@@ -1,7 +1,75 @@
-@(message: String)
+@()
 
-@main("Welcome to Play 2.0 RC1") {
-    
-    @play20.welcome(message)
-    
-}
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Validator Suite</title>
+		<meta charset="utf-8" />
+		<link href="@routes.Assets.at("stylesheets/reset.css")" rel="stylesheet" />
+		<link href="@routes.Assets.at("stylesheets/vs.css")" rel="stylesheet" />
+		<script src="@routes.Assets.at("javascripts/jquery-1.6.4.js")"></script>
+		<script src="@routes.Assets.at("javascripts/jquery.form.js")"></script>
+		<script src="@routes.Assets.at("javascripts/jquery.atmosphere.js")"></script>
+		<script src="@routes.Assets.at("javascripts/vs.js")"></script>
+	</head>
+	<body>
+		<header>
+			<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="vsLogo" viewBox="0 0 400 450">
+				<style type="text/css">
+					#logo { fill:#D2D2D2; }
+					#logo *:hover { fill:#444; }
+				</style>
+				<defs>
+					<polygon id="branch" points="6,15 32,94 -82,175 -144,130 -118,51 -81,78"></polygon>
+				</defs>
+				<g id="logo" transform="translate(200,200)">
+					<use xlink:href="#branch" transform="rotate(0)"></use>
+					<use xlink:href="#branch" transform="rotate(72)"></use>
+					<use xlink:href="#branch" transform="rotate(144)"></use>
+					<use xlink:href="#branch" transform="rotate(216)"></use>
+					<use xlink:href="#branch" transform="rotate(288)"></use>
+				</g>
+			</svg>
+			<h1><a href="/"><span>Validator</span> <span>Suite</span></a></h1>
+			<div id="admin">
+				<span>Logged in as Alexandre Bertails</span>
+				|
+				<a href="#">logout</a>
+			</div>
+		</header>
+		<section id="form">
+			
+			<form action="/observation" method="post">
+				<label for="url">URL</label>
+				<input name="url" id="url" type="text" value="http://www.w3.org" />
+				<label for="distance">Distance</label>
+				<input name="distance" id="distance" type="text" value="1" maxlength="2" />
+				<label for="distance">Check Links</label>
+				<input name="linkCheck" id="linkCheck" type="checkbox" />
+				<input type="submit" value="Validate" />
+			</form>
+			
+			<p><progress id="progress" max="100" value="50"><span>0</span>%</progress>&nbsp;<span id="status">Crawling...</span></p>
+			
+		</section>
+		<section id="stats">
+			<ul>
+				<li class="urls"><span>URLs crawled:</span><span>0/0</span></li>
+				<li class="observations"><span>Observations:</span><span>0/0</span></li>
+				<li class="errors"><span>Errors:</span><span>0</span></li>
+				<li class="warnings"><span>Warnings:</span><span>0</span></li>
+			</ul>
+		</section>
+		<a class="clear" href="#">Clear</a>
+		<section id="logs">
+			<ul>
+				
+			</ul>
+		</section>
+		<section id="observations">
+			<ul>
+				
+			</ul>
+		</section>
+	</body>
+</html>
