@@ -1,0 +1,24 @@
+syntax: glob
+logs
+project/project
+project/target
+target
+tmp
+.settings/
+lib_managed/
+src_managed/
+lift_example/
+project/boot/
+.classpath
+.cache
+.project
+.manager
+*~
+*.class
+*.log
+*\#
+build.properties
+logs
+sbt-launch*.jar
+.target
+.scala_dependencies
