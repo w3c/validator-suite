@@ -13,6 +13,13 @@ import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
 import play.api.data.FormError
+import play.api.mvc.AsyncResult
+
+import play.api.libs._
+import play.api.libs.iteratee._
+
+import play.api.libs.concurrent._
+import play.api.libs.akka._
 
 object Application extends Controller {
   
@@ -66,7 +73,7 @@ object Application extends Controller {
     val observerIdString: String = observerId.toString
     
     Created("").withHeaders(
-      "Location" -> new URI(observerIdString).toString,
+      "Location" -> ("http://tightlips.w3.org:9000/observation/" + observerIdString),
       "X-VS-ActionID" -> observerIdString)
   }
   
@@ -75,9 +82,43 @@ object Application extends Controller {
       formWithErrors => { Logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
       v => validateWithParams(v._1, v._2, v._3)
     )
+  }
+  
+  val logger = play.Logger.of("FOO")
+  
+  def subscribe(id: String) = Action {
     
+    // TODO can throw an exception if not real UUID
+    val observerId = ObserverId(id)
     
+    Observer.byObserverId(observerId).map { observer =>
+      
+      AsyncResult {
+        val ce = new CallbackEnumerator[String] { }
+        val subscriber = TypedActor.newInstance(classOf[ObserverSubscriber], new Subscriber(ce, observer)) //new Subscriber(ce, observer)
+        Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.testLog")))
+      }
+    }.getOrElse(NotFound.withHeaders("X-VS-ObserverID" -> observerId.toString))
+      
+      
+  }
+  
+}
+
+class Subscriber(
+    callback: CallbackEnumerator[String],
+    observer: Observer)
+extends TypedActor with ObserverSubscriber {
     
+  subscribe()
+
+  // subscribes to the actionManager at instantiation time
+  def subscribe(): Unit = observer.subscribe(this)
+  
+  def unsubscribe(): Unit = observer.unsubscribe(this)
+  
+  def broadcast(msg: String): Unit = {
+    callback.push(msg)
   }
   
 }
