@@ -6,6 +6,7 @@ import play.api.data._
 import play.api.data.format.Formats._
 import play.api.data.validation.Constraints._
 import play.api.data.format.Formatter
+import play.api.mvc.Request
 import java.net.URI
 import java.util.UUID
 import akka.actor.{ActorRef, Actor, Scheduler, UntypedChannel, TypedActor}
@@ -52,6 +53,7 @@ object Application extends Controller {
   )
   
   def validateWithParams(
+      request: Request[AnyContent],
       url: URL,
       distance: Int,
       linkCheck: Boolean) = {
@@ -72,15 +74,17 @@ object Application extends Controller {
     
     val observerIdString: String = observerId.toString
     
+    logger.error(request.uri)
+    
     Created("").withHeaders(
-      "Location" -> ("http://tightlips.w3.org:9000/observation/" + observerIdString),
+      "Location" -> (request.uri + "/" + observerIdString),
       "X-VS-ActionID" -> observerIdString)
   }
   
   def validate() = Action { implicit request =>
     validateForm.bindFromRequest.fold(
       formWithErrors => { Logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
-      v => validateWithParams(v._1, v._2, v._3)
+      v => validateWithParams(request, v._1, v._2, v._3)
     )
   }
   
