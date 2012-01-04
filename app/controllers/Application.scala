@@ -100,7 +100,7 @@ object Application extends Controller {
       AsyncResult {
         val ce = new CallbackEnumerator[String] { }
         val subscriber = TypedActor.newInstance(classOf[ObserverSubscriber], new Subscriber(ce, observer)) //new Subscriber(ce, observer)
-        Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.testLog")))
+        Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")))
       }
     }.getOrElse(NotFound.withHeaders("X-VS-ObserverID" -> observerId.toString))
       

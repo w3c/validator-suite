@@ -14,7 +14,9 @@ var VS = {
 		VS.stats.errors = $('#stats li.errors :last-child');
 		VS.stats.warnings = $('#stats li.warnings :last-child');
 		VS.form = $('#form form');
-		VS.atmosphereRequest = {transport: 'streaming'};
+		
+		VS.cometIframe = $('<iframe src="" style="display:none"></iframe>');
+		$('body').append(VS.cometIframe);
 		
 		VS.parseHash();
 		VS.formValidateAction();
@@ -47,13 +49,7 @@ var VS = {
 		VS.log("<li class='status'>Starting crawl of " + $("input#url", VS.form).val() + " with a distance of " + $("input#distance", VS.form).val() + "</li>");
 		var loc = xhr.getResponseHeader("Location");
 		VS.setHash('!' + loc.substr(loc.search('/observation/[^/]+$')));
-		/*$.atmosphere.subscribe(
-			loc + "/stream",
-			VS.logResponse,
-			VS.atmosphereRequest
-		);*/
-		var iframe = $('<iframe src="' + loc + "/stream" + '" style="display:none"></iframe>');
-		$('body').append(iframe);
+		VS.cometIframe.attr('src', loc + "/stream");
 	},
 	
 	xhrError: function(jqXHR, textStatus, errorThrown) {
@@ -73,7 +69,7 @@ var VS = {
 		VS.stats.warnings.text("0");
 	},
 	
-	logResponse: function(response) {
+	/*logResponse: function(response) {
 		if (response.state == "error") {
 			console.log("Error state response:");
 			console.log(response);
@@ -110,19 +106,19 @@ var VS = {
 			console.log("Empty response body:");
 			console.log(response);
 		}
-	},
+	},*/
 	
-	testLog: function(msg) {
-	  try {
-        var messages = msg.match(/\[[^\[]+\]/g);
-        for (var i=0;i<messages.length;i++) {
-          var msg = $.parseJSON(messages[i]);
-          VS.logJson(msg);
-        }
-      } catch(e) {
-        console.log(e.toString() + " - " + response.responseBody);
-        VS.log(e.toString() + " - " + response.responseBody);
-      }
+	logComet: function(msg) {
+		try {
+			var messages = msg.match(/\[[^\[]+\]/g);
+			for (var i=0;i<messages.length;i++) {
+				var msg = $.parseJSON(messages[i]);
+				VS.logJson(msg);
+			}
+		} catch(e) {
+			console.log(e.toString() + " - " + response.responseBody);
+			VS.log(e.toString() + " - " + response.responseBody);
+		}
 	},
 	
 	logJson: function(msg) {
@@ -184,7 +180,7 @@ var VS = {
 			VS.log("<li class='status'>Starting observation phase</li>");
 			VS.incrementObserved(0, msg[1]);
 		} else if (type == "OBS_FINISHED") {
-			$.atmosphere.unsubscribe();
+			VS.cometIframe.attr('src', ''); // TODO: Probably useless? Might be useful to clean the content for memory footprint 
 			VS.log("<li class='status'>Validation finished</li>");
 		} else if (type == "OBS_INITIAL") {
 			VS.incrementCrawled(0,msg[1]+msg[2]);
@@ -254,13 +250,10 @@ var VS = {
 	
 	parseHash: function() {
 		var hash = window.location.hash;
-		//console.log(hash);
+		console.log(hash);
+		console.log(hash.search('/observation/[^/]+$'));
 		if (hash.indexOf('#!/observation/') == 0)
-			$.atmosphere.subscribe(
-				hash.substr(hash.search('/observation/[^/]+$')) + "/stream",
-				VS.logResponse,
-				VS.atmosphereRequest
-			);
+			VS.cometIframe.attr('src', hash.substr(hash.search('/observation/[^/]+$')) + "/stream"); // XXX: could be hash.substr(2) for performance
 	},
 	
 	setHash: function(hash){
