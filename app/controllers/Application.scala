@@ -24,9 +24,7 @@ import play.api.libs.akka._
 
 object Application extends Controller {
   
-  def index = Action {
-    Ok(views.html.index())
-  }
+  val logger = play.Logger.of("Application")
   
   implicit val urlFormat = new Formatter[URL] {
     
@@ -41,7 +39,6 @@ object Application extends Controller {
     }
     
     def unbind(key: String, url: URL) = Map(key -> url.toString)
-    
   }
   
   val validateForm = Form(
@@ -51,6 +48,10 @@ object Application extends Controller {
       "linkCheck" -> of[Boolean]
     )
   )
+  
+  def index = Action {
+    Ok(views.html.index())
+  }
   
   def validateWithParams(
       request: Request[AnyContent],
@@ -88,34 +89,40 @@ object Application extends Controller {
     )
   }
   
-  val logger = play.Logger.of("FOO")
-  
-  def subscribe(id: String) = Action {
-    
-    // TODO can throw an exception if not real UUID
-    val observerId = ObserverId(id)
-    
-    Observer.byObserverId(observerId).map { observer =>
-      
-      AsyncResult {
-        val ce = new CallbackEnumerator[String] { }
-        val subscriber = TypedActor.newInstance(classOf[ObserverSubscriber], new Subscriber(ce, observer)) //new Subscriber(ce, observer)
-        Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")))
-      }
-    }.getOrElse(NotFound.withHeaders("X-VS-ObserverID" -> observerId.toString))
-      
-      
+  def redirect(id: String) = Action {
+    try {
+      val observerId = ObserverId(id)
+      Observer.byObserverId(observerId).map { observer =>
+        Redirect("/#!/observation/" + id)
+      }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + observerId.toString))))
+    } catch { case e =>
+      NotFound(views.html.index(Seq("Invalid action id: " + id)))
+    }
   }
   
+  def subscribe(id: String) = Action {
+    try {
+      val observerId = ObserverId(id)
+      Observer.byObserverId(observerId).map { observer =>
+        AsyncResult {
+          val ce = new CallbackEnumerator[String] { }
+          val subscriber = TypedActor.newInstance(classOf[ObserverSubscriber], new Subscriber(ce, observer)) //new Subscriber(ce, observer)
+          Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")))
+        }
+      }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))
+    } catch { case e =>
+      NotFound(views.html.cometError(Seq("Invalid action id: " + id)))
+    }
+  }
 }
 
 class Subscriber(
     callback: CallbackEnumerator[String],
     observer: Observer)
-extends TypedActor with ObserverSubscriber {
-    
+    extends TypedActor with ObserverSubscriber {
+  
   subscribe()
-
+  
   // subscribes to the actionManager at instantiation time
   def subscribe(): Unit = observer.subscribe(this)
   
