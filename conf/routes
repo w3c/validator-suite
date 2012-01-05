@@ -5,6 +5,7 @@
 # Home page
 GET     /                           controllers.Application.index()
 POST    /observation                controllers.Application.validate()
+GET     /observation/:id            controllers.Application.redirect(id)
 GET     /observation/:id/stream     controllers.Application.subscribe(id)
 
 # Map static resources from the /public folder to the /assets URL path
