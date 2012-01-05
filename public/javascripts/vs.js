@@ -14,6 +14,7 @@ var VS = {
 		VS.stats.errors = $('#stats li.errors :last-child');
 		VS.stats.warnings = $('#stats li.warnings :last-child');
 		VS.form = $('#form form');
+		VS.messages = $('#messages');
 		
 		VS.cometIframe = $('<iframe src="" style="display:none"></iframe>');
 		$('body').append(VS.cometIframe);
@@ -36,6 +37,7 @@ var VS = {
 		VS.form.submit(function() { 
 			VS.clearLogs();
 			VS.clearStats();
+			VS.clearMessages();
 			$(this).ajaxSubmit(options);
 			return false; 
 		});
@@ -48,8 +50,12 @@ var VS = {
 	subscribe: function(responseText, statusText, xhr) {
 		VS.log("<li class='status'>Starting crawl of " + $("input#url", VS.form).val() + " with a distance of " + $("input#distance", VS.form).val() + "</li>");
 		var loc = xhr.getResponseHeader("Location");
-		VS.setHash('!' + loc.substr(loc.search('/observation/[^/]+$')));
-		VS.cometIframe.attr('src', loc + "/stream");
+		if (window.location.pathname != "/") { // TODO should be dynamic?
+		  window.location = "/#!" + loc.substr(loc.search('/observation/[^/]+$'));
+		} else {
+		  VS.setHash('!' + loc.substr(loc.search('/observation/[^/]+$')));
+		  VS.cometIframe.attr('src', loc + "/stream");
+		}
 	},
 	
 	xhrError: function(jqXHR, textStatus, errorThrown) {
@@ -248,10 +254,18 @@ var VS = {
 		
 	},
 	
+	addMessage: function(str) {
+	  VS.messages.append(
+	    $('<div class="error">'+ str +'</div>')
+	  );
+	},
+	
+	clearMessages: function() {
+	  VS.messages.html('');
+	},
+	
 	parseHash: function() {
 		var hash = window.location.hash;
-		console.log(hash);
-		console.log(hash.search('/observation/[^/]+$'));
 		if (hash.indexOf('#!/observation/') == 0)
 			VS.cometIframe.attr('src', hash.substr(hash.search('/observation/[^/]+$')) + "/stream"); // XXX: could be hash.substr(2) for performance
 	},
@@ -265,7 +279,7 @@ var VS = {
 		}
 	},
 	
-//	log: function (level, args) {
+//    log: function (level, args) {
 //        if (window.console) {
 //            var logger = window.console[level];
 //            if (typeof logger == 'function') {
