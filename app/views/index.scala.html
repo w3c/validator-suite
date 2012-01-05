@@ -1,3 +1,4 @@
+@(messages:Seq[String] = Seq())
 @main("Validator Suite") {
 	<header>
 		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="vsLogo" viewBox="0 0 400 450">
@@ -23,6 +24,11 @@
 			<a href="#">logout</a>
 		</div>
 	</header>
+  <section id="messages">
+    @for(message <- messages) {
+      <div class="error">@message</div>
+    }
+  </section>
 	<section id="form">
 		
 		<form action="/observation" method="post">
@@ -54,7 +60,12 @@
 	</section>
 	<section id="observations">
 		<ul>
-			
+		  <li class="headers"><span>URI</span><span>Warnings</span><span>Errors</span></li>
+			<li>
+			  <span class="uri">http://www.w3.org/community/groups/proposed/</span><span class="warning">-</span><span class="error">16</span>
+			</li>
+			<li><span class="uri">http://www.w3.org/community/groups/proposed/</span><span class="warning">-</span><span class="errors">16</span></li>
+			<li><span class="uri">http://www.w3.org/community/groups/proposed/</span><span class="warning">-</span><span class="errors">16</span></li>
 		</ul>
 	</section>
 }
