@@ -119,7 +119,7 @@ form input[type=submit] {
 	float:left;
 	width:220px;
 	height:120px;
-	border-bottom:1px solid rgba(0,0,0,.1);;
+	border-bottom:1px solid rgba(0,0,0,.1);
 	padding:20px;
 }
 #stats ul li {
@@ -221,10 +221,58 @@ a.clear {
 }*/
 #observations {
 	padding:20px;
-	clear: both;
+	clear:both;
+	font-size:120%;
 }
 
+#observations ul {
+  display:table;
+  width:100%;
+}
 
+#observations ul li {
+  display:table-row;
+}
+
+#observations ul li.headers {
+  font-weight:bold;
+}
+
+#observations ul li.headers * {
+  color:black !important;
+}
+
+#observations ul li span {
+  display:table-cell;
+  padding:5px;
+  border-bottom:1px solid rgba(0,0,0,.1);
+}
+
+#observations ul li span:first-child {
+}
+
+#observations ul li span:nth-child(2) {
+  width:80px;
+  text-align:center;
+  color:orange;
+}
+
+#observations ul li span:last-child {
+  width:80px;
+  text-align:center;
+  color:red;
+}
+
+#observations ul li:last-child {
+  border:none;
+}
+
+#messages .error {
+  color: #8A1F11;
+  border: 1px solid #FBC2C4;
+  padding: 20px;
+  background: #FBE3E4;
+}
 
 
 
