@@ -41,6 +41,7 @@ var VS = {
 			VS.clearLogs();
 			VS.clearStats();
 			VS.clearMessages();
+			VS.clearAssertions();
 			$(this).ajaxSubmit(options);
 			return false;
 		});
@@ -209,6 +210,8 @@ var VS = {
 		} else if (type == "OBS_FINISHED") {
 			VS.cometIframe.attr('src', ''); // TODO: Probably useless? Might be useful to clean the content for memory footprint 
 			VS.log("<li class='status'>Validation finished</li>");
+			$('#progress').css('display', 'none');
+			VS.formValidateAction();
 		} else if (type == "OBS_INITIAL") {
 			VS.incrementCrawled(0,msg[1]+msg[2]);
 			VS.incrementObserved(0,msg[3]+msg[4]);
@@ -283,6 +286,11 @@ var VS = {
 	  $("#observations ul").append(
 	    $("<li><span>" + url + "</span><span>" + warnings + "</span><span>" + errors + "</span>")
 	  );
+	},
+	
+	clearAssertions: function() {
+	  $("#observations").css("display","none");
+	  $("#observations li.not(:first-child)").remove();
 	},
 	
 	addMessage: function(str) {
