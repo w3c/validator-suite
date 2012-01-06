@@ -56,6 +56,7 @@ trait ObserverSubscribers extends ObserverImpl {
       }
       (List(initial) ++ responsesToBroadcast ++ assertionsToBroadcast) mkString ""
     }
+    case Stopped => """["STOPPED"]"""
     
   }
   

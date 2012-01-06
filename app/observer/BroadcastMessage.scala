@@ -9,6 +9,7 @@ sealed trait BroadcastMessage
 // states
 case object ObservationFinished extends BroadcastMessage
 case object InitialState extends BroadcastMessage
+case object Stopped extends BroadcastMessage
 // events
 case class URLsToExplore(nbUrls: Int) extends BroadcastMessage
 case class URLsToObserve(nbUrls: Int) extends BroadcastMessage

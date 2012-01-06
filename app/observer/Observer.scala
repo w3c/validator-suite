@@ -45,7 +45,9 @@ object Observer {
  * the Exploration and Assertion phases
  */
 trait Observer {
+  // TODO cancelObservation()
   def startExplorationPhase(): Unit
+  def stop(): Unit
   def URLs(): Future[Iterable[URL]]
   def assertions(): Future[Assertions]
   // hooks for http
@@ -218,6 +220,14 @@ abstract class ObserverImpl (
     logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
     scheduleNextURLsToFetch()
   }
+  
+  def stop(): Unit = {
+    state = StoppedState
+    urlsToBeExplored.clear()
+    pendingAssertions.clear()
+    pendingFetches.clear()
+    broadcast(Stopped)
+  }
 
   /**
    * hook to send the result of a GET
@@ -225,37 +235,39 @@ abstract class ObserverImpl (
    * TODO: move distance into pendingFetches (LinkedHashMap)
    */
   def sendGETResponse(url: URL, r: GETResponse): Unit = {
-    val GETResponse(status, headers, body) = r
-    logger.debug("%s:  GET <<< %s" format (shortId, url))
-    val distance: Int = pendingFetches remove url getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
-    val encoding = "UTF-8"
-    val reader = new java.io.StringReader(body)
-    val extractedURLs = html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
-    responses +=
-      (url -> HttpResponse(url, status, headers, extractedURLs))
-    def ignore(url: URL): Boolean = {
-      def isPending = pendingFetches contains url
-      def isProcessed = responses isDefinedAt url
-      def isScheduled = urlsToBeExplored contains url
-      isPending || isProcessed || isScheduled
-    }
-    val urls = extractedURLs.distinct flatMap {
-      url => {
-        lazy val action = strategy.fetch(url, distance+1)
-        if (ignore(url) || action == FetchNothing)
-          None
-        else
-          Some(url -> (distance + 1, action))
+    if (state != StoppedState) {
+      val GETResponse(status, headers, body) = r
+      logger.debug("%s:  GET <<< %s" format (shortId, url))
+      val distance: Int = pendingFetches remove url getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+      val encoding = "UTF-8"
+      val reader = new java.io.StringReader(body)
+      val extractedURLs = html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
+      responses +=
+        (url -> HttpResponse(url, status, headers, extractedURLs))
+      def ignore(url: URL): Boolean = {
+        def isPending = pendingFetches contains url
+        def isProcessed = responses isDefinedAt url
+        def isScheduled = urlsToBeExplored contains url
+        isPending || isProcessed || isScheduled
       }
+      val urls = extractedURLs.distinct flatMap {
+        url => {
+          lazy val action = strategy.fetch(url, distance+1)
+          if (ignore(url) || action == FetchNothing)
+            None
+          else
+            Some(url -> (distance + 1, action))
+        }
+      }
+      urlsToBeExplored ++= urls
+      if (urls.size > 0) {
+        val total = responses.size + urlsToBeExplored.size + pendingFetches.size
+        logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, urls.size, total))
+      }
+      broadcast(FetchedGET(url, r.status, urls.size))
+      scheduleNextURLsToFetch()
+      conditionalEndOfExplorationPhase()
     }
-    urlsToBeExplored ++= urls
-    if (urls.size > 0) {
-      val total = responses.size + urlsToBeExplored.size + pendingFetches.size
-      logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, urls.size, total))
-    }
-    broadcast(FetchedGET(url, r.status, urls.size))
-    scheduleNextURLsToFetch()
-    conditionalEndOfExplorationPhase()
   }
   
   /**
@@ -263,14 +275,16 @@ abstract class ObserverImpl (
    * TODO: explain the logic happening here
    */
   def sendHEADResponse(url: URL, r: HEADResponse): Unit = {
-    val HEADResponse(status, headers) = r
-    logger.debug("%s: HEAD <<< %s" format (shortId, url))
-    pendingFetches -= url
-    scheduleNextURLsToFetch()
-    responses +=
-      (url -> HttpResponse(url, status, headers, Nil))
-    broadcast(FetchedHEAD(url, r.status))
-    conditionalEndOfExplorationPhase()
+    if (state != StoppedState) {
+      val HEADResponse(status, headers) = r
+      logger.debug("%s: HEAD <<< %s" format (shortId, url))
+      pendingFetches -= url
+      scheduleNextURLsToFetch()
+      responses +=
+        (url -> HttpResponse(url, status, headers, Nil))
+      broadcast(FetchedHEAD(url, r.status))
+      conditionalEndOfExplorationPhase()
+    }
   }
 
   /**
@@ -278,12 +292,14 @@ abstract class ObserverImpl (
    * TODO: explain the logic happening here
    */
   def sendException(url: URL, t: Throwable): Unit = {
-    logger.debug("%s: Exception for %s: %s" format (shortId, url, t.getMessage))
-    pendingFetches -= url
-    scheduleNextURLsToFetch()
-    responses += (url -> ErrorResponse(url, t.getMessage))
-    broadcast(FetchedError(url, t.getMessage))
-    conditionalEndOfExplorationPhase()
+    if (state != StoppedState) {
+      logger.debug("%s: Exception for %s: %s" format (shortId, url, t.getMessage))
+      pendingFetches -= url
+      scheduleNextURLsToFetch()
+      responses += (url -> ErrorResponse(url, t.getMessage))
+      broadcast(FetchedError(url, t.getMessage))
+      conditionalEndOfExplorationPhase()
+    }
   }
   
   /**

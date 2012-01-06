@@ -15,3 +15,4 @@ case object ExplorationState extends ObserverState
 case object ObservationState extends ObserverState
 case object FinishedState extends ObserverState
 case object ErrorState extends ObserverState
+case object StoppedState extends ObserverState
