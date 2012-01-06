@@ -7,6 +7,7 @@ GET     /                           controllers.Application.index()
 POST    /observation                controllers.Application.validate()
 GET     /observation/:id            controllers.Application.redirect(id)
 GET     /observation/:id/stream     controllers.Application.subscribe(id)
+GET     /observation/:id/stop       controllers.Application.stop(id)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

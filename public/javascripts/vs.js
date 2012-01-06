@@ -15,8 +15,9 @@ var VS = {
 		VS.stats.warnings = $('#stats li.warnings :last-child');
 		VS.form = $('#form form');
 		VS.messages = $('#messages');
+		VS.currentActionId = "";
 		
-		VS.cometIframe = $('<iframe src="" style="display:none"></iframe>');
+		VS.cometIframe = $('<iframe style="display:none"></iframe>');
 		$('body').append(VS.cometIframe);
 		
 		VS.parseHash();
@@ -29,31 +30,50 @@ var VS = {
 	},
 	
 	formValidateAction: function() {
-		var options = { 
+		var options = {
 			success:	VS.subscribe,
 			error:		VS.xhrError
-		}; 
+		};
 		//VS.form.ajaxForm(options); 
-		VS.form.submit(function() { 
+		VS.form.find('input[type=submit]').attr('value', 'Validate');
+		VS.form.unbind('submit');
+		VS.form.submit(function() {
 			VS.clearLogs();
 			VS.clearStats();
 			VS.clearMessages();
 			$(this).ajaxSubmit(options);
-			return false; 
+			return false;
 		});
 	},
 	
 	formStopAction: function() {
-		
+	  VS.form.find('input[type=submit]').attr('value', 'Stop');
+	  VS.form.unbind('submit');
+		VS.form.submit(function() {
+      /*$.ajax({
+        url: "/observation/" + VS.currentActionId + "/stop",
+        success: function() {
+          console.log('success');
+        }
+      });*/
+      jsRoutes.controllers.Application.stop(VS.currentActionId).ajax({
+        success: function() {
+          VS.formValidateAction();
+        }
+      });
+      return false;
+    });
 	},
 	
 	subscribe: function(responseText, statusText, xhr) {
+		VS.formStopAction();
 		VS.log("<li class='status'>Starting crawl of " + $("input#url", VS.form).val() + " with a distance of " + $("input#distance", VS.form).val() + "</li>");
 		var loc = xhr.getResponseHeader("Location");
+		VS.currentActionId = xhr.getResponseHeader("X-VS-ActionId");
 		if (window.location.pathname != "/") { // TODO should be dynamic?
-		  window.location = "/#!" + loc.substr(loc.search('/observation/[^/]+$'));
+		  window.location = "/#!" + VS.currentActionId;
 		} else {
-		  VS.setHash('!' + loc.substr(loc.search('/observation/[^/]+$')));
+		  VS.setHash('!' + VS.currentActionId);
 		  VS.cometIframe.attr('src', loc + "/stream");
 		}
 	},
@@ -122,8 +142,8 @@ var VS = {
 				VS.logJson(msg);
 			}
 		} catch(e) {
-			console.log(e.toString() + " - " + response.responseBody);
-			VS.log(e.toString() + " - " + response.responseBody);
+			console.log(e.toString() + " - " + msg);
+			VS.log(e.toString() + " - " + msg);
 		}
 	},
 	
@@ -150,7 +170,6 @@ var VS = {
 			VS.log($('<li>', {
 				'class': 'fetch error',
 				 html  : '<span>ERROR</span> <span>(' + msg[1] + ')</span> <span>' + msg[2] + '</span>'
-				 //html  : 'ERR: '+msg[1]+' - '+msg[2]
 			}));
 		} else if (type == "OBS") {
 			VS.incrementObserved(1,0);
@@ -173,6 +192,8 @@ var VS = {
 				'class': 'obs',
 				 html  : '<span>'+msg[2]+':</span> '+ msg[1] + str
 			}));
+			if (errors != 0 || warnings != 0)
+			  VS.addAssertion(msg[1], "#", errors, warnings);
 		} else if (type == "OBS_ERR") {
 			VS.log(response.responseBody);
 		} else if (type == "OBS_NO") {
@@ -191,6 +212,11 @@ var VS = {
 		} else if (type == "OBS_INITIAL") {
 			VS.incrementCrawled(0,msg[1]+msg[2]);
 			VS.incrementObserved(0,msg[3]+msg[4]);
+		} else if (type == "STOPPED") {
+		  // TODO should wait for this message before changing form to validate action
+		  VS.cometIframe.attr('src', '');
+		  $('#progress').css('display', 'none');
+		  VS.log("<li class='status'>Validation stopped</li>");
 		} else {
 			console.log(msg);
 			VS.log(msg);
@@ -250,8 +276,12 @@ var VS = {
 		);
 	},
 	
-	updateObservations: function() {
-		
+	addAssertion: function(url, validatorLink, errors, warnings) {
+	  warnings = warnings == 0 ? "-" : warnings;
+    errors = errors == 0 ? "-" : errors;
+	  $("#observations ul").append(
+	    $("<li><span>" + url + "</span><span>" + warnings + "</span><span>" + errors + "</span>")
+	  );
 	},
 	
 	addMessage: function(str) {

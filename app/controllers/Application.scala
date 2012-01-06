@@ -75,8 +75,6 @@ object Application extends Controller {
     
     val observerIdString: String = observerId.toString
     
-    logger.error(request.uri)
-    
     Created("").withHeaders(
       "Location" -> (request.uri + "/" + observerIdString),
       "X-VS-ActionID" -> observerIdString)
@@ -100,6 +98,19 @@ object Application extends Controller {
     }
   }
   
+  def stop(id: String) = Action {
+    try {
+      val observerId = ObserverId(id)
+      Observer.byObserverId(observerId).map { observer =>
+        observer.stop()
+        
+        Ok
+      }.getOrElse(NotFound)
+    } catch { case e =>
+      NotFound
+    }
+  }
+  
   def subscribe(id: String) = Action {
     try {
       val observerId = ObserverId(id)
@@ -107,7 +118,7 @@ object Application extends Controller {
         AsyncResult {
           val ce = new CallbackEnumerator[String] { }
           val subscriber = TypedActor.newInstance(classOf[ObserverSubscriber], new Subscriber(ce, observer)) //new Subscriber(ce, observer)
-          Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")))
+          Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")).withHeaders("X-VS-ActionID" -> id))
         }
       }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))
     } catch { case e =>

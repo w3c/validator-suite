@@ -144,6 +144,7 @@ abstract class ObserverImpl (
       }
       case ObservationState | FinishedState => future { responses.keys }
       case ErrorState => sys.error("what is a Future with error?")
+      case StoppedState => future { responses.keys }
     }
   
   /**
@@ -159,6 +160,7 @@ abstract class ObserverImpl (
       }
       case FinishedState => future { _assertions }
       case ErrorState => sys.error("what is a Future with error?")
+      case StoppedState => future { _assertions }
     }
   
   /**

@@ -29,6 +29,11 @@
       <div class="error">@message</div>
     }
   </section>
+  
+  @helper.javascriptRouter("jsRoutes")(
+    routes.javascript.Application.stop
+  )
+  
 	<section id="form">
 		
 		<form action="/observation" method="post">
@@ -61,10 +66,6 @@
 	<section id="observations">
 		<ul>
 		  <li class="headers"><span>URI</span><span>Warnings</span><span>Errors</span></li>
-			<li>
-			  <span class="uri">http://www.w3.org/community/groups/proposed/</span><span class="warning">-</span><span class="error">16</span>
-			</li>
-			<li><span class="uri">http://www.w3.org/community/groups/proposed/</span><span class="warning">-</span><span class="errors">16</span></li>
 			<li><span class="uri">http://www.w3.org/community/groups/proposed/</span><span class="warning">-</span><span class="errors">16</span></li>
 		</ul>
 	</section>
