@@ -71,9 +71,9 @@ var VS = {
 		var loc = xhr.getResponseHeader("Location");
 		VS.currentActionId = xhr.getResponseHeader("X-VS-ActionId");
 		if (window.location.pathname != "/") { // TODO should be dynamic?
-		  window.location = "/#!" + VS.currentActionId;
+		  window.location = "/#!/observation/" + VS.currentActionId;
 		} else {
-		  VS.setHash('!' + VS.currentActionId);
+		  VS.setHash('!/observation/' + VS.currentActionId);
 		  VS.cometIframe.attr('src', loc + "/stream");
 		}
 	},
@@ -279,6 +279,7 @@ var VS = {
 	addAssertion: function(url, validatorLink, errors, warnings) {
 	  warnings = warnings == 0 ? "-" : warnings;
     errors = errors == 0 ? "-" : errors;
+    $("#observations").css("display","block")
 	  $("#observations ul").append(
 	    $("<li><span>" + url + "</span><span>" + warnings + "</span><span>" + errors + "</span>")
 	  );

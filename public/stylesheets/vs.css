@@ -255,12 +255,14 @@ a.clear {
   width:80px;
   text-align:center;
   color:orange;
+  border-left:1px solid rgba(0,0,0,.1);
 }
 
 #observations ul li span:last-child {
   width:80px;
   text-align:center;
   color:red;
+  border-left:1px solid rgba(0,0,0,.1);
 }
 
 #observations ul li:last-child {
