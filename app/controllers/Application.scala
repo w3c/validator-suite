@@ -122,6 +122,8 @@ object Application extends Controller {
         }
       }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))
     } catch { case e =>
+      // TODO only catch correctly typed exception
+      logger.error(e.getMessage(), e);
       NotFound(views.html.cometError(Seq("Invalid action id: " + id)))
     }
   }
