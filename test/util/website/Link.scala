@@ -8,7 +8,7 @@ import scala.util.matching.Regex
  *  @param pf a partial function passed to the [[scala.util.matching.Regex]]'s extractor (aka. pattern matching).
  *         See [[http://ikaisays.com/2009/04/04/using-pattern-matching-with-regular-expressions-in-scala/ Using pattern matching with regular expressions in Scala]].
  */
-case class Link(from:String, pf: PartialFunction[Any, Seq[String]]) {
+case class Link(from: String, pf: PartialFunction[Any, Seq[String]]) {
   
   /** the regex should match the entire URL */
   lazy val regex = new Regex("^"+from+"$")
