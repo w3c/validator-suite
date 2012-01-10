@@ -1,17 +1,17 @@
 package org.w3.vs.observer
 
-import org.w3.vs.util.ObserverSpec
 import org.w3.util._
 import org.w3.util.website._
 import org.w3.vs.model._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit._
+import org.specs2.mutable.Specification
 
 /**
   * Server 1 -> Server 2
   * 1 GET       1 HEAD
   */
-object SimpleInterWebsiteTest extends ObserverSpec {
+object SimpleInterWebsiteTest extends Specification {
 
   val strategy =
     EntryPointStrategy(
@@ -27,14 +27,11 @@ object SimpleInterWebsiteTest extends ObserverSpec {
       unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
   )
 
-  "test simpleInterWebsite" in {
-    observe(servers) {
-      val observer = newObserver(strategy, timeout = Duration(1, SECONDS))
-      observer.startExplorationPhase()
-      val urls = observer.URLs().get
-      assert(urls.size === 2)
-      testInvariants(observer)
-    }
+  "test simpleInterWebsite" in new ObserverScope(servers) {
+    val observer = newObserver(strategy, timeout = Duration(1, SECONDS))
+    observer.startExplorationPhase()
+    val urls = observer.URLs().get
+    assert(urls.size === 2)
   }
 
 //    val (links, timestamps) = responseDAO.getLinksAndTimestamps(actionId) .unzip

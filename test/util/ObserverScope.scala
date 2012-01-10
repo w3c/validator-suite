@@ -1,33 +1,35 @@
-package org.w3.vs.util
+package org.w3.vs.observer
 
 import org.w3.vs.model.{Strategy, ObserverId}
 import org.w3.vs.assertor.{AssertorPicker, DoNothingAssertorPicker}
 import org.w3.vs.http.Http
-import org.w3.vs.observer.{Observer, ObserverImpl, DoNothingBroadcaster}
 import akka.actor.{Actor, TypedActor}
 import akka.testkit.TestKit
 import akka.util.Duration
 import java.util.concurrent.TimeUnit._
 import org.specs2.mutable._
 import org.specs2.specification.Example
+import org.specs2.specification.Scope
 
 /**
  * helper trait that can be used to test Observers
  * Be careful: all TypedActors are stopped after each test
  */
-trait ObserverSpec extends Specification with BeforeAfter /*with TestKit*/ {
+class ObserverScope(servers: Seq[unfiltered.util.RunnableServer]) extends Scope with BeforeAfter with TestKit {
   
-  val logger = play.Logger.of(classOf[ObserverSpec])
+  val logger = play.Logger.of(classOf[ObserverScope])
   
-  val http = Http.getInstance()
+  lazy val http = Http.getInstance()
   
   var observers = Seq[Observer]()
-
+  
   override def before: Any = {
     observers = Seq[Observer]()
+    servers foreach { _.start() }
   }
   
   override def after: Any = {
+    servers foreach { _.stop() }
     Actor.registry foreachTypedActor { TypedActor stop _ }
   }
   
@@ -49,29 +51,14 @@ trait ObserverSpec extends Specification with BeforeAfter /*with TestKit*/ {
      observer
   }
   
-  /**
-   * provides a context to body
-   * The servers are started before the execution of body, then stopped
-   * It's obviously not thread-safe and tests need to be run sequentially
-   */
-  def observe(servers: Seq[unfiltered.util.RunnableServer])(body: => Example): Example =
-    try {
-      servers foreach { _.start() }
-      val e = body
-      observers foreach testInvariants
-      e
-    } finally {
-      servers foreach { _.stop() }
-    }
-  
-  /**
-   * test the invariant that must be true for all observations
-   */
-  def testInvariants(observer: Observer): Example = {
-    logger.debug("TODO: for every authority, delay was respected")
-    logger.debug("TODO: for every authority, no fetch overlap")
-    1 must beEqualTo(1)
-  }
+//  /**
+//   * test the invariant that must be true for all observations
+//   */
+//  def testInvariants(observer: Observer): Example = {
+//    logger.debug("TODO: for every authority, delay was respected")
+//    logger.debug("TODO: for every authority, no fetch overlap")
+//    1 must beEqualTo(1)
+//  }
   
 }
 

@@ -1,17 +1,17 @@
 package org.w3.vs.observer
 
-import org.w3.vs.util.ObserverSpec
 import org.w3.util._
 import org.w3.util.website._
 import org.w3.vs.model._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit._
+import org.specs2.mutable.Specification
 
 /**
   * Server 1 -> Server 2
   * 1 GET       10 HEAD
   */
-object OneGETxHEADTest extends ObserverSpec {
+object OneGETxHEADTest extends Specification {
   
   val delay = 0
   
@@ -31,17 +31,13 @@ object OneGETxHEADTest extends ObserverSpec {
       unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
   )
 
-  "test OneGETxHEAD" in {
-    observe(servers) {
-      http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = delay
-      val observer = newObserver(strategy, timeout = Duration(1, SECONDS))
-      observer.startExplorationPhase()
-      val urls = observer.URLs().get
-      val urls8081 = urls filter { _.authority == "localhost:8081" }
-      urls8081 must have size(j)
-      testInvariants(observer)
-    }
-    
+  "test OneGETxHEAD" in new ObserverScope(servers) {
+    http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = delay
+    val observer = newObserver(strategy, timeout = Duration(1, SECONDS))
+    observer.startExplorationPhase()
+    val urls = observer.URLs().get
+    val urls8081 = urls filter { _.authority == "localhost:8081" }
+    urls8081 must have size(j)
   }
 
       // should test for the GET and HEAD of course
