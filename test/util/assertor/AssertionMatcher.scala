@@ -10,8 +10,8 @@ trait AssertionMatcher extends Specification {
   def haveErrors[Ass <: Assertion] = new Matcher[Ass] {
     def apply[A <: Ass](ass: Expectable[A]) = {
       result(ass.value.hasError,
-             "Assertion has errors",
-             "Assertion has no error", ass)
+             ass.description + " has errors",
+             ass.description + " has no error", ass)
     }
   }
 
