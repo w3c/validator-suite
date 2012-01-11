@@ -1,0 +1,553 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN' 'http://www.w3.org/TR/html4/loose.dtd'>
+<html lang="en" dir="ltr">
+<head>
+
+  
+    <title>XML Signature Properties</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    
+<!--      <script src='../../../dap-dev/ReSpec.js/js/respec.js' -->
+<!--              class='remove'></script> -->
+   
+    
+  <link charset="utf-8" type="text/css" rel="stylesheet" href="http://dev.w3.org/2009/dap/ReSpec.js/css/respec.css"><link charset="utf-8" type="text/css" rel="stylesheet" href="http://www.w3.org/StyleSheets/TR/W3C-WD"></head><body style="display: inherit;"><div class="head"><p><a href="http://www.w3.org/"><img src="http://www.w3.org/Icons/w3c_home" alt="W3C" height="48" width="72"></a></p><h1>XML Signature Properties</h1><h2 id="w3c-working-draft-04-february-2010"><acronym title="World Wide Web Consortium">W3C</acronym> Working Draft 04 February 2010</h2><dl><dt>This Version:</dt><dd><a href="http://www.w3.org/TR/2010/WD-xmldsig-properties-20100204/">http://www.w3.org/TR/2010/WD-xmldsig-properties-20100204/</a></dd><dt>Latest Published Version:</dt><dd><a href="http://www.w3.org/TR/xmldsig-properties/">http://www.w3.org/TR/xmldsig-properties/</a></dd><dt>Latest Editor's Draft:</dt><dd><a href="http://www.w3.org/2008/xmlsec/Drafts/xmldsig-properties/">http://www.w3.org/2008/xmlsec/Drafts/xmldsig-properties/</a></dd><dt>Previous version:</dt><dd><a href="http://www.w3.org/TR/2009/WD-xmldsig-properties-20090430/">http://www.w3.org/TR/2009/WD-xmldsig-properties-20090430/</a></dd><dt>Editor:</dt><dd>Frederick Hirsch</dd></dl><p class="copyright"><a href="http://www.w3.org/Consortium/Legal/ipr-notice#Copyright">Copyright</a> &copy; 2010 <a href="http://www.w3.org/"><acronym title="World Wide Web Consortium">W3C</acronym></a><sup>&reg;</sup> (<a href="http://www.csail.mit.edu/"><acronym title="Massachusetts Institute of Technology">MIT</acronym></a>, <a href="http://www.ercim.eu/"><acronym title="European Research Consortium for Informatics and Mathematics">ERCIM</acronym></a>, <a href="http://www.keio.ac.jp/">Keio</a>), All Rights Reserved. W3C <a href="http://www.w3.org/Consortium/Legal/ipr-notice#Legal_Disclaimer">liability</a>, <a href="http://www.w3.org/Consortium/Legal/ipr-notice#W3C_Trademarks">trademark</a> and <a href="http://www.w3.org/Consortium/Legal/copyright-documents">document use</a> rules apply.</p>
+<hr></div>
+    <div class="introductory section" id="abstract"><h2 id="abstract-1">Abstract</h2>
+      <p>This document outlines proposed standard XML Signature
+      Properties syntax and processing rules and an associated
+      namespace for these properties. The intent is these can be
+      composed with any version of XML Signature using the XML
+      SignatureProperties element.
+      </p>
+    </div><div id="sotd" class="introductory section"><h2 id="status-of-this-document">Status of This Document</h2><p><em>This section describes the status of this document at the time of its publication. Other documents may supersede this document. A list of current <acronym title="World Wide Web Consortium">W3C</acronym> publications and the latest revision of this technical report can be found in the <a href="http://www.w3.org/TR/"><acronym title="World Wide Web Consortium">W3C</acronym> technical reports index</a> at http://www.w3.org/TR/.</em></p><p>This document was published by the <a href="http://www.w3.org/2008/xmlsec/">XML Security Working Group</a> as a Last Call Working Draft. This document is intended to become a <acronym title="World Wide Web Consortium">W3C</acronym> Recommendation. If you wish to make comments regarding this document, please send them to <a href="mailto:public-xmlsec@w3.org">public-xmlsec@w3.org</a> (<a href="mailto:public-xmlsec-request@w3.org?subject=subscribe">subscribe</a>, <a href="http://lists.w3.org/Archives/Public/public-xmlsec/">archives</a>). The Last Call period ends 18 March 2010. All feedback is welcome.</p><p>Publication as a Working Draft does not imply endorsement by the <acronym title="World Wide Web Consortium">W3C</acronym> Membership. This is a draft document and may be updated, replaced or obsoleted by other documents at any time. It is inappropriate to cite this document as other than work in progress.</p><p>This is a Last Call Working Draft and thus the Working Group has determined that this document has satisfied the relevant technical requirements and is sufficiently stable to advance through the Technical Recommendation process.</p><p>This document was produced by a group operating under the <a href="http://www.w3.org/Consortium/Patent-Policy-20040205/">5 February 2004 <acronym title="World Wide Web Consortium">W3C</acronym> Patent Policy</a>. <acronym title="World Wide Web Consortium">W3C</acronym> maintains a <a href="http://www.w3.org/2004/01/pp-impl/42458/status" rel="disclosure">public list of any patent disclosures</a> made in connection with the deliverables of the group; that page also includes instructions for disclosing a patent. An individual who has actual knowledge of a patent which the individual believes contains <a href="http://www.w3.org/Consortium/Patent-Policy-20040205/#def-essential">Essential Claim(s)</a> must disclose the information in accordance with <a href="http://www.w3.org/Consortium/Patent-Policy-20040205/#sec-Disclosure">section 6 of the <acronym title="World Wide Web Consortium">W3C</acronym> Patent Policy</a>.</p></div><div class="section" id="toc"><h2 id="table-of-contents" class="introductory">Table of Contents</h2><ul class="toc"><li><a href="#sec-Introduction"><span class="secno">1. </span>Introduction</a></li><li><a href="#sec-Editorial"><span class="secno">2. </span>Editorial and Conformance Conventions</a></li><li><a href="#namespaces"><span class="secno">3. </span>Versions, Namespaces and Identifiers</a></li><li><a href="#general"><span class="secno">4. </span>Normative Material and Compliance</a></li><li><ul class="toc"><li><a href="#normative"><span class="secno">4.1 </span>Normative Material</a></li><li><a href="#compliance"><span class="secno">4.2 </span>Compliance</a></li></ul></li><li><a href="#scenarios"><span class="secno">5. </span>Usage scenarios and Requirements</a></li><li><ul class="toc"><li><a href="#code-signing-scenarios"><span class="secno">5.1 </span>Mobile Code Signing Scenario</a></li><li><a href="#code-signing-requirements"><span class="secno">5.2 </span>Mobile Code Signing Requirements</a></li></ul></li><li><a href="#placement"><span class="secno">6. </span>Signature Properties Placement</a></li><li><a href="#design"><span class="secno">7. </span>Signature Properties</a></li><li><ul class="toc"><li><a href="#profile-property"><span class="secno">7.1 </span>Profile Property</a></li><li><ul class="toc"><li><a href="#profile-property-generation"><span class="secno">7.1.1 </span>Generation</a></li><li><a href="#profile-property-validation"><span class="secno">7.1.2 </span>Validation</a></li></ul></li><li><a href="#role-property"><span class="secno">7.2 </span>Role Property</a></li><li><ul class="toc"><li><a href="#role-property-generation"><span class="secno">7.2.1 </span>Generation</a></li><li><a href="#role-property-validation"><span class="secno">7.2.2 </span>Validation</a></li></ul></li><li><a href="#identifier-property"><span class="secno">7.3 </span>Identifier Property</a></li><li><ul class="toc"><li><a href="#identifier-property-generation"><span class="secno">7.3.1 </span>Generation</a></li><li><a href="#identifier-property-validation"><span class="secno">7.3.2 </span>Validation</a></li></ul></li><li><a href="#created-property"><span class="secno">7.4 </span>Created Property</a></li><li><ul class="toc"><li><a href="#created-property-generation"><span class="secno">7.4.1 </span>Generation</a></li><li><a href="#created-property-validation"><span class="secno">7.4.2 </span>Validation</a></li></ul></li><li><a href="#expires-property"><span class="secno">7.5 </span>Expires Property</a></li><li><ul class="toc"><li><a href="#expires-property-generation"><span class="secno">7.5.1 </span>Generation</a></li><li><a href="#expires-property-validation"><span class="secno">7.5.2 </span>Validation</a></li></ul></li><li><a href="#replay-nonce-property"><span class="secno">7.6 </span>ReplayProtect Property</a></li><li><ul class="toc"><li><a href="#replay-nonce-property-generation"><span class="secno">7.6.1 </span>Generation</a></li><li><a href="#replay-nonce-property-validation"><span class="secno">7.6.2 </span>Validation</a></li></ul></li></ul></li><li><a href="#schema"><span class="secno">8. </span>Schema</a></li><li><ul class="toc"><li><a href="#xsdschema"><span class="secno">8.1 </span>XSD Schema and Valid Example</a></li><li><a href="#rngschema"><span class="secno">8.2 </span>RNG Schema</a></li></ul></li><li><a href="#thanks"><span class="secno">9. </span>Acknowledgments</a></li><li><a href="#references"><span class="secno">A. </span>References</a></li><li><ul class="toc"><li><a href="#normative-references"><span class="secno">A.1 </span>Normative references</a></li><li><a href="#informative-references"><span class="secno">A.2 </span>Informative references</a></li></ul></li></ul></div>
+    <div class="section" id="sec-Introduction">
+      <h2 id="x1.-introduction"><span class="secno">1. </span>Introduction</h2>
+      <p>
+	The SignatureProperties element defined by XML Signature 
+    [<a href="#bib-XMLDSIG-CORE1" rel="biblioentry" class="bibref">XMLDSIG-CORE1</a>]
+	offers a means to associate property values with an XML
+    Signature. This document defines 
+	specific properties that may be used by various applications of
+    XML Signature, without 
+	requiring those applications to define such properties on a per
+    case basis. This document 
+	defines how these properties are to be specified and processed
+    when used but does not 
+	require their use - specifications that reference this document
+    may or may not require their 
+	use.
+      </p>
+      <p>
+	The changes proposed in this document would not be a breaking
+    change to XML Signature, but 
+	warrant a new namespace for the properties themselves so that they
+    can be used in various 
+	versions of XML Signature.
+      </p>
+    </div>
+
+    <div class="section" id="sec-Editorial">
+      <h2 id="x2.-editorial-and-conformance-conventions"><span class="secno">2. </span>Editorial and Conformance Conventions</h2>
+  <p>This specification provides a normative XML Schema
+  [<a href="#bib-XMLSCHEMA-1" rel="biblioentry" class="bibref">XMLSCHEMA-1</a>], [<a href="#bib-XMLSCHEMA-2" rel="biblioentry" class="bibref">XMLSCHEMA-2</a>]. The full normative grammar is
+  defined by the XSD schema and the normative text in this
+  specification. The standalone XSD schema file is authoritative in
+  case there is any disagreement between it and the XSD schema
+  portions in this specification. </p>
+
+  <p>The key words "<em title="must" class="rfc2119">must</em>", "<em title="must not" class="rfc2119">must not</em>", "<em title="required" class="rfc2119">required</em>", "<em title="shall" class="rfc2119">shall</em>", "<em title="shall not" class="rfc2119">shall not</em>", 
+  "<em title="should" class="rfc2119">should</em>", "<em title="should not" class="rfc2119">should not</em>", "<em title="recommended" class="rfc2119">recommended</em>", "<em title="may" class="rfc2119">may</em>", and "<em title="optional" class="rfc2119">optional</em>" in this 
+  specification are to be interpreted as described in [<a href="#bib-RFC2119" rel="biblioentry" class="bibref">RFC2119</a>].</p>
+
+  <blockquote>
+    <p>"They <em title="must" class="rfc2119">must</em> only be used where it is actually required for interoperation 
+        or to limit behavior which has potential for causing harm (e.g., limiting 
+        retransmissions)"</p>
+  </blockquote>
+      <p>
+        Consequently, these capitalized keywords are used to unambiguously
+        specify requirements over protocol and application features and
+        behavior that affect the interoperability and security of
+        implementations. These key words are not used (capitalized) to
+        describe XML grammar; schema definitions unambiguously describe such
+        requirements. For instance, an XML attribute might be described as
+        being "optional."
+      </p>
+    </div>
+
+    <div class="section" id="namespaces">
+      <h2 id="x3.-versions--namespaces-and-identifiers"><span class="secno">3. </span>Versions, Namespaces and Identifiers</h2>
+      <p>No provision is made for an explicit version number in this syntax. If a future version is
+      needed, it will use a different namespace. The XML namespace 
+      [<a href="#bib-XML-NAMES" rel="biblioentry" class="bibref">XML-NAMES</a>] URI that <em title="must" class="rfc2119">must</em> be used by
+      implementations of this (dated) specification is:</p>
+<pre class="xml-example">xmlns dsp="http://www.w3.org/2009/xmldsig-properties"</pre>
+      <p>
+	This namespace is also used as the prefix for identifiers defined by this
+	specification. While applications <em title="must" class="rfc2119">must</em> support XML and XML namespaces, the use of internal
+	entities [<a href="#bib-XML10" rel="biblioentry" class="bibref">XML10</a>] or our <code>dsp</code> XML namespace prefix
+    and defaulting/scoping 
+	conventions are <em title="optional" class="rfc2119">optional</em>; use these facilities to provide compact
+    and readable examples. 
+      </p>
+      <p>
+	This specification uses Uniform Resource Identifiers [<a href="#bib-URI" rel="biblioentry" class="bibref">URI</a>] to identify resources,
+	algorithms, and semantics. The URI in the namespace declaration
+    above is also used as a 
+	prefix for URIs under the control of this specification.
+      </p>
+      <p>
+	This document does not change the namespace URI associated with XML Signature itself.
+      </p>
+    </div>
+    <div class="section" id="general">
+      <h2 id="x4.-normative-material-and-compliance"><span class="secno">4. </span>Normative Material and Compliance</h2>
+      <div class="section" id="normative">
+	<h3 id="x4.1-normative-material"><span class="secno">4.1 </span>Normative Material</h3>
+	<p>
+	  All material in this document is Normative except for examples and
+	sections marked as non-normative.</p>
+      </div>
+      <div class="section" id="compliance">
+	<h3 id="x4.2-compliance"><span class="secno">4.2 </span>Compliance</h3>
+	<p>
+	  Use of any or all of these Signature Properties in an XML Signature is
+<em title="optional" class="rfc2119">optional</em> and nothing precludes the use of additional properties
+	  defined elsewhere.
+	</p>
+	<p>
+	  <dfn id="dfn-common-signature-properties">Common
+	  Signature Properties</dfn> are properties defined in this
+	  specification and identified by 
+	  the namespace defined in this document.
+	  </p>
+      <p>
+        The full normative grammar is defined by the XSD schema and
+        the normative text in this specification. The standalone XSD
+        schema file is authoritative in case there is any disagreement
+        between it and the XSD schema portions in this specification. 
+      </p>
+      </div>
+      </div>
+    
+    <div id="scenarios" class="informative section">
+      <h2 id="x5.-usage-scenarios-and-requirements"><span class="secno">5. </span>Usage scenarios and Requirements</h2><p><em>This section is non-normative.</em></p>
+      <div class="section" id="code-signing-scenarios">
+        <h3 id="x5.1-mobile-code-signing-scenario"><span class="secno">5.1 </span>Mobile Code Signing Scenario</h3>
+	<p>A developer (author) produces code that is delivered to users
+    by a distributor (mobile 
+	operator). The code package contains an XML Signature and this
+    should be validated upon code 
+	installation to provide integrity for the package. The signature
+    delivered with the package 
+	from the distributor may change upon later installations for
+    various reasons, such as the 
+	inclusion of more timely revocation information, so signatures
+    should have an 
+	expiration. One goal is not to depend an X509 certificate
+    expiration for this functionality, 
+	since that certificate may have a longer lifetime.
+	</p>
+	<p>This case can introduce requirements for an expiration of a
+    signature as well as 
+	identifying the role of a signer (developer or distributor), as
+    well as a possible profile 
+	of the general signature standard for that specific use case (such
+    as restricting algorithms 
+	etc).
+	</p>
+      </div>
+      <div class="section" id="code-signing-requirements">
+	<h3 id="x5.2-mobile-code-signing-requirements"><span class="secno">5.2 </span>Mobile Code Signing Requirements</h3>
+	<p>
+	  There are specific requirements associated with this use case:
+	</p>
+	<ol>
+	  <li><p>Specify any additional constraints on the use of XML Signature, referencing an
+	  appropriate profile by URI. This might limit algorithms, for example.</p></li>
+	  <li><p>Define an expiration with a signature, enabling a validator to determine that the
+	  signature should no longer validate after a given time.  </p></li>
+	  <li><p>State the role of the signature creator, e.g. author, distributor etc.</p></li>
+	</ol>
+      </div>
+      </div>
+<div class="section" id="placement">
+      <h2 id="x6.-signature-properties-placement"><span class="secno">6. </span>Signature Properties Placement</h2>
+      <p>
+The Signature Properties defined in this specification are intended to  
+be used with XML Signature [<a href="#bib-XMLDSIG-CORE1" rel="biblioentry" class="bibref">XMLDSIG-CORE1</a>].
+      </p><p>
+  When a Signature Property element defined by this specification is  
+used within an XML Signature it <em title="must" class="rfc2119">must</em>
+ be contained within a  
+<code>ds:SignatureProperty</code> element.
+      </p><p>
+  This <code>ds:SignatureProperty</code> element <em title="must" class="rfc2119">must</em> be contained within a  
+<code>ds:SignatureProperties</code> element.
+      </p><p>
+  The <code>ds:SignatureProperties</code> element <em title="must" class="rfc2119">must</em> be contained within a  
+<code>ds:Object</code> element within the <code>ds:Signature</code> element.
+      </p>
+    </div>
+    <div class="section" id="design">
+      <h2 id="x7.-signature-properties"><span class="secno">7. </span>Signature Properties</h2>
+      <p>
+	This section includes schema definitions and processing
+	rules for <a class="internalDFN" href="#dfn-common-signature-properties" title="Common Signature Properties"> Common Signature
+	Properties</a>. 
+      </p>
+      
+      <p>
+	This section defines a number of signature properties that are expected to be commonly used
+	in profiles.  For each property, an intended processing model is suggested.  However, the
+	details of processing each of these properties will depend upon
+    individual application 
+	scenarios, and <em title="must" class="rfc2119">must</em> be specified in any profile that makes use of
+    the properties defined in 
+	this document.
+      </p>
+      
+    <div class="section" id="profile-property">
+      <h3 id="x7.1-profile-property"><span class="secno">7.1 </span>Profile Property</h3>
+      <p>
+	The Profile Property specifies a URI to be associated with the Signature instance to
+	identify a Profile specification that details how the XML Signature is to be used. This
+	profile may restrict the choice of algorithms, for example, as
+    well as requiring certain 
+	<a class="internalDFN" href="#dfn-common-signature-properties" title="Common Signature Properties">Common Signature
+	Properties</a> and/or other 
+	properties in the signature. 
+      </p>
+      <p>The element has no content, but specifies a URI attribute that is
+      required.</p> 
+<pre class="xml-example">&lt;element name="Profile" type="dsp:ProfileType"/&gt; 
+&lt;complexType name="ProfileType"&gt;
+ &lt;attribute name="URI" type="anyURI"/&gt;
+&lt;/complexType&gt;
+</pre>
+      <div class="section" id="profile-property-generation">
+	<h4 id="x7.1.1-generation"><span class="secno">7.1.1 </span>Generation</h4>
+	<p>Upon Signature generation, if this property is used, the URI
+    attribute value <em title="must" class="rfc2119">must</em>  be set 
+	to a value that can be understood by the relying party.
+      </p>
+      </div>
+      
+      <div class="section" id="profile-property-validation">
+	<h4 id="x7.1.2-validation"><span class="secno">7.1.2 </span>Validation</h4>
+	<p>
+	  Applications are expected to use this property to verify an assertion that a signature is
+	  meant to fulfill a specific profile.  Validation behavior is application-specific.
+	</p>
+	<p>
+	  Profiles <em title="must" class="rfc2119">must</em> specify what application behavior is expected in
+      case an unknown profile URI 
+	  is encountered.
+	</p>
+	<p>
+	  Profiles <em title="must" class="rfc2119">must</em> specify whether profile URIs defined by them can
+      coexist with other 
+	  instances of the profile property element.
+	</p>
+      </div>
+      </div>
+    
+    <div class="section" id="role-property">
+      <h3 id="x7.2-role-property"><span class="secno">7.2 </span>Role Property</h3>
+      <p>
+	The Role Property allows a URI to be associated with the signature
+    to specify an application 
+	specific role for the signature, implying application specific
+    processing steps 
+    related to the signature. 
+      </p>
+      <p>
+	An example might be to indicate that the signer of code is the
+    author or the distributor of that code.
+      </p> 
+	<p>The element has no content, but specifies a URI attribute that
+    is required.</p> 
+<pre class="xml-example">&lt;element name="Role" type="dsp:RoleType"/&gt; 
+
+&lt;complexType name="RoleType"&gt;
+ &lt;attribute name="URI" type="anyURI"/&gt;
+&lt;/complexType&gt;
+</pre>
+	
+	<div class="section" id="role-property-generation">
+	  <h4 id="x7.2.1-generation"><span class="secno">7.2.1 </span>Generation</h4>
+	  <p>
+	    Upon Signature generation, if this property is used, the URI
+        attribute value <em title="must" class="rfc2119">must</em> be 
+	    set to a value that can be understood by the relying party.
+	  </p>
+	</div>
+	
+	<div class="section" id="role-property-validation">
+	  <h4 id="x7.2.2-validation"><span class="secno">7.2.2 </span>Validation</h4>
+	  <p>
+	    Applications are expected to use this property to identify a
+        specific role for a signature (e.g., author or distributor
+        signed).  An unexpected role URI will
+	    frequently be reason for applications to deem a signature
+        invalid.
+        Profiles <em title="must" class="rfc2119">must</em> specify what application behavior is
+        expected in case an unknown 
+	    role URI is encountered, or when several role properties
+        exist on a single signature. 
+	  </p>
+	</div>
+	</div>
+
+<div class="section" id="identifier-property">
+      <h3 id="x7.3-identifier-property"><span class="secno">7.3 </span>Identifier Property</h3>
+      <p>
+	The Identifier Property is intended to
+	enable use cases where a unique identifier needs to be associated
+    with the signature, such as to enable signature management.
+      </p>
+<pre class="xml-example">&lt;element name="Identifier" type="string"/&gt;
+</pre>
+      <p>
+Identifier string values <em title="must" class="rfc2119">must</em> be unique for each signature from a
+given signer and <em title="should" class="rfc2119">should</em>
+be unique across all signers. 
+      </p>
+      
+      <div class="section" id="identifier-property-generation">
+	<h4 id="x7.3.1-generation"><span class="secno">7.3.1 </span>Generation</h4>
+	<p>Upon Signature generation, if this property is used, the value
+is set to a unique value to be associated with the signature for a
+particular signer.
+ </p>
+      </div>
+      
+      <div class="section" id="identifier-property-validation">
+	<h4 id="x7.3.2-validation"><span class="secno">7.3.2 </span>Validation</h4>
+	<p>
+	  Applications are expected to use this property to identify the
+      signature.
+	</p>
+	<p>
+	  Profiles <em title="must" class="rfc2119">must</em> specify details of the identifier property value
+      creation and interpretation.
+	</p>
+	<p>
+      If multiple instances of this property are found on a
+      single signature, then 
+	  applications <em title="must not" class="rfc2119">must not</em> deem any of these properties valid.  
+	</p>
+      </div>
+      </div>
+
+    <div class="section" id="created-property">
+      <h3 id="x7.4-created-property"><span class="secno">7.4 </span>Created Property</h3>
+      <p>
+	The Created Property is intended to
+	enable use cases where the time of signature creation needs to be recorded.
+      </p>
+<pre class="xml-example">&lt;element name="Created" type="dateTime"/&gt;
+</pre>
+      <p>
+	Creation times <em title="must" class="rfc2119">must</em> be given as <em>timezoned</em>
+    values. (See <a href="http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dateTime">section 
+	3.2.7</a> of [<a href="#bib-XMLSCHEMA-2" rel="biblioentry" class="bibref">XMLSCHEMA-2</a>].)
+    This property <em title="must not" class="rfc2119">must not</em> 
+	occur more than once for a given signature. 
+      </p>
+      
+      <div class="section" id="created-property-generation">
+	<h4 id="x7.4.1-generation"><span class="secno">7.4.1 </span>Generation</h4>
+	<p>Upon Signature generation, if this property is used, the time
+    value is set to a reference 
+	time, as defined by the application.  The value of the time does
+    not need to be from a 
+	trusted timestamp authority. The time value needs only be accurate
+    enough for comparison, 
+	as required by the application usage.  The time <em title="should" class="rfc2119">should</em> reflect the
+    time that signature generation completes.
+    </p>
+      </div>
+      
+      <div class="section" id="created-property-validation">
+	<h4 id="x7.4.2-validation"><span class="secno">7.4.2 </span>Validation</h4>
+	<p>
+	  Applications are expected to use this property to identify the
+      creation date of a signature. 
+	  Evaluation of this property is with respect to an application
+      defined reference time 
+	  (possibly wall clock time, possibly a time that is determined
+      otherwise). 
+	</p>
+	<p>
+	  Profiles <em title="must" class="rfc2119">must</em> specify what reference time should be used when
+      interpreting this property. 
+	</p>
+	<p>
+	  A Created property with an <em>untimezoned</em> time value
+      <em title="must not" class="rfc2119">must not</em> be considered 
+	  valid.  If multiple instances of this property are found on a
+      single signature, then 
+	  applications <em title="must not" class="rfc2119">must not</em> deem any of these properties valid.  
+	</p>
+      </div>
+      </div>
+    
+    <div class="section" id="expires-property">
+      <h3 id="x7.5-expires-property"><span class="secno">7.5 </span>Expires Property</h3>
+      <p>
+	The Expires Property is intended to
+	enable use cases where the signature is intended to expire.
+      </p>
+<pre class="xml-example">&lt;element name="Expires" type="dateTime"/&gt;
+</pre>
+      <p>
+	Expiration times <em title="must" class="rfc2119">must</em> be given as <em>timezoned</em> values. (See <a href="http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dateTime">section
+	3.2.7</a> of [<a href="#bib-XMLSCHEMA-2" rel="biblioentry" class="bibref">XMLSCHEMA-2</a>].)
+    This property <em title="must not" class="rfc2119">must not</em> 
+	occur more than once for a given signature.
+      </p>
+      
+      <div class="section" id="expires-property-generation">
+	<h4 id="x7.5.1-generation"><span class="secno">7.5.1 </span>Generation</h4>
+	<p>Upon Signature generation, if this property is used, the time
+    value is set to a reference 
+	time, as defined by the application.  The value of the time does not need to be from a
+	trusted timestamp authority. The time value needs only be accurate enough for comparison,
+	as required by the application usage.  </p>
+      </div>
+      
+      <div class="section" id="expires-property-validation">
+	<h4 id="x7.5.2-validation"><span class="secno">7.5.2 </span>Validation</h4>
+	<p>
+	  Applications are expected to use this property to identify the expiry date of a signature.
+	  Evaluation of this property is with respect to an application defined reference time
+	  (possibly wall clock time, possibly a time that is determined otherwise).  A property
+	  value that is later than the reference time will typically be reason for applications to
+	  deem a signature invalid with respect to the reference time.
+	</p>
+	<p>
+	  Profiles <em title="must" class="rfc2119">must</em> specify what reference time should be used when
+      interpreting this property. 
+	</p>
+	<p>
+	  An expiry property with an <em>untimezoned</em> time value <em title="must not" class="rfc2119">must not</em> be considered
+	  valid.  If multiple instances of this property are found on a single signature, then
+	  applications <em title="must not" class="rfc2119">must not</em> deem any of these properties valid.  
+	</p>
+      </div>
+      </div>
+    
+    <div class="section" id="replay-nonce-property">
+      <h3 id="x7.6-replayprotect-property"><span class="secno">7.6 </span>ReplayProtect Property</h3>
+      <p>
+	To prevent against inappropriate reuse of the signature after its intended use, a replay
+	nonce may be provided. This is a random value that should not be repeated, allowing the
+	verifier to determine that the signature has already been seen. In order to avoid the need
+	to retain nonce values indefinitely, a timestamp is included, indicating that all signatures
+	before that time should be ignored.
+      </p>
+      <p>
+	This property may be used in applications where the signature is used
+	to secure a message or other applications where it should not be
+	reused.
+      </p>
+<pre class="xml-example">&lt;element name="ReplayProtect" type="dsp:ReplayProtectType"/&gt;
+
+&lt;complexType name="ReplayProtectType" &gt;
+  &lt;sequence&gt;
+    &lt;element name="timestamp" type="dateTime"/&gt;
+    &lt;element name="nonce" type="dsp:NonceValueType"/&gt;
+  &lt;/sequence&gt;
+&lt;/complexType&gt;
+
+&lt;complexType name="NonceValueType" &gt;
+  &lt;extension base="string"&gt;
+    &lt;attribute name="EncodingType" type="anyURI"/&gt;
+  &lt;/extension&gt;
+&lt;/complexType&gt;
+</pre>
+      
+      <p>
+	Timestamp values <em title="must" class="rfc2119">must</em> be timezoned.
+      </p>
+      
+      <div class="section" id="replay-nonce-property-generation">
+	<h4 id="x7.6.1-generation"><span class="secno">7.6.1 </span>Generation</h4>
+	
+	<p>
+	  Upon Signature generation, if this property is used, the nonce value <em title="must" class="rfc2119">must</em> be set to a
+	  previously unused random value and the timestamp <em title="must" class="rfc2119">must</em> be set to a time before which the
+	  signature is determined to no longer be valid (and for which nonces need not be
+	  maintained).
+	</p>
+      </div>
+      
+      <div class="section" id="replay-nonce-property-validation">
+	<h4 id="x7.6.2-validation"><span class="secno">7.6.2 </span>Validation</h4>
+	
+	<p>
+	  If timestamp values are untimezoned, validation fails.
+	</p>
+	<p>
+	  Validation succeeds when the relying party is able to determine that the nonce in the
+	  property has not been seen before and the current time is after the timestamp recorded in
+	  the ReplayProtect property. Otherwise validation fails.
+	</p>
+	<p>
+	  Behavior of applications when an invalid property is encountered is application-specific.
+	</p>
+      </div>
+    </div>
+    </div>
+  <div class="section" id="schema">
+    <h2 id="x8.-schema"><span class="secno">8. </span>Schema</h2>
+  <div class="section" id="xsdschema">
+      <h3 id="x8.1-xsd-schema-and-valid-example"><span class="secno">8.1 </span>XSD Schema and Valid Example</h3>
+<dl>
+<dt>Signature Properties XSD Schema Instance</dt>
+<dd>
+<a href="xmldsig-properties-schema.xsd">xmldsig-properties-schema.xsd</a>
+<p>Valid XML Schema instance based on the XML Schema
+[<a href="#bib-XMLSCHEMA-1" rel="biblioentry" class="bibref">XMLSCHEMA-1</a>], [<a href="#bib-XMLSCHEMA-2" rel="biblioentry" class="bibref">XMLSCHEMA-2</a>].</p>
+</dd> 
+<dt>Signature Properties 1.1 Schema Driver</dt>
+<dd>
+<a href="xmldsig1-properties-schema.xsd">xmldsig1-properties-schema.xsd</a>
+<p>This schema instance binds together the XML Signature Core XML Schema
+instance, the XML Signature 1.1 XML Schema instance and the XML Signature
+Properties XML Schema instance.</p> 
+</dd> 
+          <dt>XML Security Signature Properties Example</dt>
+          <dd>
+            <a href="sp-example.xml">sp-example.xml</a>
+            <p>A cryptographically fabricated XML Signature Properties
+            example that validates 
+            under the schema.</p>
+          </dd>
+</dl>
+  </div>
+  <div id="rngschema" class="informative section">
+    <h3 id="x8.2-rng-schema"><span class="secno">8.2 </span>RNG Schema</h3><p><em>This section is non-normative.</em></p>
+Non-normative RELAX NG schema [<a href="#bib-RELAXNG-SCHEMA" rel="biblioentry" class="bibref">RELAXNG-SCHEMA</a>] information is
+  available in a separate document [<a href="#bib-XMLSEC-RELAXNG" rel="biblioentry" class="bibref">XMLSEC-RELAXNG</a>].
+</div>
+  </div>
+  <div class="section" id="thanks">
+    <h2 id="x9.-acknowledgments"><span class="secno">9. </span>Acknowledgments</h2>
+    <p>
+The Working Group thanks Mark Priestley, Vodafone, and Marcos Caceres,
+Opera Software, of 
+the <acronym title="World Wide Web Consortium">W3C</acronym> Web Applications Working Group for requirements discussions
+related to widget signing, and thanks Makoto Murata for assistance with the
+  RELAX NG schema.
+    </p>
+	<p> Contributions received from the members of the XML Security Working
+	      Group: Scott Cantor, Juan Carlos Cruellas, Pratik Datta, Gerald Edgar,
+	      Ken Graf, Phillip Hallam-Baker, Brad Hill, Frederick Hirsch, Brian LaMacchia, Konrad Lanz, Hal Lockhart, Cynthia Martin, Rob
+	      Miller, Sean Mullan, Shivaram Mysore, Magnus Nyström, Bruce Rich, Thomas
+	      Roessler, Ed Simon, Chris Solc, John Wray,
+	      Kelvin Yiu. </p>
+	 
+  </div>
+<div class="appendix section" id="references"><h2 id="a.-references"><span class="secno">A. </span>References</h2><p>Dated references below are to the latest known or appropriate edition of the referenced work.  The referenced works may be subject to revision, and conformant implementations may follow, and are encouraged to investigate the appropriateness of following, some or all more recent editions or replacements of the works cited. It is in each case implementation-defined which  editions are supported.</p><div class="section" id="normative-references"><h3 id="a.1-normative-references"><span class="secno">A.1 </span>Normative references</h3><dl class="bibliography"><dt id="bib-RFC2119">[RFC2119]</dt><dd>S. Bradner. <a href="http://www.ietf.org/rfc/rfc2119.txt"><cite>Key words for use in RFCs to Indicate Requirement Levels.</cite></a> Internet RFC 2119. URL: <a href="http://www.ietf.org/rfc/rfc2119.txt">http://www.ietf.org/rfc/rfc2119.txt</a> </dd><dt id="bib-URI">[URI]</dt><dd>T. Berners-Lee; R. Fielding; L. Masinter. <a href="http://www.ietf.org/rfc/rfc3986.txt"><cite>Uniform Resource Identifiers (URI): generic syntax.</cite></a> January 2005. Internet RFC 3986. URL: <a href="http://www.ietf.org/rfc/rfc3986.txt">http://www.ietf.org/rfc/rfc3986.txt</a> </dd><dt id="bib-XML-NAMES">[XML-NAMES]</dt><dd>Richard Tobin; et al. <a href="http://www.w3.org/TR/2006/REC-xml-names-20060816/"><cite>Namespaces in XML 1.0 (Second Edition).</cite></a> 16 August 2006. W3C Recommendation. URL: <a href="http://www.w3.org/TR/2006/REC-xml-names-20060816/">http://www.w3.org/TR/2006/REC-xml-names-20060816/</a> </dd><dt id="bib-XMLDSIG-CORE1">[XMLDSIG-CORE1]</dt><dd>David Solo; et al. <a href="http://www.w3.org/TR/2010/WD-xmldsig-core1-20100204/"><cite>XML Signature Syntax and Processing Version 1.1.</cite></a> 4 February 2010. W3C Working Draft. (Work in progress.) URL: <a href="http://www.w3.org/TR/2010/WD-xmldsig-core1-20100204/">http://www.w3.org/TR/2010/WD-xmldsig-core1-20100204/</a> </dd><dt id="bib-XMLSCHEMA-1">[XMLSCHEMA-1]</dt><dd>Henry S. Thompson; et al. <a href="http://www.w3.org/TR/2004/REC-xmlschema-1-20041028/"><cite>XML Schema Part 1: Structures Second Edition.</cite></a> 28 October 2004. W3C Recommendation. URL: <a href="http://www.w3.org/TR/2004/REC-xmlschema-1-20041028/">http://www.w3.org/TR/2004/REC-xmlschema-1-20041028/</a> </dd><dt id="bib-XMLSCHEMA-2">[XMLSCHEMA-2]</dt><dd>Paul V. Biron; Ashok Malhotra. <a href="http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/"><cite>XML Schema Part 2: Datatypes Second Edition.</cite></a> 28 October 2004. W3C Recommendation. URL: <a href="http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/">http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/</a> </dd></dl></div><div class="section" id="informative-references"><h3 id="a.2-informative-references"><span class="secno">A.2 </span>Informative references</h3><dl class="bibliography"><dt id="bib-RELAXNG-SCHEMA">[RELAXNG-SCHEMA]</dt><dd><a href="http://standards.iso.org/ittf/PubliclyAvailableStandards/index.html"><cite>Information technology -- Document Schema Definition Language (DSDL) -- Part 2: Regular-grammar-based validation -- RELAX NG</cite></a>. ISO/IEC 19757-2:2008. URI: <a href="http://standards.iso.org/ittf/PubliclyAvailableStandards/index.html">http://standards.iso.org/ittf/PubliclyAvailableStandards/index.html</a></dd><dt id="bib-XML10">[XML10]</dt><dd>C. M. Sperberg-McQueen; et al. <a href="http://www.w3.org/TR/2008/PER-xml-20080205/"><cite>Extensible Markup Language (XML) 1.0 (Fifth Edition).</cite></a> 10 February 1998. W3C Proposed Edited Recommendation. Revised 5 February 2008 URL: <a href="http://www.w3.org/TR/2008/PER-xml-20080205/">http://www.w3.org/TR/2008/PER-xml-20080205/</a> </dd><dt id="bib-XMLSEC-RELAXNG">[XMLSEC-RELAXNG]</dt><dd>Frederick Hirsch, Thomas Roessler. <a href="http://www.w3.org/TR/2010/WD-xmlsec-rngschema-20100204/"><cite>XML Security RELAX NG Schemas.</cite></a> 4 February 2010. W3C Working Draft. (Work in progress.) URL: <a href="http://www.w3.org/TR/2010/WD-xmlsec-rngschema-20100204/">http://www.w3.org/TR/2010/WD-xmlsec-rngschema-20100204/</a></dd></dl></div></div></body></html>

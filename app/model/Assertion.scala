@@ -7,7 +7,7 @@ package org.w3.vs.model
 case class Assertion(events: Seq[Event]) {
 
   /** having no errors means having no event with severity as 'error' */
-  def hasError:Boolean =
+  def hasError: Boolean =
     events exists { event => event.severity == "error" }
 
   def errorsNumber: Int =
