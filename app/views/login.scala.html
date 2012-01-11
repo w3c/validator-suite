@@ -1,0 +1,38 @@
+@(form: Form[(String,String)])(implicit flash: Flash)
+
+@main("Validator Suite") {
+  @views.html.header()
+        
+        @helper.form(routes.Application.authenticate) {
+            
+            @form.globalError.map { error =>
+                <p class="error">
+                    @error.message
+                </p>
+            }
+            
+            @flash.get("success").map { message =>
+                <p class="success">
+                    @message
+                </p>
+            }
+            
+            <p>
+                <input type="email" name="email" placeholder="Email" value="@form("email").value">
+            </p>
+            <p>
+                <input type="password" name="password" placeholder="Password">
+            </p>
+            <p>
+                <button type="submit">Login</button>
+            </p>
+            
+        }
+        
+        <p class="note">
+            Default users: tgambet@@w3.org:secret, bertails@@w3.org:secret
+        </p>
+            
+}
+
+
