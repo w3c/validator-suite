@@ -1,4 +1,4 @@
-@(user: org.w3.vs.model.User = null)(messages: Seq[String] = Seq[String]())
+@(user: Option[org.w3.vs.model.User] = None, messages: Seq[String] = Seq[String]())
 
 @main("Validator Suite") {
   @views.html.header(user)

@@ -1,4 +1,4 @@
-@(user: org.w3.vs.model.User = null)
+@(user: Option[org.w3.vs.model.User] = None)
 	<header> 
 		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="vsLogo" viewBox="0 0 400 450">
 			<style type="text/css">
@@ -18,8 +18,8 @@
 		</svg>
 		<h1><a href="/"><span>Validator</span> <span>Suite</span></a></h1>
 		<div id="admin">
-		@if(user != null) {
-			<span>Logged in as @user.name</span> | <a href="@routes.Application.logout">logout</a>
+		@if(user.isDefined) {
+			<span>Logged in as @user.get.name</span> | <a href="@routes.Application.logout">logout</a>
 		} else {
 			<a href="@routes.Application.login">login</a>
 		}

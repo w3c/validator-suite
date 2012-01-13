@@ -50,7 +50,7 @@ object Validator extends Controller with Secured {
   
   def index = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { user =>
-      Ok(views.html.index(user)())
+      Ok(views.html.index(Some(user)))
     }.getOrElse(
       //Redirect(routes.Application.login)
       Unauthorized
@@ -100,9 +100,9 @@ object Validator extends Controller with Secured {
         val observerId = ObserverId(id)
         Observer.byObserverId(observerId).map { observer =>
           Redirect("/#!/observation/" + id)
-        }.getOrElse(NotFound(views.html.index(user)(Seq("Unknown action id: " + observerId.toString))))
+        }.getOrElse(NotFound(views.html.index(Some(user), Seq("Unknown action id: " + observerId.toString))))
       } catch { case e =>
-        NotFound(views.html.index(null)(Seq("Invalid action id: " + id)))
+        NotFound(views.html.index(None, Seq("Invalid action id: " + id)))
       }
     }.getOrElse(Forbidden)
   }
