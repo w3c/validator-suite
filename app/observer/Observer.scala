@@ -18,44 +18,6 @@ import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
 import play.api.libs.iteratee.CallbackEnumerator
 
-object Observer {
-  
-  val registry = Map[ObserverId, Observer]()
-  
-  def byObserverId(observerId: ObserverId): Option[Observer] =
-    registry.get(observerId)
-  
-  val observerParent: ActorRef = {
-    GlobalSystem.system.actorOf(Props(new Actor {
-      def receive = { 
-        case (observerId: ObserverId, strategy: Strategy, assertorPicker: AssertorPicker) =>
-          sender ! TypedActor(context).typedActorOf(
-            classOf[Observer],
-            new ObserverImpl(assertorPicker, observerId, strategy) with ObserverSubscribers,
-            Props(),
-            observerId.toString())
-      }
-    }), name = "/observer")
-  }
-  
-  def newObserver(
-      observerId: ObserverId,
-      strategy: Strategy,
-      assertorPicker: AssertorPicker = SimpleAssertorPicker,
-      timeout: Duration = 10.second): Observer = {
-    val obs = observerParent
-      .?((observerId, strategy, assertorPicker))(10 seconds)
-      .value
-      .get
-      .right
-      .get
-      .asInstanceOf[Observer]
-    registry += (observerId -> obs)
-    obs
-  }
-
-}
-
 /**
  * An Observer is the unity of action that implements
  * the Exploration and Assertion phases

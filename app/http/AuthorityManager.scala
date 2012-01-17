@@ -10,6 +10,8 @@ import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
 import org.w3.vs.model.ObserverId
+import org.w3.vs.GlobalSystem
+import org.w3.vs.GlobalSystem
 
 trait AuthorityManager {
   def GET(url: URL, distance: Int, actionManagerId: String): Unit
@@ -44,7 +46,8 @@ extends AuthorityManager with TypedActor.PostStop {
     lastFetchTimestamp = current
   }
   
-  def observer(observerId: String) = Observer.byObserverId(ObserverId(observerId)).get
+  def observer(observerId: String) =
+    GlobalSystem.observerCreator.byObserverId(ObserverId(observerId)).get
   
   def GET(url: URL, distance: Int, observerId: String): Unit = sleepIfNeeded {
     val f = Http.GET(client, url) onSuccess {

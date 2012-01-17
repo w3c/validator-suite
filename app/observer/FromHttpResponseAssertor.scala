@@ -38,7 +38,7 @@ class FromHttpResponseAssertorImpl private[observer] (
     observerId: ObserverId,
     assertorPicker: AssertorPicker) extends FromHttpResponseAssertor {
   
-  val observer: Observer = Observer.byObserverId(observerId).get
+  val observer: Observer = GlobalSystem.observerCreator.byObserverId(observerId).get
   
   /**
    * - Pick the assertors based on the content-type

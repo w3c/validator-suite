@@ -10,10 +10,12 @@ object Global extends GlobalSettings {
   val logger = play.Logger.of("Global")
   
   override def onStart(app: Application) {
+    org.w3.vs.GlobalSystem.init()
     logger.debug(User.findAll.toString)
     InitialData.insert()
     logger.debug(User.findAll.toString)
   }
+  
   
 }
 

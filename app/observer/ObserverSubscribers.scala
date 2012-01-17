@@ -85,7 +85,7 @@ trait ObserverSubscribers extends ObserverImpl {
       classOf[ObserverSubscriber],
       subscriber,
       Props(),
-      null)
+      java.util.UUID.randomUUID().toString)
   }
 }
 

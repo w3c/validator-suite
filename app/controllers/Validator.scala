@@ -14,6 +14,7 @@ import org.w3.vs.model._
 import org.w3.vs.observer._
 import play.api.data.FormError
 import play.api.mvc.AsyncResult
+import org.w3.vs.GlobalSystem
 
 import play.api.libs._
 import play.api.libs.iteratee._
@@ -73,7 +74,7 @@ object Validator extends Controller with Secured {
     
     val observerId: ObserverId = ObserverId()
     
-    val observer = Observer.newObserver(observerId, strategy)
+    val observer = GlobalSystem.observerCreator.observerOf(observerId, strategy)
     
     observer.startExplorationPhase()
     
@@ -97,7 +98,7 @@ object Validator extends Controller with Secured {
     User.findByEmail(username).map { user =>
       try {
         val observerId = ObserverId(id)
-        Observer.byObserverId(observerId).map { observer =>
+        GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
           Redirect("/#!/observation/" + id)
         }.getOrElse(NotFound(views.html.index(Some(user), Seq("Unknown action id: " + observerId.toString))))
       } catch { case e =>
@@ -110,7 +111,7 @@ object Validator extends Controller with Secured {
     User.findByEmail(username).map { user =>
       try {
         val observerId = ObserverId(id)
-        Observer.byObserverId(observerId).map { observer =>
+        GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
           observer.stop()
           Ok
         }.getOrElse(NotFound)
@@ -124,7 +125,7 @@ object Validator extends Controller with Secured {
     User.findByEmail(username).map { user =>
       try {
         val observerId = ObserverId(id)
-        Observer.byObserverId(observerId).map { observer =>
+        GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
           AsyncResult {
             val ce = new CallbackEnumerator[String] { }
             val subscriber = observer.subscriberOf(new Subscriber(ce, observer))
