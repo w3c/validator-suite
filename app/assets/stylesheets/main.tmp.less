@@ -1,4 +1,5 @@
-@import '_theme.less';
+@import 'libs/_reset.less';
+@import 'libs/_theme.less';
 
 header {
 	
@@ -28,9 +29,6 @@ header {
 		a:active {
 			outline: none;
 		}
-		a:* {
-			outline: none;
-		}
 		span:first-child {
 			font-weight: bold;
 			text-transform: uppercase;
@@ -52,3 +50,5 @@ header {
 		padding-top: @headerHeight - @smallSpacing - 12px;
 	}
 }
+
+
