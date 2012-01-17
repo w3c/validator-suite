@@ -2,8 +2,7 @@ package org.w3.vs
 
 import akka.actor.ActorSystem
 import akka.actor.TypedActor
-import http.Http
-import http.HttpImpl
+import org.w3.vs.http.{Http, HttpImpl}
 import akka.actor.Props
 import org.w3.vs.observer._
 import org.w3.vs.model._
@@ -13,7 +12,8 @@ import akka.util.Duration
 
 trait ObserverCreator {
   def byObserverId(observerId: ObserverId): Option[Observer]
-  def observerOf(observerId: ObserverId,
+  def observerOf(
+    observerId: ObserverId,
     strategy: Strategy,
     assertorPicker: AssertorPicker = SimpleAssertorPicker,
     timeout: Duration = 10.second): Observer
@@ -33,7 +33,7 @@ class ObserverCreatorImpl extends ObserverCreator {
       timeout: Duration = 10.second): Observer = {
     val obs = TypedActor(TypedActor.context).typedActorOf(
       classOf[Observer],
-      new ObserverImpl(assertorPicker, observerId, strategy) with ObserverSubscribers,
+      new ObserverImpl(assertorPicker, observerId, strategy),
       Props(),
       observerId.toString())
     registry += (observerId -> obs)

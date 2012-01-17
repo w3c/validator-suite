@@ -3,9 +3,12 @@ package org.w3.vs.observer
 import org.w3.util._
 import org.w3.util.website._
 import org.w3.vs.model._
-import akka.util.Duration
-import java.util.concurrent.TimeUnit._
 import org.specs2.mutable.Specification
+import org.w3.vs.GlobalSystem
+import akka.dispatch.Await
+import akka.util.duration._
+import akka.util.Duration
+import java.util.concurrent.TimeUnit.SECONDS
 
 /**
   * Server 1 -> Server 2
@@ -27,10 +30,13 @@ object SimpleInterWebsiteTest extends Specification {
       unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
   )
 
-  "test simpleInterWebsite" in new ObserverScope(servers) {
-    val observer = newObserver(strategy, timeout = Duration(1, SECONDS))
+  GlobalSystem.init()
+
+  "test simpleInterWebsite" in new ObserverScope(servers)(GlobalSystem.system) {
+    val observer =
+      GlobalSystem.observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(1, SECONDS))
     observer.startExplorationPhase()
-    val urls = observer.URLs().get
+    val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     assert(urls.size === 2)
   }
 
