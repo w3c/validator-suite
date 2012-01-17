@@ -57,7 +57,7 @@ var VS = {
           console.log('success');
         }
       });*/
-      jsRoutes.controllers.Application.stop(VS.currentActionId).ajax({
+      jsRoutes.controllers.Validator.stop(VS.currentActionId).ajax({
         success: function() {
           VS.formValidateAction();
         }

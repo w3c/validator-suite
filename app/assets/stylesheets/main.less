@@ -1,0 +1,54 @@
+@import 'libs/_reset.less';
+@import 'libs/_theme.less';
+
+header {
+	
+	background: @headerBgColor;
+	height: @headerHeight;
+	text-align: right;
+	border-bottom: @borderSize solid @borderColor;
+	font-size: 16px;
+	
+	svg {
+		width: @headerHeight - @smallSpacing;
+		height: @headerHeight - @smallSpacing;
+		float: left;
+		margin: @smallSpacing 0 0 @smallSpacing;
+	}
+	
+	h1 {
+		font-size: (@headerHeight - @smallSpacing) / 3.5px;
+		margin-top: (@headerHeight - @smallSpacing) / 3.5 + 1px;
+		float: left;
+		text-align: left;
+		
+		a {
+			text-decoration: none;
+			color: inherit;
+		}
+		a:active {
+			outline: none;
+		}
+		span:first-child {
+			font-weight: bold;
+			text-transform: uppercase;
+		}
+		span:nth-child(2) {
+			font-family: serif;
+			display: block;
+			font-style: italic;
+			font-size: 0.95em;
+			position: relative;
+			left: -7px;
+			top: -2px;
+		}
+	}
+	
+	#admin {
+		font-size: 12px;
+		padding-right: @smallSpacing;
+		padding-top: @headerHeight - @smallSpacing - 12px;
+	}
+}
+
+
