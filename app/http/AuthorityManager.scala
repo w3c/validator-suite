@@ -3,13 +3,13 @@ package org.w3.vs.http
 import com.ning.http.client._
 import akka.actor._
 import akka.dispatch._
-import akka.event.EventHandler
 import org.w3.util._
 import org.w3.vs.observer._
 import akka.util.Duration
 import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
+import org.w3.vs.model.ObserverId
 
 trait AuthorityManager {
   def GET(url: URL, distance: Int, actionManagerId: String): Unit
@@ -21,21 +21,13 @@ trait AuthorityManager {
 class AuthorityManagerImpl private[http] (
   authority: Authority,
   client: AsyncHttpClient)
-extends TypedActor with AuthorityManager {
+extends AuthorityManager with TypedActor.PostStop {
   
   val logger = Logger.of(classOf[AuthorityManager])
-  
-  self.id = authority
   
   var _sleepTime: Long = 1000L
   
   var lastFetchTimestamp = 0L
-  
-  def actionManager(actionManagerId: String): Observer =
-    Actor.registry.typedActorsFor(actionManagerId).head.asInstanceOf[Observer]
-  
-  def exception(url: URL) =
-    new FutureTimeoutException("fetching %s took too long" format url)
   
   def sleepTime = _sleepTime
   
@@ -43,45 +35,52 @@ extends TypedActor with AuthorityManager {
     _sleepTime = value
   }
   
-  def GET(url: URL, distance: Int, actionManagerId: String): Unit = {
+  def sleepIfNeeded(body: => Unit): Unit = {
     val current = currentTimeMillis()
     val needToSleep = _sleepTime - (current - lastFetchTimestamp)
     if (needToSleep > 0)
       Thread.sleep(needToSleep)
-    val f = Http.GET(client, url) onResult {
-      case r: GETResponse =>
-        actionManager(actionManagerId).sendGETResponse(url, r)
-    } onException {
-      case t: Throwable =>
-        actionManager(actionManagerId).sendException(url, t)
-    } onTimeout {
-      f => actionManager(actionManagerId).sendException(url, exception(url))
-    }
-    f.await
+    body
     lastFetchTimestamp = current
   }
   
-  def HEAD(url: URL, actionManagerId: String): Unit = {
-    val f = Http.HEAD(client, url) onResult {
-      case r: HEADResponse =>
-        actionManager(actionManagerId).sendHEADResponse(url, r)
-    } onException {
+  def observer(observerId: String) = Observer.byObserverId(ObserverId(observerId)).get
+  
+  def GET(url: URL, distance: Int, observerId: String): Unit = sleepIfNeeded {
+    val f = Http.GET(client, url) onSuccess {
+      case r: GETResponse =>
+        observer(observerId).sendGETResponse(url, r)
+    } onFailure {
       case t: Throwable =>
-        actionManager(actionManagerId).sendException(url, t)
-    } onTimeout {
-      f => actionManager(actionManagerId).sendException(url, exception(url))
+        observer(observerId).sendException(url, t)
     }
-    f.await
-    Thread.sleep(sleepTime)
+    try {
+      Await.result(f, 10 seconds)
+    } catch {
+      case te: java.util.concurrent.TimeoutException =>
+        observer(observerId).sendException(url, te)
+    }
+  }
+  
+  def HEAD(url: URL, observerId: String): Unit = sleepIfNeeded {
+    val f = Http.HEAD(client, url) onSuccess {
+      case r: HEADResponse =>
+        observer(observerId).sendHEADResponse(url, r)
+    } onFailure {
+      case t: Throwable =>
+        observer(observerId).sendException(url, t)
+    }
+    try {
+      Await.result(f, 10 seconds)
+    } catch {
+      case te: java.util.concurrent.TimeoutException =>
+        observer(observerId).sendException(url, te)
+    }
   }
   
   override def postStop = {
     logger.debug("%s: stopping manager" format authority)
   }
-  
-  override def unhandled (msg: Any): Unit = {
-    logger.debug("received " + msg)
-  } 
   
 }
 

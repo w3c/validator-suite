@@ -6,7 +6,6 @@ import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import com.ning.http.client._
 import akka.actor._
 import akka.dispatch._
-import akka.event.EventHandler
 import org.w3.util._
 import akka.util.Duration
 import akka.util.duration._
@@ -21,37 +20,40 @@ trait Http {
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
  */
-private[http] class HttpImpl extends TypedActor with Http {
+class HttpImpl extends Http with TypedActor.PostStop {
 
+  import TypedActor.dispatcher
+  
   val logger = Logger.of(classOf[Http])
   
   val asyncHttpClient = Http.makeClient(2 seconds)
-
-  val authorityManagerDispatcher =
-    Dispatchers.newExecutorBasedEventDrivenDispatcher("authority-manager")
-            .withNewThreadPoolWithLinkedBlockingQueueWithCapacity(100)
-            .setCorePoolSize(8)
-            .setMaxPoolSize(8)
-            .setKeepAliveTime(4 seconds)
-            .setRejectionPolicy(new CallerRunsPolicy)
-            .build
-    
-  val configuration =
-    TypedActorConfiguration(3000).dispatcher(authorityManagerDispatcher)
-    
-  def authorityManagerFor(url: URL): AuthorityManager = {
-    val authority = url.authority
-    Actor.registry.typedActorsFor(authority).headOption match {
-      case Some(authorityManager) => authorityManager.asInstanceOf[AuthorityManager]
-      case None => {
-        val authorityManager =
-          TypedActor.newInstance(
-            classOf[AuthorityManager],
-            new AuthorityManagerImpl(authority, asyncHttpClient),
-            configuration)
-        TypedActor.link(context.getSelf, authorityManager)
-        authorityManager
-      }
+  
+//  val authorityManagerDispatcher =
+//    Dispatchers.newExecutorBasedEventDrivenDispatcher("authority-manager")
+//            .withNewThreadPoolWithLinkedBlockingQueueWithCapacity(100)
+//            .setCorePoolSize(8)
+//            .setMaxPoolSize(8)
+//            .setKeepAliveTime(4 seconds)
+//            .setRejectionPolicy(new CallerRunsPolicy)
+//            .build
+  
+//  val configuration =
+//    TypedActorConfiguration(3000).dispatcher(authorityManagerDispatcher)
+  
+  var registry = Map[Authority, AuthorityManager]()
+  
+  def authorityManagerFor(url: URL): AuthorityManager =
+    authorityManagerFor(url.authority)
+  
+  def authorityManagerFor(authority: Authority): AuthorityManager = {
+    registry.get(authority).getOrElse {
+      val authorityManager = TypedActor(TypedActor.context).typedActorOf(
+        classOf[AuthorityManager],
+        new AuthorityManagerImpl(authority, asyncHttpClient),
+        Props(),
+        authority)
+      registry += (authority -> authorityManager)
+      authorityManager
     }
   }
   
@@ -62,23 +64,13 @@ private[http] class HttpImpl extends TypedActor with Http {
     authorityManagerFor(url).HEAD(url, actionManagerId)
   
   override def postStop = {
-    val managers =
-      Actor.registry.typedActorsFor[AuthorityManager]
-    logger.debug(managers.size + " AuthorityManagers to be stopped")
-    managers foreach { TypedActor.stop(_) }
     logger.debug("closing asyncHttpClient")
     asyncHttpClient.close()
   }
-    
+  
 }
 
 object Http {
-  
-  def getInstance(): Http =
-    TypedActor.newInstance(
-      classOf[Http],
-      new HttpImpl,
-      2.seconds.toMillis)
   
   // This field is just used for debug/logging/testing
   val httpInFlight = new AtomicInteger(0)
@@ -114,7 +106,10 @@ object Http {
       u,
       { (status: Int, headers: Headers, _) => HEADResponse(status, headers) }
     )
-      
+  
+  import TypedActor.dispatcher
+
+    
   private[http] def fetchURL[T <: HttpOutgoing](
     asyncHttpClient: AsyncHttpClient,
     prepare: String => AsyncHttpClient#BoundRequestBuilder,
@@ -123,10 +118,11 @@ object Http {
       
       // timeout the Akka future 50ms after we'd have timed out the request anyhow,
       // gives us 50ms to parse the response
-      val future =
-        new DefaultCompletableFuture[T](
-          asyncHttpClient.getConfig().getRequestTimeoutInMs() + 50,
-          TimeUnit.MILLISECONDS)
+      val promise = Promise[T]()
+      
+//        new DefaultCompletableFuture[T](
+//          asyncHttpClient.getConfig().getRequestTimeoutInMs() + 50,
+//          TimeUnit.MILLISECONDS)
       
       val httpHandler: AsyncHandler[Unit] = new AsyncHandler[Unit]() {
         
@@ -146,14 +142,14 @@ object Http {
               body
             } catch {
               case t: Throwable => {
-                EventHandler.debug(this, t.getMessage)
-                future.completeWithException(t)
+                //EventHandler.debug(this, t.getMessage)
+                promise.failure(t)
                 throw t // rethrow for benefit of AsyncHttpClient
               }
             } finally {
               finished = true
               httpInFlight.decrementAndGet()
-              assert(future.isCompleted)
+              assert(promise.isCompleted)
             }
           }
         }
@@ -196,13 +192,13 @@ object Http {
             
             val body = response.getResponseBody()
             
-            future.completeWithResult(f(response.getStatusCode(), headers, body))
+            promise.success(f(response.getStatusCode(), headers, body))
           }
         }
       }
       
       prepare(u.toExternalForm()).execute(httpHandler)
-      future
+      promise
     }
 
 }

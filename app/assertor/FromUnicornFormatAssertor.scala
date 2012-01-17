@@ -4,11 +4,14 @@ import org.w3.vs.model._
 import com.codecommit.antixml._
 import scala.io.Source
 import akka.dispatch._
+import akka.actor.TypedActor
 
 /** An Assertor that reads [[http://code.w3.org/unicorn/wiki/Documentation/Observer/Response ObservationResponse]]s from [[scala.io.Source]]s
  */
 trait FromUnicornFormatAssertor extends FromSourceAssertor {
 
+  import TypedActor.dispatcher
+  
   def assert(source:Source): Future[Assertion] = Future {
     val response:Elem = XML.fromSource(source)
     val obversationRef = response.attrs get "ref" getOrElse sys.error("malformed xml")

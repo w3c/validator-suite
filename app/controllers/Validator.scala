@@ -9,7 +9,6 @@ import play.api.data.format.Formatter
 import play.api.mvc.Request
 import java.net.URI
 import java.util.UUID
-import akka.actor.{ActorRef, Actor, Scheduler, UntypedChannel, TypedActor}
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
@@ -128,7 +127,7 @@ object Validator extends Controller with Secured {
         Observer.byObserverId(observerId).map { observer =>
           AsyncResult {
             val ce = new CallbackEnumerator[String] { }
-            val subscriber = TypedActor.newInstance(classOf[ObserverSubscriber], new Subscriber(ce, observer)) //new Subscriber(ce, observer)
+            val subscriber = observer.subscriberOf(new Subscriber(ce, observer))
             Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")).withHeaders("X-VS-ActionID" -> id))
           }
         }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))
@@ -138,24 +137,6 @@ object Validator extends Controller with Secured {
         NotFound(views.html.cometError(Seq("Invalid action id: " + id)))
       }
     }.getOrElse(Forbidden)
-  }
-  
-}
-
-class Subscriber(
-    callback: CallbackEnumerator[String],
-    observer: Observer)
-    extends TypedActor with ObserverSubscriber {
-  
-  subscribe()
-  
-  // subscribes to the actionManager at instantiation time
-  def subscribe(): Unit = observer.subscribe(this)
-  
-  def unsubscribe(): Unit = observer.unsubscribe(this)
-  
-  def broadcast(msg: String): Unit = {
-    callback.push(msg)
   }
   
 }

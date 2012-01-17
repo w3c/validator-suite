@@ -13,14 +13,15 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import play.Logger
 
 object FromHttpResponseAssertor {
-  def newInstance(
-      observerId: ObserverId,
-      assertorPicker: AssertorPicker) = {
-    TypedActor.newInstance(
-      classOf[FromHttpResponseAssertor],
-      new FromHttpResponseAssertorImpl(observerId, assertorPicker),
-      3.seconds.toMillis)
-  }
+//  def newInstance(
+//      observerId: ObserverId,
+//      assertorPicker: AssertorPicker) = {
+//    TypedActor(Global.system).typedActorOf(
+//      classOf[FromHttpResponseAssertor],
+//      new FromHttpResponseAssertorImpl(observerId, assertorPicker),
+//      Props()
+//      "")
+//  }
 }
 
 /**
@@ -35,7 +36,7 @@ trait FromHttpResponseAssertor {
  */
 class FromHttpResponseAssertorImpl private[observer] (
     observerId: ObserverId,
-    assertorPicker: AssertorPicker) extends TypedActor with FromHttpResponseAssertor {
+    assertorPicker: AssertorPicker) extends FromHttpResponseAssertor {
   
   val observer: Observer = Observer.byObserverId(observerId).get
   
@@ -55,34 +56,36 @@ class FromHttpResponseAssertorImpl private[observer] (
       for {
         assertor <- assertors
       } {
-        val f = assertor.assert(url) onResult {
+        val f = assertor.assert(url) onSuccess {
             case observation =>
               observer.sendAssertion(
                   url,
                   assertor.id,
                   observation,
                   numberOfAssertors)
-          } onException {
+          } onFailure {
             case t: Throwable =>
               observer.sendAssertionError(
                   url,
                   assertor.id,
                   t,
                   numberOfAssertors)
-          } onTimeout {
-            f =>
+          }
+          try {
+            Await.result(f, 10 seconds)
+          } catch {
+            case te: java.util.concurrent.TimeoutException =>
               observer.sendAssertionError(
                   url,
                   assertor.id,
                   exception(url, assertor),
                   numberOfAssertors)
           }
-        f.await
       }
   }
   
   def exception(url: URL, assertor: Assertor) =
-    new FutureTimeoutException("observing %s with %s took too long" format (url, assertor.id))
+    new ActorTimeoutException("observing %s with %s took too long" format (url, assertor.id))
   
 }
 

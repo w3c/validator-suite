@@ -9,7 +9,6 @@ import play.api.data.format.Formatter
 import play.api.mvc.Request
 import java.net.URI
 import java.util.UUID
-import akka.actor.{ActorRef, Actor, Scheduler, UntypedChannel, TypedActor}
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._

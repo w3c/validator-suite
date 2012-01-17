@@ -10,16 +10,16 @@ import java.util.concurrent.TimeUnit._
 import org.specs2.mutable._
 import org.specs2.specification.Example
 import org.specs2.specification.Scope
+import org.w3.vs.Global
+import akka.actor.ActorSystem
 
 /**
  * helper trait that can be used to test Observers
  * Be careful: all TypedActors are stopped after each test
  */
-class ObserverScope(servers: Seq[unfiltered.util.RunnableServer]) extends Scope with BeforeAfter with TestKit {
+class ObserverScope(servers: Seq[unfiltered.util.RunnableServer])(system: ActorSystem) extends TestKit(system) with Scope with BeforeAfter {
   
   val logger = play.Logger.of(classOf[ObserverScope])
-  
-  lazy val http = Http.getInstance()
   
   var observers = Seq[Observer]()
   
@@ -30,7 +30,8 @@ class ObserverScope(servers: Seq[unfiltered.util.RunnableServer]) extends Scope 
   
   override def after: Any = {
     servers foreach { _.stop() }
-    Actor.registry foreachTypedActor { TypedActor stop _ }
+    system.shutdown()
+    Global.system = null
   }
   
   /**

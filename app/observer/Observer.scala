@@ -16,27 +16,43 @@ import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
+import play.api.libs.iteratee.CallbackEnumerator
 
 object Observer {
   
-  val registry = Actor.registry
+  val registry = Map[ObserverId, Observer]()
   
   def byObserverId(observerId: ObserverId): Option[Observer] =
-    registry.typedActorsFor(observerId.toString).headOption map { (_.asInstanceOf[Observer]) }
-
-  def newCompletableFuture[T]() = new DefaultCompletableFuture[T](30.seconds.toMillis)
-
-  lazy val http = Http.getInstance()
-
+    registry.get(observerId)
+  
+  val observerParent: ActorRef = {
+    GlobalSystem.system.actorOf(Props(new Actor {
+      def receive = { 
+        case (observerId: ObserverId, strategy: Strategy, assertorPicker: AssertorPicker) =>
+          sender ! TypedActor(context).typedActorOf(
+            classOf[Observer],
+            new ObserverImpl(assertorPicker, observerId, strategy) with ObserverSubscribers,
+            Props(),
+            observerId.toString())
+      }
+    }), name = "/observer")
+  }
+  
   def newObserver(
       observerId: ObserverId,
       strategy: Strategy,
       assertorPicker: AssertorPicker = SimpleAssertorPicker,
-      timeout: Duration = 10.second) =
-    TypedActor.newInstance(
-      classOf[Observer],
-      new ObserverImpl(http, assertorPicker, observerId, strategy) with ObserverSubscribers,
-      timeout.toMillis)
+      timeout: Duration = 10.second): Observer = {
+    val obs = observerParent
+      .?((observerId, strategy, assertorPicker))(10 seconds)
+      .value
+      .get
+      .right
+      .get
+      .asInstanceOf[Observer]
+    registry += (observerId -> obs)
+    obs
+  }
 
 }
 
@@ -69,22 +85,22 @@ trait Observer {
   //
   def subscribe(subscriber: ObserverSubscriber): Unit
   def unsubscribe(subscriber: ObserverSubscriber): Unit
+  def subscriberOf(subscriber: => Subscriber): ObserverSubscriber
 }
 
 abstract class ObserverImpl (
-    http: Http,
     assertorPicker: AssertorPicker,
     observerId: ObserverId,
-    strategy: Strategy) extends TypedActor with Observer {
+    strategy: Strategy) extends Observer {
   
   val logger = Logger.of(classOf[Observer])
   
-  self.id = observerId.uuid.toString
+  import TypedActor.dispatcher
   
   /**
    * A shorten id for logs readability
    */
-  val shortId = self.id.substring(0,6)
+  val shortId = observerId.toString.substring(0,6)
 
   /**
    * Represents the current state of this Observer. The initial state is ExplorationState.
@@ -106,12 +122,12 @@ abstract class ObserverImpl (
   /**
    * The set of futures waiting for the end of the exploration phase
    */
-  var waitingForEndOfExplorationPhase = Set[CompletableFuture[Iterable[URL]]]()
+  var waitingForEndOfExplorationPhase = Set[Promise[Iterable[URL]]]()
   
   /**
    * The set of futures waiting for the end of the assertion phase
    */
-  var waitingForEndOfAssertionPhase = Set[CompletableFuture[Assertions]]()
+  var waitingForEndOfAssertionPhase = Set[Promise[Assertions]]()
   
   /**
    * The main authority of the current strategy.
@@ -123,8 +139,13 @@ abstract class ObserverImpl (
    * a proxied assertor that can receive assertion commands
    * and that replies back to this observer asynchronously
    */
-  lazy val assertor = FromHttpResponseAssertor.newInstance(observerId, assertorPicker)
-  
+  lazy val assertor =
+    TypedActor(TypedActor.context).typedActorOf(
+      classOf[FromHttpResponseAssertor],
+      new FromHttpResponseAssertorImpl(observerId, assertorPicker),
+      Props(),
+      "assertor")
+        
   /**
    * hook to broadcast messages
    * the sub-class or mixin must deal with the subscribers
@@ -138,13 +159,13 @@ abstract class ObserverImpl (
   def URLs(): Future[Iterable[URL]] =
     state match {
       case ExplorationState => {
-        val future = Observer.newCompletableFuture[Iterable[URL]]()
+        val future = Promise[Iterable[URL]]()
         waitingForEndOfExplorationPhase += future
         future
       }
-      case ObservationState | FinishedState => future { responses.keys }
+      case ObservationState | FinishedState => Future { responses.keys }
       case ErrorState => sys.error("what is a Future with error?")
-      case StoppedState => future { responses.keys }
+      case StoppedState => Future { responses.keys }
     }
   
   /**
@@ -154,13 +175,13 @@ abstract class ObserverImpl (
   def assertions(): Future[Assertions] =
     state match {
       case ExplorationState | ObservationState => {
-        val future = Observer.newCompletableFuture[Assertions]()
+        val future = Promise[Assertions]()
         waitingForEndOfAssertionPhase += future
         future
       }
-      case FinishedState => future { _assertions }
+      case FinishedState => Future { _assertions }
       case ErrorState => sys.error("what is a Future with error?")
-      case StoppedState => future { _assertions }
+      case StoppedState => Future { _assertions }
     }
   
   /**
@@ -178,7 +199,7 @@ abstract class ObserverImpl (
 //    }
     if (pendingFetches.isEmpty && urlsToBeExplored.isEmpty) {
       logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, responses.size))
-      waitingForEndOfExplorationPhase foreach { _.completeWithResult(responses.keys) }
+      waitingForEndOfExplorationPhase foreach { _.success(responses.keys) }
       // we don't need pending Futures for crawling anymore
       // make it available for GC
       waitingForEndOfExplorationPhase = null
@@ -196,7 +217,7 @@ abstract class ObserverImpl (
     val b = pendingAssertions.isEmpty
     if (b) {
       logger.info("%s: Observation phase done with %d observations" format (shortId, _assertions.size))
-      waitingForEndOfAssertionPhase foreach { _.completeWithResult(_assertions) }
+      waitingForEndOfAssertionPhase foreach { _.success(_assertions) }
       // we don't need pending Futures for observations anymore
       // make it available for GC
       waitingForEndOfAssertionPhase = null
@@ -316,12 +337,12 @@ abstract class ObserverImpl (
       case FetchGET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
         pendingFetches += url -> distance
-        http.GET(url, distance, self.id)
+        GlobalSystem.http.GET(url, distance, observerId.toString)
       }
       case FetchHEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
         pendingFetches += url -> distance
-        http.HEAD(url, self.id)
+        GlobalSystem.http.HEAD(url, observerId.toString)
       }
       case FetchNothing => {
         logger.error("%s: Ignoring %s" format (shortId, url))
@@ -452,5 +473,4 @@ abstract class ObserverImpl (
     broadcast(NothingToObserve(url))
     conditionalEndOfAssertionPhase()
   }
-  
 }
