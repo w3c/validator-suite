@@ -10,15 +10,15 @@ header {
 	font-size: 16px;
 	
 	svg {
-		width: 100px;
-		height: 100px;
+		width: @headerHeight - @smallSpacing;
+		height: @headerHeight - @smallSpacing;
 		float: left;
 		margin: @smallSpacing 0 0 @smallSpacing;
 	}
 	
 	h1 {
-		font-size: 1.8em;
-		margin-top: 29.8px;
+		font-size: (@headerHeight - @smallSpacing) / 3.5px;
+		margin-top: (@headerHeight - @smallSpacing) / 3.5 + 1px;
 		float: left;
 		text-align: left;
 		
