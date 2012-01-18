@@ -1,54 +1,289 @@
 @import 'libs/_reset.less';
 @import 'libs/_theme.less';
 
-header {
+body {
+	font-family: @baseFontFamily;
+	font-size: @baseFontSize;
+	color: @baseFontColor;
+	background-color: @bodyBgColor;
+}
+
+/* ############# Header ############# */
+
+body > header {
 	
 	background: @headerBgColor;
 	height: @headerHeight;
 	text-align: right;
 	border-bottom: @borderSize solid @borderColor;
-	font-size: 16px;
 	
 	svg {
 		width: @headerHeight - @smallSpacing;
 		height: @headerHeight - @smallSpacing;
 		float: left;
-		margin: @smallSpacing 0 0 @smallSpacing;
+		margin: (@headerHeight / 10) 0 0 @smallSpacing;
 	}
 	
 	h1 {
-		font-size: (@headerHeight - @smallSpacing) / 3.5px;
-		margin-top: (@headerHeight - @smallSpacing) / 3.5 + 1px;
+		font-size: round((@headerHeight - @smallSpacing) / 3.5px * 10) / 10;
+		margin-top: round((@headerHeight - @smallSpacing) / 3.5px * 10) / 10 + 3px;
 		float: left;
 		text-align: left;
 		
 		a {
 			text-decoration: none;
 			color: inherit;
+			
+			:active {
+				outline: none;
+			}
 		}
-		a:active {
-			outline: none;
-		}
+		
 		span:first-child {
 			font-weight: bold;
 			text-transform: uppercase;
 		}
+		
 		span:nth-child(2) {
 			font-family: serif;
 			display: block;
 			font-style: italic;
 			font-size: 0.95em;
 			position: relative;
-			left: -7px;
-			top: -2px;
+			left: round((-@headerHeight / 15) * 10) / 10px;
+			top: round((-@headerHeight / 50) * 10) / 10px;
 		}
 	}
 	
 	#admin {
-		font-size: 12px;
 		padding-right: @smallSpacing;
-		padding-top: @headerHeight - @smallSpacing - 12px;
+		padding-top: @headerHeight - @smallSpacing - @baseFontSize;
 	}
 }
 
+
+
+
+
+
+/* ############# Form ############# */
+#form {
+	border-bottom:1px solid rgba(0,0,0,.1);
+	clear:both;
+	padding: 20px;
+	font-size:0; /* overided by next rule, aims to remove the added space between inline elements */
+}
+#form > * {
+	display:inline-block;
+}
+form *, #progress, #status {
+	font-size:13px;
+}
+form label {
+	font-weight:bold;
+	margin-right:10px;
+}
+#form * {
+	vertical-align: middle;
+}
+form input {
+	margin: 1px 15px 0 0;
+}
+form input[type=text] {
+	border-radius: 2px;
+	border: 1px solid #AAA;
+	padding: 3px 5px;
+}
+form input[type=text]:focus {
+	outline-color: rgba(0,0,0, 0.2); /* nice effect on chromium, gives nothing on all others as expected since style=none and width=0 by default */
+}
+form input[type=checkbox] {
+	opacity: 0.7;
+}
+form input[name=url] {
+	width:20em;
+}
+form input[name=distance] {
+	width:1.5em;
+}
+form input[type=submit] {
+	background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background: -o-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	border: 1px solid #AAA;
+	border-radius: 2px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	color: #444;
+	padding: 3px 12px;
+}
+#progress progress {
+	margin-right:10px;
+	height:15px;
+}
+#progress span {
+	
+}
+
+/* ############# Stats ############# */
+#stats {
+	float:left;
+	width:220px;
+	height:120px;
+	border-bottom:1px solid rgba(0,0,0,.1);
+	padding:20px;
+}
+#stats ul li {
+	padding: 11px 0;
+	border-bottom: 1px solid #E5E5E5;
+}
+#stats ul li:first-child {
+	padding-top: 0;
+}
+#stats ul li:last-child {
+	padding-bottom: 0;
+	border: none;
+}
+#stats ul li span:first-child {
+	display:inline-block;
+	width:140px;
+}
+#stats ul li span:last-child {
+	text-align:right;
+	display:inline-block;
+	width:80px;
+}
+#logs {
+	position:relative;
+	height:140px;
+	border:solid rgba(0,0,0,.1);
+	border-width:0 0 1px 1px;
+	padding:10px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	/*background-color:#F1F0F0;*/
+	font-size:12px;
+}
+a.clear {
+	position: absolute;
+	right: 15px;
+	margin-top: 10px;
+	z-index:100;
+	background-color:rgba(255,255,255,0.6);
+}
+#logs li {
+	margin-top:2px;
+}
+#logs li span {
+	display:inline-block;
+}
+#logs li.fetch span:first-child {
+	min-width:3em;
+}
+#logs li.fetch span:nth-child(2) {
+	min-width:2.9em;
+}
+#logs li.fetch span:nth-child(4) {
+	font-weight: bold;
+}
+#logs li.fetch:not(.c200) :nth-child(2) {
+	color:red;
+}
+#logs li.fetch.c401 :nth-child(2) {
+	color:orange !important;
+}
+#logs li.error {
+	color:red;
+}
+#logs li.status {
+	color:green;
+	font-weight: bold;
+}
+#logs li.status:before {
+	content:"» ";
+}
+#logs li.status:after {
+	content:"";
+}
+#logs li.obs.none {
+	color:#777;
+}
+#logs li.obs .valid {
+	color:green;
+	font-weight: bold;
+}
+#logs li.obs .errors {
+	color:red;
+	font-weight: bold;
+}
+#logs li.obs .warnings {
+	color:orange;
+	font-weight: bold;
+}
+
+/*#logs:after {
+    background-color: red;
+    content: "";
+    display: block;
+    height: 10px;
+    position: absolute;
+    bottom: 110px;
+    width: 100%;
+}*/
+#observations {
+	padding:20px;
+	clear:both;
+	//font-size:120%;
+}
+
+#observations ul {
+  display:table;
+  width:100%;
+}
+
+#observations ul li {
+  display:table-row;
+}
+
+#observations ul li.headers {
+  font-weight:bold;
+}
+
+#observations ul li.headers * {
+  color:black !important;
+}
+
+#observations ul li span {
+  display:table-cell;
+  padding:5px;
+  border-bottom:1px solid rgba(0,0,0,.1);
+}
+
+#observations ul li span:first-child {
+}
+
+#observations ul li span:nth-child(2) {
+  width:80px;
+  text-align:center;
+  color:orange;
+  border-left:1px solid rgba(0,0,0,.1);
+}
+
+#observations ul li span:last-child {
+  width:80px;
+  text-align:center;
+  color:red;
+  border-left:1px solid rgba(0,0,0,.1);
+}
+
+#observations ul li:last-child {
+  border:none;
+}
+
+#messages .error {
+  color: #8A1F11;
+  border: 1px solid #FBC2C4;
+  padding: 20px;
+  background: #FBE3E4;
+}
 
