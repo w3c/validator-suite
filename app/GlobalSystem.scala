@@ -46,13 +46,11 @@ object GlobalSystem {
   def init(): Unit = {
     
     if (system != null) {
-      TypedActor(system).stop(http)
-      TypedActor(system).stop(observerCreator)
       system.shutdown()
       system = null
     }
     
-    system = ActorSystem("VSSystem")
+    system = ActorSystem("vs")
   
     http =
       TypedActor(system).typedActorOf(
