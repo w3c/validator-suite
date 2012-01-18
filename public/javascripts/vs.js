@@ -15,6 +15,9 @@ var VS = {
 		VS.stats.warnings = $('#stats li.warnings :last-child');
 		VS.form = $('#form form');
 		VS.messages = $('#messages');
+		VS.progress = $('#progress');
+		VS.progress.bar = $('#progress progress');
+		VS.progress.legend = $('#progress span');
 		VS.currentActionId = "";
 		
 		VS.cometIframe = $('<iframe style="display:none"></iframe>');
@@ -48,22 +51,16 @@ var VS = {
 	},
 	
 	formStopAction: function() {
-	  VS.form.find('input[type=submit]').attr('value', 'Stop');
-	  VS.form.unbind('submit');
+		VS.form.find('input[type=submit]').attr('value', 'Stop');
+		VS.form.unbind('submit');
 		VS.form.submit(function() {
-      /*$.ajax({
-        url: "/observation/" + VS.currentActionId + "/stop",
-        success: function() {
-          console.log('success');
-        }
-      });*/
-      jsRoutes.controllers.Validator.stop(VS.currentActionId).ajax({
-        success: function() {
-          VS.formValidateAction();
-        }
-      });
-      return false;
-    });
+			jsRoutes.controllers.Validator.stop(VS.currentActionId).ajax({
+				success: function() {
+					VS.formValidateAction();
+				}
+			});
+			return false;
+		});
 	},
 	
 	subscribe: function(responseText, statusText, xhr) {
@@ -72,10 +69,10 @@ var VS = {
 		var loc = xhr.getResponseHeader("Location");
 		VS.currentActionId = xhr.getResponseHeader("X-VS-ActionId");
 		if (window.location.pathname != "/") { // TODO should be dynamic?
-		  window.location = "/#!/observation/" + VS.currentActionId;
+			window.location = "/#!/observation/" + VS.currentActionId;
 		} else {
-		  VS.setHash('!/observation/' + VS.currentActionId);
-		  VS.cometIframe.attr('src', loc + "/stream");
+			VS.setHash('!/observation/' + VS.currentActionId);
+			VS.cometIframe.attr('src', loc + "/stream");
 		}
 	},
 	
@@ -210,16 +207,16 @@ var VS = {
 		} else if (type == "OBS_FINISHED") {
 			VS.cometIframe.attr('src', ''); // TODO: Probably useless? Might be useful to clean the content for memory footprint 
 			VS.log("<li class='status'>Validation finished</li>");
-			$('#progress').css('display', 'none');
+			VS.progress.css('display', 'none');
 			VS.formValidateAction();
 		} else if (type == "OBS_INITIAL") {
 			VS.incrementCrawled(0,msg[1]+msg[2]);
 			VS.incrementObserved(0,msg[3]+msg[4]);
 		} else if (type == "STOPPED") {
-		  // TODO should wait for this message before changing form to validate action
-		  VS.cometIframe.attr('src', '');
-		  $('#progress').css('display', 'none');
-		  VS.log("<li class='status'>Validation stopped</li>");
+			// TODO should wait for this message before changing form to validate action
+			VS.cometIframe.attr('src', '');
+			VS.progress.css('display', 'none');
+			VS.log("<li class='status'>Validation stopped</li>");
 		} else {
 			console.log(msg);
 			VS.log(msg);
@@ -262,9 +259,10 @@ var VS = {
 			(parseInt(val[0]) + parseInt(left)) + "/" + (parseInt(val[1]) + parseInt(right))
 		);
 		
-		$('#progress').css('display', 'inline');
-		$('#progress').attr('value', parseInt(val[0]) + parseInt(left));
-		$('#progress').attr('max', parseInt(val[1]) + parseInt(right));
+		VS.progress.css('display', 'inline-block');
+		console.log(VS.progress);
+		VS.progress.bar.attr('value', parseInt(val[0]) + parseInt(left));
+		VS.progress.bar.attr('max', parseInt(val[1]) + parseInt(right));
 	},
 	
 	incrementErrors: function(nb) {
@@ -280,27 +278,27 @@ var VS = {
 	},
 	
 	addAssertion: function(url, validatorLink, errors, warnings) {
-	  warnings = warnings == 0 ? "-" : warnings;
-    errors = errors == 0 ? "-" : errors;
-    $("#observations").css("display","block")
-	  $("#observations ul").append(
-	    $("<li><span>" + url + "</span><span>" + warnings + "</span><span>" + errors + "</span>")
-	  );
+		warnings = warnings == 0 ? "-" : warnings;
+		errors = errors == 0 ? "-" : errors;
+		$("#observations").css("display","block")
+		$("#observations ul").append(
+			$("<li><span>" + url + "</span><span>" + warnings + "</span><span>" + errors + "</span>")
+		);
 	},
 	
 	clearAssertions: function() {
-	  $("#observations").css("display","none");
-	  $("#observations li.not(:first-child)").remove();
+		$("#observations").css("display","none");
+		$("#observations li.not(:first-child)").remove();
 	},
 	
 	addMessage: function(str) {
-	  VS.messages.append(
-	    $('<div class="error">'+ str +'</div>')
-	  );
+		VS.messages.append(
+			$('<div class="error">'+ str +'</div>')
+		);
 	},
 	
 	clearMessages: function() {
-	  VS.messages.html('');
+		VS.messages.html('');
 	},
 	
 	parseHash: function() {
