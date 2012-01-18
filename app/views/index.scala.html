@@ -1,20 +1,19 @@
 @(user: Option[org.w3.vs.model.User] = None, messages: Seq[String] = Seq[String]())
 
 @main("Validator Suite") {
-  @views.html.header(user)
-  
-  <section id="messages">
-    @for(message <- messages) {
-      <div class="error">@message</div>
-    }
-  </section>
-  
-  @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.Validator.stop
-  )
-  
+	@views.html.header(user)
+	
+	<section id="messages">
+	@for(message <- messages) {
+		<div class="error">@message</div>
+	}
+	</section>
+	
+	@helper.javascriptRouter("jsRoutes")(
+		routes.javascript.Validator.stop
+	)
+	
 	<section id="form">
-		
 		<form action="/observation" method="post">
 			<label for="url">URL</label>
 			<input name="url" id="url" type="text" value="http://www.w3.org" />
@@ -24,9 +23,7 @@
 			<input name="linkCheck" id="linkCheck" type="checkbox" />
 			<input type="submit" value="Validate" />
 		</form>
-		
-		<p><progress id="progress" max="100" value="50"><span>0</span>%</progress>&nbsp;<span id="status">Crawling...</span></p>
-		
+		<p id="progress" style="display:none"><progress max="100" value="0"><span>0</span>%</progress><span>Crawling...</span></p>
 	</section>
 	<section id="stats">
 		<ul>
@@ -44,7 +41,7 @@
 	</section>
 	<section id="observations" style="display:none">
 		<ul>
-		  <li class="headers"><span>URI</span><span>Warnings</span><span>Errors</span></li>
+			<li class="headers"><span>URI</span><span>Warnings</span><span>Errors</span></li>
 		</ul>
 	</section>
 }
