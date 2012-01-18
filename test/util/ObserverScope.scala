@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit._
 import org.specs2.mutable._
 import org.specs2.specification.Example
 import org.specs2.specification.Scope
-import org.w3.vs.Global
 import akka.actor.ActorSystem
 
 /**
@@ -21,35 +20,12 @@ class ObserverScope(servers: Seq[unfiltered.util.RunnableServer])(system: ActorS
   
   val logger = play.Logger.of(classOf[ObserverScope])
   
-  var observers = Seq[Observer]()
-  
   override def before: Any = {
-    observers = Seq[Observer]()
     servers foreach { _.start() }
   }
   
   override def after: Any = {
     servers foreach { _.stop() }
-    system.shutdown()
-    Global.system = null
-  }
-  
-  /**
-   * helper method to create new observers
-   * the created observers don't react on broadcast messages
-   */
-  def newObserver(
-      strategy: Strategy,
-      assertorPicker: AssertorPicker = DoNothingAssertorPicker,
-      timeout: Duration = Duration(5, SECONDS)) = {
-    val observerId = ObserverId()
-    val observer =
-      TypedActor.newInstance(
-        classOf[Observer],
-        new ObserverImpl(http, assertorPicker, observerId, strategy) with DoNothingBroadcaster,
-        timeout.toMillis)
-     observers :+= observer
-     observer
   }
   
 //  /**

@@ -12,18 +12,6 @@ import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import play.Logger
 
-object FromHttpResponseAssertor {
-//  def newInstance(
-//      observerId: ObserverId,
-//      assertorPicker: AssertorPicker) = {
-//    TypedActor(Global.system).typedActorOf(
-//      classOf[FromHttpResponseAssertor],
-//      new FromHttpResponseAssertorImpl(observerId, assertorPicker),
-//      Props()
-//      "")
-//  }
-}
-
 /**
  * An asynchronous assertor based on an HttpResponse
  */
@@ -56,31 +44,21 @@ class FromHttpResponseAssertorImpl private[observer] (
       for {
         assertor <- assertors
       } {
-        val f = assertor.assert(url) onSuccess {
-            case observation =>
-              observer.sendAssertion(
-                  url,
-                  assertor.id,
-                  observation,
-                  numberOfAssertors)
-          } onFailure {
-            case t: Throwable =>
-              observer.sendAssertionError(
-                  url,
-                  assertor.id,
-                  t,
-                  numberOfAssertors)
-          }
-          try {
-            Await.result(f, 10 seconds)
-          } catch {
-            case te: java.util.concurrent.TimeoutException =>
-              observer.sendAssertionError(
-                  url,
-                  assertor.id,
-                  exception(url, assertor),
-                  numberOfAssertors)
-          }
+        try {
+          val assertion = assertor.assert(url)
+          observer.sendAssertion(
+            url,
+            assertor.id,
+            assertion,
+            numberOfAssertors)
+        } catch {
+          case t: Throwable =>
+            observer.sendAssertionError(
+              url,
+              assertor.id,
+              t,
+              numberOfAssertors)
+        }
       }
   }
   
