@@ -88,7 +88,7 @@ object Validator extends Controller with Secured {
   def validate() = IsAuthenticated { username => implicit request =>
     User.findByEmail(username).map { user =>
       validateForm.bindFromRequest.fold(
-        formWithErrors => { Logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
+        formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
         v => validateWithParams(request, v._1, v._2, v._3)
       )
     }.getOrElse(Forbidden)
@@ -127,9 +127,11 @@ object Validator extends Controller with Secured {
         val observerId = ObserverId(id)
         GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
           AsyncResult {
-            val ce = new CallbackEnumerator[String] { }
+            val ce = new CallbackEnumerator[String]()
             val subscriber = observer.subscriberOf(new Subscriber(ce, observer))
-            Promise.pure(Ok.stream(ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")).withHeaders("X-VS-ActionID" -> id))
+            subscriber.subscribe()
+            val iteratee = ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")
+            Promise.pure(Ok.stream(iteratee).withHeaders("X-VS-ActionID" -> id))
           }
         }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))
       } catch { case e =>

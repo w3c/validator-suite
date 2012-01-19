@@ -21,12 +21,12 @@ class Subscriber(
     observer: Observer)
     extends ObserverSubscriber {
   
-  subscribe()
-  
   // subscribes to the actionManager at instantiation time
   def subscribe(): Unit = observer.subscribe(this)
   
   def unsubscribe(): Unit = observer.unsubscribe(this)
+  
+  val logger = play.Logger.of(classOf[Subscriber])
   
   def broadcast(msg: String): Unit = {
     callback.push(msg)

@@ -11,6 +11,7 @@ package org.w3.vs.observer
  */
 sealed trait ObserverState
 
+case object NotYetStarted extends ObserverState
 case object ExplorationState extends ObserverState
 case object ObservationState extends ObserverState
 case object FinishedState extends ObserverState

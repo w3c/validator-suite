@@ -4,7 +4,7 @@ import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.util._
 import org.w3.vs.assertor._
-import scala.collection.mutable.{Map, Queue, Seq, Set}
+//import scala.collection.mutable.{Map, Queue, Seq, Set}
 import akka.dispatch._
 import akka.actor._
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
@@ -32,23 +32,13 @@ trait Observer {
   def sendGETResponse(url: URL, r: GETResponse): Unit
   def sendHEADResponse(url: URL, r: HEADResponse): Unit
   def sendException(url: URL, t: Throwable): Unit
-  // hooks for Assertor
-  def sendAssertion(
-      url: URL, 
-      assertorId: AssertorId, 
-      assertion: Assertion, 
-      expectedNumberOfAssertors: Int): Unit
-  def sendAssertionError(
-      url: URL, 
-      assertorId: AssertorId, 
-      t: Throwable, 
-      expectedNumberOfAssertors: Int): Unit
-  def noAssertion(url: URL): Unit
-  //
+  // foo
   def subscribe(subscriber: ObserverSubscriber): Unit
   def unsubscribe(subscriber: ObserverSubscriber): Unit
   def subscriberOf(subscriber: => Subscriber): ObserverSubscriber
 }
+
+
 
 class ObserverImpl (
     assertorPicker: AssertorPicker,
@@ -60,27 +50,15 @@ class ObserverImpl (
   import TypedActor.dispatcher
   
   /**
-   * A shorten id for logs readability
-   */
-  val shortId = observerId.toString.substring(0,6)
-
-  /**
    * Represents the current state of this Observer. The initial state is ExplorationState.
    */
-  var state: ObserverState = null
+  var observation: Observation = Observation(observerId, strategy)
   
-  // follows the data structure for http responses and assertions
-  
-  val responses = Map[URL, Response]()
-  
-  var _assertions = List[(URL, AssertorId, Either[Throwable, Assertion])]()
-  
-  val urlsToBeExplored = LinkedHashMap[URL, (Int, FetchAction)]()
-  
-  val pendingFetches = LinkedHashMap[URL, Int]()
-  
-  val pendingAssertions = Map[URL, Int]()
-  
+  /**
+   * A shorten id for logs readability
+   */
+  val shortId = observation.shortId
+
   /**
    * The set of futures waiting for the end of the exploration phase
    */
@@ -92,36 +70,19 @@ class ObserverImpl (
   var waitingForEndOfAssertionPhase = Set[Promise[Assertions]]()
   
   /**
-   * The main authority of the current strategy.
-   * TODO: should be given by the strategy directly
-   */
-  val mainAuthority: Authority = strategy.seedURLs.headOption map {_.authority} getOrElse sys.error("No seed url in strategy")
-  
-  /**
-   * a proxied assertor that can receive assertion commands
-   * and that replies back to this observer asynchronously
-   */
-  lazy val assertor =
-    TypedActor(TypedActor.context).typedActorOf(
-      classOf[FromHttpResponseAssertor],
-      new FromHttpResponseAssertorImpl(observerId, assertorPicker),
-      Props(),
-      "assertor")
-        
-  /**
    * returns the URLs discovered during the exploration phase
    * Blocks until the exploration phase is done, or returns immediately
    */
   def URLs(): Future[Iterable[URL]] =
-    state match {
-      case ExplorationState => {
-        val future = Promise[Iterable[URL]]()
-        waitingForEndOfExplorationPhase += future
-        future
+    observation.state match {
+      case NotYetStarted | ExplorationState => {
+        val promise = Promise[Iterable[URL]]()
+        waitingForEndOfExplorationPhase += promise
+        promise
       }
-      case ObservationState | FinishedState => Future { responses.keys }
+      case ObservationState | FinishedState => Promise.successful { observation.urls }
       case ErrorState => sys.error("what is a Future with error?")
-      case StoppedState => Future { responses.keys }
+      case StoppedState => Promise.successful { observation.urls }
     }
   
   /**
@@ -129,15 +90,15 @@ class ObserverImpl (
    * Blocks until the assertion phase is done, or returns immediately
    */
   def assertions(): Future[Assertions] =
-    state match {
-      case ExplorationState | ObservationState => {
+    observation.state match {
+      case NotYetStarted | ExplorationState | ObservationState => {
         val future = Promise[Assertions]()
         waitingForEndOfAssertionPhase += future
         future
       }
-      case FinishedState => Future { _assertions }
+      case FinishedState => Promise.successful { observation.assertions }
       case ErrorState => sys.error("what is a Future with error?")
-      case StoppedState => Future { _assertions }
+      case StoppedState => Promise.successful { observation.assertions }
     }
   
   /**
@@ -153,9 +114,10 @@ class ObserverImpl (
 //        logger.debug("pending fetches %d" format pendingFetches.size)
 //      }
 //    }
-    if (pendingFetches.isEmpty && urlsToBeExplored.isEmpty) {
-      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, responses.size))
-      waitingForEndOfExplorationPhase foreach { _.success(responses.keys) }
+    if (observation.explorationPhaseHasEnded) {
+      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, observation.responses.size))
+      val urls = observation.urls
+      waitingForEndOfExplorationPhase foreach { _.success(urls) }
       // we don't need pending Futures for crawling anymore
       // make it available for GC
       waitingForEndOfExplorationPhase = null
@@ -166,26 +128,6 @@ class ObserverImpl (
   }
   
   /**
-   * tests if the assertion phase has to be ended.
-   * if it's the case, the observer enters the FinishedState
-   */
-  def conditionalEndOfAssertionPhase(): Boolean = {
-    val b = pendingAssertions.isEmpty
-    if (b) {
-      logger.info("%s: Observation phase done with %d observations" format (shortId, _assertions.size))
-      waitingForEndOfAssertionPhase foreach { _.success(_assertions) }
-      // we don't need pending Futures for observations anymore
-      // make it available for GC
-      waitingForEndOfAssertionPhase = null
-      state = FinishedState
-      broadcast(ObservationFinished)
-      subscribers foreach { TypedActor(GlobalSystem.system).stop(_) }
-      subscribers = null
-    }
-    b
-  }
-  
-  /**
    * starts the ExplorationPhase
    * <ul>
    * <li>use the seedURLs to initialize the exploration</li>
@@ -193,20 +135,19 @@ class ObserverImpl (
    * <li>schedule the first fetches</li>
    * </ul>
    */
-  def startExplorationPhase(): Unit = if (state == null) {
-    state = ExplorationState
-    val firstURLs = strategy.seedURLs
-    urlsToBeExplored ++= firstURLs map { (_, (0, FetchGET)) }
-    broadcast(URLsToExplore(firstURLs.size))
-    logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
-    scheduleNextURLsToFetch()
-  }
+  def startExplorationPhase(): Unit =
+    if (observation.state == NotYetStarted) {
+      val firstURLs = strategy.seedURLs.toList
+      observation = observation.withFirstURLsToExplore(firstURLs)
+      broadcast(URLsToExplore(firstURLs.size))
+      logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
+      scheduleNextURLsToFetch()
+    } else {
+      logger.error("you should be in NotYetStarted state, but this is " + observation.state)
+    }
   
   def stop(): Unit = {
-    state = StoppedState
-    urlsToBeExplored.clear()
-    pendingAssertions.clear()
-    pendingFetches.clear()
+    observation = observation.stop()
     broadcast(Stopped)
   }
 
@@ -216,36 +157,26 @@ class ObserverImpl (
    * TODO: move distance into pendingFetches (LinkedHashMap)
    */
   def sendGETResponse(url: URL, r: GETResponse): Unit = {
-    if (state != StoppedState) {
+    if (observation.state != StoppedState) {
       val GETResponse(status, headers, body) = r
       logger.debug("%s:  GET <<< %s" format (shortId, url))
-      val distance: Int = pendingFetches remove url getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
-      val encoding = "UTF-8"
-      val reader = new java.io.StringReader(body)
-      val extractedURLs = html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
-      responses +=
-        (url -> HttpResponse(url, status, headers, extractedURLs))
-      def ignore(url: URL): Boolean = {
-        def isPending = pendingFetches contains url
-        def isProcessed = responses isDefinedAt url
-        def isScheduled = urlsToBeExplored contains url
-        isPending || isProcessed || isScheduled
+      val distance =
+        observation.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+      val urls = {
+        val encoding = "UTF-8"
+        val reader = new java.io.StringReader(body)
+        // TODO review this clearhash stuff
+        html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
       }
-      val urls = extractedURLs.distinct flatMap {
-        url => {
-          lazy val action = strategy.fetch(url, distance+1)
-          if (ignore(url) || action == FetchNothing)
-            None
-          else
-            Some(url -> (distance + 1, action))
-        }
-      }
-      urlsToBeExplored ++= urls
+      observation =
+        observation
+          .withoutURLBeingExplored(url)
+          .withResponse(url -> HttpResponse(url, status, headers, urls))
+          .withNewUrlsToBeExplored(urls map { Explore(_, distance + 1) })
       if (urls.size > 0) {
-        val total = responses.size + urlsToBeExplored.size + pendingFetches.size
-        logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, urls.size, total))
+        logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, urls.size, observation.numberOfKnownUrls))
       }
-      broadcast(FetchedGET(url, r.status, urls.size))
+      broadcast(FetchedGET(url, status, urls.size))
       scheduleNextURLsToFetch()
       conditionalEndOfExplorationPhase()
     }
@@ -256,13 +187,12 @@ class ObserverImpl (
    * TODO: explain the logic happening here
    */
   def sendHEADResponse(url: URL, r: HEADResponse): Unit = {
-    if (state != StoppedState) {
+    if (observation.state != StoppedState) {
       val HEADResponse(status, headers) = r
       logger.debug("%s: HEAD <<< %s" format (shortId, url))
-      pendingFetches -= url
+      observation = observation.withoutURLBeingExplored(url)
       scheduleNextURLsToFetch()
-      responses +=
-        (url -> HttpResponse(url, status, headers, Nil))
+      observation = observation.withResponse(url -> HttpResponse(url, status, headers, Nil))
       broadcast(FetchedHEAD(url, r.status))
       conditionalEndOfExplorationPhase()
     }
@@ -273,57 +203,36 @@ class ObserverImpl (
    * TODO: explain the logic happening here
    */
   def sendException(url: URL, t: Throwable): Unit = {
-    if (state != StoppedState) {
+    if (observation.state != StoppedState) {
       logger.debug("%s: Exception for %s: %s" format (shortId, url, t.getMessage))
-      pendingFetches -= url
+      observation = observation.withoutURLBeingExplored(url)
       scheduleNextURLsToFetch()
-      responses += (url -> ErrorResponse(url, t.getMessage))
+      observation = observation.withResponse(url -> ErrorResponse(url, t.getMessage))
       broadcast(FetchedError(url, t.getMessage))
       conditionalEndOfExplorationPhase()
     }
   }
   
   /**
-   * explores one URL
+   * fetch one URL
    * depending on the strategy, it does the right fetch, or nothing
    */
-  def explore(url: URL): Unit = {
+  def fetch(explore: Explore, action: FetchAction): Unit = {
     //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
-    val (distance, action) =
-      urlsToBeExplored remove url getOrElse sys.error("Broken assumption: %s wasn't in urlsToBeExplored" format url)
+    val Explore(url, distance) = explore
     action match {
       case FetchGET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        pendingFetches += url -> distance
         GlobalSystem.http.GET(url, distance, observerId.toString)
       }
       case FetchHEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
-        pendingFetches += url -> distance
         GlobalSystem.http.HEAD(url, observerId.toString)
       }
       case FetchNothing => {
-        logger.error("%s: Ignoring %s" format (shortId, url))
+        logger.debug("%s: Ignoring %s" format (shortId, url))
       }
     }
-  }
-  
-  /**
-   * returns the next best URL to fetch
-   * best is defined in this order
-   * <ul>
-   * <li>a URL whose authority is the same as the main authority, if there is no pending fetch with this authority</li>
-   * <li>a URL such that there is no pending fetch with the same authority</li>
-   * <li>Nothing</li>
-   * </ul>
-   * this method has no side-effect
-   * TODO: two pendingFetches ? One for main authority and one for the rest
-   */
-  def nextURLToFetch(): Option[URL] = {
-    def noPendingFetchFor(authority: Authority) = ! pendingFetches.exists{case (url, _) => url.getAuthority == authority}
-    def mainAuthorityURL = urlsToBeExplored.collectFirst{case (url, _) if url.getAuthority == mainAuthority && noPendingFetchFor(mainAuthority) => url }
-    def otherURL = urlsToBeExplored.collectFirst{case (url, _) if noPendingFetchFor(url.getAuthority) => url }
-    mainAuthorityURL orElse otherURL
   }
   
   // 
@@ -333,16 +242,16 @@ class ObserverImpl (
    * this improves the reactivity (if we cancel the exploration) and the fairness (sharing the access to the Fetch module among observers)
    * TODO make 10 a parameter
    */
-  def scheduleNextURLsToFetch(): Unit = {
-    for {
-      _ <- 1 to (10 - pendingFetches.size)
-      url <- nextURLToFetch
-    } {
-      // there is a side-effect here, so nextURLToFetch will be different in the next iteration
-      explore(url)
-    }
-  }
+  def scheduleNextURLsToFetch(): Unit =
+    observation = observation.fetch(atMost = 10){ fetch(_, _) }
+
   
+//        val numberOfAssertors = assertors.size
+//      if (numberOfAssertors == 0) {
+//        logger.debug("%s: no observation for %s" format (shortId, url))
+//        broadcast(NothingToObserve(url))
+//      } else {
+
   /**
    * starts the assertion phase
    * we currently schedule all the assertion at once as we handle all the assertors
@@ -350,91 +259,44 @@ class ObserverImpl (
    */
   def startAssertionPhase(): Unit = {
     logger.info("%s: Starting observation phase" format (shortId))
-    state = ObservationState
-    for {
+    val _2XX = observation.responses.toIterable collect { case (url, response: HttpResponse) => (url, response) }
+    broadcast(URLsToObserve(_2XX.size))
+    val assertions: Assertions = for {
       // TODO Filter only 2xx responses
-      (url, response: HttpResponse) <- responses
-    } {
-      if (strategy shouldObserve url) {
-        assertor.assert(response)
-        pendingAssertions += (url -> 0)
+      (url, response) <- _2XX
+      if strategy shouldObserve url
+      ctOption = response.headers.contentType
+      assertors = assertorPicker.pick(ctOption)
+      assertor <- assertors
+    } yield {
+      try {
+        val assertion = assertor.assert(url)
+        logger.debug("%s: %s observed by %s" format (shortId, url, assertor.id))
+        broadcast(Asserted(url, assertor.id, assertion.errorsNumber, assertion.warningsNumber))
+        (url, assertor.id, Right(assertion))
+      } catch {
+        case t: Throwable => {
+          logger.debug("%s: %s got observation error for %s" format (shortId, url, assertor.id))
+          broadcast(AssertedError(url, assertor.id, t))
+          (url, assertor.id, Left(t))
+        }
       }
     }
-    broadcast(URLsToObserve(pendingAssertions.size))
+    
+    observation = observation.copy(assertions = assertions)
+    
+    logger.info("%s: Observation phase done with %d observations" format (shortId, observation.assertions.size))
+    waitingForEndOfAssertionPhase foreach { _.success(observation.assertions) }
+    // we don't need pending Futures for observations anymore
+    // make it available for GC
+    waitingForEndOfAssertionPhase = null
+    observation = observation.copy(state = FinishedState)
+    broadcast(ObservationFinished)
+    val context = TypedActor(TypedActor.context)
+    subscribers foreach { context.stop(_) }
+    subscribers = null
+    
   }
-  
-  /**
-   * hook to send the result of an assertion
-   * TODO explain the logic
-   */
-  def sendAssertion(
-      url: URL, 
-      assertorId: AssertorId, 
-      assertion: Assertion, 
-      expectedNumberOfAssertions: Int): Unit = {
-    logger.debug("%s: %s observed by %s (1/%d)" format (shortId, url, assertorId, expectedNumberOfAssertions))
-    val currentNumberOfAssertions = pendingAssertions(url) + 1
-    
-    if (expectedNumberOfAssertions == currentNumberOfAssertions) {
-      pendingAssertions -= url
-    } else {
-      pendingAssertions += (url -> currentNumberOfAssertions)
-    }
-    
-    _assertions ::= (url, assertorId, Right(assertion))
-    
-    broadcast(
-        Asserted(
-            url,
-            assertorId,
-            assertion.errorsNumber,
-            assertion.warningsNumber))
-    conditionalEndOfAssertionPhase()
-  }
-  
-  /**
-   * hook to notice the failure of an assertion
-   */
-  def sendAssertionError(
-      url: URL, 
-      assertorId: AssertorId, 
-      t: Throwable, 
-      expectedNumberOfAssertions: Int): Unit = {
-    logger.debug("%s: %s got observation error for %s (1/%d)" format (shortId, url, assertorId, expectedNumberOfAssertions))
-    val currentObservations = pendingAssertions(url) + 1
-    
-    if (expectedNumberOfAssertions == currentObservations) {
-      pendingAssertions -= url
-    } else {
-      pendingAssertions += (url -> currentObservations)
-    }
-    
-    val newObservationError = (assertorId -> Left(t))
-
-    _assertions ::= (url, assertorId, Left(t))
-
-    broadcast(AssertedError(url, assertorId, t))
-    conditionalEndOfAssertionPhase()
-  }
-  
-  /**
-   * hook to notice that no assertor was found for this URL
-   */
-  def noAssertion(url: URL): Unit = {
-    logger.debug("%s: no observation for %s" format (shortId, url))
-    pendingAssertions -= url
-    
-    // if no observation, we just associate an empty map to this url
-    // so that we know we did ask the ObserverPicker
-    // observations += (url -> Map())
-    
-    broadcast(NothingToObserve(url))
-    conditionalEndOfAssertionPhase()
-  }
-  
-  
-  
-  ///////
   
   
   var subscribers = Set[ObserverSubscriber]()
@@ -443,6 +305,7 @@ class ObserverImpl (
     subscribers += subscriber
     logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
     subscriber.broadcast(toBroadcast(InitialState))
+    logger.debug(toBroadcast(InitialState))
   }
   
   def unsubscribe(subscriber: ObserverSubscriber): Unit = {
@@ -461,16 +324,16 @@ class ObserverImpl (
     case NothingToObserve(url) => """["OBS_NO", "%s"]""" format url
     case ObservationFinished => """["OBS_FINISHED"]"""
     case InitialState => {
-      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (responses.size, pendingFetches.size + urlsToBeExplored.size, _assertions.size, pendingAssertions.size)
+      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (observation.responses.size, observation.urlsToBeExplored.size, observation.assertions.size, 0)
       import org.w3.vs.model._
-      val responsesToBroadcast = responses map {
+      val responsesToBroadcast = observation.responses map {
         // disctinction btw GET and HEAD, links.size??
         case (url, HttpResponse(_, status, _, _)) =>
           toBroadcast(FetchedGET(url, status, 0))
         case (url, ErrorResponse(_, typ)) =>
           toBroadcast(FetchedError(url, typ))
       }
-      val assertionsToBroadcast = _assertions map {
+      val assertionsToBroadcast = observation.assertions map {
         case (url, assertorId, Left(t)) =>
           toBroadcast(AssertedError(url, assertorId, t))
         case (url, assertorId, Right(assertion)) =>
