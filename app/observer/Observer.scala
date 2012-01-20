@@ -117,7 +117,9 @@ class ObserverImpl (
     if (observation.explorationPhaseHasEnded) {
       logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, observation.responses.size))
       val urls = observation.urls
-      waitingForEndOfExplorationPhase foreach { _.success(urls) }
+      waitingForEndOfExplorationPhase foreach {
+        _.success(urls)
+      }
       // we don't need pending Futures for crawling anymore
       // make it available for GC
       waitingForEndOfExplorationPhase = null
@@ -162,12 +164,14 @@ class ObserverImpl (
       logger.debug("%s:  GET <<< %s" format (shortId, url))
       val distance =
         observation.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
-      val urls = {
+      val extractedURLs = {
         val encoding = "UTF-8"
         val reader = new java.io.StringReader(body)
         // TODO review this clearhash stuff
         html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
       }
+      val urls = observation.filteredExtractedURLs(extractedURLs)
+      println(urls.mkString("  |||  "))
       observation =
         observation
           .withoutURLBeingExplored(url)

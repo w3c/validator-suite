@@ -19,19 +19,6 @@ import scala.collection.mutable.LinkedHashMap
 import play.api.libs.iteratee.CallbackEnumerator
 
 
-object Observation {
-  
-  def apply(_id: ObserverId, _strategy: Strategy): Observation =
-    Observation(
-      id = _id,
-      strategy = _strategy,
-      state = NotYetStarted,
-      urlsToBeExplored = List.empty,
-      responses = Map.empty,
-      assertions = List.empty)
-  
-}
-
 sealed trait ExplorationStatus
 case object ToBeExplored extends ExplorationStatus
 case object Pending extends ExplorationStatus
@@ -47,10 +34,18 @@ case class Explore(
 case class Observation(
     id: ObserverId,
     strategy: Strategy,
-    state: ObserverState,
-    urlsToBeExplored: List[Explore],
-    responses: Map[URL, Response],
-    assertions: Assertions) {
+    state: ObserverState = NotYetStarted,
+    urlsToBeExplored: List[Explore] = List.empty,
+    responses: Map[URL, Response] = Map.empty,
+    assertions: Assertions = List.empty) {
+  
+  assert {
+    val urls = urlsToBeExplored.map{_.url}
+    def noDuplicatedURLs = (urls diff urls.distinct).size == 0
+    def urlIsEitherToBeExploredOrAlreadyExplored =
+      responses.keys forall { url => ! urlsToBeExplored.contains(url) }
+    noDuplicatedURLs && urlIsEitherToBeExploredOrAlreadyExplored
+  }
   
   val shortId = id.toString.substring(0,6)
 
@@ -59,7 +54,8 @@ case class Observation(
   def explorationPhaseHasEnded = urlsToBeExplored.isEmpty
     
   def withFirstURLsToExplore(urls: Iterable[URL]): Observation =
-    this.copy(urlsToBeExplored = urls.toList map { url => Explore(url, 0) })
+    this.copy(urlsToBeExplored =
+      urls.toList.distinct map { url => Explore(url, 0) })
   
   def stop(): Observation = this.copy(state = StoppedState)
   
@@ -86,9 +82,11 @@ case class Observation(
     alreadyFetched || alreadyScheduled
   }
   
-  def withNewUrlsToBeExplored(urls: Iterable[Explore]): Observation = {
-    val filteredURLs = urls filterNot { e => shouldIgnore(e.url) }
-    this.copy(urlsToBeExplored = urlsToBeExplored ++ filteredURLs)
+  def filteredExtractedURLs(urls: List[URL]): List[URL] =
+    urls.distinct filterNot shouldIgnore
+  
+  def withNewUrlsToBeExplored(urls: List[Explore]): Observation = {
+    this.copy(urlsToBeExplored = urlsToBeExplored ++ urls)
   }
   
   def numberOfKnownUrls: Int = responses.size + urlsToBeExplored.size
