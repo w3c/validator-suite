@@ -171,7 +171,7 @@ class ObserverImpl (
         html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
       }
       val urls = observation.filteredExtractedURLs(extractedURLs)
-      println(urls.mkString("  |||  "))
+      //println(urls.mkString("  |||  "))
       observation =
         observation
           .withoutURLBeingExplored(url)

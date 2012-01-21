@@ -130,7 +130,7 @@ object Validator extends Controller with Secured {
             val ce = new CallbackEnumerator[String]()
             val subscriber = observer.subscriberOf(new Subscriber(ce, observer))
             subscriber.subscribe()
-            val iteratee = ce &> Enumeratee.map{ e => logger.error(e.toString); e } &> Comet(callback = "parent.VS.logComet")
+            val iteratee = ce &> Enumeratee.map{ e => logger.error("*** "+e.toString); e } &> Comet(callback = "parent.VS.logComet")
             Promise.pure(Ok.stream(iteratee).withHeaders("X-VS-ActionID" -> id))
           }
         }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))
