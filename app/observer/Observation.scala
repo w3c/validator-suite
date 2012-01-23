@@ -16,8 +16,6 @@ import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
-import play.api.libs.iteratee.CallbackEnumerator
-
 
 sealed trait ExplorationStatus
 case object ToBeExplored extends ExplorationStatus
