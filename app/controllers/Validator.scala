@@ -45,7 +45,12 @@ object Validator extends Controller with Secured {
     tuple(
       "url" -> of[URL],
       "distance" -> of[Int].verifying(min(0), max(10)),
-      "linkCheck" -> of[Boolean]
+      "linkCheck" -> of[Boolean](new Formatter[Boolean] {
+        def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Boolean] =
+          if (data.get(key) != None) Right(true) else Right(false)
+        def unbind(key: String, value: Boolean): Map[String, String] =
+          if (value) Map(key -> "on") else Map()
+      })
     )
   )
   
