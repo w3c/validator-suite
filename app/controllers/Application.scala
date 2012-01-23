@@ -6,18 +6,17 @@ import play.api.data._
 import play.api.data.format.Formats._
 import play.api.data.validation.Constraints._
 import play.api.data.format.Formatter
-import play.api.mvc.Request
+import play.api.mvc.{AsyncResult, Request}
+import play.api.data.Forms._
+
 import java.net.URI
 import java.util.UUID
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
-import play.api.data.FormError
-import play.api.mvc.AsyncResult
 
 import play.api.libs._
 import play.api.libs.iteratee._
-
 import play.api.libs.concurrent._
 import play.api.libs.akka._
 
@@ -28,7 +27,7 @@ object Application extends Controller {
   // -- Authentication
 
   val loginForm = Form(
-    of(
+    tuple(
       "email" -> text,
       "password" -> text
     ) verifying ("Invalid email or password", result => result match {

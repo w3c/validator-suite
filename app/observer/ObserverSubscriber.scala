@@ -3,7 +3,7 @@ package org.w3.vs.observer
 import scala.collection.mutable.Set
 import akka.actor.TypedActor
 import org.w3.vs.GlobalSystem
-import play.api.libs.iteratee.CallbackEnumerator
+import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import akka.actor.Props
 
 /**
@@ -11,25 +11,20 @@ import akka.actor.Props
  * Then the Observer can broadcast message to the Subcriber
  */
 trait ObserverSubscriber {
+  def enumerator: Enumerator[String]
   def subscribe(): Unit
   def unsubscribe(): Unit
   def broadcast(msg: String): Unit
 }
 
-class Subscriber(
-    callback: CallbackEnumerator[String],
-    observer: Observer)
-    extends ObserverSubscriber {
+class Subscriber(observer: Observer) extends ObserverSubscriber {
   
-  // subscribes to the actionManager at instantiation time
+  val enumerator = new PushEnumerator[String]( onStart = this.subscribe() )
+  
   def subscribe(): Unit = observer.subscribe(this)
   
   def unsubscribe(): Unit = observer.unsubscribe(this)
   
-  val logger = play.Logger.of(classOf[Subscriber])
-  
-  def broadcast(msg: String): Unit = {
-    callback.push(msg)
-  }
+  def broadcast(msg: String): Unit = enumerator.push(msg)
   
 }

@@ -15,6 +15,7 @@ import org.w3.vs.observer._
 import play.api.data.FormError
 import play.api.mvc.AsyncResult
 import org.w3.vs.GlobalSystem
+import play.api.data.Forms._
 
 import play.api.libs._
 import play.api.libs.iteratee._
@@ -41,7 +42,7 @@ object Validator extends Controller with Secured {
   }
   
   val validateForm = Form(
-    of(
+    tuple(
       "url" -> of[URL],
       "distance" -> of[Int].verifying(min(0), max(10)),
       "linkCheck" -> of[Boolean]
@@ -127,10 +128,8 @@ object Validator extends Controller with Secured {
         val observerId = ObserverId(id)
         GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
           AsyncResult {
-            val ce = new CallbackEnumerator[String]()
-            val subscriber = observer.subscriberOf(new Subscriber(ce, observer))
-            subscriber.subscribe()
-            val iteratee = ce &> Enumeratee.map{ e => logger.error("*** "+e.toString); e } &> Comet(callback = "parent.VS.logComet")
+            val subscriber = observer.subscriberOf(new Subscriber(observer))
+            val iteratee = subscriber.enumerator &> Enumeratee.map{ e => logger.error("*** "+e.toString); e } &> Comet(callback = "parent.VS.logComet")
             Promise.pure(Ok.stream(iteratee).withHeaders("X-VS-ActionID" -> id))
           }
         }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))

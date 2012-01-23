@@ -16,7 +16,7 @@ import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
-import play.api.libs.iteratee.CallbackEnumerator
+import play.api.libs.iteratee.PushEnumerator
 
 /**
  * An Observer is the unity of action that implements
