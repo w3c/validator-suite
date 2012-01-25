@@ -21,8 +21,9 @@ case class SiteMapBasedStrategy(
     sitemap: SiteMap)
 extends Strategy {
   
-  val seedURLs: Iterable[URL] =
-    sitemap.urls map { _.loc }
+  val seedURLs: Iterable[URL] = sitemap.urls map { _.loc }
+  
+  def mainAuthority: Authority = this.seedURLs.headOption map {_.authority} getOrElse sys.error("No seed url in strategy")
 
   val authorityToObserve: Authority =
     sitemap.urls.head.loc.authority

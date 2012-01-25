@@ -171,12 +171,10 @@ class ObserverImpl (
         html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
       }
       val urls = observation.filteredExtractedURLs(extractedURLs)
-      //println(urls.mkString("  |||  "))
       observation =
         observation
-          .withoutURLBeingExplored(url)
-          .withResponse(url -> HttpResponse(url, status, headers, urls))
-          .withNewUrlsToBeExplored(urls map { Explore(_, distance + 1) })
+          .withNewResponse(url -> HttpResponse(url, status, headers, urls))
+          .withNewUrlsToBeExplored(urls map { (_, distance + 1) })
       if (urls.size > 0) {
         logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, urls.size, observation.numberOfKnownUrls))
       }
@@ -194,9 +192,8 @@ class ObserverImpl (
     if (observation.state != StoppedState) {
       val HEADResponse(status, headers) = r
       logger.debug("%s: HEAD <<< %s" format (shortId, url))
-      observation = observation.withoutURLBeingExplored(url)
+      observation = observation.withNewResponse(url -> HttpResponse(url, status, headers, Nil))
       scheduleNextURLsToFetch()
-      observation = observation.withResponse(url -> HttpResponse(url, status, headers, Nil))
       broadcast(FetchedHEAD(url, r.status))
       conditionalEndOfExplorationPhase()
     }
@@ -209,9 +206,8 @@ class ObserverImpl (
   def sendException(url: URL, t: Throwable): Unit = {
     if (observation.state != StoppedState) {
       logger.debug("%s: Exception for %s: %s" format (shortId, url, t.getMessage))
-      observation = observation.withoutURLBeingExplored(url)
+      observation = observation.withNewResponse(url -> ErrorResponse(url, t.getMessage))
       scheduleNextURLsToFetch()
-      observation = observation.withResponse(url -> ErrorResponse(url, t.getMessage))
       broadcast(FetchedError(url, t.getMessage))
       conditionalEndOfExplorationPhase()
     }
@@ -221,9 +217,10 @@ class ObserverImpl (
    * fetch one URL
    * depending on the strategy, it does the right fetch, or nothing
    */
-  def fetch(explore: Explore, action: FetchAction): Unit = {
+  def fetch(explore: Observation#Explore): Unit = {
+    val (url, distance) = explore
+    val action = strategy.fetch(url, distance)
     //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
-    val Explore(url, distance) = explore
     action match {
       case FetchGET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
@@ -246,16 +243,14 @@ class ObserverImpl (
    * this improves the reactivity (if we cancel the exploration) and the fairness (sharing the access to the Fetch module among observers)
    * TODO make 10 a parameter
    */
-  def scheduleNextURLsToFetch(): Unit =
-    observation = observation.fetch(atMost = 10){ fetch(_, _) }
+  def scheduleNextURLsToFetch(): Unit = {
+    val (newObservation, explores) = observation.takeAtMost(10)
+    //logger.debug(explores.mkString("explores: ", " | ", ""))
+    explores foreach fetch
+    observation = newObservation
+  }
 
   
-//        val numberOfAssertors = assertors.size
-//      if (numberOfAssertors == 0) {
-//        logger.debug("%s: no observation for %s" format (shortId, url))
-//        broadcast(NothingToObserve(url))
-//      } else {
-
   /**
    * starts the assertion phase
    * we currently schedule all the assertion at once as we handle all the assertors
@@ -328,7 +323,7 @@ class ObserverImpl (
     case NothingToObserve(url) => """["OBS_NO", "%s"]""" format url
     case ObservationFinished => """["OBS_FINISHED"]"""
     case InitialState => {
-      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (observation.responses.size, observation.urlsToBeExplored.size, observation.assertions.size, 0)
+      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (observation.responses.size, observation.toBeExplored.size, observation.assertions.size, 0)
       import org.w3.vs.model._
       val responsesToBroadcast = observation.responses map {
         // disctinction btw GET and HEAD, links.size??

@@ -10,107 +10,149 @@ import akka.actor._
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import play.Logger
-import System.{currentTimeMillis => now}
+import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
 import akka.util.duration._
 import akka.util.Duration
-import scala.collection.mutable.LinkedList
-import scala.collection.mutable.LinkedHashMap
 
-sealed trait ExplorationStatus
-case object ToBeExplored extends ExplorationStatus
-case object Pending extends ExplorationStatus
-
-case class Explore(
-    url: URL,
-    distance: Int) {
-  
-  var status: ExplorationStatus = ToBeExplored
-  
+object Observation {
+  def getUrl(e: Observation#Explore): URL = e._1
+  def getDistance(e: Observation#Explore) = e._2
 }
 
+import Observation.{ getUrl, getDistance }
+
 case class Observation(
-    id: ObserverId,
-    strategy: Strategy,
-    state: ObserverState = NotYetStarted,
-    urlsToBeExplored: List[Explore] = List.empty,
-    responses: Map[URL, Response] = Map.empty,
-    assertions: Assertions = List.empty) {
+  id: ObserverId,
+  strategy: Strategy,
+  state: ObserverState = NotYetStarted,
+  toBeExplored: List[Observation#Explore] = List.empty,
+  pendingMainAuthority: Option[Observation#Explore] = None,
+  pending: Map[URL, Observation#Explore] = Map.empty,
+  responses: Map[URL, Response] = Map.empty,
+  assertions: Assertions = List.empty) {
   
-  assert {
-    val urls = urlsToBeExplored.map{_.url}
-    def noDuplicatedURLs = (urls diff urls.distinct).size == 0
-    def urlIsEitherToBeExploredOrAlreadyExplored =
-      responses.keys forall { url => ! urlsToBeExplored.contains(url) }
-    noDuplicatedURLs && urlIsEitherToBeExploredOrAlreadyExplored
-  }
+  override def toString: String =
+    """|observation:
+       |  id=%s
+       |  state=%s,
+       |  toBeExplored=%s
+       |  pendingMainAuthority=%s
+       |  responses=%s
+       |  assertions=%s""" format (id.toString, state.toString, toBeExplored.toString, pendingMainAuthority.toString, responses.keys mkString ", ", assertions.size.toString)
+
+  type Explore = (URL, Int)
+
+  def allKnownUrls: Set[URL] =
+    (pendingMainAuthority map getUrl).toSet ++
+      (toBeExplored map getUrl).toSet ++
+      pending.keySet ++
+      responses.keySet
+
+  def numberOfKnownUrls: Int = toBeExplored.size + pendingMainAuthority.size + pending.size + responses.size
+
+//  assert(
+//    allKnownUrls.size == numberOfKnownUrls,
+//    """|each url must be either 1. to be explored 2. pending 3. already explored
+//       |  observation: %s
+//       |  (%d) known urls: %s
+//       |  numberOfKnownUrls: %d""" format ("" /*this.toString*/ , allKnownUrls.size, "" /*allKnownUrls.toString*/ , numberOfKnownUrls))
+
+//  assert(
+//    allKnownUrls.size == numberOfKnownUrls,
+//    """|each url must be either 1. to be explored 2. pending 3. already explored
+//       |  observation: %s
+//       |  (%d) known urls: %s
+//       |  numberOfKnownUrls: %d""" format (this.toString , allKnownUrls.size, allKnownUrls.toString , numberOfKnownUrls))
+
+  assert(
+    allKnownUrls.size == numberOfKnownUrls,
+    "each url must be either 1. to be explored 2. pending 3. already explored. (know %d, expected %d)\n%s" format (allKnownUrls.size, numberOfKnownUrls, this.toString))
   
-  val shortId = id.toString.substring(0,6)
+  val shortId = id.toString.substring(0, 6)
 
   def urls: Iterable[URL] = responses.keys
-  
-  def explorationPhaseHasEnded = urlsToBeExplored.isEmpty
-    
-  def withFirstURLsToExplore(urls: Iterable[URL]): Observation =
-    this.copy(urlsToBeExplored =
-      urls.toList.distinct map { url => Explore(url, 0) })
-  
-  def stop(): Observation = this.copy(state = StoppedState)
-  
-  def withResponse(resp: (URL, Response)) =
-    this.copy(responses = responses + resp)
-  
-//  def distanceFor(url: URL): Option[Int] =
-//    pendingFetches collectFirst { case (_url, distance) if url == _url => distance }
-  
-  def distanceFor(url: URL): Option[Int] =
-    urlsToBeExplored collectFirst { case e if url == e.url => e.distance }
-  
-  def withPendingFetch(url: URL): Observation = {
-    urlsToBeExplored find { e => url == e.url } foreach { _.status = Pending }
-    this
+
+  def explorationPhaseHasEnded = pendingMainAuthority.isEmpty && pending.isEmpty && toBeExplored.isEmpty
+
+  def withFirstURLsToExplore(urls: List[URL]): Observation = {
+    val seedUrls = urls.distinct map { (_, 0) }
+    this.copy(toBeExplored = seedUrls)
   }
-  
-  def withoutURLBeingExplored(url: URL): Observation =
-    this.copy(urlsToBeExplored = urlsToBeExplored filterNot { e => url == e.url})
-  
+
+  def stop(): Observation = this.copy(state = StoppedState)
+
+  def withNewResponse(resp: (URL, Response)) = {
+    val (url, response) = resp
+    if (pendingMainAuthority.isDefined)
+      this.copy(
+        pendingMainAuthority = None,
+        responses = responses + resp)
+    else
+      this.copy(
+        pending = pending - url,
+        responses = responses + resp)
+  }
+
+  /**
+   * the distance for the origin for the given url
+   * search first in the pendingUrls then in urlsToBeExplored
+   */
+  def distanceFor(url: URL): Option[Int] = {
+    def fromPendingMain = pendingMainAuthority map getDistance
+    def fromPending = pending.get(url) map getDistance
+    def fromToBeExplored = toBeExplored collectFirst { case e if url == getUrl(e) => getDistance(e) }
+    fromPendingMain orElse fromPending orElse fromToBeExplored
+  }
+
+  private def exploreWith(url: URL) = { e: Explore => url == getUrl(e) }
+
   private def shouldIgnore(url: URL): Boolean = {
     def alreadyFetched = responses isDefinedAt url
-    def alreadyScheduled = urlsToBeExplored exists { e => url == e.url }
-    alreadyFetched || alreadyScheduled
+    def alreadyPendingMainAuthority = pendingMainAuthority.isDefined && getUrl(pendingMainAuthority.get) == url
+    def alreadyPending = pending isDefinedAt url
+    def alreadyScheduled = toBeExplored exists exploreWith(url)
+    alreadyFetched || alreadyPendingMainAuthority || alreadyPending || alreadyScheduled
   }
-  
-  def filteredExtractedURLs(urls: List[URL]): List[URL] =
-    urls.distinct filterNot shouldIgnore
-  
-  def withNewUrlsToBeExplored(urls: List[Explore]): Observation = {
-    this.copy(urlsToBeExplored = urlsToBeExplored ++ urls)
-  }
-  
-  def numberOfKnownUrls: Int = responses.size + urlsToBeExplored.size
-  
-  /**
-   * The main authority of the current strategy.
-   * TODO: should be given by the strategy directly
-   */
-  val mainAuthority: Authority =
-    strategy.seedURLs.headOption map {_.authority} getOrElse sys.error("No seed url in strategy")
 
-  def fetch(atMost: Int)(f: (Explore, FetchAction) => Unit): Observation = {
-    for {
-      explore <- nextBestExplores(atMost)
-    } {
-      val Explore(url, distance) = explore
-      val action = strategy.fetch(url, distance)
-      // that's the hook with side-effects
-      f(explore, action)
-      explore.status = Pending
+  def filteredExtractedURLs(urls: List[URL]): List[URL] =
+    (urls filterNot shouldIgnore).distinct
+
+  def withNewUrlsToBeExplored(urls: List[Explore]): Observation =
+    this.copy(toBeExplored = toBeExplored ++ urls)
+
+  val mainAuthority: Authority = strategy.mainAuthority
+
+  lazy val pendingAuthorities: Set[Authority] = ((pendingMainAuthority map getUrl).toSet ++ pending.keySet) map { _.getAuthority }
+
+  private def takeFromMainAuthority: Option[(Observation, Explore)] = {
+    val optExplore = toBeExplored find { e => mainAuthority == getUrl(e).getAuthority }
+//    println("=== "+toBeExplored)
+//    println("&&& "+mainAuthority)
+//    println("*** "+optExplore)
+    optExplore map {
+      case e @ (url, distance) =>
+        (this.copy(
+          toBeExplored = toBeExplored filterNot { url == getUrl(_) },
+          pendingMainAuthority = optExplore),
+          e)
     }
-    // but the status bits was changed for some explores
-    this
   }
-  
+
+  private def takeFromOtherAuthorities: Option[(Observation, Explore)] = {
+    val pendingToConsiderer =
+      toBeExplored.view filterNot { case (url, distance) => url.getAuthority == mainAuthority || (pendingAuthorities contains url.getAuthority) }
+    pendingToConsiderer.headOption map {
+      case e @ (url, distance) =>
+        (this.copy(
+          toBeExplored = toBeExplored filterNot { url == getUrl(_) },
+          pending = pending + (url -> e)),
+          e)
+    }
+  }
+
   /**
+   * TODO review documentation
    * returns the next best URL/Explore to fetch
    * best is defined in this order
    * <ul>
@@ -118,34 +160,33 @@ case class Observation(
    * <li>a URL such that there is no pending fetch with the same authority</li>
    * <li>Nothing</li>
    * </ul>
-   * TODO: two pendingFetches ? One for main authority and one for the rest
+   *
+   * if no pending main authority, try to find one
+   * if not, just take one whose authority is not already pending
    */
-  def nextBestExplores(atMost: Int): Iterable[Explore] = {
-    def alreadyPending(authority: Authority): Boolean =
-      urlsToBeExplored exists { e => e.status == Pending && authority == e.url.getAuthority }
-    val alreadyPendingFetchForMainAuthority = alreadyPending(mainAuthority)
-    var counter: Int = 0
-    // search for authority first
-    // if there is already a pending request for the main authority, it is necessarily the first one
-    val mainExplore = urlsToBeExplored find { mainAuthority == _.url.getAuthority }
-    if (mainExplore.isDefined) {
-      counter = 1
-      mainExplore.get.status = Pending
+  def take: Option[(Observation, Explore)] = {
+    //logger.debug(this.toString)
+    if (pendingMainAuthority.isDefined) {
+      takeFromOtherAuthorities
+    } else {
+      takeFromMainAuthority orElse takeFromOtherAuthorities
     }
-    val explores =
-      for {
-        explore <- urlsToBeExplored
-        if counter < atMost && explore.status != Pending
-      } yield {
-        counter += 1
-        explore.status = Pending
-        explore
-      }
-    explores ++ mainExplore
   }
-    
-//  def withAssertions(assertions: Assertions): Observation =
-//    this.copy(assertions = assertions)
-    
+
+  val logger = play.Logger.of(classOf[Observation])
+
+  def takeAtMost(n: Int): (Observation, List[Explore]) = {
+    var current: Observation = this
+    var explores: List[Explore] = List.empty
+    for {
+      i <- 0 to (n - 1)
+      (observation, e) <- current.take
+    } {
+      current = observation
+      explores ::= e
+    }
+    (current, explores)
+  }
+
 }
 
