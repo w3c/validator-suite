@@ -107,15 +107,17 @@ case class Observation(
 
   private def exploreWith(url: URL) = { e: Explore => url == getUrl(e) }
 
-  private def shouldIgnore(url: URL): Boolean = {
+  private def shouldIgnore(explore: Explore): Boolean = {
+    val (url, distance) = explore
+    def notToBeFetched = FetchNothing == strategy.fetch(url, distance)
     def alreadyFetched = responses isDefinedAt url
     def alreadyPendingMainAuthority = pendingMainAuthority.isDefined && getUrl(pendingMainAuthority.get) == url
     def alreadyPending = pending isDefinedAt url
     def alreadyScheduled = toBeExplored exists exploreWith(url)
-    alreadyFetched || alreadyPendingMainAuthority || alreadyPending || alreadyScheduled
+    notToBeFetched || alreadyFetched || alreadyPendingMainAuthority || alreadyPending || alreadyScheduled
   }
 
-  def filteredExtractedURLs(urls: List[URL]): List[URL] =
+  def filteredExtractedURLs(urls: List[Explore]): List[Explore] =
     (urls filterNot shouldIgnore).distinct
 
   def withNewUrlsToBeExplored(urls: List[Explore]): Observation =
@@ -123,13 +125,11 @@ case class Observation(
 
   val mainAuthority: Authority = strategy.mainAuthority
 
-  lazy val pendingAuthorities: Set[Authority] = ((pendingMainAuthority map getUrl).toSet ++ pending.keySet) map { _.getAuthority }
+  lazy val allPending: Set[URL] = (pendingMainAuthority map getUrl).toSet ++ pending.keySet
+  lazy val pendingAuthorities: Set[Authority] = allPending map { _.getAuthority }
 
   private def takeFromMainAuthority: Option[(Observation, Explore)] = {
     val optExplore = toBeExplored find { e => mainAuthority == getUrl(e).getAuthority }
-//    println("=== "+toBeExplored)
-//    println("&&& "+mainAuthority)
-//    println("*** "+optExplore)
     optExplore map {
       case e @ (url, distance) =>
         (this.copy(
@@ -179,7 +179,7 @@ case class Observation(
     var current: Observation = this
     var explores: List[Explore] = List.empty
     for {
-      i <- 0 to (n - 1)
+      i <- 1 to (n - allPending.size)
       (observation, e) <- current.take
     } {
       current = observation
@@ -187,6 +187,9 @@ case class Observation(
     }
     (current, explores)
   }
+  
+  def withAssertion(assertion: (URL, AssertorId, Either[Throwable, Assertion])): Observation =
+    this.copy(assertions = assertion :: assertions)
 
 }
 

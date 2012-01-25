@@ -18,6 +18,18 @@ import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
 import play.api.libs.iteratee.PushEnumerator
 
+object Observer {
+  
+  val MAX_URL_TO_FETCH = 10
+  
+  val validatorDispatcher = {
+    import java.util.concurrent.{ExecutorService, Executors}
+    val executor: ExecutorService = Executors.newFixedThreadPool(10)
+    ExecutionContext.fromExecutorService(executor)
+  }
+  
+}
+
 /**
  * An Observer is the unity of action that implements
  * the Exploration and Assertion phases
@@ -36,6 +48,9 @@ trait Observer {
   def subscribe(subscriber: ObserverSubscriber): Unit
   def unsubscribe(subscriber: ObserverSubscriber): Unit
   def subscriberOf(subscriber: => Subscriber): ObserverSubscriber
+  // bar
+  def assertionSuccess(url: URL, assertorId: AssertorId, assertion: Assertion): Unit
+  def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit
 }
 
 
@@ -47,6 +62,9 @@ class ObserverImpl (
   
   val logger = Logger.of(classOf[Observer])
   
+  val self: Observer = TypedActor.self[Observer]
+
+  // TODO is it really what we want? I don't think so
   import TypedActor.dispatcher
   
   /**
@@ -170,15 +188,17 @@ class ObserverImpl (
         // TODO review this clearhash stuff
         html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
       }
-      val urls = observation.filteredExtractedURLs(extractedURLs)
+      // TODO the distance should be different based on the kind of resource we're looking at
+      val potentialExplores = extractedURLs map { _ -> (distance + 1) }
+      val explores = observation.filteredExtractedURLs(potentialExplores)
       observation =
         observation
-          .withNewResponse(url -> HttpResponse(url, status, headers, urls))
-          .withNewUrlsToBeExplored(urls map { (_, distance + 1) })
-      if (urls.size > 0) {
-        logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, urls.size, observation.numberOfKnownUrls))
+          .withNewResponse(url -> HttpResponse(url, status, headers, extractedURLs.distinct))
+          .withNewUrlsToBeExplored(explores)
+      if (explores.size > 0) {
+        logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, observation.numberOfKnownUrls))
       }
-      broadcast(FetchedGET(url, status, urls.size))
+      broadcast(FetchedGET(url, status, explores.size))
       scheduleNextURLsToFetch()
       conditionalEndOfExplorationPhase()
     }
@@ -217,7 +237,7 @@ class ObserverImpl (
    * fetch one URL
    * depending on the strategy, it does the right fetch, or nothing
    */
-  def fetch(explore: Observation#Explore): Unit = {
+  def fetch(explore: Observation#Explore): FetchAction = {
     val (url, distance) = explore
     val action = strategy.fetch(url, distance)
     //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
@@ -231,9 +251,10 @@ class ObserverImpl (
         GlobalSystem.http.HEAD(url, observerId.toString)
       }
       case FetchNothing => {
-        logger.debug("%s: Ignoring %s" format (shortId, url))
+        logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))
       }
     }
+    action
   }
   
   // 
@@ -244,13 +265,46 @@ class ObserverImpl (
    * TODO make 10 a parameter
    */
   def scheduleNextURLsToFetch(): Unit = {
-    val (newObservation, explores) = observation.takeAtMost(10)
-    //logger.debug(explores.mkString("explores: ", " | ", ""))
-    explores foreach fetch
+    val (newObservation, explores) = observation.takeAtMost(Observer.MAX_URL_TO_FETCH)
+//    logger.debug(explores.mkString("explores: ", " | ", ""))
     observation = newObservation
+//    logger.debug("### "+explores)
+    explores foreach fetch
   }
-
   
+  var assertionCounter: Int = 0
+//  var _assertions
+  
+  def assertionSuccess(url: URL, assertorId: AssertorId, assertion: Assertion): Unit = {
+    logger.debug("%s: %s observed by %s" format (shortId, url, assertorId))
+    broadcast(Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
+    val a = (url, assertorId, Right(assertion))
+    observation = observation.withAssertion(a)
+    endOfAssertionPhase()
+  }
+  
+  def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit = {
+    logger.debug("%s: %s got observation error for %s" format (shortId, url, assertorId))
+    broadcast(AssertedError(url, assertorId, t))
+    val a = (url, assertorId, Left(t))
+    observation = observation.withAssertion(a)
+    endOfAssertionPhase()
+  }
+  
+  private def endOfAssertionPhase(): Unit =
+    if (assertionCounter == observation.assertions.size) {
+      logger.info("%s: Observation phase done with %d observations" format (shortId, observation.assertions.size))
+      waitingForEndOfAssertionPhase foreach { _.success(observation.assertions) }
+      // we don't need pending Futures for observations anymore
+      // make it available for GC
+      waitingForEndOfAssertionPhase = null
+      observation = observation.copy(state = FinishedState)
+      broadcast(ObservationFinished)
+      val context = TypedActor(TypedActor.context)
+      subscribers foreach { context.stop(_) }
+      subscribers = Set.empty
+    }
+    
   /**
    * starts the assertion phase
    * we currently schedule all the assertion at once as we handle all the assertors
@@ -260,41 +314,27 @@ class ObserverImpl (
     logger.info("%s: Starting observation phase" format (shortId))
     val _2XX = observation.responses.toIterable collect { case (url, response: HttpResponse) => (url, response) }
     broadcast(URLsToObserve(_2XX.size))
-    val assertions: Assertions = for {
+
+    for {
       // TODO Filter only 2xx responses
       (url, response) <- _2XX
       if strategy shouldObserve url
       ctOption = response.headers.contentType
       assertors = assertorPicker.pick(ctOption)
       assertor <- assertors
-    } yield {
-      try {
-        val assertion = assertor.assert(url)
-        logger.debug("%s: %s observed by %s" format (shortId, url, assertor.id))
-        broadcast(Asserted(url, assertor.id, assertion.errorsNumber, assertion.warningsNumber))
-        (url, assertor.id, Right(assertion))
-      } catch {
-        case t: Throwable => {
-          logger.debug("%s: %s got observation error for %s" format (shortId, url, assertor.id))
-          broadcast(AssertedError(url, assertor.id, t))
-          (url, assertor.id, Left(t))
+    } {
+      def run =
+        try {
+          self.assertionSuccess(url, assertor.id, assertor.assert(url))
+        } catch {
+          case t: Throwable => {
+            self.assertionFailure(url, assertor.id, t)
+          }
         }
-      }
+      assertionCounter += 1
+      Future(run)(Observer.validatorDispatcher)
     }
-    
-    observation = observation.copy(assertions = assertions)
-    
-    logger.info("%s: Observation phase done with %d observations" format (shortId, observation.assertions.size))
-    waitingForEndOfAssertionPhase foreach { _.success(observation.assertions) }
-    // we don't need pending Futures for observations anymore
-    // make it available for GC
-    waitingForEndOfAssertionPhase = null
-    observation = observation.copy(state = FinishedState)
-    broadcast(ObservationFinished)
-    val context = TypedActor(TypedActor.context)
-    subscribers foreach { context.stop(_) }
-    subscribers = null
-    
+    logger.debug("expecting %d assertions" format assertionCounter)
   }
   
   

@@ -6,6 +6,6 @@ import org.w3.util.URL
 
 package object observer {
 
-  type Assertions = Iterable[(URL, AssertorId, Either[Throwable, Assertion])]
+  type Assertions = List[(URL, AssertorId, Either[Throwable, Assertion])]
 
 }

@@ -87,8 +87,7 @@ object ObservationSpec extends Specification {
       observation.withNewUrlsToBeExplored(List(w3_home -> 0)) must throwA[AssertionError]
     }
     "should be able to filter URLs to be added" in {
-      val filteredURLs = observation.filteredExtractedURLs(List(w3_home, w3_standards, w3_participate))
-      val newExplores = filteredURLs map { _ -> 2 }
+      val newExplores = observation.filteredExtractedURLs(List(w3_home -> 2, w3_standards -> 2, w3_participate -> 2))
       newExplores.size must beEqualTo (1)
       // this should not blow up!
       val obs = observation.withNewUrlsToBeExplored(newExplores)

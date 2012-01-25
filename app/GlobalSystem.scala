@@ -59,6 +59,9 @@ object GlobalSystem {
         Props(),
         "http")
 
+    // ouch :-)
+    http.authorityManagerFor("w3.org").sleepTime = 0
+        
     observerCreator = 
       TypedActor(GlobalSystem.system).typedActorOf(
       classOf[ObserverCreator],

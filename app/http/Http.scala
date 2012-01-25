@@ -15,6 +15,7 @@ trait Http {
   def GET(url: URL, distance: Int, actionManagerId: String): Unit
   def HEAD(url: URL, actionManagerId: String): Unit
   def authorityManagerFor(url: URL): AuthorityManager
+  def authorityManagerFor(authority: Authority): AuthorityManager
 }
 
 /**
