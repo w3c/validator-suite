@@ -4,7 +4,6 @@ import org.w3.util._
 import org.w3.util.website._
 import org.w3.vs.model._
 import org.specs2.mutable.Specification
-import org.w3.vs.GlobalSystem
 import akka.dispatch.Await
 import akka.util.duration._
 import akka.util.Duration
@@ -30,11 +29,8 @@ object SimpleInterWebsiteTest extends Specification {
       unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
   )
 
-  GlobalSystem.init()
-
-  "test simpleInterWebsite" in new ObserverScope(servers)(GlobalSystem.system) {
-    val observer =
-      GlobalSystem.observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(1, SECONDS))
+  "test simpleInterWebsite" in new ObserverScope(servers)(new org.w3.vs.Production { }) {
+    val observer = observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(1, SECONDS))
     observer.startExplorationPhase()
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     assert(urls.size === 2)

@@ -56,9 +56,10 @@ trait Observer {
 
 
 class ObserverImpl (
-    assertorPicker: AssertorPicker,
     observerId: ObserverId,
-    strategy: Strategy) extends Observer {
+    strategy: Strategy)(implicit val configuration: ValidatorSuiteConf) extends Observer {
+  
+  import configuration._
   
   // TODO is it really what we want? I don't think so
   import TypedActor.dispatcher
@@ -334,11 +335,11 @@ class ObserverImpl (
       case FetchGET => {
         // TODO change the interface for http so that we pass the Observer reference directly XXX
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        GlobalSystem.http.GET(url, distance, self)
+        http.GET(url, distance, self)
       }
       case FetchHEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
-        GlobalSystem.http.HEAD(url, self)
+        http.HEAD(url, self)
       }
       case FetchNothing => {
         logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))

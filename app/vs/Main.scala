@@ -22,10 +22,10 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     
-    GlobalSystem.init()
+    val configuration = new Production { }
 
-    val am = GlobalSystem.http.authorityManagerFor(URL("http://www.w3.org/")).sleepTime = 0
-    val observer = GlobalSystem.observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(10, SECONDS))
+    val am = configuration.http.authorityManagerFor(URL("http://www.w3.org/")).sleepTime = 0
+    val observer = configuration.observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(10, SECONDS))
     observer.startExplorationPhase()
     val urls = Await.result(observer.URLs(), Duration(10, SECONDS))
     println("^^^^^^ "+urls.size)

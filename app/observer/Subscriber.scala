@@ -2,7 +2,6 @@ package org.w3.vs.observer
 
 import scala.collection.mutable.Set
 import akka.actor.TypedActor
-import org.w3.vs.GlobalSystem
 import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import akka.actor.Props
 

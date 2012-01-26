@@ -6,7 +6,6 @@ import org.w3.vs.model._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit._
 import org.specs2.mutable.Specification
-import org.w3.vs.GlobalSystem
 import akka.dispatch.Await
 import akka.util.duration._
 import akka.util.Duration

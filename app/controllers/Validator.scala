@@ -9,12 +9,12 @@ import play.api.data.format.Formatter
 import play.api.mvc.Request
 import java.net.URI
 import java.util.UUID
+import org.w3.vs.{ValidatorSuiteConf, Production}
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
 import play.api.data.FormError
 import play.api.mvc.AsyncResult
-import org.w3.vs.GlobalSystem
 import play.api.data.Forms._
 
 import play.api.libs._
@@ -23,6 +23,8 @@ import play.api.libs.concurrent._
 import play.api.libs.akka._
 
 object Validator extends Controller with Secured {
+  
+  implicit val configuration: ValidatorSuiteConf = new Production { }
   
   val logger = play.Logger.of("Controller.Validator")
   
@@ -80,7 +82,7 @@ object Validator extends Controller with Secured {
     
     val observerId: ObserverId = ObserverId()
     
-    val observer = GlobalSystem.observerCreator.observerOf(observerId, strategy)
+    val observer = configuration.observerCreator.observerOf(observerId, strategy)
     
     observer.startExplorationPhase()
     
@@ -104,7 +106,7 @@ object Validator extends Controller with Secured {
     User.findByEmail(username).map { user =>
       try {
         val observerId = ObserverId(id)
-        GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
+        configuration.observerCreator.byObserverId(observerId).map { observer =>
           Redirect("/#!/observation/" + id)
         }.getOrElse(NotFound(views.html.index(Some(user), Seq("Unknown action id: " + observerId.toString))))
       } catch { case e =>
@@ -117,7 +119,7 @@ object Validator extends Controller with Secured {
     User.findByEmail(username).map { user =>
       try {
         val observerId = ObserverId(id)
-        GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
+        configuration.observerCreator.byObserverId(observerId).map { observer =>
           observer.stop()
           Ok
         }.getOrElse(NotFound)
@@ -131,7 +133,7 @@ object Validator extends Controller with Secured {
     User.findByEmail(username).map { user =>
       try {
         val observerId = ObserverId(id)
-        GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
+        configuration.observerCreator.byObserverId(observerId).map { observer =>
           AsyncResult {
             val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
             val iteratee = subscriber.enumerator /*&> Enumeratee.map{ e => logger.error("*** "+e.toString); e }*/ &> Comet(callback = "parent.VS.logComet")

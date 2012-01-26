@@ -11,12 +11,16 @@ import org.specs2.mutable._
 import org.specs2.specification.Example
 import org.specs2.specification.Scope
 import akka.actor.ActorSystem
+import org.w3.vs.{ValidatorSuiteConf, Production}
 
 /**
  * helper trait that can be used to test Observers
  * Be careful: all TypedActors are stopped after each test
  */
-class ObserverScope(servers: Seq[unfiltered.util.RunnableServer])(system: ActorSystem) extends TestKit(system) with Scope with BeforeAfter {
+class ObserverScope(servers: Seq[unfiltered.util.RunnableServer])(implicit val configuration: ValidatorSuiteConf) extends TestKit(configuration.system) with Scope with BeforeAfter {
+  
+  val observerCreator = configuration.observerCreator
+  val http = configuration.http
   
   val logger = play.Logger.of(classOf[ObserverScope])
   

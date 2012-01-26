@@ -4,7 +4,6 @@ import org.w3.util._
 import org.w3.util.website._
 import org.w3.vs.model._
 import org.specs2.mutable.Specification
-import org.w3.vs.GlobalSystem
 import akka.dispatch.Await
 import akka.util.duration._
 import akka.util.Duration
@@ -34,11 +33,9 @@ object OneGETxHEADTest extends Specification {
       unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
   )
 
-  GlobalSystem.init()
-  
-  "test OneGETxHEAD" in new ObserverScope(servers)(GlobalSystem.system) {
-    GlobalSystem.http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = delay
-    val observer = GlobalSystem.observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(1, SECONDS))
+  "test OneGETxHEAD" in new ObserverScope(servers)(new org.w3.vs.Production { }) {
+    http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = delay
+    val observer = observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(1, SECONDS))
     observer.startExplorationPhase()
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     val urls8081 = urls filter { _.authority == "localhost:8081" }
