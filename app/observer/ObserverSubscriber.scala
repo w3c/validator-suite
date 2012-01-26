@@ -17,6 +17,7 @@ trait ObserverSubscriber {
   def broadcast(msg: String): Unit
 }
 
+// TODO to be moved
 class Subscriber(observer: Observer) extends ObserverSubscriber {
   
   val enumerator = new PushEnumerator[String]( onStart = this.subscribe() )

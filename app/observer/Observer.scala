@@ -47,7 +47,7 @@ trait Observer {
   // foo
   def subscribe(subscriber: ObserverSubscriber): Unit
   def unsubscribe(subscriber: ObserverSubscriber): Unit
-  def subscriberOf(subscriber: => Subscriber): ObserverSubscriber
+  def subscriberOf(subscriber: => ObserverSubscriber): ObserverSubscriber
   // bar
   def assertionSuccess(url: URL, assertorId: AssertorId, assertion: Assertion): Unit
   def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit
@@ -60,15 +60,34 @@ class ObserverImpl (
     observerId: ObserverId,
     strategy: Strategy) extends Observer {
   
-  val logger = Logger.of(classOf[Observer])
-  
-  val self: Observer = TypedActor.self[Observer]
-
   // TODO is it really what we want? I don't think so
   import TypedActor.dispatcher
+
+  val logger = Logger.of(classOf[Observer])
   
   /**
-   * Represents the current state of this Observer. The initial state is ExplorationState.
+   * A reference to this observer that can be safely shared with other Akka objects
+   * see the warning at http://akka.io/docs/akka/2.0-M3/scala/typed-actors.html#the-tools-of-the-trade
+   * for more informations
+   */
+  val self: Observer = TypedActor.self[Observer]
+  
+  /**
+   */
+  val context = TypedActor(TypedActor.context)
+
+  /**
+   * A counter for the assertions that are generated
+   */
+  var assertionCounter: Int = 0
+  
+  /**
+   * The set of subscribers to the events from this Observer
+   */
+  var subscribers = Set[ObserverSubscriber]()
+  
+  /**
+   * The current state of this Observer. The initial state is ExplorationState.
    */
   var observation: Observation = Observation(observerId, strategy)
   
@@ -78,7 +97,7 @@ class ObserverImpl (
   val shortId = observation.shortId
 
   /**
-   * The set of futures waiting for the end of the exploration phase
+   * The set of Promises waiting for the end of the exploration phase
    */
   var waitingForEndOfExplorationPhase = Set[Promise[Iterable[URL]]]()
   
@@ -88,7 +107,20 @@ class ObserverImpl (
   var waitingForEndOfAssertionPhase = Set[Promise[Assertions]]()
   
   /**
-   * returns the URLs discovered during the exploration phase
+   * Creates a subscriber as a children for this Observer
+   * 
+   * The id is random
+   */
+  def subscriberOf(subscriber: => ObserverSubscriber): ObserverSubscriber = {
+    context.typedActorOf(
+      classOf[ObserverSubscriber],
+      subscriber,
+      Props(),
+      java.util.UUID.randomUUID().toString)
+  }
+  
+  /**
+   * Returns the URLs discovered during the exploration phase
    * Blocks until the exploration phase is done, or returns immediately
    */
   def URLs(): Future[Iterable[URL]] =
@@ -98,13 +130,13 @@ class ObserverImpl (
         waitingForEndOfExplorationPhase += promise
         promise
       }
-      case ObservationState | FinishedState => Promise.successful { observation.urls }
+      case ObservationState | FinishedState | StoppedState =>
+        Promise.successful { observation.urls }
       case ErrorState => sys.error("what is a Future with error?")
-      case StoppedState => Promise.successful { observation.urls }
     }
   
   /**
-   * returns the assertions after the assertion phase
+   * Returns the assertions after the assertion phase
    * Blocks until the assertion phase is done, or returns immediately
    */
   def assertions(): Future[Assertions] =
@@ -120,7 +152,7 @@ class ObserverImpl (
     }
   
   /**
-   * tests if the exploration phase has to be ended.
+   * Conditional snippet for the end of the Exploration phase
    * if it's the case, the assertion phase is started
    */
   def conditionalEndOfExplorationPhase(): Unit = {
@@ -148,7 +180,48 @@ class ObserverImpl (
   }
   
   /**
-   * starts the ExplorationPhase
+   * Starts the assertion phase
+   * 
+   * we currently schedule all the assertion at once as we handle all the assertors
+   * TODO this will change with the future Web of Assertors architecture
+   */
+  def startAssertionPhase(): Unit = {
+    logger.info("%s: Starting observation phase" format (shortId))
+    // all the responses with a 200 HTTP response
+    val _2XX =
+      observation.responses.toIterable collect { case (url, response: HttpResponse) => (url, response) }
+    for {
+      (url, response) <- _2XX                     // iterate over the responses
+      if strategy shouldObserve url               // ask the strategy for urls to be observed
+      ctOption = response.headers.contentType     // take the content-type (optional) for this response
+      assertors = assertorPicker.pick(ctOption)   // and see which assertors are interested
+      assertor <- assertors                       // then iterate over these assertors
+    } {
+      // the call to the assertor to get the assertion
+      // it's meant to be executed in a Future (on top of a pool of threads)
+      // when the result is known (either a success or an error), the future
+      // calls back the Observer asynchronously
+      def run =
+        try {
+          self.assertionSuccess(url, assertor.id, assertor.assert(url))
+        } catch {
+          case t: Throwable => {
+            self.assertionFailure(url, assertor.id, t)
+          }
+        }
+      // at this point, we _know_ that an assertion is expected
+      // and will eventually trigger a call to assertionSuccess or assertionFailure
+      assertionCounter += 1
+      Future(run)(Observer.validatorDispatcher)
+    }
+    // TODO do we need to return the number of urls to observe, or the expected number of assertions?
+    broadcast(URLsToObserve(_2XX.size))
+    logger.debug("expecting %d assertions" format assertionCounter)
+  }
+
+  
+  /**
+   * Starts the ExplorationPhase
    * <ul>
    * <li>use the seedURLs to initialize the exploration</li>
    * <li>broadcast the initial state</li>
@@ -157,10 +230,13 @@ class ObserverImpl (
    */
   def startExplorationPhase(): Unit =
     if (observation.state == NotYetStarted) {
+      // ask the strategy for the first urls to considerer
       val firstURLs = strategy.seedURLs.toList
+      // update the observation state
       observation = observation.withFirstURLsToExplore(firstURLs)
       broadcast(URLsToExplore(firstURLs.size))
       logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
+      // we can now schedule the first fetches
       scheduleNextURLsToFetch()
     } else {
       logger.error("you should be in NotYetStarted state, but this is " + observation.state)
@@ -172,9 +248,17 @@ class ObserverImpl (
   }
 
   /**
-   * hook to send the result of a GET
-   * TODO: explain the logic happening here
-   * TODO: move distance into pendingFetches (LinkedHashMap)
+   * Hook to send the result of a GET
+   * 
+   * The following happens:
+   * <ul>
+   * <li>the distance for this url is retrieved from the observation</li>
+   * <li>depending on the the kind of resource, some urls are extracted</li>
+   * <li>and then cleaned before adding them back to the observation (because of the invariants to be respected)</li>
+   * <li>the observation is updated with the filtered urls and the new Response</li>
+   * <li>an event is broadcasted to the listeners</li>
+   * <li>potentially, another fetch is scheduled</li>
+   * </ul>
    */
   def sendGETResponse(url: URL, r: GETResponse): Unit = {
     if (observation.state != StoppedState) {
@@ -182,6 +266,7 @@ class ObserverImpl (
       logger.debug("%s:  GET <<< %s" format (shortId, url))
       val distance =
         observation.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+      // TODO the extraction actually depends on the kind of resource!
       val extractedURLs = {
         val encoding = "UTF-8"
         val reader = new java.io.StringReader(body)
@@ -190,6 +275,7 @@ class ObserverImpl (
       }
       // TODO the distance should be different based on the kind of resource we're looking at
       val potentialExplores = extractedURLs map { _ -> (distance + 1) }
+      // it's important to filter/clean the urls before adding them back to the observation
       val explores = observation.filteredExtractedURLs(potentialExplores)
       observation =
         observation
@@ -205,8 +291,9 @@ class ObserverImpl (
   }
   
   /**
-   * hook to send the result of a HEAD
-   * TODO: explain the logic happening here
+   * Hook to send the result of a HEAD
+   * 
+   * The logic is the same as in sendGETResponse without the extraction of links
    */
   def sendHEADResponse(url: URL, r: HEADResponse): Unit = {
     if (observation.state != StoppedState) {
@@ -220,8 +307,9 @@ class ObserverImpl (
   }
 
   /**
-   * hook to notice that a problem happened during a fetch (either GET or HEAD)
-   * TODO: explain the logic happening here
+   * Hook to send the result of a failure for a fetch
+   * 
+   * The logic is the same as in sendHEADResponse
    */
   def sendException(url: URL, t: Throwable): Unit = {
     if (observation.state != StoppedState) {
@@ -234,15 +322,17 @@ class ObserverImpl (
   }
   
   /**
-   * fetch one URL
-   * depending on the strategy, it does the right fetch, or nothing
+   * Fetch one URL
+   * 
+   * The kind of fetch is decided by the strategy (can be no fetch)
    */
-  def fetch(explore: Observation#Explore): FetchAction = {
+  private final def fetch(explore: Observation#Explore): Unit = {
     val (url, distance) = explore
     val action = strategy.fetch(url, distance)
     //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
     action match {
       case FetchGET => {
+        // TODO change the interface for http so that we pass the Observer reference directly XXX
         logger.debug("%s: GET >>> %s" format (shortId, url))
         GlobalSystem.http.GET(url, distance, observerId.toString)
       }
@@ -254,27 +344,24 @@ class ObserverImpl (
         logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))
       }
     }
-    action
   }
   
-  // 
   /**
-   * schedule the next URLs to fetch
-   * the idea is that we don't want to have too many fetches at the same time.
-   * this improves the reactivity (if we cancel the exploration) and the fairness (sharing the access to the Fetch module among observers)
-   * TODO make 10 a parameter
+   * Schedule the next URLs to be fetched
+   * 
+   * The maximum number of pending fetches is decided here.
    */
-  def scheduleNextURLsToFetch(): Unit = {
+  private final def scheduleNextURLsToFetch(): Unit = {
     val (newObservation, explores) = observation.takeAtMost(Observer.MAX_URL_TO_FETCH)
-//    logger.debug(explores.mkString("explores: ", " | ", ""))
     observation = newObservation
-//    logger.debug("### "+explores)
     explores foreach fetch
   }
   
-  var assertionCounter: Int = 0
-//  var _assertions
+  /* Section for methods related to assertions */
   
+  /**
+   * Hook to send the result of a successful assertions
+   */
   def assertionSuccess(url: URL, assertorId: AssertorId, assertion: Assertion): Unit = {
     logger.debug("%s: %s observed by %s" format (shortId, url, assertorId))
     broadcast(Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
@@ -283,6 +370,9 @@ class ObserverImpl (
     endOfAssertionPhase()
   }
   
+  /**
+   * Hook to send the result of a failed assertions
+   */
   def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit = {
     logger.debug("%s: %s got observation error for %s" format (shortId, url, assertorId))
     broadcast(AssertedError(url, assertorId, t))
@@ -291,7 +381,13 @@ class ObserverImpl (
     endOfAssertionPhase()
   }
   
-  private def endOfAssertionPhase(): Unit =
+  /**
+   * Conditional snippet of code for the end of the assertion phase.
+   * 
+   * We know how many assertions are supposed to be received.
+   * 
+   */
+  private final def endOfAssertionPhase(): Unit =
     if (assertionCounter == observation.assertions.size) {
       logger.info("%s: Observation phase done with %d observations" format (shortId, observation.assertions.size))
       waitingForEndOfAssertionPhase foreach { _.success(observation.assertions) }
@@ -300,46 +396,17 @@ class ObserverImpl (
       waitingForEndOfAssertionPhase = null
       observation = observation.copy(state = FinishedState)
       broadcast(ObservationFinished)
-      val context = TypedActor(TypedActor.context)
       subscribers foreach { context.stop(_) }
       subscribers = Set.empty
     }
-    
+  
+  /* Section for methods related to event listeners */
+  
   /**
-   * starts the assertion phase
-   * we currently schedule all the assertion at once as we handle all the assertors
-   * TODO this will change with the future Web of Assertors architecture
+   * Registers the given subscriber.
+   * 
+   * The initial state is sent at that time.
    */
-  def startAssertionPhase(): Unit = {
-    logger.info("%s: Starting observation phase" format (shortId))
-    val _2XX = observation.responses.toIterable collect { case (url, response: HttpResponse) => (url, response) }
-    broadcast(URLsToObserve(_2XX.size))
-
-    for {
-      // TODO Filter only 2xx responses
-      (url, response) <- _2XX
-      if strategy shouldObserve url
-      ctOption = response.headers.contentType
-      assertors = assertorPicker.pick(ctOption)
-      assertor <- assertors
-    } {
-      def run =
-        try {
-          self.assertionSuccess(url, assertor.id, assertor.assert(url))
-        } catch {
-          case t: Throwable => {
-            self.assertionFailure(url, assertor.id, t)
-          }
-        }
-      assertionCounter += 1
-      Future(run)(Observer.validatorDispatcher)
-    }
-    logger.debug("expecting %d assertions" format assertionCounter)
-  }
-  
-  
-  var subscribers = Set[ObserverSubscriber]()
-  
   def subscribe(subscriber: ObserverSubscriber): Unit = {
     subscribers += subscriber
     logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
@@ -347,12 +414,18 @@ class ObserverImpl (
     logger.debug(toBroadcast(InitialState))
   }
   
+  /**
+   * Unsubscribes the given subscriber.
+   */
   def unsubscribe(subscriber: ObserverSubscriber): Unit = {
     subscribers -= subscriber
     logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
   }
 
-  def toBroadcast(msg: BroadcastMessage): String = msg match {
+  /**
+   * Utility method to map a BroadcastMessage to a String that can be understood by the client
+   */
+  private def toBroadcast(msg: BroadcastMessage): String = msg match {
     case URLsToExplore(nb) => """["NB_EXP", %d]""" format (nb)
     case URLsToObserve(nb) => """["NB_OBS", %d]""" format (nb)
     case FetchedGET(url, httpCode, extractedURLs) => """["GET", %d, "%s", %d]""" format (httpCode, url, extractedURLs)
@@ -385,24 +458,15 @@ class ObserverImpl (
   }
   
   /**
-   * to broadcast messages
+   * To broadcast messages to subscribers.
    */
-  def broadcast(msg: BroadcastMessage): Unit = {
+  private def broadcast(msg: BroadcastMessage): Unit = {
     val tb = toBroadcast(msg)
     if (subscribers != null)
       subscribers foreach (_.broadcast(tb))
     else
       logger.debug("%s: no more broadcaster for %s" format (shortId, tb))
   }
-  
-  def subscriberOf(subscriber: => Subscriber): ObserverSubscriber = {
-    TypedActor(TypedActor.context).typedActorOf(
-      classOf[ObserverSubscriber],
-      subscriber,
-      Props(),
-      java.util.UUID.randomUUID().toString)
-  }
-
   
   
 }

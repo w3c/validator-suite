@@ -14,6 +14,7 @@ object ApplicationBuild extends Build {
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://scala-tools.org/repo-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
     "org.joda" % "joda-convert" % "1.1" intransitive(),
     "net.databinder" %% "dispatch-http" % "0.8.6",
+    "org.scala-tools.subcut" %% "subcut" % "1.0",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0-M2" % "test",
     "net.databinder" %% "unfiltered-filter" % "0.5.3" % "test",
