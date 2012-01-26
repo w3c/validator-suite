@@ -334,11 +334,11 @@ class ObserverImpl (
       case FetchGET => {
         // TODO change the interface for http so that we pass the Observer reference directly XXX
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        GlobalSystem.http.GET(url, distance, observerId.toString)
+        GlobalSystem.http.GET(url, distance, self)
       }
       case FetchHEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
-        GlobalSystem.http.HEAD(url, observerId.toString)
+        GlobalSystem.http.HEAD(url, self)
       }
       case FetchNothing => {
         logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))

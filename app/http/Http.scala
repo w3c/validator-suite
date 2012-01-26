@@ -10,10 +10,11 @@ import org.w3.util._
 import akka.util.Duration
 import akka.util.duration._
 import play.Logger
+import org.w3.vs.observer.Observer
 
 trait Http {
-  def GET(url: URL, distance: Int, actionManagerId: String): Unit
-  def HEAD(url: URL, actionManagerId: String): Unit
+  def GET(url: URL, distance: Int, observer: Observer): Unit
+  def HEAD(url: URL, observer: Observer): Unit
   def authorityManagerFor(url: URL): AuthorityManager
   def authorityManagerFor(authority: Authority): AuthorityManager
 }
@@ -23,23 +24,12 @@ trait Http {
  */
 class HttpImpl extends Http with TypedActor.PostStop {
 
+  // TODO really???
   import TypedActor.dispatcher
   
   val logger = Logger.of(classOf[Http])
   
   val asyncHttpClient = Http.makeClient(2 seconds)
-  
-//  val authorityManagerDispatcher =
-//    Dispatchers.newExecutorBasedEventDrivenDispatcher("authority-manager")
-//            .withNewThreadPoolWithLinkedBlockingQueueWithCapacity(100)
-//            .setCorePoolSize(8)
-//            .setMaxPoolSize(8)
-//            .setKeepAliveTime(4 seconds)
-//            .setRejectionPolicy(new CallerRunsPolicy)
-//            .build
-  
-//  val configuration =
-//    TypedActorConfiguration(3000).dispatcher(authorityManagerDispatcher)
   
   var registry = Map[Authority, AuthorityManager]()
   
@@ -58,11 +48,11 @@ class HttpImpl extends Http with TypedActor.PostStop {
     }
   }
   
-  def GET(url: URL, distance: Int, actionManagerId: String): Unit =
-    authorityManagerFor(url).GET(url, distance, actionManagerId)
+  def GET(url: URL, distance: Int, observer: Observer): Unit =
+    authorityManagerFor(url).GET(url, distance, observer)
   
-  def HEAD(url: URL, actionManagerId: String): Unit =
-    authorityManagerFor(url).HEAD(url, actionManagerId)
+  def HEAD(url: URL, observer: Observer): Unit =
+    authorityManagerFor(url).HEAD(url, observer)
   
   override def postStop = {
     logger.debug("closing asyncHttpClient")

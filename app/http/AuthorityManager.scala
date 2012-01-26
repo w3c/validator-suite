@@ -14,8 +14,8 @@ import org.w3.vs.GlobalSystem
 import org.w3.vs.GlobalSystem
 
 trait AuthorityManager {
-  def GET(url: URL, distance: Int, actionManagerId: String): Unit
-  def HEAD(url: URL, actionManagerId: String): Unit
+  def GET(url: URL, distance: Int, observer: Observer): Unit
+  def HEAD(url: URL, observer: Observer): Unit
   def sleepTime: Long
   def sleepTime_= (value: Long): Unit
 }
@@ -46,38 +46,35 @@ extends AuthorityManager with TypedActor.PostStop {
     lastFetchTimestamp = current
   }
   
-  def observer(observerId: String) =
-    GlobalSystem.observerCreator.byObserverId(ObserverId(observerId)).get
-  
-  def GET(url: URL, distance: Int, observerId: String): Unit = sleepIfNeeded {
+  def GET(url: URL, distance: Int, observer: Observer): Unit = sleepIfNeeded {
     val f = Http.GET(client, url) onSuccess {
       case r: GETResponse =>
-        observer(observerId).sendGETResponse(url, r)
+        observer.sendGETResponse(url, r)
     } onFailure {
       case t: Throwable =>
-        observer(observerId).sendException(url, t)
+        observer.sendException(url, t)
     }
     try {
       Await.result(f, 10 seconds)
     } catch {
       case te: java.util.concurrent.TimeoutException =>
-        observer(observerId).sendException(url, te)
+        observer.sendException(url, te)
     }
   }
   
-  def HEAD(url: URL, observerId: String): Unit = sleepIfNeeded {
+  def HEAD(url: URL, observer: Observer): Unit = sleepIfNeeded {
     val f = Http.HEAD(client, url) onSuccess {
       case r: HEADResponse =>
-        observer(observerId).sendHEADResponse(url, r)
+        observer.sendHEADResponse(url, r)
     } onFailure {
       case t: Throwable =>
-        observer(observerId).sendException(url, t)
+        observer.sendException(url, t)
     }
     try {
       Await.result(f, 10 seconds)
     } catch {
       case te: java.util.concurrent.TimeoutException =>
-        observer(observerId).sendException(url, te)
+        observer.sendException(url, te)
     }
   }
   
