@@ -10,7 +10,7 @@ import akka.actor.Props
  * A Subscriber that can subscribe to an Observer
  * Then the Observer can broadcast message to the Subcriber
  */
-trait ObserverSubscriber {
+trait Subscriber {
   def enumerator: Enumerator[String]
   def subscribe(): Unit
   def unsubscribe(): Unit
@@ -18,7 +18,7 @@ trait ObserverSubscriber {
 }
 
 // TODO to be moved
-class Subscriber(observer: Observer) extends ObserverSubscriber {
+class SubscriberImpl(observer: Observer) extends Subscriber {
   
   val enumerator = new PushEnumerator[String]( onStart = this.subscribe() )
   

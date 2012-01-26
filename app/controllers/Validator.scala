@@ -133,7 +133,7 @@ object Validator extends Controller with Secured {
         val observerId = ObserverId(id)
         GlobalSystem.observerCreator.byObserverId(observerId).map { observer =>
           AsyncResult {
-            val subscriber = observer.subscriberOf(new Subscriber(observer))
+            val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
             val iteratee = subscriber.enumerator /*&> Enumeratee.map{ e => logger.error("*** "+e.toString); e }*/ &> Comet(callback = "parent.VS.logComet")
             Promise.pure(Ok.stream(iteratee).withHeaders("X-VS-ActionID" -> id))
           }

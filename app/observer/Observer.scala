@@ -45,9 +45,9 @@ trait Observer {
   def sendHEADResponse(url: URL, r: HEADResponse): Unit
   def sendException(url: URL, t: Throwable): Unit
   // foo
-  def subscribe(subscriber: ObserverSubscriber): Unit
-  def unsubscribe(subscriber: ObserverSubscriber): Unit
-  def subscriberOf(subscriber: => ObserverSubscriber): ObserverSubscriber
+  def subscribe(subscriber: Subscriber): Unit
+  def unsubscribe(subscriber: Subscriber): Unit
+  def subscriberOf(subscriber: => Subscriber): Subscriber
   // bar
   def assertionSuccess(url: URL, assertorId: AssertorId, assertion: Assertion): Unit
   def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit
@@ -84,7 +84,7 @@ class ObserverImpl (
   /**
    * The set of subscribers to the events from this Observer
    */
-  var subscribers = Set[ObserverSubscriber]()
+  var subscribers = Set[Subscriber]()
   
   /**
    * The current state of this Observer. The initial state is ExplorationState.
@@ -111,9 +111,9 @@ class ObserverImpl (
    * 
    * The id is random
    */
-  def subscriberOf(subscriber: => ObserverSubscriber): ObserverSubscriber = {
+  def subscriberOf(subscriber: => Subscriber): Subscriber = {
     context.typedActorOf(
-      classOf[ObserverSubscriber],
+      classOf[Subscriber],
       subscriber,
       Props(),
       java.util.UUID.randomUUID().toString)
@@ -407,7 +407,7 @@ class ObserverImpl (
    * 
    * The initial state is sent at that time.
    */
-  def subscribe(subscriber: ObserverSubscriber): Unit = {
+  def subscribe(subscriber: Subscriber): Unit = {
     subscribers += subscriber
     logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
     subscriber.broadcast(toBroadcast(InitialState))
@@ -417,7 +417,7 @@ class ObserverImpl (
   /**
    * Unsubscribes the given subscriber.
    */
-  def unsubscribe(subscriber: ObserverSubscriber): Unit = {
+  def unsubscribe(subscriber: Subscriber): Unit = {
     subscribers -= subscriber
     logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
   }
