@@ -22,7 +22,7 @@ object Observer {
   
   val MAX_URL_TO_FETCH = 10
   
-  val validatorDispatcher = {
+  val validatorDispatcher: ExecutionContext = {
     import java.util.concurrent.{ExecutorService, Executors}
     val executor: ExecutorService = Executors.newFixedThreadPool(10)
     ExecutionContext.fromExecutorService(executor)
@@ -108,7 +108,7 @@ class ObserverImpl (
   var waitingForEndOfAssertionPhase = Set[Promise[Assertions]]()
   
   /**
-   * Creates a subscriber as a children for this Observer
+   * Creates a subscriber as an Akka-children for this Observer
    * 
    * The id is random
    */
@@ -147,9 +147,8 @@ class ObserverImpl (
         waitingForEndOfAssertionPhase += future
         future
       }
-      case FinishedState => Promise.successful { observation.assertions }
+      case FinishedState | StoppedState => Promise.successful { observation.assertions }
       case ErrorState => sys.error("what is a Future with error?")
-      case StoppedState => Promise.successful { observation.assertions }
     }
   
   /**
@@ -333,7 +332,6 @@ class ObserverImpl (
     //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
     action match {
       case FetchGET => {
-        // TODO change the interface for http so that we pass the Observer reference directly XXX
         logger.debug("%s: GET >>> %s" format (shortId, url))
         http.GET(url, distance, self)
       }

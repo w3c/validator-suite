@@ -112,14 +112,20 @@ case class Observation(
    */
   def withNewResponse(resp: (URL, Response)): Observation = {
     val (url, response) = resp
-    if (pendingMainAuthority.isDefined)
-      this.copy(
-        pendingMainAuthority = None,
-        responses = responses + resp)
-    else
-      this.copy(
-        pending = pending - url,
-        responses = responses + resp)
+    
+    pendingMainAuthority match {
+      case Some((_url, _)) if _url == url => {
+        this.copy(
+          pendingMainAuthority = None,
+          responses = responses + resp)
+      }
+      case _ => {
+        assert(pending.isDefinedAt(url), "%s was not pending" format url.toString)
+        this.copy(
+          pending = pending - url,
+          responses = responses + resp)
+      }
+    }
   }
 
   /**
@@ -137,7 +143,7 @@ case class Observation(
   /**
    * Higher-order function to filter out Explores with the given url
    */
-  private def exploreWith(url: URL) = { e: Explore => url == getUrl(e) }
+  private def exploreWith(url: URL): Explore => Boolean = { e: Explore => url == getUrl(e) }
 
   /**
    * An Explore should be ignored if
@@ -183,8 +189,9 @@ case class Observation(
   lazy val pendingAuthorities: Set[Authority] = allPending map { _.getAuthority }
 
   /**
-   * Returns (if possible, hence the Option) the first Explore that could
-   * be fetched for the main authority.
+   * Returns a couple Observation/Explore.
+   * 
+   * The Explore  is the first one that could be fetched for the main authority.
    * 
    * The returned Observation has set this Explore to be pending.
    */
@@ -193,9 +200,9 @@ case class Observation(
     optExplore map {
       case e @ (url, distance) =>
         (this.copy(
-          toBeExplored = toBeExplored filterNot { url == getUrl(_) },
-          pendingMainAuthority = optExplore),
-          e)
+           toBeExplored = toBeExplored filterNot { url == getUrl(_) },
+           pendingMainAuthority = optExplore),
+         e)
     }
   }
 
@@ -222,7 +229,7 @@ case class Observation(
    * Returns (if possible, hence the Option) the first Explore that could
    * be fetched, giving priority to the main authority.
    */
-  def take: Option[(Observation, Explore)] = {
+  private [observer] def take: Option[(Observation, Explore)] = {
     //logger.debug(this.toString)
     if (pendingMainAuthority.isDefined) {
       takeFromOtherAuthorities

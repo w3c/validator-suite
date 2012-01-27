@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit.SECONDS
 import org.specs2.matcher.BeEqualTo
 import java.util.Observable
 import org.w3.vs.observer.Observation.{getUrl, getDistance}
+import org.specs2.matcher.BeEqualTo
+import org.specs2.matcher.BeEqualTo
 
 object ObservationSpec extends Specification {
 
@@ -201,6 +203,29 @@ object ObservationSpec extends Specification {
       val (_, nextExplores) = observation.takeAtMost(10)
       nextExplores must contain(w3_standards -> 1, mobilevoice -> 2)
     }
+    
+  }
+
+  "an observation with pending fetches" should {
+
+    val observation = Observation(
+        ObserverId(),
+        strategy,
+        pendingMainAuthority = Some(w3_home -> 0),
+        pending = Map(google -> (google -> 1), mobilevoice -> (mobilevoice -> 2)))
+    
+    "unset the pending state of a url when the response is received" in {
+      val obs1 = observation.withNewResponse(w3_home -> ErrorResponse(w3_home, ""))
+      obs1.pendingMainAuthority must beEqualTo (None)
+      obs1.pending must contain (google -> (google -> 1))
+      obs1.pending must contain (mobilevoice -> (mobilevoice -> 2))
+      val obs2 = observation.withNewResponse(google -> ErrorResponse(google, ""))
+      obs2.pending must not haveKey (google)
+      obs2.pendingMainAuthority must beEqualTo (Some(w3_home -> 0))
+      obs2.pending must contain (mobilevoice -> (mobilevoice -> 2))
+    }
+    
+    
     
   }
 
