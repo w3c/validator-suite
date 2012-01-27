@@ -18,18 +18,6 @@ import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
 import play.api.libs.iteratee.PushEnumerator
 
-object Observer {
-  
-  val MAX_URL_TO_FETCH = 10
-  
-  val validatorDispatcher: ExecutionContext = {
-    import java.util.concurrent.{ExecutorService, Executors}
-    val executor: ExecutorService = Executors.newFixedThreadPool(10)
-    ExecutionContext.fromExecutorService(executor)
-  }
-  
-}
-
 /**
  * An Observer is the unity of action that implements
  * the Exploration and Assertion phases
@@ -212,7 +200,7 @@ class ObserverImpl (
       // at this point, we _know_ that an assertion is expected
       // and will eventually trigger a call to assertionSuccess or assertionFailure
       assertionCounter += 1
-      Future(run)(Observer.validatorDispatcher)
+      Future(run)(validatorDispatcher)
     }
     // TODO do we need to return the number of urls to observe, or the expected number of assertions?
     broadcast(URLsToObserve(_2XX.size))
@@ -351,7 +339,7 @@ class ObserverImpl (
    * The maximum number of pending fetches is decided here.
    */
   private final def scheduleNextURLsToFetch(): Unit = {
-    val (newObservation, explores) = observation.takeAtMost(Observer.MAX_URL_TO_FETCH)
+    val (newObservation, explores) = observation.takeAtMost(MAX_URL_TO_FETCH)
     observation = newObservation
     explores foreach fetch
   }

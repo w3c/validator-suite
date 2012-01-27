@@ -9,8 +9,17 @@ import org.w3.vs.model._
 import org.w3.vs.assertor._
 import akka.util.duration._
 import akka.util.Duration
+import akka.dispatch.ExecutionContext
 
 trait Production extends ValidatorSuiteConf {
+  
+  val MAX_URL_TO_FETCH = 10
+  
+  val validatorDispatcher: ExecutionContext = {
+    import java.util.concurrent.{ExecutorService, Executors}
+    val executor: ExecutorService = Executors.newFixedThreadPool(10)
+    ExecutionContext.fromExecutorService(executor)
+  }
   
   val system: ActorSystem = ActorSystem("vs")
   
