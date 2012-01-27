@@ -1,4 +1,4 @@
-package org.w3.vs.test
+package org.w3.vs.integration
 
 import play.api.test._
 import play.api.test.Helpers._
