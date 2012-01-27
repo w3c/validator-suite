@@ -37,8 +37,7 @@ trait Observer {
   def unsubscribe(subscriber: Subscriber): Unit
   def subscriberOf(subscriber: => Subscriber): Subscriber
   // bar
-  def assertionSuccess(url: URL, assertorId: AssertorId, assertion: Assertion): Unit
-  def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit
+  def assertion(url: URL, assertorId: AssertorId, result: Either[Throwable, Assertion]): Unit
 }
 
 
@@ -191,10 +190,10 @@ class ObserverImpl (
       // calls back the Observer asynchronously
       def run =
         try {
-          self.assertionSuccess(url, assertor.id, assertor.assert(url))
+          self.assertion(url, assertor.id, Right(assertor.assert(url)))
         } catch {
           case t: Throwable => {
-            self.assertionFailure(url, assertor.id, t)
+            self.assertion(url, assertor.id, Left(t))
           }
         }
       // at this point, we _know_ that an assertion is expected
@@ -347,12 +346,17 @@ class ObserverImpl (
   /* Section for methods related to assertions */
   
   /**
-   * Hook to send the result of a successful assertions
+   * Hook to send the result of an assertions
    */
-  def assertionSuccess(url: URL, assertorId: AssertorId, assertion: Assertion): Unit = {
+  def assertion(url: URL, assertorId: AssertorId, result: Either[Throwable, Assertion]): Unit = {
     logger.debug("%s: %s observed by %s" format (shortId, url, assertorId))
-    broadcast(Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
-    val a = (url, assertorId, Right(assertion))
+    result match {
+      case Right(assertion) =>
+        broadcast(Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
+      case Left(t) =>
+        broadcast(AssertedError(url, assertorId, t))
+    }
+    val a = (url, assertorId, result)
     observation = observation.withAssertion(a)
     endOfAssertionPhase()
   }
@@ -360,13 +364,13 @@ class ObserverImpl (
   /**
    * Hook to send the result of a failed assertions
    */
-  def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit = {
-    logger.debug("%s: %s got observation error for %s" format (shortId, url, assertorId))
-    broadcast(AssertedError(url, assertorId, t))
-    val a = (url, assertorId, Left(t))
-    observation = observation.withAssertion(a)
-    endOfAssertionPhase()
-  }
+//  def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit = {
+//    logger.debug("%s: %s got observation error for %s" format (shortId, url, assertorId))
+//    broadcast(AssertedError(url, assertorId, t))
+//    val a = (url, assertorId, Left(t))
+//    observation = observation.withAssertion(a)
+//    endOfAssertionPhase()
+//  }
   
   /**
    * Conditional snippet of code for the end of the assertion phase.
@@ -454,6 +458,5 @@ class ObserverImpl (
     else
       logger.debug("%s: no more broadcaster for %s" format (shortId, tb))
   }
-  
   
 }
