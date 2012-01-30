@@ -321,7 +321,7 @@ class ObserverImpl (
     action match {
       case FetchGET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        http.GET(url, distance, self)
+        http.GET(url, self)
       }
       case FetchHEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
@@ -344,10 +344,8 @@ class ObserverImpl (
     explores foreach fetch
   }
   
-  /* Section for methods related to assertions */
-  
   /**
-   * Hook to send the result of an assertions
+   * Hook to send the result of an assertion
    */
   def addAssertion(assertion: ObserverState#Assertion): Unit = {
     val (url, assertorId, result) = assertion
@@ -362,17 +360,6 @@ class ObserverImpl (
     state = state.withAssertion(a)
     endOfAssertionPhase()
   }
-  
-  /**
-   * Hook to send the result of a failed assertions
-   */
-//  def assertionFailure(url: URL, assertorId: AssertorId, t: Throwable): Unit = {
-//    logger.debug("%s: %s got observation error for %s" format (shortId, url, assertorId))
-//    broadcast(AssertedError(url, assertorId, t))
-//    val a = (url, assertorId, Left(t))
-//    observation = observation.withAssertion(a)
-//    endOfAssertionPhase()
-//  }
   
   /**
    * Conditional snippet of code for the end of the assertion phase.

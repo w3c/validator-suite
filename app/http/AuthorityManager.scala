@@ -12,7 +12,7 @@ import play.Logger
 import org.w3.vs.model.ObserverId
 
 trait AuthorityManager {
-  def GET(url: URL, distance: Int, observer: Observer): Unit
+  def GET(url: URL, observer: Observer): Unit
   def HEAD(url: URL, observer: Observer): Unit
   def sleepTime: Long
   def sleepTime_= (value: Long): Unit
@@ -44,7 +44,7 @@ extends AuthorityManager with TypedActor.PostStop {
     lastFetchTimestamp = current
   }
   
-  def GET(url: URL, distance: Int, observer: Observer): Unit = sleepIfNeeded {
+  def GET(url: URL, observer: Observer): Unit = sleepIfNeeded {
     val f = Http.GET(client, url) onSuccess {
       case r: GETResponse =>
         observer.sendGETResponse(url, r)

@@ -13,7 +13,7 @@ import play.Logger
 import org.w3.vs.observer.Observer
 
 trait Http {
-  def GET(url: URL, distance: Int, observer: Observer): Unit
+  def GET(url: URL, observer: Observer): Unit
   def HEAD(url: URL, observer: Observer): Unit
   def authorityManagerFor(url: URL): AuthorityManager
   def authorityManagerFor(authority: Authority): AuthorityManager
@@ -48,8 +48,8 @@ class HttpImpl extends Http with TypedActor.PostStop {
     }
   }
   
-  def GET(url: URL, distance: Int, observer: Observer): Unit =
-    authorityManagerFor(url).GET(url, distance, observer)
+  def GET(url: URL, observer: Observer): Unit =
+    authorityManagerFor(url).GET(url, observer)
   
   def HEAD(url: URL, observer: Observer): Unit =
     authorityManagerFor(url).HEAD(url, observer)
