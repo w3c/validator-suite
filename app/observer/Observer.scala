@@ -77,12 +77,12 @@ class ObserverImpl (
   /**
    * The current state of this Observer. The initial state is ExplorationState.
    */
-  var observation: ObserverState = ObserverState(observerId, strategy)
+  var state: ObserverState = ObserverState(observerId, strategy)
   
   /**
    * A shorten id for logs readability
    */
-  val shortId = observation.shortId
+  val shortId = state.shortId
 
   /**
    * The set of Promises waiting for the end of the exploration phase
@@ -112,14 +112,14 @@ class ObserverImpl (
    * Blocks until the exploration phase is done, or returns immediately
    */
   def URLs(): Future[Iterable[URL]] =
-    observation.phase match {
+    state.phase match {
       case NotYetStarted | ExplorationPhase => {
         val promise = Promise[Iterable[URL]]()
         waitingForEndOfExplorationPhase += promise
         promise
       }
       case AssertionPhase | Finished | Interrupted =>
-        Promise.successful { observation.urls }
+        Promise.successful { state.urls }
       case Error => sys.error("what is a Future with error?")
     }
   
@@ -128,13 +128,13 @@ class ObserverImpl (
    * Blocks until the assertion phase is done, or returns immediately
    */
   def assertions(): Future[ObserverState#Assertions] =
-    observation.phase match {
+    state.phase match {
       case NotYetStarted | ExplorationPhase | AssertionPhase => {
         val future = Promise[ObserverState#Assertions]()
         waitingForEndOfAssertionPhase += future
         future
       }
-      case Finished | Interrupted => Promise.successful { observation.assertions }
+      case Finished | Interrupted => Promise.successful { state.assertions }
       case Error => sys.error("what is a Future with error?")
     }
   
@@ -151,9 +151,9 @@ class ObserverImpl (
 //        logger.debug("pending fetches %d" format pendingFetches.size)
 //      }
 //    }
-    if (observation.explorationPhaseHasEnded) {
-      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, observation.responses.size))
-      val urls = observation.urls
+    if (state.explorationPhaseHasEnded) {
+      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, state.responses.size))
+      val urls = state.urls
       waitingForEndOfExplorationPhase foreach {
         _.success(urls)
       }
@@ -176,7 +176,7 @@ class ObserverImpl (
     logger.info("%s: Starting observation phase" format (shortId))
     // all the responses with a 200 HTTP response
     val _2XX =
-      observation.responses.toIterable collect { case (url, response: HttpResponse) => (url, response) }
+      state.responses.toIterable collect { case (url, response: HttpResponse) => (url, response) }
     for {
       (url, response) <- _2XX                     // iterate over the responses
       if strategy shouldObserve url               // ask the strategy for urls to be observed
@@ -216,21 +216,21 @@ class ObserverImpl (
    * </ul>
    */
   def startExplorationPhase(): Unit =
-    if (observation.phase == NotYetStarted) {
+    if (state.phase == NotYetStarted) {
       // ask the strategy for the first urls to considerer
       val firstURLs = strategy.seedURLs.toList
       // update the observation state
-      observation = observation.withFirstURLsToExplore(firstURLs)
+      state = state.withFirstURLsToExplore(firstURLs)
       broadcast(message.URLsToExplore(firstURLs.size))
       logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
       // we can now schedule the first fetches
       scheduleNextURLsToFetch()
     } else {
-      logger.error("you should be in NotYetStarted state, but this is " + observation.phase)
+      logger.error("you should be in NotYetStarted state, but this is " + state.phase)
     }
   
   def stop(): Unit = {
-    observation = observation.stop()
+    state = state.stop()
     broadcast(message.Stopped)
   }
 
@@ -248,11 +248,11 @@ class ObserverImpl (
    * </ul>
    */
   def sendGETResponse(url: URL, r: GETResponse): Unit = {
-    if (observation.phase != message.Stopped) {
+    if (state.phase != message.Stopped) {
       val GETResponse(status, headers, body) = r
       logger.debug("%s:  GET <<< %s" format (shortId, url))
       val distance =
-        observation.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+        state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
       // TODO the extraction actually depends on the kind of resource!
       val extractedURLs = {
         val encoding = "UTF-8"
@@ -263,13 +263,13 @@ class ObserverImpl (
       // TODO the distance should be different based on the kind of resource we're looking at
       val potentialExplores = extractedURLs map { _ -> (distance + 1) }
       // it's important to filter/clean the urls before adding them back to the observation
-      val explores = observation.filteredExtractedURLs(potentialExplores)
-      observation =
-        observation
+      val explores = state.filteredExtractedURLs(potentialExplores)
+      state =
+        state
           .withNewResponse(url -> HttpResponse(url, status, headers, extractedURLs.distinct))
           .withNewUrlsToBeExplored(explores)
       if (explores.size > 0) {
-        logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, observation.numberOfKnownUrls))
+        logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, state.numberOfKnownUrls))
       }
       broadcast(message.FetchedGET(url, status, explores.size))
       scheduleNextURLsToFetch()
@@ -283,10 +283,10 @@ class ObserverImpl (
    * The logic is the same as in sendGETResponse without the extraction of links
    */
   def sendHEADResponse(url: URL, r: HEADResponse): Unit = {
-    if (observation.phase != Interrupted) {
+    if (state.phase != Interrupted) {
       val HEADResponse(status, headers) = r
       logger.debug("%s: HEAD <<< %s" format (shortId, url))
-      observation = observation.withNewResponse(url -> HttpResponse(url, status, headers, Nil))
+      state = state.withNewResponse(url -> HttpResponse(url, status, headers, Nil))
       scheduleNextURLsToFetch()
       broadcast(message.FetchedHEAD(url, r.status))
       conditionalEndOfExplorationPhase()
@@ -299,9 +299,9 @@ class ObserverImpl (
    * The logic is the same as in sendHEADResponse
    */
   def sendException(url: URL, t: Throwable): Unit = {
-    if (observation.phase != Interrupted) {
+    if (state.phase != Interrupted) {
       logger.debug("%s: Exception for %s: %s" format (shortId, url, t.getMessage))
-      observation = observation.withNewResponse(url -> ErrorResponse(url, t.getMessage))
+      state = state.withNewResponse(url -> ErrorResponse(url, t.getMessage))
       scheduleNextURLsToFetch()
       broadcast(message.FetchedError(url, t.getMessage))
       conditionalEndOfExplorationPhase()
@@ -338,8 +338,8 @@ class ObserverImpl (
    * The maximum number of pending fetches is decided here.
    */
   private final def scheduleNextURLsToFetch(): Unit = {
-    val (newObservation, explores) = observation.takeAtMost(MAX_URL_TO_FETCH)
-    observation = newObservation
+    val (newObservation, explores) = state.takeAtMost(MAX_URL_TO_FETCH)
+    state = newObservation
     explores foreach fetch
   }
   
@@ -357,7 +357,7 @@ class ObserverImpl (
         broadcast(message.AssertedError(url, assertorId, t))
     }
     val a = (url, assertorId, result)
-    observation = observation.withAssertion(a)
+    state = state.withAssertion(a)
     endOfAssertionPhase()
   }
   
@@ -379,13 +379,13 @@ class ObserverImpl (
    * 
    */
   private final def endOfAssertionPhase(): Unit =
-    if (assertionCounter == observation.assertions.size) {
-      logger.info("%s: Observation phase done with %d observations" format (shortId, observation.assertions.size))
-      waitingForEndOfAssertionPhase foreach { _.success(observation.assertions) }
+    if (assertionCounter == state.assertions.size) {
+      logger.info("%s: Observation phase done with %d observations" format (shortId, state.assertions.size))
+      waitingForEndOfAssertionPhase foreach { _.success(state.assertions) }
       // we don't need pending Futures for observations anymore
       // make it available for GC
       waitingForEndOfAssertionPhase = null
-      observation = observation.copy(phase = Finished)
+      state = state.copy(phase = Finished)
       broadcast(message.ObservationFinished)
       subscribers foreach { context.stop(_) }
       subscribers = Set.empty
@@ -427,16 +427,16 @@ class ObserverImpl (
     case message.NothingToObserve(url) => """["OBS_NO", "%s"]""" format url
     case message.ObservationFinished => """["OBS_FINISHED"]"""
     case message.InitialState => {
-      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (observation.responses.size, observation.toBeExplored.size, observation.assertions.size, 0)
+      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (state.responses.size, state.toBeExplored.size, state.assertions.size, 0)
       import org.w3.vs.model._
-      val responsesToBroadcast = observation.responses map {
+      val responsesToBroadcast = state.responses map {
         // disctinction btw GET and HEAD, links.size??
         case (url, HttpResponse(_, status, _, _)) =>
           toBroadcast(message.FetchedGET(url, status, 0))
         case (url, ErrorResponse(_, typ)) =>
           toBroadcast(message.FetchedError(url, typ))
       }
-      val assertionsToBroadcast = observation.assertions map {
+      val assertionsToBroadcast = state.assertions map {
         case (url, assertorId, Left(t)) =>
           toBroadcast(message.AssertedError(url, assertorId, t))
         case (url, assertorId, Right(assertion)) =>
