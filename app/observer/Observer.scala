@@ -37,7 +37,7 @@ trait Observer {
   def unsubscribe(subscriber: Subscriber): Unit
   def subscriberOf(subscriber: => Subscriber): Subscriber
   // bar
-  def assertion(url: URL, assertorId: AssertorId, result: Either[Throwable, Asserted]): Unit
+  def addAssertion(assertion: ObserverState#Assertion): Unit
 }
 
 
@@ -188,14 +188,15 @@ class ObserverImpl (
       // it's meant to be executed in a Future (on top of a pool of threads)
       // when the result is known (either a success or an error), the future
       // calls back the Observer asynchronously
-      def run =
-        try {
-          self.assertion(url, assertor.id, Right(assertor.assert(url)))
-        } catch {
-          case t: Throwable => {
-            self.assertion(url, assertor.id, Left(t))
+      def run = {
+        val assertion =
+          try {
+            (url, assertor.id, Right(assertor.assert(url)))
+          } catch {
+            case t: Throwable => (url, assertor.id, Left(t))
           }
-        }
+        self.addAssertion(assertion)
+      }
       // at this point, we _know_ that an assertion is expected
       // and will eventually trigger a call to assertionSuccess or assertionFailure
       assertionCounter += 1
@@ -348,7 +349,8 @@ class ObserverImpl (
   /**
    * Hook to send the result of an assertions
    */
-  def assertion(url: URL, assertorId: AssertorId, result: Either[Throwable, Asserted]): Unit = {
+  def addAssertion(assertion: ObserverState#Assertion): Unit = {
+    val (url, assertorId, result) = assertion
     logger.debug("%s: %s observed by %s" format (shortId, url, assertorId))
     result match {
       case Right(assertion) =>
