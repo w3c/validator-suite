@@ -8,7 +8,7 @@ import scala.io.Source
  */
 trait FromUnicornFormatAssertor extends FromSourceAssertor {
 
-  def assert(source:Source): Assertion = {
+  def assert(source:Source): Asserted = {
     val response:Elem = XML.fromSource(source)
     val obversationRef = response.attrs get "ref" getOrElse sys.error("malformed xml")
     val obversationLang = response.attrs get QName(Some("xml"), "lang") getOrElse sys.error("malformed xml")
@@ -35,7 +35,7 @@ trait FromUnicornFormatAssertor extends FromSourceAssertor {
           }
         Event(typ, id, eventLang, contexts)
       }
-    Assertion(events)
+    Asserted(events)
   }  
 
 }

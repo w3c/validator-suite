@@ -1,8 +1,7 @@
-package org.w3.vs.observer
+package org.w3.vs.observer.message
 
 import org.w3.util.URL
 import org.w3.vs.assertor.AssertorId
-import org.w3.vs.model.Assertion
 
 sealed trait BroadcastMessage
 

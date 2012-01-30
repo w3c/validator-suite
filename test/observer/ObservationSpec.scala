@@ -12,7 +12,7 @@ import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import org.specs2.matcher.BeEqualTo
 import java.util.Observable
-import org.w3.vs.observer.Observation.{getUrl, getDistance}
+import org.w3.vs.observer.ObserverState.{getUrl, getDistance}
 import org.specs2.matcher.BeEqualTo
 import org.specs2.matcher.BeEqualTo
 
@@ -39,7 +39,7 @@ object ObservationSpec extends Specification {
       
   "an observation with some urls to be explored" should {
     val observation =
-      Observation(ObserverId(), strategy, toBeExplored = 
+      ObserverState(ObserverId(), strategy, toBeExplored = 
         List(
           (w3_home, 0),
           (w3_standards, 1)
@@ -68,19 +68,19 @@ object ObservationSpec extends Specification {
   }
   
   "a fresh observation" should {
-    val observation = Observation(ObserverId(), strategy)
+    val observation = ObserverState(ObserverId(), strategy)
     "start in NotYetStartedState" in {
-      observation.state must beEqualTo (NotYetStarted)
+      observation.phase must beEqualTo (NotYetStarted)
     }
     "produce an observation in StoppedState when stopped" in {
       val stoppedObs = observation.stop()
-      stoppedObs.state must be (StoppedState)
+      stoppedObs.phase must be (Interrupted)
     }
   }
   
   "an observation" should {
     val observation =
-      Observation(
+      ObserverState(
         ObserverId(),
         strategy,
         toBeExplored = List(w3_home -> 0, w3_standards -> 1))
@@ -106,7 +106,7 @@ object ObservationSpec extends Specification {
         w3_membership -> 1,
         w3_consortium -> 1)
 
-    val observation = Observation(ObserverId(), strategy, toBeExplored = urls)
+    val observation = ObserverState(ObserverId(), strategy, toBeExplored = urls)
     
     "take a URL" in {
       val (ob, nextExplore) = observation.take.get
@@ -132,7 +132,7 @@ object ObservationSpec extends Specification {
         w3_consortium -> 1,
         google -> 1)
 
-    val observation = Observation(ObserverId(), strategy, toBeExplored = urls)
+    val observation = ObserverState(ObserverId(), strategy, toBeExplored = urls)
     
     "take a URL from the main authority in priority regardless of the order in the url list" in {
       val (ob, nextExplore) = observation.take.get
@@ -165,7 +165,7 @@ object ObservationSpec extends Specification {
         w3_consortium -> 1,
         google -> 1)
 
-    val observation = Observation(
+    val observation = ObserverState(
         ObserverId(),
         strategy,
         pendingMainAuthority = Some(w3_home -> 0),
@@ -191,7 +191,7 @@ object ObservationSpec extends Specification {
         mobilevoice -> 2,
         w3_consortium -> 1)
 
-    val observation = Observation(
+    val observation = ObserverState(
         ObserverId(),
         strategy,
         pending = Map(google -> (google -> 1)),
@@ -208,7 +208,7 @@ object ObservationSpec extends Specification {
 
   "an observation with pending fetches" should {
 
-    val observation = Observation(
+    val observation = ObserverState(
         ObserverId(),
         strategy,
         pendingMainAuthority = Some(w3_home -> 0),

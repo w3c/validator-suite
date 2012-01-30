@@ -11,7 +11,7 @@ object FromFileAssertor extends FromUnicornFormatAssertor {
 
   val id = AssertorId("FromFileAssertor")
   
-  def observe(file: java.io.File): Assertion =
+  def observe(file: java.io.File): Asserted =
     this.assert(Source.fromFile(file))
 
 }

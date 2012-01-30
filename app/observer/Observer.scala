@@ -27,7 +27,7 @@ trait Observer {
   def startExplorationPhase(): Unit
   def stop(): Unit
   def URLs(): Future[Iterable[URL]]
-  def assertions(): Future[Assertions]
+  def assertions(): Future[ObserverState#Assertions]
   // hooks for http
   def sendGETResponse(url: URL, r: GETResponse): Unit
   def sendHEADResponse(url: URL, r: HEADResponse): Unit
@@ -37,7 +37,7 @@ trait Observer {
   def unsubscribe(subscriber: Subscriber): Unit
   def subscriberOf(subscriber: => Subscriber): Subscriber
   // bar
-  def assertion(url: URL, assertorId: AssertorId, result: Either[Throwable, Assertion]): Unit
+  def assertion(url: URL, assertorId: AssertorId, result: Either[Throwable, Asserted]): Unit
 }
 
 
@@ -77,7 +77,7 @@ class ObserverImpl (
   /**
    * The current state of this Observer. The initial state is ExplorationState.
    */
-  var observation: Observation = Observation(observerId, strategy)
+  var observation: ObserverState = ObserverState(observerId, strategy)
   
   /**
    * A shorten id for logs readability
@@ -92,7 +92,7 @@ class ObserverImpl (
   /**
    * The set of futures waiting for the end of the assertion phase
    */
-  var waitingForEndOfAssertionPhase = Set[Promise[Assertions]]()
+  var waitingForEndOfAssertionPhase = Set[Promise[ObserverState#Assertions]]()
   
   /**
    * Creates a subscriber as an Akka-children for this Observer
@@ -112,30 +112,30 @@ class ObserverImpl (
    * Blocks until the exploration phase is done, or returns immediately
    */
   def URLs(): Future[Iterable[URL]] =
-    observation.state match {
-      case NotYetStarted | ExplorationState => {
+    observation.phase match {
+      case NotYetStarted | ExplorationPhase => {
         val promise = Promise[Iterable[URL]]()
         waitingForEndOfExplorationPhase += promise
         promise
       }
-      case ObservationState | FinishedState | StoppedState =>
+      case AssertionPhase | Finished | Interrupted =>
         Promise.successful { observation.urls }
-      case ErrorState => sys.error("what is a Future with error?")
+      case Error => sys.error("what is a Future with error?")
     }
   
   /**
    * Returns the assertions after the assertion phase
    * Blocks until the assertion phase is done, or returns immediately
    */
-  def assertions(): Future[Assertions] =
-    observation.state match {
-      case NotYetStarted | ExplorationState | ObservationState => {
-        val future = Promise[Assertions]()
+  def assertions(): Future[ObserverState#Assertions] =
+    observation.phase match {
+      case NotYetStarted | ExplorationPhase | AssertionPhase => {
+        val future = Promise[ObserverState#Assertions]()
         waitingForEndOfAssertionPhase += future
         future
       }
-      case FinishedState | StoppedState => Promise.successful { observation.assertions }
-      case ErrorState => sys.error("what is a Future with error?")
+      case Finished | Interrupted => Promise.successful { observation.assertions }
+      case Error => sys.error("what is a Future with error?")
     }
   
   /**
@@ -202,7 +202,7 @@ class ObserverImpl (
       Future(run)(validatorDispatcher)
     }
     // TODO do we need to return the number of urls to observe, or the expected number of assertions?
-    broadcast(URLsToObserve(_2XX.size))
+    broadcast(message.URLsToObserve(_2XX.size))
     logger.debug("expecting %d assertions" format assertionCounter)
   }
 
@@ -216,22 +216,22 @@ class ObserverImpl (
    * </ul>
    */
   def startExplorationPhase(): Unit =
-    if (observation.state == NotYetStarted) {
+    if (observation.phase == NotYetStarted) {
       // ask the strategy for the first urls to considerer
       val firstURLs = strategy.seedURLs.toList
       // update the observation state
       observation = observation.withFirstURLsToExplore(firstURLs)
-      broadcast(URLsToExplore(firstURLs.size))
+      broadcast(message.URLsToExplore(firstURLs.size))
       logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
       // we can now schedule the first fetches
       scheduleNextURLsToFetch()
     } else {
-      logger.error("you should be in NotYetStarted state, but this is " + observation.state)
+      logger.error("you should be in NotYetStarted state, but this is " + observation.phase)
     }
   
   def stop(): Unit = {
     observation = observation.stop()
-    broadcast(Stopped)
+    broadcast(message.Stopped)
   }
 
   /**
@@ -248,7 +248,7 @@ class ObserverImpl (
    * </ul>
    */
   def sendGETResponse(url: URL, r: GETResponse): Unit = {
-    if (observation.state != StoppedState) {
+    if (observation.phase != message.Stopped) {
       val GETResponse(status, headers, body) = r
       logger.debug("%s:  GET <<< %s" format (shortId, url))
       val distance =
@@ -271,7 +271,7 @@ class ObserverImpl (
       if (explores.size > 0) {
         logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, observation.numberOfKnownUrls))
       }
-      broadcast(FetchedGET(url, status, explores.size))
+      broadcast(message.FetchedGET(url, status, explores.size))
       scheduleNextURLsToFetch()
       conditionalEndOfExplorationPhase()
     }
@@ -283,12 +283,12 @@ class ObserverImpl (
    * The logic is the same as in sendGETResponse without the extraction of links
    */
   def sendHEADResponse(url: URL, r: HEADResponse): Unit = {
-    if (observation.state != StoppedState) {
+    if (observation.phase != Interrupted) {
       val HEADResponse(status, headers) = r
       logger.debug("%s: HEAD <<< %s" format (shortId, url))
       observation = observation.withNewResponse(url -> HttpResponse(url, status, headers, Nil))
       scheduleNextURLsToFetch()
-      broadcast(FetchedHEAD(url, r.status))
+      broadcast(message.FetchedHEAD(url, r.status))
       conditionalEndOfExplorationPhase()
     }
   }
@@ -299,11 +299,11 @@ class ObserverImpl (
    * The logic is the same as in sendHEADResponse
    */
   def sendException(url: URL, t: Throwable): Unit = {
-    if (observation.state != StoppedState) {
+    if (observation.phase != Interrupted) {
       logger.debug("%s: Exception for %s: %s" format (shortId, url, t.getMessage))
       observation = observation.withNewResponse(url -> ErrorResponse(url, t.getMessage))
       scheduleNextURLsToFetch()
-      broadcast(FetchedError(url, t.getMessage))
+      broadcast(message.FetchedError(url, t.getMessage))
       conditionalEndOfExplorationPhase()
     }
   }
@@ -313,7 +313,7 @@ class ObserverImpl (
    * 
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
-  private final def fetch(explore: Observation#Explore): Unit = {
+  private final def fetch(explore: ObserverState#Explore): Unit = {
     val (url, distance) = explore
     val action = strategy.fetch(url, distance)
     //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
@@ -348,13 +348,13 @@ class ObserverImpl (
   /**
    * Hook to send the result of an assertions
    */
-  def assertion(url: URL, assertorId: AssertorId, result: Either[Throwable, Assertion]): Unit = {
+  def assertion(url: URL, assertorId: AssertorId, result: Either[Throwable, Asserted]): Unit = {
     logger.debug("%s: %s observed by %s" format (shortId, url, assertorId))
     result match {
       case Right(assertion) =>
-        broadcast(Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
+        broadcast(message.Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
       case Left(t) =>
-        broadcast(AssertedError(url, assertorId, t))
+        broadcast(message.AssertedError(url, assertorId, t))
     }
     val a = (url, assertorId, result)
     observation = observation.withAssertion(a)
@@ -385,8 +385,8 @@ class ObserverImpl (
       // we don't need pending Futures for observations anymore
       // make it available for GC
       waitingForEndOfAssertionPhase = null
-      observation = observation.copy(state = FinishedState)
-      broadcast(ObservationFinished)
+      observation = observation.copy(phase = Finished)
+      broadcast(message.ObservationFinished)
       subscribers foreach { context.stop(_) }
       subscribers = Set.empty
     }
@@ -401,8 +401,8 @@ class ObserverImpl (
   def subscribe(subscriber: Subscriber): Unit = {
     subscribers += subscriber
     logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
-    subscriber.broadcast(toBroadcast(InitialState))
-    logger.debug(toBroadcast(InitialState))
+    subscriber.broadcast(toBroadcast(message.InitialState))
+    logger.debug(toBroadcast(message.InitialState))
   }
   
   /**
@@ -416,42 +416,42 @@ class ObserverImpl (
   /**
    * Utility method to map a BroadcastMessage to a String that can be understood by the client
    */
-  private def toBroadcast(msg: BroadcastMessage): String = msg match {
-    case URLsToExplore(nb) => """["NB_EXP", %d]""" format (nb)
-    case URLsToObserve(nb) => """["NB_OBS", %d]""" format (nb)
-    case FetchedGET(url, httpCode, extractedURLs) => """["GET", %d, "%s", %d]""" format (httpCode, url, extractedURLs)
-    case FetchedHEAD(url, httpCode) => """["HEAD", %d, "%s"]""" format (httpCode, url)
-    case FetchedError(url, errorMessage) => """["ERR", "%s", "%s"]""" format (errorMessage, url)
-    case Asserted(url, assertorId, errors, warnings/*, validatorURL*/) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, errors, warnings)
-    case AssertedError(url, assertorId, t) => """["OBS_ERR", "%s"]""" format url
-    case NothingToObserve(url) => """["OBS_NO", "%s"]""" format url
-    case ObservationFinished => """["OBS_FINISHED"]"""
-    case InitialState => {
+  private def toBroadcast(msg: message.BroadcastMessage): String = msg match {
+    case message.URLsToExplore(nb) => """["NB_EXP", %d]""" format (nb)
+    case message.URLsToObserve(nb) => """["NB_OBS", %d]""" format (nb)
+    case message.FetchedGET(url, httpCode, extractedURLs) => """["GET", %d, "%s", %d]""" format (httpCode, url, extractedURLs)
+    case message.FetchedHEAD(url, httpCode) => """["HEAD", %d, "%s"]""" format (httpCode, url)
+    case message.FetchedError(url, errorMessage) => """["ERR", "%s", "%s"]""" format (errorMessage, url)
+    case message.Asserted(url, assertorId, errors, warnings/*, validatorURL*/) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, errors, warnings)
+    case message.AssertedError(url, assertorId, t) => """["OBS_ERR", "%s"]""" format url
+    case message.NothingToObserve(url) => """["OBS_NO", "%s"]""" format url
+    case message.ObservationFinished => """["OBS_FINISHED"]"""
+    case message.InitialState => {
       val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (observation.responses.size, observation.toBeExplored.size, observation.assertions.size, 0)
       import org.w3.vs.model._
       val responsesToBroadcast = observation.responses map {
         // disctinction btw GET and HEAD, links.size??
         case (url, HttpResponse(_, status, _, _)) =>
-          toBroadcast(FetchedGET(url, status, 0))
+          toBroadcast(message.FetchedGET(url, status, 0))
         case (url, ErrorResponse(_, typ)) =>
-          toBroadcast(FetchedError(url, typ))
+          toBroadcast(message.FetchedError(url, typ))
       }
       val assertionsToBroadcast = observation.assertions map {
         case (url, assertorId, Left(t)) =>
-          toBroadcast(AssertedError(url, assertorId, t))
+          toBroadcast(message.AssertedError(url, assertorId, t))
         case (url, assertorId, Right(assertion)) =>
-          toBroadcast(Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
+          toBroadcast(message.Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
       }
       (List(initial) ++ responsesToBroadcast ++ assertionsToBroadcast) mkString ""
     }
-    case Stopped => """["STOPPED"]"""
+    case message.Stopped => """["STOPPED"]"""
     
   }
   
   /**
    * To broadcast messages to subscribers.
    */
-  private def broadcast(msg: BroadcastMessage): Unit = {
+  private def broadcast(msg: message.BroadcastMessage): Unit = {
     val tb = toBroadcast(msg)
     if (subscribers != null)
       subscribers foreach (_.broadcast(tb))

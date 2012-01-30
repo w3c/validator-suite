@@ -4,7 +4,7 @@ package org.w3.vs.model
  * 
  *  It's made of a series of [[org.w3.vs.validator.Event]]s
  */
-case class Assertion(events: Seq[Event]) {
+case class Asserted(events: Seq[Event]) {
 
   /** having no errors means having no event with severity as 'error' */
   def hasError: Boolean =
