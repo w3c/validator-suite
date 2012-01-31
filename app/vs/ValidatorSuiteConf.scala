@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import org.w3.vs.http.Http
 import org.w3.vs.assertor.AssertorPicker
 import akka.dispatch.ExecutionContext
+import com.ning.http.client.AsyncHttpClient
 
 trait ValidatorSuiteConf {
   
@@ -18,5 +19,7 @@ trait ValidatorSuiteConf {
   val MAX_URL_TO_FETCH: Int
   
   val validatorDispatcher: ExecutionContext
+  
+  val httpClient: AsyncHttpClient
   
 }

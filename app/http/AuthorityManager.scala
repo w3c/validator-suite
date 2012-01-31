@@ -10,6 +10,7 @@ import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
 import org.w3.vs.model.{ObserverId, FetchAction, FetchGET, FetchHEAD, FetchNothing}
+import org.w3.vs.ValidatorSuiteConf
 
 trait AuthorityManager {
   def fetch(url: URL, action: FetchAction, observer: Observer): Unit
@@ -22,11 +23,10 @@ object AuthorityManager {
   val httpInFlight = new java.util.concurrent.atomic.AtomicInteger(0)
 }
 
-class AuthorityManagerImpl private[http] (
-  authority: Authority,
-  client: AsyncHttpClient)
+class AuthorityManagerImpl private[http] (authority: Authority)(implicit configuration: ValidatorSuiteConf)
 extends AuthorityManager with TypedActor.PostStop {
   
+  import configuration.httpClient
   import AuthorityManager.httpInFlight
   
   val logger = Logger.of(classOf[AuthorityManager])
@@ -118,8 +118,8 @@ extends AuthorityManager with TypedActor.PostStop {
       }
       
       action match {
-        case FetchGET => client.prepareGet(url.toExternalForm()).execute(httpHandler)
-        case FetchHEAD => client.prepareHead(url.toExternalForm()).execute(httpHandler)
+        case FetchGET => httpClient.prepareGet(url.toExternalForm()).execute(httpHandler)
+        case FetchHEAD => httpClient.prepareHead(url.toExternalForm()).execute(httpHandler)
         case FetchNothing => logger.error("FetchNothing was supposed to be ignored!")
       }
       

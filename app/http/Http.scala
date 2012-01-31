@@ -12,6 +12,7 @@ import akka.util.duration._
 import play.Logger
 import org.w3.vs.observer.Observer
 import org.w3.vs.model.{FetchAction, FetchHEAD, FetchGET}
+import org.w3.vs.ValidatorSuiteConf
 
 trait Http {
   def fetch(url: URL, action: FetchAction, observer: Observer): Unit
@@ -22,14 +23,13 @@ trait Http {
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
  */
-class HttpImpl extends Http with TypedActor.PostStop {
+class HttpImpl()(implicit configuration: ValidatorSuiteConf) extends Http with TypedActor.PostStop {
 
+  import configuration.httpClient
   // TODO really???
   import TypedActor.dispatcher
   
   val logger = Logger.of(classOf[Http])
-  
-  val asyncHttpClient = Http.makeClient(2 seconds)
   
   var registry = Map[Authority, AuthorityManager]()
   
@@ -40,7 +40,7 @@ class HttpImpl extends Http with TypedActor.PostStop {
     registry.get(authority).getOrElse {
       val authorityManager = TypedActor(TypedActor.context).typedActorOf(
         classOf[AuthorityManager],
-        new AuthorityManagerImpl(authority, asyncHttpClient),
+        new AuthorityManagerImpl(authority),
         Props(),
         authority)
       registry += (authority -> authorityManager)
@@ -53,31 +53,8 @@ class HttpImpl extends Http with TypedActor.PostStop {
   
   override def postStop = {
     logger.debug("closing asyncHttpClient")
-    asyncHttpClient.close()
+    httpClient.close()
   }
   
 }
 
-object Http {
-  
-  // This field is just used for debug/logging/testing
-  val httpInFlight = new AtomicInteger(0)
-
-  // note: an AsyncHttpClient is a heavy object with a thread
-  // and connection pool associated with it, it's supposed to
-  // be shared among lots of requests, not per-http-request
-  private[http] def makeClient(timeout: Duration)(implicit dispatcher: MessageDispatcher) = {
-    val executor = Executors.newCachedThreadPool()
-    
-    val builder = new AsyncHttpClientConfig.Builder()
-    val config =
-      builder.setMaximumConnectionsTotal(1000)
-      .setMaximumConnectionsPerHost(15)
-      .setExecutorService(executor)
-      .setFollowRedirects(true)
-      .setConnectionTimeoutInMs(timeout.toMillis.toInt)
-      .build
-    new AsyncHttpClient(config)
-  }
-  
-}

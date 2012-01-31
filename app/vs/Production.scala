@@ -10,6 +10,9 @@ import org.w3.vs.assertor._
 import akka.util.duration._
 import akka.util.Duration
 import akka.dispatch.ExecutionContext
+import java.util.concurrent.Executors
+import com.ning.http.client.AsyncHttpClientConfig
+import com.ning.http.client.AsyncHttpClient
 
 trait Production extends ValidatorSuiteConf {
   
@@ -26,7 +29,7 @@ trait Production extends ValidatorSuiteConf {
   lazy val http: Http =
     TypedActor(system).typedActorOf(
       classOf[Http],
-      new HttpImpl(),
+      new HttpImpl()(this),
       Props(),
       "http")
   
@@ -39,7 +42,28 @@ trait Production extends ValidatorSuiteConf {
       new ObserverCreatorImpl()(this),
       Props(),
       "observer")
-      
+  
   val assertorPicker: AssertorPicker = SimpleAssertorPicker
+  
+  /**
+   * note: an AsyncHttpClient is a heavy object with a thread
+   * and connection pool associated with it, it's supposed to
+   * be shared among lots of requests, not per-http-request
+   */
+  lazy val httpClient = {
+    // 2 seconds
+    val timeout: Int = 2000
+    val executor = Executors.newCachedThreadPool()
+    val builder = new AsyncHttpClientConfig.Builder()
+    val config =
+      builder.setMaximumConnectionsTotal(1000)
+      .setMaximumConnectionsPerHost(15)
+      .setExecutorService(executor)
+      .setFollowRedirects(true)
+      .setConnectionTimeoutInMs(timeout)
+      .build
+    new AsyncHttpClient(config)
+  }
+
   
 }
