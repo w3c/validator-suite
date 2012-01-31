@@ -28,16 +28,13 @@ trait Observer {
   def stop(): Unit
   def URLs(): Future[Iterable[URL]]
   def assertions(): Future[ObserverState#Assertions]
-  // hooks for http
-  def sendGETResponse(url: URL, r: GETResponse): Unit
-  def sendHEADResponse(url: URL, r: HEADResponse): Unit
-  def sendException(url: URL, t: Throwable): Unit
+  // hooks
+  def addResponse(fetchResponse: FetchResponse): Unit
+  def addAssertion(assertion: ObserverState#Assertion): Unit
   // foo
   def subscribe(subscriber: Subscriber): Unit
   def unsubscribe(subscriber: Subscriber): Unit
   def subscriberOf(subscriber: => Subscriber): Subscriber
-  // bar
-  def addAssertion(assertion: ObserverState#Assertion): Unit
 }
 
 
@@ -235,79 +232,79 @@ class ObserverImpl (
     broadcast(message.Stopped)
   }
 
-  /**
-   * Hook to send the result of a GET
-   * 
-   * The following happens:
-   * <ul>
-   * <li>the distance for this url is retrieved from the observation</li>
-   * <li>depending on the the kind of resource, some urls are extracted</li>
-   * <li>and then cleaned before adding them back to the observation (because of the invariants to be respected)</li>
-   * <li>the observation is updated with the filtered urls and the new Response</li>
-   * <li>an event is broadcasted to the listeners</li>
-   * <li>potentially, another fetch is scheduled</li>
-   * </ul>
-   */
-  def sendGETResponse(url: URL, r: GETResponse): Unit = {
-    if (state.phase != message.Stopped) {
-      val GETResponse(status, headers, body) = r
-      logger.debug("%s:  GET <<< %s" format (shortId, url))
-      val distance =
-        state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
-      // TODO the extraction actually depends on the kind of resource!
-      val extractedURLs = {
-        val encoding = "UTF-8"
-        val reader = new java.io.StringReader(body)
-        // TODO review this clearhash stuff
-        html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
+  def addResponse(fetchResponse: FetchResponse): Unit = if (state.phase != message.Stopped) {
+    fetchResponse match {
+      case OkResponse(url, FetchGET, status, headers, body) => {
+        logger.debug("%s:  GET <<< %s" format (shortId, url))
+        val distance =
+          state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+              // TODO the extraction actually depends on the kind of resource!
+        val extractedURLs = {
+          val encoding = "UTF-8"
+          val reader = new java.io.StringReader(body)
+          // TODO review this clearhash stuff
+          html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
+        }
+        // TODO the distance should be different based on the kind of resource we're looking at
+        val potentialExplores = extractedURLs map { _ -> (distance + 1) }
+        // it's important to filter/clean the urls before adding them back to the observation
+        val explores = state.filteredExtractedURLs(potentialExplores)
+        state =
+          state
+            .withNewResponse(url -> HttpResponse(url, status, headers, extractedURLs.distinct))
+            .withNewUrlsToBeExplored(explores)
+        if (explores.size > 0) {
+          logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, state.numberOfKnownUrls))
+        }
+        broadcast(message.FetchedGET(url, status, explores.size))
+        scheduleNextURLsToFetch()
+        conditionalEndOfExplorationPhase()
       }
-      // TODO the distance should be different based on the kind of resource we're looking at
-      val potentialExplores = extractedURLs map { _ -> (distance + 1) }
-      // it's important to filter/clean the urls before adding them back to the observation
-      val explores = state.filteredExtractedURLs(potentialExplores)
-      state =
-        state
-          .withNewResponse(url -> HttpResponse(url, status, headers, extractedURLs.distinct))
-          .withNewUrlsToBeExplored(explores)
-      if (explores.size > 0) {
-        logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, state.numberOfKnownUrls))
+      // HEAD
+      case OkResponse(url, FetchHEAD, status, headers, _) => {
+        logger.debug("%s: HEAD <<< %s" format (shortId, url))
+        state = state.withNewResponse(url -> HttpResponse(url, status, headers, Nil))
+        scheduleNextURLsToFetch()
+        broadcast(message.FetchedHEAD(url, status))
+        conditionalEndOfExplorationPhase()
       }
-      broadcast(message.FetchedGET(url, status, explores.size))
-      scheduleNextURLsToFetch()
-      conditionalEndOfExplorationPhase()
+      case OkResponse(_, FetchNothing, _, _, _) =>
+        logger.error("FetchNothing was supposed to be ignored!")
+      case KoResponse(url, why) => {
+        logger.debug("%s: Exception for %s: %s" format (shortId, url, why.getMessage))
+        state = state.withNewResponse(url -> ErrorResponse(url, why.getMessage))
+        scheduleNextURLsToFetch()
+        broadcast(message.FetchedError(url, why.getMessage))
+        conditionalEndOfExplorationPhase()
+      }
     }
   }
   
-  /**
-   * Hook to send the result of a HEAD
-   * 
-   * The logic is the same as in sendGETResponse without the extraction of links
-   */
-  def sendHEADResponse(url: URL, r: HEADResponse): Unit = {
-    if (state.phase != Interrupted) {
-      val HEADResponse(status, headers) = r
-      logger.debug("%s: HEAD <<< %s" format (shortId, url))
-      state = state.withNewResponse(url -> HttpResponse(url, status, headers, Nil))
-      scheduleNextURLsToFetch()
-      broadcast(message.FetchedHEAD(url, r.status))
-      conditionalEndOfExplorationPhase()
-    }
-  }
-
-  /**
-   * Hook to send the result of a failure for a fetch
-   * 
-   * The logic is the same as in sendHEADResponse
-   */
-  def sendException(url: URL, t: Throwable): Unit = {
-    if (state.phase != Interrupted) {
-      logger.debug("%s: Exception for %s: %s" format (shortId, url, t.getMessage))
-      state = state.withNewResponse(url -> ErrorResponse(url, t.getMessage))
-      scheduleNextURLsToFetch()
-      broadcast(message.FetchedError(url, t.getMessage))
-      conditionalEndOfExplorationPhase()
-    }
-  }
+//  /**
+//   * Hook to send the result of a GET
+//   * 
+//   * The following happens:
+//   * <ul>
+//   * <li>the distance for this url is retrieved from the observation</li>
+//   * <li>depending on the the kind of resource, some urls are extracted</li>
+//   * <li>and then cleaned before adding them back to the observation (because of the invariants to be respected)</li>
+//   * <li>the observation is updated with the filtered urls and the new Response</li>
+//   * <li>an event is broadcasted to the listeners</li>
+//   * <li>potentially, another fetch is scheduled</li>
+//   * </ul>
+//   */
+//  
+//  /**
+//   * Hook to send the result of a HEAD
+//   * 
+//   * The logic is the same as in sendGETResponse without the extraction of links
+//   */
+//
+//  /**
+//   * Hook to send the result of a failure for a fetch
+//   * 
+//   * The logic is the same as in sendHEADResponse
+//   */
   
   /**
    * Fetch one URL
@@ -321,11 +318,11 @@ class ObserverImpl (
     action match {
       case FetchGET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        http.GET(url, self)
+        http.fetch(url, action, self)
       }
       case FetchHEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
-        http.HEAD(url, self)
+        http.fetch(url, action, self)
       }
       case FetchNothing => {
         logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))

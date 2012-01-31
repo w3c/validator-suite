@@ -9,19 +9,25 @@ import akka.util.Duration
 import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
-import org.w3.vs.model.ObserverId
+import org.w3.vs.model.{ObserverId, FetchAction, FetchGET, FetchHEAD, FetchNothing}
 
 trait AuthorityManager {
-  def GET(url: URL, observer: Observer): Unit
-  def HEAD(url: URL, observer: Observer): Unit
+  def fetch(url: URL, action: FetchAction, observer: Observer): Unit
   def sleepTime: Long
   def sleepTime_= (value: Long): Unit
+}
+
+object AuthorityManager {
+  // This field is just used for debug/logging/testing
+  val httpInFlight = new java.util.concurrent.atomic.AtomicInteger(0)
 }
 
 class AuthorityManagerImpl private[http] (
   authority: Authority,
   client: AsyncHttpClient)
 extends AuthorityManager with TypedActor.PostStop {
+  
+  import AuthorityManager.httpInFlight
   
   val logger = Logger.of(classOf[AuthorityManager])
   
@@ -44,36 +50,79 @@ extends AuthorityManager with TypedActor.PostStop {
     lastFetchTimestamp = current
   }
   
-  def GET(url: URL, observer: Observer): Unit = sleepIfNeeded {
-    val f = Http.GET(client, url) onSuccess {
-      case r: GETResponse =>
-        observer.sendGETResponse(url, r)
-    } onFailure {
-      case t: Throwable =>
-        observer.sendException(url, t)
-    }
-    try {
-      Await.result(f, 10 seconds)
-    } catch {
-      case te: java.util.concurrent.TimeoutException =>
-        observer.sendException(url, te)
-    }
-  }
-  
-  def HEAD(url: URL, observer: Observer): Unit = sleepIfNeeded {
-    val f = Http.HEAD(client, url) onSuccess {
-      case r: HEADResponse =>
-        observer.sendHEADResponse(url, r)
-    } onFailure {
-      case t: Throwable =>
-        observer.sendException(url, t)
-    }
-    try {
-      Await.result(f, 10 seconds)
-    } catch {
-      case te: java.util.concurrent.TimeoutException =>
-        observer.sendException(url, te)
-    }
+  def fetch(url: URL, action: FetchAction, observer: Observer): Unit = {
+    
+      val httpHandler: AsyncHandler[Unit] = new AsyncHandler[Unit]() {
+        
+        httpInFlight.incrementAndGet()
+        
+        val builder = new Response.ResponseBuilder()
+        
+        var finished = false
+        
+        // We can have onThrowable called because onCompleted
+        // throws, and other complex situations, so to handle everything
+        // we use this
+        private def finish(body: => Unit): Unit = {
+          if (!finished) {
+            try {
+              body
+            } catch {
+              case t: Throwable => {
+                observer.addResponse(KoResponse(url, t))
+                throw t // rethrow for benefit of AsyncHttpClient
+              }
+            } finally {
+              finished = true
+              httpInFlight.decrementAndGet()
+            }
+          }
+        }
+
+        // this can be called if any of our other methods throws,
+        // including onCompleted.
+        def onThrowable(t: Throwable): Unit = {
+          finish { throw t }
+        }
+
+        def onBodyPartReceived(bodyPart: HttpResponseBodyPart): AsyncHandler.STATE = {
+          builder.accumulate(bodyPart)
+          AsyncHandler.STATE.CONTINUE
+        }
+        
+        def onStatusReceived(responseStatus: HttpResponseStatus): AsyncHandler.STATE = {
+          builder.accumulate(responseStatus)
+          AsyncHandler.STATE.CONTINUE
+        }
+        
+        def onHeadersReceived(responseHeaders: HttpResponseHeaders): AsyncHandler.STATE = {
+          builder.accumulate(responseHeaders)
+          AsyncHandler.STATE.CONTINUE
+        }
+        
+        def onCompleted(): Unit = {
+          import scala.collection.JavaConverters._
+          
+          finish {
+            val response = builder.build()
+            import java.util.{Map => jMap, List => jList}
+            import scala.collection.JavaConverters._
+            val status = response.getStatusCode()
+            val headers: Headers =
+              (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
+            val body = response.getResponseBody()
+            val fetchResponse = OkResponse(url, action, status, headers, body)
+            observer.addResponse(fetchResponse)
+          }
+        }
+      }
+      
+      action match {
+        case FetchGET => client.prepareGet(url.toExternalForm()).execute(httpHandler)
+        case FetchHEAD => client.prepareHead(url.toExternalForm()).execute(httpHandler)
+        case FetchNothing => logger.error("FetchNothing was supposed to be ignored!")
+      }
+      
   }
   
   override def postStop = {
