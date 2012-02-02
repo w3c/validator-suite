@@ -20,4 +20,3 @@ case class NewURLsToExplore(urls: Iterable[URL]) extends ObservationUpdate
 case class NewURLsToObserve(nbUrls: Int) extends ObservationUpdate
 case class NewResponse(response: Response) extends ObservationUpdate
 case class NewAssertion(assertion: ObserverState#Assertion) extends ObservationUpdate
-case class NothingToObserve(url: URL) extends ObservationUpdate

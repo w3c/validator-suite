@@ -117,7 +117,6 @@ object Validator extends Controller with Secured {
       case (url, assertorId, Left(t)) => """["OBS_ERR", "%s"]""" format url
       case (url, assertorId, Right(a)) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, a.errorsNumber, a.warningsNumber)
     }
-    case message.NothingToObserve(url) => """["OBS_NO", "%s"]""" format url // TODO not generated anymore
     case message.ObservationFinished => """["OBS_FINISHED"]"""
     case message.ObservationSnapshot(numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, messages) => {
       val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, 0)
