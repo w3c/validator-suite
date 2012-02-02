@@ -19,7 +19,7 @@ case class HttpResponse(
 
 }
 
-case class ErrorResponse(url: URL, typ: String) extends Response
+case class ErrorResponse(url: URL, errorMessage: String) extends Response
 
 object Response {
   
