@@ -16,7 +16,7 @@ trait Strategy {
   def seedURLs: Iterable[URL]
   def mainAuthority: Authority
   def shouldObserve(url: URL): Boolean
-  def fetch(url: URL, distance: Int): FetchAction
+  def fetch(url: URL, distance: Int): HttpAction
   
 }
 

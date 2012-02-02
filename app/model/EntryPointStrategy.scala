@@ -31,12 +31,12 @@ extends Strategy {
   def shouldObserve(url: URL): Boolean =
     authorityToObserve == url.authority
   
-  def fetch(url: URL, distance: Int): FetchAction = {
+  def fetch(url: URL, distance: Int): HttpAction = {
     if ((url.getAuthority == entrypoint.getAuthority) &&
         (distance < this.distance))
-      FetchGET
+      GET
     else if (linkCheck)
-      FetchHEAD
+      HEAD
     else
       FetchNothing
   }

@@ -9,11 +9,11 @@ import akka.util.Duration
 import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
-import org.w3.vs.model.{ObserverId, FetchAction, FetchGET, FetchHEAD, FetchNothing}
+import org.w3.vs.model.{ObserverId, HttpVerb, HttpAction, GET, HEAD, FetchNothing}
 import org.w3.vs.ValidatorSuiteConf
 
 trait AuthorityManager {
-  def fetch(url: URL, action: FetchAction, observer: Observer): Unit
+  def fetch(url: URL, action: HttpVerb, observer: Observer): Unit
   def sleepTime: Long
   def sleepTime_= (value: Long): Unit
 }
@@ -50,7 +50,7 @@ extends AuthorityManager with TypedActor.PostStop {
     lastFetchTimestamp = current
   }
   
-  def fetch(url: URL, action: FetchAction, observer: Observer): Unit = {
+  def fetch(url: URL, action: HttpVerb, observer: Observer): Unit = {
     
       val httpHandler: AsyncHandler[Unit] = new AsyncHandler[Unit]() {
         
@@ -118,9 +118,8 @@ extends AuthorityManager with TypedActor.PostStop {
       }
       
       action match {
-        case FetchGET => httpClient.prepareGet(url.toExternalForm()).execute(httpHandler)
-        case FetchHEAD => httpClient.prepareHead(url.toExternalForm()).execute(httpHandler)
-        case FetchNothing => logger.error("FetchNothing was supposed to be ignored!")
+        case GET => httpClient.prepareGet(url.toExternalForm()).execute(httpHandler)
+        case HEAD => httpClient.prepareHead(url.toExternalForm()).execute(httpHandler)
       }
       
   }

@@ -31,11 +31,11 @@ extends Strategy {
   def shouldObserve(url: URL): Boolean =
     authorityToObserve == url.authority
   
-  def fetch(url: URL, distance: Int): FetchAction =
+  def fetch(url: URL, distance: Int): HttpAction =
     if (sitemap.urls exists { _.loc == url })
-      FetchGET
+      GET
     else
-      FetchHEAD
+      HEAD
 
 }
 

@@ -234,7 +234,7 @@ class ObserverImpl (
 
   def addResponse(fetchResponse: FetchResponse): Unit = if (state.phase != message.Stopped) {
     fetchResponse match {
-      case OkResponse(url, FetchGET, status, headers, body) => {
+      case OkResponse(url, GET, status, headers, body) => {
         logger.debug("%s:  GET <<< %s" format (shortId, url))
         val distance =
           state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
@@ -261,15 +261,13 @@ class ObserverImpl (
         conditionalEndOfExplorationPhase()
       }
       // HEAD
-      case OkResponse(url, FetchHEAD, status, headers, _) => {
+      case OkResponse(url, HEAD, status, headers, _) => {
         logger.debug("%s: HEAD <<< %s" format (shortId, url))
         state = state.withNewResponse(url -> HttpResponse(url, status, headers, Nil))
         scheduleNextURLsToFetch()
         broadcast(message.FetchedHEAD(url, status))
         conditionalEndOfExplorationPhase()
       }
-      case OkResponse(_, FetchNothing, _, _, _) =>
-        logger.error("FetchNothing was supposed to be ignored!")
       case KoResponse(url, why) => {
         logger.debug("%s: Exception for %s: %s" format (shortId, url, why.getMessage))
         state = state.withNewResponse(url -> ErrorResponse(url, why.getMessage))
@@ -316,13 +314,13 @@ class ObserverImpl (
     val action = strategy.fetch(url, distance)
     //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
     action match {
-      case FetchGET => {
+      case GET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        http.fetch(url, action, self)
+        http.fetch(url, GET, self)
       }
-      case FetchHEAD => {
+      case HEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
-        http.fetch(url, action, self)
+        http.fetch(url, HEAD, self)
       }
       case FetchNothing => {
         logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))

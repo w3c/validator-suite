@@ -11,11 +11,11 @@ import akka.util.Duration
 import akka.util.duration._
 import play.Logger
 import org.w3.vs.observer.Observer
-import org.w3.vs.model.{FetchAction, FetchHEAD, FetchGET}
+import org.w3.vs.model.{HttpVerb, HEAD, GET}
 import org.w3.vs.ValidatorSuiteConf
 
 trait Http {
-  def fetch(url: URL, action: FetchAction, observer: Observer): Unit
+  def fetch(url: URL, action: HttpVerb, observer: Observer): Unit
   def authorityManagerFor(url: URL): AuthorityManager
   def authorityManagerFor(authority: Authority): AuthorityManager
 }
@@ -48,7 +48,7 @@ class HttpImpl()(implicit configuration: ValidatorSuiteConf) extends Http with T
     }
   }
   
-  def fetch(url: URL, action: FetchAction, observer: Observer): Unit =
+  def fetch(url: URL, action: HttpVerb, observer: Observer): Unit =
     authorityManagerFor(url).fetch(url, action, observer)
   
   override def postStop = {
