@@ -28,6 +28,9 @@ case object Stopped extends ObservationUpdate
  * A coherent state for an Observation.
  * 
  * @bertails: this should not be an ObservationUpdate
+ * TODO: actually, we should
+ * - remove numberOfResponses and numberOfAssertions
+ * - send lists of Response and ObserverState#Assertion
  */
 case class ObservationSnapshot(
     numberOfResponses: Int,
