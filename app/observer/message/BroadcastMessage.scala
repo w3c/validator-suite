@@ -2,6 +2,7 @@ package org.w3.vs.observer.message
 
 import org.w3.util.URL
 import org.w3.vs.assertor.AssertorId
+import org.w3.vs.model.Response
 
 sealed trait BroadcastMessage
 
@@ -16,9 +17,7 @@ case object Stopped extends BroadcastMessage
 // events
 case class URLsToExplore(nbUrls: Int) extends BroadcastMessage
 case class URLsToObserve(nbUrls: Int) extends BroadcastMessage
-case class FetchedGET(url: URL, httpCode: Int, extractedURLs: Int) extends BroadcastMessage
-case class FetchedHEAD(url: URL, httpCode: Int) extends BroadcastMessage
-case class FetchedError(url: URL, errorMessage: String) extends BroadcastMessage
+case class NewResponse(response: Response) extends BroadcastMessage
 case class Asserted(
     url: URL,
     assertorId: AssertorId,

@@ -249,30 +249,32 @@ class ObserverImpl (
         val potentialExplores = extractedURLs map { _ -> (distance + 1) }
         // it's important to filter/clean the urls before adding them back to the observation
         val explores = state.filteredExtractedURLs(potentialExplores)
+        val response = HttpResponse(url, GET, status, headers, extractedURLs.distinct)
         state =
           state
-            .withNewResponse(url -> HttpResponse(url, GET, status, headers, extractedURLs.distinct))
+            .withNewResponse(url -> response)
             .withNewUrlsToBeExplored(explores)
         if (explores.size > 0) {
           logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, state.numberOfKnownUrls))
         }
-        broadcast(message.FetchedGET(url, status, explores.size))
+        broadcast(message.NewResponse(response))
         scheduleNextURLsToFetch()
         conditionalEndOfExplorationPhase()
       }
       // HEAD
       case OkResponse(url, HEAD, status, headers, _) => {
         logger.debug("%s: HEAD <<< %s" format (shortId, url))
-        state = state.withNewResponse(url -> HttpResponse(url, HEAD, status, headers, Nil))
+        val response = HttpResponse(url, HEAD, status, headers, Nil)
+        state = state.withNewResponse(url -> response)
         scheduleNextURLsToFetch()
-        broadcast(message.FetchedHEAD(url, status))
+        broadcast(message.NewResponse(response))
         conditionalEndOfExplorationPhase()
       }
       case KoResponse(url, action, why) => {
         logger.debug("%s: Exception for %s: %s" format (shortId, url, why.getMessage))
         state = state.withNewResponse(url -> ErrorResponse(url, why.getMessage))
         scheduleNextURLsToFetch()
-        broadcast(message.FetchedError(url, why.getMessage))
+        broadcast(message.NewResponse(ErrorResponse(url, why.getMessage)))
         conditionalEndOfExplorationPhase()
       }
     }
@@ -389,11 +391,7 @@ class ObserverImpl (
   }
   
   private def initialState: message.InitialState = {
-    val responsesToBroadcast = state.responses map {
-      // disctinction btw GET and HEAD, links.size??
-      case (url, HttpResponse(_, _, status, _, _)) => message.FetchedGET(url, status, 0)
-      case (url, ErrorResponse(_, typ)) => message.FetchedError(url, typ)
-    }
+    val responsesToBroadcast = state.responses map { case (_, response) => message.NewResponse(response) }
     val assertionsToBroadcast = state.assertions map {
       case (url, assertorId, Left(t)) => message.AssertedError(url, assertorId, t)
       case (url, assertorId, Right(assertion)) =>
