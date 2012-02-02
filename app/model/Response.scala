@@ -7,10 +7,12 @@ sealed trait Response {
   def tinyString = toString 
 }
 
-case class HttpResponse(url: URL,
-                        status: Int,
-                        headers: Headers,
-                        links: List[URL]) extends Response {
+case class HttpResponse(
+    url: URL,
+    httpVerb: HttpVerb,
+    status: Int,
+    headers: Headers,
+    links: List[URL]) extends Response {
   
   override def tinyString =
     "[%s %d headers %d links]" format (url.toString, headers.size, links.size)
