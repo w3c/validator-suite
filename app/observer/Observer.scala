@@ -200,7 +200,7 @@ class ObserverImpl (
       Future(run)(validatorDispatcher)
     }
     // TODO do we need to return the number of urls to observe, or the expected number of assertions?
-    broadcast(message.URLsToObserve(_2XX.size))
+    broadcast(message.NewURLsToObserve(_2XX.size))
     logger.debug("expecting %d assertions" format assertionCounter)
   }
 
@@ -219,7 +219,7 @@ class ObserverImpl (
       val firstURLs = strategy.seedURLs.toList
       // update the observation state
       state = state.withFirstURLsToExplore(firstURLs)
-      broadcast(message.URLsToExplore(firstURLs.size))
+      broadcast(message.NewURLsToExplore(firstURLs))
       logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
       // we can now schedule the first fetches
       scheduleNextURLsToFetch()
@@ -235,7 +235,7 @@ class ObserverImpl (
   def addResponse(fetchResponse: FetchResponse): Unit = if (state.phase != message.Stopped) {
     fetchResponse match {
       case OkResponse(url, GET, status, headers, body) => {
-        logger.debug("%s:  GET <<< %s" format (shortId, url))
+        logger.debug("%s: GET <<< %s" format (shortId, url))
         val distance =
           state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
               // TODO the extraction actually depends on the kind of resource!
@@ -258,6 +258,7 @@ class ObserverImpl (
           logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, state.numberOfKnownUrls))
         }
         broadcast(message.NewResponse(response))
+        broadcast(message.NewURLsToExplore(explores map (_._1)))
         scheduleNextURLsToFetch()
         conditionalEndOfExplorationPhase()
       }
@@ -347,13 +348,8 @@ class ObserverImpl (
   def addAssertion(assertion: ObserverState#Assertion): Unit = {
     val (url, assertorId, result) = assertion
     logger.debug("%s: %s observed by %s" format (shortId, url, assertorId))
-    result match {
-      case Right(assertion) =>
-        broadcast(message.Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
-      case Left(t) =>
-        broadcast(message.AssertedError(url, assertorId, t))
-    }
     val a = (url, assertorId, result)
+    broadcast(message.NewAssertion(a))
     state = state.withAssertion(a)
     endOfAssertionPhase()
   }
@@ -392,11 +388,7 @@ class ObserverImpl (
   
   private def initialState: message.ObservationSnapshot = {
     val responsesToBroadcast = state.responses map { case (_, response) => message.NewResponse(response) }
-    val assertionsToBroadcast = state.assertions map {
-      case (url, assertorId, Left(t)) => message.AssertedError(url, assertorId, t)
-      case (url, assertorId, Right(assertion)) =>
-        message.Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber)
-    }
+    val assertionsToBroadcast = state.assertions map { a => message.NewAssertion(a) }
     val messages = responsesToBroadcast ++ assertionsToBroadcast
     message.ObservationSnapshot(state.responses.size, state.toBeExplored.size, state.assertions.size, messages)
   }
