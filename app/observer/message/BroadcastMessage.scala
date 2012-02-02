@@ -7,7 +7,11 @@ sealed trait BroadcastMessage
 
 // states
 case object ObservationFinished extends BroadcastMessage
-case object InitialState extends BroadcastMessage
+case class InitialState(
+    numberOfResponses: Int,
+    numberOfUrlsToBeExplored: Int,
+    numberOfAssertions: Int,
+    messages: Iterable[BroadcastMessage]) extends BroadcastMessage
 case object Stopped extends BroadcastMessage
 // events
 case class URLsToExplore(nbUrls: Int) extends BroadcastMessage

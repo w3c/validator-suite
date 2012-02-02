@@ -102,6 +102,28 @@ object Validator extends Controller with Secured {
     }.getOrElse(Forbidden)
   }
   
+    /**
+   * Utility method to map a BroadcastMessage to a String that can be understood by the client
+   */
+  private def toJSON(msg: message.BroadcastMessage): String = msg match {
+    case message.URLsToExplore(nb) => """["NB_EXP", %d]""" format (nb)
+    case message.URLsToObserve(nb) => """["NB_OBS", %d]""" format (nb)
+    case message.FetchedGET(url, httpCode, extractedURLs) => """["GET", %d, "%s", %d]""" format (httpCode, url, extractedURLs)
+    case message.FetchedHEAD(url, httpCode) => """["HEAD", %d, "%s"]""" format (httpCode, url)
+    case message.FetchedError(url, errorMessage) => """["ERR", "%s", "%s"]""" format (errorMessage, url)
+    case message.Asserted(url, assertorId, errors, warnings/*, validatorURL*/) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, errors, warnings)
+    case message.AssertedError(url, assertorId, t) => """["OBS_ERR", "%s"]""" format url
+    case message.NothingToObserve(url) => """["OBS_NO", "%s"]""" format url
+    case message.ObservationFinished => """["OBS_FINISHED"]"""
+    case message.InitialState(numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, messages) => {
+      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, 0)
+      val initialMessages = messages map toJSON mkString ""
+      initial + initialMessages
+    }
+    case message.Stopped => """["STOPPED"]"""
+    
+  }
+  
   def redirect(id: String) = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { user =>
       try {
@@ -136,7 +158,7 @@ object Validator extends Controller with Secured {
         configuration.observerCreator.byObserverId(observerId).map { observer =>
           AsyncResult {
             val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
-            val iteratee = subscriber.enumerator /*&> Enumeratee.map{ e => logger.error("*** "+e.toString); e }*/ &> Comet(callback = "parent.VS.logComet")
+            val iteratee = subscriber.enumerator &> Enumeratee.map{ e => toJSON(e) } &> Comet(callback = "parent.VS.logComet")
             Promise.pure(Ok.stream(iteratee).withHeaders("X-VS-ActionID" -> id))
           }
         }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))

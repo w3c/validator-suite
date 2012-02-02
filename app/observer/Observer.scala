@@ -387,8 +387,22 @@ class ObserverImpl (
   def subscribe(subscriber: Subscriber): Unit = {
     subscribers += subscriber
     logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
-    subscriber.broadcast(toBroadcast(message.InitialState))
-    logger.debug(toBroadcast(message.InitialState))
+    subscriber.broadcast(initialState)
+  }
+  
+  private def initialState: message.InitialState = {
+    val responsesToBroadcast = state.responses map {
+      // disctinction btw GET and HEAD, links.size??
+      case (url, HttpResponse(_, status, _, _)) => message.FetchedGET(url, status, 0)
+      case (url, ErrorResponse(_, typ)) => message.FetchedError(url, typ)
+    }
+    val assertionsToBroadcast = state.assertions map {
+      case (url, assertorId, Left(t)) => message.AssertedError(url, assertorId, t)
+      case (url, assertorId, Right(assertion)) =>
+        message.Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber)
+    }
+    val messages = responsesToBroadcast ++ assertionsToBroadcast
+    message.InitialState(state.responses.size, state.toBeExplored.size, state.assertions.size, messages)
   }
   
   /**
@@ -399,50 +413,15 @@ class ObserverImpl (
     logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
   }
 
-  /**
-   * Utility method to map a BroadcastMessage to a String that can be understood by the client
-   */
-  private def toBroadcast(msg: message.BroadcastMessage): String = msg match {
-    case message.URLsToExplore(nb) => """["NB_EXP", %d]""" format (nb)
-    case message.URLsToObserve(nb) => """["NB_OBS", %d]""" format (nb)
-    case message.FetchedGET(url, httpCode, extractedURLs) => """["GET", %d, "%s", %d]""" format (httpCode, url, extractedURLs)
-    case message.FetchedHEAD(url, httpCode) => """["HEAD", %d, "%s"]""" format (httpCode, url)
-    case message.FetchedError(url, errorMessage) => """["ERR", "%s", "%s"]""" format (errorMessage, url)
-    case message.Asserted(url, assertorId, errors, warnings/*, validatorURL*/) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, errors, warnings)
-    case message.AssertedError(url, assertorId, t) => """["OBS_ERR", "%s"]""" format url
-    case message.NothingToObserve(url) => """["OBS_NO", "%s"]""" format url
-    case message.ObservationFinished => """["OBS_FINISHED"]"""
-    case message.InitialState => {
-      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (state.responses.size, state.toBeExplored.size, state.assertions.size, 0)
-      import org.w3.vs.model._
-      val responsesToBroadcast = state.responses map {
-        // disctinction btw GET and HEAD, links.size??
-        case (url, HttpResponse(_, status, _, _)) =>
-          toBroadcast(message.FetchedGET(url, status, 0))
-        case (url, ErrorResponse(_, typ)) =>
-          toBroadcast(message.FetchedError(url, typ))
-      }
-      val assertionsToBroadcast = state.assertions map {
-        case (url, assertorId, Left(t)) =>
-          toBroadcast(message.AssertedError(url, assertorId, t))
-        case (url, assertorId, Right(assertion)) =>
-          toBroadcast(message.Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber))
-      }
-      (List(initial) ++ responsesToBroadcast ++ assertionsToBroadcast) mkString ""
-    }
-    case message.Stopped => """["STOPPED"]"""
-    
-  }
   
   /**
    * To broadcast messages to subscribers.
    */
   private def broadcast(msg: message.BroadcastMessage): Unit = {
-    val tb = toBroadcast(msg)
     if (subscribers != null)
-      subscribers foreach (_.broadcast(tb))
+      subscribers foreach (_.broadcast(msg))
     else
-      logger.debug("%s: no more broadcaster for %s" format (shortId, tb))
+      logger.debug("%s: no more broadcaster for %s" format (shortId, msg.toString))
   }
   
 }
