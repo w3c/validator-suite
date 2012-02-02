@@ -105,7 +105,7 @@ object Validator extends Controller with Secured {
     /**
    * Utility method to map a BroadcastMessage to a String that can be understood by the client
    */
-  private def toJSON(msg: message.BroadcastMessage): String = msg match {
+  private def toJSON(msg: message.ObservationUpdate): String = msg match {
     case message.URLsToExplore(nb) => """["NB_EXP", %d]""" format (nb)
     case message.URLsToObserve(nb) => """["NB_OBS", %d]""" format (nb)
     case message.NewResponse(response) => response match {
@@ -117,7 +117,7 @@ object Validator extends Controller with Secured {
     case message.AssertedError(url, assertorId, t) => """["OBS_ERR", "%s"]""" format url
     case message.NothingToObserve(url) => """["OBS_NO", "%s"]""" format url
     case message.ObservationFinished => """["OBS_FINISHED"]"""
-    case message.InitialState(numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, messages) => {
+    case message.ObservationSnapshot(numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, messages) => {
       val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, 0)
       val initialMessages = messages map toJSON mkString ""
       initial + initialMessages

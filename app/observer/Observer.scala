@@ -390,7 +390,7 @@ class ObserverImpl (
     subscriber.broadcast(initialState)
   }
   
-  private def initialState: message.InitialState = {
+  private def initialState: message.ObservationSnapshot = {
     val responsesToBroadcast = state.responses map { case (_, response) => message.NewResponse(response) }
     val assertionsToBroadcast = state.assertions map {
       case (url, assertorId, Left(t)) => message.AssertedError(url, assertorId, t)
@@ -398,7 +398,7 @@ class ObserverImpl (
         message.Asserted(url, assertorId, assertion.errorsNumber, assertion.warningsNumber)
     }
     val messages = responsesToBroadcast ++ assertionsToBroadcast
-    message.InitialState(state.responses.size, state.toBeExplored.size, state.assertions.size, messages)
+    message.ObservationSnapshot(state.responses.size, state.toBeExplored.size, state.assertions.size, messages)
   }
   
   /**
@@ -413,7 +413,7 @@ class ObserverImpl (
   /**
    * To broadcast messages to subscribers.
    */
-  private def broadcast(msg: message.BroadcastMessage): Unit = {
+  private def broadcast(msg: message.ObservationUpdate): Unit = {
     if (subscribers != null)
       subscribers foreach (_.broadcast(msg))
     else
