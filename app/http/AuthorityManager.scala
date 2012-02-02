@@ -69,7 +69,7 @@ extends AuthorityManager with TypedActor.PostStop {
               body
             } catch {
               case t: Throwable => {
-                observer.addResponse(KoResponse(url, t))
+                observer.addResponse(KoResponse(url, action, t))
                 throw t // rethrow for benefit of AsyncHttpClient
               }
             } finally {

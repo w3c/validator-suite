@@ -268,7 +268,7 @@ class ObserverImpl (
         broadcast(message.FetchedHEAD(url, status))
         conditionalEndOfExplorationPhase()
       }
-      case KoResponse(url, why) => {
+      case KoResponse(url, action, why) => {
         logger.debug("%s: Exception for %s: %s" format (shortId, url, why.getMessage))
         state = state.withNewResponse(url -> ErrorResponse(url, why.getMessage))
         scheduleNextURLsToFetch()
