@@ -368,7 +368,7 @@ class ObserverImpl (
       // make it available for GC
       waitingForEndOfAssertionPhase = null
       state = state.copy(phase = Finished)
-      broadcast(message.ObservationFinished)
+      broadcast(message.Done)
       subscribers foreach { context.stop(_) }
       subscribers = Set.empty
     }
