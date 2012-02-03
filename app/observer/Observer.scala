@@ -17,6 +17,7 @@ import akka.util.Duration
 import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
 import play.api.libs.iteratee.PushEnumerator
+import org.w3.util.Headers.wrapHeaders
 
 /**
  * An Observer is the unity of action that implements
@@ -140,14 +141,6 @@ class ObserverImpl (
    * if it's the case, the assertion phase is started
    */
   def conditionalEndOfExplorationPhase(): Unit = {
-//    if (logger.isDebugEnabled) {
-//      if (pendingFetches.size < 5) {
-//        val fetches = pendingFetches mkString " ; "
-//        logger.debug("pending fetches %s" format fetches)
-//      } else {
-//        logger.debug("pending fetches %d" format pendingFetches.size)
-//      }
-//    }
     if (state.explorationPhaseHasEnded) {
       logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, state.responses.size))
       val urls = state.urls
@@ -177,8 +170,8 @@ class ObserverImpl (
     for {
       (url, response) <- _2XX                     // iterate over the responses
       if strategy shouldObserve url               // ask the strategy for urls to be observed
-      ctOption = response.headers.contentType     // take the content-type (optional) for this response
-      assertors = assertorPicker.pick(ctOption)   // and see which assertors are interested
+      mtOption = response.headers.mimetype        // take the content-type (optional) for this response
+      assertors = assertorPicker.pick(mtOption)   // and see which assertors are interested
       assertor <- assertors                       // then iterate over these assertors
     } {
       // the call to the assertor to get the assertion
@@ -232,33 +225,30 @@ class ObserverImpl (
     broadcast(message.Stopped)
   }
 
+  private final def extractURLsFromHtml(url: URL, body: String): List[URL] = {
+    val encoding = "UTF-8"
+    val reader = new java.io.StringReader(body)
+    html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
+  }
+  
   def addResponse(fetchResponse: FetchResponse): Unit = if (state.phase != message.Stopped) {
     fetchResponse match {
       case OkResponse(url, GET, status, headers, body) => {
         logger.debug("%s: GET <<< %s" format (shortId, url))
-        val distance =
-          state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
-              // TODO the extraction actually depends on the kind of resource!
-        val extractedURLs = {
-          val encoding = "UTF-8"
-          val reader = new java.io.StringReader(body)
-          // TODO review this clearhash stuff
-          html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
-        }
-        // TODO the distance should be different based on the kind of resource we're looking at
-        val potentialExplores = extractedURLs map { _ -> (distance + 1) }
-        // it's important to filter/clean the urls before adding them back to the observation
-        val explores = state.filteredExtractedURLs(potentialExplores)
-        val response = HttpResponse(url, GET, status, headers, extractedURLs.distinct)
-        state =
-          state
-            .withNewResponse(url -> response)
-            .withNewUrlsToBeExplored(explores)
-        if (explores.size > 0) {
-          logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, explores.size, state.numberOfKnownUrls))
-        }
-        broadcast(message.NewResponse(response))
-        broadcast(message.NewURLsToExplore(explores map (_._1)))
+        val distance = state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+        val extractedURLs = headers.mimetype map {
+          case "text/html" | "application/xhtml+xml" => extractURLsFromHtml(url, body)
+          case "text/css" => List.empty /* extract links from CSS here*/
+          case _ => List.empty
+        } getOrElse List.empty
+        val newUrls = state.filteredExtractedURLs(extractedURLs, distance + 1)
+        if (! newUrls.isEmpty)
+          logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, state.numberOfKnownUrls))
+        val newResponse = HttpResponse(url, GET, status, headers, extractedURLs.distinct)
+        val newExplores = newUrls map { (_, distance + 1) }
+        state = state.withNewResponse(url -> newResponse).withNewUrlsToBeExplored(newExplores)
+        broadcast(message.NewResponse(newResponse))
+        broadcast(message.NewURLsToExplore(newUrls))
         scheduleNextURLsToFetch()
         conditionalEndOfExplorationPhase()
       }

@@ -5,17 +5,18 @@ import org.w3.vs._
 /**
  * helper class to deal with HTTP headers
  */
-case class HeadersW(headers: Headers) {
+class HeadersW(headers: Headers) {
 
   import HeadersW._
 
-  lazy val contentTypeHeader:Option[String] = headers get "Content-Type" flatMap { _.headOption }
-  lazy val contentType:Option[String] = contentTypeHeader flatMap { extractMimeType(_) }
-  lazy val charset:Option[String] = contentTypeHeader flatMap { extractCharset(_)}
+  lazy val contentTypeHeader: Option[String] = headers get "Content-Type" flatMap { _.headOption }
+  lazy val mimetype: Option[String] = contentTypeHeader flatMap { extractMimeType(_) }
+  lazy val charset: Option[String] = contentTypeHeader flatMap { extractCharset(_)}
 
 }
 
 object Headers {
+  implicit val wrapHeaders = HeadersW.wrapHeaders _
   val DEFAULT_CHARSET = "UTF-8"
 }
 
@@ -30,7 +31,7 @@ object HeadersW {
   }
 
   implicit def wrapHeaders(headers: Headers):HeadersW =
-    HeadersW(headers)
+    new HeadersW(headers)
 
   def extractMimeType(contentTypeHeader:String):Option[String] =
     CONTENT_TYPE_REGEX findFirstMatchIn contentTypeHeader map { _.group(1) }

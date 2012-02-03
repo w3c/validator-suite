@@ -66,7 +66,8 @@ case class ObserverState(
        |  toBeExplored=%s
        |  pendingMainAuthority=%s
        |  responses=%s
-       |  assertions=%s""" format (id.toString, phase.toString, toBeExplored.toString, pendingMainAuthority.toString, responses.keys mkString ", ", assertions.size.toString)
+       |  assertions=%s
+       |""" format (id.toString, phase.toString, toBeExplored.toString, pendingMainAuthority.toString, responses.keys mkString ", ", assertions.size.toString)
   
   assert(
     allKnownUrls.size == numberOfKnownUrls,
@@ -157,9 +158,8 @@ case class ObserverState(
    * <li>it's already scheduled to be fetched</li>
    * </ul>
    */
-  private def shouldIgnore(explore: Explore): Boolean = {
-    val (url, distance) = explore
-    def notToBeFetched = FetchNothing == strategy.fetch(url, distance)
+  private def shouldIgnore(url: URL, atDistance: Int): Boolean = {
+    def notToBeFetched = FetchNothing == strategy.fetch(url, atDistance)
     def alreadyFetched = responses isDefinedAt url
     def alreadyPendingMainAuthority = pendingMainAuthority.isDefined && getUrl(pendingMainAuthority.get) == url
     def alreadyPending = pending isDefinedAt url
@@ -170,8 +170,8 @@ case class ObserverState(
   /**
    * Filters the given Explores wrt this Observation and the urls to be ignored
    */
-  def filteredExtractedURLs(urls: List[Explore]): List[Explore] =
-    (urls filterNot shouldIgnore).distinct
+  def filteredExtractedURLs(urls: List[URL], atDistance: Int): List[URL] =
+    (urls filterNot { url => shouldIgnore(url, atDistance) } ).distinct
 
   /**
    * Returns an Observation with the new urls to be explored
