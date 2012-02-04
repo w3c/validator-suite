@@ -35,7 +35,7 @@ object OneGETxHEADTest extends Specification {
 
   "test OneGETxHEAD" in new ObserverScope(servers)(new org.w3.vs.Production { }) {
     http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = delay
-    val observer = observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(1, SECONDS))
+    val observer = observerCreator.observerOf(ObserverId(), strategy)
     observer.startExplorationPhase()
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     val urls8081 = urls filter { _.authority == "localhost:8081" }

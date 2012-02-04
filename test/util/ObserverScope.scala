@@ -1,7 +1,6 @@
 package org.w3.vs.observer
 
 import org.w3.vs.model.{Strategy, ObserverId}
-import org.w3.vs.assertor.{AssertorPicker, DoNothingAssertorPicker}
 import org.w3.vs.http.Http
 import akka.actor.{Actor, TypedActor}
 import akka.testkit.TestKit

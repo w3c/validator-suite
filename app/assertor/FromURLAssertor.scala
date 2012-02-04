@@ -31,9 +31,10 @@ trait FromURLAssertor extends Assertor with FromUnicornFormatAssertor {
    *  @param url a pointer to the document
    *  @return the assertion
    */
-  def assert(url: URL): Asserted = {
+  def assert(url: URL): Assertion = {
     val source = Source.fromURL(validatorURLForMachine(url))
-    this.assert(source)
+    val events = this.assert(source)
+    Assertion(url, id, events)
   }
   
 }

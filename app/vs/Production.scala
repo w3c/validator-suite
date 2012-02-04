@@ -43,8 +43,6 @@ trait Production extends ValidatorSuiteConf {
       Props(),
       "observer")
   
-  val assertorPicker: AssertorPicker = SimpleAssertorPicker
-  
   /**
    * note: an AsyncHttpClient is a heavy object with a thread
    * and connection pool associated with it, it's supposed to

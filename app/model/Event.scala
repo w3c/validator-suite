@@ -7,4 +7,4 @@ package org.w3.vs.model
  *  @param lang XML lang code
  *  @param contexts a sequence of [[org.w3.vs.validator.Context]]s
  */
-case class Event(severity:String, id:String, lang:String, contexts:Seq[Context])
+case class Event(severity: String, id: String, lang: String, contexts: Seq[Context])

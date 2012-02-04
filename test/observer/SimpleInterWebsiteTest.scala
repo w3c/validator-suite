@@ -30,7 +30,7 @@ object SimpleInterWebsiteTest extends Specification {
   )
 
   "test simpleInterWebsite" in new ObserverScope(servers)(new org.w3.vs.Production { }) {
-    val observer = observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(1, SECONDS))
+    val observer = observerCreator.observerOf(ObserverId(), strategy)
     observer.startExplorationPhase()
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     assert(urls.size === 2)

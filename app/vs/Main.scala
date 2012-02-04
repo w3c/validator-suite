@@ -25,7 +25,7 @@ object Main {
     val configuration = new Production { }
 
     val am = configuration.http.authorityManagerFor(URL("http://www.w3.org/")).sleepTime = 0
-    val observer = configuration.observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(10, SECONDS))
+    val observer = configuration.observerCreator.observerOf(ObserverId(), strategy)
     observer.startExplorationPhase()
     val urls = Await.result(observer.URLs(), Duration(10, SECONDS))
     println("^^^^^^ "+urls.size)

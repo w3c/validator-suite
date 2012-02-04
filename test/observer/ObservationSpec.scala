@@ -85,7 +85,7 @@ object ObservationSpec extends Specification {
         strategy,
         toBeExplored = List(w3_home -> 0, w3_standards -> 1))
     "not have duplicated URLs to be observed" in {
-      observation.withNewUrlsToBeExplored(List(w3_home -> 0)) must throwA[AssertionError]
+      observation.withNewUrlsToBeExplored(List(w3_home -> 0)) must throwA[java.lang.AssertionError]
     }
     "should be able to filter URLs to be added" in {
       val newUrls = observation.filteredExtractedURLs(List(w3_home, w3_standards, w3_participate), 2)

@@ -31,7 +31,7 @@ trait Observer {
   def assertions(): Future[ObserverState#Assertions]
   // hooks
   def addResponse(fetchResponse: FetchResponse): Unit
-  def addAssertion(assertion: ObserverState#Assertion): Unit
+  def addAssertion(assertion: Assertion): Unit
   // foo
   def subscribe(subscriber: Subscriber): Unit
   def unsubscribe(subscriber: Subscriber): Unit
@@ -164,36 +164,26 @@ class ObserverImpl (
    */
   def startAssertionPhase(): Unit = {
     logger.info("%s: Starting observation phase" format (shortId))
-    // all the responses with a 200 HTTP response
-    val _2XX =
-      state.responses.toIterable collect { case (url, response: HttpResponse) => (url, response) }
-    for {
-      (url, response) <- _2XX                     // iterate over the responses
-      if strategy shouldObserve url               // ask the strategy for urls to be observed
-      mtOption = response.headers.mimetype        // take the content-type (optional) for this response
-      assertors = assertorPicker.pick(mtOption)   // and see which assertors are interested
-      assertor <- assertors                       // then iterate over these assertors
-    } {
-      // the call to the assertor to get the assertion
-      // it's meant to be executed in a Future (on top of a pool of threads)
-      // when the result is known (either a success or an error), the future
-      // calls back the Observer asynchronously
-      def run = {
-        val assertion =
-          try {
-            (url, assertor.id, Right(assertor.assert(url)))
-          } catch {
-            case t: Throwable => (url, assertor.id, Left(t))
+    state.responses foreach {
+      case (_, HttpResponse(url, _, 200, headers, _)) =>
+        if (strategy.shouldObserve(url)) {
+          headers.mimetype foreach {
+            case "text/html" | "application/xhtml+xml" => {
+              assertionCounter += 1
+              Future {
+                HTMLValidator.assert(url)
+              }(validatorDispatcher) onComplete {
+                case Left(t) => self.addAssertion(Assertion(url, HTMLValidator.id, AssertionError(t)))
+                case Right(assertion) => self.addAssertion(assertion)
+              }
+            }
+            case mimetype => logger.debug("no known assertor for %s" format mimetype)
           }
-        self.addAssertion(assertion)
-      }
-      // at this point, we _know_ that an assertion is expected
-      // and will eventually trigger a call to assertionSuccess or assertionFailure
-      assertionCounter += 1
-      Future(run)(validatorDispatcher)
+        }
+      case (url, _) => ()
     }
     // TODO do we need to return the number of urls to observe, or the expected number of assertions?
-    broadcast(message.NewURLsToObserve(_2XX.size))
+    broadcast(message.NewURLsToObserve(assertionCounter))
     logger.debug("expecting %d assertions" format assertionCounter)
   }
 
@@ -271,32 +261,6 @@ class ObserverImpl (
     }
   }
   
-//  /**
-//   * Hook to send the result of a GET
-//   * 
-//   * The following happens:
-//   * <ul>
-//   * <li>the distance for this url is retrieved from the observation</li>
-//   * <li>depending on the the kind of resource, some urls are extracted</li>
-//   * <li>and then cleaned before adding them back to the observation (because of the invariants to be respected)</li>
-//   * <li>the observation is updated with the filtered urls and the new Response</li>
-//   * <li>an event is broadcasted to the listeners</li>
-//   * <li>potentially, another fetch is scheduled</li>
-//   * </ul>
-//   */
-//  
-//  /**
-//   * Hook to send the result of a HEAD
-//   * 
-//   * The logic is the same as in sendGETResponse without the extraction of links
-//   */
-//
-//  /**
-//   * Hook to send the result of a failure for a fetch
-//   * 
-//   * The logic is the same as in sendHEADResponse
-//   */
-  
   /**
    * Fetch one URL
    * 
@@ -335,12 +299,11 @@ class ObserverImpl (
   /**
    * Hook to send the result of an assertion
    */
-  def addAssertion(assertion: ObserverState#Assertion): Unit = {
-    val (url, assertorId, result) = assertion
+  def addAssertion(assertion: Assertion): Unit = {
+    val Assertion(url, assertorId, _) = assertion
     logger.debug("%s: %s observed by %s" format (shortId, url, assertorId))
-    val a = (url, assertorId, result)
-    broadcast(message.NewAssertion(a))
-    state = state.withAssertion(a)
+    broadcast(message.NewAssertion(assertion))
+    state = state.withAssertion(assertion)
     endOfAssertionPhase()
   }
   

@@ -14,9 +14,7 @@ trait ObserverCreator {
   def byObserverId(observerId: ObserverId): Option[Observer]
   def observerOf(
     observerId: ObserverId,
-    strategy: Strategy,
-    assertorPicker: AssertorPicker = SimpleAssertorPicker,
-    timeout: Duration = 10.second): Observer
+    strategy: Strategy): Observer
 }
     
 class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) extends ObserverCreator {
@@ -28,9 +26,7 @@ class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) exte
     
   def observerOf(
       observerId: ObserverId,
-      strategy: Strategy,
-      assertorPicker: AssertorPicker = SimpleAssertorPicker,
-      timeout: Duration = 10.second): Observer = {
+      strategy: Strategy): Observer = {
     val obs = TypedActor(TypedActor.context).typedActorOf(
       classOf[Observer],
       new ObserverImpl(observerId, strategy),

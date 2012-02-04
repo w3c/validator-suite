@@ -13,13 +13,15 @@ import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
 import akka.util.duration._
 import akka.util.Duration
+import ObserverState.{getUrl, getDistance}
+import org.w3.vs.model.Assertion
 
 object ObserverState {
   def getUrl(e: ObserverState#Explore): URL = e._1
   def getDistance(e: ObserverState#Explore) = e._2
 }
 
-import ObserverState.{getUrl, getDistance}
+
 
 /**
  * An Observation represents a coherent state of for an Observer.
@@ -54,7 +56,6 @@ case class ObserverState(
    * It's only an alias. You can use utility methods getUrl and getDistance from the companion object
    */
   type Explore = (URL, Int)
-  type Assertion = (URL, AssertorId, Either[Throwable, Asserted])
   type Assertions = List[Assertion]
   
   val logger = play.Logger.of(classOf[ObserverState])

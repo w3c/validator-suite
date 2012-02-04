@@ -2,7 +2,6 @@ package org.w3.vs
 
 import akka.actor.ActorSystem
 import org.w3.vs.http.Http
-import org.w3.vs.assertor.AssertorPicker
 import akka.dispatch.ExecutionContext
 import com.ning.http.client.AsyncHttpClient
 
@@ -13,8 +12,6 @@ trait ValidatorSuiteConf {
   val http: Http
 
   val observerCreator: ObserverCreator
-  
-  val assertorPicker: AssertorPicker
   
   val MAX_URL_TO_FETCH: Int
   

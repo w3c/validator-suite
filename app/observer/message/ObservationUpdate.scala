@@ -2,7 +2,7 @@ package org.w3.vs.observer.message
 
 import org.w3.util.URL
 import org.w3.vs.assertor.AssertorId
-import org.w3.vs.model.Response
+import org.w3.vs.model.{Response, Assertion}
 import org.w3.vs.observer.ObserverState
 
 /**
@@ -56,4 +56,4 @@ case class NewResponse(response: Response) extends ObservationUpdate
 /**
  * A new Assertion was received
  */
-case class NewAssertion(assertion: ObserverState#Assertion) extends ObservationUpdate
+case class NewAssertion(assertion: Assertion) extends ObservationUpdate

@@ -14,13 +14,13 @@ object DummyAssertor extends FromURLAssertor {
   // really dumb
   def validatorURLForMachine(url: URL) = url
   
-  override def assert(url: URL): Asserted = {
+  override def assert(url: URL): Assertion = {
     val event = Event(
         severity="info",
         id="dummy",
         lang="en",
         contexts=Seq(Context("", url.toString, None, None)))
-    Asserted(Seq(event))
+    Assertion(url, id, Events(Seq(event)))
   }
   
 }

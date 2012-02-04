@@ -113,9 +113,9 @@ object Validator extends Controller with Secured {
       case HttpResponse(url, HEAD, httpCode, headers, extractedURLs) => """["HEAD", %d, "%s"]""" format (httpCode, url)
       case ErrorResponse(url, errorMessage) => """["ERR", "%s", "%s"]""" format (errorMessage, url)
     }
-    case message.NewAssertion(assertion) => assertion match {
-      case (url, assertorId, Left(t)) => """["OBS_ERR", "%s"]""" format url
-      case (url, assertorId, Right(a)) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, a.errorsNumber, a.warningsNumber)
+    case message.NewAssertion(assertionResult) => assertionResult match {
+      case Assertion(url, assertorId, AssertionError(t)) => """["OBS_ERR", "%s"]""" format url
+      case Assertion(url, assertorId, events@Events(_)) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, events.errorsNumber, events.warningsNumber)
     }
     case message.Done => """["OBS_FINISHED"]"""
     case message.ObservationSnapshot(numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, messages) => {

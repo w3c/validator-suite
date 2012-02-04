@@ -28,7 +28,7 @@ object CyclicWebsiteCrawlTest extends Specification {
   
   "test cyclic(10)" in new ObserverScope(servers)(new org.w3.vs.Production { }) {
     val am = http.authorityManagerFor(URL("http://localhost:8080/")).sleepTime = delay
-    val observer = observerCreator.observerOf(ObserverId(), strategy, timeout = Duration(1, SECONDS))
+    val observer = observerCreator.observerOf(ObserverId(), strategy)
     observer.startExplorationPhase()
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     urls must have size(11)
