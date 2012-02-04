@@ -171,10 +171,12 @@ class ObserverImpl (
             case "text/html" | "application/xhtml+xml" => {
               assertionCounter += 1
               Future {
-                HTMLValidator.assert(url)
-              }(validatorDispatcher) onComplete {
-                case Left(t) => self.addAssertion(Assertion(url, HTMLValidator.id, AssertionError(t)))
-                case Right(assertion) => self.addAssertion(assertion)
+                val assertion = HTMLValidator.assert(url)
+                self.addAssertion(assertion)
+              }(validatorDispatcher) recover { // TODO when Play updates to newer version of Akka, use recoverWith with other dispatcher
+                case t: Throwable => {
+                  self.addAssertion(Assertion(url, HTMLValidator.id, AssertionError(t)))
+                }
               }
             }
             case mimetype => logger.debug("no known assertor for %s" format mimetype)
