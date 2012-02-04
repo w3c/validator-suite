@@ -18,7 +18,6 @@ import org.w3.vs.observer._
 import play.api.libs._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
-import play.api.libs.akka._
 
 object Application extends Controller {
   
