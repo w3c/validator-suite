@@ -83,8 +83,6 @@ object Validator extends Controller with Secured {
     
     val observer = configuration.observerCreator.observerOf(observerId, strategy)
     
-    observer.startExplorationPhase()
-    
     val observerIdString: String = observerId.toString
     
     Created("").withHeaders(

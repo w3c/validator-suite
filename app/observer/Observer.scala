@@ -25,7 +25,6 @@ import org.w3.util.Headers.wrapHeaders
  */
 trait Observer {
   // TODO cancelObservation()
-  def startExplorationPhase(): Unit
   def stop(): Unit
   def URLs(): Future[Iterable[URL]]
   def assertions(): Future[ObserverState#Assertions]
@@ -91,6 +90,8 @@ class ObserverImpl (
    * The set of futures waiting for the end of the assertion phase
    */
   var waitingForEndOfAssertionPhase = Set[Promise[ObserverState#Assertions]]()
+  
+  startExplorationPhase()
   
   /**
    * Creates a subscriber as an Akka-children for this Observer
