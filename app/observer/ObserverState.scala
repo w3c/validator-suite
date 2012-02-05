@@ -98,7 +98,7 @@ case class ObserverState(
   /**
    * An exploration is over when there are no more urls to explore and no pending url
    */
-  def explorationPhaseHasEnded = pendingMainAuthority.isEmpty && pending.isEmpty && toBeExplored.isEmpty
+  def noMoreUrlToExplore = pendingMainAuthority.isEmpty && pending.isEmpty && toBeExplored.isEmpty
 
   /**
    * Returns an observation where the seed urls are initialized with a distance at 0

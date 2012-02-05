@@ -136,60 +136,11 @@ class ObserverImpl (
       case Error => sys.error("what is a Future with error?")
     }
   
-  /**
-   * Conditional snippet for the end of the Exploration phase
-   * if it's the case, the assertion phase is started
-   */
-  def conditionalEndOfExplorationPhase(): Unit = {
-    if (state.explorationPhaseHasEnded) {
-      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, state.responses.size))
-      val urls = state.urls
-      waitingForEndOfExplorationPhase foreach {
-        _.success(urls)
-      }
-      // we don't need pending Futures for crawling anymore
-      // make it available for GC
-      waitingForEndOfExplorationPhase = null
-      startAssertionPhase()
-    } else {
-      //logger.debug("There are still %d pending fetches" format pendingFetches.size)
-    }
-  }
-  
-  /**
-   * Starts the assertion phase
-   * 
-   * we currently schedule all the assertion at once as we handle all the assertors
-   * TODO this will change with the future Web of Assertors architecture
-   */
-  def startAssertionPhase(): Unit = {
-    logger.info("%s: Starting observation phase" format (shortId))
-    state.responses foreach {
-      case (_, HttpResponse(url, _, 200, headers, _)) =>
-        if (strategy.shouldObserve(url)) {
-          headers.mimetype foreach {
-            case "text/html" | "application/xhtml+xml" => {
-              assertionCounter += 1
-              Future {
-                val assertion = HTMLValidator.assert(url)
-                self.addAssertion(assertion)
-              }(validatorDispatcher) recover { // TODO when Play updates to newer version of Akka, use recoverWith with other dispatcher
-                case t: Throwable => {
-                  self.addAssertion(Assertion(url, HTMLValidator.id, AssertionError(t)))
-                }
-              }
-            }
-            case mimetype => logger.debug("no known assertor for %s" format mimetype)
-          }
-        }
-      case (url, _) => ()
-    }
-    // TODO do we need to return the number of urls to observe, or the expected number of assertions?
-    broadcast(message.NewURLsToObserve(assertionCounter))
-    logger.debug("expecting %d assertions" format assertionCounter)
+  def stop(): Unit = {
+    state = state.stop()
+    broadcast(message.Stopped)
   }
 
-  
   /**
    * Starts the ExplorationPhase
    * <ul>
@@ -211,59 +162,65 @@ class ObserverImpl (
     } else {
       logger.error("you should be in NotYetStarted state, but this is " + state.phase)
     }
-  
-  def stop(): Unit = {
-    state = state.stop()
-    broadcast(message.Stopped)
-  }
 
+  /**
+   * Conditional snippet for the end of the Exploration phase
+   * if it's the case, the assertion phase is started
+   */
+  private final def conditionalEndOfExplorationPhase(): Unit = {
+    if (state.noMoreUrlToExplore) {
+      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, state.responses.size))
+      val urls = state.urls
+      waitingForEndOfExplorationPhase foreach {
+        _.success(urls)
+      }
+      // we don't need pending Futures for crawling anymore
+      // make it available for GC
+      waitingForEndOfExplorationPhase = null
+    } else {
+      //logger.debug("There are still %d pending fetches" format pendingFetches.size)
+    }
+  }
+  
+  private final def scheduleAssertion(response: Response): Unit = response match {
+    case HttpResponse(url, _, 200, headers, _) =>
+      if (strategy.shouldObserve(url)) {
+        headers.mimetype foreach {
+          case "text/html" | "application/xhtml+xml" => {
+            assertionCounter += 1
+            Future {
+              val assertion = HTMLValidator.assert(url)
+              self.addAssertion(assertion)
+            }(validatorDispatcher) recover { // TODO when Play updates to newer version of Akka, use recoverWith with other dispatcher
+              case t: Throwable => {
+                self.addAssertion(Assertion(url, HTMLValidator.id, AssertionError(t)))
+              }
+            }
+          }
+          case mimetype => logger.debug("no known assertor for %s" format mimetype)
+        }
+      }
+    case _ => ()
+  }
+  
   private final def extractURLsFromHtml(url: URL, body: String): List[URL] = {
     val encoding = "UTF-8"
     val reader = new java.io.StringReader(body)
     html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
   }
   
-  def addResponse(fetchResponse: FetchResponse): Unit = if (state.phase != message.Stopped) {
-    fetchResponse match {
-      case OkResponse(url, GET, status, headers, body) => {
-        logger.debug("%s: GET <<< %s" format (shortId, url))
-        val distance = state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
-        val extractedURLs = headers.mimetype map {
-          case "text/html" | "application/xhtml+xml" => extractURLsFromHtml(url, body)
-          case "text/css" => List.empty /* extract links from CSS here*/
-          case _ => List.empty
-        } getOrElse List.empty
-        val newUrls = state.filteredExtractedURLs(extractedURLs, distance + 1)
-        if (! newUrls.isEmpty)
-          logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, state.numberOfKnownUrls))
-        val newResponse = HttpResponse(url, GET, status, headers, extractedURLs.distinct)
-        val newExplores = newUrls map { (_, distance + 1) }
-        state = state.withNewResponse(url -> newResponse).withNewUrlsToBeExplored(newExplores)
-        broadcast(message.NewResponse(newResponse))
-        broadcast(message.NewURLsToExplore(newUrls))
-        scheduleNextURLsToFetch()
-        conditionalEndOfExplorationPhase()
-      }
-      // HEAD
-      case OkResponse(url, HEAD, status, headers, _) => {
-        logger.debug("%s: HEAD <<< %s" format (shortId, url))
-        val response = HttpResponse(url, HEAD, status, headers, Nil)
-        state = state.withNewResponse(url -> response)
-        scheduleNextURLsToFetch()
-        broadcast(message.NewResponse(response))
-        conditionalEndOfExplorationPhase()
-      }
-      case KoResponse(url, action, why) => {
-        logger.debug("%s: Exception for %s: %s" format (shortId, url, why.getMessage))
-        state = state.withNewResponse(url -> ErrorResponse(url, why.getMessage))
-        scheduleNextURLsToFetch()
-        broadcast(message.NewResponse(ErrorResponse(url, why.getMessage)))
-        conditionalEndOfExplorationPhase()
-      }
-    }
+  /**
+   * Schedule the next URLs to be fetched
+   * 
+   * The maximum number of pending fetches is decided here.
+   */
+  private final def scheduleNextURLsToFetch(): Unit = {
+    val (newObservation, explores) = state.takeAtMost(MAX_URL_TO_FETCH)
+    state = newObservation
+    explores foreach fetch
   }
   
-  /**
+    /**
    * Fetch one URL
    * 
    * The kind of fetch is decided by the strategy (can be no fetch)
@@ -288,17 +245,6 @@ class ObserverImpl (
   }
   
   /**
-   * Schedule the next URLs to be fetched
-   * 
-   * The maximum number of pending fetches is decided here.
-   */
-  private final def scheduleNextURLsToFetch(): Unit = {
-    val (newObservation, explores) = state.takeAtMost(MAX_URL_TO_FETCH)
-    state = newObservation
-    explores foreach fetch
-  }
-  
-  /**
    * Hook to send the result of an assertion
    */
   def addAssertion(assertion: Assertion): Unit = {
@@ -308,6 +254,47 @@ class ObserverImpl (
     state = state.withAssertion(assertion)
     endOfAssertionPhase()
   }
+
+  def addResponse(fetchResponse: FetchResponse): Unit = if (state.phase != message.Stopped) {
+    fetchResponse match {
+      case OkResponse(url, GET, status, headers, body) => {
+        logger.debug("%s: GET <<< %s" format (shortId, url))
+        val distance = state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+        val extractedURLs = headers.mimetype map {
+          case "text/html" | "application/xhtml+xml" => extractURLsFromHtml(url, body)
+          case "text/css" => List.empty /* extract links from CSS here*/
+          case _ => List.empty
+        } getOrElse List.empty
+        val newUrls = state.filteredExtractedURLs(extractedURLs, distance + 1)
+        if (! newUrls.isEmpty)
+          logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, state.numberOfKnownUrls))
+        val newResponse = HttpResponse(url, GET, status, headers, extractedURLs.distinct)
+        val newExplores = newUrls map { (_, distance + 1) }
+        state = state.withNewResponse(url -> newResponse).withNewUrlsToBeExplored(newExplores)
+        broadcast(message.NewResponse(newResponse))
+        broadcast(message.NewURLsToExplore(newUrls))
+        scheduleAssertion(newResponse)
+        scheduleNextURLsToFetch()
+        conditionalEndOfExplorationPhase()
+      }
+      // HEAD
+      case OkResponse(url, HEAD, status, headers, _) => {
+        logger.debug("%s: HEAD <<< %s" format (shortId, url))
+        val response = HttpResponse(url, HEAD, status, headers, Nil)
+        state = state.withNewResponse(url -> response)
+        scheduleNextURLsToFetch()
+        broadcast(message.NewResponse(response))
+        conditionalEndOfExplorationPhase()
+      }
+      case KoResponse(url, action, why) => {
+        logger.debug("%s: Exception for %s: %s" format (shortId, url, why.getMessage))
+        state = state.withNewResponse(url -> ErrorResponse(url, why.getMessage))
+        scheduleNextURLsToFetch()
+        broadcast(message.NewResponse(ErrorResponse(url, why.getMessage)))
+        conditionalEndOfExplorationPhase()
+      }
+    }
+  }
   
   /**
    * Conditional snippet of code for the end of the assertion phase.
@@ -316,7 +303,7 @@ class ObserverImpl (
    * 
    */
   private final def endOfAssertionPhase(): Unit =
-    if (assertionCounter == state.assertions.size) {
+    if (state.toBeExplored.isEmpty && assertionCounter == state.assertions.size) {
       logger.info("%s: Observation phase done with %d observations" format (shortId, state.assertions.size))
       waitingForEndOfAssertionPhase foreach { _.success(state.assertions) }
       // we don't need pending Futures for observations anymore
