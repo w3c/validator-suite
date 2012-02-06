@@ -198,6 +198,17 @@ class ObserverImpl (
               }
             }
           }
+          case "text/css" => {
+            assertionCounter += 1
+            Future {
+              val assertion = CSSValidator.assert(url)
+              self.addAssertion(assertion)
+            }(validatorDispatcher) recover { // TODO when Play updates to newer version of Akka, use recoverWith with other dispatcher
+              case t: Throwable => {
+                self.addAssertion(Assertion(url, CSSValidator.id, AssertionError(t)))
+              }
+            }
+          }
           case mimetype => logger.debug("no known assertor for %s" format mimetype)
         }
       }

@@ -17,9 +17,12 @@ class ExtractorHandler(baseURL: URL) extends DefaultHandler {
   /**
    * http://download.oracle.com/javase/6/docs/api/org/xml/sax/Attributes.html
    */
-  override def startElement (uri: String, name: String, qname: String, attrs: Attributes) = {
+  override def startElement(uri: String, name: String, qname: String, attrs: Attributes) = {
     qname match {
-      case "a" => Option(attrs.getValue("href")) foreach { value => _hrefs ::= value }
+      case "a" | "link" => {
+        val value = attrs.getValue("href")
+        if (value != null) _hrefs ::= value
+      }
       case _ => ()
     }
   }

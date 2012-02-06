@@ -66,7 +66,7 @@ trait Production extends ValidatorSuiteConf {
   def init(): Unit = {
     httpClient
     observerCreator
-      // ouch :-)
+    // ouch :-)
     http.authorityManagerFor("w3.org").sleepTime = 0
   }
 
