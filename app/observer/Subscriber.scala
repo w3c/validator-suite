@@ -19,7 +19,7 @@ trait Subscriber {
 // TODO to be moved
 class SubscriberImpl(observer: Observer) extends Subscriber {
   
-  val enumerator = new PushEnumerator[message.ObservationUpdate]( onStart = this.subscribe() )
+  val enumerator = Enumerator.imperative[message.ObservationUpdate]( onStart = this.subscribe() )
   
   def subscribe(): Unit = observer.subscribe(this)
   

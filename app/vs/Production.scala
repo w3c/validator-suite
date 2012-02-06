@@ -33,9 +33,6 @@ trait Production extends ValidatorSuiteConf {
       Props(),
       "http")
   
-  // ouch :-)
-  http.authorityManagerFor("w3.org").sleepTime = 0
-  
   lazy val observerCreator: ObserverCreator =
     TypedActor(system).typedActorOf(
       classOf[ObserverCreator],
@@ -63,5 +60,16 @@ trait Production extends ValidatorSuiteConf {
     new AsyncHttpClient(config)
   }
 
+  /**
+   * use this to make sure that all lazy services are instantiated during startup
+   */
+  def init(): Unit = {
+    httpClient
+    observerCreator
+      // ouch :-)
+    http.authorityManagerFor("w3.org").sleepTime = 0
+  }
+
+  init()
   
 }
