@@ -9,7 +9,6 @@ object ApplicationBuild extends Build {
 
   val appDependencies = Seq(
     // runtime dependencies
-    "com.ning" % "async-http-client" % "1.6.2" intransitive(),
     "nu.validator.htmlparser" % "htmlparser" % "1.2.1" intransitive(),
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://scala-tools.org/repo-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
     "org.joda" % "joda-convert" % "1.1" intransitive(),
@@ -22,7 +21,8 @@ object ApplicationBuild extends Build {
   )
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-    resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/"
+    resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
+    resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     // Add your own project settings here      
   )
   

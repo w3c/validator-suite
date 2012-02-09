@@ -4,12 +4,14 @@ import play.api.test._
 import play.api.test.Helpers._
 import play.api.libs._
 import org.specs2.mutable._
+import org.w3.util.localwebsite.LocalCache._
 
 object FunctionalSpec extends Specification {
 
   "an Application" should {
     
     "should let a valid user log in" in {
+
       running(TestServer(9001), FIREFOX) { browser =>
         
         import browser._
