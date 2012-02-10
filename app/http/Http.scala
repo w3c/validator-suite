@@ -39,9 +39,9 @@ class HttpImpl()(implicit configuration: ValidatorSuiteConf) extends Http with T
   def authorityManagerFor(authority: Authority): AuthorityManager = {
     registry.get(authority).getOrElse {
       val authorityManager = TypedActor(TypedActor.context).typedActorOf(
-        classOf[AuthorityManager],
-        new AuthorityManagerImpl(authority),
-        Props(),
+        TypedProps(
+          classOf[AuthorityManager],
+          new AuthorityManagerImpl(authority)),
         authority)
       registry += (authority -> authorityManager)
       authorityManager

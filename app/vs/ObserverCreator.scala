@@ -1,9 +1,7 @@
 package org.w3.vs
 
-import akka.actor.ActorSystem
-import akka.actor.TypedActor
+import akka.actor.{ActorSystem, TypedActor, TypedProps}
 import org.w3.vs.http.{Http, HttpImpl}
-import akka.actor.Props
 import org.w3.vs.observer._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
@@ -28,9 +26,9 @@ class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) exte
       observerId: ObserverId,
       strategy: Strategy): Observer = {
     val obs = TypedActor(TypedActor.context).typedActorOf(
-      classOf[Observer],
-      new ObserverImpl(observerId, strategy),
-      Props(),
+      TypedProps(
+        classOf[Observer],
+        new ObserverImpl(observerId, strategy)),
       observerId.toString())
     registry += (observerId -> obs)
     obs

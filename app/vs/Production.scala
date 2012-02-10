@@ -1,9 +1,7 @@
 package org.w3.vs
 
-import akka.actor.ActorSystem
-import akka.actor.TypedActor
+import akka.actor.{ActorSystem, TypedActor, TypedProps}
 import org.w3.vs.http.{Http, HttpImpl}
-import akka.actor.Props
 import org.w3.vs.observer._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
@@ -28,16 +26,16 @@ trait Production extends ValidatorSuiteConf {
   
   lazy val http: Http =
     TypedActor(system).typedActorOf(
-      classOf[Http],
-      new HttpImpl()(this),
-      Props(),
+      TypedProps(
+        classOf[Http],
+        new HttpImpl()(this)),
       "http")
   
   lazy val observerCreator: ObserverCreator =
     TypedActor(system).typedActorOf(
-      classOf[ObserverCreator],
-      new ObserverCreatorImpl()(this),
-      Props(),
+      TypedProps(
+        classOf[ObserverCreator],
+        new ObserverCreatorImpl()(this)),
       "observer")
   
   /**

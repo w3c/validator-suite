@@ -100,9 +100,9 @@ class ObserverImpl (
    */
   def subscriberOf(subscriber: => Subscriber): Subscriber = {
     context.typedActorOf(
-      classOf[Subscriber],
-      subscriber,
-      Props(),
+      TypedProps(
+        classOf[Subscriber],
+        subscriber),
       java.util.UUID.randomUUID().toString)
   }
   
