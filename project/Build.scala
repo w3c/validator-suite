@@ -22,7 +22,8 @@ object ApplicationBuild extends Build {
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
-    resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+    resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    resolvers += "repo.codahale.com" at "http://repo.codahale.com"
     // Add your own project settings here      
   )
   
