@@ -61,14 +61,13 @@ case class ObserverState(
   val logger = play.Logger.of(classOf[ObserverState])
   
   override def toString: String =
-    """|observation:
-       |  id=%s
-       |  state=%s,
-       |  toBeExplored=%s
-       |  pendingMainAuthority=%s
-       |  responses=%s
-       |  assertions=%s
-       |""" format (id.toString, phase.toString, toBeExplored.toString, pendingMainAuthority.toString, responses.keys mkString ", ", assertions.size.toString)
+"""observation:
+  id=%s
+  state=%s,
+  toBeExplored=%s
+  pendingMainAuthority=%s
+  responses=%s
+  assertions=%s""" format (id.toString, phase.toString, toBeExplored.toString, pendingMainAuthority.toString, responses.keys mkString ", ", assertions.size.toString)
   
   assert(
     allKnownUrls.size == numberOfKnownUrls,
