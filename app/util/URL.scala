@@ -2,7 +2,9 @@ package org.w3.util
 
 import java.net.{URL => jURL}
 
-case class URL(underlying:jURL) {
+case class URL(url: String) {
+  
+  val underlying: jURL = new jURL(url)
 
   override def toString = underlying.toString
 
@@ -12,18 +14,18 @@ case class URL(underlying:jURL) {
   def port: Port = underlying.getPort
   def file: File = underlying.getFile
 
-  def domain:String = {
+  def domain: String = {
     val a = host.split("\\.")
     val s = a.size
     a(s - 2) + "." + a(s - 1)
   }
 
-  def sameDomainAs(other:URL):Boolean = this.domain == other.domain
+  def sameDomainAs(other: URL): Boolean = this.domain == other.domain
 
-  def /(spec:String):Option[URL] =
+  def /(spec: String): Option[URL] =
     try {
       val url2 = URL(new jURL(underlying, spec))
-      if ("http" == url2.protocol) Some(url2) else None
+      if ("http" == url2.protocol || "https" == url2.protocol) Some(url2) else None
     } catch {
       case e => None
     }
@@ -32,13 +34,13 @@ case class URL(underlying:jURL) {
 
 object URL {
 
-  def apply(url:String):URL = URL(new jURL(url))
+  def apply(url: jURL): URL = URL(url.toString)
   
-  implicit def unwrap(url:URL):jURL = url.underlying
+  implicit def unwrap(url: URL): jURL = url.underlying
   
   def fromString(url: String) = URL(url)
   
-  def clearHash(url: URL): URL = new URL(new jURL(url.protocol, url.host, url.port, url.file))
+  def clearHash(url: URL): URL = URL(new jURL(url.protocol, url.host, url.port, url.file))
   
 }
 
