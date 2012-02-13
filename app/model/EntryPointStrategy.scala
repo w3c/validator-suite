@@ -33,7 +33,7 @@ extends Strategy {
   
   def fetch(url: URL, distance: Int): HttpAction = {
     if ((url.getAuthority == entrypoint.getAuthority) &&
-        (distance < this.distance))
+        (distance <= this.distance))
       GET
     else if (linkCheck)
       HEAD
