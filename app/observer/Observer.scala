@@ -221,6 +221,11 @@ class ObserverImpl (
     html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
   }
   
+  // TODO ?
+  private final def extractURLsFromCSS(url: URL, body: String): List[URL] = {
+    List.empty
+  }
+  
   /**
    * Schedule the next URLs to be fetched
    * 
@@ -272,12 +277,12 @@ class ObserverImpl (
       case OkResponse(url, GET, status, headers, body) => {
         logger.debug("%s: GET <<< %s" format (shortId, url))
         val distance = state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
-        val extractedURLs = headers.mimetype map {
-          case "text/html" | "application/xhtml+xml" => extractURLsFromHtml(url, body)
-          case "text/css" => List.empty /* extract links from CSS here*/
-          case _ => List.empty
-        } getOrElse List.empty
-        val newUrls = state.filteredExtractedURLs(extractedURLs, distance + 1)
+        val (extractedURLs, newDistance) = headers.mimetype map {
+          case "text/html" | "application/xhtml+xml" => (extractURLsFromHtml(url, body), distance + 1)
+          case "text/css" => (extractURLsFromCSS(url, body), distance) /* extract links from CSS here*/
+          case _ => (List.empty, distance)
+        } getOrElse (List.empty, distance)
+        val newUrls = state.filteredExtractedURLs(extractedURLs, newDistance)
         if (! newUrls.isEmpty)
           logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, state.numberOfKnownUrls))
         val newResponse = HttpResponse(url, GET, status, headers, extractedURLs.distinct)
