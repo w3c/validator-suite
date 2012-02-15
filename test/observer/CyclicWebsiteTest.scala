@@ -5,15 +5,13 @@ import org.w3.util.website._
 import org.w3.vs.model._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit._
-import org.specs2.mutable.Specification
 import akka.dispatch.Await
 import akka.util.duration._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
+import akka.testkit.TestKit
 
-object CyclicWebsiteCrawlTest extends Specification {
-
-  val delay = 0
+class CyclicWebsiteCrawlTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
   
   val strategy =
     EntryPointStrategy(
@@ -26,11 +24,11 @@ object CyclicWebsiteCrawlTest extends Specification {
   
   val servers = Seq(unfiltered.jetty.Http(8080).filter(Website.cyclic(10).toPlanify))
   
-  "test cyclic(10)" in new ObserverScope(servers)(new org.w3.vs.Production { }) {
-    val am = http.authorityManagerFor(URL("http://localhost:8080/")).sleepTime = delay
+  "test cyclic(10)" in {
+    http.authorityManagerFor(URL("http://localhost:8080/")).sleepTime = 0
     val observer = observerCreator.observerOf(ObserverId(), strategy)
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
-    urls must have size(11)
+    urls must have size (11)
   }
   
 //    val (links, timestamps) = responseDAO.getLinksAndTimestamps(actionId) .unzip

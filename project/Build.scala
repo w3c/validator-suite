@@ -15,12 +15,14 @@ object ApplicationBuild extends Build {
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     // test dependencies
-    "com.typesafe.akka" % "akka-testkit" % "2.0-M2" % "test",
+    "com.typesafe.akka" % "akka-testkit" % "2.0-M4" % "test",
     "net.databinder" %% "unfiltered-filter" % "0.5.3" % "test",
-    "net.databinder" %% "unfiltered-jetty" % "0.5.3" % "test"
+    "net.databinder" %% "unfiltered-jetty" % "0.5.3" % "test",
+    "org.scalatest" %% "scalatest" % "1.7.1" % "test"
   )
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
+    testOptions in Test := Nil,
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     resolvers += "repo.codahale.com" at "http://repo.codahale.com"
