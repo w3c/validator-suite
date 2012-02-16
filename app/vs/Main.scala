@@ -19,13 +19,15 @@ object Main {
       distance=0,
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
-
+  
+  val job = Job(strategy)
+  
   def main(args: Array[String]): Unit = {
     
     val configuration = new Production { }
 
     val am = configuration.http.authorityManagerFor(URL("http://www.w3.org/")).sleepTime = 0
-    val observer = configuration.observerCreator.observerOf(ObserverId(), strategy)
+    val observer = configuration.observerCreator.observerOf(ObserverId(), job)
     val urls = Await.result(observer.URLs(), Duration(10, SECONDS))
     println("^^^^^^ "+urls.size)
 

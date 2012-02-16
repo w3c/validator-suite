@@ -41,7 +41,7 @@ trait Observer {
 
 class ObserverImpl (
     observerId: ObserverId,
-    strategy: Strategy)(implicit val configuration: ValidatorSuiteConf) extends Observer {
+    job: Job)(implicit val configuration: ValidatorSuiteConf) extends Observer {
   
   import configuration._
   
@@ -74,7 +74,7 @@ class ObserverImpl (
   /**
    * The current state of this Observer. The initial state is ExplorationState.
    */
-  var state: ObserverState = ObserverState(observerId, strategy)
+  var state: ObserverState = ObserverState(observerId, job)
   
   /**
    * A shorten id for logs readability
@@ -153,7 +153,7 @@ class ObserverImpl (
   def startExplorationPhase(): Unit =
     if (state.phase == NotYetStarted) {
       // ask the strategy for the first urls to considerer
-      val firstURLs = strategy.seedURLs.toList
+      val firstURLs = job.strategy.seedURLs.toList
       // update the observation state
       state = state.withFirstURLsToExplore(firstURLs)
       broadcast(message.NewURLsToExplore(firstURLs))
@@ -185,7 +185,7 @@ class ObserverImpl (
   
   private final def scheduleAssertion(response: Response): Unit = response match {
     case HttpResponse(url, _, 200, headers, _) =>
-      if (strategy.shouldObserve(url)) {
+      if (job.strategy.shouldObserve(url)) {
         headers.mimetype foreach {
           case "text/html" | "application/xhtml+xml" => {
             assertionCounter += 1
@@ -239,7 +239,7 @@ class ObserverImpl (
    */
   private final def fetch(explore: ObserverState#Explore): Unit = {
     val (url, distance) = explore
-    val action = strategy.fetch(url, distance)
+    val action = job.strategy.fetch(url, distance)
     //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
     action match {
       case GET => {

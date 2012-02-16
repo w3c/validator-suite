@@ -22,11 +22,13 @@ class CyclicWebsiteCrawlTest extends ObserverTestHelper(new org.w3.vs.Production
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
+  val job = Job(strategy)
+  
   val servers = Seq(unfiltered.jetty.Http(8080).filter(Website.cyclic(10).toPlanify))
   
   "test cyclic(10)" in {
     http.authorityManagerFor(URL("http://localhost:8080/")).sleepTime = 0
-    val observer = observerCreator.observerOf(ObserverId(), strategy)
+    val observer = observerCreator.observerOf(ObserverId(), job)
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     urls must have size (11)
   }

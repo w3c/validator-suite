@@ -12,7 +12,7 @@ trait ObserverCreator {
   def byObserverId(observerId: ObserverId): Option[Observer]
   def observerOf(
     observerId: ObserverId,
-    strategy: Strategy): Observer
+    job: Job): Observer
 }
     
 class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) extends ObserverCreator {
@@ -24,11 +24,11 @@ class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) exte
     
   def observerOf(
       observerId: ObserverId,
-      strategy: Strategy): Observer = {
+      job: Job): Observer = {
     val obs = TypedActor(TypedActor.context).typedActorOf(
       TypedProps(
         classOf[Observer],
-        new ObserverImpl(observerId, strategy)),
+        new ObserverImpl(observerId, job)),
       observerId.toString())
     registry += (observerId -> obs)
     obs
