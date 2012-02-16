@@ -84,9 +84,11 @@ object Validator extends Controller with Secured {
       linkCheck=linkCheck,
       filter=Filter(include=Everything, exclude=Nothing))
     
+    val job = Job(strategy)
+    
     val observerId: ObserverId = ObserverId()
     
-    val observer = configuration.observerCreator.observerOf(observerId, strategy)
+    val observer = configuration.observerCreator.observerOf(observerId, job)
     
     val observerIdString: String = observerId.toString
     
