@@ -156,7 +156,7 @@ class ObserverImpl (
       val firstURLs = job.strategy.seedURLs.toList
       // update the observation state
       state = state.withFirstURLsToExplore(firstURLs)
-      broadcast(message.NewURLsToExplore(firstURLs))
+      //broadcast(message.NewURLsToExplore(firstURLs))
       logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
       // we can now schedule the first fetches
       scheduleNextURLsToFetch()
@@ -278,13 +278,14 @@ class ObserverImpl (
           case _ => List.empty
         } getOrElse List.empty
         val newUrls = state.filteredExtractedURLs(extractedURLs, distance + 1)
-        if (! newUrls.isEmpty)
+        if (! newUrls.isEmpty) {
           logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, state.numberOfKnownUrls))
+          //broadcast(message.NewURLsToExplore(newUrls))
+        }
         val newResponse = HttpResponse(url, GET, status, headers, extractedURLs.distinct)
         val newExplores = newUrls map { (_, distance + 1) }
         state = state.withNewResponse(url -> newResponse).withNewUrlsToBeExplored(newExplores)
         broadcast(message.NewResponse(newResponse))
-        broadcast(message.NewURLsToExplore(newUrls))
         scheduleAssertion(newResponse)
         scheduleNextURLsToFetch()
         conditionalEndOfExplorationPhase()
@@ -340,11 +341,10 @@ class ObserverImpl (
     subscriber.broadcast(initialState)
   }
   
-  private def initialState: message.ObservationSnapshot = {
+  private def initialState: Iterable[message.ObservationUpdate] = {
     val responsesToBroadcast = state.responses map { case (_, response) => message.NewResponse(response) }
     val assertionsToBroadcast = state.assertions map { a => message.NewAssertion(a) }
-    val messages = responsesToBroadcast ++ assertionsToBroadcast
-    message.ObservationSnapshot(state.responses.size, state.toBeExplored.size, state.assertions.size, messages)
+    responsesToBroadcast ++ assertionsToBroadcast
   }
   
   /**
