@@ -13,6 +13,7 @@ GET     /logout                     controllers.Application.logout
 # Observations
 POST    /observation                controllers.Validator.validate()
 GET     /observation/:id            controllers.Validator.redirect(id)
+GET     /observation/:id/ws         controllers.Validator.subscribeWS(id)
 GET     /observation/:id/stream     controllers.Validator.subscribe(id)
 GET     /observation/:id/stop       controllers.Validator.stop(id)
 
