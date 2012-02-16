@@ -84,11 +84,9 @@ object Validator extends Controller with Secured {
       linkCheck=linkCheck,
       filter=Filter(include=Everything, exclude=Nothing))
     
-    val job = Job(strategy)
-    
     val observerId: ObserverId = ObserverId()
     
-    val observer = configuration.observerCreator.observerOf(observerId, job)
+    val observer = configuration.observerCreator.observerOf(observerId, strategy)
     
     val observerIdString: String = observerId.toString
     
@@ -148,5 +146,4 @@ object Validator extends Controller with Secured {
         (Iteratee.foreach[JsValue](e => println(e)), Enumerator.enumInput(Input.EOF))
       }
     }
-
 }
