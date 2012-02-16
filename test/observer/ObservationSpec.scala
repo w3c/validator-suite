@@ -27,6 +27,8 @@ object ObservationSpec extends Specification {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
+  val job = Job(strategy)
+      
   val w3_home = URL("http://www.w3.org")
   val w3_standards = URL("http://www.w3.org/standards")
   val w3_participate = URL("http://www.w3.org/participate")
@@ -39,7 +41,7 @@ object ObservationSpec extends Specification {
       
   "an observation with some urls to be explored" should {
     val observation =
-      ObserverState(ObserverId(), strategy, toBeExplored = 
+      ObserverState(ObserverId(), job, toBeExplored = 
         List(
           (w3_home, 0),
           (w3_standards, 1)
@@ -68,7 +70,7 @@ object ObservationSpec extends Specification {
   }
   
   "a fresh observation" should {
-    val observation = ObserverState(ObserverId(), strategy)
+    val observation = ObserverState(ObserverId(), job)
     "start in NotYetStartedState" in {
       observation.phase must beEqualTo (NotYetStarted)
     }
@@ -82,7 +84,7 @@ object ObservationSpec extends Specification {
     val observation =
       ObserverState(
         ObserverId(),
-        strategy,
+        job,
         toBeExplored = List(w3_home -> 0, w3_standards -> 1))
     "not have duplicated URLs to be observed" in {
       observation.withNewUrlsToBeExplored(List(w3_home -> 0)) must throwA[java.lang.AssertionError]
@@ -106,7 +108,7 @@ object ObservationSpec extends Specification {
         w3_membership -> 1,
         w3_consortium -> 1)
 
-    val observation = ObserverState(ObserverId(), strategy, toBeExplored = urls)
+    val observation = ObserverState(ObserverId(), job, toBeExplored = urls)
     
     "take a URL" in {
       val (ob, nextExplore) = observation.take.get
@@ -132,7 +134,7 @@ object ObservationSpec extends Specification {
         w3_consortium -> 1,
         google -> 1)
 
-    val observation = ObserverState(ObserverId(), strategy, toBeExplored = urls)
+    val observation = ObserverState(ObserverId(), job, toBeExplored = urls)
     
     "take a URL from the main authority in priority regardless of the order in the url list" in {
       val (ob, nextExplore) = observation.take.get
@@ -167,7 +169,7 @@ object ObservationSpec extends Specification {
 
     val observation = ObserverState(
         ObserverId(),
-        strategy,
+        job,
         pendingMainAuthority = Some(w3_home -> 0),
         toBeExplored = urls)
     
@@ -193,7 +195,7 @@ object ObservationSpec extends Specification {
 
     val observation = ObserverState(
         ObserverId(),
-        strategy,
+        job,
         pending = Map(google -> (google -> 1)),
         toBeExplored = urls)
     
@@ -210,7 +212,7 @@ object ObservationSpec extends Specification {
 
     val observation = ObserverState(
         ObserverId(),
-        strategy,
+        job,
         pendingMainAuthority = Some(w3_home -> 0),
         pending = Map(google -> (google -> 1), mobilevoice -> (mobilevoice -> 2)))
     

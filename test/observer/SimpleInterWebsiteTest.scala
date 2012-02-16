@@ -24,13 +24,15 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new org.w3.vs.Production
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
+  val job = Job(strategy)
+  
   val servers = Seq(
       unfiltered.jetty.Http(8080).filter(Website(Seq("/" --> "http://localhost:8081/")).toPlanify),
       unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
   )
 
   "test simpleInterWebsite" in {
-    val observer = observerCreator.observerOf(ObserverId(), strategy)
+    val observer = observerCreator.observerOf(ObserverId(), job)
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     assert(urls.size === 2)
   }
