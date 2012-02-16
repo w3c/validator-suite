@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit.SECONDS
   * Server 1 -> Server 2
   * 1 GET       1 HEAD
   */
-object SimpleInterWebsiteTest extends Specification {
+class SimpleInterWebsiteTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
 
   val strategy =
     EntryPointStrategy(
@@ -24,13 +24,15 @@ object SimpleInterWebsiteTest extends Specification {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
+  val job = Job(strategy)
+  
   val servers = Seq(
       unfiltered.jetty.Http(8080).filter(Website(Seq("/" --> "http://localhost:8081/")).toPlanify),
       unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
   )
 
-  "test simpleInterWebsite" in new ObserverScope(servers)(new org.w3.vs.Production { }) {
-    val observer = observerCreator.observerOf(ObserverId(), strategy)
+  "test simpleInterWebsite" in {
+    val observer = observerCreator.observerOf(ObserverId(), job)
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     assert(urls.size === 2)
   }

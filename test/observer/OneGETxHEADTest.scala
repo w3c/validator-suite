@@ -13,9 +13,7 @@ import java.util.concurrent.TimeUnit.SECONDS
   * Server 1 -> Server 2
   * 1 GET       10 HEAD
   */
-object OneGETxHEADTest extends Specification {
-  
-  val delay = 0
+class OneGETxHEADTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
   
   val j = 10
   
@@ -27,15 +25,17 @@ object OneGETxHEADTest extends Specification {
       distance=1,
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
-
+  
+  val job = Job(strategy)
+  
   val servers = Seq(
       unfiltered.jetty.Http(8080).filter(Website((1 to j) map { i => "/" --> ("http://localhost:8081/"+i) }).toPlanify),
       unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
   )
 
-  "test OneGETxHEAD" in new ObserverScope(servers)(new org.w3.vs.Production { }) {
-    http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = delay
-    val observer = observerCreator.observerOf(ObserverId(), strategy)
+  "test OneGETxHEAD" in {
+    http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = 0
+    val observer = observerCreator.observerOf(ObserverId(), job)
     val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
     val urls8081 = urls filter { _.authority == "localhost:8081" }
     urls8081 must have size(j)

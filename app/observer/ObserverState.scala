@@ -40,15 +40,17 @@ object ObserverState {
  * </ul>
  */
 case class ObserverState(
-  id: ObserverId, 
-  strategy: Strategy, 
-  phase: ObserverPhase = NotYetStarted, 
-  toBeExplored: List[ObserverState#Explore] = List.empty, 
-  pendingMainAuthority: Option[ObserverState#Explore] = None, 
-  pending: Map[URL, ObserverState#Explore] = Map.empty, 
-  responses: Map[URL, Response] = Map.empty, 
+  id: ObserverId,
+  job: Job,
+  phase: ObserverPhase = NotYetStarted,
+  toBeExplored: List[ObserverState#Explore] = List.empty,
+  pendingMainAuthority: Option[ObserverState#Explore] = None,
+  pending: Map[URL, ObserverState#Explore] = Map.empty,
+  responses: Map[URL, Response] = Map.empty,
   assertions: ObserverState#Assertions = List.empty)
  {
+  
+  def strategy = job.strategy
   
   /**
    * This type associated a distance to a particular known url

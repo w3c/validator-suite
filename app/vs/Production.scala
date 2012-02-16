@@ -24,14 +24,15 @@ trait Production extends ValidatorSuiteConf {
   
   val system: ActorSystem = ActorSystem("vs")
   
-  lazy val http: Http =
+  val http: Http =
     TypedActor(system).typedActorOf(
       TypedProps(
         classOf[Http],
         new HttpImpl()(this)),
       "http")
+    
   
-  lazy val observerCreator: ObserverCreator =
+  val observerCreator: ObserverCreator =
     TypedActor(system).typedActorOf(
       TypedProps(
         classOf[ObserverCreator],
@@ -43,7 +44,7 @@ trait Production extends ValidatorSuiteConf {
    * and connection pool associated with it, it's supposed to
    * be shared among lots of requests, not per-http-request
    */
-  lazy val httpClient = {
+  val httpClient = {
     // 2 seconds
     val timeout: Int = 2000
     val executor = Executors.newCachedThreadPool()
@@ -57,17 +58,8 @@ trait Production extends ValidatorSuiteConf {
       .build
     new AsyncHttpClient(config)
   }
-
-  /**
-   * use this to make sure that all lazy services are instantiated during startup
-   */
-  def init(): Unit = {
-    httpClient
-    observerCreator
-    // ouch :-)
-    http.authorityManagerFor("w3.org").sleepTime = 0
-  }
-
-  init()
+  
+  // ouch :-)
+  http.authorityManagerFor("w3.org").sleepTime = 0
   
 }

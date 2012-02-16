@@ -1,15 +1,14 @@
 package org.w3.vs.store
 
-import org.specs2.mutable.Specification
+import org.scalatest.{Filter => _, _}
+import org.scalatest.matchers.MustMatchers
 import java.io._
-import org.specs2.mutable.Before
 import org.w3.vs.model._
 import org.w3.util.{File => _, _}
 import org.w3.vs.observer._
-import org.specs2.matcher.BeEqualTo
 import java.nio.file.Paths
 
-abstract class StoreSpec() extends Specification {
+abstract class StoreSpec extends WordSpec with MustMatchers with EitherValues {
   
   val strategy =
     EntryPointStrategy(
@@ -20,40 +19,44 @@ abstract class StoreSpec() extends Specification {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
+  val job = Job(strategy)
+  
   val store: Store
   
-  "a store" should {
+  "a store" must {
     
     "be initializable" in {
       val r = store.init()
-      r must beRight ()
+      r must be ('right)
     }
     
-    val os1 = ObserverState(ObserverId(), strategy)
-    val os2 = ObserverState(ObserverId(), strategy)
-    val os3 = ObserverState(ObserverId(), strategy)
+    val os1 = ObserverState(ObserverId(), job)
+    val os2 = ObserverState(ObserverId(), job)
+    val os3 = ObserverState(ObserverId(), job)
     
     "save new ObserverStates" in {
       val op1 = store.save(os1)
-      op1 must beRight ()
+      op1 must be ('right)
       val op2 = store.save(os2)
-      op2 must beRight ()
+      op2 must be ('right)
       val op3 = store.save(os3)
-      op3 must beRight ()
+      op3 must be ('right)
     }
     
     "get states" in {
       val g1 = store.get(os1.id).right.get
-      g1 must beEqualTo (os1)
+      g1 must equal (os1)
       val g2 = store.get(os2.id).right.get
-      g2 must beEqualTo (os2)
+      g2 must equal (os2)
       val g3 = store.get(os3.id).right.get
-      g3 must beEqualTo (os3)
+      g3 must equal (os3)
     }
     
     "list ObserverStates" in {
       val os = store.list.right.get
-      os must containAllOf(List(os1, os2, os3))
+      os must contain (os1)
+      os must contain (os2)
+      os must contain (os3)
     }
     
   }
@@ -61,7 +64,7 @@ abstract class StoreSpec() extends Specification {
   
 }
 
-object FileStoreSpec extends StoreSpec() {
+class FileStoreSpec extends StoreSpec {
   
   lazy val storeDir = {
     val dir = Paths.get(System.getProperty("java.io.tmpdir")).resolve("filestore").toFile()
@@ -73,7 +76,7 @@ object FileStoreSpec extends StoreSpec() {
   
 }
 
-object MemoryStoreSpec extends StoreSpec() {
+class MemoryStoreSpec extends StoreSpec {
   
   lazy val store = new MemoryStore
   
