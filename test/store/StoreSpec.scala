@@ -7,6 +7,7 @@ import org.w3.vs.model._
 import org.w3.util.{File => _, _}
 import org.w3.vs.observer._
 import org.specs2.matcher.BeEqualTo
+import java.nio.file.Paths
 
 abstract class StoreSpec() extends Specification {
   
@@ -63,7 +64,7 @@ abstract class StoreSpec() extends Specification {
 object FileStoreSpec extends StoreSpec() {
   
   lazy val storeDir = {
-    val dir = new File("/tmp/filestore")
+    val dir = Paths.get(System.getProperty("java.io.tmpdir")).resolve("filestore").toFile()
     if (! dir.exists) dir.mkdir()
     dir
   }
