@@ -21,6 +21,8 @@ import play.api.libs._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
 
+import play.api.libs.json._
+
 object Validator extends Controller with Secured {
   
   implicit val configuration: ValidatorSuiteConf = new Production { }
@@ -172,4 +174,19 @@ object Validator extends Controller with Secured {
     }.getOrElse(Forbidden)
   }
   
+  def subscribeWS(id: String) = //: Promise[(Iteratee[String,String],Enumerator[String])] = 
+    WebSocket.using[String]{ request => 
+      try {
+        val observerId = ObserverId(id)
+        configuration.observerCreator.byObserverId(observerId).map { observer =>
+          val in = Iteratee.consume[String]()
+          val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
+          (in, subscriber.enumerator &> Enumeratee.map{ e => toJSON(e) })
+        }.getOrElse((Iteratee.consume[String](), Enumerator.enumInput(Input.EOF)))
+      } catch { case e =>
+        // TODO only catch correctly typed exception
+        logger.error(e.getMessage(), e);
+        (Iteratee.consume[String](), Enumerator.enumInput(Input.EOF))
+      }
+  }
 }
