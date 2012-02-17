@@ -6,7 +6,7 @@ package org.w3.vs.model
 //import anorm._
 //import anorm.SqlParser._
 
-import org.w3.vs.observer.{Observer => Job}
+import org.w3.vs.observer.Observer
 import org.w3.vs.observer._
 import org.w3.vs.model._
 
@@ -14,15 +14,15 @@ case class User(
     email: String,
     name: String,
     password: String,
-    jobs: List[Job]) {
+    jobs: List[Observer]) {
   
-  def withJob(job: Job): User =
+  def withJob(job: Observer): User =
     this.copy(jobs = jobs :+ job)
   
-  def owns(job: Job): Boolean =
+  def owns(job: Observer): Boolean =
     jobs.contains(job)
   
-  def canAccess(job: Job): Boolean = 
+  def canAccess(job: Observer): Boolean = 
     true
 }
 
@@ -44,7 +44,7 @@ object User {
   var users: Seq[User] = Seq[User]()
   
   def apply(email: String, name: String, password: String): User =
-    User(email, name, password, List[Job]())
+    User(email, name, password, List[Observer]())
   
   // -- Queries
   
