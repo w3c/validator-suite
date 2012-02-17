@@ -6,7 +6,6 @@ import org.w3.vs.model.{Response, Assertion}
 import org.w3.vs.observer.ObserverState
 import play.api.libs.json._
 import org.w3.vs.model._
-import org.w3.util.JsInt
 
 /**
  * An update that happened on an Observation.
@@ -62,7 +61,7 @@ case class NewURLsToExplore(urls: Iterable[URL]) extends ObservationUpdate {
   def toJS: JsValue = 
     JsArray(List(
       JsString("NB_EXP"),
-      new JsInt(urls.size)
+      JsNumber(urls.size)
     ))
 }
 
