@@ -23,3 +23,6 @@ sbt-launch*.jar
 .target
 .scala_dependencies
 Play20
+test/resources
+test/observer/TempTest.scala
+*.egp
