@@ -10,17 +10,11 @@ body>header #admin{padding-right:10px;padding-top:77px;}
 
 #nav {float:left;}
 section.main {float:right;} /* unsupported: box-sizing:border-box; padding:10px} */
-#nav {
-	width:19%;
-}
+#nav {width:19%;}
 #nav > *,
-section.main > * {
-	margin:10px;
-}
+section.main > * {margin:10px;}
 section.main,
-#crumbs {
-	width:80%;
-}
+#crumbs {width:80%;}
 #crumbs {
 	border:solid #e5e5e5;
 	border-width: 0 0 1px 1px;
@@ -31,12 +25,8 @@ section.main,
 	margin:10px;
 	list-style-type: none;
 }
-#crumbs li {
-	display:inline;
-}
-#crumbs li:after {
-	content: " | "
-}
+#crumbs li {display:inline;}
+#crumbs li:after {content: " | "}
 #crumbs li:last-child:after {
 	content:"";
 	display:none;
@@ -48,9 +38,7 @@ footer {
 	border-width:1px 0;
 	background:#f5f5f5;
 }
-section.main > header {
-	display:none;
-}
+section.main > header {display:none;}
 section.main > ul {
 	list-style-type: none;
 	padding:0;
@@ -63,14 +51,24 @@ section.main > ul > li {
 body > section.main {
 	border:solid #e5e5e5;
 	border-width: 0 0 0 1px;
-	
 }
-.job {
-	overflow: auto;
-}
+.job {overflow: auto;}
 .job .meta,
 .job .last,
 .job .graph,
-.job .menu {
-	float:left;
+.job .menu {float:left;}
+.job .report {clear: left}
+.job .meta ul {margin:0}
+.job .filters h1 {
+	display:inline;
+	font-size:1.1em;
+	border:solid #e5e5e5;
+	border-width: 1px 1px 0 1px;
+	padding:5px;
+	margin-right:10px
 }
+
+.report summary ul,
+.report summary li {display:inline}
+.report details {padding:5px 0;border-top:1px solid #e5e5e5;}
+
