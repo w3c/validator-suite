@@ -28,6 +28,6 @@ class SubscriberImpl(observer: Observer) extends Subscriber {
   
   def broadcast(msg: message.ObservationUpdate): Unit = enumerator.push(msg)
   
-  def broadcast(msgs: Iterable[message.ObservationUpdate]): Unit = for(msg <- msgs) { enumerator.push(msg) }
+  def broadcast(msgs: Iterable[message.ObservationUpdate]): Unit = msgs.map(enumerator.push)
   
 }
