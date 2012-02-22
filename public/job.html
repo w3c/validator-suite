@@ -31,19 +31,16 @@
 	</header>
 	
 	<nav id="nav">
+		<ul>
+			<li><a href="dashboard.html">Dashboard</a></li>
+			<li>Add new job</li>
+		</ul>
 		<section>
-			<header>Jobs</header>
+			<header>Settings</header>
 			<ul>
-				<li>List jobs</li>
-				<li>Add new job</li>
-			</ul>
-		</section>
-		<section>
-			<header>Navigation group</header>
-			<ul>
-				<li>link1</li>
-				<li>link2</li>
-				<li>link3</li>
+				<li>User profile</li>
+				<li>Validator strategies</li>
+				<li>...</li>
 			</ul>
 		</section>
 		<section>
@@ -69,21 +66,26 @@
 			
 		</details> -->
 		
-		<small># A report is basically a list of uris with attached messages coming from different 
+		<p style="font-size:0.8em"># A report is basically a list of uris with attached messages coming from different 
 		assertors. An obvious way to filter the list is to filter based on assertor (i.e. show me the 
 		list of uris that contain messages coming from that assertor and only display these messages).
 		We could also filter based on number of errors (e.g. only urls with more than 50 errors) or 
-		other criterions, and compose filters. For the first version tab presentation based on 
-		assertors might be enough.
-		 </small>
+		other criterions, and compose filters. Some possible filters (controls TBD):
+		 </p>
 		
 		<div class="filters">
-			<!-- TDB -->
-			<h1>Markup</h1>
-			<h1>CSS</h1>
-			<h1>I18n</h1>
-			<h1>LinkChecker</h1>
+			<ul>
+				<li>On assertors</li>
+				<li>On content-types</li>
+				<li>On messages types (V2)</li>
+				<li>On # of errors/warnings (threshold for selected assertors)</li>
+				<li>On path (only uris under a certain uri)</li>
+				<li>...</li>
+			</ul>
 		</div>
+		
+		<p style="font-size:0.8em"># Metadata depends on filters and is updated on new messages</p>
+		
 		<div class="meta">
 			<ul>
 				<li>Last updated: <time datetime="1970-01-01T00:00Z">22 Feb 2012</time></li>
@@ -101,6 +103,9 @@
 |____________________
 </pre>
 		</div>
+		
+		<p style="font-size:0.8em; clear:both"># Live report. Organized by uris only for now. Could be explored as a tree (e.g. urchin)</p>
+		
 		<div class="report">
 			<details>
 				<summary>
@@ -111,8 +116,8 @@
 						<li>Last update: T</li>
 					</ul>
 					<ul>
-						<li><a href="">Revalidate</a></li>
-						<li><a href="">Focus</a></li>
+						<li>Revalidate</li>
+						<li><a href="single.html">Focus</a></li>
 					</ul>
 				</summary>
 				<ul class="messages">
@@ -132,8 +137,8 @@
 						<li>Last update: T</li>
 					</ul>
 					<ul>
-						<li><a href="">Revalidate</a></li>
-						<li><a href="">Focus</a></li>
+						<li>Revalidate</li>
+						<li>Focus</li>
 					</ul>
 				</summary>
 			</details>
@@ -146,8 +151,8 @@
 						<li>Last update: T</li>
 					</ul>
 					<ul>
-						<li><a href="">Revalidate</a></li>
-						<li><a href="">Focus</a></li>
+						<li>Revalidate</li>
+						<li>Focus</li>
 					</ul>
 				</summary>
 			</details>
@@ -160,8 +165,8 @@
 						<li>Last update: T</li>
 					</ul>
 					<ul>
-						<li><a href="">Revalidate</a></li>
-						<li><a href="">Focus</a></li>
+						<li>Revalidate</li>
+						<li>Focus</li>
 					</ul>
 				</summary>
 			</details>
@@ -174,8 +179,8 @@
 						<li>Last update: T</li>
 					</ul>
 					<ul>
-						<li><a href="">Revalidate</a></li>
-						<li><a href="">Focus</a></li>
+						<li>Revalidate</li>
+						<li>Focus</li>
 					</ul>
 				</summary>
 			</details>

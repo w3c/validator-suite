@@ -7,10 +7,13 @@ body>header h1 a :active{outline:none;}
 body>header h1 span:first-child{font-weight:bold;text-transform:uppercase;}
 body>header h1 span:nth-child(2){font-family:serif;display:block;font-style:italic;font-size:0.95em;position:relative;left:-6.7px;top:-2px;}
 body>header #admin{padding-right:10px;padding-top:77px;}
+details{display:block}
 
 #nav {float:left;}
 section.main {float:right;} /* unsupported: box-sizing:border-box; padding:10px} */
 #nav {width:19%;}
+#nav > ul {padding-left:1.4em}
+#nav > section > ul {margin-top:5px}
 #nav > *,
 section.main > * {margin:10px;}
 section.main,
@@ -57,7 +60,7 @@ body > section.main {
 .job .last,
 .job .graph,
 .job .menu {float:left;}
-.job .report {clear: left}
+.job .report {}
 .job .meta ul {margin:0}
 .job .filters h1 {
 	display:inline;
