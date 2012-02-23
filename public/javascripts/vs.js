@@ -77,7 +77,7 @@ var VS = {
 			//VS.cometIframe.attr('src', loc + "/stream");
 			
 			var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
-			VS.WS = new WS("ws://localhost:9000/observation/" + VS.currentActionId + "/ws");
+			VS.WS = new WS("/observation/" + VS.currentActionId + "/ws");
 			
 			VS.WS.onmessage = function(event) {
 				VS.logComet(event.data);
@@ -323,7 +323,7 @@ var VS = {
 		} else {
 			window.location.replace('#' + hash);
 		}
-	},
+	}
 	
 //    log: function (level, args) {
 //        if (window.console) {
