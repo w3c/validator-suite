@@ -133,10 +133,10 @@ object Validator extends Controller with Secured {
   }
   
   def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
-  configuration.observerCreator.byObserverId(id).map { observer =>
+  configuration.observerCreator.byRunId(id).map { observer =>
     val in = Iteratee.foreach[JsValue](e => println(e))
     val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
-    (in, subscriber.enumerator &> Enumeratee.map[ObservationUpdate]{ e => e.toJS })
+    (in, subscriber.enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
   }.getOrElse(CloseWebsocket)
 }
   
