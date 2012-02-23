@@ -8,16 +8,16 @@ import play.api.data.validation.Constraints._
 import play.api.data.format.Formatter
 import play.api.mvc.{AsyncResult, Request}
 import play.api.data.Forms._
-
 import java.net.URI
 import java.util.UUID
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
-
 import play.api.libs._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
+import play.api.libs.json.JsValue
+import play.api.mvc.WebSocket.FrameFormatter
 
 object Application extends Controller {
   
@@ -77,15 +77,32 @@ trait Secured {
    */
   private def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Application.login)
   
-  // --
+  /**
+   * Simply close the websocket if the user is not authorized.
+   */
+  private def onUnauthorizedWebSocket[A](request: RequestHeader) = CloseWebsocket[A]
+  protected def CloseWebsocket[A]: (Iteratee[A, _], Enumerator[A]) = (Iteratee.foreach[A](e => println(e)), Enumerator.eof)
   
   /** 
    * Action for authenticated users.
    */
-  def IsAuthenticated(f: => String => Request[AnyContent] => Result) = Security.Authenticated(username, onUnauthorized) { user =>
+  def IsAuthenticated(f: => String => Request[AnyContent] => Result): Action[(Action[AnyContent], AnyContent)] = Security.Authenticated(username, onUnauthorized) { user =>
     Action(request => f(user)(request))
   }
-
+  
+  /** 
+   * WebSocket for authenticated users.
+   */
+  def AuthenticatedWebSocket[A](f: => String => RequestHeader => (Iteratee[A,_], Enumerator[A]))(implicit frameFormatter: FrameFormatter[A]): WebSocket[A] = {
+    WebSocket.using[A](request => {
+      username(request).map { user =>
+        f(user)(request)
+      }.getOrElse {
+        onUnauthorizedWebSocket(request)
+      }
+    })
+  }
+  
   /**
    * Check if the connected user is a member of this project.
    */

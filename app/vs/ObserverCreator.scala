@@ -10,6 +10,7 @@ import akka.util.Duration
 
 trait ObserverCreator {
   def byObserverId(observerId: ObserverId): Option[Observer]
+  def byObserverId(observerIdStr: String): Option[Observer]
   def observerOf(
     observerId: ObserverId,
     job: Job): Observer
@@ -21,7 +22,16 @@ class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) exte
   
   def byObserverId(observerId: ObserverId): Option[Observer] =
     registry.get(observerId)
-    
+  
+  def byObserverId(observerIdStr: String): Option[Observer] = {
+    try {
+      val observerId = ObserverId(observerIdStr)
+      byObserverId(observerId)
+    } catch { case e => // TODO only catch correctly typed exception
+      None
+    }
+  }
+  
   def observerOf(
       observerId: ObserverId,
       job: Job): Observer = {

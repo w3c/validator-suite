@@ -13,6 +13,7 @@ import org.w3.vs.{ValidatorSuiteConf, Production}
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
+import org.w3.vs.observer.message._
 import play.api.data.FormError
 import play.api.mvc.AsyncResult
 import play.api.data.Forms._
@@ -20,6 +21,10 @@ import play.api.data.Forms._
 import play.api.libs._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
+
+import play.api.libs.json._
+
+import akka.dispatch._
 
 object Validator extends Controller with Secured {
   
@@ -101,31 +106,6 @@ object Validator extends Controller with Secured {
     }.getOrElse(Forbidden)
   }
   
-    /**
-   * Utility method to map a BroadcastMessage to a String that can be understood by the client
-   */
-  private def toJSON(msg: message.ObservationUpdate): String = msg match {
-    case message.NewURLsToExplore(newURLs) => """["NB_EXP", %d]""" format (newURLs.size)
-    case message.NewURLsToObserve(nb) => """["NB_OBS", %d]""" format (nb)
-    case message.NewResponse(response) => response match {
-      case HttpResponse(url, GET, httpCode, headers, extractedURLs) => """["GET", %d, "%s", %d]""" format (httpCode, url, 0) // TODO extractedURLs != new URLs
-      case HttpResponse(url, HEAD, httpCode, headers, extractedURLs) => """["HEAD", %d, "%s"]""" format (httpCode, url)
-      case ErrorResponse(url, errorMessage) => """["ERR", "%s", "%s"]""" format (errorMessage, url)
-    }
-    case message.NewAssertion(assertionResult) => assertionResult match {
-      case Assertion(url, assertorId, AssertionError(t)) => """["OBS_ERR", "%s"]""" format url
-      case Assertion(url, assertorId, events@Events(_)) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, events.errorsNumber, events.warningsNumber)
-    }
-    case message.Done => """["OBS_FINISHED"]"""
-    case message.ObservationSnapshot(numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, messages) => {
-      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, 0)
-      val initialMessages = messages map toJSON mkString ""
-      initial + initialMessages
-    }
-    case message.Stopped => """["STOPPED"]"""
-    
-  }
-  
   def redirect(id: String) = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { user =>
       try {
@@ -139,37 +119,21 @@ object Validator extends Controller with Secured {
     }.getOrElse(Forbidden)
   }
   
-  def stop(id: String) = IsAuthenticated { username => _ =>
+  def stop(id: String): Action[(Action[AnyContent], AnyContent)] = IsAuthenticated { username => request =>
     User.findByEmail(username).map { user =>
-      try {
-        val observerId = ObserverId(id)
-        configuration.observerCreator.byObserverId(observerId).map { observer =>
+        configuration.observerCreator.byObserverId(id).map { observer =>
           observer.stop()
           Ok
         }.getOrElse(NotFound)
-      } catch { case e =>
-        NotFound
-      }
     }.getOrElse(Forbidden)
   }
   
-  def subscribe(id: String) = IsAuthenticated { username => _ =>
-    User.findByEmail(username).map { user =>
-      try {
-        val observerId = ObserverId(id)
-        configuration.observerCreator.byObserverId(observerId).map { observer =>
-          AsyncResult {
-            val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
-            val iteratee = subscriber.enumerator &> Enumeratee.map{ e => toJSON(e) } &> Comet(callback = "parent.VS.logComet")
-            Promise.pure(Ok.stream(iteratee).withHeaders("X-VS-ActionID" -> id))
-          }
-        }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))
-      } catch { case e =>
-        // TODO only catch correctly typed exception
-        logger.error(e.getMessage(), e);
-        NotFound(views.html.cometError(Seq("Invalid action id: " + id)))
-      }
-    }.getOrElse(Forbidden)
+  def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
+    configuration.observerCreator.byObserverId(id).map { observer =>
+      val in = Iteratee.foreach[JsValue](e => println(e))
+      val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
+      (in, subscriber.enumerator &> Enumeratee.map[ObservationUpdate]{ e => e.toJS })
+    }.getOrElse(CloseWebsocket)
   }
-  
+
 }

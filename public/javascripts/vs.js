@@ -30,6 +30,8 @@ var VS = {
 			VS.clearLogs();
 			return false;
 		});
+		
+		VS.WS = null;
 	},
 	
 	formValidateAction: function() {

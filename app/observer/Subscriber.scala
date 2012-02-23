@@ -25,6 +25,7 @@ class SubscriberImpl(observer: Observer) extends Subscriber {
   
   def unsubscribe(): Unit = observer.unsubscribe(this)
   
+  // catch java.nio.channels.ClosedChannelException
   def broadcast(msg: message.ObservationUpdate): Unit = enumerator.push(msg)
   
 }
