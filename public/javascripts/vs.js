@@ -77,7 +77,8 @@ var VS = {
 			//VS.cometIframe.attr('src', loc + "/stream");
 			
 			var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
-			VS.WS = new WS("/observation/" + VS.currentActionId + "/ws");
+			VS.WS = new WS("ws://" + window.location.hostname + ":" + window.location.port + "/observation/" + VS.currentActionId + "/ws");
+			
 			
 			VS.WS.onmessage = function(event) {
 				VS.logComet(event.data);
@@ -289,7 +290,7 @@ var VS = {
 	addAssertion: function(url, validatorLink, errors, warnings) {
 		warnings = warnings == 0 ? "-" : warnings;
 		errors = errors == 0 ? "-" : errors;
-		$("#observations").css("display","block")
+		$("#observations").css("display","block");
 		$("#observations ul").append(
 			$("<li><span>" + url + "</span><span>" + warnings + "</span><span>" + errors + "</span>")
 		);
