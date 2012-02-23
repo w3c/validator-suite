@@ -16,18 +16,18 @@ class CyclicWebsiteCrawlTest extends ObserverTestHelper(new org.w3.vs.Production
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
-      name="localhost:8080",
-      entrypoint=URL("http://localhost:8080/"),
+      name="localhost:9001",
+      entrypoint=URL("http://localhost:9001/"),
       distance=11,
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
   val run = Run(job = Job(strategy = strategy))
   
-  val servers = Seq(unfiltered.jetty.Http(8080).filter(Website.cyclic(10).toPlanify))
+  val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
   "test cyclic(10)" in {
-    http.authorityManagerFor(URL("http://localhost:8080/")).sleepTime = 0
+    http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
     val observer = observerCreator.observerOf(run)
     def cond = store.listResourceInfos(run.id).right.get.size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)

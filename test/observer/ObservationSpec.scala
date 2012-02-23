@@ -17,7 +17,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
-      name="localhost:8080",
+      name="localhost:9001",
       entrypoint=URL("http://www.w3.org"),
       distance=11,
       linkCheck=true,

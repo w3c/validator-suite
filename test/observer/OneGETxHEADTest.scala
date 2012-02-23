@@ -20,8 +20,8 @@ class OneGETxHEADTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
-      name="localhost:8080",
-      entrypoint=URL("http://localhost:8080/"),
+      name="localhost:9001",
+      entrypoint=URL("http://localhost:9001/"),
       distance=1,
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
@@ -29,17 +29,17 @@ class OneGETxHEADTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
   val run = Run(job = Job(strategy = strategy))
   
   val servers = Seq(
-      unfiltered.jetty.Http(8080).filter(Website((1 to j) map { i => "/" --> ("http://localhost:8081/"+i) }).toPlanify),
-      unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
+      unfiltered.jetty.Http(9001).filter(Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toPlanify),
+      unfiltered.jetty.Http(9002).filter(Website(Seq()).toPlanify)
   )
 
   "test OneGETxHEAD" in {
-    http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = 0
+    http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
     val observer = observerCreator.observerOf(run)
     def ris = store.listResourceInfos(run.id).right.get
     def cond = ris.size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
-    val urls8081 = ris filter { _.url.authority == "localhost:8081" }
+    val urls8081 = ris filter { _.url.authority == "localhost:9002" }
     urls8081 must have size(j)
   }
 

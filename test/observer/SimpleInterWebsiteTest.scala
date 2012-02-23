@@ -18,8 +18,8 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new org.w3.vs.Production
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
-      name="localhost:8080",
-      entrypoint=URL("http://localhost:8080/"),
+      name="localhost:9001",
+      entrypoint=URL("http://localhost:9001/"),
       distance=1,
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
@@ -27,8 +27,8 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new org.w3.vs.Production
   val run = Run(job = Job(strategy = strategy))
   
   val servers = Seq(
-      unfiltered.jetty.Http(8080).filter(Website(Seq("/" --> "http://localhost:8081/")).toPlanify),
-      unfiltered.jetty.Http(8081).filter(Website(Seq()).toPlanify)
+      unfiltered.jetty.Http(9001).filter(Website(Seq("/" --> "http://localhost:9002/")).toPlanify),
+      unfiltered.jetty.Http(9002).filter(Website(Seq()).toPlanify)
   )
 
   "test simpleInterWebsite" in {

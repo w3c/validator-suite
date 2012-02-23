@@ -12,7 +12,7 @@ object FunctionalSpec extends Specification {
     
     "should let a valid user log in" in {
 
-      running(TestServer(9001), FIREFOX) { browser =>
+      running(TestServer(9001), HTMLUNIT) { browser =>
         
         import browser._
         
