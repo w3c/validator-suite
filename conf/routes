@@ -4,6 +4,7 @@
 
 # Index
 GET     /                           controllers.Validator.index()
+GET     /dashboard                  controllers.Validator.dashboard()
 
 # Authentication
 GET     /login                      controllers.Application.login

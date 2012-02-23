@@ -67,6 +67,18 @@ object Validator extends Controller with Secured {
     )
   }
   
+  def dashboard = IsAuthenticated { username => _ =>
+    User.findByEmail(username).map { user =>
+      implicit def userOpt = Some(user)
+      Ok(views.html.dashboard())
+      //Ok
+    }.getOrElse(
+      //Redirect(routes.Application.login)
+      Unauthorized
+      //Forbidden
+    )
+  }
+  
   def validateWithParams(
       request: Request[AnyContent],
       url: URL,

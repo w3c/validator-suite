@@ -1,7 +1,6 @@
 @(user: Option[org.w3.vs.model.User] = None, messages: Seq[String] = Seq[String]())
 
 @main("Validator Suite") {
-	@views.html.header(user)
 	
 	<section id="messages">
 	@for(message <- messages) {
