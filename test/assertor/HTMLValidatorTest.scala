@@ -3,18 +3,18 @@ package org.w3.vs.assertor
 import org.w3.util.URL
 import org.specs2.mutable._
 
-object HTMLValidatorTest extends Specification with AssertionMatcher {
+object HTMLValidatorTest extends Specification with AssertionResultMatcher {
 
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
-    val observation = HTMLValidator.assert(url)
-    observation must (haveErrors)
+    val assertion = HTMLValidator.assert(url).right.get
+    assertion must (haveErrors)
   }
 
   "there should be no HTML error in http://www.w3.org/2011/08/validator-test/no-error.html" in {
     val url = URL("http://www.w3.org/2011/08/validator-test/no-error.html")
-    val observation = HTMLValidator.assert(url)
-    observation must not (haveErrors)
+    val assertion = HTMLValidator.assert(url).right.get
+    assertion must not (haveErrors)
   }
 
 }

@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import org.w3.vs.http.Http
 import akka.dispatch.ExecutionContext
 import com.ning.http.client.AsyncHttpClient
+import org.w3.vs.store.Store
 
 trait ValidatorSuiteConf {
   
@@ -18,5 +19,7 @@ trait ValidatorSuiteConf {
   val validatorDispatcher: ExecutionContext
   
   val httpClient: AsyncHttpClient
+  
+  val store: Store
   
 }

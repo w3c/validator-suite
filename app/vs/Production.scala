@@ -9,8 +9,8 @@ import akka.util.duration._
 import akka.util.Duration
 import akka.dispatch.ExecutionContext
 import java.util.concurrent.Executors
-import com.ning.http.client.AsyncHttpClientConfig
-import com.ning.http.client.AsyncHttpClient
+import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
+import org.w3.vs.store._
 
 trait Production extends ValidatorSuiteConf {
   
@@ -58,6 +58,8 @@ trait Production extends ValidatorSuiteConf {
       .build
     new AsyncHttpClient(config)
   }
+  
+  val store = new MemoryStore
   
   // ouch :-)
   http.authorityManagerFor("w3.org").sleepTime = 0

@@ -9,7 +9,7 @@ import akka.util.Duration
 import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
-import org.w3.vs.model.{ObserverId, HttpVerb, HttpAction, GET, HEAD, FetchNothing}
+import org.w3.vs.model.{Response => _, _}
 import org.w3.vs.ValidatorSuiteConf
 
 trait AuthorityManager {

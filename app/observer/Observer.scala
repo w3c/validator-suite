@@ -24,10 +24,7 @@ import org.w3.util.Headers.wrapHeaders
  * the Exploration and Assertion phases
  */
 trait Observer {
-  // TODO cancelObservation()
   def stop(): Unit
-  def URLs(): Future[Iterable[URL]]
-  def assertions(): Future[ObserverState#Assertions]
   // hooks
   def addResponse(fetchResponse: FetchResponse): Unit
   def addAssertion(assertion: Assertion): Unit
@@ -39,9 +36,7 @@ trait Observer {
 
 
 
-class ObserverImpl (
-    observerId: ObserverId,
-    job: Job)(implicit val configuration: ValidatorSuiteConf) extends Observer {
+class ObserverImpl(run: Run)(implicit val configuration: ValidatorSuiteConf) extends Observer {
   
   import configuration._
   
@@ -64,7 +59,8 @@ class ObserverImpl (
   /**
    * A counter for the assertions that are generated
    */
-  var assertionCounter: Int = 0
+  var sentAssertions: Int = 0
+  var receivedAssertions: Int = 0
   
   /**
    * The set of subscribers to the events from this Observer
@@ -74,24 +70,19 @@ class ObserverImpl (
   /**
    * The current state of this Observer. The initial state is ExplorationState.
    */
-  var state: ObserverState = ObserverState(observerId, job)
+  var data: ObserverData = null//ObserverState(observerId, job)
+  
+  var state: ObserverState = null
   
   /**
    * A shorten id for logs readability
    */
-  val shortId = state.shortId
+  val shortId = run.shortId
 
-  /**
-   * The set of Promises waiting for the end of the exploration phase
-   */
-  var waitingForEndOfExplorationPhase = Set[Promise[Iterable[URL]]]()
-  
-  /**
-   * The set of futures waiting for the end of the assertion phase
-   */
-  var waitingForEndOfAssertionPhase = Set[Promise[ObserverState#Assertions]]()
-  
   startExplorationPhase()
+  
+//  def job = run.job
+  def strategy = run.job.strategy
   
   /**
    * Creates a subscriber as an Akka-children for this Observer
@@ -106,39 +97,8 @@ class ObserverImpl (
       java.util.UUID.randomUUID().toString)
   }
   
-  /**
-   * Returns the URLs discovered during the exploration phase
-   * Blocks until the exploration phase is done, or returns immediately
-   */
-  def URLs(): Future[Iterable[URL]] =
-    state.phase match {
-      case NotYetStarted | ExplorationPhase => {
-        val promise = Promise[Iterable[URL]]()
-        waitingForEndOfExplorationPhase += promise
-        promise
-      }
-      case AssertionPhase | Finished | Interrupted =>
-        Promise.successful { state.urls }
-      case Error => sys.error("what is a Future with error?")
-    }
-  
-  /**
-   * Returns the assertions after the assertion phase
-   * Blocks until the assertion phase is done, or returns immediately
-   */
-  def assertions(): Future[ObserverState#Assertions] =
-    state.phase match {
-      case NotYetStarted | ExplorationPhase | AssertionPhase => {
-        val future = Promise[ObserverState#Assertions]()
-        waitingForEndOfAssertionPhase += future
-        future
-      }
-      case Finished | Interrupted => Promise.successful { state.assertions }
-      case Error => sys.error("what is a Future with error?")
-    }
-  
   def stop(): Unit = {
-    state = state.stop()
+    state = Stopped
     broadcast(message.Stopped)
   }
 
@@ -150,80 +110,48 @@ class ObserverImpl (
    * <li>schedule the first fetches</li>
    * </ul>
    */
-  def startExplorationPhase(): Unit =
-    if (state.phase == NotYetStarted) {
-      // ask the strategy for the first urls to considerer
-      val firstURLs = job.strategy.seedURLs.toList
-      // update the observation state
-      state = state.withFirstURLsToExplore(firstURLs)
-      //broadcast(message.NewURLsToExplore(firstURLs))
-      logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
-      // we can now schedule the first fetches
-      scheduleNextURLsToFetch()
-    } else {
-      logger.error("you should be in NotYetStarted state, but this is " + state.phase)
-    }
+  def startExplorationPhase(): Unit = {
+    // ask the strategy for the first urls to considerer
+    val firstURLs = strategy.seedURLs.toList
+    // update the observation state
+    val (initialData, _) = ObserverData(strategy).withNewUrlsToBeExplored(firstURLs, 0)
+    data = initialData
+    logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
+    // we can now schedule the first fetches
+    scheduleNextURLsToFetch()
+  }
 
   /**
    * Conditional snippet for the end of the Exploration phase
    * if it's the case, the assertion phase is started
    */
   private final def conditionalEndOfExplorationPhase(): Unit = {
-    if (state.noMoreUrlToExplore) {
-      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, state.responses.size))
-      val urls = state.urls
-      waitingForEndOfExplorationPhase foreach {
-        _.success(urls)
-      }
-      // we don't need pending Futures for crawling anymore
-      // make it available for GC
-      waitingForEndOfExplorationPhase = null
+    if (data.noMoreUrlToExplore) {
+      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, data.fetched.size))
     } else {
       //logger.debug("There are still %d pending fetches" format pendingFetches.size)
     }
   }
   
-  private final def scheduleAssertion(response: Response): Unit = response match {
-    case HttpResponse(url, _, 200, headers, _) =>
-      if (job.strategy.shouldObserve(url)) {
-        headers.mimetype foreach {
-          case "text/html" | "application/xhtml+xml" => {
-            assertionCounter += 1
-            Future {
-              val assertion = HTMLValidator.assert(url)
-              self.addAssertion(assertion)
-            }(validatorDispatcher) recover { // TODO when Play updates to newer version of Akka, use recoverWith with other dispatcher
-              case t: Throwable => {
-                self.addAssertion(Assertion(url, HTMLValidator.id, AssertionError(t)))
-              }
-            }
-          }
-          case "text/css" => {
-            assertionCounter += 1
-            Future {
-              val assertion = CSSValidator.assert(url)
-              self.addAssertion(assertion)
-            }(validatorDispatcher) recover { // TODO when Play updates to newer version of Akka, use recoverWith with other dispatcher
-              case t: Throwable => {
-                self.addAssertion(Assertion(url, CSSValidator.id, AssertionError(t)))
-              }
-            }
-          }
-          case mimetype => logger.debug("no known assertor for %s" format mimetype)
-        }
+  private final def scheduleAssertion(resourceInfo: ResourceInfo): Unit = strategy.assertorsFor(resourceInfo) foreach { assertor =>
+    sentAssertions += 1
+    val url = resourceInfo.url
+    Future {
+      val result = assertor.assert(url)
+      self.addAssertion(Assertion(
+        url = url,
+        assertorId = assertor.id,
+        runId = run.id,
+        result = result.fold(t => AssertionError(t.getMessage), r => r)))
+    }(validatorDispatcher) recoverWith { case t: Throwable =>
+      Future {
+        self.addAssertion(Assertion(
+          url = url,
+          assertorId = assertor.id,
+          runId = run.id,
+          result = AssertionError(t.getMessage)))
       }
-    case _ => ()
-  }
-  
-  private final def extractURLsFromHtml(url: URL, body: String): List[URL] = {
-    val encoding = "UTF-8"
-    val reader = new java.io.StringReader(body)
-    html.HtmlParser.parse(url, reader, encoding) map { url: URL => URL.clearHash(url) }
-  }
-  
-  // TODO ?
-  private final def extractURLsFromCSS(url: URL, body: String): List[URL] = {
-    List.empty
+    }
   }
   
   /**
@@ -232,8 +160,8 @@ class ObserverImpl (
    * The maximum number of pending fetches is decided here.
    */
   private final def scheduleNextURLsToFetch(): Unit = {
-    val (newObservation, explores) = state.takeAtMost(MAX_URL_TO_FETCH)
-    state = newObservation
+    val (newObservation, explores) = data.takeAtMost(MAX_URL_TO_FETCH)
+    data = newObservation
     explores foreach fetch
   }
   
@@ -242,10 +170,9 @@ class ObserverImpl (
    * 
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
-  private final def fetch(explore: ObserverState#Explore): Unit = {
+  private final def fetch(explore: ObserverData#Explore): Unit = {
     val (url, distance) = explore
-    val action = job.strategy.fetch(url, distance)
-    //logger.debug("%s: remaining urls %d" format (shortId, urlsToBeExplored.size))
+    val action = strategy.fetch(url, distance)
     action match {
       case GET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
@@ -265,52 +192,65 @@ class ObserverImpl (
    * Hook to send the result of an assertion
    */
   def addAssertion(assertion: Assertion): Unit = {
-    val Assertion(url, assertorId, _) = assertion
-    logger.debug("%s: %s observed by %s" format (shortId, url, assertorId))
+    receivedAssertions = receivedAssertions + 1
+    logger.debug("%s: %s observed by %s" format (shortId, assertion.url, assertion.assertorId))
     broadcast(message.NewAssertion(assertion))
-    state = state.withAssertion(assertion)
+    store.putAssertion(assertion)
     endOfAssertionPhase()
   }
 
-  def addResponse(fetchResponse: FetchResponse): Unit = if (state.phase != message.Stopped) {
-    fetchResponse match {
+  def addResponse(fetchResponse: FetchResponse): Unit = {
+    data = data.withCompletedFetch(fetchResponse.url)
+    val (resourceInfo, newData) = fetchResponse match {
       case OkResponse(url, GET, status, headers, body) => {
         logger.debug("%s: GET <<< %s" format (shortId, url))
-        val distance = state.distanceFor(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
-        val (extractedURLs, newDistance) = headers.mimetype map {
-          case "text/html" | "application/xhtml+xml" => (extractURLsFromHtml(url, body), distance + 1)
-          case "text/css" => (extractURLsFromCSS(url, body), distance) /* extract links from CSS here*/
-          case _ => (List.empty, distance)
+        val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+        val (extractedURLs, newDistance) = headers.mimetype collect {
+          case "text/html" | "application/xhtml+xml" => URLExtractor.fromHtml(url, body).distinct -> (distance + 1)
+          case "text/css" => URLExtractor.fromCSS(url, body).distinct -> distance /* extract links from CSS here*/
         } getOrElse (List.empty, distance)
-        val newUrls = state.filteredExtractedURLs(extractedURLs, newDistance)
+        // TODO do something with the newUrls
+        val (_newData, newUrls) = data.withNewUrlsToBeExplored(extractedURLs, newDistance)
         if (! newUrls.isEmpty)
-          logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, state.numberOfKnownUrls))
-        val newResponse = HttpResponse(url, GET, status, headers, extractedURLs.distinct)
-        val newExplores = newUrls map { (_, distance + 1) }
-        state = state.withNewResponse(url -> newResponse).withNewUrlsToBeExplored(newExplores)
-        broadcast(message.NewResponse(newResponse))
-        //broadcast(message.NewURLsToExplore(newUrls))
-        scheduleAssertion(newResponse)
-        scheduleNextURLsToFetch()
-        conditionalEndOfExplorationPhase()
+          logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, data.numberOfKnownUrls))
+        val ri = ResourceInfo(
+          url = url,
+          runId = run.id,
+          action = GET,
+          distancefromSeed = distance,
+          result = Fetch(status, headers, extractedURLs))
+        (ri, _newData)
       }
       // HEAD
       case OkResponse(url, HEAD, status, headers, _) => {
         logger.debug("%s: HEAD <<< %s" format (shortId, url))
-        val response = HttpResponse(url, HEAD, status, headers, Nil)
-        state = state.withNewResponse(url -> response)
-        scheduleNextURLsToFetch()
-        broadcast(message.NewResponse(response))
-        conditionalEndOfExplorationPhase()
+        val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+        val ri = ResourceInfo(
+          url = url,
+          runId = run.id,
+          action = GET,
+          distancefromSeed = distance,
+          result = Fetch(status, headers, List.empty))
+        (ri, data)
       }
       case KoResponse(url, action, why) => {
         logger.debug("%s: Exception for %s: %s" format (shortId, url, why.getMessage))
-        state = state.withNewResponse(url -> ErrorResponse(url, why.getMessage))
-        scheduleNextURLsToFetch()
-        broadcast(message.NewResponse(ErrorResponse(url, why.getMessage)))
-        conditionalEndOfExplorationPhase()
+        val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
+        val ri = ResourceInfo(
+          url = url,
+          runId = run.id,
+          action = GET,
+          distancefromSeed = distance,
+          result = ResourceInfoError(why.getMessage))
+        (ri, data)
       }
     }
+    data = newData
+    store.putResourceInfo(resourceInfo)
+    broadcast(message.NewResourceInfo(resourceInfo))
+    scheduleNextURLsToFetch()
+    scheduleAssertion(resourceInfo)
+    conditionalEndOfExplorationPhase()
   }
   
   /**
@@ -320,13 +260,9 @@ class ObserverImpl (
    * 
    */
   private final def endOfAssertionPhase(): Unit =
-    if (state.toBeExplored.isEmpty && assertionCounter == state.assertions.size) {
-      logger.info("%s: Observation phase done with %d observations" format (shortId, state.assertions.size))
-      waitingForEndOfAssertionPhase foreach { _.success(state.assertions) }
-      // we don't need pending Futures for observations anymore
-      // make it available for GC
-      waitingForEndOfAssertionPhase = null
-      state = state.copy(phase = Finished)
+    if (data.toBeExplored.isEmpty && sentAssertions == receivedAssertions) { // @@@ number of assertions so far
+      logger.info("%s: Observation phase done with %d observations" format (shortId, receivedAssertions)) // @@@ look into store?
+      state = Idle
       broadcast(message.Done)
       subscribers foreach { context.stop(_) }
       subscribers = Set.empty
@@ -346,9 +282,9 @@ class ObserverImpl (
   }
   
   private def initialState: Iterable[message.ObservationUpdate] = {
-    val responsesToBroadcast = state.responses map { case (_, response) => message.NewResponse(response) }
-    val assertionsToBroadcast = state.assertions map { a => message.NewAssertion(a) }
-    responsesToBroadcast ++ assertionsToBroadcast
+    val resourceInfos = store.listResourceInfos(run.id).right.get map message.NewResourceInfo
+    val assertions = store.listAssertions(run.id).right.get map message.NewAssertion
+    resourceInfos ++ assertions
   }
   
   /**

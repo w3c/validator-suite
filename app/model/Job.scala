@@ -4,17 +4,11 @@ import java.util.UUID
 import org.joda.time.DateTime
 
 case class Job(
-  id: Job#Id,
+  id: Job#Id = UUID.randomUUID,
   strategy: Strategy,
-  currentRun: Option[DateTime],
-  previousRun: Option[DateTime]) {
+  createdAt: DateTime = new DateTime,
+  creator: String = "john doe") {
   
   type Id = UUID
-  
-}
-
-object Job {
-  
-  def apply(strategy: Strategy): Job = Job(UUID.randomUUID(), strategy, None, None)
   
 }

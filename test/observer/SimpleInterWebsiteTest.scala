@@ -24,7 +24,7 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new org.w3.vs.Production
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = Job(strategy)
+  val run = Run(job = Job(strategy = strategy))
   
   val servers = Seq(
       unfiltered.jetty.Http(8080).filter(Website(Seq("/" --> "http://localhost:8081/")).toPlanify),
@@ -32,9 +32,10 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new org.w3.vs.Production
   )
 
   "test simpleInterWebsite" in {
-    val observer = observerCreator.observerOf(ObserverId(), job)
-    val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
-    assert(urls.size === 2)
+    val observer = observerCreator.observerOf(run)
+    def ris = store.listResourceInfos(run.id).right.get
+    def cond = ris.size == 2
+    awaitCond(cond, 3 seconds, 50 milliseconds)
   }
 
 //    val (links, timestamps) = responseDAO.getLinksAndTimestamps(actionId) .unzip

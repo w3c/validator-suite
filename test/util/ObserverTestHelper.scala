@@ -1,6 +1,6 @@
 package org.w3.vs.observer
 
-import org.w3.vs.model.{Strategy, ObserverId}
+import org.w3.vs.model._
 import org.w3.vs.http.Http
 import akka.actor.{Actor, TypedActor}
 import akka.testkit.{TestKit, ImplicitSender}
@@ -23,6 +23,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   
   val observerCreator = configuration.observerCreator
   val http = configuration.http
+  val store = configuration.store
   
   val logger = play.Logger.of(classOf[ObserverTestHelper])
   

@@ -13,7 +13,6 @@ import org.w3.vs.{ValidatorSuiteConf, Production}
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
-import org.w3.vs.observer.message._
 import play.api.data.FormError
 import play.api.mvc.AsyncResult
 import play.api.data.Forms._
@@ -23,8 +22,6 @@ import play.api.libs.iteratee._
 import play.api.libs.concurrent._
 
 import play.api.libs.json._
-
-import akka.dispatch._
 
 object Validator extends Controller with Secured {
   
@@ -83,18 +80,25 @@ object Validator extends Controller with Secured {
       distance=distance,
       linkCheck=linkCheck,
       filter=Filter(include=Everything, exclude=Nothing))
+
+    logger.debug("jbefore")
+      
+    // this should be persisted
+    val job = Job(strategy = strategy)
     
-    val job = Job(strategy)
+    logger.debug("job: "+job)
     
-    val observerId: ObserverId = ObserverId()
+    val run = Run(job = job)
     
-    val observer = configuration.observerCreator.observerOf(observerId, job)
+    logger.debug("run: "+run)
+
+    val observer = configuration.observerCreator.observerOf(run)
     
-    val observerIdString: String = observerId.toString
+    val runIdString: String = run.id.toString
     
     Created("").withHeaders(
-      "Location" -> (request.uri + "/" + observerIdString),
-      "X-VS-ActionID" -> observerIdString)
+      "Location" -> (request.uri + "/" + runIdString),
+      "X-VS-ActionID" -> runIdString)
   }
   
   def validate() = IsAuthenticated { username => implicit request =>
@@ -103,37 +107,37 @@ object Validator extends Controller with Secured {
         formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
         v => validateWithParams(request, v._1, v._2, v._3)
       )
-    }.getOrElse(Forbidden)
+    }.getOrElse{ Forbidden }
   }
   
   def redirect(id: String) = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { user =>
       try {
-        val observerId = ObserverId(id)
-        configuration.observerCreator.byObserverId(observerId).map { observer =>
+        val runId: Run#Id = UUID.fromString(id)
+        configuration.observerCreator.byRunId(runId).map { observer =>
           Redirect("/#!/observation/" + id)
-        }.getOrElse(NotFound(views.html.index(Some(user), Seq("Unknown action id: " + observerId.toString))))
+        }.getOrElse(NotFound(views.html.index(Some(user), Seq("Unknown action id: " + id))))
       } catch { case e =>
         NotFound(views.html.index(None, Seq("Invalid action id: " + id)))
       }
     }.getOrElse(Forbidden)
   }
   
-  def stop(id: String): Action[(Action[AnyContent], AnyContent)] = IsAuthenticated { username => request =>
+  def stop(id: String) = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { user =>
-        configuration.observerCreator.byObserverId(id).map { observer =>
-          observer.stop()
-          Ok
-        }.getOrElse(NotFound)
+      configuration.observerCreator.byRunId(id).map { observer =>
+        observer.stop()
+        Ok
+      }.getOrElse(NotFound)
     }.getOrElse(Forbidden)
   }
   
   def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
-    configuration.observerCreator.byObserverId(id).map { observer =>
-      val in = Iteratee.foreach[JsValue](e => println(e))
-      val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
-      (in, subscriber.enumerator &> Enumeratee.map[ObservationUpdate]{ e => e.toJS })
-    }.getOrElse(CloseWebsocket)
-  }
-
+  configuration.observerCreator.byObserverId(id).map { observer =>
+    val in = Iteratee.foreach[JsValue](e => println(e))
+    val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
+    (in, subscriber.enumerator &> Enumeratee.map[ObservationUpdate]{ e => e.toJS })
+  }.getOrElse(CloseWebsocket)
+}
+  
 }

@@ -26,7 +26,7 @@ class OneGETxHEADTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = Job(strategy)
+  val run = Run(job = Job(strategy = strategy))
   
   val servers = Seq(
       unfiltered.jetty.Http(8080).filter(Website((1 to j) map { i => "/" --> ("http://localhost:8081/"+i) }).toPlanify),
@@ -35,9 +35,11 @@ class OneGETxHEADTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
 
   "test OneGETxHEAD" in {
     http.authorityManagerFor(URL("http://localhost:8081/")).sleepTime = 0
-    val observer = observerCreator.observerOf(ObserverId(), job)
-    val urls = Await.result(observer.URLs(), Duration(1, SECONDS))
-    val urls8081 = urls filter { _.authority == "localhost:8081" }
+    val observer = observerCreator.observerOf(run)
+    def ris = store.listResourceInfos(run.id).right.get
+    def cond = ris.size == 11
+    awaitCond(cond, 3 seconds, 50 milliseconds)
+    val urls8081 = ris filter { _.url.authority == "localhost:8081" }
     urls8081 must have size(j)
   }
 
