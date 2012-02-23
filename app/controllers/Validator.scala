@@ -78,18 +78,25 @@ object Validator extends Controller with Secured {
       distance=distance,
       linkCheck=linkCheck,
       filter=Filter(include=Everything, exclude=Nothing))
+
+    logger.debug("jbefore")
+      
+    // this should be persisted
+    val job = Job(strategy = strategy)
     
-    val job = Job(strategy)
+    logger.debug("job: "+job)
     
-    val observerId: ObserverId = ObserverId()
+    val run = Run(job = job)
     
-    val observer = configuration.observerCreator.observerOf(observerId, job)
+    logger.debug("run: "+run)
+
+    val observer = configuration.observerCreator.observerOf(run)
     
-    val observerIdString: String = observerId.toString
+    val runIdString: String = run.id.toString
     
     Created("").withHeaders(
-      "Location" -> (request.uri + "/" + observerIdString),
-      "X-VS-ActionID" -> observerIdString)
+      "Location" -> (request.uri + "/" + runIdString),
+      "X-VS-ActionID" -> runIdString)
   }
   
   def validate() = IsAuthenticated { username => implicit request =>
@@ -98,41 +105,38 @@ object Validator extends Controller with Secured {
         formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
         v => validateWithParams(request, v._1, v._2, v._3)
       )
-    }.getOrElse(Forbidden)
+    }.getOrElse{ Forbidden }
   }
   
-    /**
-   * Utility method to map a BroadcastMessage to a String that can be understood by the client
-   */
   private def toJSON(msg: message.ObservationUpdate): String = msg match {
-    case message.NewURLsToExplore(newURLs) => """["NB_EXP", %d]""" format (newURLs.size)
-    case message.NewURLsToObserve(nb) => """["NB_OBS", %d]""" format (nb)
-    case message.NewResponse(response) => response match {
-      case HttpResponse(url, GET, httpCode, headers, extractedURLs) => """["GET", %d, "%s", %d]""" format (httpCode, url, 0) // TODO extractedURLs != new URLs
-      case HttpResponse(url, HEAD, httpCode, headers, extractedURLs) => """["HEAD", %d, "%s"]""" format (httpCode, url)
-      case ErrorResponse(url, errorMessage) => """["ERR", "%s", "%s"]""" format (errorMessage, url)
-    }
-    case message.NewAssertion(assertionResult) => assertionResult match {
-      case Assertion(url, assertorId, AssertionError(t)) => """["OBS_ERR", "%s"]""" format url
-      case Assertion(url, assertorId, events@Events(_)) => """["OBS", "%s", "%s", %d, %d]""" format (url, assertorId, events.errorsNumber, events.warningsNumber)
-    }
     case message.Done => """["OBS_FINISHED"]"""
-    case message.ObservationSnapshot(numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, messages) => {
-      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (numberOfResponses, numberOfUrlsToBeExplored, numberOfAssertions, 0)
+    case message.Stopped => """["STOPPED"]"""
+    case message.NewAssertion(a) => a.result match {
+      case AssertionError(why) => """["OBS_ERR", "%s"]""" format a.url
+      case events@Events(_) => """["OBS", "%s", "%s", %d, %d]""" format (a.url, a.assertorId, events.errorsNumber, events.warningsNumber)
+    }
+    case message.NewResourceInfo(ri) => ri.result match {
+      case ResourceInfoError(why) => """["ERR", "%s", "%s"]""" format (why, ri.url)
+      case Fetch(status, headers, extractedLinks) => ri.action match {
+        case GET => """["GET", %d, "%s", %d]""" format (status, ri.url, 0)
+        case HEAD => """["HEAD", %d, "%s"]""" format (status, ri.url)
+        case _ => sys.error("TODO you should change the type :-)")
+      }
+    }
+    case message.ObservationSnapshot(messages) => {
+      val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (0, 0, 0, 0)
       val initialMessages = messages map toJSON mkString ""
       initial + initialMessages
     }
-    case message.Stopped => """["STOPPED"]"""
-    
   }
   
   def redirect(id: String) = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { user =>
       try {
-        val observerId = ObserverId(id)
-        configuration.observerCreator.byObserverId(observerId).map { observer =>
+        val runId: Run#Id = UUID.fromString(id)
+        configuration.observerCreator.byRunId(runId).map { observer =>
           Redirect("/#!/observation/" + id)
-        }.getOrElse(NotFound(views.html.index(Some(user), Seq("Unknown action id: " + observerId.toString))))
+        }.getOrElse(NotFound(views.html.index(Some(user), Seq("Unknown action id: " + id))))
       } catch { case e =>
         NotFound(views.html.index(None, Seq("Invalid action id: " + id)))
       }
@@ -142,8 +146,8 @@ object Validator extends Controller with Secured {
   def stop(id: String) = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { user =>
       try {
-        val observerId = ObserverId(id)
-        configuration.observerCreator.byObserverId(observerId).map { observer =>
+        val runId: Run#Id = UUID.fromString(id)
+        configuration.observerCreator.byRunId(runId).map { observer =>
           observer.stop()
           Ok
         }.getOrElse(NotFound)
@@ -156,14 +160,14 @@ object Validator extends Controller with Secured {
   def subscribe(id: String) = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { user =>
       try {
-        val observerId = ObserverId(id)
-        configuration.observerCreator.byObserverId(observerId).map { observer =>
+        val runId: Run#Id = UUID.fromString(id)
+        configuration.observerCreator.byRunId(runId).map { observer =>
           AsyncResult {
             val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
             val iteratee = subscriber.enumerator &> Enumeratee.map{ e => toJSON(e) } &> Comet(callback = "parent.VS.logComet")
             Promise.pure(Ok.stream(iteratee).withHeaders("X-VS-ActionID" -> id))
           }
-        }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + observerId.toString))))
+        }.getOrElse(NotFound(views.html.cometError(Seq("Unknown action id: " + id))))
       } catch { case e =>
         // TODO only catch correctly typed exception
         logger.error(e.getMessage(), e);

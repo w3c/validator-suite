@@ -3,35 +3,64 @@ package org.w3.vs.store
 import org.w3.vs.model._
 import org.w3.vs.observer._
 import org.w3.util._
-import java.io.{File, FileWriter}
-import com.mongodb.util.JSON
-import com.novus.salat._
-import com.novus.salat.global._
-import com.mongodb.casbah.Imports._
-import java.nio.file._
-import java.nio.file.attribute.BasicFileAttributes
+import scala.collection.JavaConverters._
+import scala.collection.mutable.ConcurrentMap
+import java.util.concurrent.ConcurrentHashMap
 
 class MemoryStore extends Store {
   
-  import java.util.concurrent.ConcurrentHashMap
-  import scala.collection.JavaConversions.{JConcurrentMapWrapper => JCMWrapper}
-  private val states = JCMWrapper(new ConcurrentHashMap[ObserverId, ObserverState])
+  val assertions: ConcurrentMap[Assertion#Id, Assertion] = new ConcurrentHashMap[Assertion#Id, Assertion]().asScala
+    
+  val resourceInfos: ConcurrentMap[ResourceInfo#Id, ResourceInfo] = new ConcurrentHashMap[ResourceInfo#Id, ResourceInfo]().asScala
+  
+  val runs: ConcurrentMap[Run#Id, Run] = new ConcurrentHashMap[Run#Id, Run]().asScala
   
   def init(): Either[Throwable, Unit] = Right()
   
-  def list: Either[Throwable, Traversable[ObserverState]] = Right(states.values)
-  
-  def get(id: ObserverId): Either[Throwable, ObserverState] =
+  def putAssertion(assertion: Assertion): Either[Throwable, Unit] =
     try {
-      Right(states(id))
-    } catch { case t: Throwable =>
-      Left(t)
+      assertions += assertion.id -> assertion
+      Right()
+    } catch {
+      case t => Left(t)
     }
   
+  def putResourceInfo(resourceInfo: ResourceInfo): Either[Throwable, Unit] =
+    try {
+      resourceInfos += resourceInfo.id -> resourceInfo
+      Right()
+    } catch {
+      case t => Left(t)
+    }
   
-  def save(state: ObserverState): Either[Throwable, Unit] = {
-    states += state.id -> state
-    Right()
+  def putRun(run: Run): Either[Throwable, Unit] =
+    try {
+      runs += run.id -> run
+      Right()
+    } catch {
+      case t => Left(t)
+    }
+  
+  def getResourceInfo(url: URL, runId: Run#Id): Either[Throwable, ResourceInfo] = {
+    val riOpt = resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.runId == runId => ri }
+    riOpt.toRight(new Throwable("run %s: couldn't find %s" format (runId.toString, url.toString)))
+  }
+  
+  def distance(url: URL, runId: Run#Id): Either[Throwable, Int] = {
+    getResourceInfo(url, runId).right map { _.distancefromSeed }
+  }
+  
+  def listResourceInfos(runId: Run#Id): Either[Throwable, Iterable[ResourceInfo]] = {
+    val ris = resourceInfos.values filter { _.runId == runId }
+    Right(ris)
+  }
+  
+  def listAllResourceInfos(): Either[Throwable, Iterable[ResourceInfo]] =
+    Right(resourceInfos.values)
+  
+  def listAssertions(runId: Run#Id): Either[Throwable, Iterable[Assertion]] = {
+    val as = assertions.values filter { _.runId == runId }
+    Right(as)
   }
   
 }

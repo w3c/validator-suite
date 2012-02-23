@@ -25,11 +25,8 @@ extends Strategy {
   def seedURLs: Iterable[URL] = Seq(entrypoint)
   
   def mainAuthority: Authority = entrypoint.getAuthority
-
+  
   val authorityToObserve: Authority = mainAuthority
-    
-  def shouldObserve(url: URL): Boolean =
-    authorityToObserve == url.authority
   
   def fetch(url: URL, distance: Int): HttpAction = {
     if ((url.getAuthority == entrypoint.getAuthority) &&
