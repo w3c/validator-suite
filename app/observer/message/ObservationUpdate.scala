@@ -6,6 +6,7 @@ import org.w3.vs.model.{Response, Assertion}
 import org.w3.vs.observer.ObserverState
 import play.api.libs.json._
 import org.w3.vs.model._
+import play.api.libs.json.JsNumber
 
 /**
  * An update that happened on an Observation.
@@ -58,27 +59,51 @@ case object Stopped extends ObservationUpdate {
  * A new Response was received during the exploration
  */
 case class NewResourceInfo(resourceInfo: ResourceInfo) extends ObservationUpdate {
-	def toJS: JsValue = JsArray()
+  def toJS: JsValue = {
+    resourceInfo.result match {
+      case ResourceInfoError(why) => 
+        JsArray(List(
+          JsString("ERR"),
+          JsString(why),
+          JsString(resourceInfo.url.toString)
+        ))
+      case Fetch(status, headers, extractedLinks) => resourceInfo.action match {
+        case GET => 
+          JsArray(List(
+            JsString("GET"),
+            JsNumber(status),
+            JsString(resourceInfo.url.toString)
+          ))
+        case HEAD => 
+          JsArray(List(
+            JsString("HEAD"),
+            JsNumber(status),
+            JsString(resourceInfo.url.toString)
+          ))
+        case _ => sys.error("TODO you should change the type :-)")
+      }
+    }
+  }
 }
 
 /**
  * A new Assertion was received
  */
 case class NewAssertion(assertion: Assertion) extends ObservationUpdate {
-  def toJS: JsValue = JsArray()
-//    assertion match {
-//      case Assertion(url, assertorId, AssertionError(t)) => 
-//        JsArray(List(
-//          JsString("OBS_ERR"),
-//          JsString(url.toString)
-//        ))
-//      case Assertion(url, assertorId, events@Events(_)) => 
-//        JsArray(List(
-//          JsString("OBS"),
-//          JsString(url.toString),
-//          JsString(assertorId.toString),
-//          JsNumber(events.errorsNumber),
-//          JsNumber(events.warningsNumber)
-//        ))
-//    }
+  def toJS: JsValue = assertion.result match {
+    case AssertionError(why) => 
+      JsArray(List(
+        JsString("OBS_ERR"),
+        JsString(assertion.url.toString)
+      ))
+    case events@Events(_) => 
+      JsArray(List(
+        JsString("OBS"),
+        JsString(assertion.url.toString),
+        JsString(assertion.assertorId.toString),
+        JsNumber(events.errorsNumber),
+        JsNumber(events.warningsNumber)
+      ))
+  }
 }
+
