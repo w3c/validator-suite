@@ -32,7 +32,7 @@ import scala.collection.mutable.ListMap
  * </ul>
  */
 case class ObserverData(
-    strategy: Strategy,
+    strategy: Strategy, // TODO
     distance: Map[URL, Int] = Map.empty,
     // urls that are waiting to be explored
     toBeExplored: List[URL] = List.empty,
@@ -61,7 +61,7 @@ case class ObserverData(
   /**
    * An exploration is over when there are no more urls to explore and no pending url
    */
-  def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
+  final def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
 
   /**
    * An Explore should be ignored if
@@ -72,7 +72,7 @@ case class ObserverData(
    * <li>it's already scheduled to be fetched</li>
    * </ul>
    */
-  private def shouldIgnore(url: URL, atDistance: Int): Boolean = {
+  private final def shouldIgnore(url: URL, atDistance: Int): Boolean = {
     def notToBeFetched = FetchNothing == strategy.fetch(url, atDistance)
     def alreadyKnown = distance isDefinedAt url
     notToBeFetched || alreadyKnown

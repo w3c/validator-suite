@@ -261,7 +261,7 @@ class ObserverImpl(run: Run)(implicit val configuration: ValidatorSuiteConf) ext
    */
   private final def endOfAssertionPhase(): Unit =
     if (data.toBeExplored.isEmpty && sentAssertions == receivedAssertions) { // @@@ number of assertions so far
-      logger.info("%s: Observation phase done with %d observations" format (shortId, 666)) // @@@ look into store?
+      logger.info("%s: Observation phase done with %d observations" format (shortId, receivedAssertions)) // @@@ look into store?
       state = Idle
       broadcast(message.Done)
       subscribers foreach { context.stop(_) }
