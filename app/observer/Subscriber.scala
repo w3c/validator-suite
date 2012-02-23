@@ -14,6 +14,7 @@ trait Subscriber {
   def subscribe(): Unit
   def unsubscribe(): Unit
   def broadcast(msg: message.ObservationUpdate): Unit
+  def broadcast(msgs: Iterable[message.ObservationUpdate]): Unit
 }
 
 // TODO to be moved
@@ -27,5 +28,7 @@ class SubscriberImpl(observer: Observer) extends Subscriber {
   
   // catch java.nio.channels.ClosedChannelException
   def broadcast(msg: message.ObservationUpdate): Unit = enumerator.push(msg)
+  
+  def broadcast(msgs: Iterable[message.ObservationUpdate]): Unit = msgs.map(enumerator.push)
   
 }

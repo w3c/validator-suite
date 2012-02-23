@@ -6,11 +6,30 @@ package org.w3.vs.model
 //import anorm._
 //import anorm.SqlParser._
 
-case class User(email: String, name: String, password: String)
+import org.w3.vs.observer.Observer
+import org.w3.vs.observer._
+import org.w3.vs.model._
+
+case class User(
+    email: String,
+    name: String,
+    password: String,
+    jobs: List[Observer]) {
+  
+  def withJob(job: Observer): User =
+    this.copy(jobs = jobs :+ job)
+  
+  def owns(job: Observer): Boolean =
+    jobs.contains(job)
+  
+  def canAccess(job: Observer): Boolean = 
+    true
+}
+
+//case class Job(strategy: Strategy, jobConf: JobConfiguration, observers: List[Observer])
+//case class JobConfiguration()
 
 object User {
-  
-  // -- Parsers
   
   /**
    * Parse a User from a ResultSet
@@ -20,8 +39,12 @@ object User {
     get[String]("user.name") ~/
     get[String]("user.password") ^^ {
       case email~name~password => User(email, name, password)
-    }
-  }*/
+    }}*/
+  
+  var users: Seq[User] = Seq[User]()
+  
+  def apply(email: String, name: String, password: String): User =
+    User(email, name, password, List[Observer]())
   
   // -- Queries
   
@@ -29,23 +52,13 @@ object User {
    * Retrieve a User from email.
    */
   def findByEmail(email: String): Option[User] = {
-    /*DB.withConnection { implicit connection =>
-      SQL("select * from user where email = {email}").on(
-        'email -> email
-      ).as(User.simple ?)
-    }*/
     users find { _.email == email}
   }
-  
-  var users: Seq[User] = Seq[User]()
   
   /**
    * Retrieve all users.
    */
   def findAll: Seq[User] = {
-    /*DB.withConnection { implicit connection =>
-      SQL("select * from user").as(User.simple *)
-    }*/
     users
   }
   
@@ -53,41 +66,13 @@ object User {
    * Authenticate a User.
    */
   def authenticate(email: String, password: String): Option[User] = {
-    /*DB.withConnection { implicit connection =>
-      SQL(
-        """
-         select * from user where 
-         email = {email} and password = {password}
-        """
-      ).on(
-        'email -> email,
-        'password -> password
-      ).as(User.simple ?)
-    }*/
     users find { u => u.email == email && u.password == password }
-    
   }
    
   /**
    * Create a User.
    */
   def create(user: User): User = {
-    /*DB.withConnection { implicit connection =>
-      SQL(
-        """
-          insert into user values (
-            {email}, {name}, {password}
-          )
-        """
-      ).on(
-        'email -> user.email,
-        'name -> user.name,
-        'password -> user.password
-      ).executeUpdate()
-      
-      user
-      
-    }*/
     users +:= user
     user
   }

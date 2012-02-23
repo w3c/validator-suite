@@ -75,6 +75,13 @@ var VS = {
 		} else {
 			VS.setHash('!/observation/' + VS.currentActionId);
 			VS.cometIframe.attr('src', loc + "/stream");
+			
+			var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+			var chatSocket = new WS("ws://localhost:9000/observation/" + VS.currentActionId + "/ws");
+			
+			chatSocket.onmessage = function(event) {
+				console.log(event.data);
+			};
 		}
 	},
 	
