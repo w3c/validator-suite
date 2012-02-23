@@ -27,8 +27,24 @@ class SubscriberImpl(observer: Observer) extends Subscriber {
   def unsubscribe(): Unit = observer.unsubscribe(this)
   
   // catch java.nio.channels.ClosedChannelException
-  def broadcast(msg: message.ObservationUpdate): Unit = enumerator.push(msg)
+  def broadcast(msg: message.ObservationUpdate): Unit = {
+    try { 
+      enumerator.push(msg)
+    } catch {
+      case e: java.nio.channels.ClosedChannelException => unsubscribe(); enumerator.close
+    }
+  }
   
   def broadcast(msgs: Iterable[message.ObservationUpdate]): Unit = msgs.map(enumerator.push)
   
 }
+
+/*class DashboardSubscriber(observer: Observer) extends Subscriber {
+  
+  def subscribe(): Unit = {
+    observer.subscribe(this)
+    
+  }
+  
+}
+class JobSubscriber extends Subscriber {}*/

@@ -107,7 +107,7 @@ object Validator extends Controller with Secured {
         formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
         v => validateWithParams(request, v._1, v._2, v._3)
       )
-    }.getOrElse{ Forbidden }
+    }.getOrElse(Forbidden)
   }
   
   def redirect(id: String) = IsAuthenticated { username => _ =>
@@ -123,7 +123,7 @@ object Validator extends Controller with Secured {
     }.getOrElse(Forbidden)
   }
   
-  def stop(id: String) = IsAuthenticated { username => _ =>
+  def stop(id: String) = IsAuthenticated { username => request =>
     User.findByEmail(username).map { user =>
       configuration.observerCreator.byRunId(id).map { observer =>
         observer.stop()
@@ -132,12 +132,35 @@ object Validator extends Controller with Secured {
     }.getOrElse(Forbidden)
   }
   
-  def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
-  configuration.observerCreator.byRunId(id).map { observer =>
-    val in = Iteratee.foreach[JsValue](e => println(e))
-    val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
-    (in, subscriber.enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
-  }.getOrElse(CloseWebsocket)
-}
+  /*def dashboardSocket(): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
+    
+    User.findByEmail(username).map { user =>
+      
+      
+      
+    }.getOrElse(CloseWebsocket)
+    
+    configuration.observerCreator.byRunId(id).map { observer =>
+      val in = Iteratee.foreach[JsValue](e => println(e))
+      val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
+      (in, subscriber.enumerator &> Enumeratee.map[ObservationUpdate]{ e => e.toJS })
+    }.getOrElse(CloseWebsocket)
+  }*/
   
+  // def jobSocket
+  // 
+  def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
+    configuration.observerCreator.byRunId(id).map { observer =>
+      val in = Iteratee.foreach[JsValue](e => println(e))
+      val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
+      (in, subscriber.enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
+    }.getOrElse(CloseWebsocket)
+  }
+  
+  // def dashboardSocket()
+  // Get user's list of jobs
+  // for each job subscribe a dashboard subscriber
+  
+  
+
 }
