@@ -1,11 +1,5 @@
 package org.w3.vs.model
 
-//import play.api.db._
-//import play.api.Play.current
-
-//import anorm._
-//import anorm.SqlParser._
-
 import org.w3.vs.observer.Observer
 import org.w3.vs.observer._
 import org.w3.vs.model._
@@ -14,16 +8,20 @@ case class User(
     email: String,
     name: String,
     password: String,
-    jobs: List[Observer]) {
+    jobs: List[Job]) {
   
-  def withJob(job: Observer): User =
+  def withJob(job: Job): User =
     this.copy(jobs = jobs :+ job)
   
-  def owns(job: Observer): Boolean =
+  def owns(job: Job): Boolean =
     jobs.contains(job)
   
-  def canAccess(job: Observer): Boolean = 
+  def canAccess(job: Job): Boolean = 
     true
+    
+  def getJobById(id: Job#Id): Option[Job] =
+    jobs.find {_.id == id}
+  
 }
 
 //case class Job(strategy: Strategy, jobConf: JobConfiguration, observers: List[Observer])
@@ -44,7 +42,7 @@ object User {
   var users: Seq[User] = Seq[User]()
   
   def apply(email: String, name: String, password: String): User =
-    User(email, name, password, List[Observer]())
+    User(email, name, password, List[Job]())
   
   // -- Queries
   
