@@ -56,7 +56,7 @@ object Validator extends Controller with Secured {
     )
   )
   
-  def index = IsAuth { implicit user => _ => Ok(views.html.index()) }
+  def index = IsAuth { implicit user => _ => Ok(views.html.index()(Some(user))) }
   
   def dashboard = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { implicit user =>
@@ -124,9 +124,9 @@ object Validator extends Controller with Secured {
         val runId: Run#Id = UUID.fromString(id)
         configuration.observerCreator.byRunId(runId).map { observer =>
           Redirect("/#!/observation/" + id)
-        }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
+        }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))(Some(user))))
       } catch { case e =>
-        NotFound(views.html.index(Seq("Invalid action id: " + id)))
+        NotFound(views.html.index(Seq("Invalid action id: " + id))(None))
       }
     }.getOrElse(Forbidden)
   }
@@ -173,11 +173,12 @@ object Validator extends Controller with Secured {
   
   implicit def uuidWraper(s: String): java.util.UUID = java.util.UUID.fromString(s)
   
-  import BindableUUID._
+  //import controllers._
   
-  /*def test(implicit jobId: java.util.UUID) = OwnsJob {
+  
+  def test(implicit jobId: java.util.UUID) = OwnsJob {
     user: User => job: Job => request: Request[AnyContent] => Ok("yoo")
-  }*/
+  }
   
   // def dashboardSocket()
   // Get user's list of jobs
@@ -185,17 +186,3 @@ object Validator extends Controller with Secured {
   
 }
 
-object BindableUUID {
-  implicit def bindableUUID: PathBindable[java.util.UUID] = new PathBindable[java.util.UUID] {
-    def bind (key: String, value: String): Either[String, java.util.UUID] = {
-      try {
-        Right(java.util.UUID.fromString(value))
-      } catch { case e: Exception =>
-        Left("invalid id: " + value)
-      }
-    }
-    def unbind (key: String, value: java.util.UUID): String = {
-      value.toString
-    }
-  }
-}

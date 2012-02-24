@@ -142,7 +142,6 @@ object OwnsJob extends ActionModule2[User, Job] {
   implicit def jobId: Job#Id = null
   
   override def param(req: Request[AnyContent]): Option[(User, Job)] = {
-    println("%%%%%%%%%%%%%% " + jobId)
     IsAuth.param(req).flatMap { user =>
       user.getJobById(jobId).map { (user, _) }
     }
