@@ -59,6 +59,7 @@ var VS = {
 			jsRoutes.controllers.Validator.stop(VS.currentActionId).ajax({
 				success: function() {
 					VS.formValidateAction();
+					VS.WS.close();
 				}
 			});
 			return false;
@@ -68,7 +69,7 @@ var VS = {
 	subscribe: function(responseText, statusText, xhr) {
 		VS.formStopAction();
 		VS.log("<li class='status'>Starting crawl of " + $("input#url", VS.form).val() + " with a distance of " + $("input#distance", VS.form).val() + "</li>");
-		var loc = xhr.getResponseHeader("Location");
+		//var loc = xhr.getResponseHeader("Location");
 		VS.currentActionId = xhr.getResponseHeader("X-VS-ActionId");
 		if (window.location.pathname != "/") { // TODO should be dynamic?
 			window.location = "/#!/observation/" + VS.currentActionId;
