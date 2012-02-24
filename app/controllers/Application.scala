@@ -126,3 +126,80 @@ trait Secured {
   }*/
 
 }
+object IsAjax extends ActionModule {
+  implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
+  def condition(req: Request[AnyContent]): Boolean = 
+    req.headers.get("x-requested-with").map{_ == "xmlhttprequest"}.getOrElse(false)
+}
+
+object IsAuth extends ActionModule1[User] {
+  implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
+  override def param(req: Request[AnyContent]) = req.session.get("email").flatMap { User.findByEmail(_) }
+}
+
+object OwnsJob extends ActionModule2[User, Job] {
+  implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
+  implicit def jobId: Job#Id = null
+  
+  override def param(req: Request[AnyContent]): Option[(User, Job)] = {
+    println("%%%%%%%%%%%%%% " + jobId)
+    IsAuth.param(req).flatMap { user =>
+      user.getJobById(jobId).map { (user, _) }
+    }
+  }
+  def apply(f: => User => Job => Request[AnyContent] => Result)(implicit id: Job#Id) = { 
+    Action {
+      request => param(request) match {
+        case Some((a, b)) => f(a)(b)(request)
+        case None => onFail(request)
+      }
+    }
+  }
+}
+
+trait ActionModule {
+  def condition(req: Request[AnyContent]): Boolean
+  implicit def onFail(req: Request[AnyContent]): Result 
+  def apply(f: => Request[AnyContent] => Result)(implicit onFail: Request[AnyContent] => Result = onFail): Action[AnyContent] = 
+    Action {
+	  request => 
+	    if (condition(request)) f(request)
+	    else onFail(request)
+    }
+}
+
+trait ActionModule1[A] {
+  def param(req: Request[AnyContent]): Option[A]
+  implicit def onFail(req: Request[AnyContent]): Result
+  def apply(f: => A => Request[AnyContent] => Result)(implicit onFail: Request[AnyContent] => Result = onFail): Action[AnyContent] = 
+    Action {
+      request => param(request) match {
+        case Some(a) => f(a)(request)
+        case None => onFail(request)
+      }
+    }
+}
+
+trait ActionModule2[A, B] {
+  def param(req: Request[AnyContent]): Option[(A, B)]
+  implicit def onFail(req: Request[AnyContent]): Result 
+  def apply(f: => A => B => Request[AnyContent] => Result)(implicit onFail: Request[AnyContent] => Result = onFail): Action[AnyContent] = 
+    Action {
+      request => param(request) match {
+        case Some((a, b)) => f(a)(b)(request)
+        case None => onFail(request)
+      }
+    }
+}
+
+trait ActionModule3[A, B, C] {
+  def param(req: Request[AnyContent]): Option[(A, B, C)]
+  implicit def onFail(req: Request[AnyContent]): Result 
+  def apply(f: => A => B => C => Request[AnyContent] => Result)(implicit onFail: Request[AnyContent] => Result = onFail): Action[AnyContent] = 
+    Action {
+      request => param(request) match {
+        case Some((a, b, c)) => f(a)(b)(c)(request)
+        case None => onFail(request)
+      }
+    }
+}

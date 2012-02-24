@@ -16,12 +16,11 @@ import org.w3.vs.observer._
 import play.api.data.FormError
 import play.api.mvc.AsyncResult
 import play.api.data.Forms._
-
 import play.api.libs._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
-
 import play.api.libs.json._
+import play.api.mvc.PathBindable
 
 object Validator extends Controller with Secured {
   
@@ -57,25 +56,15 @@ object Validator extends Controller with Secured {
     )
   )
   
-  def index = IsAuthenticated { username => _ =>
-    User.findByEmail(username).map { user =>
-      Ok(views.html.index(Some(user)))
-    }.getOrElse(
-      //Redirect(routes.Application.login)
-      Unauthorized
-      //Forbidden
-    )
-  }
+  def index = IsAuth { implicit user => _ => Ok(views.html.index()) }
   
   def dashboard = IsAuthenticated { username => _ =>
-    User.findByEmail(username).map { user =>
+    User.findByEmail(username).map { implicit user =>
       implicit def userOpt = Some(user)
       Ok(views.html.dashboard())
-      //Ok
     }.getOrElse(
-      //Redirect(routes.Application.login)
-      Unauthorized
-      //Forbidden
+      //Unauthorized
+      Forbidden
     )
   }
   
@@ -94,7 +83,7 @@ object Validator extends Controller with Secured {
       filter=Filter(include=Everything, exclude=Nothing))
 
     logger.debug("jbefore")
-      
+    
     // this should be persisted
     val job = Job(strategy = strategy)
     
@@ -122,43 +111,56 @@ object Validator extends Controller with Secured {
     }.getOrElse(Forbidden)
   }
   
+  def validate2() = IsAuth { implicit user => implicit request =>
+    validateForm.bindFromRequest.fold(
+      formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
+      v => validateWithParams(request, v._1, v._2, v._3)
+    )
+  }
+  
   def redirect(id: String) = IsAuthenticated { username => _ =>
-    User.findByEmail(username).map { user =>
+    User.findByEmail(username).map { implicit user =>
       try {
         val runId: Run#Id = UUID.fromString(id)
         configuration.observerCreator.byRunId(runId).map { observer =>
           Redirect("/#!/observation/" + id)
-        }.getOrElse(NotFound(views.html.index(Some(user), Seq("Unknown action id: " + id))))
+        }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
       } catch { case e =>
-        NotFound(views.html.index(None, Seq("Invalid action id: " + id)))
+        NotFound(views.html.index(Seq("Invalid action id: " + id)))
       }
     }.getOrElse(Forbidden)
   }
   
-  def stop(id: String) = IsAuthenticated { username => request =>
+  def stop(id: String) = IsAuthenticated { username => request => {
+    println(request.path)
     User.findByEmail(username).map { user =>
       configuration.observerCreator.byRunId(id).map { observer =>
         observer.stop()
         Ok
       }.getOrElse(NotFound)
     }.getOrElse(Forbidden)
-  }
+  }}
   
-  /*def dashboardSocket(): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
-    
+  /*
+   * Authenticated socket responsible for streaming the dashboard data, i.e. the list of 
+   * jobs owned by the current user.
+   
+  def dashboardSocket: WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
     User.findByEmail(username).map { user =>
-      
-      
-      
+      // Get the list of jobs of the user
+      val socket = (Iteratee.foreach[JsValue](e => println(e)))
+      var enum = Enumerator.imperative[JsValue]()
+      user.jobs.map { job =>
+        // Subscribe a DashboardSubscriber to the job's observer
+        val sub = job.observer.observerOf(new DashboardSubscriber())
+        job.observer.subscribe2(sub)
+        enum = enum >>> sub.enumerator
+      }
+      enum = enum &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS }
+      (Iteratee.ignore, enum)
     }.getOrElse(CloseWebsocket)
-    
-    configuration.observerCreator.byRunId(id).map { observer =>
-      val in = Iteratee.foreach[JsValue](e => println(e))
-      val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
-      (in, subscriber.enumerator &> Enumeratee.map[ObservationUpdate]{ e => e.toJS })
-    }.getOrElse(CloseWebsocket)
-  }*/
-  
+  }
+  */
   // def jobSocket
   // 
   def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
@@ -169,10 +171,31 @@ object Validator extends Controller with Secured {
     }.getOrElse(CloseWebsocket)
   }
   
+  implicit def uuidWraper(s: String): java.util.UUID = java.util.UUID.fromString(s)
+  
+  import BindableUUID._
+  
+  /*def test(implicit jobId: java.util.UUID) = OwnsJob {
+    user: User => job: Job => request: Request[AnyContent] => Ok("yoo")
+  }*/
+  
   // def dashboardSocket()
   // Get user's list of jobs
   // for each job subscribe a dashboard subscriber
   
-  
+}
 
+object BindableUUID {
+  implicit def bindableUUID: PathBindable[java.util.UUID] = new PathBindable[java.util.UUID] {
+    def bind (key: String, value: String): Either[String, java.util.UUID] = {
+      try {
+        Right(java.util.UUID.fromString(value))
+      } catch { case e: Exception =>
+        Left("invalid id: " + value)
+      }
+    }
+    def unbind (key: String, value: java.util.UUID): String = {
+      value.toString
+    }
+  }
 }
