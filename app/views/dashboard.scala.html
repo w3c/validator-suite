@@ -1,6 +1,9 @@
 @(jobs: Iterable[org.w3.vs.model.Job] = None)(implicit user: Option[org.w3.vs.model.User])
 
-@main("Validator Suite", stylesheets = List("mockup.css")) {
+@libs.main("Validator Suite", stylesheets = List("mockup.css")) {
+	
+	@libs.navigation()
+	
 	<section id="jobs" class="main">
 		<header>My jobs</header>
 		<ul>

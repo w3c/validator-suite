@@ -1,6 +1,8 @@
 @(user: Option[org.w3.vs.model.User] = None, messages: Seq[String] = Seq[String]())
 
-@main("Validator Suite") {
+@libs.main("Validator Suite") {
+	
+	@libs.navigation()
 	
 	<section id="messages">
 	@for(message <- messages) {
