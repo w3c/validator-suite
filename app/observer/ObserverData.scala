@@ -39,7 +39,10 @@ case class ObserverData(
     // urls that are being explored
     pending: Set[URL] = Set.empty,
     // urls we have already fetched
-    fetched: Set[URL] = Set.empty) {
+    fetched: Set[URL] = Set.empty,
+    subscribers: Set[ActorRef] = Set.empty,
+    sentAssertions: Int = 0,
+    receivedAssertions: Int = 0) {
   
   type Explore = (URL, Int)
   
@@ -185,6 +188,9 @@ case class ObserverData(
     pending = pending - url,
     fetched = fetched + url
   )
+  
+  def assertionPhaseIsFinished: Boolean =
+    toBeExplored.isEmpty && sentAssertions == receivedAssertions
   
 }
 

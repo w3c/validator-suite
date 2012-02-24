@@ -13,7 +13,7 @@ import org.w3.vs.model.{Response => _, _}
 import org.w3.vs.ValidatorSuiteConf
 
 trait AuthorityManager {
-  def fetch(url: URL, action: HttpVerb, observer: Observer): Unit
+  def fetch(url: URL, action: HttpVerb, observer: ActorRef): Unit
   def sleepTime: Long
   def sleepTime_= (value: Long): Unit
 }
@@ -50,7 +50,7 @@ extends AuthorityManager with TypedActor.PostStop {
     lastFetchTimestamp = current
   }
   
-  def fetch(url: URL, action: HttpVerb, observer: Observer): Unit = {
+  def fetch(url: URL, action: HttpVerb, observer: ActorRef): Unit = {
     
       val httpHandler: AsyncHandler[Unit] = new AsyncHandler[Unit]() {
         
@@ -69,7 +69,7 @@ extends AuthorityManager with TypedActor.PostStop {
               body
             } catch {
               case t: Throwable => {
-                observer.addResponse(KoResponse(url, action, t))
+                observer ! KoResponse(url, action, t)
                 throw t // rethrow for benefit of AsyncHttpClient
               }
             } finally {
@@ -112,7 +112,7 @@ extends AuthorityManager with TypedActor.PostStop {
               (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
             val body = response.getResponseBody()
             val fetchResponse = OkResponse(url, action, status, headers, body)
-            observer.addResponse(fetchResponse)
+            observer ! fetchResponse
           }
         }
       }

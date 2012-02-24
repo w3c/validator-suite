@@ -4,7 +4,6 @@ import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.util._
 import org.w3.vs.assertor._
-//import scala.collection.mutable.{Map, Queue, Seq, Set}
 import akka.dispatch._
 import akka.actor._
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
@@ -18,25 +17,10 @@ import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
 import play.api.libs.iteratee.PushEnumerator
 import org.w3.util.Headers.wrapHeaders
-
-/**
- * An Observer is the unity of action that implements
- * the Exploration and Assertion phases
- */
-trait Observer {
-  def stop(): Unit
-  // hooks
-  def addResponse(fetchResponse: FetchResponse): Unit
-  def addAssertion(assertion: Assertion): Unit
-  // foo
-  def subscribe(subscriber: Subscriber): Unit
-  def unsubscribe(subscriber: Subscriber): Unit
-  def subscriberOf(subscriber: => Subscriber): Subscriber
-}
+import akka.pattern.pipe
 
 
-
-class ObserverImpl(run: Run)(implicit val configuration: ValidatorSuiteConf) extends Observer {
+class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[ObserverState, ObserverData] {
   
   import configuration._
   
@@ -46,123 +30,27 @@ class ObserverImpl(run: Run)(implicit val configuration: ValidatorSuiteConf) ext
   val logger = Logger.of(classOf[Observer])
   
   /**
-   * A reference to this observer that can be safely shared with other Akka objects
-   * see the warning at http://akka.io/docs/akka/2.0-M3/scala/typed-actors.html#the-tools-of-the-trade
-   * for more informations
-   */
-  val self: Observer = TypedActor.self[Observer]
-  
-  /**
-   */
-  val context = TypedActor(TypedActor.context)
-
-  /**
-   * A counter for the assertions that are generated
-   */
-  var sentAssertions: Int = 0
-  var receivedAssertions: Int = 0
-  
-  /**
-   * The set of subscribers to the events from this Observer
-   */
-  var subscribers = Set[Subscriber]()
-  
-  /**
-   * The current state of this Observer. The initial state is ExplorationState.
-   */
-  var data: ObserverData = null//ObserverState(observerId, job)
-  
-  var state: ObserverState = null
-  
-  /**
    * A shorten id for logs readability
    */
   val shortId = run.shortId
-
-  startExplorationPhase()
   
-//  def job = run.job
   def strategy = run.job.strategy
   
-  /**
-   * Creates a subscriber as an Akka-children for this Observer
-   * 
-   * The id is random
-   */
-  def subscriberOf(subscriber: => Subscriber): Subscriber = {
-    context.typedActorOf(
-      TypedProps(
-        classOf[Subscriber],
-        subscriber),
-      java.util.UUID.randomUUID().toString)
-  }
+  startWith(Running, scheduleNextURLsToFetch(startExploration))
   
-  def stop(): Unit = {
-    state = Stopped
-    broadcast(message.Stopped)
-  }
-
-  /**
-   * Starts the ExplorationPhase
-   * <ul>
-   * <li>use the seedURLs to initialize the exploration</li>
-   * <li>broadcast the initial state</li>
-   * <li>schedule the first fetches</li>
-   * </ul>
-   */
-  def startExplorationPhase(): Unit = {
+  def startExploration: ObserverData = {
     // ask the strategy for the first urls to considerer
     val firstURLs = strategy.seedURLs.toList
     // update the observation state
     val (initialData, _) = ObserverData(strategy).withNewUrlsToBeExplored(firstURLs, 0)
-    data = initialData
     logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
-    // we can now schedule the first fetches
-    scheduleNextURLsToFetch()
+    initialData
   }
 
-  /**
-   * Conditional snippet for the end of the Exploration phase
-   * if it's the case, the assertion phase is started
-   */
-  private final def conditionalEndOfExplorationPhase(): Unit = {
-    if (data.noMoreUrlToExplore) {
-      logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, data.fetched.size))
-    } else {
-      //logger.debug("There are still %d pending fetches" format pendingFetches.size)
-    }
-  }
-  
-  private final def scheduleAssertion(resourceInfo: ResourceInfo): Unit = strategy.assertorsFor(resourceInfo) foreach { assertor =>
-    sentAssertions += 1
-    val url = resourceInfo.url
-    Future {
-      val result = assertor.assert(url)
-      self.addAssertion(Assertion(
-        url = url,
-        assertorId = assertor.id,
-        runId = run.id,
-        result = result.fold(t => AssertionError(t.getMessage), r => r)))
-    }(validatorDispatcher) recoverWith { case t: Throwable =>
-      Future {
-        self.addAssertion(Assertion(
-          url = url,
-          assertorId = assertor.id,
-          runId = run.id,
-          result = AssertionError(t.getMessage)))
-      }
-    }
-  }
-  
-  /**
-   * Schedule the next URLs to be fetched
-   * 
-   * The maximum number of pending fetches is decided here.
-   */
-  private final def scheduleNextURLsToFetch(): Unit = {
+  def scheduleNextURLsToFetch(data: ObserverData): ObserverData = {
     val (newObservation, explores) = data.takeAtMost(MAX_URL_TO_FETCH)
-    data = newObservation
     explores foreach fetch
+    newObservation
   }
   
     /**
@@ -188,20 +76,63 @@ class ObserverImpl(run: Run)(implicit val configuration: ValidatorSuiteConf) ext
     }
   }
   
-  /**
-   * Hook to send the result of an assertion
-   */
-  def addAssertion(assertion: Assertion): Unit = {
-    receivedAssertions = receivedAssertions + 1
-    logger.debug("%s: %s observed by %s" format (shortId, assertion.url, assertion.assertorId))
-    broadcast(message.NewAssertion(assertion))
-    store.putAssertion(assertion)
-    endOfAssertionPhase()
+//  when(Idle) {
+//    case Event(_, _) => logger.debug("we're done!!!")
+//  }
+  
+  when(Running) {
+    case Event(assertion: Assertion, data) => {
+      val data2 = receiveAssertion(assertion, data)
+      if (data2.assertionPhaseIsFinished) {
+        val data3 = endAssertionPhase(data: ObserverData)
+        stop(FSM.Normal)
+      }
+      else {
+        goto(Running) using data2
+      }
+    }
+    case Event(fetchResponse: FetchResponse, data) => {
+      val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
+      store.putResourceInfo(resourceInfo)
+      broadcast(message.NewResourceInfo(resourceInfo), data2)
+      val data3 = scheduleNextURLsToFetch(data2)
+      val data4 = scheduleAssertion(resourceInfo, data3)
+      if (data4.noMoreUrlToExplore) {
+        logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, data4.fetched.size))
+      } else {
+        //logger.debug("There are still %d pending fetches" format pendingFetches.size)
+      }
+      goto(Running) using data4
+    }
+    case Event(message.Subscribe(subscriber), data) => {
+      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
+      initialState foreach { msg => subscriber ! msg }
+      goto(Running) using data.copy(subscribers = data.subscribers + subscriber)
+    }
+    case Event(message.Unsubscribe(subscriber), data) => {
+      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
+      goto(Running) using data.copy(subscribers = data.subscribers - subscriber)
+    }
   }
-
-  def addResponse(fetchResponse: FetchResponse): Unit = {
-    data = data.withCompletedFetch(fetchResponse.url)
-    val (resourceInfo, newData) = fetchResponse match {
+  
+  private final def receiveAssertion(assertion: Assertion, data: ObserverData): ObserverData = {
+    logger.debug("%s: %s observed by %s" format (shortId, assertion.url, assertion.assertorId))
+    broadcast(message.NewAssertion(assertion), data)
+    store.putAssertion(assertion)
+    data.copy(receivedAssertions = data.receivedAssertions + 1)
+  }
+  
+  private final def endAssertionPhase(data: ObserverData): ObserverData = {
+    logger.info("%s: Observation phase done with %d observations" format (shortId, data.receivedAssertions)) // @@@ look into store?
+    broadcast(message.Done, data)
+    val ctx = TypedActor(context)
+    data.subscribers foreach { s => ctx.stop(s) }
+    data.copy(subscribers = Set.empty)
+  }
+  
+  private final def receiveResponse(fetchResponse: FetchResponse, _data: ObserverData): (ResourceInfo, ObserverData) = {
+    val data = _data.withCompletedFetch(fetchResponse.url)
+    fetchResponse match {
       case OkResponse(url, GET, status, headers, body) => {
         logger.debug("%s: GET <<< %s" format (shortId, url))
         val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
@@ -245,65 +176,50 @@ class ObserverImpl(run: Run)(implicit val configuration: ValidatorSuiteConf) ext
         (ri, data)
       }
     }
-    data = newData
-    store.putResourceInfo(resourceInfo)
-    broadcast(message.NewResourceInfo(resourceInfo))
-    scheduleNextURLsToFetch()
-    scheduleAssertion(resourceInfo)
-    conditionalEndOfExplorationPhase()
   }
   
-  /**
-   * Conditional snippet of code for the end of the assertion phase.
-   * 
-   * We know how many assertions are supposed to be received.
-   * 
-   */
-  private final def endOfAssertionPhase(): Unit =
-    if (data.toBeExplored.isEmpty && sentAssertions == receivedAssertions) { // @@@ number of assertions so far
-      logger.info("%s: Observation phase done with %d observations" format (shortId, receivedAssertions)) // @@@ look into store?
-      state = Idle
-      broadcast(message.Done)
-      subscribers foreach { context.stop(_) }
-      subscribers = Set.empty
+  
+  private final def scheduleAssertion(resourceInfo: ResourceInfo, data: ObserverData): ObserverData = {
+    val assertors = strategy.assertorsFor(resourceInfo)
+    val url = resourceInfo.url
+    
+    assertors foreach { assertor =>
+      val f = Future {
+        val result = assertor.assert(url)
+        Assertion(
+          url = url,
+          assertorId = assertor.id,
+          runId = run.id,
+          // TODO check the 401 here?
+          result = result.fold(t => AssertionError(t.getMessage), r => r))
+      }(validatorDispatcher) recoverWith { case t: Throwable =>
+        Future {
+          Assertion(
+            url = url,
+            assertorId = assertor.id,
+            runId = run.id,
+            result = AssertionError(t.getMessage))
+        }
+      }
+      f pipeTo self
     }
-  
-  /* Section for methods related to event listeners */
-  
-  /**
-   * Registers the given subscriber.
-   * 
-   * The initial state is sent at that time.
-   */
-  def subscribe(subscriber: Subscriber): Unit = {
-    subscribers += subscriber
-    logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
-    subscriber.broadcast(initialState)
+    
+    data.copy(sentAssertions = data.sentAssertions + assertors.size)
   }
   
-  private def initialState: Iterable[message.ObservationUpdate] = {
+
+  // TODO should be a service from the store
+  private final def initialState: Iterable[message.ObservationUpdate] = {
     val resourceInfos = store.listResourceInfos(run.id).right.get map message.NewResourceInfo
     val assertions = store.listAssertions(run.id).right.get map message.NewAssertion
     resourceInfos ++ assertions
   }
   
   /**
-   * Unsubscribes the given subscriber.
-   */
-  def unsubscribe(subscriber: Subscriber): Unit = {
-    subscribers -= subscriber
-    logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, subscribers.mkString("{", ",", "}")))
-  }
-
-  
-  /**
    * To broadcast messages to subscribers.
    */
-  private def broadcast(msg: message.ObservationUpdate): Unit = {
-    if (subscribers != null)
-      subscribers foreach (_.broadcast(msg))
-    else
-      logger.debug("%s: no more broadcaster for %s" format (shortId, msg.toString))
+  private final def broadcast(msg: message.ObservationUpdate, data: ObserverData): Unit = {
+    data.subscribers foreach ( s => s ! msg )
   }
   
 }

@@ -5,6 +5,7 @@ package org.w3.vs.observer
  */
 sealed trait ObserverState
 
+case object Starting extends ObserverState
 case object Running extends ObserverState
 case object Idle extends ObserverState
 case object Stopped extends ObserverState
