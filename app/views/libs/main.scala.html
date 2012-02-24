@@ -1,4 +1,4 @@
-@(title: String, stylesheets: Iterable[String] = List(), scripts: Iterable[String] = List())(content: Html)(implicit user: Option[org.w3.vs.model.User] = None)
+@(title: String, stylesheets: Iterable[String] = List(), scripts: Iterable[String] = List())(content: Html)(implicit user: org.w3.vs.model.User = null)
 <!DOCTYPE html>
 <html>
 	<head>
@@ -11,7 +11,7 @@
 		}
 	</head>
 	<body>
-		@libs.header()
+		@libs.header(Option(user))
 		@content
 		@libs.footer()
 		<script src="@routes.Assets.at("javascripts/libs/jquery-1.7.1.js")"></script>
