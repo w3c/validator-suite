@@ -56,7 +56,7 @@ object Validator extends Controller with Secured {
     )
   )
   
-  def index = IsAuth { implicit user => _ => Ok(views.html.index()(Some(user))) }
+  def index = IsAuth { _ => implicit user: User => Ok(views.html.index()(Some(user))) }
   
   def dashboard = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { implicit user =>
@@ -111,7 +111,7 @@ object Validator extends Controller with Secured {
     }.getOrElse(Forbidden)
   }
   
-  def validate2() = IsAuth { implicit user => implicit request =>
+  def validate2() = IsAuth { implicit request => implicit user: User =>
     validateForm.bindFromRequest.fold(
       formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
       v => validateWithParams(request, v._1, v._2, v._3)
@@ -171,18 +171,18 @@ object Validator extends Controller with Secured {
     }.getOrElse(CloseWebsocket)
   }
   
-  implicit def uuidWraper(s: String): java.util.UUID = java.util.UUID.fromString(s)
-  
-  //import controllers._
-  
-  
-  def test(implicit jobId: java.util.UUID) = OwnsJob {
-    user: User => job: Job => request: Request[AnyContent] => Ok("yoo")
-  }
+//  implicit def uuidWraper(s: String): java.util.UUID = java.util.UUID.fromString(s)
+//  
+//  def test2(implicit jobId: java.util.UUID) = (IsAuth >> IsAuth2 >> IsAuth3) {
+//    user: User => user2: User => user3: User => request: Request[AnyContent] => Ok("yoo")
+//  }
+//  
+//  def test(implicit jobId: java.util.UUID) = (IsAjax >> OwnsJob) {
+//    user: User => job: Job => request: Request[AnyContent] => Ok("yoo")
+//  }
   
   // def dashboardSocket()
   // Get user's list of jobs
   // for each job subscribe a dashboard subscriber
   
 }
-

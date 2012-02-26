@@ -14,7 +14,7 @@ GET     /logout                     controllers.Application.logout
 # Observations
 POST    /observation                controllers.Validator.validate2()
 GET     /observation/:id            controllers.Validator.redirect(id: String)
-GET     /observation/:id/test       controllers.Validator.test(id: java.util.UUID)
+#GET     /observation/:id/test       controllers.Validator.test(id: java.util.UUID)
 GET     /observation/:id/ws         controllers.Validator.subscribe(id: String)
 GET     /observation/:id/stop       controllers.Validator.stop(id: String)
 
