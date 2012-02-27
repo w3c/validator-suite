@@ -111,7 +111,7 @@ object Validator extends Controller with Secured {
   }
   
   def stop(id: String) = IfAuth { implicit request => implicit user: User =>
-    configuration.observerCreator.byRunId(id).map {o => o.stop(); Ok}.getOrElse(NotFound)
+    configuration.observerCreator.byRunId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
   }
   
   /*
@@ -139,8 +139,8 @@ object Validator extends Controller with Secured {
   def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
     configuration.observerCreator.byRunId(id).map { observer =>
       val in = Iteratee.foreach[JsValue](e => println(e))
-      val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
-      (in, subscriber.enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
+      val enumerator = Subscribe.to(observer)
+      (in, enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
     }.getOrElse(CloseWebsocket)
   }
   
