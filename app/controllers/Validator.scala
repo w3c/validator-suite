@@ -56,7 +56,7 @@ object Validator extends Controller with Secured {
     )
   )
   
-  def index = IsAuth { _ => implicit user: User => Ok(views.html.index()(Some(user))) }
+  def index = IsAuth { _ => implicit user: User => Ok(views.html.index()) }
   
   def dashboard = IsAuthenticated { username => _ =>
     User.findByEmail(username).map { implicit user =>
@@ -124,9 +124,9 @@ object Validator extends Controller with Secured {
         val runId: Run#Id = UUID.fromString(id)
         configuration.observerCreator.byRunId(runId).map { observer =>
           Redirect("/#!/observation/" + id)
-        }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))(Some(user))))
+        }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
       } catch { case e =>
-        NotFound(views.html.index(Seq("Invalid action id: " + id))(None))
+        NotFound(views.html.index(Seq("Invalid action id: " + id)))
       }
     }.getOrElse(Forbidden)
   }
@@ -184,5 +184,23 @@ object Validator extends Controller with Secured {
   // def dashboardSocket()
   // Get user's list of jobs
   // for each job subscribe a dashboard subscriber
+  
+  // Pages
+//  login
+//  dashboard
+//  job (report)
+//  job/url (focus)
+  
+  // Sockets
+//  dashboardSocket
+//  jobSocket
+//  uriSocket
+  
+  // Ajax actions
+//  createJob
+//  editJob
+//  runJob
+//  stopJob
+//  deleteJob
   
 }

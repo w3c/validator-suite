@@ -1,35 +1,35 @@
 @(form: Form[(String,String)])(implicit flash: Flash)
 
 @libs.main("Validator Suite") {
+	
+	@libs.header(None)
+	
+	@helper.form(routes.Application.authenticate) {
+	
+		@form.globalError.map { error =>
+			<p class="error">@error.message</p>
+		}
 		
-        @helper.form(routes.Application.authenticate) {
-            
-            @form.globalError.map { error =>
-                <p class="error">
-                    @error.message
-                </p>
-            }
-            
-            @flash.get("success").map { message =>
-                <p class="success">
-                    @message
-                </p>
-            }
-            
-            <p>
-                <input type="email" id="email" name="email" placeholder="Email" value="@form("email").value">
-            </p>
-            <p>
-                <input type="password" id="password" name="password" placeholder="Password">
-            </p>
-            <p>
-                <button id="submit-login" type="submit">Login</button>
-            </p>
-            
-        }
-        
-        <p class="note">
-            Default users: tgambet@@w3.org:secret, bertails@@w3.org:secret
-        </p>
-            
-}(None)
+		@flash.get("success").map { message =>
+			<p class="success">@message</p>
+		}
+		
+		<p>
+			<input type="email" id="email" name="email" placeholder="Email" value="@form("email").value">
+		</p>
+		<p>
+			<input type="password" id="password" name="password" placeholder="Password">
+		</p>
+		<p>
+			<button id="submit-login" type="submit">Login</button>
+		</p>
+	
+	}
+	
+	<p class="note">
+		Default users: tgambet@@w3.org:secret, bertails@@w3.org:secret
+	</p>
+	
+	@libs.footer()
+	
+}
