@@ -18,6 +18,7 @@ import play.api.libs.iteratee._
 import play.api.libs.concurrent._
 import play.api.libs.json.JsValue
 import play.api.mvc.WebSocket.FrameFormatter
+import scala.PartialFunction
 
 object Application extends Controller {
   
@@ -37,8 +38,10 @@ object Application extends Controller {
   /**
    * Login page.
    */
-  def login = Action { implicit request =>
-    Ok(views.html.login(loginForm))
+  def login = IfNotAuth { 
+    implicit request => Ok(views.html.login(loginForm))
+  }{
+    implicit request => Redirect(routes.Validator.index)
   }
 
   /**
@@ -59,7 +62,6 @@ object Application extends Controller {
       "success" -> "You've been logged out"
     )
   }
-  
 }
 
 /**
@@ -71,24 +73,24 @@ trait Secured {
    * Retrieve the connected user email.
    */
   private def username(request: RequestHeader) = request.session.get("email")
-
-  /**
-   * Redirect to login if the user in not authorized.
-   */
-  private def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Application.login)
-  
+//
+//  /**
+//   * Redirect to login if the user in not authorized.
+//   */
+//  private def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Application.login)
+//  
   /**
    * Simply close the websocket if the user is not authorized.
    */
   private def onUnauthorizedWebSocket[A](request: RequestHeader) = CloseWebsocket[A]
   protected def CloseWebsocket[A]: (Iteratee[A, _], Enumerator[A]) = (Iteratee.foreach[A](e => println(e)), Enumerator.eof)
-  
-  /** 
-   * Action for authenticated users.
-   */
-  def IsAuthenticated(f: => String => Request[AnyContent] => Result): Action[(Action[AnyContent], AnyContent)] = Security.Authenticated(username, onUnauthorized) { user =>
-    Action(request => f(user)(request))
-  }
+//  
+//  /** 
+//   * Action for authenticated users.
+//   */
+//  def IsAuthenticated(f: => String => Request[AnyContent] => Result): Action[(Action[AnyContent], AnyContent)] = Security.Authenticated(username, onUnauthorized) { user =>
+//    Action(request => f(user)(request))
+//  }
   
   /** 
    * WebSocket for authenticated users.
@@ -126,79 +128,87 @@ trait Secured {
   }*/
 
 }
-object IsAjax extends ActionModule {
-  implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
+
+object IfAjax extends ActionModule0 {
+  override implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.BadRequest("This request can only be an Ajax request")
   def condition(req: Request[AnyContent]): Boolean = 
     req.headers.get("x-requested-with").map{_ == "xmlhttprequest"}.getOrElse(false)
 }
-
-object IsAuth extends ActionModule1[User] {
-  implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
-  override def param(req: Request[AnyContent]) = req.session.get("email").flatMap { User.findByEmail(_) }
+object IfAuth extends ActionModule1[User] {
+  override implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
+  def map(req: Request[AnyContent]) = List(req.session.get("email").flatMap { User.findByEmail(_) })
+}
+object IfNotAuth extends ActionModule0 {
+  def condition(req: Request[AnyContent]) = req.session.get("email") == None
+}
+object OptionAuth extends ActionModule1[Option[User]] {
+  def map(req: Request[AnyContent]): List[Option[Option[User]]] = List(req.session.get("email").map { User.findByEmail(_) })
 }
 
+// For testing, doesn't really check Job ownership for now
 object OwnsJob extends ActionModule2[User, Job] {
-  implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
+  val strategy = EntryPointStrategy(
+      uuid=java.util.UUID.randomUUID(), 
+      name="demo strategy",
+      entrypoint=URL("http://www.w3.org"),
+      distance=1,
+      linkCheck=true,
+      filter=Filter(include=Everything, exclude=Nothing))
+      
+  //implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
   implicit def jobId: Job#Id = null
+  override def map(req: Request[AnyContent]): List[Option[_]] = 
+    IfAuth.map(req).head match {
+      case Some(user) => List(Some(user), Some(new Job(strategy = strategy)))
+      case _ => List(None, None)
+    }
+}
+
+
+
+
+// Temporary objects to test compilation
+object True extends ActionModule0 {
+  def condition(req: Request[AnyContent]): Boolean = true
+}
+object False extends ActionModule0 {
+  def condition(req: Request[AnyContent]): Boolean = false
+}
+object Hello extends ActionModule1[String] {
+  def map(req: Request[AnyContent]) = List(Some("hello"))
+}
+object HiAndHello extends ActionModule2[String, String] {
+  def map(req: Request[AnyContent]) = List(Some("hi"), Some("hello"))
+}
+object GoodByeFolks extends ActionModule3[String, String, String] {
+  def map(req: Request[AnyContent]) = List(Some("good"), Some("bye"), Some("folks"))
+}
+object HiGoodByeFolks extends ActionModule4[String, String, String, String] {
+  def map(req: Request[AnyContent]) = List(Some("hi"), Some("good"), Some("bye"), Some("folks"))
+}
+object Test {
   
-  override def param(req: Request[AnyContent]): Option[(User, Job)] = {
-    IsAuth.param(req).flatMap { user =>
-      user.getJobById(jobId).map { (user, _) }
-    }
+  def test() = {
+    val a0 = True
+    val a1 = Hello
+    val a2 = HiAndHello
+    val a3 = GoodByeFolks
+    
+    val b: ActionModule0 = a0 >> a0 >> a0 >> a0 // composing ActionModule0s produce an ActionModule0
+    val c = a0 >> a1                            // ActionModule0 >> ActionModule1 produce an ActionModule1 
+    val d = a1 >> a0                            // Can be composed in whichever order
+    val e = a1 >> a1                            // -> ActionModule2
+    val f = a1 >> a2                            // -> ActionModule3
+    val g = a1 >> a3                            // -> ActionModule4
+    val h = e >> a0 >> a1                       // -> ActionModule4
+    val result = play.api.mvc.Results.Ok
+    
+    b {req => result}
+    c {req => s: String => result}
+    d {req => s: String => result}
+    e {req => s: String => ss: String => result}
+    f {req => s: String => ss: String => sss: String => result}
+    g {req => s: String => ss: String => sss: String => ssss: String => result}
   }
-  def apply(f: => User => Job => Request[AnyContent] => Result)(implicit id: Job#Id) = { 
-    Action {
-      request => param(request) match {
-        case Some((a, b)) => f(a)(b)(request)
-        case None => onFail(request)
-      }
-    }
-  }
-}
-
-trait ActionModule {
-  def condition(req: Request[AnyContent]): Boolean
-  implicit def onFail(req: Request[AnyContent]): Result 
-  def apply(f: => Request[AnyContent] => Result)(implicit onFail: Request[AnyContent] => Result = onFail): Action[AnyContent] = 
-    Action {
-	  request => 
-	    if (condition(request)) f(request)
-	    else onFail(request)
-    }
-}
-
-trait ActionModule1[A] {
-  def param(req: Request[AnyContent]): Option[A]
-  implicit def onFail(req: Request[AnyContent]): Result
-  def apply(f: => A => Request[AnyContent] => Result)(implicit onFail: Request[AnyContent] => Result = onFail): Action[AnyContent] = 
-    Action {
-      request => param(request) match {
-        case Some(a) => f(a)(request)
-        case None => onFail(request)
-      }
-    }
-}
-
-trait ActionModule2[A, B] {
-  def param(req: Request[AnyContent]): Option[(A, B)]
-  implicit def onFail(req: Request[AnyContent]): Result 
-  def apply(f: => A => B => Request[AnyContent] => Result)(implicit onFail: Request[AnyContent] => Result = onFail): Action[AnyContent] = 
-    Action {
-      request => param(request) match {
-        case Some((a, b)) => f(a)(b)(request)
-        case None => onFail(request)
-      }
-    }
-}
-
-trait ActionModule3[A, B, C] {
-  def param(req: Request[AnyContent]): Option[(A, B, C)]
-  implicit def onFail(req: Request[AnyContent]): Result 
-  def apply(f: => A => B => C => Request[AnyContent] => Result)(implicit onFail: Request[AnyContent] => Result = onFail): Action[AnyContent] = 
-    Action {
-      request => param(request) match {
-        case Some((a, b, c)) => f(a)(b)(c)(request)
-        case None => onFail(request)
-      }
-    }
+  
 }

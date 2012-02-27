@@ -1,7 +1,8 @@
-@(jobs: Iterable[org.w3.vs.model.Job] = None)(implicit user: Option[org.w3.vs.model.User])
+@(jobs: Iterable[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
 
 @libs.main("Validator Suite", stylesheets = List("mockup.css")) {
 	
+	@libs.header(Some(user))
 	@libs.navigation()
 	
 	<section id="jobs" class="main">
@@ -98,4 +99,7 @@
 			</li>
 		</ul>
 	</section>
+	
+	@libs.footer()
+	
 }

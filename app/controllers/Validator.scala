@@ -56,17 +56,7 @@ object Validator extends Controller with Secured {
     )
   )
   
-  def index = IsAuth { implicit user => _ => Ok(views.html.index()(Some(user))) }
-  
-  def dashboard = IsAuthenticated { username => _ =>
-    User.findByEmail(username).map { implicit user =>
-      implicit def userOpt = Some(user)
-      Ok(views.html.dashboard())
-    }.getOrElse(
-      //Unauthorized
-      Forbidden
-    )
-  }
+  def index = IfAuth { _ => implicit user: User => Ok(views.html.index()) }
   
   def validateWithParams(
       request: Request[AnyContent],
@@ -102,44 +92,27 @@ object Validator extends Controller with Secured {
       "X-VS-ActionID" -> runIdString)
   }
   
-  def validate() = IsAuthenticated { username => implicit request =>
-    User.findByEmail(username).map { user =>
-      validateForm.bindFromRequest.fold(
-        formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
-        v => validateWithParams(request, v._1, v._2, v._3)
-      )
-    }.getOrElse(Forbidden)
-  }
-  
-  def validate2() = IsAuth { implicit user => implicit request =>
+  def validate() = IfAuth { implicit request => implicit user: User =>
     validateForm.bindFromRequest.fold(
       formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
       v => validateWithParams(request, v._1, v._2, v._3)
     )
   }
   
-  def redirect(id: String) = IsAuthenticated { username => _ =>
-    User.findByEmail(username).map { implicit user =>
-      try {
-        val runId: Run#Id = UUID.fromString(id)
-        configuration.observerCreator.byRunId(runId).map { observer =>
-          Redirect("/#!/observation/" + id)
-        }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))(Some(user))))
-      } catch { case e =>
-        NotFound(views.html.index(Seq("Invalid action id: " + id))(None))
-      }
-    }.getOrElse(Forbidden)
+  def redirect(id: String) = IfAuth { implicit request => implicit user: User =>
+    try {
+      val runId: Run#Id = UUID.fromString(id)
+      configuration.observerCreator.byRunId(runId).map { observer =>
+        Redirect("/#!/observation/" + id)
+      }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
+    } catch { case e =>
+      NotFound(views.html.index(Seq("Invalid action id: " + id)))
+    }
   }
   
-  def stop(id: String) = IsAuthenticated { username => request => {
-    println(request.path)
-    User.findByEmail(username).map { user =>
-      configuration.observerCreator.byRunId(id).map { observer =>
-        // observer.stop() TODO
-        Ok
-      }.getOrElse(NotFound)
-    }.getOrElse(Forbidden)
-  }}
+  def stop(id: String) = IfAuth { implicit request => implicit user: User =>
+    configuration.observerCreator.byRunId(id).map {o => o.stop(); Ok}.getOrElse(NotFound)
+  }
   
   /*
    * Authenticated socket responsible for streaming the dashboard data, i.e. the list of 
@@ -166,23 +139,44 @@ object Validator extends Controller with Secured {
   def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
     configuration.observerCreator.byRunId(id).map { observer =>
       val in = Iteratee.foreach[JsValue](e => println(e))
-      val enumerator = Subscribe.to(observer)
-      (in, enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
+      val subscriber = observer.subscriberOf(new SubscriberImpl(observer))
+      (in, subscriber.enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
     }.getOrElse(CloseWebsocket)
   }
   
-  implicit def uuidWraper(s: String): java.util.UUID = java.util.UUID.fromString(s)
-  
-  //import controllers._
-  
-  
-  def test(implicit jobId: java.util.UUID) = OwnsJob {
-    user: User => job: Job => request: Request[AnyContent] => Ok("yoo")
-  }
+//  implicit def uuidWraper(s: String): java.util.UUID = java.util.UUID.fromString(s)
+//  
+//  def test2(implicit jobId: java.util.UUID) = (IsAuth >> IsAuth2 >> IsAuth3) {
+//    user: User => user2: User => user3: User => request: Request[AnyContent] => Ok("yoo")
+//  }
+//  
+//  def test(implicit jobId: java.util.UUID) = (IsAjax >> OwnsJob) {
+//    user: User => job: Job => request: Request[AnyContent] => Ok("yoo")
+//  }
   
   // def dashboardSocket()
   // Get user's list of jobs
   // for each job subscribe a dashboard subscriber
   
+  
+  // * Pages
+  // login
+  // logout
+  // dashboard
+  def dashboard = IfAuth { _ => implicit user: User => Ok(views.html.dashboard())}
+  // job (report)
+  // job/url (focus)
+  
+  // * Sockets
+  // dashboardSocket
+  // jobSocket
+  // uriSocket
+  
+  // * Ajax actions
+  // createJob
+  // editJob
+  // runJob
+  // stopJob
+  // deleteJob
+  
 }
-
