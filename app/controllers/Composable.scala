@@ -4,20 +4,39 @@ package controllers
 
 abstract trait Composable[Req, Res] {
   val arity: Int
-  // This must be a sequence of size = /arity/. How to enforce? Tuples would be ideal but don't manipulate well in an abstract way.
+  // This must be a sequence/seq/list? of size = arity. How to enforce? Tuples would be ideal but don't manipulate well in an abstract way.
   def map(req: Req): List[Option[_]]
   implicit def onFail(req: Req): Res
 }
 object Composable {
   def composeMaps[Req, Res](l: Composable[Req, Res], r: Composable[Req, Res]): Req => List[Option[_]] = {
-    if (l.arity == 0) req => r.map(req)
-    else req => List(l.map(req), r.map(req)).flatten // Should call l.map, check if contains None, if so fill list with None r.arity times ...
+    req => {
+      if ((l.arity == 0 && l.map(req) == List(None))) {
+        List(None)
+      } else if (l.arity == 0){
+        r.map(req)
+      } else {
+        // Optimization: call r.map(req) only if mapping succeeded for left Composable
+        val lmap = l.map(req)
+        onlyContainsSomes(lmap) match {
+          case true => List(l.map(req), r.map(req)).flatten
+          case false => lmap
+        }
+      }
+    }
   }
   def composeFails[Req, Res](l: Composable[Req, Res], r: Composable[Req, Res]): Req => Res = {
-    req => l.map(req).dropRight(r.arity) match { // ... unless we take the first l.arity terms instead of dropingRight
-      case _: List[Some[_]] => r.onFail(req)
-      case _ => l.onFail(req)
+    req => {
+      // Possible optimization: l.map(req) should be "cached" to avoid the cost of calling it here again
+      l.map(req).take(scala.math.max(1, l.arity)) match {
+        case a: List[Option[_]] if onlyContainsSomes(a) => r.onFail(req)
+        case _ => l.onFail(req)
+      }
     }
+  }
+  // XXX No way to do that with pattern matching?
+  private def onlyContainsSomes(list: List[Option[_]]): Boolean = {
+    list.filter(_ == None).size == 0
   }
 }
 object Composable0 {
@@ -65,7 +84,7 @@ trait Composable0[Req, Res] extends Composable[Req, Res] {
   }
   def apply(req: Req)(f: => Req => Res)(implicit onFail: Req => Res): Res =
     map(req) match {
-      case a: List[Some[_]] => f(req)
+      case List(Some(a)) if a == true => f(req)
       case _ => onFail(req)
     }
   def >> (r: Composable0[Req, Res]): Composable0[Req, Res] = Composable0[Req, Res](this, r)
@@ -77,8 +96,8 @@ trait Composable0[Req, Res] extends Composable[Req, Res] {
 trait Composable1[Req, Res, A] extends Composable[Req, Res] {
   val arity = 1
   def apply[A](req: Req)(f: => Req => A => Res)(implicit onFail: Req => Res): Res =
-    map(req).head match {
-      case Some(a) => f(req)(a.asInstanceOf[A])
+    map(req) match {
+      case List(Some(a)) => f(req)(a.asInstanceOf[A])
       case _ => onFail(req)
     }
   def >> (r: Composable0[Req, Res]): Composable1[Req, Res, A] = Composable1[Req, Res, A](this, r)

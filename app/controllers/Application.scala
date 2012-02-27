@@ -38,8 +38,10 @@ object Application extends Controller {
   /**
    * Login page.
    */
-  def login = Action { implicit request =>
-    Ok(views.html.login(loginForm))
+  def login = IfNotAuth { 
+    implicit request => Ok(views.html.login(loginForm))
+  }{
+    implicit request => Redirect(routes.Validator.index)
   }
 
   /**
@@ -71,24 +73,24 @@ trait Secured {
    * Retrieve the connected user email.
    */
   private def username(request: RequestHeader) = request.session.get("email")
-
-  /**
-   * Redirect to login if the user in not authorized.
-   */
-  private def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Application.login)
-  
+//
+//  /**
+//   * Redirect to login if the user in not authorized.
+//   */
+//  private def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Application.login)
+//  
   /**
    * Simply close the websocket if the user is not authorized.
    */
   private def onUnauthorizedWebSocket[A](request: RequestHeader) = CloseWebsocket[A]
   protected def CloseWebsocket[A]: (Iteratee[A, _], Enumerator[A]) = (Iteratee.foreach[A](e => println(e)), Enumerator.eof)
-  
-  /** 
-   * Action for authenticated users.
-   */
-  def IsAuthenticated(f: => String => Request[AnyContent] => Result): Action[(Action[AnyContent], AnyContent)] = Security.Authenticated(username, onUnauthorized) { user =>
-    Action(request => f(user)(request))
-  }
+//  
+//  /** 
+//   * Action for authenticated users.
+//   */
+//  def IsAuthenticated(f: => String => Request[AnyContent] => Result): Action[(Action[AnyContent], AnyContent)] = Security.Authenticated(username, onUnauthorized) { user =>
+//    Action(request => f(user)(request))
+//  }
   
   /** 
    * WebSocket for authenticated users.
@@ -127,44 +129,20 @@ trait Secured {
 
 }
 
-
-/*
- * A dummy ActionModule0 that never fails
- */
-object True extends ActionModule0 {
-  implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.InternalServerError // Should never happen
-  def condition(req: Request[AnyContent]): Boolean = true
-}
-
-/*
- * Some ActionModuleX for testing purposes
- */
-object Hello extends ActionModule1[String] {
-  implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.InternalServerError("Hello failed") // Should never happen
-  override def map(req: Request[AnyContent]) = List(Some("hello"))
-}
-object HiAndHello extends ActionModule2[String, String] {
-  implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.InternalServerError("HiAndHello failed") // Should never happen
-  override def map(req: Request[AnyContent]) = List(Some("hi"), Some("hello"))
-}
-object GoodByeFolks extends ActionModule3[String, String, String] {
-  implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.InternalServerError("GoodByeFolks failed") // Should never happen
-  override def map(req: Request[AnyContent]) = List(Some("good"), Some("bye"), Some("folks"))
-}
-object HiGoodByeFolks extends ActionModule4[String, String, String, String] {
-  implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.InternalServerError("HiGoodByeFolks failed") // Should never happen
-  override def map(req: Request[AnyContent]) = List(Some("hi"), Some("good"), Some("bye"), Some("folks"))
-}
-
-// Some real ones
-object IsAjax extends ActionModule0 {
-  implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.BadRequest("This request can only be an Ajax request")
+object IfAjax extends ActionModule0 {
+  override implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.BadRequest("This request can only be an Ajax request")
   def condition(req: Request[AnyContent]): Boolean = 
     req.headers.get("x-requested-with").map{_ == "xmlhttprequest"}.getOrElse(false)
 }
-object IsAuth extends ActionModule1[User] {
-  implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
-  override def map(req: Request[AnyContent]) = List(req.session.get("email").flatMap { User.findByEmail(_) })
+object IfAuth extends ActionModule1[User] {
+  override implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
+  def map(req: Request[AnyContent]) = List(req.session.get("email").flatMap { User.findByEmail(_) })
+}
+object IfNotAuth extends ActionModule0 {
+  def condition(req: Request[AnyContent]) = req.session.get("email") == None
+}
+object OptionAuth extends ActionModule1[Option[User]] {
+  def map(req: Request[AnyContent]): List[Option[Option[User]]] = List(req.session.get("email").map { User.findByEmail(_) })
 }
 
 // For testing, doesn't really check Job ownership for now
@@ -177,16 +155,37 @@ object OwnsJob extends ActionModule2[User, Job] {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
       
-  implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
+  //implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
   implicit def jobId: Job#Id = null
   override def map(req: Request[AnyContent]): List[Option[_]] = 
-    IsAuth.map(req).head match {
+    IfAuth.map(req).head match {
       case Some(user) => List(Some(user), Some(new Job(strategy = strategy)))
       case _ => List(None, None)
     }
 }
 
-// A temporary object to test compilation
+
+
+
+// Temporary objects to test compilation
+object True extends ActionModule0 {
+  def condition(req: Request[AnyContent]): Boolean = true
+}
+object False extends ActionModule0 {
+  def condition(req: Request[AnyContent]): Boolean = false
+}
+object Hello extends ActionModule1[String] {
+  def map(req: Request[AnyContent]) = List(Some("hello"))
+}
+object HiAndHello extends ActionModule2[String, String] {
+  def map(req: Request[AnyContent]) = List(Some("hi"), Some("hello"))
+}
+object GoodByeFolks extends ActionModule3[String, String, String] {
+  def map(req: Request[AnyContent]) = List(Some("good"), Some("bye"), Some("folks"))
+}
+object HiGoodByeFolks extends ActionModule4[String, String, String, String] {
+  def map(req: Request[AnyContent]) = List(Some("hi"), Some("good"), Some("bye"), Some("folks"))
+}
 object Test {
   
   def test() = {

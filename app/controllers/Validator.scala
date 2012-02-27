@@ -56,17 +56,7 @@ object Validator extends Controller with Secured {
     )
   )
   
-  def index = IsAuth { _ => implicit user: User => Ok(views.html.index()) }
-  
-  def dashboard = IsAuthenticated { username => _ =>
-    User.findByEmail(username).map { implicit user =>
-      implicit def userOpt = Some(user)
-      Ok(views.html.dashboard())
-    }.getOrElse(
-      //Unauthorized
-      Forbidden
-    )
-  }
+  def index = IfAuth { _ => implicit user: User => Ok(views.html.index()) }
   
   def validateWithParams(
       request: Request[AnyContent],
@@ -102,44 +92,27 @@ object Validator extends Controller with Secured {
       "X-VS-ActionID" -> runIdString)
   }
   
-  def validate() = IsAuthenticated { username => implicit request =>
-    User.findByEmail(username).map { user =>
-      validateForm.bindFromRequest.fold(
-        formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
-        v => validateWithParams(request, v._1, v._2, v._3)
-      )
-    }.getOrElse(Forbidden)
-  }
-  
-  def validate2() = IsAuth { implicit request => implicit user: User =>
+  def validate() = IfAuth { implicit request => implicit user: User =>
     validateForm.bindFromRequest.fold(
       formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
       v => validateWithParams(request, v._1, v._2, v._3)
     )
   }
   
-  def redirect(id: String) = IsAuthenticated { username => _ =>
-    User.findByEmail(username).map { implicit user =>
-      try {
-        val runId: Run#Id = UUID.fromString(id)
-        configuration.observerCreator.byRunId(runId).map { observer =>
-          Redirect("/#!/observation/" + id)
-        }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
-      } catch { case e =>
-        NotFound(views.html.index(Seq("Invalid action id: " + id)))
-      }
-    }.getOrElse(Forbidden)
+  def redirect(id: String) = IfAuth { implicit request => implicit user: User =>
+    try {
+      val runId: Run#Id = UUID.fromString(id)
+      configuration.observerCreator.byRunId(runId).map { observer =>
+        Redirect("/#!/observation/" + id)
+      }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
+    } catch { case e =>
+      NotFound(views.html.index(Seq("Invalid action id: " + id)))
+    }
   }
   
-  def stop(id: String) = IsAuthenticated { username => request => {
-    println(request.path)
-    User.findByEmail(username).map { user =>
-      configuration.observerCreator.byRunId(id).map { observer =>
-        observer.stop()
-        Ok
-      }.getOrElse(NotFound)
-    }.getOrElse(Forbidden)
-  }}
+  def stop(id: String) = IfAuth { implicit request => implicit user: User =>
+    configuration.observerCreator.byRunId(id).map {o => o.stop(); Ok}.getOrElse(NotFound)
+  }
   
   /*
    * Authenticated socket responsible for streaming the dashboard data, i.e. the list of 
@@ -185,22 +158,25 @@ object Validator extends Controller with Secured {
   // Get user's list of jobs
   // for each job subscribe a dashboard subscriber
   
-  // Pages
-//  login
-//  dashboard
-//  job (report)
-//  job/url (focus)
   
-  // Sockets
-//  dashboardSocket
-//  jobSocket
-//  uriSocket
+  // * Pages
+  // login
+  // logout
+  // dashboard
+  def dashboard = IfAuth { _ => implicit user: User => Ok(views.html.dashboard())}
+  // job (report)
+  // job/url (focus)
   
-  // Ajax actions
-//  createJob
-//  editJob
-//  runJob
-//  stopJob
-//  deleteJob
+  // * Sockets
+  // dashboardSocket
+  // jobSocket
+  // uriSocket
+  
+  // * Ajax actions
+  // createJob
+  // editJob
+  // runJob
+  // stopJob
+  // deleteJob
   
 }

@@ -8,14 +8,16 @@ import play.api.mvc.Action
 abstract trait ActionModule extends Composable[Request[AnyContent], Result] {
   type Req = Request[AnyContent]
   type Res = Result
+  implicit def onFail(req: Request[AnyContent]): Result = 
+    play.api.mvc.Results.InternalServerError("ActionModule " + this.getClass.toString + " failed to map its parameters.")
 }
 
 // TODO Check whether there is another way to make a Composable0 castable to ActionModule0 implicitly
 object ActionModule {
   implicit def fromComposable0(c: Composable0[Request[AnyContent], Result]): ActionModule0 = {
     new ActionModule0 {
-      def condition(req: Request[AnyContent]) = c.condition(req)
-      def onFail(req: Request[AnyContent]) = c.onFail(req)
+      override def condition(req: Request[AnyContent]) = c.condition(req)
+      override def onFail(req: Request[AnyContent]) = c.onFail(req)
     }
   }
   implicit def fromComposable1[A](c: Composable1[Request[AnyContent], Result, A]): ActionModule1[A] = {
@@ -26,20 +28,20 @@ object ActionModule {
   }
   implicit def fromComposable2[A, B](c: Composable2[Request[AnyContent], Result, A, B]): ActionModule2[A, B] = {
     new ActionModule2[A, B] {
-      def map(req: Request[AnyContent]) = c.map(req)
-      def onFail(req: Request[AnyContent]) = c.onFail(req)
+      override def map(req: Request[AnyContent]) = c.map(req)
+      override def onFail(req: Request[AnyContent]) = c.onFail(req)
     }
   }
   implicit def fromComposable3[A, B, C](c: Composable3[Request[AnyContent], Result, A, B, C]): ActionModule3[A, B, C] = {
     new ActionModule3[A, B, C] {
-      def map(req: Request[AnyContent]) = c.map(req)
-      def onFail(req: Request[AnyContent]) = c.onFail(req)
+      override def map(req: Request[AnyContent]) = c.map(req)
+      override def onFail(req: Request[AnyContent]) = c.onFail(req)
     }
   }
   implicit def fromComposable4[A, B, C, D](c: Composable4[Request[AnyContent], Result, A, B, C, D]): ActionModule4[A, B, C, D] = {
     new ActionModule4[A, B, C, D] {
-      def map(req: Request[AnyContent]) = c.map(req)
-      def onFail(req: Request[AnyContent]) = c.onFail(req)
+      override def map(req: Request[AnyContent]) = c.map(req)
+      override def onFail(req: Request[AnyContent]) = c.onFail(req)
     }
   }
 }
