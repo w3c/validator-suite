@@ -18,14 +18,17 @@ trait Store {
   
   def listResourceInfos(runId: Run#Id): Either[Throwable, Iterable[ResourceInfo]]
   
-  def listAllResourceInfos(): Either[Throwable, Iterable[ResourceInfo]]
+  // this is not really safe (goes through the entire collection)
+  // def listAllResourceInfos(): Either[Throwable, Iterable[ResourceInfo]]
   
   def listAssertions(runId: Run#Id): Either[Throwable, Iterable[Assertion]]
   
-//  def init(): Either[Throwable, Unit]
-//  def list: Either[Throwable, Traversable[ObserverState]]
-//  def get(id: ObserverId): Either[Throwable, ObserverState]
-//  def save(state: ObserverState): Either[Throwable, Unit]
+  def saveUser(user: User): Either[Throwable, Unit]
+  
+  def getUserByEmail(email: String): Either[Throwable, Option[User]]
+  
+  def authenticate(email: String, password: String): Either[Throwable, Option[User]]
+  
   
 }
 

@@ -8,12 +8,13 @@ import akka.dispatch.Await
 import akka.util.duration._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
+import org.w3.vs.prod.Configuration
 
 /**
   * Server 1 -> Server 2
   * 1 GET       1 HEAD
   */
-class SimpleInterWebsiteTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
+class SimpleInterWebsiteTest extends ObserverTestHelper(new Configuration { }) {
 
   val strategy =
     EntryPointStrategy(

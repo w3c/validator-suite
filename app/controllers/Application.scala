@@ -19,6 +19,7 @@ import play.api.libs.concurrent._
 import play.api.libs.json.JsValue
 import play.api.mvc.WebSocket.FrameFormatter
 import scala.PartialFunction
+import org.w3.vs.prod.configuration.store
 
 object Application extends Controller {
   
@@ -31,7 +32,7 @@ object Application extends Controller {
       "email" -> text,
       "password" -> text
     ) verifying ("Invalid email or password", result => result match {
-      case (email, password) => User.authenticate(email, password).isDefined
+      case (email, password) => store.authenticate(email, password).fold(t => false, _.isDefined)
     })
   )
 
@@ -136,13 +137,13 @@ object IfAjax extends ActionModule0 {
 }
 object IfAuth extends ActionModule1[User] {
   override implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
-  def map(req: Request[AnyContent]) = List(req.session.get("email").flatMap { User.findByEmail(_) })
+  def map(req: Request[AnyContent]) = List(req.session.get("email").flatMap { email => store.getUserByEmail(email).right.get })
 }
 object IfNotAuth extends ActionModule0 {
   def condition(req: Request[AnyContent]) = req.session.get("email") == None
 }
 object OptionAuth extends ActionModule1[Option[User]] {
-  def map(req: Request[AnyContent]): List[Option[Option[User]]] = List(req.session.get("email").map { User.findByEmail(_) })
+  def map(req: Request[AnyContent]): List[Option[Option[User]]] = List(req.session.get("email").map { email => store.getUserByEmail(email).right.get })
 }
 
 // For testing, doesn't really check Job ownership for now

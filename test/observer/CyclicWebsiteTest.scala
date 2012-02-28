@@ -10,8 +10,9 @@ import akka.util.duration._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import akka.testkit.TestKit
+import org.w3.vs.prod.Configuration
 
-class CyclicWebsiteCrawlTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
+class CyclicWebsiteCrawlTest extends ObserverTestHelper(new Configuration { }) {
   
   val strategy =
     EntryPointStrategy(

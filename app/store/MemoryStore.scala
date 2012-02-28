@@ -13,6 +13,8 @@ class MemoryStore extends Store {
     
   val resourceInfos: ConcurrentMap[ResourceInfo#Id, ResourceInfo] = new ConcurrentHashMap[ResourceInfo#Id, ResourceInfo]().asScala
   
+  val users: ConcurrentMap[User#Id, User] = new ConcurrentHashMap[User#Id, User]().asScala
+  
   val runs: ConcurrentMap[Run#Id, Run] = new ConcurrentHashMap[Run#Id, Run]().asScala
   
   def init(): Either[Throwable, Unit] = Right()
@@ -62,5 +64,29 @@ class MemoryStore extends Store {
     val as = assertions.values filter { _.runId == runId }
     Right(as)
   }
+  
+  def saveUser(user: User): Either[Throwable, Unit] =
+    try {
+      users += user.id -> user
+      Right()
+    } catch {
+      case t => Left(t)
+    }
+  
+  def getUserByEmail(email: String): Either[Throwable, Option[User]] =
+    try {
+      val userOpt = users collectFirst { case (_, user) if user.email == email => user }
+      Right(userOpt)
+    } catch {
+      case t => Left(t)
+    }
+  
+  def authenticate(email: String, password: String): Either[Throwable, Option[User]] =
+    try {
+      val userOpt = users collectFirst { case (_, user) if user.email == email && user.password == password => user }
+      Right(userOpt)
+    } catch {
+      case t => Left(t)
+    }
   
 }

@@ -9,7 +9,6 @@ import play.api.data.format.Formatter
 import play.api.mvc.Request
 import java.net.URI
 import java.util.UUID
-import org.w3.vs.{ValidatorSuiteConf, Production}
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
@@ -24,9 +23,9 @@ import play.api.mvc.PathBindable
 
 object Validator extends Controller with Secured {
   
-  implicit val configuration: ValidatorSuiteConf = new Production { }
-  
   val logger = play.Logger.of("Controller.Validator")
+  
+  import org.w3.vs.prod.configuration
   
   implicit val urlFormat = new Formatter[URL] {
     

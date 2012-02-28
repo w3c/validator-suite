@@ -1,4 +1,4 @@
-package org.w3.vs
+package org.w3.vs.prod
 
 import akka.actor.{ActorSystem, TypedActor, TypedProps}
 import org.w3.vs.http.{Http, HttpImpl}
@@ -11,8 +11,9 @@ import akka.dispatch.ExecutionContext
 import java.util.concurrent.Executors
 import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
 import org.w3.vs.store._
+import org.w3.vs._
 
-trait Production extends ValidatorSuiteConf {
+trait Configuration extends ValidatorSuiteConf {
   
   val MAX_URL_TO_FETCH = 10
   

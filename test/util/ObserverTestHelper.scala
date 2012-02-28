@@ -7,7 +7,7 @@ import akka.testkit.{TestKit, ImplicitSender}
 import akka.util.Duration
 import java.util.concurrent.TimeUnit._
 import akka.actor.ActorSystem
-import org.w3.vs.{ValidatorSuiteConf, Production}
+import org.w3.vs.ValidatorSuiteConf
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 

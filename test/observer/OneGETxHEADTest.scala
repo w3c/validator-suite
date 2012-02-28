@@ -8,12 +8,13 @@ import akka.dispatch.Await
 import akka.util.duration._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
+import org.w3.vs.prod.Configuration
 
 /**
   * Server 1 -> Server 2
   * 1 GET       10 HEAD
   */
-class OneGETxHEADTest extends ObserverTestHelper(new org.w3.vs.Production { }) {
+class OneGETxHEADTest extends ObserverTestHelper(new Configuration { }) {
   
   val j = 10
   

@@ -16,20 +16,8 @@ import akka.util.Duration
 import scala.collection.mutable.ListMap
 
 /**
- * An Observation represents a coherent state of for an Observer.
- * 
- * The following invariants are enforced:
- * <ul>
- * <li>a URL is either
- *   <ul>
- *   <li>to be explored</li>
- *   <li>being fetch (pending state)</li>
- *   <li>already fetched and has a Response associated to it</li>
- *   </ul>
- * </li>
- * <li>an observation is immutable</li>
- * <li></li>
- * </ul>
+ * ObserverData represents a coherent state of for an Observer, modelized as an FSM
+ * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
 case class ObserverData(
     strategy: Strategy, // TODO
@@ -53,7 +41,7 @@ case class ObserverData(
     val d2 = r -- l
     d1 ++ d2
   }
-  
+
   assert(distance.keySet == fetched ++ pending ++ toBeExplored, diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
   assert(toBeExplored.toSet.intersect(pending) == Set.empty)
   assert(pending.intersect(fetched) == Set.empty)
