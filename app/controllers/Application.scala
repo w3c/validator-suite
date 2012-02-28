@@ -40,10 +40,11 @@ object Application extends Controller {
    * Login page.
    */
   def login = IfNotAuth { 
-    implicit request => Ok(views.html.login(loginForm))
-  }{
-    implicit request => Redirect(routes.Validator.index)
+    implicit request => t => Ok(views.html.login(loginForm))
   }
+//  {
+//    implicit request => t => Redirect(routes.Validator.index)
+//  }
 
   /**
    * Handle login form submission.
@@ -128,88 +129,4 @@ trait Secured {
     }
   }*/
 
-}
-
-object IfAjax extends ActionModule0 {
-  override implicit def onFail(req: Request[AnyContent]) = play.api.mvc.Results.BadRequest("This request can only be an Ajax request")
-  def condition(req: Request[AnyContent]): Boolean = 
-    req.headers.get("x-requested-with").map{_ == "xmlhttprequest"}.getOrElse(false)
-}
-object IfAuth extends ActionModule1[User] {
-  override implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
-  def map(req: Request[AnyContent]) = List(req.session.get("email").flatMap { email => store.getUserByEmail(email).right.get })
-}
-object IfNotAuth extends ActionModule0 {
-  def condition(req: Request[AnyContent]) = req.session.get("email") == None
-}
-object OptionAuth extends ActionModule1[Option[User]] {
-  def map(req: Request[AnyContent]): List[Option[Option[User]]] = List(req.session.get("email").map { email => store.getUserByEmail(email).right.get })
-}
-
-// For testing, doesn't really check Job ownership for now
-object OwnsJob extends ActionModule2[User, Job] {
-  val strategy = EntryPointStrategy(
-      uuid=java.util.UUID.randomUUID(), 
-      name="demo strategy",
-      entrypoint=URL("http://www.w3.org"),
-      distance=1,
-      linkCheck=true,
-      filter=Filter(include=Everything, exclude=Nothing))
-      
-  //implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
-  implicit def jobId: Job#Id = null
-  override def map(req: Request[AnyContent]): List[Option[_]] = 
-    IfAuth.map(req).head match {
-      case Some(user) => List(Some(user), Some(new Job(strategy = strategy)))
-      case _ => List(None, None)
-    }
-}
-
-
-
-
-// Temporary objects to test compilation
-object True extends ActionModule0 {
-  def condition(req: Request[AnyContent]): Boolean = true
-}
-object False extends ActionModule0 {
-  def condition(req: Request[AnyContent]): Boolean = false
-}
-object Hello extends ActionModule1[String] {
-  def map(req: Request[AnyContent]) = List(Some("hello"))
-}
-object HiAndHello extends ActionModule2[String, String] {
-  def map(req: Request[AnyContent]) = List(Some("hi"), Some("hello"))
-}
-object GoodByeFolks extends ActionModule3[String, String, String] {
-  def map(req: Request[AnyContent]) = List(Some("good"), Some("bye"), Some("folks"))
-}
-object HiGoodByeFolks extends ActionModule4[String, String, String, String] {
-  def map(req: Request[AnyContent]) = List(Some("hi"), Some("good"), Some("bye"), Some("folks"))
-}
-object Test {
-  
-  def test() = {
-    val a0 = True
-    val a1 = Hello
-    val a2 = HiAndHello
-    val a3 = GoodByeFolks
-    
-    val b: ActionModule0 = a0 >> a0 >> a0 >> a0 // composing ActionModule0s produce an ActionModule0
-    val c = a0 >> a1                            // ActionModule0 >> ActionModule1 produce an ActionModule1 
-    val d = a1 >> a0                            // Can be composed in whichever order
-    val e = a1 >> a1                            // -> ActionModule2
-    val f = a1 >> a2                            // -> ActionModule3
-    val g = a1 >> a3                            // -> ActionModule4
-    val h = e >> a0 >> a1                       // -> ActionModule4
-    val result = play.api.mvc.Results.Ok
-    
-    b {req => result}
-    c {req => s: String => result}
-    d {req => s: String => result}
-    e {req => s: String => ss: String => result}
-    f {req => s: String => ss: String => sss: String => result}
-    g {req => s: String => ss: String => sss: String => ssss: String => result}
-  }
-  
 }

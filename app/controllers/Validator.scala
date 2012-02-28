@@ -91,14 +91,14 @@ object Validator extends Controller with Secured {
       "X-VS-ActionID" -> runIdString)
   }
   
-  def validate() = IfAuth { implicit request => implicit user: User =>
+  def validate() = IfAuth { implicit request => implicit user =>
     validateForm.bindFromRequest.fold(
       formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
       v => validateWithParams(request, v._1, v._2, v._3)
     )
   }
   
-  def redirect(id: String) = IfAuth { implicit request => implicit user: User =>
+  def redirect(id: String) = IfAuth { implicit request => implicit user =>
     try {
       val runId: Run#Id = UUID.fromString(id)
       configuration.observerCreator.byRunId(runId).map { observer =>
@@ -109,7 +109,7 @@ object Validator extends Controller with Secured {
     }
   }
   
-  def stop(id: String) = IfAuth { implicit request => implicit user: User =>
+  def stop(id: String) = IfAuth { implicit request => implicit user =>
     configuration.observerCreator.byRunId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
   }
   
@@ -143,16 +143,6 @@ object Validator extends Controller with Secured {
     }.getOrElse(CloseWebsocket)
   }
   
-//  implicit def uuidWraper(s: String): java.util.UUID = java.util.UUID.fromString(s)
-//  
-//  def test2(implicit jobId: java.util.UUID) = (IsAuth >> IsAuth2 >> IsAuth3) {
-//    user: User => user2: User => user3: User => request: Request[AnyContent] => Ok("yoo")
-//  }
-//  
-//  def test(implicit jobId: java.util.UUID) = (IsAjax >> OwnsJob) {
-//    user: User => job: Job => request: Request[AnyContent] => Ok("yoo")
-//  }
-  
   // def dashboardSocket()
   // Get user's list of jobs
   // for each job subscribe a dashboard subscriber
@@ -162,7 +152,7 @@ object Validator extends Controller with Secured {
   // login
   // logout
   // dashboard
-  def dashboard = IfAuth { _ => implicit user: User => Ok(views.html.dashboard())}
+  def dashboard = IfAuth { _ => implicit user => Ok(views.html.dashboard())}
   // job (report)
   // job/url (focus)
   
