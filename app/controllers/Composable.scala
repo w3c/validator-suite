@@ -1,4 +1,4 @@
-package controllers
+package org.controllers
 
 // TODO Documentation
 
@@ -35,9 +35,7 @@ object Composable {
     }
   }
   // XXX No way to do that with pattern matching?
-  private def onlyContainsSomes(list: List[Option[_]]): Boolean = {
-    list.filter(_ == None).size == 0
-  }
+  private def onlyContainsSomes(list: List[Option[_]]): Boolean = list.forall(_.isDefined)
 }
 object Composable0 {
   def apply[Req, Res](l: Composable0[Req, Res], r: Composable0[Req, Res]): Composable0[Req, Res] =
@@ -95,7 +93,7 @@ trait Composable0[Req, Res] extends Composable[Req, Res] {
 }
 trait Composable1[Req, Res, A] extends Composable[Req, Res] {
   val arity = 1
-  def apply[A](req: Req)(f: => Req => A => Res)(implicit onFail: Req => Res): Res =
+  def apply(req: Req)(f: => Req => A => Res)(implicit onFail: Req => Res): Res =
     map(req) match {
       case List(Some(a)) => f(req)(a.asInstanceOf[A])
       case _ => onFail(req)
@@ -107,7 +105,7 @@ trait Composable1[Req, Res, A] extends Composable[Req, Res] {
 }
 trait Composable2[Req, Res, A, B] extends Composable[Req, Res] {
   val arity = 2
-  def apply[A, B](req: Req)(f: => Req => A => B => Res)(implicit onFail: Req => Res): Res =
+  def apply(req: Req)(f: => Req => A => B => Res)(implicit onFail: Req => Res): Res =
     map(req) match {
       // Type erasure sucks as hell. XXX workaround?
       case List(Some(a), Some(b)) => f(req)(a.asInstanceOf[A])(b.asInstanceOf[B])
@@ -119,7 +117,7 @@ trait Composable2[Req, Res, A, B] extends Composable[Req, Res] {
 }
 trait Composable3[Req, Res, A, B, C] extends Composable[Req, Res] {
   val arity = 3
-  def apply[A, B, C](req: Req)(f: => Req => A => B => C => Res)(implicit onFail: Req => Res): Res =
+  def apply(req: Req)(f: => Req => A => B => C => Res)(implicit onFail: Req => Res): Res =
     map(req) match {
       case List(Some(a), Some(b), Some(c)) => f(req)(a.asInstanceOf[A])(b.asInstanceOf[B])(c.asInstanceOf[C])
       case _ => onFail(req)
@@ -129,7 +127,7 @@ trait Composable3[Req, Res, A, B, C] extends Composable[Req, Res] {
 }
 trait Composable4[Req, Res, A, B, C, D] extends Composable[Req, Res] {
   val arity = 4
-  def apply[A, B, C, D](req: Req)(f: => Req => A => B => C => D => Res)(implicit onFail: Req => Res): Res =
+  def apply(req: Req)(f: => Req => A => B => C => D => Res)(implicit onFail: Req => Res): Res =
     map(req) match {
       case List(Some(a), Some(b), Some(c), Some(d)) => f(req)(a.asInstanceOf[A])(b.asInstanceOf[B])(c.asInstanceOf[C])(d.asInstanceOf[D])
       case _ => onFail(req)

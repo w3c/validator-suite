@@ -1,4 +1,4 @@
-package controllers
+package org.controllers
 
 import play.api.mvc.Result
 import play.api.mvc.Request
@@ -57,28 +57,28 @@ trait ActionModule0 extends Composable0[Request[AnyContent], Result] with Action
 }
 trait ActionModule1[A] extends Composable1[Request[AnyContent], Result, A] with ActionModule {
   import ActionModule._
-  def apply[A](f: => Req => A => Res)(implicit onFail: Req => Res = onFail): Action[AnyContent] = 
-    Action { req => super.apply[A](req)(f) }
+  def apply(f: => Req => A => Res)(implicit onFail: Req => Res = onFail): Action[AnyContent] = 
+    Action { req => super.apply(req)(f) }
   def >> (r: ActionModule0): ActionModule1[A] = super.>>(r)
   def >>[B] (r: ActionModule1[B]): ActionModule2[A, B] = super.>>(r)
   def >>[B, C] (r: ActionModule2[B, C]): ActionModule3[A, B, C] = super.>>(r)
   def >>[B, C, D] (r: ActionModule3[B, C, D]): ActionModule4[A, B, C, D] = super.>>(r)
 }
 trait ActionModule2[A, B] extends Composable2[Request[AnyContent], Result, A, B] with ActionModule {
-  def apply[A, B](f: => Req => A => B => Res)(implicit onFail: Req => Res = onFail): Action[AnyContent] = 
-    Action { req => super.apply[A, B](req)(f) }
+  def apply(f: => Req => A => B => Res)(implicit onFail: Req => Res = onFail): Action[AnyContent] = 
+    Action { req => super.apply(req)(f) }
   def >> (r: ActionModule0): ActionModule2[A, B] = super.>>(r)
   def >>[C] (r: ActionModule1[C]): ActionModule3[A, B, C] = super.>>(r)
   def >>[C, D] (r: ActionModule2[C, D]): ActionModule4[A, B, C, D] = super.>>(r)
 }
 trait ActionModule3[A, B, C] extends Composable3[Request[AnyContent], Result, A, B, C] with ActionModule {
-  def apply[A, B, C](f: => Req => A => B => C => Res)(implicit onFail: Req => Res = onFail): Action[AnyContent] = 
-    Action { req => super.apply[A, B, C](req)(f) }
+  def apply(f: => Req => A => B => C => Res)(implicit onFail: Req => Res = onFail): Action[AnyContent] = 
+    Action { req => super.apply(req)(f) }
   def >> (r: ActionModule0): ActionModule3[A, B, C] = super.>>(r)
   def >>[D] (r: ActionModule1[D]): ActionModule4[A, B, C, D] = super.>>(r)
 }
 trait ActionModule4[A, B, C, D] extends Composable4[Request[AnyContent], Result, A, B, C, D] with ActionModule {
-  def apply[A, B, C, D](f: => Req => A => B => C => D => Res)(implicit onFail: Req => Res = onFail): Action[AnyContent] = 
-    Action { req => super.apply[A, B, C, D](req)(f) }
+  def apply(f: => Req => A => B => C => D => Res)(implicit onFail: Req => Res = onFail): Action[AnyContent] = 
+    Action { req => super.apply(req)(f) }
   def >> (r: ActionModule0): ActionModule4[A, B, C, D] = super.>>(r)
 }
