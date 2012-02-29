@@ -11,18 +11,18 @@ trait Store {
   
   def putResourceInfo(resourceInfo: ResourceInfo): Validation[Throwable, Unit]
   
-  def putRun(run: Run): Validation[Throwable, Unit]
+  def putJob(job: Job): Validation[Throwable, Unit]
   
-  def getResourceInfo(url: URL, runId: Run#Id): Validation[Throwable, ResourceInfo]
+  def getResourceInfo(url: URL, jobId: Job#Id): Validation[Throwable, ResourceInfo]
   
-  def distance(url: URL, runId: Run#Id): Validation[Throwable, Int]
+  def distance(url: URL, jobId: Job#Id): Validation[Throwable, Int]
   
-  def listResourceInfos(runId: Run#Id): Validation[Throwable, Iterable[ResourceInfo]]
+  def listResourceInfos(jobId: Job#Id): Validation[Throwable, Iterable[ResourceInfo]]
   
   // this is not really safe (goes through the entire collection)
   // def listAllResourceInfos(): Validation[Throwable, Iterable[ResourceInfo]]
   
-  def listAssertions(runId: Run#Id): Validation[Throwable, Iterable[Assertion]]
+  def listAssertions(jobId: Job#Id): Validation[Throwable, Iterable[Assertion]]
   
   def saveUser(user: User): Validation[Throwable, Unit]
   

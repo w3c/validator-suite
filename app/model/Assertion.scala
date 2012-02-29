@@ -11,10 +11,11 @@ import org.w3.vs.assertor._
  */
 case class Assertion(
     id: Assertion#Id = UUID.randomUUID(),
+    // the urls that were needed to generate this assertion
     url: URL,
     assertorId: AssertorId,
     // an assertion was produced in the context of a run
-    runId: Run#Id,
+    jobId: Job#Id,
     // when this assertion was produced
     timestamp: DateTime = new DateTime,
     // the useful stuff

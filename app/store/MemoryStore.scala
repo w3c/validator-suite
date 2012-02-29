@@ -18,7 +18,7 @@ class MemoryStore extends Store {
   
   val users: ConcurrentMap[User#Id, User] = new ConcurrentHashMap[User#Id, User]().asScala
   
-  val runs: ConcurrentMap[Run#Id, Run] = new ConcurrentHashMap[Run#Id, Run]().asScala
+  val jobs: ConcurrentMap[Job#Id, Job] = new ConcurrentHashMap[Job#Id, Job]().asScala
   
   def init(): Validation[Throwable, Unit] = Success()
   
@@ -30,29 +30,29 @@ class MemoryStore extends Store {
     resourceInfos += resourceInfo.id -> resourceInfo
   }
   
-  def putRun(run: Run): Validation[Throwable, Unit] = fromTryCatch {
-    runs += run.id -> run
+  def putJob(job: Job): Validation[Throwable, Unit] = fromTryCatch {
+    jobs += job.id -> job
   }
   
-  def getResourceInfo(url: URL, runId: Run#Id): Validation[Throwable, ResourceInfo] = {
-    val riOpt = resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.runId == runId => ri }
-    riOpt toSuccess (new Throwable("run %s: couldn't find %s" format (runId.toString, url.toString)))
+  def getResourceInfo(url: URL, jobId: Job#Id): Validation[Throwable, ResourceInfo] = {
+    val riOpt = resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.jobId == jobId => ri }
+    riOpt toSuccess (new Throwable("job %s: couldn't find %s" format (jobId.toString, url.toString)))
   }
   
-  def distance(url: URL, runId: Run#Id): Validation[Throwable, Int] = {
-    getResourceInfo(url, runId) map { _.distancefromSeed }
+  def distance(url: URL, jobId: Job#Id): Validation[Throwable, Int] = {
+    getResourceInfo(url, jobId) map { _.distancefromSeed }
   }
   
-  def listResourceInfos(runId: Run#Id): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
-    resourceInfos.values filter { _.runId == runId }
+  def listResourceInfos(jobId: Job#Id): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
+    resourceInfos.values filter { _.jobId == jobId }
   }
   
   def listAllResourceInfos(): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
     resourceInfos.values
   }
   
-  def listAssertions(runId: Run#Id): Validation[Throwable, Iterable[Assertion]] = fromTryCatch {
-    assertions.values filter { _.runId == runId }
+  def listAssertions(jobId: Job#Id): Validation[Throwable, Iterable[Assertion]] = fromTryCatch {
+    assertions.values filter { _.jobId == jobId }
   }
   
   def saveUser(user: User): Validation[Throwable, Unit] = fromTryCatch {

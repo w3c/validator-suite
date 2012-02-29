@@ -20,7 +20,7 @@ import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
 
 
-class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[ObserverState, ObserverData] {
+class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[ObserverState, ObserverData] {
   
   import configuration._
   
@@ -32,9 +32,9 @@ class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends
   /**
    * A shorten id for logs readability
    */
-  val shortId = run.shortId
+  val shortId = job.shortId
   
-  def strategy = run.job.strategy
+  implicit def strategy = job.strategy
   
   startWith(Running, scheduleNextURLsToFetch(startExploration))
   
@@ -146,7 +146,7 @@ class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends
           logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, data.numberOfKnownUrls))
         val ri = ResourceInfo(
           url = url,
-          runId = run.id,
+          jobId = job.id,
           action = GET,
           distancefromSeed = distance,
           result = Fetch(status, headers, extractedURLs))
@@ -158,7 +158,7 @@ class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends
         val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
         val ri = ResourceInfo(
           url = url,
-          runId = run.id,
+          jobId = job.id,
           action = GET,
           distancefromSeed = distance,
           result = Fetch(status, headers, List.empty))
@@ -169,7 +169,7 @@ class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends
         val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
         val ri = ResourceInfo(
           url = url,
-          runId = run.id,
+          jobId = job.id,
           action = GET,
           distancefromSeed = distance,
           result = ResourceInfoError(why.getMessage))
@@ -189,7 +189,7 @@ class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends
         Assertion(
           url = url,
           assertorId = assertor.id,
-          runId = run.id,
+          jobId = job.id,
           // TODO check the 401 here?
           result = result.fold(t => AssertionError(t.getMessage), r => r))
       }(validatorDispatcher) recoverWith { case t: Throwable =>
@@ -197,7 +197,7 @@ class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends
           Assertion(
             url = url,
             assertorId = assertor.id,
-            runId = run.id,
+            jobId = job.id,
             result = AssertionError(t.getMessage))
         }
       }
@@ -210,8 +210,8 @@ class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends
 
   // TODO should be a service from the store
   private final def initialState: Iterable[message.ObservationUpdate] = {
-    val resourceInfos = store.listResourceInfos(run.id).either.right.get map message.NewResourceInfo
-    val assertions = store.listAssertions(run.id).either.right.get map message.NewAssertion
+    val resourceInfos = store.listResourceInfos(job.id).either.right.get map message.NewResourceInfo
+    val assertions = store.listAssertions(job.id).either.right.get map message.NewAssertion
     resourceInfos ++ assertions
   }
   

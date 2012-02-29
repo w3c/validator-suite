@@ -23,14 +23,14 @@ class CyclicWebsiteCrawlTest extends ObserverTestHelper(new Configuration { }) {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val run = Run(job = Job(strategy = strategy))
+  val job = Job(strategy = strategy)
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
   "test cyclic(10)" in {
     http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
-    val observer = observerCreator.observerOf(run)
-    def cond = (store.listResourceInfos(run.id) getOrElse sys.error("was not a Success") ).size == 11
+    val observer = observerCreator.observerOf(job)
+    def cond = (store.listResourceInfos(job.id) getOrElse sys.error("was not a Success") ).size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
   }
   

@@ -11,4 +11,6 @@ case class Job(
   
   type Id = UUID
   
+  def shortId: String = id.toString.substring(0, 6)
+  
 }

@@ -25,7 +25,7 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new Configuration { }) {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val run = Run(job = Job(strategy = strategy))
+  val job = Job(strategy = strategy)
   
   val servers = Seq(
       unfiltered.jetty.Http(9001).filter(Website(Seq("/" --> "http://localhost:9002/")).toPlanify),
@@ -33,8 +33,8 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new Configuration { }) {
   )
 
   "test simpleInterWebsite" in {
-    val observer = observerCreator.observerOf(run)
-    def ris = store.listResourceInfos(run.id) getOrElse sys.error("was not a Success")
+    val observer = observerCreator.observerOf(job)
+    def ris = store.listResourceInfos(job.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 2
     awaitCond(cond, 3 seconds, 50 milliseconds)
   }

@@ -7,29 +7,29 @@ import org.w3.vs.model._
 import org.w3.vs.assertor._
 
 trait ObserverCreator {
-  def byRunId(runId: Run#Id): Option[ActorRef]
-  def byRunId(runId: String): Option[ActorRef]
-  def observerOf(run: Run): ActorRef
+  def byJobId(jobId: Job#Id): Option[ActorRef]
+  def byJobId(jobId: String): Option[ActorRef]
+  def observerOf(job: Job): ActorRef
 }
     
 class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) extends ObserverCreator {
   
-  var registry = Map[Run#Id, ActorRef]()
+  var registry = Map[Job#Id, ActorRef]()
   
-  def byRunId(runId: Run#Id): Option[ActorRef] = registry.get(runId)
+  def byJobId(jobId: Job#Id): Option[ActorRef] = registry.get(jobId)
   
-  def byRunId(runIdString: String): Option[ActorRef] =
+  def byJobId(jobIdString: String): Option[ActorRef] =
     try {
-      val runId: Run#Id = java.util.UUID.fromString(runIdString)
-      byRunId(runId)
+      val jobId: Job#Id = java.util.UUID.fromString(jobIdString)
+      byJobId(jobId)
     } catch { case e =>
       None
     }
     
-  def observerOf(run: Run): ActorRef = {
+  def observerOf(job: Job): ActorRef = {
     val obs = TypedActor.context.actorOf(
-      Props(new Observer(run)), name = run.id.toString)
-    registry += (run.id -> obs)
+      Props(new Observer(job)), name = job.id.toString)
+    registry += (job.id -> obs)
     obs
   }
 }

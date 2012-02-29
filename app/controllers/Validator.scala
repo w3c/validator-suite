@@ -81,17 +81,13 @@ object Validator extends Controller {
     
     logger.debug("job: "+job)
     
-    val run = Run(job = job)
+    val observer = configuration.observerCreator.observerOf(job)
     
-    logger.debug("run: "+run)
-
-    val observer = configuration.observerCreator.observerOf(run)
-    
-    val runIdString: String = run.id.toString
+    val jobIdString: String = job.id.toString
     
     Created("").withHeaders(
-      "Location" -> (request.uri + "/" + runIdString),
-      "X-VS-ActionID" -> runIdString)
+      "Location" -> (request.uri + "/" + jobIdString),
+      "X-VS-ActionID" -> jobIdString)
   }
   
   def validate() = IfAuth { implicit request => implicit user =>
@@ -103,8 +99,8 @@ object Validator extends Controller {
   
   def redirect(id: String) = IfAuth { implicit request => implicit user =>
     try {
-      val runId: Run#Id = UUID.fromString(id)
-      configuration.observerCreator.byRunId(runId).map { observer =>
+      val jobId: Job#Id = UUID.fromString(id)
+      configuration.observerCreator.byJobId(jobId).map { observer =>
         Redirect("/#!/observation/" + id)
       }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
     } catch { case e =>
@@ -113,7 +109,7 @@ object Validator extends Controller {
   }
   
   def stop(id: String) = IfAuth { implicit request => implicit user =>
-    configuration.observerCreator.byRunId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
+    configuration.observerCreator.byJobId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
   }
   
   /*
@@ -137,7 +133,7 @@ object Validator extends Controller {
   // def jobSocket
   // 
   def subscribe(id: String): WebSocket[JsValue] = IfAuthSocket { request => user =>
-    configuration.observerCreator.byRunId(id).map { observer =>
+    configuration.observerCreator.byJobId(id).map { observer =>
       val in = Iteratee.foreach[JsValue](e => println(e))
       val enumerator = Subscribe.to(observer)
       (in, enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
@@ -165,7 +161,7 @@ object Validator extends Controller {
   // * Ajax actions
   // createJob
   // editJob
-  // runJob
+  // jobJob
   // stopJob
   // deleteJob
   
