@@ -7,11 +7,6 @@ import play.api.data.format.Formats._
 import play.api.data.validation.Constraints._
 import play.api.data.format.Formatter
 import play.api.mvc.Request
-import java.net.URI
-import java.util.UUID
-import org.w3.util._
-import org.w3.vs.model._
-import org.w3.vs.observer._
 import play.api.data.FormError
 import play.api.mvc.AsyncResult
 import play.api.data.Forms._
@@ -21,7 +16,14 @@ import play.api.libs.concurrent._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
 
-object Validator extends Controller with Secured {
+import java.net.URI
+import java.util.UUID
+
+import org.w3.util._
+import org.w3.vs.model._
+import org.w3.vs.observer._
+
+object Validator extends Controller {
   
   val logger = play.Logger.of("Controller.Validator")
   
@@ -55,7 +57,7 @@ object Validator extends Controller with Secured {
     )
   )
   
-  def index = IfAuth { _ => implicit user: User => Ok(views.html.index()) }
+  def index = IfAuth { _ => implicit user => Ok(views.html.index()) }
   
   def validateWithParams(
       request: Request[AnyContent],
@@ -117,25 +119,23 @@ object Validator extends Controller with Secured {
    * Authenticated socket responsible for streaming the dashboard data, i.e. the list of 
    * jobs owned by the current user.
    
-  def dashboardSocket: WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
-    User.findByEmail(username).map { user =>
-      // Get the list of jobs of the user
-      val socket = (Iteratee.foreach[JsValue](e => println(e)))
-      var enum = Enumerator.imperative[JsValue]()
-      user.jobs.map { job =>
-        // Subscribe a DashboardSubscriber to the job's observer
-        val sub = job.observer.observerOf(new DashboardSubscriber())
-        job.observer.subscribe2(sub)
-        enum = enum >>> sub.enumerator
-      }
-      enum = enum &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS }
-      (Iteratee.ignore, enum)
-    }.getOrElse(CloseWebsocket)
-  }
-  */
+  def dashboardSocket: WebSocket[JsValue] = IfAuthSocket { request => user =>
+    // Get the list of jobs of the user
+    val socket = (Iteratee.foreach[JsValue](e => println(e)))
+    var enum = Enumerator.imperative[JsValue]()
+    user.jobs.map { job =>
+    // Subscribe a DashboardSubscriber to the job's observer
+      val sub = job.observer.observerOf(new DashboardSubscriber())
+      job.observer.subscribe2(sub)
+      enum = enum >>> sub.enumerator
+    }
+    enum = enum &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS }
+    (Iteratee.ignore, enum)
+  }*/
+  
   // def jobSocket
   // 
-  def subscribe(id: String): WebSocket[JsValue] = AuthenticatedWebSocket { username => request =>
+  def subscribe(id: String): WebSocket[JsValue] = IfAuthSocket { request => user =>
     configuration.observerCreator.byRunId(id).map { observer =>
       val in = Iteratee.foreach[JsValue](e => println(e))
       val enumerator = Subscribe.to(observer)
@@ -152,7 +152,7 @@ object Validator extends Controller with Secured {
   // login
   // logout
   // dashboard
-  def dashboard = IfAuth { _ => implicit user => Ok(views.html.dashboard())}
+  def dashboard = IfAuth {_ => implicit user => Ok(views.html.dashboard())}
   // job (report)
   // job/url (focus)
   
