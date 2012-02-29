@@ -30,7 +30,7 @@ class CyclicWebsiteCrawlTest extends ObserverTestHelper(new Configuration { }) {
   "test cyclic(10)" in {
     http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
     val observer = observerCreator.observerOf(run)
-    def cond = store.listResourceInfos(run.id).right.get.size == 11
+    def cond = (store.listResourceInfos(run.id) getOrElse sys.error("was not a Success") ).size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
   }
   

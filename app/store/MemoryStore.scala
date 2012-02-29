@@ -6,6 +6,9 @@ import org.w3.util._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap
+import scalaz._
+import Scalaz._
+import Validation._
 
 class MemoryStore extends Store {
   
@@ -17,76 +20,55 @@ class MemoryStore extends Store {
   
   val runs: ConcurrentMap[Run#Id, Run] = new ConcurrentHashMap[Run#Id, Run]().asScala
   
-  def init(): Either[Throwable, Unit] = Right()
+  def init(): Validation[Throwable, Unit] = Success()
   
-  def putAssertion(assertion: Assertion): Either[Throwable, Unit] =
-    try {
-      assertions += assertion.id -> assertion
-      Right()
-    } catch {
-      case t => Left(t)
-    }
+  def putAssertion(assertion: Assertion): Validation[Throwable, Unit] = fromTryCatch {
+    assertions += assertion.id -> assertion
+  }
+
+  def putResourceInfo(resourceInfo: ResourceInfo): Validation[Throwable, Unit] = fromTryCatch {
+    resourceInfos += resourceInfo.id -> resourceInfo
+  }
   
-  def putResourceInfo(resourceInfo: ResourceInfo): Either[Throwable, Unit] =
-    try {
-      resourceInfos += resourceInfo.id -> resourceInfo
-      Right()
-    } catch {
-      case t => Left(t)
-    }
-  
-  def putRun(run: Run): Either[Throwable, Unit] =
+  def putRun(run: Run): Validation[Throwable, Unit] =
     try {
       runs += run.id -> run
-      Right()
+      Success()
     } catch {
-      case t => Left(t)
+      case t => t.fail
     }
   
-  def getResourceInfo(url: URL, runId: Run#Id): Either[Throwable, ResourceInfo] = {
+  def getResourceInfo(url: URL, runId: Run#Id): Validation[Throwable, ResourceInfo] = {
     val riOpt = resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.runId == runId => ri }
-    riOpt.toRight(new Throwable("run %s: couldn't find %s" format (runId.toString, url.toString)))
+    riOpt toSuccess (new Throwable("run %s: couldn't find %s" format (runId.toString, url.toString)))
   }
   
-  def distance(url: URL, runId: Run#Id): Either[Throwable, Int] = {
-    getResourceInfo(url, runId).right map { _.distancefromSeed }
+  def distance(url: URL, runId: Run#Id): Validation[Throwable, Int] = {
+    getResourceInfo(url, runId) map { _.distancefromSeed }
   }
   
-  def listResourceInfos(runId: Run#Id): Either[Throwable, Iterable[ResourceInfo]] = {
-    val ris = resourceInfos.values filter { _.runId == runId }
-    Right(ris)
+  def listResourceInfos(runId: Run#Id): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
+    resourceInfos.values filter { _.runId == runId }
   }
   
-  def listAllResourceInfos(): Either[Throwable, Iterable[ResourceInfo]] =
-    Right(resourceInfos.values)
-  
-  def listAssertions(runId: Run#Id): Either[Throwable, Iterable[Assertion]] = {
-    val as = assertions.values filter { _.runId == runId }
-    Right(as)
+  def listAllResourceInfos(): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
+    resourceInfos.values
   }
   
-  def saveUser(user: User): Either[Throwable, Unit] =
-    try {
-      users += user.id -> user
-      Right()
-    } catch {
-      case t => Left(t)
-    }
+  def listAssertions(runId: Run#Id): Validation[Throwable, Iterable[Assertion]] = fromTryCatch {
+    assertions.values filter { _.runId == runId }
+  }
   
-  def getUserByEmail(email: String): Either[Throwable, Option[User]] =
-    try {
-      val userOpt = users collectFirst { case (_, user) if user.email == email => user }
-      Right(userOpt)
-    } catch {
-      case t => Left(t)
-    }
+  def saveUser(user: User): Validation[Throwable, Unit] = fromTryCatch {
+    users += user.id -> user
+  }
   
-  def authenticate(email: String, password: String): Either[Throwable, Option[User]] =
-    try {
-      val userOpt = users collectFirst { case (_, user) if user.email == email && user.password == password => user }
-      Right(userOpt)
-    } catch {
-      case t => Left(t)
-    }
+  def getUserByEmail(email: String): Validation[Throwable, Option[User]] = fromTryCatch {
+    users collectFirst { case (_, user) if user.email == email => user }
+  }
   
+  def authenticate(email: String, password: String): Validation[Throwable, Option[User]] = fromTryCatch {
+    users collectFirst { case (_, user) if user.email == email && user.password == password => user }
+  }
+    
 }

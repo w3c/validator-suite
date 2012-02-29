@@ -14,6 +14,7 @@ object ApplicationBuild extends Build {
     "org.joda" % "joda-convert" % "1.1" intransitive(),
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
+    "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0-RC2" % "test",
     "net.databinder" %% "unfiltered-filter" % "0.5.3" % "test",

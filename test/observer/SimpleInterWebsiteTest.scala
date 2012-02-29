@@ -34,7 +34,7 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new Configuration { }) {
 
   "test simpleInterWebsite" in {
     val observer = observerCreator.observerOf(run)
-    def ris = store.listResourceInfos(run.id).right.get
+    def ris = store.listResourceInfos(run.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 2
     awaitCond(cond, 3 seconds, 50 milliseconds)
   }

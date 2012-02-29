@@ -210,8 +210,8 @@ class Observer(run: Run)(implicit val configuration: ValidatorSuiteConf) extends
 
   // TODO should be a service from the store
   private final def initialState: Iterable[message.ObservationUpdate] = {
-    val resourceInfos = store.listResourceInfos(run.id).right.get map message.NewResourceInfo
-    val assertions = store.listAssertions(run.id).right.get map message.NewAssertion
+    val resourceInfos = store.listResourceInfos(run.id).either.right.get map message.NewResourceInfo
+    val assertions = store.listAssertions(run.id).either.right.get map message.NewAssertion
     resourceInfos ++ assertions
   }
   

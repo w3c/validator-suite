@@ -37,7 +37,7 @@ class OneGETxHEADTest extends ObserverTestHelper(new Configuration { }) {
   "test OneGETxHEAD" in {
     http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
     val observer = observerCreator.observerOf(run)
-    def ris = store.listResourceInfos(run.id).right.get
+    def ris = store.listResourceInfos(run.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
     val urls8081 = ris filter { _.url.authority == "localhost:9002" }

@@ -137,13 +137,13 @@ object IfAjax extends ActionModule0 {
 }
 object IfAuth extends ActionModule1[User] {
   override implicit def onFail(req: Request[AnyContent]) = Results.Redirect(routes.Application.login)
-  def map(req: Request[AnyContent]) = List(req.session.get("email").flatMap { email => store.getUserByEmail(email).right.get })
+  def map(req: Request[AnyContent]) = List(req.session.get("email").flatMap { email => store.getUserByEmail(email) getOrElse sys.error("was not a Success") })
 }
 object IfNotAuth extends ActionModule0 {
   def condition(req: Request[AnyContent]) = req.session.get("email") == None
 }
 object OptionAuth extends ActionModule1[Option[User]] {
-  def map(req: Request[AnyContent]): List[Option[Option[User]]] = List(req.session.get("email").map { email => store.getUserByEmail(email).right.get })
+  def map(req: Request[AnyContent]): List[Option[Option[User]]] = List(req.session.get("email").map { email => store.getUserByEmail(email) getOrElse sys.error("was not a Success") })
 }
 
 // For testing, doesn't really check Job ownership for now
