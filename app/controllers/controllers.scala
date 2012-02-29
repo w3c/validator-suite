@@ -1,3 +1,5 @@
+package org.w3.vs
+
 import play.api.mvc.Request
 import play.api.mvc.AnyContent
 import play.api.mvc.Result

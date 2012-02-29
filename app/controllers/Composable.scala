@@ -1,4 +1,4 @@
-package controllers
+package org.w3.vs.controllers
 
 trait Composable[A, Req, Res, Z] {
   def extract(req: Req): Either[Res, A]

@@ -1,4 +1,4 @@
-package controllers
+package org.w3.vs.controllers
 
 import org.w3.vs.model.User
 import org.w3.vs.prod.configuration.store

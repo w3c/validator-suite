@@ -22,6 +22,7 @@ import java.util.UUID
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.observer._
+import org.w3.vs.controllers._
 
 object Validator extends Controller {
   
