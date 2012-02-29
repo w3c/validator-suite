@@ -1,7 +1,9 @@
 package org.w3.vs.controllers
 
+import scalaz._
+
 trait Composable[A, Req, Res, Z] {
-  def extract(req: Req): Either[Res, A]
+  def extract(req: Req): Validation[Res, A]
   def apply(f: Req => A => Res)(implicit partial: (Req => Res) => Z): Z =
     partial { Composable.semantics(this)(f) _ }
 }

@@ -30,13 +30,9 @@ class MemoryStore extends Store {
     resourceInfos += resourceInfo.id -> resourceInfo
   }
   
-  def putRun(run: Run): Validation[Throwable, Unit] =
-    try {
-      runs += run.id -> run
-      Success()
-    } catch {
-      case t => t.fail
-    }
+  def putRun(run: Run): Validation[Throwable, Unit] = fromTryCatch {
+    runs += run.id -> run
+  }
   
   def getResourceInfo(url: URL, runId: Run#Id): Validation[Throwable, ResourceInfo] = {
     val riOpt = resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.runId == runId => ri }

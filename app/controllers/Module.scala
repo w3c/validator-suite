@@ -15,60 +15,76 @@ import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Iteratee
 import play.api.libs.json.JsValue
 
+import scalaz._
+import Scalaz._
+import Validation._
+import org.w3.util.Pimps._
+
 trait ActionModule[A] extends Composable[A, ActionReq, ActionRes, Action[AnyContent]]
 trait SocketModule[A] extends Composable[A, SocketReq, SocketRes, WebSocket[JsValue]]
 
 object IfAjax extends ActionModule[Boolean] {
   def extract(req: ActionReq) = {
     req.headers.get("x-requested-with") match {
-      case Some("xmlhttprequest") => Right(true)
-      case _ => Left(play.api.mvc.Results.BadRequest("This request can only be an Ajax request"))
+      case Some("xmlhttprequest") => Success(true)
+      case _ => Failure(play.api.mvc.Results.BadRequest("This request can only be an Ajax request"))
     }
   }
 }
 object IfNotAjax extends ActionModule[Boolean] {
   def extract(req: ActionReq) = {
     req.headers.get("x-requested-with") match {
-      case None => Right(true)
-      case _ => Left(play.api.mvc.Results.BadRequest("This request cannot be an Ajax request"))
+      case None => Success(true)
+      case _ => Failure(play.api.mvc.Results.BadRequest("This request cannot be an Ajax request"))
     }
   }
 }
 object OptionAjax extends ActionModule[Option[Boolean]] {
   def extract(req: ActionReq) = {
     req.headers.get("x-requested-with") match {
-      case Some("xmlhttprequest") => Right(Some(true))
-      case _ => Right(None)
+      case Some("xmlhttprequest") => Success(Some(true))
+      case _ => Success(None)
     }
   }
 }
 
 object IfAuth extends ActionModule[User] { 
-  def extract(req: Request[AnyContent]) = {
-    req.session.get("email").flatMap{store.getUserByEmail(_).right.get} match {
-      case Some(user) => Right(user)
-      case _ => Left(Results.Redirect(controllers.routes.Application.login))
-    }
-  }
+  def extract(req: Request[AnyContent]) =
+    for {
+      email <- req.session.get("email") toSuccess Results.Redirect(controllers.routes.Application.login)
+      userOpt <- store.getUserByEmail(email) failMap { t => Results.InternalServerError }
+      user <- userOpt toSuccess Results.Redirect(controllers.routes.Application.login)
+    } yield user
 }
+
+//Product with Serializable with 
+// Either[(play.api.libs.iteratee.Iteratee[play.api.libs.json.JsValue,Unit], java.lang.Object with 
+// play.api.libs.iteratee.Enumerator[Nothing]),Nothing]
+
 object IfAuthSocket extends SocketModule[User] {
-  def extract(req: RequestHeader) = {
-    req.session.get("email").flatMap{store.getUserByEmail(_).right.get} match {
-      case Some(user) => Right(user)
-      case _ => Left((Iteratee.foreach[JsValue](e => println(e)), Enumerator.eof))
-    }
+  def extract(req: RequestHeader): Validation[SocketRes, User] = {
+    def default: SocketRes = (Iteratee.foreach[JsValue](e => println(e)), Enumerator.eof)
+    for {
+      email <- req.session.get("email") toSuccess default // is this the desired behaviour?
+      userOpt <- store.getUserByEmail(email) failMap { t => default }
+      user <- userOpt toSuccess default
+    } yield user
   }
 }
+
 object IfNotAuth extends ActionModule[Boolean] {
   def extract(req: ActionReq) = {
     req.session.get("email") match { 
-      case None => Right(true)
-      case _ => Left(Results.Redirect(controllers.routes.Validator.index)) 
+      case None => Success(true)
+      case _ => Failure(Results.Redirect(controllers.routes.Validator.index)) 
     }
   }
 }
+
 object OptionAuth extends ActionModule[Option[User]] {
-  def extract(req: ActionReq) = {
-    Right(req.session.get("email").flatMap{store.getUserByEmail(_).right.get})
-  }
+  def extract(req: ActionReq) =
+    for {
+      email <- req.session.get("email") toSuccess Results.Redirect(controllers.routes.Application.login)
+      userOpt <- store.getUserByEmail(email) failMap { t => Results.InternalServerError }
+    } yield userOpt
 }
