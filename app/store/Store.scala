@@ -13,6 +13,8 @@ trait Store {
   
   def putJob(job: Job): Validation[Throwable, Unit]
   
+  def getJobById(id: Job#Id): Validation[Throwable, Job]
+  
   def getResourceInfo(url: URL, jobId: Job#Id): Validation[Throwable, ResourceInfo]
   
   def distance(url: URL, jobId: Job#Id): Validation[Throwable, Int]

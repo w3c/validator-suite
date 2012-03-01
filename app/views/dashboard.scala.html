@@ -6,98 +6,45 @@
 	@libs.navigation()
 	
 	<section id="jobs" class="main">
-		<header>My jobs</header>
-		<ul>
-			<li>
-				<section class="job">
-					<header>MyJob1</header>
-					<ul class="meta">
-						<li>Name: MyJob1</li>
-						<li>Uri: http://www.w3.org/</li>
-						<li>Status: Running|Idle</li>
-						<li>Resources: 16,053</li>
-					</ul>
-					<ul class="last">
-						<li>Last run: <time datetime="1970-01-01T00:00Z">01 Jan 1970</time></li>
-						<li>Last updated: <time datetime="1970-01-01T00:00Z">01 Jan 1970</time></li>
-						<li>Errors: 153</li>
-						<li>Warnings: 66</li>
-					</ul>
-					<div class="graph">
+	<ul>
+	@jobs.map { job =>
+		<li>
+			<section class="job">
+				<header>@job.name</header>
+				<ul class="meta">
+					<li>Name: @job.name</li>
+					<li>Uri: @job.strategy.seedURLs.head</li>
+					<li>Status: -</li>
+					<li>Resources: -</li>
+				</ul>
+				<ul class="last">
+					<li>Last run: <time datetime="">-</time></li>
+					<li>Last updated: <time datetime="">-</time></li>
+					<li>Errors: -</li>
+					<li>Warnings: -</li>
+				</ul>
+				<div class="graph">
 <pre style="margin: 0 0 0 30px">|       +
 |    +     +      +
 |  +          +
 |____________________
 </pre>
-					</div>
-					<ul class="menu">
-						<li><a href="job.html">Show</a></li>
-						<li>Run</li>
-						<li>Edit</li>
-						<li>Delete</li>
-					</ul>
-				</section>
-			</li>
-			<li>
-				<section class="job">
-					<header>MyJob2</header>
-					<ul class="meta">
-						<li>Name: MyJob2</li>
-						<li>Uri: http://www.w3.org/</li>
-						<li>Status: Running|Idle</li>
-						<li>Resources: 16,053</li>
-					</ul>
-					<ul class="last">
-						<li>Last run: <time datetime="1970-01-01T00:00Z">01 Jan 1970</time></li>
-						<li>Last updated: <time datetime="1970-01-01T00:00Z">01 Jan 1970</time></li>
-						<li>Errors: 153</li>
-						<li>Warnings: 66</li>
-					</ul>
-					<div class="graph">
-<pre style="margin: 0 0 0 30px">|       +
-|    +     +      +
-|  +          +
-|____________________
-</pre>
-					</div>
-					<ul class="menu">
-						<li>Show</li>
-						<li>Run</li>
-						<li>Edit</li>
-						<li>Delete</li>
-					</ul>
-				</section>
-				</li><li>
-				<section class="job">
-					<header>MyJob3</header>
-					<ul class="meta">
-						<li>Name: MyJob3</li>
-						<li>Uri: http://www.w3.org/</li>
-						<li>Status: Running|Idle</li>
-						<li>Resources: 16,053</li>
-					</ul>
-					<ul class="last">
-						<li>Last run: <time datetime="1970-01-01T00:00Z">01 Jan 1970</time></li>
-						<li>Last updated: <time datetime="1970-01-01T00:00Z">01 Jan 1970</time></li>
-						<li>Errors: 153</li>
-						<li>Warnings: 66</li>
-					</ul>
-					<div class="graph">
-<pre style="margin: 0 0 0 30px">|       +
-|    +     +      +
-|  +          +
-|____________________
-</pre>
-					</div>
-					<ul class="menu">
-						<li>Show</li>
-						<li>Run</li>
-						<li>Edit</li>
-						<li>Delete</li>
-					</ul>
-				</section>
-			</li>
-		</ul>
+				</div>
+				<ul class="menu">
+					<li><a href="@routes.Validator.showJob(job.id)">Show</a></li>
+					<li>Run</li>
+					<li><a href="@routes.Validator.editJob(job.id)">Edit</a></li>
+					<li>
+					  <a href="@routes.Validator.deleteJob(job.id)">Delete</a>
+					  @(/*helper.form(routes.Validator.jobDispatcher(job.id)){
+					  <input type="hidden" name="http-method" value="delete"> @(/* The Delete method is not supported in HTML5... */)
+					  <button type=submit>Delete</button>}*/)
+					</li>
+				</ul>
+			</section>
+		</li>
+	}
+	</ul>
 	</section>
 	
 	@libs.footer()

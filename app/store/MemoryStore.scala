@@ -34,6 +34,11 @@ class MemoryStore extends Store {
     jobs += job.id -> job
   }
   
+  def getJobById(id: Job#Id) = jobs.get(id) match {
+    case Some(job) => Success(job)
+    case _ => Failure(new Throwable) // TODO
+  }
+  
   def getResourceInfo(url: URL, jobId: Job#Id): Validation[Throwable, ResourceInfo] = {
     val riOpt = resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.jobId == jobId => ri }
     riOpt toSuccess (new Throwable("job %s: couldn't find %s" format (jobId.toString, url.toString)))

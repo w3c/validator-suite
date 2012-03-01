@@ -5,7 +5,6 @@
 		<title>@title</title>
 		<meta charset="utf-8" />
 		<!--<link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">-->
-		<link href="@routes.Assets.at("stylesheets/main.min.css")" rel="stylesheet" />
 		@stylesheets.map { stylesheet => 
 		<link href="@{routes.Assets.at("stylesheets/"+stylesheet)}" rel="stylesheet" />
 		}

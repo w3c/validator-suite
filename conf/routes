@@ -4,7 +4,24 @@
 
 # Index
 GET     /                           controllers.Validator.index()
+
+# Dashboard
 GET     /dashboard                  controllers.Validator.dashboard()
+
+# Jobs
+GET     /job/:id                    controllers.Validator.showJob(id: java.util.UUID)
+# HTML5 does not support PUT and DELETE methods!
+#PUT     /job/:id                    controllers.Validator.updateJob(id: java.util.UUID)
+#DELETE  /job/:id                    controllers.Validator.deleteJob(id: java.util.UUID)
+# Workaround 1:
+GET     /job/:id/delete             controllers.Validator.deleteJob(id: java.util.UUID)
+POST    /job/:id                    controllers.Validator.updateJob(id: java.util.UUID)
+# Workaround 2: jobDispatcher checks if a http-method parameter (= put|delete) is passed with the form and dispatch to the correct action 
+#POST    /job/:id                    controllers.Validator.jobDispatcher(id: java.util.UUID)
+
+GET     /job/:id/edit               controllers.Validator.editJob(id: java.util.UUID)
+GET     /job                        controllers.Validator.newJob()
+POST    /job                        controllers.Validator.createJob()
 
 # Authentication
 GET     /login                      controllers.Application.login

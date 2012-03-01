@@ -1,6 +1,7 @@
 package org.w3.vs.controllers
 
 import org.w3.vs.model.User
+import org.w3.vs.model.Job
 import org.w3.vs.prod.configuration.store
 
 import play.api.mvc.Request
@@ -55,6 +56,20 @@ object IfAuth extends ActionModule[User] {
       userOpt <- store.getUserByEmail(email) failMap { t => Results.InternalServerError }
       user <- userOpt toSuccess Results.Redirect(controllers.routes.Application.login)
     } yield user
+}
+
+object IfJob {
+  def apply(id: Job#Id) = new IfJob {
+    val jobId = id
+  }
+}
+trait IfJob extends ActionModule[Job] { 
+  val jobId: Job#Id  
+  def extract(req: Request[AnyContent]): Validation[Result, Job] =
+    store.getJobById(jobId).fold(
+      f => Failure(Results.InternalServerError("Error not implemented in Module.scala/IfJob")), // TODO
+      job => Success(job)
+    )
 }
 
 //Product with Serializable with 

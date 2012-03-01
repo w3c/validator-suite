@@ -14,7 +14,7 @@ import java.util.UUID
   * @param filter a filter to be applied to the URLs being discovered
   */
 case class EntryPointStrategy(
-    uuid: UUID,
+    uuid: UUID = UUID.randomUUID,
     name: String,
     entrypoint: URL,
     distance: Int,

@@ -1,35 +1,21 @@
-@()
+@(crumbs: Iterable[(String, String)] = List())
 
 <nav id="nav">
 	<ul>
-		<li><a href="dashboard.html">Dashboard</a></li>
-		<li>Add new job</li>
+		<li><a href="@routes.Validator.dashboard">Dashboard</a></li>
+		<li><a href="@routes.Validator.newJob">Add new job</a></li>
 	</ul>
-	<section>
-		<header>Settings</header>
-		<ul>
-			<li>User profile</li>
-			<li>Validator strategies</li>
-			<li>...</li>
-		</ul>
-	</section>
-	<section>
-		<header>Navigation group</header>
-		<ul>
-			<li>link1</li>
-			<li>link2</li>
-			<li>link3</li>
-		</ul>
-	</section>
-	<p style="font-size:0.7em">
-	# This part should be foldable on demand and based on media query.
-	The folded state shows only icons (e.g. Wordpress admin navigation). 
-	Links can either be displayed flat or in navigation groups.
-	</p>
 </nav>
 
 <nav id="crumbs">
 	<ul>
-		<li><a href="dashboard.html">Dashboard</a></li>
+		<li><a href="@routes.Validator.dashboard">Dashboard</a></li>
+		@crumbs.map { crumb =>
+		  @if(crumb._2 == "") {
+	  	    <li>@crumb._1</li>
+		  } else {
+		    <li><a href="@crumb._2">@crumb._1</a></li>
+		  }
+		}
 	</ul>
 </nav>

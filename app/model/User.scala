@@ -17,6 +17,9 @@ case class User(
   def withJob(job: Job): User =
     this.copy(jobs = jobs :+ job)
   
+  def withoutJob(job: Job): User =
+    this.copy(jobs = jobs.filterNot(_ == job)) // XXX Fixme? 
+    
   def owns(job: Job): Boolean =
     jobs.contains(job)
   
