@@ -22,6 +22,8 @@ object ApplicationBuild extends Build {
     "org.scalatest" %% "scalatest" % "1.7.1" % "test"
   )
 
+  val assertorApi = Project("assertor-api", file("assertor-api"))
+
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
     testOptions in Test := Nil,
     routesImport += "org.w3.vs.util.Binders._",
@@ -29,6 +31,6 @@ object ApplicationBuild extends Build {
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     resolvers += "repo.codahale.com" at "http://repo.codahale.com"
     // Add your own project settings here      
-  )
+  ) dependsOn (assertorApi)
   
 }
