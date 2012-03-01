@@ -4,7 +4,7 @@ import org.w3.vs.model._
 import com.codecommit.antixml._
 import scala.io.Source
 
-/** An Assertor that reads [[http://code.w3.org/unicorn/wiki/Documentation/Observer/Response ObservationResponse]]s from [[scala.io.Source]]s
+/** An Assertor that reads [[http://code.w3.org/unicorn/wiki/Documentation/Run/Response ObservationResponse]]s from [[scala.io.Source]]s
  */
 trait FromUnicornFormatAssertor extends FromSourceAssertor {
 

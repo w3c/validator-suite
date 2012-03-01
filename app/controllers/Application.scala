@@ -12,7 +12,7 @@ import java.net.URI
 import java.util.UUID
 import org.w3.util._
 import org.w3.vs.model._
-import org.w3.vs.observer._
+import org.w3.vs.run._
 import play.api.libs._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._

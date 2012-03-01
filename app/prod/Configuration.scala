@@ -2,7 +2,7 @@ package org.w3.vs.prod
 
 import akka.actor.{ActorSystem, TypedActor, TypedProps}
 import org.w3.vs.http.{Http, HttpImpl}
-import org.w3.vs.observer._
+import org.w3.vs.run._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
 import akka.util.duration._
@@ -33,12 +33,12 @@ trait Configuration extends ValidatorSuiteConf {
       "http")
     
   
-  val observerCreator: ObserverCreator =
+  val runCreator: RunCreator =
     TypedActor(system).typedActorOf(
       TypedProps(
-        classOf[ObserverCreator],
-        new ObserverCreatorImpl()(this)),
-      "observer")
+        classOf[RunCreator],
+        new RunCreatorImpl()(this)),
+      "run")
   
   /**
    * note: an AsyncHttpClient is a heavy object with a thread

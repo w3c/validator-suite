@@ -1,7 +1,7 @@
 //package org.w3.vs.store
 //
 //import org.w3.vs.model._
-//import org.w3.vs.observer._
+//import org.w3.vs.run._
 //import org.w3.util._
 //import java.io.{File, FileWriter}
 //import com.mongodb.util.JSON
@@ -44,31 +44,31 @@
 //    Right(())
 //  }
 //  
-//  def list: Either[Throwable, Traversable[ObserverState]] =
+//  def list: Either[Throwable, Traversable[RunState]] =
 //   try {
-//     val states = base.list map { filename => get(ObserverId(filename)).right.get }
+//     val states = base.list map { filename => get(RunId(filename)).right.get }
 //     Right(states.toTraversable)
 //   } catch { case t: Throwable =>
 //     Left(t)
 //   }
 //  
-//  def get(id: ObserverId): Either[Throwable, ObserverState] =
+//  def get(id: RunId): Either[Throwable, RunState] =
 //    try {
 //      val stateFile = new File(base, id.toString)
 //      val source = io.Source.fromFile(stateFile)
 //      val json = source.getLines.mkString("\n")
 //      val dbobject = JSON.parse(json).asInstanceOf[DBObject]
-//      val observerState = grater[ObserverState].asObject(dbobject)
-//      Right(observerState)
+//      val runState = grater[RunState].asObject(dbobject)
+//      Right(runState)
 //    } catch { case t: Throwable =>
 //      Left(t)
 //    }
 //  
 //  
-//  def save(state: ObserverState): Either[Throwable, Unit] =
+//  def save(state: RunState): Either[Throwable, Unit] =
 //    try {
 //      val stateFile = new File(base, state.id.toString)
-//      val dbo = grater[ObserverState].asDBObject(state)
+//      val dbo = grater[RunState].asDBObject(state)
 //      val json = dbo.toString
 //      val writer = new FileWriter(stateFile)
 //      writer.write(json)

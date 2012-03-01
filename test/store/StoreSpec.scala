@@ -5,7 +5,7 @@ import org.scalatest.matchers.MustMatchers
 import java.io._
 import org.w3.vs.model._
 import org.w3.util.{File => _, _}
-import org.w3.vs.observer._
+import org.w3.vs.run._
 import java.nio.file.Paths
 
 abstract class StoreSpec extends WordSpec with MustMatchers with EitherValues {
@@ -30,11 +30,11 @@ abstract class StoreSpec extends WordSpec with MustMatchers with EitherValues {
 //      r must be ('right)
 //    }
 //    
-//    val os1 = ObserverState(ObserverId(), job)
-//    val os2 = ObserverState(ObserverId(), job)
-//    val os3 = ObserverState(ObserverId(), job)
+//    val os1 = RunState(RunId(), job)
+//    val os2 = RunState(RunId(), job)
+//    val os3 = RunState(RunId(), job)
 //    
-//    "save new ObserverStates" in {
+//    "save new RunStates" in {
 //      val op1 = store.save(os1)
 //      op1 must be ('right)
 //      val op2 = store.save(os2)
@@ -52,7 +52,7 @@ abstract class StoreSpec extends WordSpec with MustMatchers with EitherValues {
 //      g3 must equal (os3)
 //    }
 //    
-//    "list ObserverStates" in {
+//    "list RunStates" in {
 //      val os = store.list.right.get
 //      os must contain (os1)
 //      os must contain (os2)

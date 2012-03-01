@@ -1,4 +1,4 @@
-package org.w3.vs.observer
+package org.w3.vs.run
 
 import org.w3.vs.model._
 import org.w3.vs.http.Http
@@ -12,20 +12,20 @@ import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 
 /**
- * helper trait that can be used to test Observers
+ * helper trait that can be used to test Runs
  * Be careful: all TypedActors are stopped after each test
  */
-abstract class ObserverTestHelper(configuration: ValidatorSuiteConf)
+abstract class RunTestHelper(configuration: ValidatorSuiteConf)
 extends TestKit(configuration.system) with ImplicitSender
 with WordSpec with MustMatchers with BeforeAndAfterAll {
   
   def servers: Seq[unfiltered.util.RunnableServer]
   
-  val observerCreator = configuration.observerCreator
+  val runCreator = configuration.runCreator
   val http = configuration.http
   val store = configuration.store
   
-  val logger = play.Logger.of(classOf[ObserverTestHelper])
+  val logger = play.Logger.of(classOf[RunTestHelper])
   
   override def beforeAll: Unit = {
     servers foreach { _.start() }
@@ -39,7 +39,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
 //  /**
 //   * test the invariant that must be true for all observations
 //   */
-//  def testInvariants(observer: Observer): Example = {
+//  def testInvariants(run: Run): Example = {
 //    logger.debug("TODO: for every authority, delay was respected")
 //    logger.debug("TODO: for every authority, no fetch overlap")
 //    1 must beEqualTo(1)

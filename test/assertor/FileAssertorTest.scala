@@ -4,7 +4,7 @@ import org.w3.util._
 import org.specs2.mutable._
 import org.w3.vs.model.Events
 
-object FileObserverTest extends Specification {
+object FileRunTest extends Specification {
 
   "test_1.xml should has only 3 info events" in {
     val testFile = new java.io.File("test/resources/test_1.xml")

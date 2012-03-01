@@ -1,4 +1,4 @@
-package org.w3.vs.observer
+package org.w3.vs.run
 
 import org.w3.vs._
 import org.w3.vs.model._
@@ -16,10 +16,10 @@ import akka.util.Duration
 import scala.collection.mutable.ListMap
 
 /**
- * ObserverData represents a coherent state of for an Observer, modelized as an FSM
+ * RunData represents a coherent state of for an Run, modelized as an FSM
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
-case class ObserverData(
+case class RunData(
     strategy: Strategy, // TODO
     distance: Map[URL, Int] = Map.empty,
     // urls that are waiting to be explored
@@ -47,7 +47,7 @@ case class ObserverData(
   assert(pending.intersect(fetched) == Set.empty)
   assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
   
-  val logger = play.Logger.of(classOf[ObserverData])
+  val logger = play.Logger.of(classOf[RunData])
   
   /**
    * An exploration is over when there are no more urls to explore and no pending url
@@ -72,7 +72,7 @@ case class ObserverData(
   /**
    * Returns an Observation with the new urls to be explored
    */
-  def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (ObserverData, List[URL]) = {
+  def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (RunData, List[URL]) = {
     val filteredUrls = urls.filterNot{ url => shouldIgnore(url, atDistance) }.distinct
     val newDistance = distance ++ filteredUrls.map{ url => url -> atDistance }
     val newData = this.copy(
@@ -84,7 +84,7 @@ case class ObserverData(
   /**
    * Returns an Observation with the new urls to be explored
    */
-  def withNewUrlsToBeExplored(urlsWithDistance: List[(URL, Int)]): (ObserverData, List[URL]) = {
+  def withNewUrlsToBeExplored(urlsWithDistance: List[(URL, Int)]): (RunData, List[URL]) = {
     // as it's a map, there is no duplicated url :-)
     // also, the ListMap preserves the order of insertion
     
@@ -111,7 +111,7 @@ case class ObserverData(
    * 
    * The returned Observation has set this Explore to be pending.
    */
-  private def takeFromMainAuthority: Option[(ObserverData, URL)] = {
+  private def takeFromMainAuthority: Option[(RunData, URL)] = {
     val optUrl = toBeExplored find { _.authority == mainAuthority }
     optUrl map { url =>
       (this.copy(
@@ -128,7 +128,7 @@ case class ObserverData(
    * 
    * The returned Observation has set this Explore to be pending.
    */
-  private def takeFromOtherAuthorities: Option[(ObserverData, URL)] = {
+  private def takeFromOtherAuthorities: Option[(RunData, URL)] = {
     val pendingToConsiderer =
       toBeExplored.view filterNot { url => url.authority == mainAuthority || (pendingAuthorities contains url.getAuthority) }
     pendingToConsiderer.headOption map { url =>
@@ -145,7 +145,7 @@ case class ObserverData(
    * Returns (if possible, hence the Option) the first Explore that could
    * be fetched, giving priority to the main authority.
    */
-  def take: Option[(ObserverData, URL)] = {
+  def take: Option[(RunData, URL)] = {
     //logger.debug(this.toString)
     if (mainAuthorityIsBeingFetched) {
       takeFromOtherAuthorities
@@ -159,8 +159,8 @@ case class ObserverData(
    * 
    * The returned Observation has all the Explores marked as being pending.
    */
-  def takeAtMost(n: Int): (ObserverData, List[Explore]) = {
-    var current: ObserverData = this
+  def takeAtMost(n: Int): (RunData, List[Explore]) = {
+    var current: RunData = this
     var urls: List[URL] = List.empty
     for {
       i <- 1 to (n - pending.size)
@@ -172,7 +172,7 @@ case class ObserverData(
     (current, urls.reverse map { url => url -> distance(url) })
   }
   
-  def withCompletedFetch(url: URL): ObserverData = this.copy(
+  def withCompletedFetch(url: URL): RunData = this.copy(
     pending = pending - url,
     fetched = fetched + url
   )

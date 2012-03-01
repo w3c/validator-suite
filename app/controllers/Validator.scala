@@ -19,7 +19,7 @@ import java.net.URI
 import java.util.UUID
 import org.w3.util._
 import org.w3.vs.model._
-import org.w3.vs.observer._
+import org.w3.vs.run._
 import org.w3.vs.controllers._
 import org.w3.vs.model.EntryPointStrategy
 import org.w3.vs.prod.configuration.store
@@ -83,7 +83,7 @@ object Validator extends Controller {
     
     logger.debug("job: "+job)
     
-    val observer = configuration.observerCreator.observerOf(job)
+    val run = configuration.runCreator.runOf(job)
     
     val jobIdString: String = job.id.toString
     
@@ -102,7 +102,7 @@ object Validator extends Controller {
   def redirect(id: String) = IfAuth { implicit request => implicit user =>
     try {
       val jobId: Job#Id = UUID.fromString(id)
-      configuration.observerCreator.byJobId(jobId).map { observer =>
+      configuration.runCreator.byJobId(jobId).map { run =>
         Redirect("/#!/observation/" + id)
       }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
     } catch { case e =>
@@ -111,7 +111,7 @@ object Validator extends Controller {
   }
   
   def stop(id: String) = IfAuth { implicit request => implicit user =>
-    configuration.observerCreator.byJobId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
+    configuration.runCreator.byJobId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
   }
   
   /*
@@ -123,9 +123,9 @@ object Validator extends Controller {
     val socket = (Iteratee.foreach[JsValue](e => println(e)))
     var enum = Enumerator.imperative[JsValue]()
     user.jobs.map { job =>
-    // Subscribe a DashboardSubscriber to the job's observer
-      val sub = job.observer.observerOf(new DashboardSubscriber())
-      job.observer.subscribe2(sub)
+    // Subscribe a DashboardSubscriber to the job's run
+      val sub = job.run.runOf(new DashboardSubscriber())
+      job.run.subscribe2(sub)
       enum = enum >>> sub.enumerator
     }
     enum = enum &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS }
@@ -135,9 +135,9 @@ object Validator extends Controller {
   // def jobSocket
   // 
   def subscribe(id: String): WebSocket[JsValue] = IfAuthSocket { request => user =>
-    configuration.observerCreator.byJobId(id).map { observer =>
+    configuration.runCreator.byJobId(id).map { run =>
       val in = Iteratee.foreach[JsValue](e => println(e))
-      val enumerator = Subscribe.to(observer)
+      val enumerator = Subscribe.to(run)
       (in, enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
     }.getOrElse(CloseWebsocket)
   }

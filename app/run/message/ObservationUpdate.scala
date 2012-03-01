@@ -1,9 +1,9 @@
-package org.w3.vs.observer.message
+package org.w3.vs.run.message
 
 import org.w3.util.URL
 import org.w3.vs.assertor.AssertorId
 import org.w3.vs.model.{Response, Assertion}
-import org.w3.vs.observer.ObserverState
+import org.w3.vs.run.RunState
 import play.api.libs.json._
 import org.w3.vs.model._
 import play.api.libs.json.JsNumber

@@ -1,4 +1,4 @@
-package org.w3.vs.observer
+package org.w3.vs.run
 
 import org.w3.util._
 import org.w3.util.website._
@@ -14,7 +14,7 @@ import org.w3.vs.prod.Configuration
   * Server 1 -> Server 2
   * 1 GET       10 HEAD
   */
-class OneGETxHEADTest extends ObserverTestHelper(new Configuration { }) {
+class OneGETxHEADTest extends RunTestHelper(new Configuration { }) {
   
   val j = 10
   
@@ -36,7 +36,7 @@ class OneGETxHEADTest extends ObserverTestHelper(new Configuration { }) {
 
   "test OneGETxHEAD" in {
     http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
-    val observer = observerCreator.observerOf(job)
+    val run = runCreator.runOf(job)
     def ris = store.listResourceInfos(job.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)

@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
-import org.w3.vs.observer.Observer
-import org.w3.vs.observer._
+import org.w3.vs.run.Run
+import org.w3.vs.run._
 import org.w3.vs.model._
 import java.util.UUID
 

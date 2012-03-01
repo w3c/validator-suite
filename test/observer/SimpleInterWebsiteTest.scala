@@ -1,4 +1,4 @@
-package org.w3.vs.observer
+package org.w3.vs.run
 
 import org.w3.util._
 import org.w3.util.website._
@@ -14,7 +14,7 @@ import org.w3.vs.prod.Configuration
   * Server 1 -> Server 2
   * 1 GET       1 HEAD
   */
-class SimpleInterWebsiteTest extends ObserverTestHelper(new Configuration { }) {
+class SimpleInterWebsiteTest extends RunTestHelper(new Configuration { }) {
 
   val strategy =
     EntryPointStrategy(
@@ -33,7 +33,7 @@ class SimpleInterWebsiteTest extends ObserverTestHelper(new Configuration { }) {
   )
 
   "test simpleInterWebsite" in {
-    val observer = observerCreator.observerOf(job)
+    val run = runCreator.runOf(job)
     def ris = store.listResourceInfos(job.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 2
     awaitCond(cond, 3 seconds, 50 milliseconds)

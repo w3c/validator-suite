@@ -2,17 +2,17 @@ package org.w3.vs
 
 import akka.actor.{ActorSystem, TypedActor, Props, ActorRef}
 import org.w3.vs.http.{Http, HttpImpl}
-import org.w3.vs.observer._
+import org.w3.vs.run._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
 
-trait ObserverCreator {
+trait RunCreator {
   def byJobId(jobId: Job#Id): Option[ActorRef]
   def byJobId(jobId: String): Option[ActorRef]
-  def observerOf(job: Job): ActorRef
+  def runOf(job: Job): ActorRef
 }
     
-class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) extends ObserverCreator {
+class RunCreatorImpl()(implicit val configuration: ValidatorSuiteConf) extends RunCreator {
   
   var registry = Map[Job#Id, ActorRef]()
   
@@ -26,9 +26,9 @@ class ObserverCreatorImpl()(implicit val configuration: ValidatorSuiteConf) exte
       None
     }
     
-  def observerOf(job: Job): ActorRef = {
+  def runOf(job: Job): ActorRef = {
     val obs = TypedActor.context.actorOf(
-      Props(new Observer(job)), name = job.id.toString)
+      Props(new Run(job)), name = job.id.toString)
     registry += (job.id -> obs)
     obs
   }

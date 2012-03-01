@@ -6,7 +6,7 @@ import org.w3.vs.assertor._
 import org.w3.util._
 import org.w3.util.Headers._
 
-/** An strategy to be used by the Observer
+/** An strategy to be used by the Run
   * 
   * @param uuid a unique identifier
   * @param name a name

@@ -1,4 +1,4 @@
-package org.w3.vs.observer
+package org.w3.vs.run
 
 import org.w3.util._
 import org.w3.util.website._
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 import akka.testkit.TestKit
 import org.w3.vs.prod.Configuration
 
-class CyclicWebsiteCrawlTest extends ObserverTestHelper(new Configuration { }) {
+class CyclicWebsiteCrawlTest extends RunTestHelper(new Configuration { }) {
   
   val strategy =
     EntryPointStrategy(
@@ -29,7 +29,7 @@ class CyclicWebsiteCrawlTest extends ObserverTestHelper(new Configuration { }) {
   
   "test cyclic(10)" in {
     http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
-    val observer = observerCreator.observerOf(job)
+    val run = runCreator.runOf(job)
     def cond = (store.listResourceInfos(job.id) getOrElse sys.error("was not a Success") ).size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
   }

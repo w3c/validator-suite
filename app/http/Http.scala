@@ -10,12 +10,12 @@ import org.w3.util._
 import akka.util.Duration
 import akka.util.duration._
 import play.Logger
-import org.w3.vs.observer.Observer
+import org.w3.vs.run.Run
 import org.w3.vs.model.{HttpVerb, HEAD, GET}
 import org.w3.vs.ValidatorSuiteConf
 
 trait Http {
-  def fetch(url: URL, action: HttpVerb, observer: ActorRef): Unit
+  def fetch(url: URL, action: HttpVerb, run: ActorRef): Unit
   def authorityManagerFor(url: URL): AuthorityManager
   def authorityManagerFor(authority: Authority): AuthorityManager
 }
@@ -48,8 +48,8 @@ class HttpImpl()(implicit configuration: ValidatorSuiteConf) extends Http with T
     }
   }
   
-  def fetch(url: URL, action: HttpVerb, observer: ActorRef): Unit =
-    authorityManagerFor(url).fetch(url, action, observer)
+  def fetch(url: URL, action: HttpVerb, run: ActorRef): Unit =
+    authorityManagerFor(url).fetch(url, action, run)
   
   override def postStop = {
     logger.debug("closing asyncHttpClient")

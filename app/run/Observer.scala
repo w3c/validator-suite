@@ -1,4 +1,4 @@
-package org.w3.vs.observer
+package org.w3.vs.run
 
 import org.w3.vs._
 import org.w3.vs.model._
@@ -20,14 +20,14 @@ import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
 
 
-class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[ObserverState, ObserverData] {
+class Run(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[RunState, RunData] {
   
   import configuration._
   
   // TODO is it really what we want? I don't think so
   import TypedActor.dispatcher
 
-  val logger = Logger.of(classOf[Observer])
+  val logger = Logger.of(classOf[Run])
   
   /**
    * A shorten id for logs readability
@@ -38,16 +38,16 @@ class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
   
   startWith(Running, scheduleNextURLsToFetch(startExploration))
   
-  def startExploration: ObserverData = {
+  def startExploration: RunData = {
     // ask the strategy for the first urls to considerer
     val firstURLs = strategy.seedURLs.toList
     // update the observation state
-    val (initialData, _) = ObserverData(strategy).withNewUrlsToBeExplored(firstURLs, 0)
+    val (initialData, _) = RunData(strategy).withNewUrlsToBeExplored(firstURLs, 0)
     logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
     initialData
   }
 
-  def scheduleNextURLsToFetch(data: ObserverData): ObserverData = {
+  def scheduleNextURLsToFetch(data: RunData): RunData = {
     val (newObservation, explores) = data.takeAtMost(MAX_URL_TO_FETCH)
     explores foreach fetch
     newObservation
@@ -58,7 +58,7 @@ class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
    * 
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
-  private final def fetch(explore: ObserverData#Explore): Unit = {
+  private final def fetch(explore: RunData#Explore): Unit = {
     val (url, distance) = explore
     val action = strategy.fetch(url, distance)
     action match {
@@ -84,7 +84,7 @@ class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     case Event(assertion: Assertion, data) => {
       val data2 = receiveAssertion(assertion, data)
       if (data2.assertionPhaseIsFinished) {
-        val data3 = endAssertionPhase(data: ObserverData)
+        val data3 = endAssertionPhase(data: RunData)
         stop(FSM.Normal)
       }
       else {
@@ -115,14 +115,14 @@ class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     }
   }
   
-  private final def receiveAssertion(assertion: Assertion, data: ObserverData): ObserverData = {
+  private final def receiveAssertion(assertion: Assertion, data: RunData): RunData = {
     logger.debug("%s: %s observed by %s" format (shortId, assertion.url, assertion.assertorId))
     broadcast(message.NewAssertion(assertion), data)
     store.putAssertion(assertion)
     data.copy(receivedAssertions = data.receivedAssertions + 1)
   }
   
-  private final def endAssertionPhase(data: ObserverData): ObserverData = {
+  private final def endAssertionPhase(data: RunData): RunData = {
     logger.info("%s: Observation phase done with %d observations" format (shortId, data.receivedAssertions)) // @@@ look into store?
     broadcast(message.Done, data)
     val ctx = TypedActor(context)
@@ -130,7 +130,7 @@ class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     data.copy(subscribers = Set.empty)
   }
   
-  private final def receiveResponse(fetchResponse: FetchResponse, _data: ObserverData): (ResourceInfo, ObserverData) = {
+  private final def receiveResponse(fetchResponse: FetchResponse, _data: RunData): (ResourceInfo, RunData) = {
     val data = _data.withCompletedFetch(fetchResponse.url)
     fetchResponse match {
       case OkResponse(url, GET, status, headers, body) => {
@@ -179,7 +179,7 @@ class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
   }
   
   
-  private final def scheduleAssertion(resourceInfo: ResourceInfo, data: ObserverData): ObserverData = {
+  private final def scheduleAssertion(resourceInfo: ResourceInfo, data: RunData): RunData = {
     val assertors = strategy.assertorsFor(resourceInfo)
     val url = resourceInfo.url
     
@@ -218,7 +218,7 @@ class Observer(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
   /**
    * To broadcast messages to subscribers.
    */
-  private final def broadcast(msg: message.ObservationUpdate, data: ObserverData): Unit = {
+  private final def broadcast(msg: message.ObservationUpdate, data: RunData): Unit = {
     data.subscribers foreach ( s => s ! msg )
   }
   

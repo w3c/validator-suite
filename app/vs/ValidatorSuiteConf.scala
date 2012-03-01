@@ -12,7 +12,7 @@ trait ValidatorSuiteConf {
   
   val http: Http
 
-  val observerCreator: ObserverCreator
+  val runCreator: RunCreator
   
   val MAX_URL_TO_FETCH: Int
   

@@ -1,7 +1,7 @@
 package org.w3.vs.assertor
 
 import org.w3.vs.model._
-import org.w3.vs.observer._
+import org.w3.vs.run._
 import scala.io.Source
 
 /** An assertor that can read an [[org.w3.vs.validator.Assertion]] from a file
