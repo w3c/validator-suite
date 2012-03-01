@@ -15,45 +15,58 @@ import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.ListMap
 
+object RunData {
+  def diff(l: Set[URL], r: Set[URL]): Set[URL] = {
+    val d1 = l -- r
+    val d2 = r -- l
+    d1 ++ d2
+  }
+}
+
 /**
  * RunData represents a coherent state of for an Run, modelized as an FSM
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
 case class RunData(
-    strategy: Strategy, // TODO
+    // will never change for a Run, but it's very usefull to have it here
+    strategy: Strategy,
+    // the distance from the seed for every known URLs
     distance: Map[URL, Int] = Map.empty,
-    // urls that are waiting to be explored
+    // state of each URL
     toBeExplored: List[URL] = List.empty,
-    // urls that are being explored
     pending: Set[URL] = Set.empty,
-    // urls we have already fetched
     fetched: Set[URL] = Set.empty,
+    // the set of actors subscribed to events
     subscribers: Set[ActorRef] = Set.empty,
+    // keep track the assertions
+    oks: Int = 0,
+    errors: Int = 0,
+    warnings: Int = 0,
+    invalidated: Int = 0,
+    // keep track of assertions sent to the assertor we call synchronously
     sentAssertions: Int = 0,
     receivedAssertions: Int = 0) {
   
   type Explore = (URL, Int)
   
-  def numberOfKnownUrls: Int = distance.size
-  
-  private def diff(l: Set[URL], r: Set[URL]): Set[URL] = {
-    val d1 = l -- r
-    val d2 = r -- l
-    d1 ++ d2
-  }
+  final def numberOfKnownUrls: Int = distance.size
 
-  assert(distance.keySet == fetched ++ pending ++ toBeExplored, diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
+  assert(distance.keySet == fetched ++ pending ++ toBeExplored, RunData.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
   assert(toBeExplored.toSet.intersect(pending) == Set.empty)
   assert(pending.intersect(fetched) == Set.empty)
   assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
   
-  val logger = play.Logger.of(classOf[RunData])
+  final val logger = play.Logger.of(classOf[RunData])
   
   /**
    * An exploration is over when there are no more urls to explore and no pending url
    */
   final def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
-
+  
+  final def isIdle = noMoreUrlToExplore && (sentAssertions == receivedAssertions)
+  
+  final def isRunning = ! isIdle
+  
   /**
    * An Explore should be ignored if
    * <ul>

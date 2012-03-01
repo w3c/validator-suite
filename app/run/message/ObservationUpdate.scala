@@ -33,28 +33,6 @@ case object Stopped extends ObservationUpdate {
   def toJS: JsValue = JsArray(List(JsString("STOPPED")))
 }
 
-//private def toJSON(msg: message.ObservationUpdate): String = msg match {
-//case message.Done => """["OBS_FINISHED"]"""
-//case message.Stopped => """["STOPPED"]"""
-//case message.NewAssertion(a) => a.result match {
-//  case AssertionError(why) => """["OBS_ERR", "%s"]""" format a.url
-//  case events@Events(_) => """["OBS", "%s", "%s", %d, %d]""" format (a.url, a.assertorId, events.errorsNumber, events.warningsNumber)
-//}
-//case message.NewResourceInfo(ri) => ri.result match {
-//  case ResourceInfoError(why) => """["ERR", "%s", "%s"]""" format (why, ri.url)
-//  case Fetch(status, headers, extractedLinks) => ri.action match {
-//    case GET => """["GET", %d, "%s", %d]""" format (status, ri.url, 0)
-//    case HEAD => """["HEAD", %d, "%s"]""" format (status, ri.url)
-//    case _ => sys.error("TODO you should change the type :-)")
-//  }
-//}
-//case message.ObservationSnapshot(messages) => {
-//  val initial = """["OBS_INITIAL", %d, %d, %d, %d]""" format (0, 0, 0, 0)
-//  val initialMessages = messages map toJSON mkString ""
-//  initial + initialMessages
-//}
-//}
-
 /**
  * A new Response was received during the exploration
  */

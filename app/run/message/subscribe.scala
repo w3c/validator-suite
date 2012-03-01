@@ -2,6 +2,9 @@ package org.w3.vs.run.message
 
 import akka.actor.ActorRef
 
-case class Subscribe(subscriber: ActorRef)
+sealed trait SpeakToRun
 
-case class Unsubscribe(subscriber: ActorRef)
+case object Start extends SpeakToRun
+case object Stop extends SpeakToRun
+case class Subscribe(subscriber: ActorRef) extends SpeakToRun
+case class Unsubscribe(subscriber: ActorRef) extends SpeakToRun

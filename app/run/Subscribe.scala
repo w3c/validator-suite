@@ -25,17 +25,10 @@ object Subscribe {
       }
     }))
 
+    // TODO make the enumerator to stop the actor and unsubscribe it when an error occurs (or when it's 
     lazy val enumerator: PushEnumerator[message.ObservationUpdate] =
       Enumerator.imperative[message.ObservationUpdate]( onStart = run ! message.Subscribe(subscriber) )
     
-//    def push(msg: message.ObservationUpdate): Unit =
-//      try { 
-//        enumerator.push(msg)
-//      } catch { case e: java.nio.channels.ClosedChannelException =>
-//        run ! message.Unsubscribe(subscriber)
-//        enumerator.close
-//      }
-      
     enumerator
   }
   

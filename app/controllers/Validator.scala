@@ -84,6 +84,7 @@ object Validator extends Controller {
     logger.debug("job: "+job)
     
     val run = configuration.runCreator.runOf(job)
+    run ! message.Start
     
     val jobIdString: String = job.id.toString
     

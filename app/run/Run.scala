@@ -36,18 +36,64 @@ class Run(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Acto
   
   implicit def strategy = job.strategy
   
-  startWith(Running, scheduleNextURLsToFetch(startExploration))
+  startWith(NotYetStarted, RunData(strategy))
   
-  def startExploration: RunData = {
+  when(NotYetStarted) {
+    case Event(message.Start, _) => {
+      goto(Started) using scheduleNextURLsToFetch(initialData)
+    }
+  }
+  
+  when(Started) {
+    
+    case Event(assertion: Assertion, data) => {
+      val data2 = receiveAssertion(assertion, data)
+      if (data2.assertionPhaseIsFinished) {
+        val data3 = endAssertionPhase(data: RunData)
+        stop(FSM.Normal)
+      }
+      else {
+        stay() using data2
+      }
+    }
+    
+    case Event(fetchResponse: FetchResponse, data) => {
+      val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
+      store.putResourceInfo(resourceInfo)
+      broadcast(message.NewResourceInfo(resourceInfo), data2)
+      val data3 = scheduleNextURLsToFetch(data2)
+      val data4 = scheduleAssertion(resourceInfo, data3)
+      if (data4.noMoreUrlToExplore) {
+        logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, data4.fetched.size))
+      } else {
+        //logger.debug("There are still %d pending fetches" format pendingFetches.size)
+      }
+      stay() using data4
+    }
+    
+    case Event(message.Subscribe(subscriber), data) => {
+      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
+      initialState foreach { msg => subscriber ! msg }
+      stay() using data.copy(subscribers = data.subscribers + subscriber)
+    }
+    
+    case Event(message.Unsubscribe(subscriber), data) => {
+      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
+      stay() using data.copy(subscribers = data.subscribers - subscriber)
+    }
+    
+  }
+  
+  private final def initialData: RunData = {
     // ask the strategy for the first urls to considerer
     val firstURLs = strategy.seedURLs.toList
     // update the observation state
-    val (initialData, _) = RunData(strategy).withNewUrlsToBeExplored(firstURLs, 0)
+    val (data, _) = RunData(strategy).withNewUrlsToBeExplored(firstURLs, 0)
     logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
-    initialData
+    data
   }
 
-  def scheduleNextURLsToFetch(data: RunData): RunData = {
+  private final def scheduleNextURLsToFetch(data: RunData): RunData = {
     val (newObservation, explores) = data.takeAtMost(MAX_URL_TO_FETCH)
     explores foreach fetch
     newObservation
@@ -75,45 +121,7 @@ class Run(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Acto
       }
     }
   }
-  
-//  when(Idle) {
-//    case Event(_, _) => logger.debug("we're done!!!")
-//  }
-  
-  when(Running) {
-    case Event(assertion: Assertion, data) => {
-      val data2 = receiveAssertion(assertion, data)
-      if (data2.assertionPhaseIsFinished) {
-        val data3 = endAssertionPhase(data: RunData)
-        stop(FSM.Normal)
-      }
-      else {
-        goto(Running) using data2
-      }
-    }
-    case Event(fetchResponse: FetchResponse, data) => {
-      val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
-      store.putResourceInfo(resourceInfo)
-      broadcast(message.NewResourceInfo(resourceInfo), data2)
-      val data3 = scheduleNextURLsToFetch(data2)
-      val data4 = scheduleAssertion(resourceInfo, data3)
-      if (data4.noMoreUrlToExplore) {
-        logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, data4.fetched.size))
-      } else {
-        //logger.debug("There are still %d pending fetches" format pendingFetches.size)
-      }
-      goto(Running) using data4
-    }
-    case Event(message.Subscribe(subscriber), data) => {
-      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
-      initialState foreach { msg => subscriber ! msg }
-      goto(Running) using data.copy(subscribers = data.subscribers + subscriber)
-    }
-    case Event(message.Unsubscribe(subscriber), data) => {
-      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
-      goto(Running) using data.copy(subscribers = data.subscribers - subscriber)
-    }
-  }
+
   
   private final def receiveAssertion(assertion: Assertion, data: RunData): RunData = {
     logger.debug("%s: %s observed by %s" format (shortId, assertion.url, assertion.assertorId))

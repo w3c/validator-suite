@@ -5,7 +5,10 @@ package org.w3.vs.run
  */
 sealed trait RunState
 
-case object Starting extends RunState
-case object Running extends RunState
-case object Idle extends RunState
-case object Stopped extends RunState
+sealed trait RunStatus
+
+case object NotYetStarted extends RunState with RunStatus
+case object Started extends RunState
+case object Running extends RunStatus
+case object Idle extends RunStatus
+case object Stopped extends RunState with RunStatus
