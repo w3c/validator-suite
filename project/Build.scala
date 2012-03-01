@@ -16,7 +16,7 @@ object ApplicationBuild extends Build {
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
     // test dependencies
-    "com.typesafe.akka" % "akka-testkit" % "2.0-RC2" % "test",
+    "com.typesafe.akka" % "akka-testkit" % "2.0-RC3" % "test",
     "net.databinder" %% "unfiltered-filter" % "0.5.3" % "test",
     "net.databinder" %% "unfiltered-jetty" % "0.5.3" % "test",
     "org.scalatest" %% "scalatest" % "1.7.1" % "test"
