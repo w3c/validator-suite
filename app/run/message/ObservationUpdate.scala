@@ -2,11 +2,13 @@ package org.w3.vs.run.message
 
 import org.w3.util.URL
 import org.w3.vs.assertor.AssertorId
-import org.w3.vs.model.{Response, Assertion}
+import org.w3.vs.model._
 import org.w3.vs.run.RunState
 import play.api.libs.json._
 import org.w3.vs.model._
 import play.api.libs.json.JsNumber
+import scalaz._
+
 
 /**
  * An update that happened on an Observation.
@@ -67,21 +69,23 @@ case class NewResourceInfo(resourceInfo: ResourceInfo) extends ObservationUpdate
 /**
  * A new Assertion was received
  */
-case class NewAssertion(assertion: Assertion) extends ObservationUpdate {
-  def toJS: JsValue = assertion.result match {
-    case AssertionError(why) => 
-      JsArray(List(
-        JsString("OBS_ERR"),
-        JsString(assertion.url.toString)
-      ))
-    case events@Events(_) => 
+case class NewAssertorResult(result: AssertorResult) extends ObservationUpdate {
+  
+  def toJS: JsValue = result match {
+    case assertions: Assertions =>
       JsArray(List(
         JsString("OBS"),
-        JsString(assertion.url.toString),
-        JsString(assertion.assertorId.toString),
-        JsNumber(events.errorsNumber),
-        JsNumber(events.warningsNumber)
+        JsString(assertions.url.toString),
+        JsString(assertions.assertorId.toString),
+        JsNumber(assertions.numberOfErrors),
+        JsNumber(assertions.numberOfWarnings)
+      ))
+    case fail: AssertorFail =>
+      JsArray(List(
+        JsString("OBS_ERR"),
+        JsString(fail.url.toString)
       ))
   }
+  
 }
 

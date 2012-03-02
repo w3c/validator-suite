@@ -12,6 +12,6 @@ trait FromSourceAssertor extends Assertor {
    *  @param source where to read 
    *  @return the assertion
    */
-  def assert(source: Source): Events
+  def assert(source: Source): Iterable[RawAssertion]
 
 }

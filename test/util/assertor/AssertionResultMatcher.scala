@@ -7,10 +7,10 @@ import org.w3.vs.model._
 
 trait AssertionResultMatcher extends Specification {
 
-  def haveErrors[Result <: AssertionResult] = new Matcher[Result] {
+  def haveErrors[Result <: AssertorResult] = new Matcher[Result] {
     def apply[R <: Result](r: Expectable[R]) = {
       val bool = r.value match {
-        case events@Events(_) => events.hasError
+        case assertions: Assertions => assertions.hasError
         case _ => false
       }
       result(bool,
@@ -19,5 +19,14 @@ trait AssertionResultMatcher extends Specification {
     }
   }
   
+  def haveErrorz[Result <: Iterable[RawAssertion]] = new Matcher[Result] {
+    def apply[R <: Result](r: Expectable[R]) = {
+      val bool = r.value exists { _.isError }
+      result(bool,
+             r.description + " has errors",
+             r.description + " has no error", r)
+    }
+  }
+
   
 }

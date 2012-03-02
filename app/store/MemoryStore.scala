@@ -12,7 +12,7 @@ import Validation._
 
 class MemoryStore extends Store {
   
-  val assertions: ConcurrentMap[Assertion#Id, Assertion] = new ConcurrentHashMap[Assertion#Id, Assertion]().asScala
+  val results: ConcurrentMap[AssertorResult#Id, AssertorResult] = new ConcurrentHashMap[AssertorResult#Id, AssertorResult]().asScala
     
   val resourceInfos: ConcurrentMap[ResourceInfo#Id, ResourceInfo] = new ConcurrentHashMap[ResourceInfo#Id, ResourceInfo]().asScala
   
@@ -22,8 +22,8 @@ class MemoryStore extends Store {
   
   def init(): Validation[Throwable, Unit] = Success()
   
-  def putAssertion(assertion: Assertion): Validation[Throwable, Unit] = fromTryCatch {
-    assertions += assertion.id -> assertion
+  def putAssertorResult(result: AssertorResult): Validation[Throwable, Unit] = fromTryCatch {
+    results += result.id -> result
   }
 
   def putResourceInfo(resourceInfo: ResourceInfo): Validation[Throwable, Unit] = fromTryCatch {
@@ -56,8 +56,8 @@ class MemoryStore extends Store {
     resourceInfos.values
   }
   
-  def listAssertions(jobId: Job#Id): Validation[Throwable, Iterable[Assertion]] = fromTryCatch {
-    assertions.values filter { _.jobId == jobId }
+  def listAssertorResults(jobId: Job#Id): Validation[Throwable, Iterable[AssertorResult]] = fromTryCatch {
+    results.values filter { _.jobId == jobId }
   }
   
   def saveUser(user: User): Validation[Throwable, Unit] = fromTryCatch {

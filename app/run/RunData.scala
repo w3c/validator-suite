@@ -44,8 +44,8 @@ case class RunData(
     warnings: Int = 0,
     invalidated: Int = 0,
     // keep track of assertions sent to the assertor we call synchronously
-    sentAssertions: Int = 0,
-    receivedAssertions: Int = 0) {
+    sentAssertorResults: Int = 0,
+    receivedAssertorResults: Int = 0) {
   
   type Explore = (URL, Int)
   
@@ -63,7 +63,7 @@ case class RunData(
    */
   final def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
   
-  final def isIdle = noMoreUrlToExplore && (sentAssertions == receivedAssertions)
+  final def isIdle = noMoreUrlToExplore && (sentAssertorResults == receivedAssertorResults)
   
   final def isRunning = ! isIdle
   
@@ -191,7 +191,7 @@ case class RunData(
   )
   
   def assertionPhaseIsFinished: Boolean =
-    toBeExplored.isEmpty && sentAssertions == receivedAssertions
+    toBeExplored.isEmpty && sentAssertorResults == receivedAssertorResults
   
 }
 

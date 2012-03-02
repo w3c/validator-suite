@@ -7,7 +7,7 @@ import scalaz.Validation
 
 trait Store {
   
-  def putAssertion(assertion: Assertion): Validation[Throwable, Unit]
+  def putAssertorResult(result: AssertorResult): Validation[Throwable, Unit]
   
   def putResourceInfo(resourceInfo: ResourceInfo): Validation[Throwable, Unit]
   
@@ -24,7 +24,7 @@ trait Store {
   // this is not really safe (goes through the entire collection)
   // def listAllResourceInfos(): Validation[Throwable, Iterable[ResourceInfo]]
   
-  def listAssertions(jobId: Job#Id): Validation[Throwable, Iterable[Assertion]]
+  def listAssertorResults(jobId: Job#Id): Validation[Throwable, Iterable[AssertorResult]]
   
   def saveUser(user: User): Validation[Throwable, Unit]
   

@@ -46,8 +46,8 @@ class Run(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Acto
   
   when(Started) {
     
-    case Event(assertion: Assertion, data) => {
-      val data2 = receiveAssertion(assertion, data)
+    case Event(result: AssertorResult, data) => {
+      val data2 = receiveAssertion(result, data)
       if (data2.assertionPhaseIsFinished) {
         val data3 = endAssertionPhase(data: RunData)
         stop(FSM.Normal)
@@ -123,15 +123,15 @@ class Run(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Acto
   }
 
   
-  private final def receiveAssertion(assertion: Assertion, data: RunData): RunData = {
-    logger.debug("%s: %s observed by %s" format (shortId, assertion.url, assertion.assertorId))
-    broadcast(message.NewAssertion(assertion), data)
-    store.putAssertion(assertion)
-    data.copy(receivedAssertions = data.receivedAssertions + 1)
+  private final def receiveAssertion(result: AssertorResult, data: RunData): RunData = {
+    logger.debug("%s: %s observed by %s" format (shortId, result.url, result.assertorId))
+    broadcast(message.NewAssertorResult(result), data)
+    store.putAssertorResult(result)
+    data.copy(receivedAssertorResults = data.receivedAssertorResults + 1)
   }
   
   private final def endAssertionPhase(data: RunData): RunData = {
-    logger.info("%s: Observation phase done with %d observations" format (shortId, data.receivedAssertions)) // @@@ look into store?
+    logger.info("%s: Observation phase done with %d observations" format (shortId, data.receivedAssertorResults)) // @@@ look into store?
     broadcast(message.Done, data)
     val ctx = TypedActor(context)
     data.subscribers foreach { s => ctx.stop(s) }
@@ -193,33 +193,39 @@ class Run(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Acto
     
     assertors foreach { assertor =>
       val f = Future {
-        val result = assertor.assert(url)
-        Assertion(
-          url = url,
-          assertorId = assertor.id,
-          jobId = job.id,
-          // TODO check the 401 here?
-          result = result.fold(t => AssertionError(t.getMessage), r => r))
-      }(validatorDispatcher) recoverWith { case t: Throwable =>
-        Future {
-          Assertion(
+        assertor.assert(url) fold (
+          throwable => AssertorFail(
             url = url,
             assertorId = assertor.id,
             jobId = job.id,
-            result = AssertionError(t.getMessage))
+            why = throwable.getMessage
+          ),
+          assertions => Assertions(
+            url = url,
+            assertorId = assertor.id,
+            jobId = job.id,
+            assertions = assertions
+          )
+        )
+      }(validatorDispatcher) recoverWith { case throwable: Throwable =>
+        Future {
+          AssertorFail(
+            url = url,
+            assertorId = assertor.id,
+            jobId = job.id,
+            why = throwable.getMessage)
         }
       }
       f pipeTo self
     }
     
-    data.copy(sentAssertions = data.sentAssertions + assertors.size)
+    data.copy(sentAssertorResults = data.sentAssertorResults + assertors.size)
   }
   
-
   // TODO should be a service from the store
   private final def initialState: Iterable[message.ObservationUpdate] = {
     val resourceInfos = store.listResourceInfos(job.id).either.right.get map message.NewResourceInfo
-    val assertions = store.listAssertions(job.id).either.right.get map message.NewAssertion
+    val assertions = store.listAssertorResults(job.id).either.right.get map message.NewAssertorResult
     resourceInfos ++ assertions
   }
   

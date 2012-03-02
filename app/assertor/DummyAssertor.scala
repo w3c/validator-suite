@@ -16,12 +16,12 @@ object DummyAssertor extends FromURLAssertor {
   def validatorURLForMachine(url: URL) = url
   
   override def assert(url: URL) = {
-    val event = Event(
+    val event = RawAssertion(
         severity="info",
         id="dummy",
         lang="en",
         contexts=Seq(Context("", url.toString, None, None)))
-    Success(Events(Seq(event)))
+    Success(Seq(event))
   }
   
 }

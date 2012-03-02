@@ -11,7 +11,7 @@ object FromFileAssertor extends FromUnicornFormatAssertor {
 
   val id = AssertorId("FromFileAssertor")
   
-  def observe(file: java.io.File): Events =
+  def observe(file: java.io.File): Iterable[RawAssertion] =
     this.assert(Source.fromFile(file))
 
 }
