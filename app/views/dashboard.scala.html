@@ -1,5 +1,14 @@
 @(jobs: Iterable[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
 
+@import org.w3.vs.prod._
+
+@isRunning(id: java.util.UUID) = @{
+  configuration.runCreator.byJobId(id) match { 
+    case None => false
+    case Some(run) => true
+  }
+}
+
 @libs.main("Validator Suite", stylesheets = List("mockup.css")) {
 	
 	@libs.header(Some(user))
@@ -7,14 +16,20 @@
 	
 	<section id="jobs" class="main">
 	<ul>
-	@jobs.map { job =>
+	@jobs.map { job =>		
 		<li>
 			<section class="job">
 				<header>@job.name</header>
 				<ul class="meta">
 					<li>Name: @job.name</li>
 					<li>Uri: @job.strategy.seedURLs.head</li>
-					<li>Status: -</li>
+					<li>Status:
+						@if(isRunning(job.id)) {
+						  Running
+						} else {
+						  Idle
+						} 
+					</li>
 					<li>Resources: -</li>
 				</ul>
 				<ul class="last">
@@ -32,7 +47,13 @@
 				</div>
 				<ul class="menu">
 					<li><a href="@routes.Validator.showJob(job.id)">Show</a></li>
-					<li>Run</li>
+					<li>
+					@if(isRunning(job.id)) {
+					  Stop
+					} else {
+					  <a href="@routes.Validator.runJob(job.id)">Run</a>
+					} 
+					</li>
 					<li><a href="@routes.Validator.editJob(job.id)">Edit</a></li>
 					<li>
 					  <a href="@routes.Validator.deleteJob(job.id)">Delete</a>

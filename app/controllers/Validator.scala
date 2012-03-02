@@ -169,6 +169,7 @@ object Validator extends Controller {
           store.saveUser(user.withoutJob(job).withJob(newj))
           store.putJob(newj)
           Redirect(routes.Validator.dashboard)
+          //Redirect(routes.Validator.dashboard.toString, 301)
         }
       )
     } else {
@@ -186,12 +187,22 @@ object Validator extends Controller {
     }
   } 
   
-  // finds job from id, checks ownership, shows pre-filled form 
+  // finds job from id, checks ownership, shows pre-filled form
   def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
     if (user.owns(job))
       Ok(views.html.jobForm(jobForm.fill(job), job.id))
     else
       Ok(views.html.jobForm(jobForm.fill(job), job.id)) // TODO throw an error / redirect
+  }
+  
+  // finds job from id, checks ownership, runs it
+  def runJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
+    if (user.owns(job)) {
+      val run = configuration.runCreator.runOf(job)
+      run ! message.Start
+      Redirect(routes.Validator.dashboard)
+    } else
+      Redirect(routes.Validator.dashboard) // TODO throw an error / redirect
   }
   
   // creates a job and redirects to the dashboard

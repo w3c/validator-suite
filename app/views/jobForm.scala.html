@@ -3,7 +3,7 @@
 @libs.main("Validator Suite", stylesheets = List("mockup.css")) {
 	
 	@libs.header(Some(user))
-	@libs.navigation(List(("New Job", "")))
+	@libs.navigation(List((form("name").value.getOrElse("New Job"), "")))
 	
 	<section class="main">
 	
@@ -13,8 +13,8 @@
 	}
 	</script>
 	
-	@if(id != null) {
-	@helper.form(routes.Validator.updateJob(id)) {
+	@defining(if (id != null) routes.Validator.updateJob(id) else routes.Validator.createJob) { action =>
+	@helper.form(action) {
 		<label for="name">Name: </label>
 		<input id="name" name="name" type="text" value="@form("name").value" required></input><br>
 		<label for="url">URL: </label>
@@ -23,22 +23,13 @@
 		<input id="distance" name="distance" type="range" value="@form("distance").value.getOrElse(10)" max=20 onchange="showValue(this.value)"/><span id="dist">@form("distance").value.getOrElse(10)</span><br>
 		<label for="linkCheck">Check external links: </label>
 		<input type=checkbox id=linkCheck name=linkCheck @if(form("linkCheck").value == Some("on")) {checked}/><br>
+		@if(id != null) {
 		<button type=submit>Update</button>
-	}
-	} else {
-	@helper.form(routes.Validator.createJob) {
-		<label for="name">Name: </label>
-		<input id="name" name="name" type="text" value="@form("name").value" required></input><br>
-		<label for="url">URL: </label>
-		<input id="url" name="url" type="url" value="@form("url").value" required></input><br>
-		<label for="distance">Distance: </label>
-		<input id="distance" name="distance" type="range" value="@form("distance").value.getOrElse(10)" max=20 onchange="showValue(this.value)"/><span id="dist">@form("distance").value.getOrElse(10)</span><br>
-		<label for="linkCheck">Check external links: </label>
-		<input type=checkbox id=linkCheck name=linkCheck @if(form("linkCheck").value == Some("on")) {checked}/><br>
+		} else {
 		<button type=submit>Create</button>
+		}
 	}
 	}
-	
 	
 	</section>
 	

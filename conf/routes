@@ -19,6 +19,7 @@ POST    /job/:id                    controllers.Validator.updateJob(id: java.uti
 # Workaround 2: jobDispatcher checks if a http-method parameter (= put|delete) is passed with the form and dispatch to the correct action 
 #POST    /job/:id                    controllers.Validator.jobDispatcher(id: java.util.UUID)
 
+GET     /job/:id/run                controllers.Validator.runJob(id: java.util.UUID)
 GET     /job/:id/edit               controllers.Validator.editJob(id: java.util.UUID)
 GET     /job                        controllers.Validator.newJob()
 POST    /job                        controllers.Validator.createJob()

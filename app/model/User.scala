@@ -22,9 +22,6 @@ case class User(
     
   def owns(job: Job): Boolean =
     jobs.contains(job)
-  
-  def canAccess(job: Job): Boolean = 
-    true
     
   def getJobById(id: Job#Id): Option[Job] =
     jobs.find {_.id == id}
