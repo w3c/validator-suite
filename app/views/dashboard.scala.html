@@ -3,10 +3,7 @@
 @import org.w3.vs.prod._
 
 @isRunning(id: java.util.UUID) = @{
-  configuration.runCreator.byJobId(id) match { 
-    case None => false
-    case Some(run) => true
-  }
+  configuration.runCreator.byJobId(id).isSuccess
 }
 
 @libs.main("Validator Suite", stylesheets = List("mockup.css")) {

@@ -10,7 +10,7 @@ import org.w3.util._
 import akka.util.Duration
 import akka.util.duration._
 import play.Logger
-import org.w3.vs.run.Run
+import org.w3.vs.run.RunActor
 import org.w3.vs.model.{HttpVerb, HEAD, GET}
 import org.w3.vs.ValidatorSuiteConf
 

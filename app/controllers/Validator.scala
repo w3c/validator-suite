@@ -84,7 +84,7 @@ object Validator extends Controller {
     logger.debug("job: "+job)
     
     val run = configuration.runCreator.runOf(job)
-    run ! message.Start
+    run.start()
     
     val jobIdString: String = job.id.toString
     
@@ -199,7 +199,7 @@ object Validator extends Controller {
   def runJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
     if (user.owns(job)) {
       val run = configuration.runCreator.runOf(job)
-      run ! message.Start
+      run.start()
       Redirect(routes.Validator.dashboard)
     } else
       Redirect(routes.Validator.dashboard) // TODO throw an error / redirect

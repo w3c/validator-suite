@@ -10,7 +10,8 @@ object Subscribe {
   
   val logger = play.Logger.of("Subscribe")
   
-  def to(run: ActorRef)(implicit conf: ValidatorSuiteConf): Enumerator[message.ObservationUpdate] = {
+  def to(run: Run)(implicit conf: ValidatorSuiteConf): Enumerator[message.ObservationUpdate] = {
+    val actorRef = run.actor
     import conf.system
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
@@ -18,7 +19,7 @@ object Subscribe {
           try { 
             enumerator.push(msg)
           } catch { case e: java.nio.channels.ClosedChannelException =>
-            run ! message.Unsubscribe(subscriber)
+            actorRef ! message.Unsubscribe(subscriber)
             enumerator.close
           }
         case msg => logger.debug("subscriber got "+msg)
@@ -27,7 +28,7 @@ object Subscribe {
 
     // TODO make the enumerator to stop the actor and unsubscribe it when an error occurs (or when it's 
     lazy val enumerator: PushEnumerator[message.ObservationUpdate] =
-      Enumerator.imperative[message.ObservationUpdate]( onStart = run ! message.Subscribe(subscriber) )
+      Enumerator.imperative[message.ObservationUpdate]( onStart = actorRef ! message.Subscribe(subscriber) )
     
     enumerator
   }
