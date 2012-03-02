@@ -3,6 +3,8 @@ package org.w3.vs.assertor
 import org.w3.util._
 import org.w3.vs.model._
 import scala.io.Source
+import scalaz._
+import Validation._
 
 /** An assertor that returns assertions about a document pointed by a URL
  */
@@ -31,13 +33,10 @@ trait FromURLAssertor extends Assertor with FromUnicornFormatAssertor {
    *  @param url a pointer to the document
    *  @return the assertion
    */
-  def assert(url: URL): Either[Throwable, AssertionResult] =
-    try {
-      val source = Source.fromURL(validatorURLForMachine(url))
-      val events = this.assert(source)
-      Right(events)
-    } catch { case t: Throwable =>
-      Left(t)
-    }
+  def assert(url: URL): Validation[Throwable, AssertionResult] = fromTryCatch {
+    val source = Source.fromURL(validatorURLForMachine(url))
+    val events = this.assert(source)
+    events
+  }
   
 }

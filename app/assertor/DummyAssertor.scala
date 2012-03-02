@@ -2,6 +2,7 @@ package org.w3.vs.assertor
 
 import org.w3.util._
 import org.w3.vs.model._
+import scalaz.Success
 
 /**
  * An Assertor that builds dummy assertions
@@ -20,7 +21,7 @@ object DummyAssertor extends FromURLAssertor {
         id="dummy",
         lang="en",
         contexts=Seq(Context("", url.toString, None, None)))
-    Right(Events(Seq(event)))
+    Success(Events(Seq(event)))
   }
   
 }
