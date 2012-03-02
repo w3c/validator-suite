@@ -37,7 +37,7 @@ trait Configuration extends ValidatorSuiteConf {
     TypedActor(system).typedActorOf(
       TypedProps(
         classOf[RunCreator],
-        new RunCreatorImpl()(this)),
+        new RunCreatorImpl()(this, 5 seconds)),
       "run")
   
   /**

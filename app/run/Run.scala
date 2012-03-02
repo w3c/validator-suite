@@ -17,12 +17,14 @@ import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
 import play.api.libs.iteratee.PushEnumerator
 import org.w3.util.Headers.wrapHeaders
-import akka.pattern.pipe
+import akka.pattern.ask
+import akka.util.Timeout
 
-class Run(val actor: ActorRef) {
+class Run(val actor: ActorRef)(implicit timeout: Timeout) {
   
-  def start(): Unit = {
-    actor ! message.Start
-  }
+  def start(): Unit = actor ! message.Start
+  
+  def status(): Future[RunStatus] =
+    (actor ? message.GetStatus).mapTo[RunStatus]
   
 }

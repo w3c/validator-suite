@@ -38,6 +38,18 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
   
   startWith(NotYetStarted, RunData(strategy))
   
+  whenUnhandled {
+    case Event(message.GetStatus, s) => {
+      val status = stateName match {
+        case s @ (NotYetStarted | Stopped) => s
+        case Started if stateData.isRunning => Running
+        case Started => Idle
+      }
+      sender ! status
+      stay()
+    }
+  }
+  
   when(NotYetStarted) {
     case Event(message.Start, _) => {
       goto(Started) using scheduleNextURLsToFetch(initialData)
