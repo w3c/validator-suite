@@ -1,10 +1,7 @@
 @(jobs: Iterable[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
 
 @import org.w3.vs.prod._
-
-@isRunning(id: java.util.UUID) = @{
-  configuration.runCreator.byJobId(id).isSuccess
-}
+@import views.Helper._
 
 @libs.main("Validator Suite", stylesheets = List("mockup.css")) {
 	
@@ -20,13 +17,7 @@
 				<ul class="meta">
 					<li>Name: @job.name</li>
 					<li>Uri: @job.strategy.seedURLs.head</li>
-					<li>Status:
-						@if(isRunning(job.id)) {
-						  Running
-						} else {
-						  Idle
-						} 
-					</li>
+					<li>Status: @job.getStatus</li>
 					<li>Resources: -</li>
 				</ul>
 				<ul class="last">
@@ -45,7 +36,7 @@
 				<ul class="menu">
 					<li><a href="@routes.Validator.showJob(job.id)">Show</a></li>
 					<li>
-					@if(isRunning(job.id)) {
+					@if(job.isRunning) {
 					  Stop
 					} else {
 					  <a href="@routes.Validator.runJob(job.id)">Run</a>

@@ -12,8 +12,8 @@ object Global extends GlobalSettings {
         strategy = new EntryPointStrategy(
           name="irrelevantForV1",
           entrypoint=URL("http://www.w3.org/"),
-          distance=10,
-          linkCheck=true,
+          distance=0,
+          linkCheck=false,
           filter=Filter(include=Everything, exclude=Nothing)))
     store.putJob(jobW3C)
     store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret").withJob(jobW3C))

@@ -23,6 +23,8 @@ import org.w3.vs.run._
 import org.w3.vs.controllers._
 import org.w3.vs.model.EntryPointStrategy
 import org.w3.vs.prod.configuration.store
+import akka.util.duration._
+import akka.dispatch.Await
 
 object Validator extends Controller {
   
@@ -161,6 +163,8 @@ object Validator extends Controller {
   
   // finds job from id, checks ownership, updates job, redirects to dashboard
   def updateJob(id: Job#Id) = (IfAuth, IfJob(id)) {implicit request => implicit user => job =>
+    //println(configuration.runCreator.byJobId(id).either.right.get.status.value.get.right.get)
+    //println(Await.result(configuration.runCreator.byJobId(id).either.right.get.status, 1 second))
     if (user.owns(job)) {
       jobForm.bindFromRequest.fold (
         formWithErrors => BadRequest(views.html.jobForm(formWithErrors, job.id)),
