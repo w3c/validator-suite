@@ -9,7 +9,6 @@ import akka.actor._
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import play.Logger
-import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
 import akka.util.duration._
 import akka.util.Duration

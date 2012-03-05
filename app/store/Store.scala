@@ -32,6 +32,9 @@ trait Store {
   
   def authenticate(email: String, password: String): Validation[Throwable, Option[User]]
   
+  def putSnapshot(snapshot: RunSnapshot): Validation[Throwable, Unit]
+  
+  def latestSnapshotFor(jobId: Job#Id): Validation[Throwable, Option[RunSnapshot]]
   
 }
 

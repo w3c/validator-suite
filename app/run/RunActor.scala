@@ -20,7 +20,6 @@ import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
 import message.GetJobData
 
-
 class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[RunState, RunData] {
   
   import configuration._
@@ -34,6 +33,19 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
    * A shorten id for logs readability
    */
   val shortId = job.shortId
+  
+  final private def takeSnapshot: RunSnapshot = {
+    val data = stateData
+    import data._
+    RunSnapshot(
+      jobId = job.id,
+      distance = distance,
+      toBeExplored = pending.toList ++ toBeExplored,
+      fetched = fetched,
+      oks = oks,
+      errors = errors,
+      warnings = warnings)
+  }
   
   implicit def strategy = job.strategy
   

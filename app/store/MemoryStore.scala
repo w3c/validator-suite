@@ -20,6 +20,8 @@ class MemoryStore extends Store {
   
   val jobs: ConcurrentMap[Job#Id, Job] = new ConcurrentHashMap[Job#Id, Job]().asScala
   
+  val snapshots: ConcurrentMap[Job#Id, RunSnapshot] = new ConcurrentHashMap[Job#Id, RunSnapshot]().asScala
+  
   def init(): Validation[Throwable, Unit] = Success()
   
   def putAssertorResult(result: AssertorResult): Validation[Throwable, Unit] = fromTryCatch {
@@ -70,6 +72,17 @@ class MemoryStore extends Store {
   
   def authenticate(email: String, password: String): Validation[Throwable, Option[User]] = fromTryCatch {
     users collectFirst { case (_, user) if user.email == email && user.password == password => user }
+  }
+  
+  def putSnapshot(snapshot: RunSnapshot): Validation[Throwable, Unit] = fromTryCatch {
+    snapshots += snapshot.jobId -> snapshot
+  }
+  
+  def latestSnapshotFor(jobId: Job#Id): Validation[Throwable, Option[RunSnapshot]] = fromTryCatch {
+    import org.joda.time.DateTime
+    implicit val timestampOrdering = scala.math.Ordering.fromLessThan((x: DateTime, y: DateTime) => x isBefore y)
+    def latest = snapshots.filterKeys{ _ == jobId }.values.maxBy(_.createdAt)
+    try Some(latest) catch { case t => None }
   }
     
 }
