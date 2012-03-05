@@ -140,7 +140,7 @@ object Validator extends Controller {
   def subscribe(id: String): WebSocket[JsValue] = IfAuthSocket { request => user =>
     configuration.runCreator.byJobId(id).map { run =>
       val in = Iteratee.foreach[JsValue](e => println(e))
-      val enumerator = Subscribe.to(run)
+      val enumerator = run.subscribeToUpdates()
       (in, enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
     }.getOrElse(CloseWebsocket)
   }

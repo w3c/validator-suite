@@ -6,25 +6,43 @@ import org.w3.util._
 import org.w3.vs.assertor._
 import akka.dispatch._
 import akka.actor._
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
-import java.util.concurrent.TimeUnit.MILLISECONDS
 import play.Logger
-import System.{currentTimeMillis => now}
-import org.w3.vs.http._
 import akka.util.duration._
 import akka.util.Duration
-import scala.collection.mutable.LinkedList
-import scala.collection.mutable.LinkedHashMap
-import play.api.libs.iteratee.PushEnumerator
-import org.w3.util.Headers.wrapHeaders
 import akka.pattern.ask
 import akka.util.Timeout
+import play.api.libs.iteratee.{Enumerator, PushEnumerator}
+import akka.actor.Props
 
-class Run(val actor: ActorRef)(implicit timeout: Timeout) {
+class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
   
-  def start(): Unit = actor ! message.Start
+  val logger = play.Logger.of(classOf[Run])
+  
+  def start(): Unit = actorRef ! message.Start
   
   def status(): Future[RunStatus] =
-    (actor ? message.GetStatus).mapTo[RunStatus]
+    (actorRef ? message.GetStatus).mapTo[RunStatus]
+  
+  def subscribeToUpdates()(implicit conf: ValidatorSuiteConf): Enumerator[message.ObservationUpdate] = {
+    import conf.system
+    lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
+      def receive = {
+        case msg: message.ObservationUpdate =>
+          try { 
+            enumerator.push(msg)
+          } catch { case e: java.nio.channels.ClosedChannelException =>
+            actorRef ! message.Unsubscribe(subscriber)
+            enumerator.close
+          }
+        case msg => logger.debug("subscriber got "+msg)
+      }
+    }))
+
+    // TODO make the enumerator to stop the actor and unsubscribe it when an error occurs (or when it's 
+    lazy val enumerator: PushEnumerator[message.ObservationUpdate] =
+      Enumerator.imperative[message.ObservationUpdate]( onStart = actorRef ! message.Subscribe(subscriber) )
+    
+    enumerator
+  }
   
 }
