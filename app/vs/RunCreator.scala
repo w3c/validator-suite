@@ -10,8 +10,8 @@ import Validation._
 import akka.util.Timeout
 
 trait RunCreator {
-  def byJobId(jobId: Job#Id): Validation[Throwable, Run]
-  def byJobId(jobId: String): Validation[Throwable, Run]
+  def byJobId(jobId: Job#Id): Option[Run]
+  def byJobId(jobId: String): Option[Run]
   def runOf(job: Job): Run
 }
 
@@ -19,13 +19,13 @@ class RunCreatorImpl()(implicit configuration: ValidatorSuiteConf, timeout: Time
   
   var registry = Map[Job#Id, ActorRef]()
   
-  def byJobId(jobId: Job#Id): Validation[Throwable, Run] = fromTryCatch { new Run(registry(jobId)) }
+  def byJobId(jobId: Job#Id): Option[Run] = registry.get(jobId) map { new Run(_) }
   
-  def byJobId(jobIdString: String): Validation[Throwable, Run] =
+  def byJobId(jobIdString: String): Option[Run] =
     for {
-      jobId <- fromTryCatch { java.util.UUID.fromString(jobIdString) }
-      run <- byJobId(jobId)
-    } yield run
+      jobId <- try Some(java.util.UUID.fromString(jobIdString)) catch { case t => None }
+      job <- byJobId(jobId)
+    } yield job
   
   def runOf(job: Job): Run = {
     val actor = TypedActor.context.actorOf(

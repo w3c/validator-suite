@@ -20,6 +20,9 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
   
   def start(): Unit = actorRef ! message.Start
   
+  def jobData(): Future[JobData] =
+    (actorRef ? message.GetJobData).mapTo[JobData]
+  
   def status(): Future[RunStatus] =
     (actorRef ? message.GetStatus).mapTo[RunStatus]
   

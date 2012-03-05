@@ -11,16 +11,16 @@ import org.w3.vs.run.NotYetStarted
 object Helper {
   
   // moved to job
-  def getJobStatus(id: Job#Id): org.w3.vs.run.RunStatus = {
-    configuration.runCreator.byJobId(id).fold(
-      failure => NotYetStarted,
-      success => 
-        try {
-          Await.result(success.status, 100 milliseconds)
-        } catch {
-          case e: AskTimeoutException => {println(e); Stopped}
-        }
-    )
-  }
+//  def getJobStatus(id: Job#Id): org.w3.vs.run.RunStatus = {
+//    configuration.runCreator.byJobId(id).fold(
+//      failure => NotYetStarted,
+//      success => 
+//        try {
+//          Await.result(success.status, 100 milliseconds)
+//        } catch {
+//          case e: AskTimeoutException => {println(e); Stopped}
+//        }
+//    )
+//  }
   
 }

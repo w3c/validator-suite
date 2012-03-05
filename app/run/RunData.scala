@@ -67,6 +67,13 @@ case class RunData(
   
   final def isRunning = ! isIdle
   
+  final def status(stateName: RunState): RunStatus = stateName match {
+    case NotYetStarted => NotYetStarted
+    case Stopped => Stopped
+    case Started if this.isRunning => Running
+    case Started => Idle
+  }
+  
   /**
    * An Explore should be ignored if
    * <ul>

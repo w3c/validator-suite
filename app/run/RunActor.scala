@@ -18,6 +18,7 @@ import scala.collection.mutable.LinkedHashMap
 import play.api.libs.iteratee.PushEnumerator
 import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
+import message.GetJobData
 
 
 class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[RunState, RunData] {
@@ -40,12 +41,17 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
   
   whenUnhandled {
     case Event(message.GetStatus, s) => {
-      val status = stateName match {
-        case s @ (NotYetStarted | Stopped) => s
-        case Started if stateData.isRunning => Running
-        case Started => Idle
-      }
-      sender ! status
+      sender ! s.status(stateName)
+      stay()
+    }
+    case Event(message.GetJobData, s) => {
+      val jobData = JobData(
+        status = s.status(stateName),
+        resources = s.numberOfKnownUrls,
+        oks = s.oks,
+        errors = s.errors,
+        warnings = s.warnings)
+      sender ! jobData
       stay()
     }
   }
@@ -62,7 +68,7 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
       val data2 = receiveAssertion(result, data)
       if (data2.assertionPhaseIsFinished) {
         val data3 = endAssertionPhase(data: RunData)
-        stop(FSM.Normal)
+        stop(FSM.Normal) // @@@@
       }
       else {
         stay() using data2

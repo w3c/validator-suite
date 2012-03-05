@@ -30,6 +30,7 @@ object Validator extends Controller {
   
   val logger = play.Logger.of("Controller.Validator")
   
+  // TODO: make the implicit explicit!!!
   import org.w3.vs.prod.configuration
   
   implicit val urlFormat = new Formatter[URL] {
@@ -138,7 +139,8 @@ object Validator extends Controller {
   // def jobSocket
   // 
   def subscribe(id: String): WebSocket[JsValue] = IfAuthSocket { request => user =>
-    configuration.runCreator.byJobId(id).map { run =>
+    configuration.runCreator.byJobId(id).map { run: Run =>
+//      val run = runOpt getOrElse sys.error("tom told me this should go away anyway")
       val in = Iteratee.foreach[JsValue](e => println(e))
       val enumerator = run.subscribeToUpdates()
       (in, enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
