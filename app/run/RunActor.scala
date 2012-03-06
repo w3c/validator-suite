@@ -50,12 +50,12 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
       warnings = warnings)
   }
   
-  final private def extractJobData: JobData = JobData(
-    status = stateData.status(stateName),
-    resources = stateData.numberOfKnownUrls,
-    oks = stateData.oks,
-    errors = stateData.errors,
-    warnings = stateData.warnings)
+  final private def extractJobData(state: RunState, data: RunData): JobData = JobData(
+    status = data.status(state),
+    resources = data.numberOfKnownUrls,
+    oks = data.oks,
+    errors = data.errors,
+    warnings = data.warnings)
   
   final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
     var data = _data
@@ -70,7 +70,7 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
   
   implicit def strategy = job.strategy
   
-  val initialConditions: (RunState, RunData) = store.latestSnapshotFor(job.id) match {
+  private final val initialConditions: (RunState, RunData) = store.latestSnapshotFor(job.id) match {
     case Failure(t) => throw t
     case Success(None) => {
       val initialData = replayEventsOn(RunData(strategy), None)
@@ -90,9 +90,23 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
       stay()
     }
     case Event(message.GetJobData, s) => {
-      val jobData = extractJobData
+      val jobData = extractJobData(stateName, stateData)
       sender ! jobData
       stay()
+    }
+  }
+  
+  onTransition {
+    // detect when the status as changed
+    case (currentState, nextState) if stateData.status(currentState) != nextStateData.status(nextState) => {
+      val jobData = extractJobData(nextState, nextStateData)
+      broadcast(message.UpdateData(jobData), nextStateData)
+      if (nextStateData.noMoreUrlToExplore) {
+        logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, nextStateData.fetched.size))
+      }
+      if (nextStateData.assertionPhaseIsFinished) {
+        logger.info("%s: no pending assertions" format shortId)
+      }
     }
   }
   
@@ -106,10 +120,6 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     
     case Event(result: AssertorResult, data) => {
       val data2 = receiveAssertion(result, data)
-      if (data2.assertionPhaseIsFinished) {
-        val jobData = extractJobData
-        broadcast(message.UpdateData(jobData), data)
-      }
       stay() using data2
     }
     
@@ -119,11 +129,6 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
       broadcast(message.NewResourceInfo(resourceInfo), data2)
       val data3 = scheduleNextURLsToFetch(data2)
       val data4 = scheduleAssertion(resourceInfo, data3)
-      if (data4.noMoreUrlToExplore) {
-        logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, data4.fetched.size))
-      } else {
-        //logger.debug("There are still %d pending fetches" format pendingFetches.size)
-      }
       stay() using data4
     }
     
