@@ -74,7 +74,7 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     case Failure(t) => throw t
     case Success(None) => {
       val initialData = replayEventsOn(RunData(strategy), None)
-      (NotYetStarted, initialData)
+      (Started, initialData)
     }
     case Success(Some(snapshot)) => {
       val resumedData = replayEventsOn(RunData.fromSnapshot(strategy, snapshot), Some(snapshot.createdAt))
@@ -82,6 +82,8 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     }
   }
   
+  // at instanciation of this actor
+  configuration.system.scheduler.schedule(2 seconds, 5 seconds, self, message.TellTheWorldYouAreAlive)
   startWith(initialConditions._1, initialConditions._2)
   
   whenUnhandled {
@@ -92,6 +94,15 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     case Event(message.GetJobData, s) => {
       val jobData = extractJobData(stateName, stateData)
       sender ! jobData
+      stay()
+    }
+    case Event(message.TellTheWorldYouAreAlive, _) => {
+      // send to the store a fresher version of this run
+      store.putSnapshot(takeSnapshot)
+      // tell the subscribers about the current data for this run
+      val jobData = extractJobData(stateName, stateData)
+      broadcast(message.UpdateData(jobData), stateData)
+      logger.info("%s: current data - %s" format (shortId, jobData.toString))
       stay()
     }
   }

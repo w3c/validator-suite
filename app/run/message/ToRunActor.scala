@@ -6,5 +6,6 @@ case object Start
 case object Stop
 case object GetStatus
 case object GetJobData
+case object TellTheWorldYouAreAlive
 case class Subscribe(subscriber: ActorRef)
 case class Unsubscribe(subscriber: ActorRef)
