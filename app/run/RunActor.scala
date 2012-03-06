@@ -74,7 +74,7 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     case Failure(t) => throw t
     case Success(None) => {
       val initialData = replayEventsOn(RunData(strategy), None)
-      (Started, initialData)
+      (NotYetStarted, initialData)
     }
     case Success(Some(snapshot)) => {
       val resumedData = replayEventsOn(RunData.fromSnapshot(strategy, snapshot), Some(snapshot.createdAt))
