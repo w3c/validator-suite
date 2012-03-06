@@ -40,11 +40,9 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
         case msg => logger.debug("subscriber got "+msg)
       }
     }))
-
     // TODO make the enumerator to stop the actor and unsubscribe it when an error occurs (or when it's 
     lazy val enumerator: PushEnumerator[message.ObservationUpdate] =
       Enumerator.imperative[message.ObservationUpdate]( onStart = actorRef ! message.Subscribe(subscriber) )
-    
     enumerator
   }
   

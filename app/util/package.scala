@@ -13,4 +13,9 @@ package object util {
   type Headers = Map[String, List[String]]
   type ContentType = String
   
+  import scala.math.Ordering
+  import org.joda.time.DateTime
+
+  implicit val DateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan((x: DateTime, y: DateTime) => x isBefore y)
+  
 }

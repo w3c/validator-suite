@@ -19,6 +19,9 @@ import play.api.libs.iteratee.PushEnumerator
 import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
 import message.GetJobData
+import scalaz._
+import Scalaz._
+import org.joda.time.DateTime
 
 class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[RunState, RunData] {
   
@@ -47,9 +50,32 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
       warnings = warnings)
   }
   
+  final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
+    var data = _data
+    store.listResourceInfos(job.id, after = afterOpt).fold( t => throw t, ris => ris) foreach { resourceInfo =>
+      data = data.withCompletedFetch(resourceInfo.url)
+    }
+    store.listAssertorResults(job.id, after = afterOpt).fold( t => throw t, ars => ars) foreach { assertorResult =>
+      data = data.withAssertorResult(assertorResult)
+    }
+    data
+  }
+  
   implicit def strategy = job.strategy
   
-  startWith(NotYetStarted, RunData(strategy))
+  val initialConditions: (RunState, RunData) = store.latestSnapshotFor(job.id) match {
+    case Failure(t) => throw t
+    case Success(None) => {
+      val initialData = replayEventsOn(RunData(strategy), None)
+      (NotYetStarted, initialData)
+    }
+    case Success(Some(snapshot)) => {
+      val resumedData = replayEventsOn(RunData.fromSnapshot(strategy, snapshot), Some(snapshot.createdAt))
+      (Started, resumedData)
+    }
+  }
+  
+  startWith(initialConditions._1, initialConditions._2)
   
   whenUnhandled {
     case Event(message.GetStatus, s) => {

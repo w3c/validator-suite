@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap
 import scalaz._
 import Scalaz._
 import Validation._
+import org.joda.time.DateTime
+import org.w3.util.DateTimeOrdering
 
 class MemoryStore extends Store {
   
@@ -50,16 +52,18 @@ class MemoryStore extends Store {
     getResourceInfo(url, jobId) map { _.distancefromSeed }
   }
   
-  def listResourceInfos(jobId: Job#Id): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
-    resourceInfos.values filter { _.jobId == jobId }
+  def listResourceInfos(jobId: Job#Id, after: Option[DateTime] = None): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
+    after match {
+      case None => resourceInfos.values filter { _.jobId == jobId }
+      case Some(date) => resourceInfos.values.filter{ ri => ri.jobId == jobId && ri.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
+    }
   }
   
-  def listAllResourceInfos(): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
-    resourceInfos.values
-  }
-  
-  def listAssertorResults(jobId: Job#Id): Validation[Throwable, Iterable[AssertorResult]] = fromTryCatch {
-    results.values filter { _.jobId == jobId }
+  def listAssertorResults(jobId: Job#Id, after: Option[DateTime] = None): Validation[Throwable, Iterable[AssertorResult]] = fromTryCatch {
+    after match {
+      case None => results.values filter { _.jobId == jobId }
+      case Some(date) => results.values.filter{ r => r.jobId == jobId && r.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
+    }
   }
   
   def saveUser(user: User): Validation[Throwable, Unit] = fromTryCatch {
@@ -79,9 +83,7 @@ class MemoryStore extends Store {
   }
   
   def latestSnapshotFor(jobId: Job#Id): Validation[Throwable, Option[RunSnapshot]] = fromTryCatch {
-    import org.joda.time.DateTime
-    implicit val timestampOrdering = scala.math.Ordering.fromLessThan((x: DateTime, y: DateTime) => x isBefore y)
-    def latest = snapshots.filterKeys{ _ == jobId }.values.maxBy(_.createdAt)
+    def latest = snapshots.filterKeys{ _ == jobId }.values.maxBy(_.createdAt)(DateTimeOrdering)
     try Some(latest) catch { case t => None }
   }
     

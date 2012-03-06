@@ -15,11 +15,25 @@ import akka.util.Duration
 import scala.collection.mutable.ListMap
 
 object RunData {
+  
   def diff(l: Set[URL], r: Set[URL]): Set[URL] = {
     val d1 = l -- r
     val d2 = r -- l
     d1 ++ d2
   }
+  
+  def fromSnapshot(strategy: Strategy, snapshot: RunSnapshot): RunData = {
+    import snapshot._
+    RunData(
+      strategy = strategy,
+      distance = distance,
+      toBeExplored = toBeExplored,
+      fetched = fetched,
+      oks = oks,
+      errors = errors,
+      warnings = warnings)
+  }
+  
 }
 
 /**
@@ -196,6 +210,15 @@ case class RunData(
     fetched = fetched + url
   )
   
+  def withAssertorResult(result: AssertorResult): RunData = result match {
+    case assertions: Assertions => this.copy(
+      oks = assertions.numberOfOks,
+      errors = assertions.numberOfErrors,
+      warnings = assertions.numberOfWarnings
+    )
+    case fail: AssertorFail => this // should do something about that
+  }
+    
   def assertionPhaseIsFinished: Boolean =
     toBeExplored.isEmpty && sentAssertorResults == receivedAssertorResults
   

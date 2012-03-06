@@ -30,6 +30,9 @@ case class Assertions(
     assertions: Iterable[RawAssertion]) extends AssertorResult {
   
   def hasError: Boolean = assertions exists { _.isError }
+  def hasWarnings: Boolean = assertions exists { _.isWarning }
+  
+  def numberOfOks = if (hasError || hasWarnings) 0 else 1
   
   def numberOfErrors = assertions.view.filter(_.isError).size
   

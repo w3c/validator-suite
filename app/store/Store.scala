@@ -4,6 +4,7 @@ import org.w3.vs.model._
 import org.w3.vs.run._
 import org.w3.util._
 import scalaz.Validation
+import org.joda.time.DateTime
 
 trait Store {
   
@@ -19,12 +20,12 @@ trait Store {
   
   def distance(url: URL, jobId: Job#Id): Validation[Throwable, Int]
   
-  def listResourceInfos(jobId: Job#Id): Validation[Throwable, Iterable[ResourceInfo]]
+  def listResourceInfos(jobId: Job#Id, after: Option[DateTime] = None): Validation[Throwable, Iterable[ResourceInfo]]
   
   // this is not really safe (goes through the entire collection)
   // def listAllResourceInfos(): Validation[Throwable, Iterable[ResourceInfo]]
   
-  def listAssertorResults(jobId: Job#Id): Validation[Throwable, Iterable[AssertorResult]]
+  def listAssertorResults(jobId: Job#Id, after: Option[DateTime] = None): Validation[Throwable, Iterable[AssertorResult]]
   
   def saveUser(user: User): Validation[Throwable, Unit]
   
