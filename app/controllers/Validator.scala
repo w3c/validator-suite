@@ -143,7 +143,7 @@ object Validator extends Controller {
 //      val run = runOpt getOrElse sys.error("tom told me this should go away anyway")
       val in = Iteratee.foreach[JsValue](e => println(e))
       val enumerator = run.subscribeToUpdates()
-      (in, enumerator &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS })
+      (in, enumerator &> Enumeratee.map[message.RunUpdate]{ e => e.toJS })
     }.getOrElse(CloseWebsocket)
   }
   

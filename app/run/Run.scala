@@ -26,11 +26,11 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
   def status(): Future[RunStatus] =
     (actorRef ? message.GetStatus).mapTo[RunStatus]
   
-  def subscribeToUpdates()(implicit conf: ValidatorSuiteConf): Enumerator[message.ObservationUpdate] = {
+  def subscribeToUpdates()(implicit conf: ValidatorSuiteConf): Enumerator[message.RunUpdate] = {
     import conf.system
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
-        case msg: message.ObservationUpdate =>
+        case msg: message.RunUpdate =>
           try { 
             enumerator.push(msg)
           } catch { case e: java.nio.channels.ClosedChannelException =>
@@ -41,8 +41,8 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
       }
     }))
     // TODO make the enumerator to stop the actor and unsubscribe it when an error occurs (or when it's 
-    lazy val enumerator: PushEnumerator[message.ObservationUpdate] =
-      Enumerator.imperative[message.ObservationUpdate]( onStart = actorRef ! message.Subscribe(subscriber) )
+    lazy val enumerator: PushEnumerator[message.RunUpdate] =
+      Enumerator.imperative[message.RunUpdate]( onStart = actorRef ! message.Subscribe(subscriber) )
     enumerator
   }
   

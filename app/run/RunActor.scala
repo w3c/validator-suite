@@ -50,6 +50,13 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
       warnings = warnings)
   }
   
+  final private def extractJobData: JobData = JobData(
+    status = stateData.status(stateName),
+    resources = stateData.numberOfKnownUrls,
+    oks = stateData.oks,
+    errors = stateData.errors,
+    warnings = stateData.warnings)
+  
   final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
     var data = _data
     store.listResourceInfos(job.id, after = afterOpt).fold( t => throw t, ris => ris) foreach { resourceInfo =>
@@ -83,12 +90,7 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
       stay()
     }
     case Event(message.GetJobData, s) => {
-      val jobData = JobData(
-        status = s.status(stateName),
-        resources = s.numberOfKnownUrls,
-        oks = s.oks,
-        errors = s.errors,
-        warnings = s.warnings)
+      val jobData = extractJobData
       sender ! jobData
       stay()
     }
@@ -105,12 +107,10 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     case Event(result: AssertorResult, data) => {
       val data2 = receiveAssertion(result, data)
       if (data2.assertionPhaseIsFinished) {
-        val data3 = endAssertionPhase(data: RunData)
-        stop(FSM.Normal) // @@@@
+        val jobData = extractJobData
+        broadcast(message.UpdateData(jobData), data)
       }
-      else {
-        stay() using data2
-      }
+      stay() using data2
     }
     
     case Event(fetchResponse: FetchResponse, data) => {
@@ -184,14 +184,6 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
     broadcast(message.NewAssertorResult(result), data)
     store.putAssertorResult(result)
     data.copy(receivedAssertorResults = data.receivedAssertorResults + 1)
-  }
-  
-  private final def endAssertionPhase(data: RunData): RunData = {
-    logger.info("%s: Observation phase done with %d observations" format (shortId, data.receivedAssertorResults)) // @@@ look into store?
-    broadcast(message.Done, data)
-    val ctx = TypedActor(context)
-    data.subscribers foreach { s => ctx.stop(s) }
-    data.copy(subscribers = Set.empty)
   }
   
   private final def receiveResponse(fetchResponse: FetchResponse, _data: RunData): (ResourceInfo, RunData) = {
@@ -279,7 +271,7 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
   }
   
   // TODO should be a service from the store
-  private final def initialState: Iterable[message.ObservationUpdate] = {
+  private final def initialState: Iterable[message.RunUpdate] = {
     val resourceInfos = store.listResourceInfos(job.id).either.right.get map message.NewResourceInfo
     val assertions = store.listAssertorResults(job.id).either.right.get map message.NewAssertorResult
     resourceInfos ++ assertions
@@ -288,7 +280,7 @@ class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends
   /**
    * To broadcast messages to subscribers.
    */
-  private final def broadcast(msg: message.ObservationUpdate, data: RunData): Unit = {
+  private final def broadcast(msg: message.RunUpdate, data: RunData): Unit = {
     data.subscribers foreach ( s => s ! msg )
   }
   

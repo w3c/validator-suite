@@ -15,30 +15,18 @@ import scalaz._
  * 
  * Listening to updates lets you know everything about an Observation.
  */
-sealed trait ObservationUpdate {
+sealed trait RunUpdate {
   def toJS: JsValue
 }
 
-/**
- * The Observation has finished, there should be no more updates after that.
- * 
- * Note: this may go away in next versions.
- */
-case object Done extends ObservationUpdate {
-  def toJS: JsValue = JsArray(List(JsString("OBS_FINISHED")))
-}
-
-/**
- * The user has stopped the observation
- */
-case object Stopped extends ObservationUpdate {
-  def toJS: JsValue = JsArray(List(JsString("STOPPED")))
+case class UpdateData(data: JobData) extends RunUpdate {
+  def toJS: JsValue = JsString("")
 }
 
 /**
  * A new Response was received during the exploration
  */
-case class NewResourceInfo(resourceInfo: ResourceInfo) extends ObservationUpdate {
+case class NewResourceInfo(resourceInfo: ResourceInfo) extends RunUpdate {
   def toJS: JsValue = {
     resourceInfo.result match {
       case ResourceInfoError(why) => 
@@ -69,7 +57,7 @@ case class NewResourceInfo(resourceInfo: ResourceInfo) extends ObservationUpdate
 /**
  * A new Assertion was received
  */
-case class NewAssertorResult(result: AssertorResult) extends ObservationUpdate {
+case class NewAssertorResult(result: AssertorResult) extends RunUpdate {
   
   def toJS: JsValue = result match {
     case assertions: Assertions =>
