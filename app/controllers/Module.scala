@@ -3,7 +3,6 @@ package org.w3.vs.controllers
 import org.w3.vs.model.User
 import org.w3.vs.model.Job
 import org.w3.vs.prod.configuration.store
-
 import play.api.mvc.Request
 import play.api.mvc.AnyContent
 import play.api.mvc.Result
@@ -11,17 +10,18 @@ import play.api.mvc.Results
 import play.api.mvc.Action
 import play.api.mvc.WebSocket
 import play.api.mvc.RequestHeader
-
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Iteratee
 import play.api.libs.json.JsValue
-
 import scalaz._
 import Scalaz._
 import Validation._
 import org.w3.util.Pimps._
+import play.api.mvc.AsyncResult
+import play.api.libs.concurrent.Promise
 
 trait ActionModule[A] extends Composable[A, ActionReq, ActionRes, Action[AnyContent]]
+trait AsyncActionModule[A] extends Composable[Promise[A], ActionReq, AsyncActionRes, Action[AnyContent]]
 trait SocketModule[A] extends Composable[A, SocketReq, SocketRes, WebSocket[JsValue]]
 
 object IfAjax extends ActionModule[Boolean] {
@@ -49,6 +49,11 @@ object OptionAjax extends ActionModule[Option[Boolean]] {
   }
 }
 
+object AsyncIfAuth extends AsyncActionModule[User] {
+  def extract(req: Request[AnyContent]): Validation[AsyncActionRes, Promise[User]] = {
+    IfAuth.extract(req).fold(failure => Failure(Promise.pure(failure)), success => Success(Promise.pure(success)))
+  }
+}
 object IfAuth extends ActionModule[User] { 
   def extract(req: Request[AnyContent]) =
     for {
