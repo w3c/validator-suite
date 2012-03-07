@@ -271,7 +271,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
             assertions = assertions
           )
         )
-      }(validatorDispatcher) recoverWith { case throwable: Throwable =>
+      }(assertorExecutionContext) recoverWith { case throwable: Throwable =>
         Future {
           AssertorFail(
             url = url,

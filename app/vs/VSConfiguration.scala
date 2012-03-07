@@ -16,7 +16,9 @@ trait VSConfiguration {
   
   val MAX_URL_TO_FETCH: Int
   
-  val validatorDispatcher: ExecutionContext
+  val assertorExecutionContext: ExecutionContext
+  
+  val webExecutionContext: ExecutionContext
   
   val httpClient: AsyncHttpClient
   

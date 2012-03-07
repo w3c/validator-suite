@@ -17,7 +17,13 @@ trait DefaultProdConfiguration extends VSConfiguration {
   
   val MAX_URL_TO_FETCH = 10
   
-  val validatorDispatcher: ExecutionContext = {
+  lazy val assertorExecutionContext: ExecutionContext = {
+    import java.util.concurrent.{ExecutorService, Executors}
+    val executor: ExecutorService = Executors.newFixedThreadPool(10)
+    ExecutionContext.fromExecutorService(executor)
+  }
+  
+  lazy val webExecutionContext: ExecutionContext = {
     import java.util.concurrent.{ExecutorService, Executors}
     val executor: ExecutorService = Executors.newFixedThreadPool(10)
     ExecutionContext.fromExecutorService(executor)
