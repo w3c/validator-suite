@@ -6,7 +6,7 @@ import akka.dispatch.ExecutionContext
 import com.ning.http.client.AsyncHttpClient
 import org.w3.vs.store.Store
 
-trait ValidatorSuiteConf {
+trait VSConfiguration {
   
   val system: ActorSystem
   

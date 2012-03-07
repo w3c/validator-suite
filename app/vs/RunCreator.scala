@@ -15,7 +15,7 @@ trait RunCreator {
   def runOf(job: Job): Run
 }
 
-class RunCreatorImpl()(implicit configuration: ValidatorSuiteConf, timeout: Timeout) extends RunCreator {
+class RunCreatorImpl()(implicit configuration: VSConfiguration, timeout: Timeout) extends RunCreator {
   
   var registry = Map[Job#Id, ActorRef]()
   

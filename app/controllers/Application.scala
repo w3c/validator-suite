@@ -19,10 +19,11 @@ import play.api.libs.concurrent._
 import play.api.libs.json.JsValue
 import play.api.mvc.WebSocket.FrameFormatter
 import scala.PartialFunction
-import org.w3.vs.prod.configuration.store
 import org.w3.vs.controllers._
 
 object Application extends Controller {
+  
+  def store = org.w3.vs.Prod.configuration.store
   
   val logger = play.Logger.of("Controller.Application")
 

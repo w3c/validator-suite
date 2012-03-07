@@ -23,7 +23,7 @@ import scalaz._
 import Scalaz._
 import org.joda.time.DateTime
 
-class RunActor(job: Job)(implicit val configuration: ValidatorSuiteConf) extends Actor with FSM[RunState, RunData] {
+class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Actor with FSM[RunState, RunData] {
   
   import configuration._
   

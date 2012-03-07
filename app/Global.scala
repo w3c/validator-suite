@@ -4,10 +4,12 @@ import org.w3.util._
 
 object Global extends GlobalSettings {
 
+  def store = org.w3.vs.Prod.configuration.store
+  
   val logger = play.Logger.of("Global")
   
   override def onStart(app: Application): Unit = {
-    import org.w3.vs.prod.configuration.store
+    
     val jobW3C = new Job(name="W3C", 
         strategy = new EntryPointStrategy(
           name="irrelevantForV1",

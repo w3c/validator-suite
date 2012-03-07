@@ -24,7 +24,7 @@ object Main {
   
   def main(args: Array[String]): Unit = {
     
-    val configuration = new prod.Configuration { }
+    val configuration = new DefaultProdConfiguration { }
 
 //    val am = configuration.http.authorityManagerFor(URL("http://www.w3.org/")).sleepTime = 0
 //    val run = configuration.runCreator.runOf(RunId(), job)

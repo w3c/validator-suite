@@ -12,7 +12,7 @@ import akka.util.duration._
 import play.Logger
 import org.w3.vs.run.RunActor
 import org.w3.vs.model.{HttpVerb, HEAD, GET}
-import org.w3.vs.ValidatorSuiteConf
+import org.w3.vs.VSConfiguration
 
 trait Http {
   def fetch(url: URL, action: HttpVerb, run: ActorRef): Unit
@@ -23,7 +23,7 @@ trait Http {
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
  */
-class HttpImpl()(implicit configuration: ValidatorSuiteConf) extends Http with TypedActor.PostStop {
+class HttpImpl()(implicit configuration: VSConfiguration) extends Http with TypedActor.PostStop {
 
   import configuration.httpClient
   // TODO really???

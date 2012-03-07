@@ -26,7 +26,7 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
   def status(): Future[RunStatus] =
     (actorRef ? message.GetStatus).mapTo[RunStatus]
   
-  def subscribeToUpdates()(implicit conf: ValidatorSuiteConf): Enumerator[message.RunUpdate] = {
+  def subscribeToUpdates()(implicit conf: VSConfiguration): Enumerator[message.RunUpdate] = {
     import conf.system
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {

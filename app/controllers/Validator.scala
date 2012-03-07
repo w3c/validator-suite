@@ -22,16 +22,17 @@ import org.w3.vs.model._
 import org.w3.vs.run._
 import org.w3.vs.controllers._
 import org.w3.vs.model.EntryPointStrategy
-import org.w3.vs.prod.configuration.store
 import akka.util.duration._
 import akka.dispatch.Await
 
 object Validator extends Controller {
   
+  def store = org.w3.vs.Prod.configuration.store
+  
   val logger = play.Logger.of("Controller.Validator")
   
   // TODO: make the implicit explicit!!!
-  import org.w3.vs.prod.configuration
+  import org.w3.vs.Prod.configuration
   
   implicit val urlFormat = new Formatter[URL] {
     

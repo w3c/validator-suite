@@ -10,7 +10,7 @@ import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
 import org.w3.vs.model.{Response => _, _}
-import org.w3.vs.ValidatorSuiteConf
+import org.w3.vs.VSConfiguration
 
 trait AuthorityManager {
   def fetch(url: URL, action: HttpVerb, run: ActorRef): Unit
@@ -23,7 +23,7 @@ object AuthorityManager {
   val httpInFlight = new java.util.concurrent.atomic.AtomicInteger(0)
 }
 
-class AuthorityManagerImpl private[http] (authority: Authority)(implicit configuration: ValidatorSuiteConf)
+class AuthorityManagerImpl private[http] (authority: Authority)(implicit configuration: VSConfiguration)
 extends AuthorityManager with TypedActor.PostStop {
   
   import configuration.httpClient

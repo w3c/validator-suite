@@ -7,7 +7,7 @@ import akka.testkit.{TestKit, ImplicitSender}
 import akka.util.Duration
 import java.util.concurrent.TimeUnit._
 import akka.actor.ActorSystem
-import org.w3.vs.ValidatorSuiteConf
+import org.w3.vs.VSConfiguration
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 
@@ -15,7 +15,7 @@ import org.scalatest.matchers.MustMatchers
  * helper trait that can be used to test Runs
  * Be careful: all TypedActors are stopped after each test
  */
-abstract class RunTestHelper(configuration: ValidatorSuiteConf)
+abstract class RunTestHelper(configuration: VSConfiguration)
 extends TestKit(configuration.system) with ImplicitSender
 with WordSpec with MustMatchers with BeforeAndAfterAll {
   

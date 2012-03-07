@@ -2,7 +2,6 @@ package org.w3.vs.controllers
 
 import org.w3.vs.model.User
 import org.w3.vs.model.Job
-import org.w3.vs.prod.configuration.store
 import play.api.mvc.Request
 import play.api.mvc.AnyContent
 import play.api.mvc.Result
@@ -54,7 +53,9 @@ object AsyncIfAuth extends AsyncActionModule[User] {
     IfAuth.extract(req).fold(failure => Failure(Promise.pure(failure)), success => Success(Promise.pure(success)))
   }
 }
-object IfAuth extends ActionModule[User] { 
+object IfAuth extends ActionModule[User] {
+  def store = org.w3.vs.Prod.configuration.store
+
   def extract(req: Request[AnyContent]) =
     for {
       email <- req.session.get("email") toSuccess Results.Redirect(controllers.routes.Application.login)
@@ -68,8 +69,11 @@ object IfJob {
     val jobId = id
   }
 }
-trait IfJob extends ActionModule[Job] { 
-  val jobId: Job#Id  
+trait IfJob extends ActionModule[Job] {
+  def store = org.w3.vs.Prod.configuration.store
+  
+  val jobId: Job#Id
+  
   def extract(req: Request[AnyContent]): Validation[Result, Job] =
     store.getJobById(jobId).fold(
       f => Failure(Results.InternalServerError("Error not implemented in Module.scala/IfJob")), // TODO
@@ -82,6 +86,9 @@ trait IfJob extends ActionModule[Job] {
 // play.api.libs.iteratee.Enumerator[Nothing]),Nothing]
 
 object IfAuthSocket extends SocketModule[User] {
+  
+  def store = org.w3.vs.Prod.configuration.store
+
   def extract(req: RequestHeader): Validation[SocketRes, User] = {
     def default: SocketRes = (Iteratee.foreach[JsValue](e => println(e)), Enumerator.eof)
     for {
@@ -102,6 +109,9 @@ object IfNotAuth extends ActionModule[Boolean] {
 }
 
 object OptionAuth extends ActionModule[Option[User]] {
+  
+  def store = org.w3.vs.Prod.configuration.store
+  
   def extract(req: ActionReq) =
     for {
       email <- req.session.get("email") toSuccess Results.Redirect(controllers.routes.Application.login)
