@@ -41,12 +41,7 @@ footer {
 	border-width:1px 0;
 	background:#f5f5f5;
 }
-section.main > header {display:none;}
-section.main > ul {
-	list-style-type: none;
-	padding:0;
-}
-section.main > ul > li {
+section.main > article {
 	border:1px solid #e5e5e5;
 	margin-bottom:10px;
 	padding:10px;
@@ -56,12 +51,8 @@ body > section.main {
 	border-width: 0 0 0 1px;
 }
 .job {overflow: auto;}
-.job .meta,
-.job .last,
-.job .graph,
-.job .menu {float:left;padding-left: 20px;margin-right: 30px;}
+.job ul {float:left; padding-left: 20px; margin: 0 30px 0 0;}
 .job .report {}
-.job .meta ul {margin:0}
 .job .filters h1 {
 	display:inline;
 	font-size:1.1em;
