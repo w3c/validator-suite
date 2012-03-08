@@ -166,7 +166,7 @@ object Validator extends Controller {
   // dashboard
   def dashboard = IfAuth {_ => implicit user =>
     AsyncResult {
-      val jobs = store.listJobs(user.id).fold(t => throw t, jobs => jobs)
+      val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
       val jobDatas = jobs map ( _.getData )
       val foo = Future.sequence(jobDatas).asPromise orTimeout("timeout", 1, SECONDS)
       foo map {either => 
@@ -187,7 +187,7 @@ object Validator extends Controller {
   // finds job from id, checks ownership, updates job, redirects to dashboard
   def updateJob(id: Job#Id) = (IfAuth, IfJob(id)) {implicit request => implicit user => job =>
     if (user.owns(id)) {
-      jobForm.bindFromRequest.fold (
+      jobForm(user).bindFromRequest.fold (
         formWithErrors => BadRequest(views.html.jobForm(formWithErrors, job.id)),
         newJob => {
           store.putJob(job.copy(strategy = newJob.strategy, name = newJob.name))
@@ -213,9 +213,9 @@ object Validator extends Controller {
   // finds job from id, checks ownership, shows pre-filled form
   def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
     if (user.owns(id))
-      Ok(views.html.jobForm(jobForm.fill(job), job.id))
+      Ok(views.html.jobForm(jobForm(user).fill(job), job.id))
     else
-      Ok(views.html.jobForm(jobForm.fill(job), job.id)) // TODO throw an error / redirect
+      Ok(views.html.jobForm(jobForm(user).fill(job), job.id)) // TODO throw an error / redirect
   }
   
   // finds job from id, checks ownership, runs it
@@ -232,8 +232,8 @@ object Validator extends Controller {
   
   // creates a job and redirects to the dashboard
   def createJob() = IfAuth {implicit req => implicit user => 
-    jobForm.bindFromRequest.fold (
-      formWithErrors => BadRequest(views.html.jobForm(formWithErrors, null)),
+    jobForm(user).bindFromRequest.fold (
+      formWithErrors => BadRequest(views.html.jobForm(formWithErrors)),
       job => {
         store.putJob(job.copy(creator = user.id, organization = user.organization)) // ?
         Redirect(routes.Validator.dashboard)
@@ -241,9 +241,9 @@ object Validator extends Controller {
     )}
   
   // shows the job creation form
-  def newJob() = IfAuth {_ => implicit user => Ok(views.html.jobForm(jobForm, null))}
+  def newJob() = IfAuth {_ => implicit user => Ok(views.html.jobForm(jobForm(user)))}
   
-  val jobForm = Form(
+  def jobForm(user: User) = Form(
     mapping (
       "name" -> text,
       "url" -> of[URL],
@@ -251,11 +251,10 @@ object Validator extends Controller {
       "linkCheck" -> of[Boolean](booleanFormatter)
     )((name, url, distance, linkCheck) => {
       // done the following so that it compiles, but this is crearly wrong
-      val fakeUser = User.fake
       Job(
         name = name,
-        organization = fakeUser.organization,
-        creator = fakeUser.id,
+        organization = user.organization,
+        creator = user.id,
         strategy = new EntryPointStrategy(
           name="irrelevantForV1",
           entrypoint=url,
