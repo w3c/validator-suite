@@ -70,11 +70,11 @@ trait IfJob extends ActionModule[Job] {
   
   val jobId: Job#Id
   
-  def extract(req: Request[AnyContent]): Validation[Result, Job] =
-    store.getJobById(jobId).fold(
-      f => Failure(Results.InternalServerError("Error not implemented in Module.scala/IfJob")), // TODO
-      job => Success(job)
-    )
+  def extract(req: Request[AnyContent]): Validation[Result, Job] = store.getJobById(jobId) match {
+    case Success(Some(job)) => Success(job)
+    case _ => Failure(Results.InternalServerError("Error not implemented in Module.scala/IfJob"))
+  }
+  
 }
 
 //Product with Serializable with 

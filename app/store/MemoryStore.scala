@@ -38,9 +38,16 @@ class MemoryStore extends Store {
     jobs += job.id -> job
   }
   
-  def getJobById(id: Job#Id) = jobs.get(id) match {
-    case Some(job) => Success(job)
-    case _ => Failure(new Throwable) // TODO
+  def removeJob(jobId: Job#Id): Validation[Throwable, Unit] = fromTryCatch {
+    jobs -= jobId
+  }
+  
+  def getJobById(id: Job#Id) = fromTryCatch {
+   jobs.get(id)
+  }
+    
+  def listJobs(organizationId: Organization#Id): Validation[Throwable, Iterable[Job]] = fromTryCatch {
+    jobs collect { case (_, job) if organizationId == job.organization => job }
   }
   
   def getResourceInfo(url: URL, jobId: Job#Id): Validation[Throwable, ResourceInfo] = {

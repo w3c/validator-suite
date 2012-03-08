@@ -13,8 +13,6 @@ object Job {
     Job(name = "fake job", creator = fakeUser.id, organization = fakeUser.organization, strategy = strategy)
   }
   
-//  def getJobsFor(user: User)(implicit conf: VSConfiguration): 
-  
 }
 
 case class Job(
