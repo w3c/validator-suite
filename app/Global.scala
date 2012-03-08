@@ -13,16 +13,25 @@ object Global extends GlobalSettings {
   
   override def onStart(app: Application): Unit = {
     
-    val jobW3C = new Job(name="W3C", 
-        strategy = new EntryPointStrategy(
-          name="irrelevantForV1",
-          entrypoint=URL("http://www.w3.org/"),
-          distance=1,
-          linkCheck=false,
-          filter=Filter(include=Everything, exclude=Nothing)))
-    store.putJob(jobW3C)
-    store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret").withJob(jobW3C))
-    store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret").withJob(jobW3C))
+    val w3c = Organization(name="World Wide Web Consortium")
+    
+    val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id)
+    val bertails = User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id)
+    
+    val job = Job(
+      name = "W3C",
+      creator = bertails.id,
+      organization = w3c.id,
+      strategy = new EntryPointStrategy(
+        name="irrelevantForV1",
+        entrypoint=URL("http://www.w3.org/"),
+        distance=1,
+        linkCheck=false,
+        filter=Filter(include=Everything, exclude=Nothing)))
+    
+    store.putJob(job)
+    store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id))
+    store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id))
   }
   
   override def onStop(app: Application): Unit = {

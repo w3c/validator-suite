@@ -6,12 +6,24 @@ import org.w3.vs.run._
 import akka.dispatch._
 import org.w3.vs.VSConfiguration
 
+object Job {
+  
+  def fake(strategy: EntryPointStrategy): Job = {
+    val fakeUser = User.fake
+    Job(name = "fake job", creator = fakeUser.id, organization = fakeUser.organization, strategy = strategy)
+  }
+  
+//  def getJobsFor(user: User)(implicit conf: VSConfiguration): 
+  
+}
+
 case class Job(
   id: Job#Id = UUID.randomUUID,
   strategy: EntryPointStrategy,
   createdAt: DateTime = new DateTime,
-  creator: String = "john doe",
-  name: String = "myJob") {
+  creator: User#Id,
+  organization: Organization#Id,
+  name: String) {
   
   type Id = UUID
   

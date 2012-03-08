@@ -89,7 +89,8 @@ object Validator extends Controller {
     logger.debug("jbefore")
     
     // this should be persisted
-    val job = Job(strategy = strategy)
+    val fakeUser = User.fake
+    val job = Job(name = "unknown", organization = fakeUser.organization, creator = fakeUser.id, strategy = strategy)
     
     logger.debug("job: "+job)
     
@@ -245,15 +246,20 @@ object Validator extends Controller {
       "url" -> of[URL],
       "distance" -> of[Int],
       "linkCheck" -> of[Boolean](booleanFormatter)
-    )((name, url, distance, linkCheck) =>
-      Job(name=name, 
+    )((name, url, distance, linkCheck) => {
+      // done the following so that it compiles, but this is crearly wrong
+      val fakeUser = User.fake
+      Job(
+        name = name,
+        organization = fakeUser.organization,
+        creator = fakeUser.id,
         strategy = new EntryPointStrategy(
           name="irrelevantForV1",
           entrypoint=url,
           distance=distance,
           linkCheck=linkCheck,
-          filter=Filter(include=Everything, exclude=Nothing)
-    )))
+          filter=Filter(include=Everything, exclude=Nothing)))
+    })
     ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
   )
   

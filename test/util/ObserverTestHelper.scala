@@ -27,13 +27,17 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   
   val logger = play.Logger.of(classOf[RunTestHelper])
   
+  val configurationBeforeTest = org.w3.vs.Prod.configuration
+  
   override def beforeAll: Unit = {
+    org.w3.vs.Prod.configuration = configuration
     servers foreach { _.start() }
   }
   
   override def afterAll: Unit = {
     configuration.system.shutdown()
     servers foreach { _.stop() }
+    org.w3.vs.Prod.configuration = configurationBeforeTest
   }
   
 //  /**

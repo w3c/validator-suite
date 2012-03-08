@@ -25,7 +25,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = Job(strategy = strategy)
+  val job = Job.fake(strategy = strategy)
   
   val servers = Seq(
       unfiltered.jetty.Http(9001).filter(Website(Seq("/" --> "http://localhost:9002/")).toPlanify),
