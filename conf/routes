@@ -24,6 +24,8 @@ GET     /job/:id/edit               controllers.Validator.editJob(id: java.util.
 GET     /job                        controllers.Validator.newJob()
 POST    /job                        controllers.Validator.createJob()
 
+GET     /jobs                       controllers.Validator.dashboardSocket()
+
 # Authentication
 GET     /login                      controllers.Application.login
 POST    /login                      controllers.Application.authenticate
