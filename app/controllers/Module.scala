@@ -17,11 +17,12 @@ import Scalaz._
 import Validation._
 import org.w3.util.Pimps._
 import play.api.mvc.AsyncResult
+import akka.dispatch.Future
+import play.api.Play.current
 import play.api.libs.concurrent.Promise
 
-trait ActionModule[A] extends Composable[A, ActionReq, ActionRes, Action[AnyContent]]
-trait AsyncActionModule[A] extends Composable[Promise[A], ActionReq, AsyncActionRes, Action[AnyContent]]
-trait SocketModule[A] extends Composable[A, SocketReq, SocketRes, WebSocket[JsValue]]
+trait ActionModule[A] extends Composable[A, ActionReq, Result, Action[AnyContent]]
+trait SocketModule[A] extends Composable[A, RequestHeader, SocketRes, WebSocket[JsValue]]
 
 object IfAjax extends ActionModule[Boolean] {
   def extract(req: ActionReq) = {
@@ -48,11 +49,6 @@ object OptionAjax extends ActionModule[Option[Boolean]] {
   }
 }
 
-object AsyncIfAuth extends AsyncActionModule[User] {
-  def extract(req: Request[AnyContent]): Validation[AsyncActionRes, Promise[User]] = {
-    IfAuth.extract(req).fold(failure => Failure(Promise.pure(failure)), success => Success(Promise.pure(success)))
-  }
-}
 object IfAuth extends ActionModule[User] {
   def store = org.w3.vs.Prod.configuration.store
 
