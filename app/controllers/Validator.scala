@@ -188,7 +188,7 @@ object Validator extends Controller {
         formWithErrors => BadRequest(views.html.jobForm(formWithErrors, job.id)),
         newJob => {
           store.putJob(job.copy(strategy = newJob.strategy, name = newJob.name))
-          //store.saveUser(user.withJob(job.copy(strategy = newJob.strategy, name = newJob.name))) // seems unnecessary to save the user here, TODO review
+          store.saveUser(user.withJob(job.copy(strategy = newJob.strategy, name = newJob.name)))
           Redirect(routes.Validator.dashboard)
           //Redirect(routes.Validator.dashboard.toString, 301)
         }
