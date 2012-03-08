@@ -17,6 +17,7 @@ import play.api.libs.json._
 import play.api.mvc.PathBindable
 import java.net.URI
 import java.util.UUID
+import java.util.concurrent.TimeUnit._
 import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.run._
@@ -24,6 +25,9 @@ import org.w3.vs.controllers._
 import org.w3.vs.model.EntryPointStrategy
 import akka.util.duration._
 import akka.dispatch.Await
+import akka.dispatch.Future
+import play.api.Play.current
+import play.libs.Akka._
 
 object Validator extends Controller {
   
@@ -33,6 +37,8 @@ object Validator extends Controller {
   
   // TODO: make the implicit explicit!!!
   import org.w3.vs.Prod.configuration
+  
+  implicit def ec = configuration.webExecutionContext
   
   implicit val urlFormat = new Formatter[URL] {
     
@@ -157,24 +163,32 @@ object Validator extends Controller {
   // login
   // logout
   // dashboard
-  def dashboard = IfAuth {_ => implicit user => Ok(views.html.dashboard(user.jobs))}
+  def dashboard = IfAuth {_ => implicit user => 
+    AsyncResult {
+      val jobDatas = Future.sequence(user.jobs.values map { _.getData }).asPromise
+      jobDatas orTimeout("timeout", 1, SECONDS) map {either => 
+        either fold(
+          data => Ok(views.html.dashboard(user.jobs.values zip data)), 
+          b => Results.InternalServerError(b) // TODO
+        )
+      }
+    }
+  }
+  
   // new job
   // job (report)
   // job/url (focus)
   
-  def showJob(id: Job#Id)   = IfAuth {_ => implicit user => Ok(views.html.job())} // find job from id, check read access, redirect to report
+  def showJob(id: Job#Id) = IfAuth {_ => implicit user => Ok(views.html.job())} // find job from id, check read access, redirect to report
   
   // finds job from id, checks ownership, updates job, redirects to dashboard
   def updateJob(id: Job#Id) = (IfAuth, IfJob(id)) {implicit request => implicit user => job =>
-    //println(configuration.runCreator.byJobId(id).either.right.get.status.value.get.right.get)
-    //println(Await.result(configuration.runCreator.byJobId(id).either.right.get.status, 1 second))
     if (user.owns(job)) {
       jobForm.bindFromRequest.fold (
         formWithErrors => BadRequest(views.html.jobForm(formWithErrors, job.id)),
         newJob => {
-          val newj = newJob.withNewId(job.id)
-          store.saveUser(user.withoutJob(job).withJob(newj))
-          store.putJob(newj)
+          store.putJob(job.copy(strategy = newJob.strategy, name = newJob.name))
+          //store.saveUser(user.withJob(job.copy(strategy = newJob.strategy, name = newJob.name))) // seems unnecessary to save the user here, TODO review
           Redirect(routes.Validator.dashboard)
           //Redirect(routes.Validator.dashboard.toString, 301)
         }
@@ -187,7 +201,7 @@ object Validator extends Controller {
   // finds job from id, checks ownership, deletes job, redirects to dashboard
   def deleteJob(id: Job#Id) = (IfAuth, IfJob(id)) {_ => implicit user => job =>
     if (user.owns(job)) {
-      store.saveUser(user.withoutJob(job)) // TODO Also remove the job from the store (method missing)
+      store.saveUser(user.copy(jobs = user.jobs - id)) // TODO Also remove the job from the store? (method missing)
       Redirect(routes.Validator.dashboard)
     } else {
       Redirect(routes.Validator.dashboard) // TODO Display an error
@@ -205,8 +219,7 @@ object Validator extends Controller {
   // finds job from id, checks ownership, runs it
   def runJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
     if (user.owns(job)) {
-      val run = configuration.runCreator.runOf(job)
-      run.start()
+      job.getRun().start()
       Redirect(routes.Validator.dashboard)
     } else
       Redirect(routes.Validator.dashboard) // TODO throw an error / redirect

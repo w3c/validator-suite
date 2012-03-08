@@ -17,15 +17,11 @@ case class Job(
   
   def shortId: String = id.toString.substring(0, 6)
   
-  def withNewId(id: Id) = this.copy(id = id)
-  
   def getRun()(implicit conf: VSConfiguration): Run = {
     import conf.runCreator
     runCreator.byJobId(id) getOrElse runCreator.runOf(this)
   }
   
   def getData()(implicit conf: VSConfiguration): Future[JobData] = getRun().jobData()
-
-  def isRunning = true
   
 }

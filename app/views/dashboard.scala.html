@@ -1,6 +1,5 @@
-@(jobs: Iterable[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
+@(jobs: Iterable[(org.w3.vs.model.Job, org.w3.vs.model.JobData)] = None)(implicit user: org.w3.vs.model.User)
 
-@import org.w3.vs.prod._
 @import views.Helper._
 
 @libs.main("Validator Suite", stylesheets = List("mockup.css")) {
@@ -10,38 +9,30 @@
 	
 	<section id="jobs" class="main">
 	<ul>
-	@jobs.map { job =>		
+	@for((job, data) <- jobs) {	
 		<li>
 			<section class="job">
-				<header>@job.name</header>
+				<header style="display:none">@job.name</header>
 				<ul class="meta">
 					<li>Name: @job.name</li>
 					<li>Uri: @job.strategy.seedURLs.head</li>
-					<li>Status: @@job.getStatus</li>
-					<li>Resources: -</li>
+					<li>Status: @data.status</li>
+					<li>Resources: @data.resources</li>
 				</ul>
 				<ul class="last">
 					<li>Last run: <time datetime="">-</time></li>
 					<li>Last updated: <time datetime="">-</time></li>
-					<li>Errors: -</li>
-					<li>Warnings: -</li>
+					<li>Errors: @data.errors</li>
+					<li>Warnings: @data.warnings</li>
 				</ul>
-				<div class="graph">
-<pre style="margin: 0 0 0 30px">|       +
-|    +     +      +
-|  +          +
-|____________________
-</pre>
-				</div>
 				<ul class="menu">
 					<li><a href="@routes.Validator.showJob(job.id)">Show</a></li>
-					<li>
-					@if(job.isRunning) {
-					  Stop
-					} else {
-					  <a href="@routes.Validator.runJob(job.id)">Run</a>
-					} 
-					</li>
+					<li>@defining(data.status) { status =>
+					  @status match {
+					    case org.w3.vs.run.Running => {Stop}
+					    case _ => {<a href=@routes.Validator.runJob(job.id)>Run</a>}
+					  }
+					}</li>
 					<li><a href="@routes.Validator.editJob(job.id)">Edit</a></li>
 					<li>
 					  <a href="@routes.Validator.deleteJob(job.id)">Delete</a>
