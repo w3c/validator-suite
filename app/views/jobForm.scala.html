@@ -23,11 +23,7 @@
 		<input id="distance" name="distance" type="range" value="@form("distance").value.getOrElse(10)" max=20 onchange="showValue(this.value)"/><span id="dist">@form("distance").value.getOrElse(10)</span><br>
 		<label for="linkCheck">Check external links: </label>
 		<input type=checkbox id=linkCheck name=linkCheck @if(form("linkCheck").value == Some("on")) {checked}/><br>
-		@if(id != null) {
-		<button type=submit>Update</button>
-		} else {
-		<button type=submit>Create</button>
-		}
+		<button type=submit>@if(id != null) {Update} else {Create}</button>
 	}
 	}
 	
