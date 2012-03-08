@@ -164,12 +164,14 @@ object Validator extends Controller {
   // login
   // logout
   // dashboard
-  def dashboard = IfAuth {_ => implicit user => 
+  def dashboard = IfAuth {_ => implicit user =>
     AsyncResult {
-      val jobDatas = Future.sequence(user.jobs.values map { _.getData }).asPromise
-      jobDatas orTimeout("timeout", 1, SECONDS) map {either => 
+      val jobs = store.listJobs(user.id).fold(t => throw t, jobs => jobs)
+      val jobDatas = jobs map ( _.getData )
+      val foo = Future.sequence(jobDatas).asPromise orTimeout("timeout", 1, SECONDS)
+      foo map {either => 
         either fold(
-          data => Ok(views.html.dashboard(user.jobs.values zip data)), 
+          data => Ok(views.html.dashboard(jobs zip data)), 
           b => Results.InternalServerError(b) // TODO
         )
       }
@@ -184,12 +186,11 @@ object Validator extends Controller {
   
   // finds job from id, checks ownership, updates job, redirects to dashboard
   def updateJob(id: Job#Id) = (IfAuth, IfJob(id)) {implicit request => implicit user => job =>
-    if (user.owns(job)) {
+    if (user.owns(id)) {
       jobForm.bindFromRequest.fold (
         formWithErrors => BadRequest(views.html.jobForm(formWithErrors, job.id)),
         newJob => {
           store.putJob(job.copy(strategy = newJob.strategy, name = newJob.name))
-          store.saveUser(user.withJob(job.copy(strategy = newJob.strategy, name = newJob.name)))
           Redirect(routes.Validator.dashboard)
           //Redirect(routes.Validator.dashboard.toString, 301)
         }
@@ -201,8 +202,8 @@ object Validator extends Controller {
   
   // finds job from id, checks ownership, deletes job, redirects to dashboard
   def deleteJob(id: Job#Id) = (IfAuth, IfJob(id)) {_ => implicit user => job =>
-    if (user.owns(job)) {
-      store.saveUser(user.copy(jobs = user.jobs - id)) // TODO Also remove the job from the store? (method missing)
+    if (user.owns(id)) {
+      store.removeJob(id)
       Redirect(routes.Validator.dashboard)
     } else {
       Redirect(routes.Validator.dashboard) // TODO Display an error
@@ -211,7 +212,7 @@ object Validator extends Controller {
   
   // finds job from id, checks ownership, shows pre-filled form
   def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
-    if (user.owns(job))
+    if (user.owns(id))
       Ok(views.html.jobForm(jobForm.fill(job), job.id))
     else
       Ok(views.html.jobForm(jobForm.fill(job), job.id)) // TODO throw an error / redirect
@@ -219,7 +220,7 @@ object Validator extends Controller {
   
   // finds job from id, checks ownership, runs it
   def runJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
-    if (user.owns(job)) {
+    if (user.owns(id)) {
       job.getRun().start()
       Redirect(routes.Validator.dashboard)
     } else
@@ -231,8 +232,7 @@ object Validator extends Controller {
     jobForm.bindFromRequest.fold (
       formWithErrors => BadRequest(views.html.jobForm(formWithErrors, null)),
       job => {
-        store.saveUser(user.withJob(job))
-        store.putJob(job) // ?
+        store.putJob(job.copy(creator = user.id, organization = user.organization)) // ?
         Redirect(routes.Validator.dashboard)
       }
     )}
