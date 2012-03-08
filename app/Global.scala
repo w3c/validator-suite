@@ -3,8 +3,11 @@ import org.w3.vs.model._
 import org.w3.util._
 
 object Global extends GlobalSettings {
+  
+  def vsconf = org.w3.vs.Prod.configuration
 
-  def store = org.w3.vs.Prod.configuration.store
+  def store = vsconf.store
+  def system = vsconf.system
   
   val logger = play.Logger.of("Global")
   
@@ -22,5 +25,8 @@ object Global extends GlobalSettings {
     store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret").withJob(jobW3C))
   }
   
+  override def onStop(app: Application): Unit = {
+    system.shutdown()
+  }
   
 }
