@@ -10,20 +10,14 @@ case class User(
     email: String,
     name: String,
     password: String,
-    jobs: List[Job] = List.empty) {
+    jobs: Map[Job#Id, Job] = Map.empty) {
   
   type Id = UUID
   
   def withJob(job: Job): User =
-    this.copy(jobs = jobs :+ job)
+    this.copy(jobs = jobs + ((job.id, job)))
   
-  def withoutJob(job: Job): User =
-    this.copy(jobs = jobs.filterNot(_ == job)) // XXX Fixme? 
-    
   def owns(job: Job): Boolean =
-    jobs.contains(job)
-    
-  def getJobById(id: Job#Id): Option[Job] =
-    jobs.find {_.id == id}
+    jobs.isDefinedAt(job.id)
   
 }
