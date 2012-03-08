@@ -1,6 +1,6 @@
-//Functional.install();
-
-var Message = Backbone.Model.extend({
+$(function(){
+	
+window.Message = Backbone.Model.extend({
     
     url: "",
     
@@ -20,11 +20,11 @@ var Message = Backbone.Model.extend({
     }
 });
 
-var Messages = Backbone.Collection.extend({
+window.Messages = Backbone.Collection.extend({
     model: Message
 });
 
-var JobData = Backbone.Model.extend({
+window.JobData = Backbone.Model.extend({
     
     defaults: {
         "status": "-",
@@ -39,7 +39,7 @@ var JobData = Backbone.Model.extend({
     }
 });
 
-var Job = Backbone.Model.extend({
+window.Job = Backbone.Model.extend({
     
     defaults: {
         "id": "",
@@ -62,12 +62,63 @@ var Job = Backbone.Model.extend({
     },
     
     initialize: function() {
-        
+    	console.log("New Job");
+    	this.log();
     }
 });
 
-var Jobs = Backbone.Collection.extend({
+window.JobView = Backbone.View.extend({
+
+    tagName:  "article",
+    
+    attributes: {"class" :"job"},
+
+    template: _.template($('#job-template').html()),
+
+    events: {
+      "click .edit"     : "edit",
+      "click .delete"   : "clear",
+      "click .run"      : "run",
+      "click .stop"     : "stop"
+    },
+
+    initialize: function() {
+      this.model.bind('change', this.render, this);
+      console.log("New JobView");
+      this.model.bind('destroy', this.remove, this);
+    },
+
+    render: function() {
+      this.$el.html(this.template(this.model.toJSON()));
+      return this;
+    },
+
+    edit: function() {
+      
+    },
+
+    run: function() {
+      
+    },
+
+    stop: function(e) {
+      
+    },
+
+    remove: function() {
+      this.$el.remove();
+    },
+
+    clear: function() {
+      this.model.destroy();
+    }
+
+});
+
+window.JobList = Backbone.Collection.extend({
+	
     model: Job,
+    
     subscribe: function() {
         //var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
         //WS = new WS("ws://");
@@ -75,38 +126,73 @@ var Jobs = Backbone.Collection.extend({
         //    Jobs.updateData(JobData.fromJSON(event.data));
         //};
     },
+    
     getJobFromHTML: function(element) {
         var job = new Job({
-            "name": $("header", element).text(),
-            "seedUri": $("header", element).text(),
+            "name": $(".name", element).text(),
+            "seedUri": $(".uri", element).text(),
             "data": new JobData({
-                "status": "-",
-                "resources": 0,
-                "errors": 0,
-                "warnings": 0                
+                "status": $(".status", element).text(),
+                "resources": parseInt($(".resources", element).text()),
+                "errors": parseInt($(".errors", element).text()),
+                "warnings": parseInt($(".warnings", element).text())                
             }),
         });
-        job.log();
         return job;
     },
+    
     initialize: function() {
-
+    	console.log("New JobList");
     }
 });
 
+window.Jobs = new JobList();
 
-var DashBoard = {
-    Jobs: new Jobs(),
+window.DashBoardView = Backbone.View.extend({
+	el: $("#jobs"),
+	
+    events: {
+    	
+    },
+    
 	initialize: function() {
+		console.log("New DashBoard");
 		console.log("Jobs found:");
         console.log($("#jobs .job"));
-		var jobs = _.map($("#jobs .job"), function(job) { 
-        	console.log(job);
-        	DashBoard.Jobs.getJobFromHTML(job); 
+		
+        // Bind events
+	    Jobs.on('add', this.addOne, this);
+	    Jobs.on('reset', this.addAll, this);
+	    //Jobs.on('all', this.render, this);
+        
+        // Parse the HTML to get initial data
+        Jobs.reset();
+        var jobs = $("#jobs .job").map(function(job) { 
+        	return Jobs.getJobFromHTML(job); 
         });
-		this.Jobs.add(jobs, {silent: true});
-		this.Jobs.subscribe();
-	}
-};
+        Jobs.add(jobs.toArray(), {silent: true});
+        //Jobs.add(jobs.toArray());
+		
+		// Subscribe to job updates through a WebSocket
+		Jobs.subscribe();
+	},
+	
+    render: function() {
+    	console.log("render");
+    },
+    
+    addOne: function(job) {
+    	console.log("addOne");
+    	console.log(job);
+    	var view = new JobView({model: job});
+    	this.$el.append(view.render().el);
+    },
+    
+    addAll: function() {
+    	Jobs.each(this.addOne);
+    }
+});
 
-DashBoard.initialize();
+window.DashBoard = new DashBoardView;
+
+});
