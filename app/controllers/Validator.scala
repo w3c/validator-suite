@@ -217,10 +217,13 @@ object Validator extends Controller {
   }
   
   // finds job from id, checks ownership, runs it
-  def runJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
+  def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {req => implicit user => job => isAjax =>
     if (user.owns(job)) {
       job.getRun().start()
-      Redirect(routes.Validator.dashboard)
+      if (!isAjax)
+    	Redirect(routes.Validator.dashboard)
+      else
+        Ok
     } else
       Redirect(routes.Validator.dashboard) // TODO throw an error / redirect
   }
@@ -265,6 +268,9 @@ object Validator extends Controller {
   
   // * Sockets
   // dashboardSocket
+  def dashboardSocket() = IfAuthSocket {req => user =>
+    CloseWebsocket
+  }
   // jobSocket
   // uriSocket
   
