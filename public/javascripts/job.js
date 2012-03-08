@@ -71,7 +71,10 @@ window.JobView = Backbone.View.extend({
 
     tagName:  "article",
     
-    attributes: {"class" :"job"},
+    attributes: {
+    	"class": "job",
+    	"data-id": "0"
+    },
 
     template: _.template($('#job-template').html()),
 
@@ -83,8 +86,9 @@ window.JobView = Backbone.View.extend({
     },
 
     initialize: function() {
+      this.$el.attr("data-id", this.model.get('id'));
       this.model.bind('change', this.render, this);
-      console.log("New JobView");
+      //console.log("New JobView");
       this.model.bind('destroy', this.remove, this);
     },
 
@@ -128,7 +132,9 @@ window.JobList = Backbone.Collection.extend({
     },
     
     getJobFromHTML: function(element) {
+    	//console.log(element);
         var job = new Job({
+        	"id": $(element).attr("data-id"),
             "name": $(".name", element).text(),
             "seedUri": $(".uri", element).text(),
             "data": new JobData({
@@ -158,7 +164,7 @@ window.DashBoardView = Backbone.View.extend({
 	initialize: function() {
 		console.log("New DashBoard");
 		console.log("Jobs found:");
-        console.log($("#jobs .job"));
+        //console.log($("#jobs .job"));
 		
         // Bind events
 	    Jobs.on('add', this.addOne, this);
@@ -167,23 +173,23 @@ window.DashBoardView = Backbone.View.extend({
         
         // Parse the HTML to get initial data
         Jobs.reset();
-        var jobs = $("#jobs .job").map(function(job) { 
+        var jobs = $("#jobs .job").map(function(index, job) { 
         	return Jobs.getJobFromHTML(job); 
-        });
-        Jobs.add(jobs.toArray(), {silent: true});
-        //Jobs.add(jobs.toArray());
+        }).toArray();
+        //Jobs.add(jobs, {silent: true});
+        Jobs.add(jobs);
 		
 		// Subscribe to job updates through a WebSocket
 		Jobs.subscribe();
 	},
 	
     render: function() {
-    	console.log("render");
+    	//console.log("render");
     },
     
     addOne: function(job) {
-    	console.log("addOne");
-    	console.log(job);
+    	//console.log("addOne");
+    	//console.log(job);
     	var view = new JobView({model: job});
     	this.$el.append(view.render().el);
     },

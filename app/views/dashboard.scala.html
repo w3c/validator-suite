@@ -9,7 +9,7 @@
 	
 	<section id="jobs" class="main">
 	@for((job, data) <- jobs) {
-		<article class="job">
+		<article class="job" data-id="@job.id">
 			<ul>
 				<li>Name: <span class="name">@job.name</span></li>
 				<li>Uri: <span class="uri">@job.strategy.seedURLs.head</span></li>
