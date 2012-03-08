@@ -40,11 +40,11 @@ object IfNotAjax extends ActionModule[Boolean] {
     }
   }
 }
-object OptionAjax extends ActionModule[Option[Boolean]] {
+object IsAjax extends ActionModule[Boolean] {
   def extract(req: ActionReq) = {
     req.headers.get("x-requested-with") match {
-      case Some("xmlhttprequest") => Success(Some(true))
-      case _ => Success(None)
+      case Some("xmlhttprequest") => Success(true)
+      case _ => Success(false)
     }
   }
 }
