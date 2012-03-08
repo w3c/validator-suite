@@ -212,9 +212,10 @@ case class RunData(
   
   def withAssertorResult(result: AssertorResult): RunData = result match {
     case assertions: Assertions => this.copy(
-      oks = assertions.numberOfOks,
-      errors = assertions.numberOfErrors,
-      warnings = assertions.numberOfWarnings
+      oks = oks + assertions.numberOfOks,
+      errors = errors + assertions.numberOfErrors,
+      warnings = warnings + assertions.numberOfWarnings,
+      receivedAssertorResults = receivedAssertorResults + 1
     )
     case fail: AssertorFail => this // should do something about that
   }

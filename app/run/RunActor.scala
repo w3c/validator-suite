@@ -199,7 +199,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
     logger.debug("%s: %s observed by %s" format (shortId, result.url, result.assertorId))
     broadcast(message.NewAssertorResult(result), data)
     store.putAssertorResult(result)
-    data.copy(receivedAssertorResults = data.receivedAssertorResults + 1)
+    data.withAssertorResult(result)
   }
   
   private final def receiveResponse(fetchResponse: FetchResponse, _data: RunData): (ResourceInfo, RunData) = {
