@@ -22,12 +22,14 @@ import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.run._
 import org.w3.vs.controllers._
+import org.w3.vs.run.message._
 import org.w3.vs.model.EntryPointStrategy
 import akka.util.duration._
 import akka.dispatch.Await
 import akka.dispatch.Future
 import play.api.Play.current
 import play.libs.Akka._
+import com.google.common.eventbus.Subscribe
 
 object Validator extends Controller {
   
@@ -70,8 +72,6 @@ object Validator extends Controller {
     )
   )
   
-  def index = IfAuth { _ => implicit user => Ok(views.html.index()) }
-  
   def validateWithParams(
       request: Request[AnyContent],
       url: URL,
@@ -111,6 +111,10 @@ object Validator extends Controller {
     )
   }
   
+  def stop(id: String) = IfAuth { implicit request => implicit user =>
+    configuration.runCreator.byJobId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
+  }
+  
   def redirect(id: String) = IfAuth { implicit request => implicit user =>
     try {
       val jobId: Job#Id = UUID.fromString(id)
@@ -122,48 +126,46 @@ object Validator extends Controller {
     }
   }
   
-  def stop(id: String) = IfAuth { implicit request => implicit user =>
-    configuration.runCreator.byJobId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
-  }
-  
-  /*
-   * Authenticated socket responsible for streaming the dashboard data, i.e. the list of 
-   * jobs owned by the current user.
-   
-  def dashboardSocket: WebSocket[JsValue] = IfAuthSocket { request => user =>
-    // Get the list of jobs of the user
-    val socket = (Iteratee.foreach[JsValue](e => println(e)))
-    var enum = Enumerator.imperative[JsValue]()
-    user.jobs.map { job =>
-    // Subscribe a DashboardSubscriber to the job's run
-      val sub = job.run.runOf(new DashboardSubscriber())
-      job.run.subscribe2(sub)
-      enum = enum >>> sub.enumerator
-    }
-    enum = enum &> Enumeratee.map[message.ObservationUpdate]{ e => e.toJS }
-    (Iteratee.ignore, enum)
-  }*/
-  
-  // def jobSocket
-  // 
   def subscribe(id: String): WebSocket[JsValue] = IfAuthSocket { request => user =>
     configuration.runCreator.byJobId(id).map { run: Run =>
-//      val run = runOpt getOrElse sys.error("tom told me this should go away anyway")
       val in = Iteratee.foreach[JsValue](e => println(e))
       val enumerator = run.subscribeToUpdates()
       (in, enumerator &> Enumeratee.map[message.RunUpdate]{ e => e.toJS })
     }.getOrElse(CloseWebsocket)
   }
+
+  // ------
   
-  // def dashboardSocket()
-  // Get user's list of jobs
-  // for each job subscribe a dashboard subscriber
-  
+  def jobForm(user: User) = Form(
+    mapping (
+      "name" -> text,
+      "url" -> of[URL],
+      "distance" -> of[Int],
+      "linkCheck" -> of[Boolean](booleanFormatter)
+    )((name, url, distance, linkCheck) => {
+      Job(
+        name = name,
+        organization = user.organization,
+        creator = user.id,
+        strategy = new EntryPointStrategy(
+          name="irrelevantForV1",
+          entrypoint=url,
+          distance=distance,
+          linkCheck=linkCheck,
+          filter=Filter(include=Everything, exclude=Nothing)))
+    })
+    ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
+  )
+
+//  def jobDispatcher(id: Job#Id) = Action { request =>
+//    request.body.asFormUrlEncoded
+//    logger.error(request.body.toString)
+//  }
+
   
   // * Pages
-  // login
-  // logout
-  // dashboard
+  def index = IfAuth { _ => implicit user => Ok(views.html.index()) }
+  
   def dashboard = IfAuth {_ => implicit user =>
     AsyncResult {
       val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
@@ -178,13 +180,8 @@ object Validator extends Controller {
     }
   }
   
-  // new job
-  // job (report)
-  // job/url (focus)
-  
   def showJob(id: Job#Id) = IfAuth {_ => implicit user => Ok(views.html.job())} // find job from id, check read access, redirect to report
   
-  // finds job from id, checks ownership, updates job, redirects to dashboard
   def updateJob(id: Job#Id) = (IfAuth, IfJob(id)) {implicit request => implicit user => job =>
     if (user.owns(id)) {
       jobForm(user).bindFromRequest.fold (
@@ -200,7 +197,6 @@ object Validator extends Controller {
     }
   } 
   
-  // finds job from id, checks ownership, deletes job, redirects to dashboard
   def deleteJob(id: Job#Id) = (IfAuth, IfJob(id)) {_ => implicit user => job =>
     if (user.owns(id)) {
       store.removeJob(id)
@@ -210,7 +206,6 @@ object Validator extends Controller {
     }
   } 
   
-  // finds job from id, checks ownership, shows pre-filled form
   def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
     if (user.owns(id))
       Ok(views.html.jobForm(jobForm(user).fill(job), job.id))
@@ -218,7 +213,6 @@ object Validator extends Controller {
       Ok(views.html.jobForm(jobForm(user).fill(job), job.id)) // TODO throw an error / redirect
   }
   
-  // finds job from id, checks ownership, runs it
   def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {req => implicit user => job => isAjax =>
     if (user.owns(id)) {
       job.getRun().start()
@@ -230,7 +224,6 @@ object Validator extends Controller {
       Redirect(routes.Validator.dashboard) // TODO throw an error / redirect
   }
   
-  // creates a job and redirects to the dashboard
   def createJob() = IfAuth {implicit req => implicit user => 
     jobForm(user).bindFromRequest.fold (
       formWithErrors => BadRequest(views.html.jobForm(formWithErrors)),
@@ -240,50 +233,16 @@ object Validator extends Controller {
       }
     )}
   
-  // shows the job creation form
   def newJob() = IfAuth {_ => implicit user => Ok(views.html.jobForm(jobForm(user)))}
   
-  def jobForm(user: User) = Form(
-    mapping (
-      "name" -> text,
-      "url" -> of[URL],
-      "distance" -> of[Int],
-      "linkCheck" -> of[Boolean](booleanFormatter)
-    )((name, url, distance, linkCheck) => {
-      // done the following so that it compiles, but this is crearly wrong
-      Job(
-        name = name,
-        organization = user.organization,
-        creator = user.id,
-        strategy = new EntryPointStrategy(
-          name="irrelevantForV1",
-          entrypoint=url,
-          distance=distance,
-          linkCheck=linkCheck,
-          filter=Filter(include=Everything, exclude=Nothing)))
-    })
-    ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
-  )
-  
-//  def jobDispatcher(id: Job#Id) = Action { request =>
-//    request.body.asFormUrlEncoded
-//    logger.error(request.body.toString)
-//    
-//  }
-  
   // * Sockets
-  // dashboardSocket
   def dashboardSocket() = IfAuthSocket {req => user =>
-    CloseWebsocket
+    val in = Iteratee.foreach[JsValue](e => println(e)) // TODO unsubscribe on client close
+    val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
+    var out = jobs.map(_.getRun().subscribeToUpdates).reduce((e1, e2) => e1 >- e2) &> Enumeratee.filter(_.isInstanceOf[UpdateData]) &> Enumeratee.map {e => e.toJS}
+    (in, out)
   }
   // jobSocket
   // uriSocket
-  
-  // * Ajax actions
-  // createJob
-  // editJob
-  // jobJob
-  // stopJob
-  // deleteJob
   
 }
