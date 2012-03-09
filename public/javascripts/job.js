@@ -1,198 +1,159 @@
 $(function(){
 	
 window.Message = Backbone.Model.extend({
-    
-    url: "",
-    
-    defaults: {
-        "id": "",
-        "type": 0,
-        "timestamp": "",
-        "assertorId": "",
-        "line": 0,
-        "column": 0,
-        "context": "",
-        "message": ""
-    }
+	url: "",
+	defaults: {
+		type: 0,
+		timestamp: "",
+		assertorId: "",
+		line: 0,
+		column: 0,
+		context: "",
+		message: ""
+	}
 });
 
 window.Messages = Backbone.Collection.extend({
-    model: Message
+	model: Message
 });
 
 window.JobData = Backbone.Model.extend({
-    
-    defaults: {
-        "status": "-",
-        "resources": 0,
-        "oks": 0,
-        "errors": 0,
-        "warnings": 0
-    }
+	defaults: {
+		status: "-",
+		resources: 0,
+		oks: 0,
+		errors: 0,
+		warnings: 0
+	},
+	fromJson: function(data) {
+		try {
+			var json = $.parseJSON(data);
+			this.set({
+				jobId: json[1],
+				status: json[2],
+			    resources: json[3],
+			    oks: json[4],
+			    errors: json[5],
+			    warnings: json[6]
+			});
+			return this;
+		} catch(e) {
+			return null;
+		}
+	}
 });
 
 window.Job = Backbone.Model.extend({
-    
-    defaults: {
-        "id": "",
-        "name": "",
-        "seedUri": "",
-        "distance": "",
-        "data": new JobData(), // A collection of JobDatas containing a timestamp is what we need to build a graph
-        "createdAt": "",
-        "lastRun": "",
-        "lastUpdated": "",
-        "messages": new Messages()
-    },
-    
-    toJson: function() {
-    	return JSON.stringify(this.toJSON());
-    },
-    
-    log: function() {
-    	console.log(this.toJson());
-    },
-    
-    initialize: function() {
-    	console.log("New Job");
-    	this.log();
-    }
+	defaults: {
+		name: "",
+		seedUri: "",
+		distance: "",
+		data: new JobData(), // A collection of JobDatas containing a timestamp is what we need to build a graph
+		createdAt: "",
+		lastRun: "",
+		lastUpdated: "",
+		messages: new Messages()
+	},
+	log:    function() {console.log(this.toJson());},
+	toJson: function() {return JSON.stringify(this.toJSON());},
 });
 
 window.JobView = Backbone.View.extend({
-
-    tagName:  "article",
-    
-    attributes: {
-    	"class": "job",
-    	"data-id": "0"
-    },
-
-    template: _.template($('#job-template').html()),
-
-    events: {
-      "click .edit"     : "edit",
-      "click .delete"   : "clear",
-      "click .run"      : "run",
-      "click .stop"     : "stop"
-    },
-
-    initialize: function() {
-      this.$el.attr("data-id", this.model.get('id'));
-      this.model.bind('change', this.render, this);
-      this.model.bind('destroy', this.remove, this);
-    },
-
-    render: function() {
-      this.$el.html(this.template(this.model.toJSON()));
-      return this;
-    },
-
-    edit: function() {
-      
-    },
-
-    run: function() {
-      
-    },
-
-    stop: function(e) {
-      
-    },
-
-    remove: function() {
-      this.$el.remove();
-    },
-
-    clear: function() {
-      this.model.destroy();
-    }
+	tagName:  "article",
+	attributes: {
+		"class": "job",
+		"data-id": "0"
+	},
+	events: {
+		"click .edits"	 : "edit",
+		"click .deletes"  : "clear",
+		"click .runs"	 : "run",
+		"click .stops"	 : "stop"
+	},
+	template: _.template($('#job-template').html()),
+	
+	initialize: function() {
+		if(this.model !== undefined) {
+			this.model.bind('change', this.render, this);
+			this.model.bind('destroy', this.remove, this);
+		}
+	},
+	render: function() {
+		this.$el.html(this.template(this.model.toJSON()));
+		return this;
+	},
+	edit:   function() {},
+	run:    function() {},
+	stop:   function() {},
+	remove: function() {this.$el.remove();},
+	clear:  function() {this.model.destroy();},
+	fromHTML: function(elem) {
+		this.setElement(elem);
+		this.model = new Job({
+			id: $(elem).attr("data-id"),
+			name: $(".name", elem).text(),
+			seedUri: $(".uri", elem).text(),
+			data: new JobData({
+				status: $(".status", elem).text(),
+				resources: parseInt($(".resources", elem).text()),
+				errors: parseInt($(".errors", elem).text()),
+				warnings: parseInt($(".warnings", elem).text())				
+			})
+		});
+		this.initialize();
+		return this;
+	}
 });
 
 window.JobList = Backbone.Collection.extend({
-	
-    model: Job,
-    
-    subscribe: function() {
-//        var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
-//        WS = new WS("ws://localhost:9000/jobs");
-//        WS.onmessage = function(event) {
-//            Jobs.updateData(JobData.fromJSON(event.data));
-//        };
-    },
-    
-    getJobFromHTML: function(element) {
-        var job = new Job({
-        	"id": $(element).attr("data-id"),
-            "name": $(".name", element).text(),
-            "seedUri": $(".uri", element).text(),
-            "data": new JobData({
-                "status": $(".status", element).text(),
-                "resources": parseInt($(".resources", element).text()),
-                "errors": parseInt($(".errors", element).text()),
-                "warnings": parseInt($(".warnings", element).text())                
-            }),
-        });
-        return job;
-    },
-    
-    initialize: function() {
-    	console.log("New JobList");
-    }
+	model: Job,
 });
 
-window.Jobs = new JobList();
-
 window.DashBoardView = Backbone.View.extend({
-	
 	el: $("#jobs"),
-	
+	jobs: new JobList(),
 	jobViews: [],
 	
-    events: {},
-    
 	initialize: function() {
-
 		// Bind events
-	    Jobs.on('add', this.addOne, this);
-	    Jobs.on('reset', this.addAll, this);
-	    //Jobs.on('all', this.render, this);
-        
-        // Parse the HTML to get initial data as an array of (model, view)
-        Jobs.reset();
-        var jobs = $("#jobs .job").map(function(index, jobElem) { 
-        	var jobModel = Jobs.getJobFromHTML(jobElem);
-        	var jobView = new JobView({model: jobModel, el: jobElem});
-        	return {
-        		model: jobModel,
-        		view: jobView
-        	};
-        }).toArray();
-        
-        var views = _.map(jobs, function(job){return job.view;});
-        var models = _.map(jobs, function(job){return job.model;});
-        
-        // Add the jobs to the collection silently and register the views with the Dashboard.
-        Jobs.add(models, {silent: true});
-        this.jobViews = _.union(this.jobViews, views);
+		this.jobs.on('add', this.addOne, this);
+		this.jobs.on('reset', this.addAll, this);
+		//this.jobs.on('all', this.render, this);
+		
+		// Parse the HTML to get initial data as an array of (model, view)
+		this.jobs.reset();
+		var views = $("#jobs .job").map(function(index, jobElem) { 
+			return (new JobView()).fromHTML(jobElem);
+		}).toArray();
+		var models = _.map(views, function(view){return view.model;});
+		
+		// Add the jobs to the collection silently and register the views with the Dashboard.
+		this.jobs.add(models, {silent: true});
+		this.jobViews = _.union(this.jobViews, views);
 		
 		// Subscribe to job updates through a WebSocket
-		Jobs.subscribe();
+		this.subscribe();
 	},
-	
-    render: function() {
-    	this.$el.empty();
-    	this.$el.append(_.map(this.jobViews, function(view){return view.render().el;}));
-    },
-    
-    addOne: function(job) {
-    	this.jobViews.push(new JobView({model: job}));
-    	this.render();
-    },
-    
-    addAll: function() {
-    	Jobs.each(this.addOne);
-    }
+	render: function() {
+		this.$el.empty();
+		this.$el.append(_.map(this.jobViews, function(view){return view.render().el;}));
+	},
+	addOne: function(job) {
+		this.jobViews.push(new JobView({model: job}));
+		this.render();
+	},
+	addAll: function() {
+		this.jobs.each(this.addOne);
+	},
+	subscribe: function() {
+		var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+		WS = new WS("ws://localhost:9000/jobs");
+		WS.onmessage = function(event) {
+			var data = (new JobData()).fromJson(event.data);
+			var job = DashBoard.jobs.get(data.get("jobId"));
+			job.set("data", data);
+		};
+	},
 });
 
 window.DashBoard = new DashBoardView;

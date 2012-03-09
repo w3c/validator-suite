@@ -51,10 +51,14 @@
 			<li>Warnings: <span class="warnings"><%= data.get('warnings') %></span></li>
 		</ul>
 		<ul>
-			<li><a href="routes.Validator.showJob(job.id)" class="show">Show</a></li>
-			<li><a href="routes.Validator.runJob(job.id)" class="run">Run</a></li>
-			<li><a href="routes.Validator.editJob(job.id)" class="edit">Edit</a></li>
-			<li><a href="routes.Validator.deleteJob(job.id)" class="delete">Delete</a></li>
+			<li><a href="/job/<%= id %>" class="show">Show</a></li>
+			<% if (data.get("status") != "Running") { %>
+			<li><a href="/job/<%= id %>/run" class="run">Run</a></li>
+			<% } else { %>
+			<li><a href="/job/<%= id %>/stop" class="stop">Stop</a></li>
+			<% } %>
+			<li><a href="/job/<%= id %>/edit" class="edit">Edit</a></li>
+			<li><a href="/job/<%= id %>/delete" class="delete">Delete</a></li>
 		</ul>
 	</script>
 	
