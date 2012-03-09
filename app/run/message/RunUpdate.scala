@@ -9,7 +9,6 @@ import org.w3.vs.model._
 import play.api.libs.json.JsNumber
 import scalaz._
 
-
 /**
  * An update that happened on an Observation.
  * 
@@ -19,8 +18,17 @@ sealed trait RunUpdate {
   def toJS: JsValue
 }
 
-case class UpdateData(data: JobData) extends RunUpdate {
-  def toJS: JsValue = JsString("")
+case class UpdateData(data: JobData, jobId: Job#Id) extends RunUpdate {
+  def toJS: JsValue = 
+    JsArray(List(
+      JsString("JobStatus"),
+      JsString(jobId.toString),
+      JsString(data.status.toString),
+      JsNumber(data.resources),
+      JsNumber(data.oks),
+      JsNumber(data.errors),
+      JsNumber(data.warnings)
+    ))
 }
 
 /**
