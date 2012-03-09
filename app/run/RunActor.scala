@@ -83,7 +83,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
   }
   
   // at instanciation of this actor
-  configuration.system.scheduler.schedule(2 seconds, 5 seconds, self, message.TellTheWorldYouAreAlive)
+  configuration.system.scheduler.schedule(2 seconds, 0.5 seconds, self, message.TellTheWorldYouAreAlive)
   startWith(initialConditions._1, initialConditions._2)
   
   whenUnhandled {
@@ -101,9 +101,18 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
       store.putSnapshot(takeSnapshot)
       // tell the subscribers about the current data for this run
       val jobData = extractJobData(stateName, stateData)
-      broadcast(message.UpdateData(jobData), stateData)
-      logger.info("%s: current data - %s" format (shortId, jobData.toString))
+      broadcast(message.UpdateData(jobData, job.id), stateData)
+      //logger.info("%s: current data - %s" format (shortId, jobData.toString))
       stay()
+    }
+    case Event(message.Subscribe(subscriber), data) => {
+      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
+      initialState foreach { msg => subscriber ! msg }
+      stay() using data.copy(subscribers = data.subscribers + subscriber)
+    }
+    case Event(message.Unsubscribe(subscriber), data) => {
+      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
+      stay() using data.copy(subscribers = data.subscribers - subscriber)
     }
   }
   
@@ -111,7 +120,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
     // detect when the status as changed
     case (currentState, nextState) if stateData.status(currentState) != nextStateData.status(nextState) => {
       val jobData = extractJobData(nextState, nextStateData)
-      broadcast(message.UpdateData(jobData), nextStateData)
+      broadcast(message.UpdateData(jobData, job.id), nextStateData)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, nextStateData.fetched.size))
       }
@@ -141,17 +150,6 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
       val data3 = scheduleNextURLsToFetch(data2)
       val data4 = scheduleAssertion(resourceInfo, data3)
       stay() using data4
-    }
-    
-    case Event(message.Subscribe(subscriber), data) => {
-      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
-      initialState foreach { msg => subscriber ! msg }
-      stay() using data.copy(subscribers = data.subscribers + subscriber)
-    }
-    
-    case Event(message.Unsubscribe(subscriber), data) => {
-      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
-      stay() using data.copy(subscribers = data.subscribers - subscriber)
     }
     
   }
