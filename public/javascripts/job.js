@@ -170,14 +170,14 @@ window.VS = {
 	
 	Socket: {
 		ws: null,
-		url: "ws://localhost:9000/jobs",
+		url: "ws://" + window.location.host + "/jobs",
 		type: window['MozWebSocket'] ? MozWebSocket : WebSocket,
 		onmessage: function(event) {
 			var data = (new JobData()).fromJson(event.data);
 			var job = DashBoard.jobs.get(data.get("jobId"));
 			if (typeof job !== 'undefined')
 				job.set("data", data);
-		},	
+		},
 		open: function() {
 			if (this.ws == null || this.ws.readyState === this.type.CLOSING || this.ws.readyState === this.type.CLOSED) { 
 				this.ws = new this.type(this.url);
