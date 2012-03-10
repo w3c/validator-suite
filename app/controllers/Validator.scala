@@ -189,7 +189,7 @@ object Validator extends Controller {
   
   def jobDispatcher(id: Job#Id) = Action { request =>
     var s = for {
-      body <- {logger.error(request.body.asFormUrlEncoded.toString); request.body.asFormUrlEncoded}
+      body <- request.body.asFormUrlEncoded
       param <- body.get("action")
       action <- param.headOption
     } yield action.toLowerCase match {
