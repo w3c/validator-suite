@@ -42,8 +42,9 @@ object IfNotAjax extends ActionModule[Boolean] {
 }
 object IsAjax extends ActionModule[Boolean] {
   def extract(req: ActionReq) = {
+    println(req.headers.get("x-requested-with"))
     req.headers.get("x-requested-with") match {
-      case Some("xmlhttprequest") => Success(true)
+      case Some("XMLHttpRequest") => Success(true)
       case _ => Success(false)
     }
   }
