@@ -1,4 +1,4 @@
-@(form: Form[org.w3.vs.model.Job], id: java.util.UUID = null)(implicit user: org.w3.vs.model.User)
+@(form: Form[org.w3.vs.model.Job], job: Option[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
 
 @libs.main("Validator Suite", stylesheets = List("mockup.css")) {
 	
@@ -13,8 +13,7 @@
 	}
 	</script>
 	
-	@defining(if (id != null) routes.Validator.updateJob(id) else routes.Validator.createJob) { action =>
-	@helper.form(action) {
+	<form method="post">
 		<label for="name">Name: </label>
 		<input id="name" name="name" type="text" value="@form("name").value" required></input><br>
 		<label for="url">URL: </label>
@@ -23,9 +22,12 @@
 		<input id="distance" name="distance" type="range" value="@form("distance").value.getOrElse(10)" max=20 onchange="showValue(this.value)"/><span id="dist">@form("distance").value.getOrElse(10)</span><br>
 		<label for="linkCheck">Check external links: </label>
 		<input type=checkbox id=linkCheck name=linkCheck @if(form("linkCheck").value == Some("on")) {checked}/><br>
-		<button type=submit>@if(id != null) {Update} else {Create}</button>
-	}
-	}
+		@if(job.isDefined) {
+		<input type=submit name=action value=Update formaction="@routes.Validator.jobDispatcher(job.get.id)">
+		} else {
+		<input type=submit name=action value=Create formaction="@routes.Validator.createJob">
+		}
+	</form>
 	
 	</section>
 	

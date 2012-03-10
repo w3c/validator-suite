@@ -90,6 +90,7 @@ window.JobView = Backbone.View.extend({
 	fromHTML: function(elem) {
 		this.setElement(elem);
 		this.model = new Job({
+			// TODO replace by pure DOM api?
 			id: $(elem).attr("data-id"),
 			name: $(".name", elem).text(),
 			seedUri: $(".uri", elem).text(),
@@ -146,16 +147,26 @@ window.DashBoardView = Backbone.View.extend({
 		this.jobs.each(this.addOne);
 	},
 	subscribe: function() {
-		var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
-		WS = new WS("ws://localhost:9000/jobs");
-		WS.onmessage = function(event) {
+		VS.openSocket("ws://localhost:9000/jobs").onmessage = function(event) {
 			var data = (new JobData()).fromJson(event.data);
 			var job = DashBoard.jobs.get(data.get("jobId"));
-			job.set("data", data);
+			if (typeof job !== 'undefined')
+				job.set("data", data);
 		};
 	},
 });
 
-window.DashBoard = new DashBoardView;
+window.VS = {
+	Socket: window['MozWebSocket'] ? MozWebSocket : WebSocket,
+	socketRef: null,
+	openSocket: function(url) {
+		if (this.socketRef == null) {
+			this.socketRef = new this.Socket(url);
+		} 
+		return this.socketRef;
+	}
+};
+
+//window.DashBoard = new DashBoardView;
 
 });

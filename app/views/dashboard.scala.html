@@ -1,6 +1,7 @@
 @(jobs: Iterable[(org.w3.vs.model.Job, org.w3.vs.model.JobData)] = None)(implicit user: org.w3.vs.model.User)
 
 @import views.Helper._
+@import org.w3.vs.run._
 
 @libs.main("Validator Suite", stylesheets = List("mockup.css"), scripts = List("job.js")) {
 	
@@ -22,17 +23,19 @@
 				<li>Errors: <span class="errors">@data.errors</span></li>
 				<li>Warnings: <span class="warnings">@data.warnings</span></li>
 			</ul>
+			<form action="@routes.Validator.jobDispatcher(job.id)" method="post">
 			<ul>
-				<li><a href="@routes.Validator.showJob(job.id)" class="show">Show</a></li>
+				<li><input type="submit" value="Show" class="show" formmethod="get" /></li>
 				<li>@defining(data.status) { status =>
 				  @status match {
-				    case org.w3.vs.run.Running => {Stop}
-				    case _ => {<a href=@routes.Validator.runJob(job.id) class="run">Run</a>}
+				    case Running => {<input type="submit" name="action" value="Stop" class="stop">}
+				    case _ =>       {<input type="submit" name="action" value="Run" class="run">}
 				  }
 				}</li>
-				<li><a href="@routes.Validator.editJob(job.id)" class="edit">Edit</a></li>
-				<li><a href="@routes.Validator.deleteJob(job.id)" class="delete">Delete</a></li>
+				<li><input type="submit" value="Edit" class="edit" formmethod="get" formaction="@routes.Validator.editJob(job.id)" /></li>
+				<li><input type="submit" name="action" value="Delete" class="delete" /></li>
 			</ul>
+			</form>
 		</article>
 	}
 	</section>

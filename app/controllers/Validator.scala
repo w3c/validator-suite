@@ -157,13 +157,7 @@ object Validator extends Controller {
     ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
   )
 
-//  def jobDispatcher(id: Job#Id) = Action { request =>
-//    request.body.asFormUrlEncoded
-//    logger.error(request.body.toString)
-//  }
-
-  
-  // * Pages
+  // * Indexes
   def index = IfAuth { _ => implicit user => Ok(views.html.index()) }
   
   def dashboard = IfAuth {_ => implicit user =>
@@ -180,12 +174,38 @@ object Validator extends Controller {
     }
   }
   
-  def showJob(id: Job#Id) = IfAuth {_ => implicit user => Ok(views.html.job())} // find job from id, check read access, redirect to report
+  // * Jobs
+  def newJob() = IfAuth {_ => implicit user => Ok(views.html.jobForm(jobForm(user)))}
+  
+  def createJob() = IfAuth {implicit req => implicit user => 
+    jobForm(user).bindFromRequest.fold (
+      formWithErrors => BadRequest(views.html.jobForm(formWithErrors)),
+      job => {
+        store.putJob(job.copy(creator = user.id, organization = user.organization)) // ?
+        Redirect(routes.Validator.dashboard)
+      }
+    )
+  }
+  
+  def jobDispatcher(id: Job#Id) = Action { request =>
+    var s = for {
+      body <- {logger.error(request.body.asFormUrlEncoded.toString); request.body.asFormUrlEncoded}
+      param <- body.get("action")
+      action <- param.headOption
+    } yield action.toLowerCase match {
+      case "update" => updateJob(id)(request)
+      case "delete" => deleteJob(id)(request)
+      case "run" => runJob(id)(request)
+      case "stop" => stopJob(id)(request)
+    }
+    s.getOrElse(BadRequest) // TODO error with flash
+    // Can i do that in one expression?
+  }
   
   def updateJob(id: Job#Id) = (IfAuth, IfJob(id)) {implicit request => implicit user => job =>
     if (user.owns(id)) {
       jobForm(user).bindFromRequest.fold (
-        formWithErrors => BadRequest(views.html.jobForm(formWithErrors, job.id)),
+        formWithErrors => BadRequest(views.html.jobForm(formWithErrors, Some(job))),
         newJob => {
           store.putJob(job.copy(strategy = newJob.strategy, name = newJob.name))
           Redirect(routes.Validator.dashboard)
@@ -197,49 +217,48 @@ object Validator extends Controller {
     }
   } 
   
-  def deleteJob(id: Job#Id) = (IfAuth, IfJob(id)) {_ => implicit user => job =>
+  def deleteJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
     if (user.owns(id)) {
       store.removeJob(id)
       Redirect(routes.Validator.dashboard)
     } else {
       Redirect(routes.Validator.dashboard) // TODO Display an error
     }
-  } 
-  
-  def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
-    if (user.owns(id))
-      Ok(views.html.jobForm(jobForm(user).fill(job), job.id))
-    else
-      Ok(views.html.jobForm(jobForm(user).fill(job), job.id)) // TODO throw an error / redirect
   }
   
   def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {req => implicit user => job => isAjax =>
     if (user.owns(id)) {
       job.getRun().start()
-      if (!isAjax)
-    	Redirect(routes.Validator.dashboard)
-      else
-        Ok
+      if (isAjax) Ok else Redirect(routes.Validator.dashboard)
     } else
-      Redirect(routes.Validator.dashboard) // TODO throw an error / redirect
+      if (!isAjax) InternalServerError else Redirect(routes.Validator.dashboard)// TODO error
   }
   
-  def createJob() = IfAuth {implicit req => implicit user => 
-    jobForm(user).bindFromRequest.fold (
-      formWithErrors => BadRequest(views.html.jobForm(formWithErrors)),
-      job => {
-        store.putJob(job.copy(creator = user.id, organization = user.organization)) // ?
-        Redirect(routes.Validator.dashboard)
-      }
-    )}
+  def stopJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
+    if (user.owns(id)) {
+      // TODO
+      Redirect(routes.Validator.dashboard)
+    } else {
+      Redirect(routes.Validator.dashboard) // with flash
+    }
+  }
   
-  def newJob() = IfAuth {_ => implicit user => Ok(views.html.jobForm(jobForm(user)))}
+  def showJob(id: Job#Id) = IfAuth {_ => implicit user => Ok(views.html.job())}
+  
+  def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
+    if (user.owns(id))
+      Ok(views.html.jobForm(jobForm(user).fill(job), Some(job)))
+    else
+      Ok(views.html.jobForm(jobForm(user).fill(job), Some(job))) // TODO error
+  }
   
   // * Sockets
   def dashboardSocket() = IfAuthSocket {req => user =>
     val in = Iteratee.foreach[JsValue](e => println(e)) // TODO unsubscribe on client close
     val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
-    var out = jobs.map(_.getRun().subscribeToUpdates).reduce((e1, e2) => e1 >- e2) &> Enumeratee.filter(_.isInstanceOf[UpdateData]) &> Enumeratee.map {e => e.toJS}
+    var out = jobs.map(_.getRun().subscribeToUpdates)
+      .reduce((e1, e2) => e1 >- e2) &>
+      Enumeratee.collect{case e: UpdateData => e.toJS}
     (in, out)
   }
   // jobSocket
