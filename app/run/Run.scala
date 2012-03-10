@@ -13,6 +13,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import akka.actor.Props
+import java.nio.channels.ClosedChannelException
 
 class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
   
@@ -33,16 +34,20 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
         case msg: message.RunUpdate =>
           try { 
             enumerator.push(msg)
-          } catch { case e: java.nio.channels.ClosedChannelException =>
-            actorRef ! message.Unsubscribe(subscriber)
-            enumerator.close
+          } catch { 
+            case e: ClosedChannelException => enumerator.close; logger.error("ClosedChannel exception: ", e)
+          	case e => enumerator.close; logger.error("Socket exception: ", e)
           }
         case msg => logger.debug("subscriber got "+msg)
       }
     }))
     // TODO make the enumerator to stop the actor and unsubscribe it when an error occurs (or when it's 
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
-      Enumerator.imperative[message.RunUpdate]( onStart = actorRef ! message.Subscribe(subscriber) )
+      Enumerator.imperative[message.RunUpdate](
+        onStart = actorRef ! message.Subscribe(subscriber),
+        onComplete = actorRef ! message.Unsubscribe(subscriber),
+        onError = (_,_) => actorRef ! message.Unsubscribe(subscriber)
+      )
     enumerator
   }
   

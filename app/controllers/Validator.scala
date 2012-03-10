@@ -254,10 +254,10 @@ object Validator extends Controller {
   
   // * Sockets
   def dashboardSocket() = IfAuthSocket {req => user =>
-    val in = Iteratee.foreach[JsValue](e => println(e)) // TODO unsubscribe on client close
     val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
-    var out = jobs.map(_.getRun().subscribeToUpdates)
-      .reduce((e1, e2) => e1 >- e2) &>
+    var subs = jobs.map(_.getRun().subscribeToUpdates)
+    val in = Iteratee.eofOrElse[JsValue]{}{subs.map{_ >>> Enumerator.eof}}
+    var out = subs.reduce((e1, e2) => e1 >>> e2) &>
       Enumeratee.collect{case e: UpdateData => e.toJS}
     (in, out)
   }

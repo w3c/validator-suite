@@ -106,12 +106,12 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
       stay()
     }
     case Event(message.Subscribe(subscriber), data) => {
-      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
+      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, data.subscribers.+(subscriber).mkString("{", ",", "}")))
       initialState foreach { msg => subscriber ! msg }
       stay() using data.copy(subscribers = data.subscribers + subscriber)
     }
     case Event(message.Unsubscribe(subscriber), data) => {
-      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, data.subscribers.mkString("{", ",", "}")))
+      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, data.subscribers.-(subscriber).mkString("{", ",", "}")))
       stay() using data.copy(subscribers = data.subscribers - subscriber)
     }
   }
