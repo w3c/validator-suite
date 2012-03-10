@@ -220,26 +220,26 @@ object Validator extends Controller {
   def deleteJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
     if (user.owns(id)) {
       store.removeJob(id)
-      Redirect(routes.Validator.dashboard)
+      if (isAjax) Ok else Redirect(routes.Validator.dashboard)
     } else {
-      Redirect(routes.Validator.dashboard) // TODO Display an error
+      if (isAjax) InternalServerError else Redirect(routes.Validator.dashboard)// TODO error
     }
   }
   
-  def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {req => implicit user => job => isAjax =>
+  def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
     if (user.owns(id)) {
       job.getRun().start()
       if (isAjax) Ok else Redirect(routes.Validator.dashboard)
     } else
-      if (!isAjax) InternalServerError else Redirect(routes.Validator.dashboard)// TODO error
+      if (isAjax) InternalServerError else Redirect(routes.Validator.dashboard)// TODO error
   }
   
   def stopJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
     if (user.owns(id)) {
       // TODO
-      Redirect(routes.Validator.dashboard)
+      if (isAjax) Ok else Redirect(routes.Validator.dashboard)
     } else {
-      Redirect(routes.Validator.dashboard) // with flash
+      if (isAjax) InternalServerError else Redirect(routes.Validator.dashboard)// TODO error
     }
   }
   

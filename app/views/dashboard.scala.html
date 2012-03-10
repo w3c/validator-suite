@@ -56,12 +56,12 @@
 		<ul>
 			<li><a href="/job/<%= id %>" class="show">Show</a></li>
 			<% if (data.get("status") != "Running") { %>
-			<li><a href="/job/<%= id %>/run" class="run">Run</a></li>
+			<li><a href="/job/<%= id %>" class="run">Run</a></li>
 			<% } else { %>
-			<li><a href="/job/<%= id %>/stop" class="stop">Stop</a></li>
+			<li><a href="/job/<%= id %>" class="stop">Stop</a></li>
 			<% } %>
 			<li><a href="/job/<%= id %>/edit" class="edit">Edit</a></li>
-			<li><a href="/job/<%= id %>/delete" class="delete">Delete</a></li>
+			<li><a href="/job/<%= id %>" class="delete">Delete</a></li>
 		</ul>
 	</script>
 	

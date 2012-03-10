@@ -83,7 +83,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
   }
   
   // at instanciation of this actor
-  configuration.system.scheduler.schedule(2 seconds, 0.5 seconds, self, message.TellTheWorldYouAreAlive)
+  configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, message.TellTheWorldYouAreAlive)
   startWith(initialConditions._1, initialConditions._2)
   
   whenUnhandled {

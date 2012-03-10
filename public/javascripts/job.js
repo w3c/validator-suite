@@ -26,6 +26,7 @@ window.JobData = Backbone.Model.extend({
 		warnings: 0
 	},
 	fromJson: function(data) {
+		console.log(data);
 		try {
 			var json = $.parseJSON(data);
 			this.set({
@@ -56,6 +57,21 @@ window.Job = Backbone.Model.extend({
 	},
 	log:    function() {console.log(this.toJson());},
 	toJson: function() {return JSON.stringify(this.toJSON());},
+	fromHTML: function(elem) {
+		this.set({
+			// TODO replace by pure DOM api?
+			id: $(elem).attr("data-id"),
+			name: $(".name", elem).text(),
+			seedUri: $(".uri", elem).text(),
+			data: new JobData({
+				status: $(".status", elem).text(),
+				resources: parseInt($(".resources", elem).text()),
+				errors: parseInt($(".errors", elem).text()),
+				warnings: parseInt($(".warnings", elem).text())				
+			})
+		});
+		return this;
+	}
 });
 
 window.JobView = Backbone.View.extend({
@@ -65,10 +81,10 @@ window.JobView = Backbone.View.extend({
 		"data-id": "0"
 	},
 	events: {
-		"click .edits"	 : "edit",
-		"click .deletes"  : "clear",
-		"click .runs"	 : "run",
-		"click .stops"	 : "stop"
+		"click .edit"	 : "edit",
+		"click .run"	 : "run",
+		"click .stop"	 : "stop",
+		"click .delete"  : "_delete"
 	},
 	template: _.template($('#job-template').html()),
 	
@@ -82,28 +98,39 @@ window.JobView = Backbone.View.extend({
 		this.$el.html(this.template(this.model.toJSON()));
 		return this;
 	},
-	edit:   function() {},
-	run:    function() {},
-	stop:   function() {},
-	remove: function() {this.$el.remove();},
-	clear:  function() {this.model.destroy();},
-	fromHTML: function(elem) {
-		this.setElement(elem);
-		this.model = new Job({
-			// TODO replace by pure DOM api?
-			id: $(elem).attr("data-id"),
-			name: $(".name", elem).text(),
-			seedUri: $(".uri", elem).text(),
-			data: new JobData({
-				status: $(".status", elem).text(),
-				resources: parseInt($(".resources", elem).text()),
-				errors: parseInt($(".errors", elem).text()),
-				warnings: parseInt($(".warnings", elem).text())				
-			})
+	edit:   function() {
+		window.location = "/job/" + this.model.id + "/edit";
+		return false;
+	},
+	run:    function() {
+		$.ajax({
+			type: "POST",
+			url: "/job/" + this.model.id,
+			data: {action: "run"},
+			// TODO see why this is necessary. loss of subscribers on start?
+			success: function() {VS.Socket.reset();}
 		});
-		this.initialize();
-		return this;
-	}
+		return false;
+	},
+	stop:   function() {
+		$.ajax({
+			type: "POST",
+			url: "/job/" + this.model.id,
+			data: {action: "stop"},
+		});
+		return false;
+	},
+	_delete:  function() {
+		$.ajax({
+			type: "POST",
+			url: "/job/" + this.model.id,
+			data: {action: "delete"}
+			//success: this.clear
+		});
+		return false;
+	},
+	remove: function() {this.$el.remove();},
+	clear:  function() {this.model.destroy();}
 });
 
 window.JobList = Backbone.Collection.extend({
@@ -113,60 +140,61 @@ window.JobList = Backbone.Collection.extend({
 window.DashBoardView = Backbone.View.extend({
 	el: $("#jobs"),
 	jobs: new JobList(),
-	jobViews: [],
 	
 	initialize: function() {
 		// Bind events
 		this.jobs.on('add', this.addOne, this);
 		this.jobs.on('reset', this.addAll, this);
-		//this.jobs.on('all', this.render, this);
-		
 		// Parse the HTML to get initial data as an array of (model, view)
-		this.jobs.reset();
-		var views = $("#jobs .job").map(function(index, jobElem) { 
-			return (new JobView()).fromHTML(jobElem);
-		}).toArray();
-		var models = _.map(views, function(view){return view.model;});
-		
-		// Add the jobs to the collection silently and register the views with the Dashboard.
-		this.jobs.add(models, {silent: true});
-		this.jobViews = _.union(this.jobViews, views);
-		
+		_.each($("#jobs .job").toArray(), function(jobElem) { 
+			this.jobs.add((new Job()).fromHTML(jobElem));
+			$(jobElem).remove();
+		}, this);
 		// Subscribe to job updates through a WebSocket
 		this.subscribe();
 	},
-	render: function() {
-		this.$el.empty();
-		this.$el.append(_.map(this.jobViews, function(view){return view.render().el;}));
-	},
 	addOne: function(job) {
-		this.jobViews.push(new JobView({model: job}));
-		this.render();
+		var view = new JobView({model: job});
+		this.$el.append(view.render().el);
 	},
-	addAll: function() {
-		this.jobs.each(this.addOne);
+	addAll: function(j) {
+		this.$el.empty();
+		this.jobs.each(this.addOne, this);
 	},
 	subscribe: function() {
-		VS.openSocket("ws://localhost:9000/jobs").onmessage = function(event) {
+		VS.Socket.open();
+	}
+});
+
+window.VS = {
+	
+	Socket: {
+		ws: null,
+		url: "ws://localhost:9000/jobs",
+		type: window['MozWebSocket'] ? MozWebSocket : WebSocket,
+		onmessage: function(event) {
 			var data = (new JobData()).fromJson(event.data);
 			var job = DashBoard.jobs.get(data.get("jobId"));
 			if (typeof job !== 'undefined')
 				job.set("data", data);
-		};
-	},
-});
-
-window.VS = {
-	Socket: window['MozWebSocket'] ? MozWebSocket : WebSocket,
-	socketRef: null,
-	openSocket: function(url) {
-		if (this.socketRef == null) {
-			this.socketRef = new this.Socket(url);
-		} 
-		return this.socketRef;
+		},	
+		open: function() {
+			if (this.ws == null || this.ws.readyState === this.type.CLOSING || this.ws.readyState === this.type.CLOSED) { 
+				this.ws = new this.type(this.url);
+				this.ws.onmessage = this.onmessage;
+			}
+			return this.ws;
+		},
+		reset: function() {
+			if (this.ws == null) 
+				return;
+			this.ws.close();
+			this.open();
+		}
 	}
+	
 };
 
-//window.DashBoard = new DashBoardView;
+window.DashBoard = new DashBoardView();
 
 });
