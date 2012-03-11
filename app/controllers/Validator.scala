@@ -196,9 +196,10 @@ object Validator extends Controller {
       case "update" => updateJob(id)(request)
       case "delete" => deleteJob(id)(request)
       case "run" => runJob(id)(request)
+      case "runnow" => runJob(id)(request)
       case "stop" => stopJob(id)(request)
     }
-    s.getOrElse(BadRequest) // TODO error with flash
+    s.getOrElse(BadRequest("BadRequest: JobDispatcher")) // TODO error with flash
     // Can i do that in one expression?
   }
   
@@ -256,9 +257,8 @@ object Validator extends Controller {
   def dashboardSocket() = IfAuthSocket {req => user =>
     val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
     var subs = jobs.map(_.getRun().subscribeToUpdates)
-    val in = Iteratee.eofOrElse[JsValue]{}{subs.map{_ >>> Enumerator.eof}}
-    var out = subs.reduce((e1, e2) => e1 >>> e2) &>
-      Enumeratee.collect{case e: UpdateData => e.toJS}
+    val in = Iteratee.ignore[JsValue]
+    var out = subs.reduce((e1, e2) => e1 >- e2) &> Enumeratee.collect{case e: UpdateData => e.toJS}
     (in, out)
   }
   // jobSocket

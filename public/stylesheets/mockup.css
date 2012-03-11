@@ -50,7 +50,7 @@ body > section.main {
 	border:solid #e5e5e5;
 	border-width: 0 0 0 1px;
 }
-#jobs .job input[type=submit] {
+#jobs .job button {
 	border:none;
 	background:none;
 	cursor:pointer;
