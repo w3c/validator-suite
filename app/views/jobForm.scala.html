@@ -23,9 +23,9 @@
 		<label for="linkCheck">Check external links: </label>
 		<input type=checkbox id=linkCheck name=linkCheck @if(form("linkCheck").value == Some("on")) {checked}/><br>
 		@if(job.isDefined) {
-		<input type=submit name=action value=Update formaction="@routes.Validator.jobDispatcher(job.get.id)">
+		<input type=submit name=action value=Update formaction="@routes.Dashboard.jobDispatcher(job.get.id)">
 		} else {
-		<input type=submit name=action value=Create formaction="@routes.Validator.createJob">
+		<input type=submit name=action value=Create formaction="@routes.Dashboard.createJob">
 		}
 	</form>
 	

@@ -31,111 +31,15 @@ import play.api.Play.current
 import play.libs.Akka._
 import com.google.common.eventbus.Subscribe
 
-object Validator extends Controller {
+object Dashboard extends Controller {
   
   def store = org.w3.vs.Prod.configuration.store
   
-  val logger = play.Logger.of("Controller.Validator")
+  val logger = play.Logger.of("Controller.Dashboard")
   
   // TODO: make the implicit explicit!!!
   import org.w3.vs.Prod.configuration
-  
-  implicit def ec = configuration.webExecutionContext
-  
-  implicit val urlFormat = new Formatter[URL] {
-    
-    override val format = Some("format.url", Nil)
-    
-    def bind(key: String, data: Map[String, String]) = {
-      stringFormat.bind(key, data).right.flatMap { s =>
-        scala.util.control.Exception.allCatch[URL]
-          .either(URL(s))
-          .left.map(e => Seq(FormError(key, "error.url", Nil)))
-      }
-    }
-    
-    def unbind(key: String, url: URL) = Map(key -> url.toString)
-  }
-  
-  implicit val booleanFormatter = new Formatter[Boolean] {
-    def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Boolean] =
-      Right(data isDefinedAt key)
-    def unbind(key: String, value: Boolean): Map[String, String] =
-      if (value) Map(key -> "on") else Map()
-  }
-  
-  val validateForm = Form(
-    tuple(
-      "url" -> of[URL],
-      "distance" -> of[Int].verifying(min(0), max(10)),
-      "linkCheck" -> of[Boolean](booleanFormatter)
-    )
-  )
-  
-  def validateWithParams(
-      request: Request[AnyContent],
-      url: URL,
-      distance: Int,
-      linkCheck: Boolean) = {
-    
-    val strategy = EntryPointStrategy(
-      uuid=java.util.UUID.randomUUID(), 
-      name="demo strategy",
-      entrypoint=url,
-      distance=distance,
-      linkCheck=linkCheck,
-      filter=Filter(include=Everything, exclude=Nothing))
 
-    logger.debug("jbefore")
-    
-    // this should be persisted
-    val fakeUser = User.fake
-    val job = Job(name = "unknown", organization = fakeUser.organization, creator = fakeUser.id, strategy = strategy)
-    
-    logger.debug("job: "+job)
-    
-    val run = configuration.runCreator.runOf(job)
-    run.start()
-    
-    val jobIdString: String = job.id.toString
-    
-    Created("").withHeaders(
-      "Location" -> (request.uri + "/" + jobIdString),
-      "X-VS-ActionID" -> jobIdString)
-  }
-  
-  def validate() = IfAuth { implicit request => implicit user =>
-    validateForm.bindFromRequest.fold(
-      formWithErrors => { logger.error(formWithErrors.errors.toString); BadRequest(formWithErrors.toString) },
-      v => validateWithParams(request, v._1, v._2, v._3)
-    )
-  }
-  
-  def stop(id: String) = IfAuth { implicit request => implicit user =>
-    configuration.runCreator.byJobId(id).map {o => /*o.stop();*/ Ok}.getOrElse(NotFound)
-  }
-  
-  def redirect(id: String) = IfAuth { implicit request => implicit user =>
-    try {
-      val jobId: Job#Id = UUID.fromString(id)
-      configuration.runCreator.byJobId(jobId).map { run =>
-        Redirect("/#!/observation/" + id)
-      }.getOrElse(NotFound(views.html.index(Seq("Unknown action id: " + id))))
-    } catch { case e =>
-      NotFound(views.html.index(Seq("Invalid action id: " + id)))
-    }
-  }
-  
-  def subscribe(id: String): WebSocket[JsValue] = IfAuthSocket { request => user =>
-    configuration.runCreator.byJobId(id).map { run: Run =>
-      val in = Iteratee.foreach[JsValue](e => println(e))
-      val enumerator = run.subscribeToUpdates()
-      (in, enumerator &> Enumeratee.map[message.RunUpdate]{ e => e.toJS })
-    }.getOrElse(CloseWebsocket)
-  }
-
-  // ------
-  
   def jobForm(user: User) = Form(
     mapping (
       "name" -> text,
@@ -182,7 +86,7 @@ object Validator extends Controller {
       formWithErrors => BadRequest(views.html.jobForm(formWithErrors)),
       job => {
         store.putJob(job.copy(creator = user.id, organization = user.organization)) // ?
-        Redirect(routes.Validator.dashboard)
+        Redirect(routes.Dashboard.dashboard)
       }
     )
   }
@@ -209,38 +113,38 @@ object Validator extends Controller {
         formWithErrors => BadRequest(views.html.jobForm(formWithErrors, Some(job))),
         newJob => {
           store.putJob(job.copy(strategy = newJob.strategy, name = newJob.name))
-          Redirect(routes.Validator.dashboard)
-          //Redirect(routes.Validator.dashboard.toString, 301)
+          Redirect(routes.Dashboard.dashboard)
+          //Redirect(routes.Dashboard.dashboard.toString, 301)
         }
       )
     } else {
-      Redirect(routes.Validator.dashboard)
+      Redirect(routes.Dashboard.dashboard)
     }
   } 
   
   def deleteJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
     if (user.owns(id)) {
       store.removeJob(id)
-      if (isAjax) Ok else Redirect(routes.Validator.dashboard)
+      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
     } else {
-      if (isAjax) InternalServerError else Redirect(routes.Validator.dashboard)// TODO error
+      if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
     }
   }
   
   def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
     if (user.owns(id)) {
       job.getRun().start()
-      if (isAjax) Ok else Redirect(routes.Validator.dashboard)
+      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
     } else
-      if (isAjax) InternalServerError else Redirect(routes.Validator.dashboard)// TODO error
+      if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
   }
   
   def stopJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
     if (user.owns(id)) {
       // TODO
-      if (isAjax) Ok else Redirect(routes.Validator.dashboard)
+      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
     } else {
-      if (isAjax) InternalServerError else Redirect(routes.Validator.dashboard)// TODO error
+      if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
     }
   }
   

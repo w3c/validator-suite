@@ -3,17 +3,17 @@
 # ~~~~
 
 # Indexes
-GET     /                           controllers.Validator.index()
-GET     /dashboard                  controllers.Validator.dashboard()
+GET     /                           controllers.Demo.index()
+GET     /dashboard                  controllers.Dashboard.dashboard()
 
 # Jobs
-GET     /job                        controllers.Validator.newJob()
-POST    /job                        controllers.Validator.createJob()
+GET     /job                        controllers.Dashboard.newJob()
+POST    /job                        controllers.Dashboard.createJob()
 # delete, run, stop or update are all POSTed actions, handled by jobDispatcher
-POST    /job/:id                    controllers.Validator.jobDispatcher(id: java.util.UUID)
-GET     /job/:id                    controllers.Validator.showJob(id: java.util.UUID)
-GET     /job/:id/edit               controllers.Validator.editJob(id: java.util.UUID)
-GET     /jobs                       controllers.Validator.dashboardSocket()
+POST    /job/:id                    controllers.Dashboard.jobDispatcher(id: java.util.UUID)
+GET     /job/:id                    controllers.Dashboard.showJob(id: java.util.UUID)
+GET     /job/:id/edit               controllers.Dashboard.editJob(id: java.util.UUID)
+GET     /jobs                       controllers.Dashboard.dashboardSocket()
 
 # Authentication
 GET     /login                      controllers.Application.login
@@ -21,11 +21,10 @@ POST    /login                      controllers.Application.authenticate
 GET     /logout                     controllers.Application.logout
 
 # Observations
-POST    /observation                controllers.Validator.validate()
-GET     /observation/:id            controllers.Validator.redirect(id: String)
-#GET     /observation/:id/test       controllers.Validator.test(id: java.util.UUID)
-GET     /observation/:id/ws         controllers.Validator.subscribe(id: String)
-GET     /observation/:id/stop       controllers.Validator.stop(id: String)
+POST    /observation                controllers.Demo.validate()
+GET     /observation/:id            controllers.Demo.redirect(id: String)
+GET     /observation/:id/ws         controllers.Demo.subscribe(id: String)
+GET     /observation/:id/stop       controllers.Demo.stop(id: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

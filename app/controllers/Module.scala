@@ -99,7 +99,7 @@ object IfNotAuth extends ActionModule[Boolean] {
   def extract(req: ActionReq) = {
     req.session.get("email") match { 
       case None => Success(true)
-      case _ => Failure(Results.Redirect(controllers.routes.Validator.index)) 
+      case _ => Failure(Results.Redirect(controllers.routes.Dashboard.dashboard)) 
     }
   }
 }

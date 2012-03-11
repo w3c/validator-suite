@@ -25,7 +25,7 @@
 				<li>Errors: <span class="errors">@data.errors</span></li>
 				<li>Warnings: <span class="warnings">@data.warnings</span></li>
 			</ul>
-			<form action="@routes.Validator.jobDispatcher(job.id)" method="post">
+			<form action="@routes.Dashboard.jobDispatcher(job.id)" method="post">
 			<ul>
 				<li><button type="submit" class="show" formmethod="get">Show</button></li>
 				<li>@defining(data.status) { status =>
@@ -37,7 +37,7 @@
 				  }
 				}</li>
 				<li><button type="submit" name="action" value="runnow" class="nunnow">Run now</button></li>
-				<li><button type="submit" class="edit" formmethod="get" formaction="@routes.Validator.editJob(job.id)">Edit</button></li>
+				<li><button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(job.id)">Edit</button></li>
 				<li><button type="submit" name="action" value="delete" class="delete">Delete</button></li>
 			</ul>
 			</form>
