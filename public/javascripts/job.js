@@ -75,8 +75,8 @@ window.JobData.fromJSON = function(data) {
 			errors: json[5],
 			warnings: json[6]
 		});
-	} catch(e) {
-		console.log(e);
+	} catch(ex) {
+		console.log(ex);
 		return null;
 	}
 };
@@ -104,6 +104,8 @@ window.Job = Backbone.Model.extend({
 	},
 	
 	run: function(options) {this._serverEvent('run', options);},
+	
+	runnow: function(options) {this._serverEvent('runnow', options);},
 	
 	stop: function(options) {this._serverEvent('stop', options);},
 	
@@ -185,6 +187,7 @@ window.JobView = Backbone.View.extend({
 	events: {
 		"click .edit"	 : "edit",
 		"click .run"	 : "run",
+		"click .runnow"	 : "runnow",
 		"click .stop"	 : "stop",
 		"click .delete"	: "_delete"
 	},
@@ -210,15 +213,21 @@ window.JobView = Backbone.View.extend({
 		this.model.run();
 		return false;
 	},
+	runnow: function() {
+		this.model.runnow();
+		return false;
+	},
 	stop: function() {
 		this.model.stop();
 		return false;
 	},
 	_delete: function() {
-		this.model.destroy();
+		this.model.destroy({wait:true});
 		return false;
 	},
-	remove: $(this.el).remove()
+	remove: function () {
+		$(this.el).remove();
+	}
 	
 });
 
