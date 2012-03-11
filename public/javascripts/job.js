@@ -89,7 +89,7 @@ window.Job = Backbone.Model.extend({
 			}
 		};
 		options.error = Backbone.wrapError(options.error, model, options);
-		var xhr = (this.sync || Backbone.sync).call(this, 'stop', this, options);
+		var xhr = (this.sync || Backbone.sync).call(this, event, this, options);
 		if (!options.wait) trigger();
 		return xhr;
 	},
@@ -188,7 +188,7 @@ window.DashBoardView = Backbone.View.extend({
 		this.jobs.on('add', this.addOne, this);
 		this.jobs.on('reset', this.addAll, this);
 		// XXX bug server-side
-		this.jobs.on('run', VS.Socket.reset, this);
+		this.jobs.on('run', VS.Socket.reset);
 		// Parse the HTML to get initial data as an array of (model, view)
 		_.each($("#jobs .job").toArray(), function(jobElem) { 
 			this.jobs.add(Job.fromHTML(jobElem));
@@ -214,7 +214,6 @@ window.VS = {
 	
 	Socket: {
 		
-		that: this,
 		ws: null,
 		url: "ws://" + window.location.host + "/jobs",
 		type: window['MozWebSocket'] ? MozWebSocket : WebSocket,
@@ -228,20 +227,21 @@ window.VS = {
 		},
 		
 		open: function() {
-			if (that.ws == null 
-				|| that.ws.readyState === that.type.CLOSING 
-				|| that.ws.readyState === that.type.CLOSED) { 
-				that.ws = new that.type(that.url);
-				that.ws.onmessage = that.onmessage;
+			var s = VS.Socket;
+			if (s.ws == null
+				|| s.ws.readyState === s.type.CLOSING 
+				|| s.ws.readyState === s.type.CLOSED) { 
+				s.ws = new s.type(s.url);
+				s.ws.onmessage = s.onmessage;
 			}
-			return that.ws;
+			return this.ws;
 		},
 		
 		reset: function() {
-			if (that.ws == null)
+			if (VS.Socket.ws === null)
 				return;
-			that.ws.close();
-			that.open();
+			VS.Socket.ws.close();
+			VS.Socket.open();
 		}
 	},
 
