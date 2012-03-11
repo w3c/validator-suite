@@ -1,5 +1,43 @@
 $(function(){
 
+window.LogoView = Backbone.View.extend({
+	i: 0,
+	el: $("#logo"),
+	branches: $("#logo g"),
+	rotating: false,
+	initialize: function(){
+		var toggle = _.bind(function(){this.toggle();}, this);
+		this.$el.click(toggle);
+		$("#admin").click(toggle);
+	},
+	rotate: function(){
+		if (!this.rotating)
+			return;
+		this.branches.map(function(i,e){e.id = "";});
+		this.branches.get(this.i%5).id = "r1";
+		this.i++;
+		var rotate = _.bind(function(){this.rotate();}, this);
+		if (this.rotating)
+			window.setTimeout(rotate, 500);
+		this.el.setAttribute("class", "rotate");
+	},
+	start: function() {
+		var rotate = _.bind(function(){this.rotate();}, this);
+		this.rotating = true;
+		window.setTimeout(rotate, 1);
+	},
+	stop: function() {
+		this.el.setAttribute("class", "");
+		this.branches.map(function(i,e){e.id = "";});
+		this.rotating = false;
+	},
+	toggle: function() {
+		this.rotating ? this.stop() : this.start();
+	},
+});
+
+window.Logo = new LogoView();
+	
 window.Message = Backbone.Model.extend({
 	url: "",
 	defaults: {
@@ -27,16 +65,15 @@ window.JobData = Backbone.Model.extend({
 	}
 });
 window.JobData.fromJSON = function(data) {
-	//console.log(data);
 	try {
 		var json = $.parseJSON(data);
 		return new JobData({
 			jobId: json[1],
 			status: json[2],
-				resources: json[3],
-				oks: json[4],
-				errors: json[5],
-				warnings: json[6]
+			resources: json[3],
+			oks: json[4],
+			errors: json[5],
+			warnings: json[6]
 		});
 	} catch(e) {
 		console.log(e);
@@ -58,7 +95,7 @@ window.Job = Backbone.Model.extend({
 	defaults: {
 		name: "",
 		seedUri: "",
-		distance: "",
+		distance: 0,
 		data: new JobData(), // A collection of JobDatas containing a timestamp is what we need to build a graph
 		createdAt: "",
 		lastRun: "",
@@ -107,17 +144,28 @@ window.Job = Backbone.Model.extend({
 		return $.ajax(_.extend(params, options));	
 	},
 	
+	syncData: function(jobData) {
+		if (!_.isEqual(jobData.attributes, this.get('data').attributes)) {
+			this.set({data: jobData});
+			console.log("dataUpdated");
+		}
+	},
+	
 	log: function() {console.log(JSON.stringify(this.toJSON()));},
 });
 
 window.Job.fromHTML = function(elem) {
+	console.log(parseInt($(".distance", elem).text()));
 	return new Job({
 		id: $(elem).attr("data-id"),
 		name: $(".name", elem).text(),
 		seedUri: $(".uri", elem).text(),
+		distance: parseInt($(".distance", elem).text()),
 		data: new JobData({
+			jobId: $(elem).attr("data-id"),
 			status: $(".status", elem).text(),
 			resources: parseInt($(".resources", elem).text()),
+			oks: parseInt($(".oks", elem).text()),
 			errors: parseInt($(".errors", elem).text()),
 			warnings: parseInt($(".warnings", elem).text())				
 		})
@@ -126,7 +174,7 @@ window.Job.fromHTML = function(elem) {
 
 window.JobView = Backbone.View.extend({
 	
-	 tagName: "article",
+	tagName : "article",
 	template: _.template($('#job-template').html()),
 	
 	attributes: {
@@ -219,11 +267,11 @@ window.VS = {
 		type: window['MozWebSocket'] ? MozWebSocket : WebSocket,
 		
 		onmessage: function(event) {
+			//console.log(event.data);
 			var data = JobData.fromJSON(event.data);
 			var job = DashBoard.jobs.get(data.get("jobId"));
-			//console.log(job);
 			if (!_.isUndefined(job))
-				job.set("data", data);
+				job.syncData(data);
 		},
 		
 		open: function() {
@@ -238,7 +286,7 @@ window.VS = {
 		},
 		
 		reset: function() {
-			if (VS.Socket.ws === null)
+			if (VS.Socket.ws == null)
 				return;
 			VS.Socket.ws.close();
 			VS.Socket.open();
