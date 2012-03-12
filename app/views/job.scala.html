@@ -1,136 +1,27 @@
-@(jobs: Iterable[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
+@(job: Option[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
 
-@libs.main("Validator Suite", stylesheets = List("mockup.css")) {
+@libs.main("Validator Suite", 
+	stylesheets = List("dashboard.css"), 
+	scripts = List("dashboard.js", "report.js"),
+	exec = """$(function(){window.Report = new ReportView();});""") {
 	
 	@libs.header(Some(user))
-	@libs.navigation()
 	
-	<section class="main job">
-		<!-- <details class="html validator">
-			<summary>Show/Hide me</summary>
-			
-		</details> -->
+	<nav id="nav">
+		<ul>
+			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
+			<li><a href="@routes.Dashboard.newJob">Add new job</a></li>
+		</ul>
+	</nav>
+	
+	<section id="main"><div>
+		@libs.navigation()
 		
-		<p style="font-size:0.8em"># A report is basically a list of uris with attached messages coming from different 
-		assertors. An obvious way to filter the list is to filter based on assertor (i.e. show me the 
-		list of uris that contain messages coming from that assertor and only display these messages).
-		We could also filter based on number of errors (e.g. only urls with more than 50 errors) or 
-		other criterions, and compose filters. Some possible filters (controls TBD):
-		 </p>
+		<section id="report"><div>
+		@job.get.id
+		</div></section>
 		
-		<div class="filters">
-			<ul>
-				<li>On assertors</li>
-				<li>On content-types</li>
-				<li>On messages types (V2)</li>
-				<li>On # of errors/warnings (threshold for selected assertors)</li>
-				<li>On path (only uris under a certain uri)</li>
-				<li>...</li>
-			</ul>
-		</div>
-		
-		<p style="font-size:0.8em"># Metadata depends on filters and is updated on new messages</p>
-		
-		<div class="meta">
-			<ul>
-				<li>Last updated: <time datetime="1970-01-01T00:00Z">22 Feb 2012</time></li>
-				<li>Total of errors: 52</li>
-				<li>Total of warnings: 30</li>
-				<li>Resources checked: 850</li>
-				<li>Valid resources: 775</li>
-			</ul>
-		</div>
-		<div class="graph">
-<pre style="margin: 5px 0 0 50px">
-|       +
-|    +     +      +
-|  +          +
-|____________________
-</pre>
-		</div>
-		
-		<p style="font-size:0.8em; clear:both"># Live report. Organized by uris only for now. Could be explored as a tree (e.g. urchin)</p>
-		
-		<div class="report">
-			<details>
-				<summary>
-					<a href="">http://www.w3.org/community</a>
-					<ul>
-						<li>Errors: 27</li>
-						<li>Warnings: 1</li>
-						<li>Last update: T</li>
-					</ul>
-					<ul>
-						<li>Revalidate</li>
-						<li><a href="single.html">Focus</a></li>
-					</ul>
-				</summary>
-				<ul class="messages">
-					<li><small># A message has an assertor, a type, a line, column, context, and a html formatted message</small></li>
-					<li></li>
-					<li>HTML | Error | 30 | 89 | <code>…name="syntaxhighlighter-version"</code> | Bad value syntaxhighlighter-version for attribute name on element meta: Keyword syntaxhighlighter-version is not registered.</li>
-					<li></li>
-					<li></li>
-				</ul>
-			</details>
-			<details>
-				<summary>
-					<a href="">http://www.w3.org/community</a>
-					<ul>
-						<li>Errors: 27</li>
-						<li>Warnings: 1</li>
-						<li>Last update: T</li>
-					</ul>
-					<ul>
-						<li>Revalidate</li>
-						<li>Focus</li>
-					</ul>
-				</summary>
-			</details>
-			<details>
-				<summary>
-					<a href="">http://www.w3.org/community</a>
-					<ul>
-						<li>Errors: 27</li>
-						<li>Warnings: 1</li>
-						<li>Last update: T</li>
-					</ul>
-					<ul>
-						<li>Revalidate</li>
-						<li>Focus</li>
-					</ul>
-				</summary>
-			</details>
-			<details>
-				<summary>
-					<a href="">http://www.w3.org/community</a>
-					<ul>
-						<li>Errors: 27</li>
-						<li>Warnings: 1</li>
-						<li>Last update: T</li>
-					</ul>
-					<ul>
-						<li>Revalidate</li>
-						<li>Focus</li>
-					</ul>
-				</summary>
-			</details>
-			<details>
-				<summary>
-					<a href="">http://www.w3.org/community</a>
-					<ul>
-						<li>Errors: 27</li>
-						<li>Warnings: 1</li>
-						<li>Last update: T</li>
-					</ul>
-					<ul>
-						<li>Revalidate</li>
-						<li>Focus</li>
-					</ul>
-				</summary>
-			</details>
-		</div>
-	</section>
+	</div></section>
 	
 	@libs.footer()
 	

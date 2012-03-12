@@ -148,7 +148,9 @@ object Dashboard extends Controller {
     }
   }
   
-  def showJob(id: Job#Id) = IfAuth {_ => implicit user => Ok(views.html.job())}
+  def showJob(id: Job#Id) = (IfAuth, IfJob(id)) {_ => implicit user => job =>
+    Ok(views.html.job(Some(job)))
+  }
   
   def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
     if (user.owns(id))

@@ -29,19 +29,11 @@ object Global extends GlobalSettings {
         linkCheck=false,
         filter=Filter(include=Everything, exclude=Nothing)))
     
-    val ibm = Job(
-      name = "IBM",
-      creator = tgambet.id,
-      organization = w3c.id,
-      strategy = new EntryPointStrategy(
-        name="irrelevantForV1",
-        entrypoint=URL("http://www.ibm.com/"),
-        distance=1,
-        linkCheck=false,
-        filter=Filter(include=Everything, exclude=Nothing)))
+    var a = List[Job]()
+    for (i <- 0 until 8)
+      a = a :+ job.copy(id = java.util.UUID.randomUUID, strategy = job.strategy.copy(distance = i)) 
+    a.map(store.putJob)
     
-    store.putJob(job)
-    store.putJob(ibm)
     store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id))
     store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id))
   }

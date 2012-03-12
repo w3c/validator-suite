@@ -3,7 +3,10 @@
 @import views.Helper._
 @import org.w3.vs.run._
 
-@libs.main("Validator Suite", stylesheets = List("mockup.css", "dashboard.css"), scripts = List("job.js")) {
+@libs.main("Validator Suite", 
+	stylesheets = List("dashboard.css"), 
+	scripts = List("dashboard.js"),
+	exec = """$(function(){window.Dashboard = new DashboardView();});""") {
 	
 	@libs.header(Some(user))
 	
