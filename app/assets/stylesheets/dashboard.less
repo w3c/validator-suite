@@ -1,6 +1,8 @@
 @import 'libs/_reset.less';
 @import 'libs/_header.less';
 
+/* Top level */
+
 body,html{height:100%}
 body>header {
 	position: absolute;
@@ -32,11 +34,21 @@ footer {
 	background:#f5f5f5;
 }
 
+/* Main nav */
 
- 
+@media screen and (max-width: 710px) {
+	#nav {display:none}
+	#main {
+	margin-left:0;
+	}
+}
+
 #nav > ul {padding-left:1.4em;line-height:1.2em}
 #nav > section > ul {margin-top:5px}
 #nav > * {margin:10px;}
+
+/* Content nav */
+
 #crumbs {
 	border:solid #e5e5e5;
 	border-width: 0 0 1px 0;
@@ -52,6 +64,9 @@ footer {
 	content:"";
 	display:none;
 }
+
+/* Jobs */
+
 #jobs > div {
 	padding:10px;
 }
