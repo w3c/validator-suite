@@ -237,7 +237,7 @@ window.JobList = Backbone.Collection.extend({
 });
 
 window.DashBoardView = Backbone.View.extend({
-	el: $("#jobs"),
+	el: $("#jobs > div"),
 	jobs: new JobList(),
 	
 	initialize: function() {

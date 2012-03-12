@@ -1,11 +1,19 @@
 @(form: Form[org.w3.vs.model.Job], job: Option[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
 
-@libs.main("Validator Suite", stylesheets = List("mockup.css")) {
+@libs.main("Validator Suite", stylesheets = List("dashboard.css")) {
 	
 	@libs.header(Some(user))
-	@libs.navigation(List((form("name").value.getOrElse("New Job"), "")))
 	
-	<section class="main">
+	<nav id="nav">
+		<ul>
+			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
+			<li><a href="@routes.Dashboard.newJob">Add new job</a></li>
+		</ul>
+	</nav>
+		
+	<section id="main">
+	<div>
+	@libs.navigation(List((form("name").value.getOrElse("New Job"), "")))
 	
 	<script type="text/javascript">
 	function showValue(newValue) {
@@ -29,6 +37,7 @@
 		}
 	</form>
 	
+	</div>
 	</section>
 	
 	@libs.footer()

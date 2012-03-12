@@ -1,21 +1,13 @@
 @(crumbs: Iterable[(String, String)] = List())
-
-	<nav id="nav">
-		<ul>
-			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-			<li><a href="@routes.Dashboard.newJob">Add new job</a></li>
-		</ul>
-	</nav>
-	
-	<nav id="crumbs">
-		<ul>
-			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-			@crumbs.map { crumb =>
-			  @if(crumb._2 == "") {
-		  	    <li>@crumb._1</li>
-			  } else {
-			    <li><a href="@crumb._2">@crumb._1</a></li>
-			  }
-			}
-		</ul>
-	</nav>
+		<nav id="crumbs">
+			<ul>
+				<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
+				@crumbs.map { crumb =>
+				  @if(crumb._2 == "") {
+			  	    <li>@crumb._1</li>
+				  } else {
+				    <li><a href="@crumb._2">@crumb._1</a></li>
+				  }
+				}
+			</ul>
+		</nav>

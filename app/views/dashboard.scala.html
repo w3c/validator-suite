@@ -3,46 +3,58 @@
 @import views.Helper._
 @import org.w3.vs.run._
 
-@libs.main("Validator Suite", stylesheets = List("mockup.css"), scripts = List("job.js")) {
+@libs.main("Validator Suite", stylesheets = List("mockup.css", "dashboard.css"), scripts = List("job.js")) {
 	
 	@libs.header(Some(user))
-	@libs.navigation()
 	
-	<section id="jobs" class="main">
-	@for((job, data) <- jobs) {
-		<article class="job" data-id="@job.id">
-			<ul>
-				<li>Name: <span class="name">@job.name</span></li>
-				<li>Uri: <span class="uri">@job.strategy.seedURLs.head</span></li>
-				<li>Distance: <span class="distance">@job.strategy.distance</span></li>
-				<li>Status: <span class="status">@data.status</span></li>
-				<li>Resources: <span class="resources">@data.resources</span></li>
-			</ul>
-			<ul>
-				<li>Last run: <time datetime="">-</time></li>
-				<li>Last updated: <time datetime="">-</time></li>
-				<li>Valid: <span class="oks">@data.oks</span></li>
-				<li>Errors: <span class="errors">@data.errors</span></li>
-				<li>Warnings: <span class="warnings">@data.warnings</span></li>
-			</ul>
-			<form action="@routes.Dashboard.jobDispatcher(job.id)" method="post">
-			<ul>
-				<li><button type="submit" class="show" formmethod="get">Show</button></li>
-				<li>@defining(data.status) { status =>
-				  @status match {
-				    case a @ (Running | Idle) => {
-				    <button type="submit" name="action" value="stop" class="stop">Stop</button>}
-				    case _ => {
-				    <button type="submit" name="action" value="run" class="run">Run</button>}
-				  }
-				}</li>
-				<li><button type="submit" name="action" value="runnow" class="nunnow">Run now</button></li>
-				<li><button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(job.id)">Edit</button></li>
-				<li><button type="submit" name="action" value="delete" class="delete">Delete</button></li>
-			</ul>
-			</form>
-		</article>
-	}
+	<nav id="nav">
+		<ul>
+			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
+			<li><a href="@routes.Dashboard.newJob">Add new job</a></li>
+		</ul>
+	</nav>
+	
+	<section id="main">
+	<div>
+		@libs.navigation()
+		
+		<section id="jobs">
+		<div>
+		@for((job, data) <- jobs) {
+			<article class="job" data-id="@job.id">
+				<ul>
+					<li>Name: <span class="name">@job.name</span></li>
+					<li>Uri: <span class="uri">@job.strategy.seedURLs.head</span></li>
+					<li>Distance: <span class="distance">@job.strategy.distance</span></li>
+					<li>Status: <span class="status">@data.status</span></li>
+					<li>Resources: <span class="resources">@data.resources</span></li>
+				</ul>
+				<ul>
+					<li>Last run: <time datetime="">-</time></li>
+					<li>Last updated: <time datetime="">-</time></li>
+					<li>Valid: <span class="oks">@data.oks</span></li>
+					<li>Errors: <span class="errors">@data.errors</span></li>
+					<li>Warnings: <span class="warnings">@data.warnings</span></li>
+				</ul>
+				<form action="@routes.Dashboard.jobDispatcher(job.id)" method="post">
+				<ul>
+					<li><button type="submit" class="show" formmethod="get">Show</button></li>
+					<li>@defining(data.status) { status =>
+					  @status match {
+					    case a @ (Running | Idle) => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
+					    case _ => {<button type="submit" name="action" value="run" class="run">Run</button>}
+					  }
+					}</li>
+					<li><button type="submit" name="action" value="runnow" class="nunnow">Run now</button></li>
+					<li><button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(job.id)">Edit</button></li>
+					<li><button type="submit" name="action" value="delete" class="delete">Delete</button></li>
+				</ul>
+				</form>
+			</article>
+		}
+		</div>
+		</section>
+	</div>
 	</section>
 	
 	<script type="text/template" id="job-template">

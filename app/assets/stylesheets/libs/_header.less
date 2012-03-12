@@ -1,0 +1,61 @@
+@import 'libs/_theme.less';
+
+body {
+	font-family: @baseFontFamily;
+	font-size: @baseFontSize;
+	color: @baseFontColor;
+	background-color: @bodyBgColor;
+}
+
+/* ############# Header ############# */
+
+body > header {
+	
+	background: @headerBgColor;
+	height: @headerHeight;
+	text-align: right;
+	border-bottom: @borderSize solid @borderColor;
+	
+	svg {
+		width: @headerHeight - @smallSpacing;
+		height: @headerHeight - @smallSpacing;
+		float: left;
+		margin: (@headerHeight / 10) 0 0 @smallSpacing;
+	}
+	
+	h1 {
+		font-size: round((@headerHeight - @smallSpacing) / 3.5px * 10) / 10;
+		margin-top: round((@headerHeight - @smallSpacing) / 3.5px * 10) / 10 + 3px;
+		float: left;
+		text-align: left;
+		
+		a {
+			text-decoration: none;
+			color: inherit;
+			
+			:active {
+				outline: none;
+			}
+		}
+		
+		span:first-child {
+			font-weight: bold;
+			text-transform: uppercase;
+		}
+		
+		span:nth-child(2) {
+			font-family: serif;
+			display: block;
+			font-style: italic;
+			font-size: 0.95em;
+			position: relative;
+			left: round((-@headerHeight / 15) * 10) / 10px;
+			top: round((-@headerHeight / 50) * 10) / 10px;
+		}
+	}
+	
+	#admin {
+		padding-right: @smallSpacing;
+		padding-top: @headerHeight - @smallSpacing - @baseFontSize;
+	}
+}
