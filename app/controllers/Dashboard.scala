@@ -153,8 +153,8 @@ object Dashboard extends Controller {
         // Transform to a tuple (updateData, sameAsPrevious)
         Enumeratee.scanLeft[UpdateData]((seed(jobId), false)) {(from: (UpdateData, Boolean), to: UpdateData) => 
           from match {
-            case (prev, _) if (to == prev) => (to, true)
-            case _ => (to, false)
+            case (prev, _) if (to != prev) => (to, false)
+            case _ => (to, true)
           }
         }
     // Interleave the resulting enumerators
