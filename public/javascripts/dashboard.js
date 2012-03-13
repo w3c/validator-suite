@@ -205,7 +205,7 @@ window.JobView = Backbone.View.extend({
 		return this;
 	},
 	edit: function () {
-		window.open(this.model.url + "/edit");
+		window.open(this.model.url() + "/edit");
 		return false;
 	},
 	run: function () {

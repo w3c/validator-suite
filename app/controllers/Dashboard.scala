@@ -92,7 +92,7 @@ object Dashboard extends Controller {
   }
   
   def jobDispatcher(id: Job#Id) = Action { request =>
-    var s = for {
+    (for {
       body <- request.body.asFormUrlEncoded
       param <- body.get("action")
       action <- param.headOption
@@ -102,8 +102,7 @@ object Dashboard extends Controller {
       case "run" => runJob(id)(request)
       case "runnow" => runJob(id)(request)
       case "stop" => stopJob(id)(request)
-    }
-    s.getOrElse(BadRequest("BadRequest: JobDispatcher")) // TODO error with flash
+    }).getOrElse(BadRequest("BadRequest: JobDispatcher")) // TODO error with flash
     // Can i do that in one expression?
   }
   
@@ -120,7 +119,7 @@ object Dashboard extends Controller {
     } else {
       Redirect(routes.Dashboard.dashboard)
     }
-  } 
+  }
   
   def deleteJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
     if (user.owns(id)) {
@@ -146,10 +145,6 @@ object Dashboard extends Controller {
     } else {
       if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
     }
-  }
-  
-  def showJob(id: Job#Id) = (IfAuth, IfJob(id)) {_ => implicit user => job =>
-    Ok(views.html.job(Some(job)))
   }
   
   def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>

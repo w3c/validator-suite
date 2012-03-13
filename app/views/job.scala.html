@@ -1,4 +1,6 @@
-@(job: Option[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
+@(job: Option[org.w3.vs.model.Job] = None, results: Iterable[org.w3.vs.model.AssertorResult])(implicit user: org.w3.vs.model.User)
+
+@import org.w3.vs.model._
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"), 
@@ -19,6 +21,17 @@
 		
 		<section id="report"><div>
 		@job.get.id
+		
+		<br>
+		
+		@results.map{result => @{
+			result match {
+				case Assertions(_, _, _, _, _, assertions) =>
+					{play.api.templates.HtmlFormat.raw(assertions.map(_.description).head)}
+				case _ => {"failed"}
+			}
+		}}
+		
 		</div></section>
 		
 	</div></section>
