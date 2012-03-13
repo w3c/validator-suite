@@ -245,8 +245,7 @@ window.DashboardView = Backbone.View.extend({
 		this.jobs.on('reset', this.addAll, this);
 		// XXX bug server-side
 		var onmessage = _.bind(this._messageCallback, this);
-		this.jobs.on('run', function () {VS.Socket.reset().onmessage = onmessage;}, VS.Socket);
-		this.jobs.on('runnow', function () {VS.Socket.reset().onmessage = onmessage;}, VS.Socket);
+		this.jobs.on('sync', function () {VS.Socket.reset().onmessage = onmessage;}, VS.Socket);
 		// Parse the HTML to get initial data as an array of (model, view)
 		_.each($("#jobs .job").toArray(), function(jobElem) { 
 			this.jobs.add(Job.fromHTML(jobElem));
