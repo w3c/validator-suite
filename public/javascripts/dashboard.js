@@ -87,7 +87,8 @@ var methodMap = {
 	  'read':'GET',
 	'create':'POST',
 	'update':'POST',
-	'delete':'POST'
+	'delete':'POST',
+	'runnow':'POST'
 };
 
 window.Job = Backbone.Model.extend({
@@ -243,8 +244,9 @@ window.DashboardView = Backbone.View.extend({
 		this.jobs.on('add', this.addOne, this);
 		this.jobs.on('reset', this.addAll, this);
 		// XXX bug server-side
-		this.jobs.on('run', _.bind(function(){VS.Socket.reset();},this), VS.Socket);
-		this.jobs.on('runnow', function () {VS.Socket.reset();}, VS.Socket);
+		var onmessage = _.bind(this._messageCallback, this);
+		this.jobs.on('run', function () {VS.Socket.reset().onmessage = onmessage;}, VS.Socket);
+		this.jobs.on('runnow', function () {VS.Socket.reset().onmessage = onmessage;}, VS.Socket);
 		// Parse the HTML to get initial data as an array of (model, view)
 		_.each($("#jobs .job").toArray(), function(jobElem) { 
 			this.jobs.add(Job.fromHTML(jobElem));
@@ -296,7 +298,7 @@ window.VS = {
 			if (typeof this.ws != 'object')
 				return;
 			this.ws.close();
-			this.open();
+			return this.open();
 		}
 	},
 
