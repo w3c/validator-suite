@@ -8,13 +8,12 @@ import play.api.data.format.Formats._
 import play.api.libs.json._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
-
 import akka.dispatch.Future
 import java.util.concurrent.TimeUnit._
-
 import org.w3.util._
 import org.w3.vs.controllers._
 import org.w3.vs.model._
+import org.w3.vs.run._
 import org.w3.vs.run.message._
 
 object Dashboard extends Controller {
@@ -142,10 +141,26 @@ object Dashboard extends Controller {
   
   // * Sockets
   def dashboardSocket() = IfAuthSocket {req => user =>
-    val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
-    var subs = jobs.map(_.getRun().subscribeToUpdates)
     val in = Iteratee.ignore[JsValue]
-    var out = subs.reduce((e1, e2) => e1 >- e2) &> Enumeratee.collect{case e: UpdateData => e.toJS}
+    val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
+    // The seed for the future scan, ie the initial jobData of a run
+    def seed(id: Job#Id) = new UpdateData(JobData.Default, id)
+    // Mapping through a list of (jobId, enum)
+    var out = jobs.map(job => (job.id, job.getRun().subscribeToUpdates)).map { tuple =>
+      val (jobId, enum) = tuple
+      // Filter the enumerator, taking only the UpdateData messages
+      enum &> Enumeratee.collect[RunUpdate]{case e: UpdateData => e} &>
+        // Transform to a tuple (updateData, sameAsPrevious)
+        Enumeratee.scanLeft[UpdateData]((seed(jobId), false)) {(from: (UpdateData, Boolean), to: UpdateData) => 
+          from match {
+            case (prev, _) if (to == prev) => (to, true)
+            case _ => (to, false)
+          }
+        }
+    // Interleave the resulting enumerators
+    }.reduce((e1, e2) => e1 >- e2) &>
+    // And collect messages that are marked as changed
+      Enumeratee.collect{case (a, false) => a.toJS} 
     (in, out)
   }
   // jobSocket

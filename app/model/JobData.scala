@@ -14,3 +14,15 @@ case class JobData(
     errors: Int,
     warnings: Int
 )
+
+object JobData {
+  
+  val Default = 
+    new JobData(
+      status = NotYetStarted,
+      resources = 0,
+      oks = 0,
+      errors = 0,
+      warnings = 0)
+  
+}
