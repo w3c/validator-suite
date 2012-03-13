@@ -33,7 +33,16 @@ trait FromUnicornFormatAssertor extends FromSourceAssertor {
             val column = context.attrs get "column" map { s => s.toInt }
             Context(content, contextRef, line, column)
           }
-        RawAssertion(typ, id, eventLang, contexts)
+        val description = message \ "description" head
+        val group = description.children
+        def removeScope(node: Node): Node = {
+          node match {
+            case e: Elem => e.children.map(removeScope); e.copy(scope = Map.empty)
+            case e => e
+          }
+        } 
+        val res = group.map{removeScope}
+        RawAssertion(typ, id, eventLang, contexts, res.toString)
       }
     events
   }  
