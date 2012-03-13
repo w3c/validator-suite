@@ -15,13 +15,13 @@ import akka.util.Duration
 import scala.collection.mutable.ListMap
 
 object RunData {
-  
+
   def diff(l: Set[URL], r: Set[URL]): Set[URL] = {
     val d1 = l -- r
     val d2 = r -- l
     d1 ++ d2
   }
-  
+
   def fromSnapshot(strategy: Strategy, snapshot: RunSnapshot): RunData = {
     import snapshot._
     RunData(
@@ -33,7 +33,7 @@ object RunData {
       errors = errors,
       warnings = warnings)
   }
-  
+
 }
 
 /**
@@ -59,34 +59,34 @@ case class RunData(
     // keep track of assertions sent to the assertor we call synchronously
     sentAssertorResults: Int = 0,
     receivedAssertorResults: Int = 0) {
-  
+
   type Explore = (URL, Int)
-  
+
   final def numberOfKnownUrls: Int = distance.size
 
   assert(distance.keySet == fetched ++ pending ++ toBeExplored, RunData.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
   assert(toBeExplored.toSet.intersect(pending) == Set.empty)
   assert(pending.intersect(fetched) == Set.empty)
   assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
-  
+
   final val logger = play.Logger.of(classOf[RunData])
-  
+
   /**
    * An exploration is over when there are no more urls to explore and no pending url
    */
   final def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
-  
+
   final def isIdle = noMoreUrlToExplore && (sentAssertorResults == receivedAssertorResults)
-  
-  final def isRunning = ! isIdle
-  
+
+  final def isRunning = !isIdle
+
   final def status(stateName: RunState): RunStatus = stateName match {
-    case NotYetStarted => NotYetStarted
-    case Stopped => Stopped
-    case Started if this.isRunning => Running
-    case Started => Idle
+    case NotYetStarted ⇒ NotYetStarted
+    case Stopped ⇒ Stopped
+    case Started if this.isRunning ⇒ Running
+    case Started ⇒ Idle
   }
-  
+
   /**
    * An Explore should be ignored if
    * <ul>
@@ -106,23 +106,23 @@ case class RunData(
    * Returns an Observation with the new urls to be explored
    */
   def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (RunData, List[URL]) = {
-    val filteredUrls = urls.filterNot{ url => shouldIgnore(url, atDistance) }.distinct
-    val newDistance = distance ++ filteredUrls.map{ url => url -> atDistance }
+    val filteredUrls = urls.filterNot { url ⇒ shouldIgnore(url, atDistance) }.distinct
+    val newDistance = distance ++ filteredUrls.map { url ⇒ url -> atDistance }
     val newData = this.copy(
       toBeExplored = toBeExplored ++ filteredUrls,
       distance = newDistance)
     (newData, filteredUrls)
   }
-  
+
   /**
    * Returns an Observation with the new urls to be explored
    */
   def withNewUrlsToBeExplored(urlsWithDistance: List[(URL, Int)]): (RunData, List[URL]) = {
     // as it's a map, there is no duplicated url :-)
     // also, the ListMap preserves the order of insertion
-    
+
     val map: ListMap[URL, Int] = ListMap.empty
-    map ++= urlsWithDistance.filterNot{ case (url, distance) => shouldIgnore(url, distance) }
+    map ++= urlsWithDistance.filterNot { case (url, distance) ⇒ shouldIgnore(url, distance) }
     val newUrls = map.keys.toList
     val newData = this.copy(
       toBeExplored = toBeExplored ++ newUrls,
@@ -139,18 +139,18 @@ case class RunData(
 
   /**
    * Returns a couple Observation/Explore.
-   * 
+   *
    * The Explore  is the first one that could be fetched for the main authority.
-   * 
+   *
    * The returned Observation has set this Explore to be pending.
    */
   private def takeFromMainAuthority: Option[(RunData, URL)] = {
     val optUrl = toBeExplored find { _.authority == mainAuthority }
-    optUrl map { url =>
+    optUrl map { url ⇒
       (this.copy(
-         pending = pending + url,
-         toBeExplored = toBeExplored filterNot { _ == url }),
-       url)
+        pending = pending + url,
+        toBeExplored = toBeExplored filterNot { _ == url }),
+        url)
     }
   }
 
@@ -158,22 +158,22 @@ case class RunData(
    * Returns (if possible, hence the Option) the first Explore that could
    * be fetched for any authority but the main one.
    * Also, this Explore must be the only one with this Authority.
-   * 
+   *
    * The returned Observation has set this Explore to be pending.
    */
   private def takeFromOtherAuthorities: Option[(RunData, URL)] = {
     val pendingToConsiderer =
-      toBeExplored.view filterNot { url => url.authority == mainAuthority || (pendingAuthorities contains url.getAuthority) }
-    pendingToConsiderer.headOption map { url =>
+      toBeExplored.view filterNot { url ⇒ url.authority == mainAuthority || (pendingAuthorities contains url.getAuthority) }
+    pendingToConsiderer.headOption map { url ⇒
       (this.copy(
-         pending = pending + url,
-         toBeExplored = toBeExplored filterNot { _ == url }),
-       url)
+        pending = pending + url,
+        toBeExplored = toBeExplored filterNot { _ == url }),
+        url)
     }
   }
-  
+
   lazy val mainAuthorityIsBeingFetched = pending exists { _.authority == mainAuthority }
-  
+
   /**
    * Returns (if possible, hence the Option) the first Explore that could
    * be fetched, giving priority to the main authority.
@@ -189,39 +189,37 @@ case class RunData(
 
   /**
    * Returns as many Explores as possible to be fetched.
-   * 
+   *
    * The returned Observation has all the Explores marked as being pending.
    */
   def takeAtMost(n: Int): (RunData, List[Explore]) = {
     var current: RunData = this
     var urls: List[URL] = List.empty
     for {
-      i <- 1 to (n - pending.size)
-      (observation, url) <- current.take
+      i ← 1 to (n - pending.size)
+      (observation, url) ← current.take
     } {
       current = observation
       urls ::= url
     }
-    (current, urls.reverse map { url => url -> distance(url) })
+    (current, urls.reverse map { url ⇒ url -> distance(url) })
   }
-  
+
   def withCompletedFetch(url: URL): RunData = this.copy(
     pending = pending - url,
-    fetched = fetched + url
-  )
-  
+    fetched = fetched + url)
+
   def withAssertorResult(result: AssertorResult): RunData = result match {
-    case assertions: Assertions => this.copy(
+    case assertions: Assertions ⇒ this.copy(
       oks = oks + assertions.numberOfOks,
       errors = errors + assertions.numberOfErrors,
       warnings = warnings + assertions.numberOfWarnings,
-      receivedAssertorResults = receivedAssertorResults + 1
-    )
-    case fail: AssertorFail => this // should do something about that
+      receivedAssertorResults = receivedAssertorResults + 1)
+    case fail: AssertorFail ⇒ this // should do something about that
   }
-    
+
   def assertionPhaseIsFinished: Boolean =
     toBeExplored.isEmpty && sentAssertorResults == receivedAssertorResults
-  
+
 }
 

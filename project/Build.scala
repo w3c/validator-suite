@@ -1,6 +1,8 @@
 import sbt._
 import Keys._
 import PlayProject._
+import org.ensime.sbt.Plugin.Settings.ensimeConfig
+import org.ensime.sbt.util.SExp._
 
 object ApplicationBuild extends Build {
 
@@ -24,13 +26,21 @@ object ApplicationBuild extends Build {
 
   val assertorApi = Project("assertor-api", file("assertor-api"))
 
+
+
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
     testOptions in Test := Nil,
     routesImport += "org.w3.vs.util.Binders._",
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    resolvers += "repo.codahale.com" at "http://repo.codahale.com"
-    // Add your own project settings here      
+    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
+    ensimeConfig := sexp(
+      key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),
+      key(":formatting-prefs"), sexp(
+        key(":rewriteArrowSymbols"), true,
+        key(":doubleIndentClassDeclaration"), true
+      )
+    )
   ) // dependsOn (assertorApi)
   
 }
