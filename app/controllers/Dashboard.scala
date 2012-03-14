@@ -58,12 +58,30 @@ object Dashboard extends Controller {
       param <- body.get("action")
       action <- param.headOption
     } yield action.toLowerCase match {
-      case "update" => createOrUpdateJob(Some(id))(request)
       case "delete" => deleteJob(id)(request)
+      case "update" => createOrUpdateJob(Some(id))(request)
       case "run"    => runJob(id)(request)
       case "runnow" => runJob(id)(request)
       case "stop"   => stopJob(id)(request)
     }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
+  }
+  
+  def editJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req =>
+    (for {
+      user <- isAuth failMap {e => InternalServerError(e)}
+      id <- idOpt toSuccess Ok(views.html.jobForm(jobForm(user))(user, idOpt))
+      job <- ownsJob(user)(id) failMap {e => InternalServerError(e)}
+    } yield Ok(views.html.jobForm(jobForm(user).fill(job))(user, idOpt))).fold(f=>f,s=>s)
+  }
+  
+  def deleteJob(implicit id: Job#Id) = Action { implicit req =>
+    (for {
+      user <- isAuth failMap {e => InternalServerError(e)}
+      job <- ownsJob(user) failMap {e => InternalServerError(e)}
+      _ <- store.removeJob(id) failMap {t => InternalServerError(t.getMessage)}
+    } yield {
+      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
+    }).fold(f=>f,s=>s) 
   }
   
   def createOrUpdateJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req =>
@@ -87,43 +105,20 @@ object Dashboard extends Controller {
     }).fold(f=>f,s=>s)
   }
   
-  // refactorable
-  def deleteJob(implicit id: Job#Id) = Action { implicit req =>
+  def runJob(implicit id: Job#Id) =    simpleJobAction(user => job => job.run())
+  
+  def runJobNow(implicit id: Job#Id) = simpleJobAction(user => job => job.runNow())
+  
+  def stopJob(implicit id: Job#Id) =   simpleJobAction(user => job => job.stop())
+  
+  private def simpleJobAction(action: User => Job => Any)(implicit id: Job#Id) = Action { implicit req =>
     (for {
       user <- isAuth failMap {e => InternalServerError(e)}
       job <- ownsJob(user) failMap {e => InternalServerError(e)}
     } yield {
-      store.removeJob(id)
-      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
-    }).fold(f=>f,s=>s) 
-  }
-
-  def runJob(implicit id: Job#Id) = Action { implicit req =>
-    (for {
-      user <- isAuth failMap {e => InternalServerError(e)}
-      job <- ownsJob(user) failMap {e => InternalServerError(e)}
-    } yield {
-      job.runNow()
+      action(user)(job)
       if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
     }).fold(f=>f,s=>s)
-  }
-  
-  def stopJob(implicit id: Job#Id) = Action { implicit req =>
-    (for {
-      user <- isAuth failMap {e => InternalServerError(e)}
-      job <- ownsJob(user) failMap {e => InternalServerError(e)}
-    } yield {
-      job.stop()
-      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
-    }).fold(f=>f,s=>s)
-  }
-  
-  def editJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req =>
-    (for {
-      user <- isAuth failMap {e => InternalServerError(e)}
-      id <- idOpt toSuccess Ok(views.html.jobForm(jobForm(user))(user, idOpt))
-      job <- ownsJob(user)(id) failMap {e => InternalServerError(e)}
-    } yield Ok(views.html.jobForm(jobForm(user).fill(job))(user, idOpt))).fold(f=>f,s=>s)
   }
   
   // Move in a trait next 3
