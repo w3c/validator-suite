@@ -29,7 +29,12 @@ object Dashboard extends Controller {
   import org.w3.vs.Prod.configuration
 
   // * Indexes
-  def index = Action { _ => Ok(views.html.index()) }
+  def index = Action { implicit req => 
+    isAuth.fold[Result](
+      e => InternalServerError(e),
+      user => Ok(views.html.index()(user))
+    )
+  }
   
   def dashboard = Action { implicit req =>
     AsyncResult {
