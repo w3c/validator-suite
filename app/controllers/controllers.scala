@@ -23,6 +23,9 @@ import org.w3.vs.model._
 import play.api.mvc.PathBindable
 import play.api.mvc.JavascriptLitteral
 import java.util.UUID
+import scalaz.Validation
+import scalaz.Success
+import scalaz.Failure
 
 package object controllers {
   
@@ -58,6 +61,13 @@ package object controllers {
     })
     ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
   )
+
+  class FormW[T](form: Form[T]) {
+    def toValidation: Validation[Form[T], T] =
+      form.fold(f ⇒ Failure(f), s ⇒ Success(s))
+  }
+
+  implicit def toFormW[T](form: Form[T]): FormW[T] = new FormW(form)
   
   /*
    *  Formatters

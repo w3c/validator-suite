@@ -28,13 +28,6 @@ object Dashboard extends Controller {
   // TODO: make the implicit explicit!!!
   import org.w3.vs.Prod.configuration
 
-  // * Indexes
-  def index = Action { implicit req ⇒
-    isAuth.fold[Result](
-      e ⇒ InternalServerError(e),
-      user ⇒ Ok(views.html.index()(user)))
-  }
-
   // Future  -->  Validation
 
   def dashboard = Action { implicit req ⇒
@@ -66,9 +59,9 @@ object Dashboard extends Controller {
     } yield action.toLowerCase match {
       case "delete" ⇒ deleteJob(id)(request)
       case "update" ⇒ createOrUpdateJob(Some(id))(request)
-      case "run" ⇒ runJob(id)(request)
+      case "run"    ⇒ runJob(id)(request)
       case "runnow" ⇒ runJob(id)(request)
-      case "stop" ⇒ stopJob(id)(request)
+      case "stop"   ⇒ stopJob(id)(request)
     }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
   }
 
@@ -89,15 +82,6 @@ object Dashboard extends Controller {
       if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
     }).fold(f ⇒ f, s ⇒ s)
   }
-
-  import play.api.data.Form
-
-  class FormW[T](form: Form[T]) {
-    def toValidation: Validation[Form[T], T] =
-      form.fold(f ⇒ Failure(f), s ⇒ Success(s))
-  }
-
-  implicit def toFormW[T](form: Form[T]): FormW[T] = new FormW(form)
 
   def createOrUpdateJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req ⇒
     val r: Validation[Result, Result] = for {
@@ -156,19 +140,17 @@ object Dashboard extends Controller {
   }
 
   // * Sockets
-  def dashboardSocket() = IfAuthSocket { req ⇒
-    user ⇒
+  def dashboardSocket() = IfAuthSocket { req ⇒ user ⇒
       val in = Iteratee.ignore[JsValue]
       val jobs = store.listJobs(user.organization).fold(t ⇒ throw t, jobs ⇒ jobs)
       // The seed for the future scan, ie the initial jobData of a run
-      def seed(id: Job#Id) = new UpdateData(JobData.Default, id)
+      def seed = new UpdateData(null, null)
       // Mapping through a list of (jobId, enum)
-      var out = jobs.map(job ⇒ (job.id, job.getRun().subscribeToUpdates)).map { tuple ⇒
-        val (jobId, enum) = tuple
+      var out = jobs.map(job ⇒ job.getRun().subscribeToUpdates).map { enum ⇒
         // Filter the enumerator, taking only the UpdateData messages
         enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData ⇒ e } &>
           // Transform to a tuple (updateData, sameAsPrevious)
-          Enumeratee.scanLeft[UpdateData]((seed(jobId), false)) { (from: (UpdateData, Boolean), to: UpdateData) ⇒
+          Enumeratee.scanLeft[UpdateData]((seed, false)) { (from: (UpdateData, Boolean), to: UpdateData) ⇒
             from match {
               case (prev, _) if (to != prev) ⇒ (to, false)
               case _ ⇒ (to, true)

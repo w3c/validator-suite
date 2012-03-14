@@ -52,6 +52,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
   }
   
   final private def extractJobData(fsmState: FSMState, data: RunData): JobData = JobData(
+    jobId = job.id,
     state = data.status(fsmState),
     resources = data.numberOfKnownUrls,
     oks = data.oks,
