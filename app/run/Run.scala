@@ -21,6 +21,9 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
   
   def start(): Unit = actorRef ! message.Start
   
+  // TODO
+  def stop(): Unit = {}
+  
   def jobData(): Future[JobData] =
     (actorRef ? message.GetJobData).mapTo[JobData]
   

@@ -7,7 +7,7 @@
 	<nav id="nav">
 		<ul>
 			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-			<li><a href="@routes.Dashboard.newJob">Add new job</a></li>
+			<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
 		</ul>
 	</nav>
 		
@@ -33,7 +33,7 @@
 		@if(job.isDefined) {
 		<input type=submit name=action value=Update formaction="@routes.Dashboard.jobDispatcher(job.get.id)">
 		} else {
-		<input type=submit name=action value=Create formaction="@routes.Dashboard.createJob">
+		<input type=submit name=action value=Create formaction="@routes.Dashboard.createOrUpdateJob">
 		}
 	</form>
 	

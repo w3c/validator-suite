@@ -1,8 +1,8 @@
-@(messages: Seq[String] = Seq[String]())(implicit user: org.w3.vs.model.User)
+@(messages: Seq[String] = Seq[String]())
 
 @libs.main(title = "Validator Suite", stylesheets = List("main.min.css"), scripts = List("vs.js")) {
 	
-	@libs.header(Some(user))
+	@libs.header(None)
 	
 	<section id="messages">
 	@for(message <- messages) {

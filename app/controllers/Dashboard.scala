@@ -2,19 +2,22 @@ package controllers
 
 import play.api._
 import play.api.mvc._
-import play.api.data._
-import play.api.data.Forms._
-import play.api.data.format.Formats._
 import play.api.libs.json._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
 import akka.dispatch.Future
 import java.util.concurrent.TimeUnit._
 import org.w3.util._
+import org.w3.util.Pimps._
 import org.w3.vs.controllers._
 import org.w3.vs.model._
 import org.w3.vs.run._
 import org.w3.vs.run.message._
+import scalaz._
+import Scalaz._
+import Validation._
+import akka.dispatch.Await
+import akka.util.Duration
 
 object Dashboard extends Controller {
   
@@ -25,118 +28,127 @@ object Dashboard extends Controller {
   // TODO: make the implicit explicit!!!
   import org.w3.vs.Prod.configuration
 
-  def jobForm(user: User) = Form(
-    mapping (
-      "name" -> text,
-      "url" -> of[URL],
-      "distance" -> of[Int],
-      "linkCheck" -> of[Boolean](booleanFormatter)
-    )((name, url, distance, linkCheck) => {
-      Job(
-        name = name,
-        organization = user.organization,
-        creator = user.id,
-        strategy = new EntryPointStrategy(
-          name="irrelevantForV1",
-          entrypoint=url,
-          distance=distance,
-          linkCheck=linkCheck,
-          filter=Filter(include=Everything, exclude=Nothing)))
-    })
-    ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
-  )
-
   // * Indexes
-  def index = IfAuth { _ => implicit user => Ok(views.html.index()) }
+  def index = Action { _ => Ok(views.html.index()) }
   
-  def dashboard = IfAuth {_ => implicit user =>
+  def dashboard = Action { implicit req =>
     AsyncResult {
-      val jobs = store.listJobs(user.organization).fold(t => throw t, jobs => jobs)
-      val jobDatas = jobs map ( _.getData )
-      val foo = Future.sequence(jobDatas).asPromise orTimeout("timeout", 1, SECONDS)
-      foo map {either => 
-        either fold(
-          data => Ok(views.html.dashboard(jobs zip data)), 
-          b => Results.InternalServerError(b) // TODO
-        )
-      }
+      (for {
+        user <- isAuth failMap {e => Promise.pure(InternalServerError)}
+        jobs <- store.listJobs(user.organization) failMap {e => Promise.pure(InternalServerError)}
+        // That's not right, no scalaz in akka 2?
+        //jobDatas <- Await.result(Future.sequence(jobs map (_.getData)), Duration(1, SECONDS)) // orTimeout("timeout", 1, SECONDS)
+      } yield {
+        val jobDatas = jobs map ( _.getData )
+        val foo = Future.sequence(jobDatas).asPromise orTimeout("timeout", 1, SECONDS)
+        foo map {either => 
+          either.fold[Result] (
+            data => Ok(views.html.dashboard(jobs zip data)(user)), 
+            b => Results.InternalServerError(b) // TODO
+          )
+        }
+      }).fold(f=>f,s=>s)
     }
   }
   
   // * Jobs
-  def newJob() = IfAuth {_ => implicit user => Ok(views.html.jobForm(jobForm(user)))}
-  
-  def createJob() = IfAuth {implicit req => implicit user => 
-    jobForm(user).bindFromRequest.fold (
-      formWithErrors => BadRequest(views.html.jobForm(formWithErrors)),
-      job => {
-        store.putJob(job.copy(creator = user.id, organization = user.organization)) // ?
-        Redirect(routes.Dashboard.dashboard)
-      }
-    )
-  }
-  
   def jobDispatcher(id: Job#Id) = Action { request =>
     (for {
       body <- request.body.asFormUrlEncoded
       param <- body.get("action")
       action <- param.headOption
     } yield action.toLowerCase match {
-      case "update" => updateJob(id)(request)
+      case "update" => createOrUpdateJob(Some(id))(request)
       case "delete" => deleteJob(id)(request)
-      case "run" => runJob(id)(request)
+      case "run"    => runJob(id)(request)
       case "runnow" => runJob(id)(request)
-      case "stop" => stopJob(id)(request)
-    }).getOrElse(BadRequest("BadRequest: JobDispatcher")) // TODO error with flash
-    // Can i do that in one expression?
+      case "stop"   => stopJob(id)(request)
+    }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
   }
   
-  def updateJob(id: Job#Id) = (IfAuth, IfJob(id)) {implicit request => implicit user => job =>
-    if (user.owns(id)) {
-      jobForm(user).bindFromRequest.fold (
-        formWithErrors => BadRequest(views.html.jobForm(formWithErrors, Some(job))),
+  def createOrUpdateJob(idOpt: Option[Job#Id] = None) = Action { implicit req =>
+    (for {
+      user <- isAuth failMap {e => InternalServerError(e)}
+      id <- idOpt toSuccess {
+          jobForm(user).bindFromRequest.fold[Result] (
+            formWithErrors => BadRequest(views.html.jobForm(formWithErrors)(user)),
+            job => {
+              store.putJob(job.copy(creator = user.id, organization = user.organization))
+              if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
+          })}
+      job <- ownsJob(id,req) failMap {e => InternalServerError(e)}
+    } yield {
+      jobForm(user).bindFromRequest.fold[Result] (
+        formWithErrors => Ok(views.html.jobForm(formWithErrors, Some(job))(user)),
         newJob => {
           store.putJob(job.copy(strategy = newJob.strategy, name = newJob.name))
-          Redirect(routes.Dashboard.dashboard)
-          //Redirect(routes.Dashboard.dashboard.toString, 301)
-        }
-      )
-    } else {
-      Redirect(routes.Dashboard.dashboard)
-    }
+          if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
+      })
+    }).fold(f=>f,s=>s)
   }
   
-  def deleteJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
-    if (user.owns(id)) {
+  // refactorable
+  def deleteJob(implicit id: Job#Id) = Action { implicit req =>
+    (for {
+      user <- isAuth failMap {e => InternalServerError(e)}
+      job <- ownsJob failMap {e => InternalServerError(e)}
+    } yield {
       store.removeJob(id)
       if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
-    } else {
-      if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
+    }).fold(f=>f,s=>s) 
+  }
+
+  def runJob(implicit id: Job#Id) = Action { implicit req =>
+    (for {
+      user <- isAuth failMap {e => InternalServerError(e)}
+      job <- ownsJob failMap {e => InternalServerError(e)}
+    } yield {
+      job.start()
+      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
+    }).fold(f=>f,s=>s)
+  }
+  
+  def stopJob(implicit id: Job#Id) = Action { implicit req =>
+    (for {
+      user <- isAuth failMap {e => InternalServerError(e)}
+      job <- ownsJob failMap {e => InternalServerError(e)}
+    } yield {
+      job.stop()
+      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
+    }).fold(f=>f,s=>s)
+  }
+  
+  def editJob(idOpt: Option[Job#Id] = None) = Action { implicit req =>
+    (for {
+      user <- isAuth failMap {e => InternalServerError(e)}
+      id <- idOpt toSuccess Ok(views.html.jobForm(jobForm(user))(user))
+      job <- ownsJob(id,req) failMap {e => InternalServerError(e)}
+    } yield Ok(views.html.jobForm(jobForm(user).fill(job), Some(job))(user))).fold(f=>f,s=>s)
+  }
+  
+  // Move in a trait next 3
+  def isAjax(implicit req: Request[AnyContent]) = {
+     req.headers.get("x-requested-with") match {
+      case Some("XMLHttpRequest") => true
+      case _ => false
     }
   }
   
-  def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
-    if (user.owns(id)) {
-      job.getRun().start()
-      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
-    } else
-      if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
+  def ownsJob(implicit id: Job#Id, req: Request[AnyContent]) = {
+    for {
+      user <- isAuth(req)
+      jobOpt <- store.getJobById(id) failMap { t => "store exception" }
+      job <- jobOpt toSuccess { "unknown jobid" }
+    } yield job
   }
   
-  def stopJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
-    if (user.owns(id)) {
-      // TODO
-      if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
-    } else {
-      if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
-    }
-  }
-  
-  def editJob(id: Job#Id) = (IfAuth, IfJob(id)) {req => implicit user => job =>
-    if (user.owns(id))
-      Ok(views.html.jobForm(jobForm(user).fill(job), Some(job)))
-    else
-      Ok(views.html.jobForm(jobForm(user).fill(job), Some(job))) // TODO error
+  def isAuth(implicit req: Request[AnyContent]) = {
+    implicit val user = for {
+      email <- req.session.get("email") toSuccess "not authenticated"
+      userOpt <- store.getUserByEmail(email) failMap { t => "store exception" }
+      user <- userOpt toSuccess "unknown user"
+    } yield user
+    user
   }
   
   // * Sockets

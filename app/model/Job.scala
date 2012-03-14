@@ -32,6 +32,10 @@ case class Job(
     runCreator.byJobId(id) getOrElse runCreator.runOf(this)
   }
   
+  def start()(implicit conf: VSConfiguration) = getRun().start()
+  
+  def stop()(implicit conf: VSConfiguration) = getRun().stop()
+  
   def getData()(implicit conf: VSConfiguration): Future[JobData] = getRun().jobData()
   
 }

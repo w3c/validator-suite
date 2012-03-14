@@ -30,7 +30,8 @@ object ApplicationBuild extends Build {
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
     testOptions in Test := Nil,
-    routesImport += "org.w3.vs.util.Binders._",
+    routesImport += "org.w3.vs.controllers._",
+    routesImport += "java.util.UUID",
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     resolvers += "repo.codahale.com" at "http://repo.codahale.com",

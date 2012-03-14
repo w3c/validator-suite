@@ -13,7 +13,7 @@
 	<nav id="nav">
 		<ul>
 			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-			<li><a href="@routes.Dashboard.newJob">Add new job</a></li>
+			<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
 		</ul>
 	</nav>
 	
@@ -49,7 +49,7 @@
 					  }
 					}</li>
 					<li><button type="submit" name="action" value="runnow" class="nunnow">Run now</button></li>
-					<li><button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(job.id)">Edit</button></li>
+					<li><button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(Some(job.id))">Edit</button></li>
 					<li><button type="submit" name="action" value="delete" class="delete">Delete</button></li>
 				</ul>
 				</form>

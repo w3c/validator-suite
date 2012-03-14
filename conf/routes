@@ -7,12 +7,13 @@ GET     /                           controllers.Demo.index()
 GET     /dashboard                  controllers.Dashboard.dashboard()
 
 # Jobs
-GET     /job                        controllers.Dashboard.newJob()
-POST    /job                        controllers.Dashboard.createJob()
-# delete, run, stop or update are all POSTed actions, handled by jobDispatcher
-POST    /job/:id                    controllers.Dashboard.jobDispatcher(id: java.util.UUID)
-GET     /job/:id                    controllers.Report.showReport(id: java.util.UUID)
-GET     /job/:id/edit               controllers.Dashboard.editJob(id: java.util.UUID)
+GET     /job                        controllers.Dashboard.editJob(id: Option[UUID] = None)
+GET     /job/:id/edit               controllers.Dashboard.editJob(id: Option[UUID])
+
+POST    /job                        controllers.Dashboard.createOrUpdateJob(id: Option[UUID] = None)
+# delete, run, stop or put are all POSTed actions, handled by jobDispatcher
+POST    /job/:id                    controllers.Dashboard.jobDispatcher(id: UUID)
+GET     /job/:id                    controllers.Report.showReport(id: UUID)
 GET     /jobs                       controllers.Dashboard.dashboardSocket()
 
 # Authentication
