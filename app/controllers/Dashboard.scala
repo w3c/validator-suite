@@ -134,13 +134,6 @@ object Dashboard extends Controller {
     }
   }
   
-  // def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
-  //   if (user.owns(id)) {
-  //     job.getRun().runNow()
-  //     if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
-  //   } else
-  //     if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
-
   def ownsJob(user: User)(implicit id: Job#Id) = {
     for {
       jobOpt <- store.getJobById(id) failMap { t => "store exception" }
