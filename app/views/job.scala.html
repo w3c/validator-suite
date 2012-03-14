@@ -27,7 +27,7 @@
 		@results.map{result => @{
 			result match {
 				case Assertions(_, _, _, _, _, assertions) =>
-					{play.api.templates.HtmlFormat.raw(assertions.map(_.description).head)}
+					{play.api.templates.HtmlFormat.raw(assertions.flatMap(_.description).headOption getOrElse "")}
 				case _ => {"failed"}
 			}
 		}}

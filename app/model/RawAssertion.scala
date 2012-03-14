@@ -7,7 +7,7 @@ package org.w3.vs.model
  *  @param lang XML lang code
  *  @param contexts a sequence of [[org.w3.vs.validator.Context]]s
  */
-case class RawAssertion(severity: String, id: String, lang: String, contexts: Seq[Context], description: String) {
+case class RawAssertion(severity: String, id: String, lang: String, contexts: Seq[Context], description: Option[String]) {
   def isError = severity == "error"
   def isWarning = severity == "warning"
   def isInfo = severity == "info"

@@ -21,7 +21,7 @@ object DummyAssertor extends FromURLAssertor {
         id="dummy",
         lang="en",
         contexts=Seq(Context("Dummy context", url.toString, None, None)),
-        description = "Dummy message")
+        description = Some("Dummy message"))
     Success(Seq(event))
   }
   

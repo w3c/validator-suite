@@ -7,14 +7,14 @@ object HTMLValidatorTest extends Specification with AssertionResultMatcher {
 
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
-    val assertion = HTMLValidator.assert(url) getOrElse sys.error("was not a Success")
+    val assertion = HTMLValidator.assert(url).fold( t => throw t, a => a)
     assertion must (haveErrorz)
   }
 
-  "there should be no HTML error in http://www.w3.org/2011/08/validator-test/no-error.html" in {
-    val url = URL("http://www.w3.org/2011/08/validator-test/no-error.html")
-    val assertion = HTMLValidator.assert(url) getOrElse sys.error("was not a Success")
-    assertion must not (haveErrorz)
-  }
+  // "there should be no HTML error in http://www.w3.org/2011/08/validator-test/no-error.html" in {
+  //   val url = URL("http://www.w3.org/2011/08/validator-test/no-error.html")
+  //   val assertion = HTMLValidator.assert(url) getOrElse sys.error("was not a Success")
+  //   assertion must not (haveErrorz)
+  // }
 
 }
