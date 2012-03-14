@@ -1,14 +1,10 @@
 package org.w3.vs.run
 
-/**
- * The phase of an run.
- */
+sealed trait FSMState
+case object On extends FSMState
+case object Off extends FSMState
+
 sealed trait RunState
-
-sealed trait RunStatus
-
-case object NotYetStarted extends RunState with RunStatus
-case object Stopped extends RunState with RunStatus
-case object Started extends RunState
-case object Running extends RunStatus
-case object Idle extends RunStatus
+case object Busy extends RunState
+case object Waiting extends RunState
+case object Stopped extends RunState

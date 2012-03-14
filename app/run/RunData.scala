@@ -64,7 +64,9 @@ case class RunData(
 
   final def numberOfKnownUrls: Int = distance.size
 
-  assert(distance.keySet == fetched ++ pending ++ toBeExplored, RunData.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
+  assert(
+    distance.keySet == fetched ++ pending ++ toBeExplored,
+    RunData.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
   assert(toBeExplored.toSet.intersect(pending) == Set.empty)
   assert(pending.intersect(fetched) == Set.empty)
   assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
@@ -76,15 +78,14 @@ case class RunData(
    */
   final def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
 
-  final def isIdle = noMoreUrlToExplore && (sentAssertorResults == receivedAssertorResults)
+  final def isWaiting = noMoreUrlToExplore && (sentAssertorResults == receivedAssertorResults)
 
-  final def isRunning = !isIdle
+  final def isBusy = !isWaiting
 
-  final def status(stateName: RunState): RunStatus = stateName match {
-    case NotYetStarted ⇒ NotYetStarted
-    case Stopped ⇒ Stopped
-    case Started if this.isRunning ⇒ Running
-    case Started ⇒ Idle
+  final def status(fsmState: FSMState): RunState = fsmState match {
+    case _ if this.isBusy ⇒ Busy
+    case On               ⇒ Waiting
+    case Off              ⇒ Stopped
   }
 
   /**

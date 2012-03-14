@@ -5,7 +5,7 @@ import org.joda.time.DateTime
 import org.w3.vs.run._
 
 case class JobData(
-    status: RunStatus,
+    state: RunState,
     resources: Int,
     oks: Int,
     errors: Int,
@@ -14,12 +14,11 @@ case class JobData(
 
 object JobData {
   
-  val Default = 
-    new JobData(
-      status = NotYetStarted,
-      resources = 0,
-      oks = 0,
-      errors = 0,
-      warnings = 0)
+  val Default = JobData(
+    state = null,
+    resources = 0,
+    oks = 0,
+    errors = 0,
+    warnings = 0)
   
 }

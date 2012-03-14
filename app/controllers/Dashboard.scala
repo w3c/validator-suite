@@ -103,7 +103,7 @@ object Dashboard extends Controller {
       user <- isAuth failMap {e => InternalServerError(e)}
       job <- ownsJob failMap {e => InternalServerError(e)}
     } yield {
-      job.start()
+      job.runNow()
       if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
     }).fold(f=>f,s=>s)
   }
@@ -134,6 +134,13 @@ object Dashboard extends Controller {
     }
   }
   
+  // def runJob(id: Job#Id) = (IfAuth, IfJob(id), IsAjax) {_ => implicit user => job => isAjax =>
+  //   if (user.owns(id)) {
+  //     job.getRun().runNow()
+  //     if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
+  //   } else
+  //     if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
+
   def ownsJob(implicit id: Job#Id, req: Request[AnyContent]) = {
     for {
       user <- isAuth(req)
