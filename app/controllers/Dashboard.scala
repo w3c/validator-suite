@@ -37,7 +37,7 @@ object Dashboard extends Controller {
         user <- isAuth failMap {e => Promise.pure(InternalServerError)}
         jobs <- store.listJobs(user.organization) failMap {e => Promise.pure(InternalServerError)}
         // That's not right, no scalaz in akka 2?
-        //jobDatas <- Await.result(Future.sequence(jobs map (_.getData)), Duration(1, SECONDS)) // orTimeout("timeout", 1, SECONDS)
+        //jobDatas <- Await.result(Future.sequence(jobs map (_.getData)).onFailure[Promise[Result]]{case _ => Promise.pure(InternalServerError)}, Duration(1, SECONDS)) //.fold{t=>t} // orTimeout("timeout", 1, SECONDS)
       } yield {
         val jobDatas = jobs map ( _.getData )
         val foo = Future.sequence(jobDatas).asPromise orTimeout("timeout", 1, SECONDS)
@@ -66,20 +66,20 @@ object Dashboard extends Controller {
     }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
   }
   
-  def createOrUpdateJob(idOpt: Option[Job#Id] = None) = Action { implicit req =>
+  def createOrUpdateJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req =>
     (for {
       user <- isAuth failMap {e => InternalServerError(e)}
       id <- idOpt toSuccess {
           jobForm(user).bindFromRequest.fold[Result] (
-            formWithErrors => BadRequest(views.html.jobForm(formWithErrors)(user)),
+            formWithErrors => BadRequest(views.html.jobForm(formWithErrors)(user, idOpt)),
             job => {
               store.putJob(job.copy(creator = user.id, organization = user.organization))
               if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
           })}
-      job <- ownsJob(id,req) failMap {e => InternalServerError(e)}
+      job <- ownsJob(user)(id) failMap {e => InternalServerError(e)}
     } yield {
       jobForm(user).bindFromRequest.fold[Result] (
-        formWithErrors => Ok(views.html.jobForm(formWithErrors, Some(job))(user)),
+        formWithErrors => Ok(views.html.jobForm(formWithErrors)(user, idOpt)),
         newJob => {
           store.putJob(job.copy(strategy = newJob.strategy, name = newJob.name))
           if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
@@ -91,7 +91,7 @@ object Dashboard extends Controller {
   def deleteJob(implicit id: Job#Id) = Action { implicit req =>
     (for {
       user <- isAuth failMap {e => InternalServerError(e)}
-      job <- ownsJob failMap {e => InternalServerError(e)}
+      job <- ownsJob(user) failMap {e => InternalServerError(e)}
     } yield {
       store.removeJob(id)
       if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
@@ -101,7 +101,7 @@ object Dashboard extends Controller {
   def runJob(implicit id: Job#Id) = Action { implicit req =>
     (for {
       user <- isAuth failMap {e => InternalServerError(e)}
-      job <- ownsJob failMap {e => InternalServerError(e)}
+      job <- ownsJob(user) failMap {e => InternalServerError(e)}
     } yield {
       job.runNow()
       if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
@@ -111,19 +111,19 @@ object Dashboard extends Controller {
   def stopJob(implicit id: Job#Id) = Action { implicit req =>
     (for {
       user <- isAuth failMap {e => InternalServerError(e)}
-      job <- ownsJob failMap {e => InternalServerError(e)}
+      job <- ownsJob(user) failMap {e => InternalServerError(e)}
     } yield {
       job.stop()
       if (isAjax) Ok else Redirect(routes.Dashboard.dashboard)
     }).fold(f=>f,s=>s)
   }
   
-  def editJob(idOpt: Option[Job#Id] = None) = Action { implicit req =>
+  def editJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req =>
     (for {
       user <- isAuth failMap {e => InternalServerError(e)}
-      id <- idOpt toSuccess Ok(views.html.jobForm(jobForm(user))(user))
-      job <- ownsJob(id,req) failMap {e => InternalServerError(e)}
-    } yield Ok(views.html.jobForm(jobForm(user).fill(job), Some(job))(user))).fold(f=>f,s=>s)
+      id <- idOpt toSuccess Ok(views.html.jobForm(jobForm(user))(user, idOpt))
+      job <- ownsJob(user)(id) failMap {e => InternalServerError(e)}
+    } yield Ok(views.html.jobForm(jobForm(user).fill(job))(user, idOpt))).fold(f=>f,s=>s)
   }
   
   // Move in a trait next 3
@@ -141,21 +141,20 @@ object Dashboard extends Controller {
   //   } else
   //     if (isAjax) InternalServerError else Redirect(routes.Dashboard.dashboard)// TODO error
 
-  def ownsJob(implicit id: Job#Id, req: Request[AnyContent]) = {
+  def ownsJob(user: User)(implicit id: Job#Id) = {
     for {
-      user <- isAuth(req)
       jobOpt <- store.getJobById(id) failMap { t => "store exception" }
       job <- jobOpt toSuccess { "unknown jobid" }
+      owns <- (if (job.organization == user.organization) Some(true) else None) toSuccess { "unauthorized" }
     } yield job
   }
   
   def isAuth(implicit req: Request[AnyContent]) = {
-    implicit val user = for {
+    for {
       email <- req.session.get("email") toSuccess "not authenticated"
       userOpt <- store.getUserByEmail(email) failMap { t => "store exception" }
       user <- userOpt toSuccess "unknown user"
     } yield user
-    user
   }
   
   // * Sockets

@@ -1,4 +1,4 @@
-@(form: Form[org.w3.vs.model.Job], job: Option[org.w3.vs.model.Job] = None)(implicit user: org.w3.vs.model.User)
+@(form: Form[org.w3.vs.model.Job])(implicit user: org.w3.vs.model.User, idOpt: Option[java.util.UUID])
 
 @libs.main("Validator Suite", stylesheets = List("dashboard.css")) {
 	
@@ -30,8 +30,8 @@
 		<input id="distance" name="distance" type="range" value="@form("distance").value.getOrElse(10)" max=20 onchange="showValue(this.value)"/><span id="dist">@form("distance").value.getOrElse(10)</span><br>
 		<label for="linkCheck">Check external links: </label>
 		<input type=checkbox id=linkCheck name=linkCheck @if(form("linkCheck").value == Some("on")) {checked}/><br>
-		@if(job.isDefined) {
-		<input type=submit name=action value=Update formaction="@routes.Dashboard.jobDispatcher(job.get.id)">
+		@if(idOpt.isDefined) {
+		<input type=submit name=action value=Update formaction="@routes.Dashboard.jobDispatcher(idOpt.get)">
 		} else {
 		<input type=submit name=action value=Create formaction="@routes.Dashboard.createOrUpdateJob">
 		}
