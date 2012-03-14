@@ -19,13 +19,17 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
   
   val logger = play.Logger.of(classOf[Run])
   
-  def start(): Unit = actorRef ! message.Start
+  def run(): Unit = actorRef ! message.Run
   
+  def stop(): Unit = actorRef ! message.Stop
+
+  def runNow(): Unit = actorRef ! message.RunNow
+
   def jobData(): Future[JobData] =
     (actorRef ? message.GetJobData).mapTo[JobData]
   
-  def status(): Future[RunStatus] =
-    (actorRef ? message.GetStatus).mapTo[RunStatus]
+  def status(): Future[RunState] =
+    (actorRef ? message.GetStatus).mapTo[RunState]
   
   def subscribeToUpdates()(implicit conf: VSConfiguration): Enumerator[message.RunUpdate] = {
     import conf.system

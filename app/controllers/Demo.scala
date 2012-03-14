@@ -72,7 +72,7 @@ object Demo extends Controller {
     logger.debug("job: "+job)
     
     val run = configuration.runCreator.runOf(job)
-    run.start()
+    run.runNow()
     
     val jobIdString: String = job.id.toString
     

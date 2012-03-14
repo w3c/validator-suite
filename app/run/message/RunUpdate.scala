@@ -23,7 +23,7 @@ case class UpdateData(data: JobData, jobId: Job#Id) extends RunUpdate {
     JsArray(List(
       JsString("JobStatus"),
       JsString(jobId.toString),
-      JsString(data.status.toString),
+      JsString(data.state.toString),
       JsNumber(data.resources),
       JsNumber(data.oks),
       JsNumber(data.errors),

@@ -8,7 +8,7 @@ import akka.pattern.AskTimeoutException
 import akka.util.duration._
 
 case class JobData(
-    status: RunStatus,
+    state: RunState,
     resources: Int,
     oks: Int,
     errors: Int,

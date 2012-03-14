@@ -10,6 +10,7 @@ case class RunSnapshot(
     distance: Map[URL, Int],
     toBeExplored: List[URL],
     fetched: Set[URL],
+    fsmState: FSMState,
     oks: Int,
     errors: Int,
     warnings: Int,
