@@ -4,7 +4,7 @@
 	
 	@libs.header(None)
 	
-	@helper.form(routes.Application.authenticate) {
+	@helper.form(routes.Dashboard.authenticate) {
 	
 		@form.globalError.map { error =>
 			<p class="error">@error.message</p>

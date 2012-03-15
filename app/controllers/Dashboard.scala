@@ -60,11 +60,12 @@ object Dashboard extends Controller {
       param ← body.get("action")
       action ← param.headOption
     } yield action.toLowerCase match {
-      case "delete" ⇒ deleteJob(id)(request)
-      case "update" ⇒ createOrUpdateJob(Some(id))(request)
-      case "run"    ⇒ runJob(id)(request)
-      case "runnow" ⇒ runJob(id)(request)
-      case "stop"   ⇒ stopJob(id)(request)
+      case "delete"  ⇒ deleteJob(id)(request)
+      case "update"  ⇒ createOrUpdateJob(Some(id))(request)
+      case "on"      ⇒ onJob(id)(request)
+      case "off"     ⇒ offJob(id)(request)
+      case "stop"    ⇒ stopJob(id)(request)
+      case "refresh" ⇒ refreshJob(id)(request)
     }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
   }
   
@@ -91,29 +92,64 @@ object Dashboard extends Controller {
       job ← ownsJob(user) failMap failwithGrace
       _ ← store.removeJob(id) failMap {t ⇒ failwithGrace(StoreException(t))}
     } yield {
-      seeDashboard(Ok, ("info", "Job deleted"))
+      seeDashboard(Ok, ("info" -> "Job deleted"))
     }).fold(f ⇒ f, s ⇒ s)
   }
   
   def createOrUpdateJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req ⇒
     (for {
       user ← isAuth failMap failwithGrace
-      newJob ← isValidForm failMap {formWithErrors ⇒ BadRequest(views.html.jobForm(formWithErrors))}
+      newJob ← isValidForm(jobForm) failMap {formWithErrors ⇒ BadRequest(views.html.jobForm(formWithErrors))}
       id ← idOpt toSuccess {
         store putJob(newJob.assignTo(user)) fold (
           t ⇒ failwithGrace(StoreException(t)),
-          _ => seeDashboard(Created, ("info", "Job created"))
+          _ => seeDashboard(Created, ("info" -> "Job created"))
       )}
       job ← ownsJob(user)(id) failMap failwithGrace
       _ ← store putJob(job.copy(strategy = newJob.strategy, name = newJob.name)) failMap {t ⇒ failwithGrace(StoreException(t))}
-    } yield seeDashboard(Ok, ("info", "Job updated"))).fold(f ⇒ f, s ⇒ s)
+    } yield seeDashboard(Ok, ("info" -> "Job updated"))).fold(f ⇒ f, s ⇒ s)
   }
 
-  def runJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.run())("run started")
+  /**
+   * Login page.
+   */
+  def login = Action { implicit req ⇒
+    isAuth.fold(
+      ex => ex match {
+        case s: StoreException => failwithGrace(s)
+        case _ => Ok(views.html.login(loginForm)) // Other exceptions are just silent
+      },
+      user => Redirect(routes.Dashboard.dashboard) // If the user is already logged in send him to the dashboard (have to be careful of infinite redirect loops here)
+    )
+  }
+  
+  /**
+   * Logout and clean the session.
+   */
+  def logout = Action {
+    Redirect(routes.Dashboard.login).withNewSession.flashing(
+      "success" -> "You've been logged out"
+    )
+  }
 
-  def runJobNow(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.runNow())("run started")
+  /**
+   * Handle login form submission.
+   */
+  def authenticate = Action { implicit request =>
+    (for {
+      userF ← isValidForm(loginForm) failMap {formWithErrors ⇒ BadRequest(views.html.login(formWithErrors))}
+      userOpt <- store.authenticate(userF._1, userF._2) failMap {t ⇒ failwithGrace(StoreException(t))}
+      user <- userOpt toSuccess failwithGrace(UnknownUser)
+    } yield Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)).fold(f ⇒ f, s ⇒ s)
+  }
+  
+  def onJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.on())("run on")
 
-  def stopJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.stop())("run stoped")
+  def offJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.off())("run off")
+
+  def refreshJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.refresh())("run refresh")
+  
+  def stopJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.stop())("run stop")
 
   private def simpleJobAction(action: User ⇒ Job ⇒ Any)(msg: String)(implicit id: Job#Id) = Action { implicit req ⇒
     (for {
@@ -133,23 +169,23 @@ object Dashboard extends Controller {
     e match {
       case UnknownJob => {
         if (isAjax) NotFound
-        else SeeOther(routes.Dashboard.dashboard.toString).flashing(("error", "Unknown Job"))
+        else SeeOther(routes.Dashboard.dashboard.toString).flashing(("error" -> "Unknown Job"))
       }
       case c @ (UnknownUser | Unauthenticated) => {
         if (isAjax) Unauthorized
-        else Unauthorized(views.html.login(Application.loginForm)).withNewSession
+        else Unauthorized(views.html.login(loginForm)).withNewSession
       }
       case UnauthorizedJob => {
         if (isAjax) Forbidden
-        else Forbidden(views.html.error(List(("error", "Forbidden"))))
+        else Forbidden(views.html.error(List(("error" -> "Forbidden"))))
       }
       case StoreException(t) => {
         if (isAjax) InternalServerError
-        else InternalServerError(views.html.error(List(("error", "Store Exception"))))
+        else InternalServerError(views.html.error(List(("error" -> "Store Exception"))))
       }
       case Timeout(t) => {
         if (isAjax) InternalServerError
-        else InternalServerError(views.html.error(List(("error", "Timeout Exception"))))
+        else InternalServerError(views.html.error(List(("error" -> "Timeout Exception"))))
       }
     }
   }
@@ -179,33 +215,45 @@ object Dashboard extends Controller {
       user ← userOpt toSuccess UnknownUser
     } yield user
   }
+  
+  private implicit def isAuthS(implicit req: RequestHeader): Validation[SuiteException, User] = {
+    for {
+      email ← req.session get("email") toSuccess Unauthenticated
+      userOpt ← store getUserByEmail(email) failMap {StoreException(_)}
+      user ← userOpt toSuccess UnknownUser
+    } yield user
+  }
 
-  private def isValidForm(implicit req: Request[AnyContent]) = {
-    jobForm.bindFromRequest.toValidation
+  private def isValidForm[E](form: Form[E])(implicit req: Request[AnyContent]) = {
+    form.bindFromRequest.toValidation
   }
 
   // * Sockets
-  def dashboardSocket() = IfAuthSocket { req ⇒ user ⇒
-      val in = Iteratee.ignore[JsValue]
-      val jobs = store listJobs(user.organization) fold(t ⇒ throw t, jobs ⇒ jobs)
-      // The seed for the future scan, ie the initial jobData of a run
-      def seed = new UpdateData(null, null)
-      // Mapping through a list of (jobId, enum)
-      var out = jobs.map(job ⇒ job.getRun().subscribeToUpdates).map { enum ⇒
+  def dashboardSocket() = WebSocket.using[JsValue] { implicit req ⇒ 
+    isAuthS.fold(
+      f => (Iteratee.ignore[JsValue], Enumerator.eof),
+      user => {
+        val in = Iteratee.ignore[JsValue]
+        val jobs = store listJobs(user.organization) fold(t ⇒ throw t, jobs ⇒ jobs)
+        // The seed for the future scan, ie the initial jobData of a run
+        def seed = new UpdateData(null, null)
+        // Mapping through a list of (jobId, enum)
+        var out = jobs.map(job ⇒ job.getRun().subscribeToUpdates).map { enum ⇒
         // Filter the enumerator, taking only the UpdateData messages
-        enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData ⇒ e } &>
-          // Transform to a tuple (updateData, sameAsPrevious)
-          Enumeratee.scanLeft[UpdateData]((seed, false)) { (from: (UpdateData, Boolean), to: UpdateData) ⇒
-            from match {
-              case (prev, _) if (to != prev) ⇒ (to, false)
-              case _ ⇒ (to, true)
+          enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData ⇒ e } &>
+            // Transform to a tuple (updateData, sameAsPrevious)
+            Enumeratee.scanLeft[UpdateData]((seed, false)) { (from: (UpdateData, Boolean), to: UpdateData) ⇒
+              from match {
+                case (prev, _) if (to != prev) ⇒ (to, false)
+                case _ ⇒ (to, true)
+              }
             }
-          }
         // Interleave the resulting enumerators
-      }.reduce((e1, e2) ⇒ e1 >- e2) &>
+        }.reduce((e1, e2) ⇒ e1 >- e2) &>
         // And collect messages that are marked as changed
-        Enumeratee.collect { case (a, false) ⇒ a.toJS }
-      (in, out)
+          Enumeratee.collect { case (a, false) ⇒ a.toJS }
+        (in, out)
+    })
   }
   // jobSocket
   // uriSocket

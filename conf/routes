@@ -3,7 +3,7 @@
 # ~~~~
 
 # Indexes
-GET     /                           controllers.Demo.index()
+#GET     /                           controllers.Demo.index()
 GET     /dashboard                  controllers.Dashboard.dashboard()
 
 # Jobs
@@ -17,15 +17,15 @@ GET     /job/:id                    controllers.Dashboard.showReport(id: UUID)
 GET     /jobs                       controllers.Dashboard.dashboardSocket()
 
 # Authentication
-GET     /login                      controllers.Application.login
-POST    /login                      controllers.Application.authenticate
-GET     /logout                     controllers.Application.logout
+GET     /login                      controllers.Dashboard.login
+POST    /login                      controllers.Dashboard.authenticate
+GET     /logout                     controllers.Dashboard.logout
 
 # Observations
-POST    /observation                controllers.Demo.validate()
-GET     /observation/:id            controllers.Demo.redirect(id: String)
-GET     /observation/:id/ws         controllers.Demo.subscribe(id: String)
-GET     /observation/:id/stop       controllers.Demo.stop(id: String)
+#POST    /observation                controllers.Demo.validate()
+#GET     /observation/:id            controllers.Demo.redirect(id: String)
+#GET     /observation/:id/ws         controllers.Demo.subscribe(id: String)
+#GET     /observation/:id/stop       controllers.Demo.stop(id: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

@@ -18,12 +18,12 @@ case class User(
   type Id = UUID
   
   // TODO we shoudnl't swallow the Failure here, that's bad
-  def owns(jobId: Job#Id)(implicit configuration: VSConfiguration): Boolean = {
-    import configuration.store
-    store.getJobById(jobId) match {
-      case Success(Some(_)) => true
-      case _ => false
-    }
-  }
+//  def owns(jobId: Job#Id)(implicit configuration: VSConfiguration): Boolean = {
+//    import configuration.store
+//    store.getJobById(jobId) match {
+//      case Success(Some(_)) => true
+//      case _ => false
+//    }
+//  }
   
 }

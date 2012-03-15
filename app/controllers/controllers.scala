@@ -36,10 +36,16 @@ package object controllers {
   implicit def action: ((ActionReq => Result) => Action[AnyContent]) = Action.apply _
   implicit def socket: ((RequestHeader => SocketRes) => WebSocket[JsValue]) = WebSocket.using[JsValue] _
   
-  
   implicit def ec = configuration.webExecutionContext
   
   def CloseWebsocket: SocketRes = (Iteratee.ignore[JsValue], Enumerator.eof)
+  
+  val loginForm = Form(
+    tuple(
+      "email" -> email,
+      "password" -> text
+    )
+  )
   
   def jobForm = Form(
     mapping (

@@ -19,10 +19,13 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
   
   val logger = play.Logger.of(classOf[Run])
   
-  def run(): Unit = actorRef ! message.Run
-  
+  // TODO
+  def on(): Unit = actorRef ! message.Run
+  def off(): Unit = actorRef ! message.Run
   def stop(): Unit = actorRef ! message.Stop
-
+  def refresh(): Unit = actorRef ! message.RunNow
+  
+  // kept here for the tests
   def runNow(): Unit = actorRef ! message.RunNow
 
   def jobData(): Future[JobData] =
