@@ -19,8 +19,8 @@ case class Job(
   id: Job#Id = UUID.randomUUID,
   strategy: EntryPointStrategy,
   createdAt: DateTime = new DateTime,
-  creator: User#Id,
-  organization: Organization#Id,
+  creator: User#Id = null,
+  organization: Organization#Id = null,
   name: String) {
   
   type Id = UUID
@@ -40,4 +40,7 @@ case class Job(
   
   def getData()(implicit conf: VSConfiguration): Future[JobData] = getRun().jobData()
   
+  def assignTo(user: User): Job = {
+    copy(creator = user.id, organization = user.organization)
+  }
 }

@@ -1,4 +1,4 @@
-@(job: Option[org.w3.vs.model.Job] = None, results: Iterable[org.w3.vs.model.AssertorResult])(implicit user: org.w3.vs.model.User)
+@(job: Option[org.w3.vs.model.Job] = None, results: Option[Iterable[org.w3.vs.model.AssertorResult]] = None)(errors: List[(String, String)] = List())(implicit userOpt: Option[org.w3.vs.model.User], flash: Flash)
 
 @import org.w3.vs.model._
 
@@ -7,7 +7,7 @@
 	scripts = List("dashboard.js", "report.js"),
 	exec = """$(function(){window.Report = new ReportView();});""") {
 	
-	@libs.header(Some(user))
+	@libs.header(userOpt)
 	
 	<nav id="nav">
 		<ul>
@@ -19,18 +19,26 @@
 	<section id="main"><div>
 		@libs.navigation()
 		
+		@flash.data.map { case (key, message) =>
+			<div class="@key vsmessage">@message</div>
+		}
+		
+		@errors.map { case (key, message) =>
+			<div class="@key vsmessage">@message</div>
+		}
+		
 		<section id="report"><div>
-		@job.get.id
+		
 		
 		<br>
 		
-		@results.map{result => @{
+		@*@results.map{result => @{
 			result match {
 				case Assertions(_, _, _, _, _, assertions) =>
 					{play.api.templates.HtmlFormat.raw(assertions.flatMap(_.description).headOption getOrElse "")}
 				case _ => {"failed"}
 			}
-		}}
+		}}*@
 		
 		</div></section>
 		

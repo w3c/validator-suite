@@ -1,8 +1,8 @@
-@(form: Form[org.w3.vs.model.Job])(implicit user: org.w3.vs.model.User, idOpt: Option[java.util.UUID])
+@(form: Form[org.w3.vs.model.Job])(implicit userOpt: Option[org.w3.vs.model.User], idOpt: Option[java.util.UUID])
 
 @libs.main("Validator Suite", stylesheets = List("dashboard.css")) {
 	
-	@libs.header(Some(user))
+	@libs.header(userOpt)
 	
 	<nav id="nav">
 		<ul>

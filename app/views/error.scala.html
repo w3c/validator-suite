@@ -1,0 +1,30 @@
+@(errors: List[(String, String)] = List())(implicit userOpt: Option[org.w3.vs.model.User])
+
+@import org.w3.vs.model._
+
+@libs.main("Validator Suite", 
+	stylesheets = List("dashboard.css"), 
+	scripts = List("dashboard.js", "report.js"),
+	exec = """$(function(){window.Report = new ReportView();});""") {
+	
+	@libs.header(userOpt)
+	
+	<nav id="nav">
+		<ul>
+			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
+			<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
+		</ul>
+	</nav>
+	
+	<section id="main"><div>
+		@libs.navigation()
+		
+		@errors.map { case (key, message) =>
+			<div class="@key vsmessage">@message</div>
+		}
+		
+	</div></section>
+	
+	@libs.footer()
+	
+}

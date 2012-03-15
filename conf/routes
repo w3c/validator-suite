@@ -13,7 +13,7 @@ GET     /job/:id/edit               controllers.Dashboard.editJob(id: Option[UUI
 POST    /job                        controllers.Dashboard.createOrUpdateJob(id: Option[UUID] = None)
 # delete, run, stop or put are all POSTed actions, handled by jobDispatcher
 POST    /job/:id                    controllers.Dashboard.jobDispatcher(id: UUID)
-GET     /job/:id                    controllers.Report.showReport(id: UUID)
+GET     /job/:id                    controllers.Dashboard.showReport(id: UUID)
 GET     /jobs                       controllers.Dashboard.dashboardSocket()
 
 # Authentication

@@ -1,4 +1,4 @@
-@(jobs: Iterable[(org.w3.vs.model.Job, org.w3.vs.model.JobData)] = None)(implicit user: org.w3.vs.model.User)
+@(jobs: Iterable[(org.w3.vs.model.Job, org.w3.vs.model.JobData)] = None)()(implicit flash: Flash, userOpt: Option[org.w3.vs.model.User])
 
 @import views.Helper._
 @import org.w3.vs.run._
@@ -8,7 +8,7 @@
 	scripts = List("dashboard.js"),
 	exec = """$(function(){window.Dashboard = new DashboardView();});""") {
 	
-	@libs.header(Some(user))
+	@libs.header(userOpt)
 	
 	<nav id="nav">
 		<ul>
@@ -20,6 +20,10 @@
 	<section id="main">
 	<div>
 		@libs.navigation()
+		
+		@flash.data.map { case (key, message) =>
+			<div class="@key vsmessage">@message</div>
+		}
 		
 		<section id="jobs">
 		<div>

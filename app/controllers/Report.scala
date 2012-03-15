@@ -21,11 +21,6 @@ object Report extends Controller {
   
   implicit def ec = configuration.webExecutionContext
   
-  def showReport(id: Job#Id) = (IfAuth, IfJob(id)) {_ => implicit user => job =>
-    var ar = store.listAssertorResults(job.id).fold(t => throw t, s => s)
-    Ok(views.html.job(Some(job), ar))
-  }
-  
   def subscribe(id: Job#Id): WebSocket[JsValue] = IfAuthSocket { request => user =>
     configuration.runCreator.byJobId(id).map { run: Run =>
       val in = Iteratee.foreach[JsValue](e => println(e))

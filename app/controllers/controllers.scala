@@ -41,7 +41,7 @@ package object controllers {
   
   def CloseWebsocket: SocketRes = (Iteratee.ignore[JsValue], Enumerator.eof)
   
-  def jobForm(user: User) = Form(
+  def jobForm = Form(
     mapping (
       "name" -> text,
       "url" -> of[URL],
@@ -50,8 +50,8 @@ package object controllers {
     )((name, url, distance, linkCheck) => {
       Job(
         name = name,
-        organization = user.organization,
-        creator = user.id,
+        organization = null,
+        creator = null,
         strategy = new EntryPointStrategy(
           name="irrelevantForV1",
           entrypoint=url,
