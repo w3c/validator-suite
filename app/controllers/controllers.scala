@@ -29,18 +29,14 @@ import scalaz.Failure
 
 package object controllers {
   
-  // Will go away
-  type ActionReq = Request[AnyContent]
-  type AsyncActionRes = Promise[Result]
-  type SocketRes = (Iteratee[JsValue,_], Enumerator[JsValue])
-  implicit def action: ((ActionReq => Result) => Action[AnyContent]) = Action.apply _
-  implicit def socket: ((RequestHeader => SocketRes) => WebSocket[JsValue]) = WebSocket.using[JsValue] _
-  
   implicit def ec = configuration.webExecutionContext
   
-  def CloseWebsocket: SocketRes = (Iteratee.ignore[JsValue], Enumerator.eof)
+  def CloseWebsocket = (Iteratee.ignore[JsValue], Enumerator.eof)
   
-  val loginForm = Form(
+  /*
+   *  Forms
+   */
+  def loginForm = Form(
     tuple(
       "email" -> email,
       "password" -> text
