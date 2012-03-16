@@ -32,6 +32,8 @@ object Dashboard extends Controller {
   
   // Future  -->  Validation
 
+  def index = Action { _ ⇒ Redirect(routes.Dashboard.dashboard) }
+  
   def dashboard = Action { implicit req ⇒
     AsyncResult {
       (for {
@@ -120,7 +122,7 @@ object Dashboard extends Controller {
     (for {
       userF ← isValidForm(loginForm) failMap {formWithErrors ⇒ BadRequest(views.html.login(formWithErrors))}
       userO ← store.authenticate(userF._1, userF._2) failMap {t ⇒ failWithGrace(StoreException(t))}
-       user ← userO toSuccess failWithGrace(UnknownUser)
+       user ← userO toSuccess Unauthorized(views.html.login(loginForm)).withNewSession //failWithGrace(UnknownUser)
     } yield Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)).fold(f ⇒ f, s ⇒ s)
   }
   
@@ -143,7 +145,7 @@ object Dashboard extends Controller {
   }
   
   private def seeDashboard(status: Status, message: (String, String))(implicit req: Request[_]): Result = {
-    if (isAjax) status else Results.SeeOther(routes.Dashboard.dashboard.toString)
+    if (isAjax) status else SeeOther(routes.Dashboard.dashboard.toString)
   }
   
   private def failWithGrace[E >: SuiteException](e: E)(implicit req: Request[_]): Result = {
@@ -188,7 +190,7 @@ object Dashboard extends Controller {
     } yield j
   }
   
-  private implicit def userOpt(implicit req: Request[_]): Option[User] = isAuth.toOption
+  private implicit def userOpt(implicit v: Validation[SuiteException, User]): Option[User] = v.toOption
   
   private implicit def isAuth(implicit session: Session): Validation[SuiteException, User] = {
     for {

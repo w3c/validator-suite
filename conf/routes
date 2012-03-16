@@ -3,7 +3,7 @@
 # ~~~~
 
 # Indexes
-#GET     /                           controllers.Demo.index()
+GET     /                           controllers.Dashboard.index()
 GET     /dashboard                  controllers.Dashboard.dashboard()
 
 # Jobs
