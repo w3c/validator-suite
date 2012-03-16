@@ -65,6 +65,7 @@ object Dashboard extends Controller {
       case     "off" ⇒ offJob(id)(req)
       case    "stop" ⇒ stopJob(id)(req)
       case "refresh" ⇒ refreshJob(id)(req)
+      case         _ => BadRequest("BadRequest: unknown action")
     }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
   }
   
