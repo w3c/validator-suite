@@ -1,6 +1,4 @@
-@(errors: List[(String, String)] = List())(implicit userOpt: Option[org.w3.vs.model.User])
-
-@import org.w3.vs.model._
+@(errors: List[(String, String)] = List())(implicit userOpt: Option[User])
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"), 

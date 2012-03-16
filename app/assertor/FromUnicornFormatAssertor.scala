@@ -23,6 +23,7 @@ trait FromUnicornFormatAssertor extends FromSourceAssertor {
         }
         val eventRef = message.attrs get "ref" getOrElse obversationRef
         val eventLang = message.attrs get "lang" getOrElse obversationLang
+        val title = (message \ "title" \ text).headOption.getOrElse("") // Title is mandatory
         val contexts =
           for {
             context <- message \ "context"
@@ -34,20 +35,18 @@ trait FromUnicornFormatAssertor extends FromSourceAssertor {
             Context(content, contextRef, line, column)
           }
         val descriptionOpt = (message \ "description").headOption map { description =>
-          description.children.map(FromUnicornFormatAssertor.removeScope).mkString("")
+          description.children.map(removeScope).mkString("")
         }
-        RawAssertion(typ, id, eventLang, contexts, descriptionOpt)
+        RawAssertion(typ, id, eventLang, contexts, title, descriptionOpt)
       }
     events
-  }  
-
-}
-
-object FromUnicornFormatAssertor {
-  def removeScope(node: Node): Node = {
+  }
+  
+  private def removeScope(node: Node): Node = {
     node match {
       case e: Elem => e.copy(scope = Map.empty, children = e.children.map(removeScope))
       case e => e
     }
   }
+
 }

@@ -82,13 +82,14 @@ window.JobData.fromJSON = function (data) {
 };
 
 var methodMap = {
-	   'run':'POST',
+	    'on':'POST',
+	   'off':'POST',
 	  'stop':'POST',
-	  'read':'GET',
+   'refresh':'POST',
 	'create':'POST',
+	  'read':'GET',
 	'update':'POST',
 	'delete':'POST',
-	'runnow':'POST'
 };
 
 window.Job = Backbone.Model.extend({
@@ -106,7 +107,7 @@ window.Job = Backbone.Model.extend({
 	
 	run: function(options) {this._serverEvent('run', options);},
 	
-	runnow: function(options) {this._serverEvent('runnow', options);},
+	runnow: function(options) {this._serverEvent('refresh', options);},
 	
 	stop: function(options) {this._serverEvent('stop', options);},
 	
@@ -177,7 +178,7 @@ window.Job.fromHTML = function(elem) {
 window.JobView = Backbone.View.extend({
 	
 	tagName : "article",
-	template: _.template($('#job-template').html()),
+	template: _.template($('#job-template').html()), // check presence first
 	
 	attributes: {
 		"class": "job",

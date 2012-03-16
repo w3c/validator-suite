@@ -1,6 +1,4 @@
-@(job: Option[org.w3.vs.model.Job] = None, results: Option[Iterable[org.w3.vs.model.AssertorResult]] = None)(errors: List[(String, String)] = List())(implicit userOpt: Option[org.w3.vs.model.User], flash: Flash)
-
-@import org.w3.vs.model._
+@(job: Option[Job] = None, assertions: Option[Iterable[AssertorResult]] = None)(errors: List[(String, String)] = List())(implicit userOpt: Option[User], flash: Flash)
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"), 
@@ -31,14 +29,31 @@
 		
 		
 		<br>
+		@if(assertions.isDefined) {
+		  @assertions.get.collect{case sertion: Assertions =>
 		
-		@*@results.map{result => @{
-			result match {
-				case Assertions(_, _, _, _, _, assertions) =>
-					{play.api.templates.HtmlFormat.raw(assertions.flatMap(_.description).headOption getOrElse "")}
-				case _ => {"failed"}
-			}
-		}}*@
+		<details>
+			<summary>
+				<a href="#">@sertion.url</a>
+				<ul>
+					<li>Errors: @sertion.numberOfErrors</li>
+					<li>Warnings: @sertion.numberOfWarnings</li>
+					<li>Timestamp: @sertion.timestamp</li>
+				</ul>
+			</summary>
+			<ul class="messages">
+			@defining(sertion.assertions) { raws =>
+			@raws.map { raw =>
+				<li class="@raw.severity" lang="@raw.lang">@raw.title</li>
+			}}
+			</ul>
+		</details>
+		
+		  }
+		}
+		
+
+		
 		
 		</div></section>
 		

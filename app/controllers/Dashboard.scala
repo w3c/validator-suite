@@ -146,7 +146,7 @@ object Dashboard extends Controller {
   }
   
   private def seeDashboard(status: Status, message: (String, String))(implicit req: Request[_]): Result = {
-    if (isAjax) status else SeeOther(routes.Dashboard.dashboard.toString)
+    if (isAjax) status else SeeOther(routes.Dashboard.dashboard.toString).flashing(message)
   }
   
   private def failWithGrace[E >: SuiteException](e: E)(implicit req: Request[_]): Result = {
