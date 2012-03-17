@@ -35,11 +35,14 @@ case class Job(
   
   def refresh()(implicit conf: VSConfiguration) = jobLive().refresh()
   
+  def on()(implicit conf: VSConfiguration) = jobLive().on()
+  
+  def off()(implicit conf: VSConfiguration) = jobLive().off()
+
   def stop()(implicit conf: VSConfiguration) = jobLive().stop()
   
   def getData()(implicit conf: VSConfiguration): Future[JobData] = jobLive().jobData()
   
-  // there should be a better way
   def assignTo(user: User): Job = {
     copy(creator = user.id, organization = user.organization)
   }

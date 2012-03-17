@@ -32,130 +32,151 @@ object Dashboard extends Controller {
   
   // Future  -->  Validation
 
+  def index = Action { _ ⇒ Redirect(routes.Dashboard.dashboard) }
+  
   def dashboard = Action { implicit req ⇒
     AsyncResult {
       (for {
-        user ← isAuth failMap {e => Promise.pure(failwithGrace(e))}
-        jobs ← store listJobs(user.organization) failMap {t => Promise.pure(failwithGrace(StoreException(t)))}
-        //jobss <- Future.sequence(jobs map (_.getData))
-        // That's not right, no scalaz in akka 2?
-        //jobDatas: Validation[P[R], Iterable[JobData]] <- Await.result(Future.sequence(jobs map (_.getData)).onFailure[Promise[Result]]{case _ => Promise.pure(InternalServerError)}, Duration(1, SECONDS)) //.fold{t=>t} // orTimeout("timeout", 1, SECONDS)
+        user ← isAuth failMap {e ⇒ Promise.pure(failWithGrace(e))}
+        jobs ← store listJobs(user.organization) failMap {t ⇒ Promise.pure(failWithGrace(StoreException(t)))}
       } yield {
         val jobDatas = jobs map (_.getData)
         val result = Future.sequence(jobDatas).asPromise orTimeout (Timeout(new Throwable), 1, SECONDS) // validation in scalaz.syntax.ValidationV -> fail[X](x): Validation[Future,X]
         result map { either ⇒
           either.fold[Result](
             data ⇒ Ok(views.html.dashboard(jobs zip data)),
-            timeout ⇒ failwithGrace(timeout)
+            timeout ⇒ failWithGrace(timeout)
           )
         }
       }).fold(f ⇒ f, s ⇒ s)
     }
   }
-
+  
   // * Jobs
-  def jobDispatcher(id: Job#Id) = Action { request ⇒
+  def jobDispatcher(implicit id: Job#Id) = Action { implicit req ⇒
     (for {
-      body ← request.body.asFormUrlEncoded
-      param ← body.get("action")
+        body ← req.body.asFormUrlEncoded
+       param ← body.get("action")
       action ← param.headOption
     } yield action.toLowerCase match {
-      case "delete" ⇒ deleteJob(id)(request)
-      case "update" ⇒ createOrUpdateJob(Some(id))(request)
-      case "run"    ⇒ runJob(id)(request)
-      case "runnow" ⇒ runJob(id)(request)
-      case "stop"   ⇒ stopJob(id)(request)
+      case  "delete" ⇒ deleteJob(id)(req)
+      case  "update" ⇒ createOrUpdateJob(Some(id))(req)
+      case      "on" ⇒ onJob(id)(req)
+      case     "off" ⇒ offJob(id)(req)
+      case    "stop" ⇒ stopJob(id)(req)
+      case "refresh" ⇒ refreshJob(id)(req)
+      case         _ => BadRequest("BadRequest: unknown action")
     }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
   }
   
-  def showReport(implicit id: Job#Id) = Action { implicit req =>
-    val view = views.html.job
+  def showReport(implicit id: Job#Id) = Action { implicit req ⇒
     (for {
-      user ← isAuth failMap failwithGrace 
-      job ← ownsJob(user)(id) failMap failwithGrace
-      asserts <- store.listAssertorResults(job.id) failMap (t ⇒ failwithGrace(StoreException(t)))
-    } yield Ok(views.html.job(Some(job), Some(asserts))())).fold(f ⇒ f, s ⇒ s)
+      user ← isAuth failMap failWithGrace 
+       job ← ownsJob(user)(id) failMap failWithGrace
+       ars ← store.listAssertorResults(job.id) failMap (t ⇒ failWithGrace(StoreException(t)))
+    } yield Ok(views.html.job(Some(job), Some(ars))())).fold(f ⇒ f, s ⇒ s)
   }
-
+  
   def editJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req ⇒
     (for {
-      user ← isAuth failMap failwithGrace
-      id ← idOpt toSuccess Ok(views.html.jobForm(jobForm))
-      job ← ownsJob(user)(id) failMap failwithGrace
+      user ← isAuth failMap failWithGrace
+        id ← idOpt toSuccess Ok(views.html.jobForm(jobForm))
+       job ← ownsJob(user)(id) failMap failWithGrace
     } yield Ok(views.html.jobForm(jobForm.fill(job)))).fold(f ⇒ f, s ⇒ s)
   }
-
+  
   def deleteJob(implicit id: Job#Id) = Action { implicit req ⇒
     (for {
-      user ← isAuth failMap failwithGrace
-      job ← ownsJob(user) failMap failwithGrace
-      _ ← store.removeJob(id) failMap {t ⇒ failwithGrace(StoreException(t))}
-    } yield {
-      seeDashboard(Ok, ("info", "Job deleted"))
-    }).fold(f ⇒ f, s ⇒ s)
+      user ← isAuth failMap failWithGrace
+       job ← ownsJob(user) failMap failWithGrace
+         _ ← store.removeJob(id) failMap {t ⇒ failWithGrace(StoreException(t))}
+    } yield seeDashboard(Ok, ("info" -> "Job deleted"))).fold(f ⇒ f, s ⇒ s)
   }
   
   def createOrUpdateJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req ⇒
     (for {
-      user ← isAuth failMap failwithGrace
-      newJob ← isValidForm failMap {formWithErrors ⇒ BadRequest(views.html.jobForm(formWithErrors))}
-      id ← idOpt toSuccess {
-        store putJob(newJob.assignTo(user)) fold (
-          t ⇒ failwithGrace(StoreException(t)),
-          _ => seeDashboard(Created, ("info", "Job created"))
-      )}
-      job ← ownsJob(user)(id) failMap failwithGrace
-      _ ← store putJob(job.copy(strategy = newJob.strategy, name = newJob.name)) failMap {t ⇒ failwithGrace(StoreException(t))}
-    } yield seeDashboard(Ok, ("info", "Job updated"))).fold(f ⇒ f, s ⇒ s)
+      user ← isAuth failMap failWithGrace
+      jobF ← isValidForm(jobForm) failMap {formWithErrors ⇒ BadRequest(views.html.jobForm(formWithErrors))}
+        id ← idOpt toSuccess {store putJob(jobF.assignTo(user)) fold (
+             t ⇒ failWithGrace(StoreException(t)),
+             _ ⇒ seeDashboard(Created, ("info" -> "Job created")))}
+       job ← ownsJob(user)(id) failMap failWithGrace
+         _ ← store putJob(job.copy(strategy = jobF.strategy, name = jobF.name)) failMap {t ⇒ failWithGrace(StoreException(t))}
+    } yield seeDashboard(Ok, ("info" -> "Job updated"))).fold(f ⇒ f, s ⇒ s)
   }
+  
+  def login = Action { implicit req ⇒
+    isAuth.fold(
+      ex ⇒ ex match {
+        case s: StoreException ⇒ failWithGrace(s)
+        case _ ⇒ Ok(views.html.login(loginForm)) // Other exceptions are just silent
+      },
+      user ⇒ Redirect(routes.Dashboard.dashboard) // If the user is already logged in send him to the dashboard
+    )
+  }
+  
+  def logout = Action {
+    Redirect(routes.Dashboard.login).withNewSession.flashing("success" -> "You've been logged out")
+  }
+  
+  def authenticate = Action { implicit req ⇒
+    (for {
+      userF ← isValidForm(loginForm) failMap {formWithErrors ⇒ BadRequest(views.html.login(formWithErrors))}
+      userO ← store.authenticate(userF._1, userF._2) failMap {t ⇒ failWithGrace(StoreException(t))}
+       user ← userO toSuccess Unauthorized(views.html.login(loginForm)).withNewSession //failWithGrace(UnknownUser)
+    } yield Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)).fold(f ⇒ f, s ⇒ s)
+  }
+  
+  def onJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.on())("run on")
 
-  def runJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.refresh())("run started")
+  def offJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.off())("run off")
 
-  def runJobNow(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.refresh())("run started")
-
-  def stopJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.stop())("run stoped")
+  def refreshJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.refresh())("run refresh")
+  
+  def stopJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.stop())("run stop")
 
   private def simpleJobAction(action: User ⇒ Job ⇒ Any)(msg: String)(implicit id: Job#Id) = Action { implicit req ⇒
     (for {
-      user ← isAuth failMap failwithGrace
-      job ← ownsJob(user) failMap failwithGrace
+      user ← isAuth failMap failWithGrace
+       job ← ownsJob(user) failMap failWithGrace
     } yield {
       action(user)(job)
       seeDashboard(Accepted, ("info", msg))
     }).fold(f ⇒ f, s ⇒ s)
   }
   
-  private def seeDashboard(status: Status, message: (String, String))(implicit req: Request[AnyContent]): Result = {
-    if (isAjax) status else Results.SeeOther(routes.Dashboard.dashboard.toString)
+  private def seeDashboard(status: Status, message: (String, String))(implicit req: Request[_]): Result = {
+    if (isAjax) status else SeeOther(routes.Dashboard.dashboard.toString).flashing(message)
   }
   
-  private def failwithGrace[E >: SuiteException](e: E)(implicit req: Request[AnyContent]): Result = {
+  private def failWithGrace[E >: SuiteException](e: E)(implicit req: Request[_]): Result = {
     e match {
-      case UnknownJob => {
+      case UnknownJob ⇒ {
         if (isAjax) NotFound
-        else SeeOther(routes.Dashboard.dashboard.toString).flashing(("error", "Unknown Job"))
+        else SeeOther(routes.Dashboard.dashboard.toString).flashing(("error" -> "Unknown Job"))
       }
-      case c @ (UnknownUser | Unauthenticated) => {
+      case _ @ (UnknownUser | Unauthenticated) ⇒ {
         if (isAjax) Unauthorized
-        else Unauthorized(views.html.login(Application.loginForm)).withNewSession
+        else Unauthorized(views.html.login(loginForm)).withNewSession
       }
-      case UnauthorizedJob => {
+      case UnauthorizedJob ⇒ {
         if (isAjax) Forbidden
-        else Forbidden(views.html.error(List(("error", "Forbidden"))))
+        else Forbidden(views.html.error(List(("error" -> "Forbidden"))))
       }
-      case StoreException(t) => {
+      case StoreException(t) ⇒ {
         if (isAjax) InternalServerError
-        else InternalServerError(views.html.error(List(("error", "Store Exception"))))
+        else InternalServerError(views.html.error(List(("error" -> "Store Exception"))))
       }
-      case Timeout(t) => {
+      case Timeout(t) ⇒ {
         if (isAjax) InternalServerError
-        else InternalServerError(views.html.error(List(("error", "Timeout Exception"))))
+        else InternalServerError(views.html.error(List(("error" -> "Timeout Exception"))))
       }
     }
   }
-
-  // Move in a trait next 3
-  private def isAjax(implicit req: Request[AnyContent]) = {
+  
+  private def isValidForm[E](form: Form[E])(implicit req: Request[_]) = form.bindFromRequest.toValidation
+  
+  private def isAjax(implicit req: Request[_]) = {
     req.headers get("x-requested-with") match {
       case Some("XMLHttpRequest") ⇒ true
       case _ ⇒ false
@@ -165,47 +186,47 @@ object Dashboard extends Controller {
   private def ownsJob(user: User)(implicit id: Job#Id): Validation[SuiteException, Job] = {
     for {
       jobOpt ← store getJobById(id) failMap {StoreException(_)}
-      job ← jobOpt toSuccess UnknownJob
-      authJob: Job ← (if (job.organization == user.organization) Some(job) else None) toSuccess UnauthorizedJob //Failure(UnauthorizedJob)
-    } yield authJob
+         job ← jobOpt toSuccess UnknownJob
+      j: Job ← (if (job.organization == user.organization) Some(job) else None) toSuccess UnauthorizedJob
+    } yield j
   }
-
-  private implicit def userOpt(implicit req: Request[AnyContent]): Option[User] = isAuth.toOption
   
-  private implicit def isAuth(implicit req: Request[AnyContent]): Validation[SuiteException, User] = {
+  private implicit def userOpt(implicit v: Validation[SuiteException, User]): Option[User] = v.toOption
+  
+  private implicit def isAuth(implicit session: Session): Validation[SuiteException, User] = {
     for {
-      email ← req.session get("email") toSuccess Unauthenticated
-      userOpt ← store getUserByEmail(email) failMap {StoreException(_)}
-      user ← userOpt toSuccess UnknownUser
+      email ← session get("email") toSuccess Unauthenticated
+      userO ← store getUserByEmail(email) failMap {StoreException(_)}
+       user ← userO toSuccess UnknownUser
     } yield user
   }
-
-  private def isValidForm(implicit req: Request[AnyContent]) = {
-    jobForm.bindFromRequest.toValidation
-  }
-
+  
   // * Sockets
-  def dashboardSocket() = IfAuthSocket { req ⇒ user ⇒
-      val in = Iteratee.ignore[JsValue]
-      val jobs = store listJobs(user.organization) fold(t ⇒ throw t, jobs ⇒ jobs)
-      // The seed for the future scan, ie the initial jobData of a run
-      def seed = new UpdateData(null)
-      // Mapping through a list of (jobId, enum)
-      var out = jobs.map(job ⇒ job.jobLive().subscribeToUpdates).map { enum ⇒
+  def dashboardSocket() = WebSocket.using[JsValue] { implicit req ⇒ 
+    isAuth.fold(
+      f ⇒ (Iteratee.ignore[JsValue], Enumerator.eof),
+      user ⇒ {
+        val in = Iteratee.ignore[JsValue]
+        val jobs = store listJobs(user.organization) fold(t ⇒ throw t, jobs ⇒ jobs)
+        // The seed for the future scan, ie the initial jobData of a run
+        def seed = new UpdateData(null)
+        // Mapping through a list of (jobId, enum)
+        var out = jobs.map(job ⇒ job.jobLive().subscribeToUpdates).map { enum ⇒
         // Filter the enumerator, taking only the UpdateData messages
-        enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData ⇒ e } &>
-          // Transform to a tuple (updateData, sameAsPrevious)
-          Enumeratee.scanLeft[UpdateData]((seed, false)) { (from: (UpdateData, Boolean), to: UpdateData) ⇒
-            from match {
-              case (prev, _) if (to != prev) ⇒ (to, false)
-              case _ ⇒ (to, true)
+          enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData ⇒ e } &>
+            // Transform to a tuple (updateData, sameAsPrevious)
+            Enumeratee.scanLeft[UpdateData]((seed, false)) { (from: (UpdateData, Boolean), to: UpdateData) ⇒
+              from match {
+                case (prev, _) if (to != prev) ⇒ (to, false)
+                case _ ⇒ (to, true)
+              }
             }
-          }
         // Interleave the resulting enumerators
-      }.reduce((e1, e2) ⇒ e1 >- e2) &>
+        }.reduce((e1, e2) ⇒ e1 >- e2) &>
         // And collect messages that are marked as changed
-        Enumeratee.collect { case (a, false) ⇒ a.toJS }
-      (in, out)
+          Enumeratee.collect { case (a, false) ⇒ a.toJS }
+        (in, out)
+    })
   }
   // jobSocket
   // uriSocket

@@ -29,13 +29,13 @@ case class Assertions(
     timestamp: DateTime = new DateTime,
     assertions: Iterable[RawAssertion]) extends AssertorResult {
   
+  def isValid = if (hasError || hasWarnings) false else true
+  def numberOfOks = if (hasError || hasWarnings) 0 else 1 // makes no sense, the name is lying
+  
   def hasError: Boolean = assertions exists { _.isError }
   def hasWarnings: Boolean = assertions exists { _.isWarning }
   
-  def numberOfOks = if (hasError || hasWarnings) 0 else 1
-  
-  def numberOfErrors = assertions.view.filter(_.isError).size
-  
+  def numberOfErrors = assertions.view.filter(_.isError).size  
   def numberOfWarnings = assertions.view.filter(_.isWarning).size
   
 }

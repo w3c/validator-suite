@@ -34,6 +34,10 @@ class JobLive(val jobActorRef: ActorRef)(implicit timeout: Timeout, conf: VSConf
   
   def stop(): Unit = jobActorRef ! message.Stop
 
+  def on(): Unit = jobActorRef ! message.BeProactive
+
+  def off(): Unit = jobActorRef ! message.BeLazy
+
   def jobData(): Future[JobData] =
     (jobActorRef ? message.GetJobData).mapTo[JobData]
 

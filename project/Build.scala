@@ -32,6 +32,7 @@ object ApplicationBuild extends Build {
     testOptions in Test := Nil,
     routesImport += "org.w3.vs.controllers._",
     routesImport += "java.util.UUID",
+    templatesImport += "org.w3.vs.model._",
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     resolvers += "repo.codahale.com" at "http://repo.codahale.com",
