@@ -1,10 +1,11 @@
 package org.w3.vs.run
 
-sealed trait FSMState
-case object On extends FSMState
-case object Off extends FSMState
+//case class RunState(activity: RunActivity, explorationMode: ExplorationMode)
 
-sealed trait RunState
-case object Busy extends RunState
-case object Waiting extends RunState
-case object Stopped extends RunState
+sealed trait RunActivity
+case object Busy extends RunActivity
+case object Idle extends RunActivity
+
+sealed trait ExplorationMode
+case object ProActive extends ExplorationMode
+case object Lazy extends ExplorationMode

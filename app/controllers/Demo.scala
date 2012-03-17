@@ -72,7 +72,7 @@ object Demo extends Controller {
     logger.debug("job: "+job)
     
     val run = configuration.runCreator.runOf(job)
-    run.runNow()
+    run.refresh()
     
     val jobIdString: String = job.id.toString
     
@@ -106,9 +106,9 @@ object Demo extends Controller {
   }
   
   def subscribe(id: String): WebSocket[JsValue] = IfAuthSocket { request => user =>
-    configuration.runCreator.byJobId(id).map { run: Run =>
+    configuration.runCreator.byJobId(id).map { jobLive: JobLive =>
       val in = Iteratee.foreach[JsValue](e => println(e))
-      val enumerator = run.subscribeToUpdates()
+      val enumerator = jobLive.subscribeToUpdates()
       (in, enumerator &> Enumeratee.map[message.RunUpdate]{ e => e.toJS })
     }.getOrElse(CloseWebsocket)
   }

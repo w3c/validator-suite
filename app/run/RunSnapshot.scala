@@ -5,12 +5,31 @@ import org.w3.util._
 
 import org.joda.time.DateTime
 
+object RunSnapshot {
+
+  def apply(data: RunData): RunSnapshot = {
+    import data._
+    RunSnapshot(
+      jobId = jobId,
+      runId = runId,
+      explorationMode = explorationMode,
+      distance = distance,
+      toBeExplored = pending.toList ++ data.toBeExplored,
+      fetched = fetched,
+      oks = oks,
+      errors = errors,
+      warnings = warnings)
+  }
+
+}
+
 case class RunSnapshot(
     jobId: Job#Id,
+    runId: Run#Id,
+    explorationMode: ExplorationMode,
     distance: Map[URL, Int],
     toBeExplored: List[URL],
     fetched: Set[URL],
-    fsmState: FSMState,
     oks: Int,
     errors: Int,
     warnings: Int,

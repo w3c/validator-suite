@@ -15,24 +15,29 @@ import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import akka.actor.Props
 import java.nio.channels.ClosedChannelException
 
-class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
-  
-  val logger = play.Logger.of(classOf[Run])
-  
-  def run(): Unit = actorRef ! message.Run
-  
-  def stop(): Unit = actorRef ! message.Stop
+object JobLive {
 
-  def runNow(): Unit = actorRef ! message.RunNow
+  def getJobLiveOrCreate(id: Job#Id, job: => Job)(implicit conf: VSConfiguration): JobLive = {
+    import conf.runCreator
+    runCreator.byJobId(id) getOrElse runCreator.runOf(job)
+  }
+
+}
+
+class JobLive(val jobActorRef: ActorRef)(implicit timeout: Timeout, conf: VSConfiguration) {
+
+  import conf.system
+
+  val logger = play.Logger.of(classOf[JobLive])
+  
+  def refresh(): Unit = jobActorRef ! message.Refresh
+  
+  def stop(): Unit = jobActorRef ! message.Stop
 
   def jobData(): Future[JobData] =
-    (actorRef ? message.GetJobData).mapTo[JobData]
-  
-  def status(): Future[RunState] =
-    (actorRef ? message.GetStatus).mapTo[RunState]
-  
-  def subscribeToUpdates()(implicit conf: VSConfiguration): Enumerator[message.RunUpdate] = {
-    import conf.system
+    (jobActorRef ? message.GetJobData).mapTo[JobData]
+
+  def subscribeToUpdates(): Enumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
         case msg: message.RunUpdate =>
@@ -48,9 +53,9 @@ class Run(val actorRef: ActorRef)(implicit timeout: Timeout) {
     // TODO make the enumerator to stop the actor and unsubscribe it when an error occurs (or when it's 
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
-        onStart = actorRef ! message.Subscribe(subscriber),
-        onComplete = actorRef ! message.Unsubscribe(subscriber),
-        onError = (_,_) => actorRef ! message.Unsubscribe(subscriber)
+        onStart = jobActorRef.tell(message.Subscribe, subscriber),
+        onComplete = jobActorRef.tell(message.Unsubscribe, subscriber),
+        onError = (_,_) => jobActorRef.tell(message.Unsubscribe, subscriber)
       )
     enumerator
   }

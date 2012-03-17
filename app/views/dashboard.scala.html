@@ -33,7 +33,7 @@
 					<li>Name: <span class="name">@job.name</span></li>
 					<li>Uri: <span class="uri">@job.strategy.seedURLs.head</span></li>
 					<li>Distance: <span class="distance">@job.strategy.distance</span></li>
-					<li>Status: <span class="status">@data.state</span></li>
+					<li>Status: <span class="status">@data.activity</span></li>
 					<li>Resources: <span class="resources">@data.resources</span></li>
 				</ul>
 				<ul>
@@ -46,9 +46,9 @@
 				<form action="@routes.Dashboard.jobDispatcher(job.id)" method="post">
 				<ul>
 					<li><button type="submit" class="show" formmethod="get">Show</button></li>
-					<li>@defining(data.state) { state =>
+					<li>@defining(data.activity) { state =>
 					  @state match {
-					    case a @ (Busy | Waiting) => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
+					    case a @ Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
 					    case _ => {<button type="submit" name="action" value="run" class="run">Run</button>}
 					  }
 					}</li>

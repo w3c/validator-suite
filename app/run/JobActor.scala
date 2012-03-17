@@ -23,41 +23,23 @@ import scalaz._
 import Scalaz._
 import org.joda.time.DateTime
 
-class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Actor with FSM[FSMState, RunData] {
+case object Unique
+
+class JobActor(job: Job)(implicit val configuration: VSConfiguration) extends Actor with FSM[Unit, RunData] {
   
   import configuration._
   
   // TODO is it really what we want? I don't think so
   import TypedActor.dispatcher
 
-  val logger = Logger.of(classOf[RunActor])
+  val logger = Logger.of(classOf[JobActor])
   
   /**
    * A shorten id for logs readability
    */
   val shortId = job.shortId
   
-  final private def takeSnapshot: RunSnapshot = {
-    val data = stateData
-    import data._
-    RunSnapshot(
-      jobId = job.id,
-      distance = distance,
-      fsmState = stateName,
-      toBeExplored = pending.toList ++ toBeExplored,
-      fetched = fetched,
-      oks = oks,
-      errors = errors,
-      warnings = warnings)
-  }
-  
-  final private def extractJobData(fsmState: FSMState, data: RunData): JobData = JobData(
-    jobId = job.id,
-    state = data.status(fsmState),
-    resources = data.numberOfKnownUrls,
-    oks = data.oks,
-    errors = data.errors,
-    warnings = data.warnings)
+  implicit def strategy = job.strategy
   
   final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
     var data = _data
@@ -70,47 +52,48 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
     data
   }
   
-  implicit def strategy = job.strategy
-  
   /**
    * tries to get the latest snapshot, then replays the events that happened on it
    */
-  private final val initialConditions: (FSMState, RunData) = store.latestSnapshotFor(job.id) match {
+  private final def initialConditions: RunData = store.latestSnapshotFor(job.id) match {
     case Failure(t) => throw t
-    case Success(None) => (On, RunData(strategy))
-    case Success(Some(snapshot)) => {
-      val resumedData = replayEventsOn(RunData.fromSnapshot(strategy, snapshot), Some(snapshot.createdAt))
-      (snapshot.fsmState, resumedData)
-    }
+    case Success(None) => RunData(jobId = job.id, strategy = strategy)
+    case Success(Some(snapshot)) => replayEventsOn(RunData(strategy, snapshot), Some(snapshot.createdAt))
   }
   
   // at instanciation of this actor
+
   configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, message.TellTheWorldYouAreAlive)
-  startWith(initialConditions._1, initialConditions._2)
-  
-  whenUnhandled {
-    case Event(message.GetStatus, data) => {
-      sender ! data.status(stateName)
-      stay()
-    }
+
+  startWith(Unique, initialConditions)
+
+  when( () ) {
     case Event(message.GetJobData, data) => {
-      val jobData = extractJobData(stateName, data)
+      val jobData = JobData(data)
       sender ! jobData
       stay()
     }
-    case Event(message.TellTheWorldYouAreAlive, _) => {
+    case Event(message.TellTheWorldYouAreAlive, data) => {
       // send to the store a fresher version of this run
-      store.putSnapshot(takeSnapshot)
+      // TODO: do it only if necessary
+      val snapshot = RunSnapshot(data)
+      store.putSnapshot(snapshot)
       // tell the subscribers about the current data for this run
-      val jobData = extractJobData(stateName, stateData)
-      broadcast(message.UpdateData(jobData, job.id), stateData)
+      // TODO: do it only if necessary
+      val jobData = JobData(data)
+      broadcast(message.UpdateData(jobData), data)
       //logger.info("%s: current data - %s" format (shortId, jobData.toString))
       stay()
     }
+    // TODO makes runId part of the AssertorResult and change logic accordingly
     case Event(result: AssertorResult, data) => {
-      val dataWithAssertorResult = receiveAssertion(result, data)
+      logger.debug("%s: %s observed by %s" format (shortId, result.url, result.assertorId))
+      broadcast(message.NewAssertorResult(result), data)
+      store.putAssertorResult(result)
+      val dataWithAssertorResult = data.withAssertorResult(result)
       stay() using dataWithAssertorResult
     }
+    // TODO makes runId part of the FetchResponse and change logic accordingly
     case Event(fetchResponse: FetchResponse, data) => {
       val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
       store.putResourceInfo(resourceInfo)
@@ -119,22 +102,29 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
       val data4 = scheduleAssertion(resourceInfo, data3)
       stay() using data4
     }
-    case Event(message.Subscribe(subscriber), data) => {
-      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, data.subscribers.+(subscriber).mkString("{", ",", "}")))
-      initialState foreach { msg => subscriber ! msg }
-      stay() using data.copy(subscribers = data.subscribers + subscriber)
+    case Event(message.Subscribe, data) => {
+      val subscriber = sender
+      val dataWithSubscriber = data.subscribers + subscriber
+      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, dataWithSubscriber.mkString("{", ",", "}")))
+      stay() using data.copy(subscribers = dataWithSubscriber)
     }
-    case Event(message.Unsubscribe(subscriber), data) => {
-      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, data.subscribers.-(subscriber).mkString("{", ",", "}")))
-      stay() using data.copy(subscribers = data.subscribers - subscriber)
+    case Event(message.Unsubscribe, data) => {
+      val subscriber = sender
+      val dataWithoutSubscriber = data.subscribers - subscriber
+      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, dataWithoutSubscriber.mkString("{", ",", "}")))
+      stay() using data.copy(subscribers = dataWithoutSubscriber)
     }
+    case Event(message.BeProactive, data) => stay() using data.copy(explorationMode = ProActive)
+    case Event(message.BeLazy, data) => stay() using data.copy(explorationMode = Lazy)
+    case Event(message.Refresh, data) => stay() using scheduleNextURLsToFetch(initialData)
+    case Event(message.Stop, data) => stay() using data.copy(explorationMode = Lazy, toBeExplored = List.empty)
   }
-  
+
   onTransition {
     // detect when the status as changed
-    case (currentFSMState, nextFSMState) if stateData.status(currentFSMState) != nextStateData.status(nextFSMState) => {
-      val jobData = extractJobData(nextFSMState, nextStateData)
-      broadcast(message.UpdateData(jobData, job.id), nextStateData)
+    case (_, _) if RunData.somethingImportantHappened(stateData, nextStateData) => {
+      val jobData = JobData(nextStateData)
+      broadcast(message.UpdateData(jobData), nextStateData)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, nextStateData.fetched.size))
       }
@@ -143,24 +133,12 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
       }
     }
   }
-  
-  when(Off) {
-    case Event(message.Run, _) => goto(On)
-    case Event(message.RunNow, _) => goto(On) using scheduleNextURLsToFetch(initialData)
-    case Event(message.Stop, _) => stay()
-  }
-  
-  when(On) {
-    case Event(message.Run, _) => stay()
-    case Event(message.RunNow, _) => stay() using scheduleNextURLsToFetch(initialData)
-    case Event(message.Stop, _) => goto(Off)
-  }
-  
+
   private final def initialData: RunData = {
     // ask the strategy for the first urls to considerer
     val firstURLs = strategy.seedURLs.toList
     // update the observation state
-    val (data, _) = RunData(strategy).withNewUrlsToBeExplored(firstURLs, 0)
+    val (data, _) = RunData(jobId = job.id, strategy = strategy).withNewUrlsToBeExplored(firstURLs, 0)
     logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
     data
   }
@@ -171,7 +149,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
     newObservation
   }
   
-    /**
+  /**
    * Fetch one URL
    * 
    * The kind of fetch is decided by the strategy (can be no fetch)
@@ -195,13 +173,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
   }
 
   
-  private final def receiveAssertion(result: AssertorResult, data: RunData): RunData = {
-    logger.debug("%s: %s observed by %s" format (shortId, result.url, result.assertorId))
-    broadcast(message.NewAssertorResult(result), data)
-    store.putAssertorResult(result)
-    data.withAssertorResult(result)
-  }
-  
+  // pure function (no side-effect)
   private final def receiveResponse(fetchResponse: FetchResponse, _data: RunData): (ResourceInfo, RunData) = {
     val data = _data.withCompletedFetch(fetchResponse.url)
     fetchResponse match {
@@ -250,7 +222,7 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
     }
   }
   
-  
+  // has side-effects
   private final def scheduleAssertion(resourceInfo: ResourceInfo, data: RunData): RunData = {
     val assertors = strategy.assertorsFor(resourceInfo)
     val url = resourceInfo.url
@@ -284,13 +256,6 @@ class RunActor(job: Job)(implicit val configuration: VSConfiguration) extends Ac
     }
     
     data.copy(sentAssertorResults = data.sentAssertorResults + assertors.size)
-  }
-  
-  // TODO should be a service from the store
-  private final def initialState: Iterable[message.RunUpdate] = {
-    val resourceInfos = store.listResourceInfos(job.id).either.right.get map message.NewResourceInfo
-    val assertions = store.listAssertorResults(job.id).either.right.get map message.NewAssertorResult
-    resourceInfos ++ assertions
   }
   
   /**

@@ -2,12 +2,14 @@ package org.w3.vs.run.message
 
 import akka.actor.ActorRef
 
-case object Run
+case object Refresh
 case object Stop
-case object RunNow
 
-case object GetStatus
+case object BeProactive
+case object BeLazy
+
 case object GetJobData
 case object TellTheWorldYouAreAlive
-case class Subscribe(subscriber: ActorRef)
-case class Unsubscribe(subscriber: ActorRef)
+
+case object Subscribe
+case object Unsubscribe

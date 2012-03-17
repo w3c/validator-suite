@@ -13,6 +13,7 @@ import org.w3.vs.http._
 import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.ListMap
+import java.util.UUID
 
 object RunData {
 
@@ -22,10 +23,13 @@ object RunData {
     d1 ++ d2
   }
 
-  def fromSnapshot(strategy: Strategy, snapshot: RunSnapshot): RunData = {
+  def apply(strategy: Strategy, snapshot: RunSnapshot): RunData = {
     import snapshot._
     RunData(
       strategy = strategy,
+      jobId = jobId,
+      runId = runId,
+      explorationMode = explorationMode,
       distance = distance,
       toBeExplored = toBeExplored,
       fetched = fetched,
@@ -34,6 +38,14 @@ object RunData {
       warnings = warnings)
   }
 
+  def somethingImportantHappened(before: RunData, after: RunData): Boolean =
+    before.explorationMode != after.explorationMode ||
+      before.activity != after.activity
+
+}
+
+case class Run(id: Run#Id) {
+  type Id = UUID
 }
 
 /**
@@ -43,6 +55,9 @@ object RunData {
 case class RunData(
     // will never change for a Run, but it's very usefull to have it here
     strategy: Strategy,
+    jobId: Job#Id,
+    runId: Run#Id = UUID.randomUUID(),
+    explorationMode: ExplorationMode = ProActive,
     // the distance from the seed for every known URLs
     distance: Map[URL, Int] = Map.empty,
     // state of each URL
@@ -64,12 +79,12 @@ case class RunData(
 
   final def numberOfKnownUrls: Int = distance.size
 
-  assert(
-    distance.keySet == fetched ++ pending ++ toBeExplored,
-    RunData.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
-  assert(toBeExplored.toSet.intersect(pending) == Set.empty)
-  assert(pending.intersect(fetched) == Set.empty)
-  assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
+  // assert(
+  //   distance.keySet == fetched ++ pending ++ toBeExplored,
+  //   RunData.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
+  // assert(toBeExplored.toSet.intersect(pending) == Set.empty)
+  // assert(pending.intersect(fetched) == Set.empty)
+  // assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
 
   final val logger = play.Logger.of(classOf[RunData])
 
@@ -78,15 +93,11 @@ case class RunData(
    */
   final def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
 
-  final def isWaiting = noMoreUrlToExplore && (sentAssertorResults == receivedAssertorResults)
+  final def isIdle = noMoreUrlToExplore && (sentAssertorResults == receivedAssertorResults)
 
-  final def isBusy = !isWaiting
+  final def isBusy = !isIdle
 
-  final def status(fsmState: FSMState): RunState = fsmState match {
-    case _ if this.isBusy ⇒ Busy
-    case On               ⇒ Waiting
-    case Off              ⇒ Stopped
-  }
+  final def activity: RunActivity = if (isBusy) Busy else Idle
 
   /**
    * An Explore should be ignored if

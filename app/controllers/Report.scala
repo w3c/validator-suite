@@ -1,7 +1,7 @@
 package controllers
 
 import org.w3.vs.model.Job
-import org.w3.vs.run.Run
+import org.w3.vs.run._
 import org.w3.vs.run.message._
 import org.w3.vs.controllers._
 import play.api.mvc.Controller
@@ -22,9 +22,9 @@ object Report extends Controller {
   implicit def ec = configuration.webExecutionContext
   
   def subscribe(id: Job#Id): WebSocket[JsValue] = IfAuthSocket { request => user =>
-    configuration.runCreator.byJobId(id).map { run: Run =>
+    configuration.runCreator.byJobId(id).map { jobLive: JobLive =>
       val in = Iteratee.foreach[JsValue](e => println(e))
-      val enumerator = run.subscribeToUpdates()
+      val enumerator = jobLive.subscribeToUpdates()
       (in, enumerator &> Enumeratee.map[RunUpdate]{ e => e.toJS })
     }.getOrElse(CloseWebsocket)
   }

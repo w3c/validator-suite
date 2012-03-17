@@ -109,9 +109,9 @@ object Dashboard extends Controller {
     } yield seeDashboard(Ok, ("info", "Job updated"))).fold(f ⇒ f, s ⇒ s)
   }
 
-  def runJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.run())("run started")
+  def runJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.refresh())("run started")
 
-  def runJobNow(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.runNow())("run started")
+  def runJobNow(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.refresh())("run started")
 
   def stopJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.stop())("run stoped")
 
@@ -189,9 +189,9 @@ object Dashboard extends Controller {
       val in = Iteratee.ignore[JsValue]
       val jobs = store listJobs(user.organization) fold(t ⇒ throw t, jobs ⇒ jobs)
       // The seed for the future scan, ie the initial jobData of a run
-      def seed = new UpdateData(null, null)
+      def seed = new UpdateData(null)
       // Mapping through a list of (jobId, enum)
-      var out = jobs.map(job ⇒ job.getRun().subscribeToUpdates).map { enum ⇒
+      var out = jobs.map(job ⇒ job.jobLive().subscribeToUpdates).map { enum ⇒
         // Filter the enumerator, taking only the UpdateData messages
         enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData ⇒ e } &>
           // Transform to a tuple (updateData, sameAsPrevious)

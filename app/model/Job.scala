@@ -15,6 +15,9 @@ object Job {
   
 }
 
+// I guess the case class is actually just the configuration part
+// we should have a wrapper for that guy that would act as a facade for the JobActor
+// this is now called JobLive, but that sounds wrong
 case class Job(
   id: Job#Id = UUID.randomUUID,
   strategy: EntryPointStrategy,
@@ -26,20 +29,17 @@ case class Job(
   type Id = UUID
   
   def shortId: String = id.toString.substring(0, 6)
+
+  // should this be private?
+  def jobLive()(implicit conf: VSConfiguration): JobLive = JobLive.getJobLiveOrCreate(id, this)
   
-  def getRun()(implicit conf: VSConfiguration): Run = {
-    import conf.runCreator
-    runCreator.byJobId(id) getOrElse runCreator.runOf(this)
-  }
+  def refresh()(implicit conf: VSConfiguration) = jobLive().refresh()
   
-  def run()(implicit conf: VSConfiguration) = getRun().run()
+  def stop()(implicit conf: VSConfiguration) = jobLive().stop()
   
-  def runNow()(implicit conf: VSConfiguration) = getRun().runNow()
+  def getData()(implicit conf: VSConfiguration): Future[JobData] = jobLive().jobData()
   
-  def stop()(implicit conf: VSConfiguration) = getRun().stop()
-  
-  def getData()(implicit conf: VSConfiguration): Future[JobData] = getRun().jobData()
-  
+  // there should be a better way
   def assignTo(user: User): Job = {
     copy(creator = user.id, organization = user.organization)
   }

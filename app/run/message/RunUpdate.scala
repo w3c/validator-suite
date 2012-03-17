@@ -3,7 +3,7 @@ package org.w3.vs.run.message
 import org.w3.util.URL
 import org.w3.vs.assertor.AssertorId
 import org.w3.vs.model._
-import org.w3.vs.run.RunState
+import org.w3.vs.run._
 import play.api.libs.json._
 import org.w3.vs.model._
 import play.api.libs.json.JsNumber
@@ -18,12 +18,12 @@ sealed trait RunUpdate {
   def toJS: JsValue
 }
 
-case class UpdateData(data: JobData, jobId: Job#Id) extends RunUpdate {
+case class UpdateData(data: JobData) extends RunUpdate {
   def toJS: JsValue = 
     JsArray(List(
       JsString("JobStatus"),
-      JsString(jobId.toString),
-      JsString(data.state.toString),
+      JsString(data.jobId.toString),
+      JsString(data.activity.toString),
       JsNumber(data.resources),
       JsNumber(data.oks),
       JsNumber(data.errors),

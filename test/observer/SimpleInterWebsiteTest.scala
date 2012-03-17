@@ -34,7 +34,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
 
   "test simpleInterWebsite" in {
     val run = runCreator.runOf(job)
-    run.runNow()
+    run.refresh()
     def ris = store.listResourceInfos(job.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 2
     awaitCond(cond, 3 seconds, 50 milliseconds)
