@@ -238,7 +238,7 @@ window.JobList = Backbone.Collection.extend({
 });
 
 window.DashboardView = Backbone.View.extend({
-	el: $("#jobs > div"),
+	el: $("#jobs"),
 	jobs: new JobList(),
 	initialize: function () {
 		// Bind events

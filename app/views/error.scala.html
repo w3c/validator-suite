@@ -1,28 +1,23 @@
-@(errors: List[(String, String)] = List())(implicit userOpt: Option[User])
+@(errors: List[(String, String)] = List())(implicit userOpt: Option[User], flash: Flash)
 
 @libs.main("Validator Suite", 
-	stylesheets = List("dashboard.css"), 
-	scripts = List("dashboard.js", "report.js"),
-	exec = """$(function(){window.Report = new ReportView();});""") {
-	
+	stylesheets = List("dashboard.css")){
+   
+   @***** Header ******@
+   
 	@libs.header(userOpt)
 	
-	<nav id="nav">
-		<ul>
-			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-			<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
-		</ul>
-	</nav>
+}{ @***** Toolbar *****@
+
+	<ul><li><a href="@routes.Dashboard.dashboard">Dashboard</a></li></ul>
 	
-	<section id="main"><div>
-		@libs.navigation()
-		
-		@errors.map { case (key, message) =>
-			<div class="@key vsmessage">@message</div>
-		}
-		
-	</div></section>
+}{ @***** Content *****@ 
 	
+	@libs.navigation()
+	@libs.errors(errors)
+	
+}{ @***** Footer *****@
+
 	@libs.footer()
-	
+
 }

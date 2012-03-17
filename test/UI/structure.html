@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Validator Suite</title>
+	<meta charset="utf-8">
+	
+	<!-- 
+	
+	
+	
+	 -->
+	
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<style>
+	
+	body {
+		width: 100%;
+		min-width: 700px;
+		min-height:500px;
+		margin: 0;
+		height: 100%;
+		position: absolute;
+		padding-top: 100px;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		padding-bottom: 50px;
+		background: black;
+	}
+	header {
+		padding: 10px;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		position:absolute;
+		width:100%;
+		outline:2px solid blue;
+		height:100px;
+		top:0;
+		left:0;
+	}
+	aside {
+		padding: 10px;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		width: 170px;
+		height: 100%;
+		outline: 2px solid red;
+		float: left;
+	}
+	section {
+		padding: 0px;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		margin-left:170px;
+		min-height:100%;
+		outline:2px solid green;
+	}
+	section > div {
+		padding: 10px;
+	}
+	footer {
+		padding: 10px;
+		box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		height:50px;
+		outline:2px solid blue;
+	}
+	body > div {
+		position:absolute;
+		width:100%;
+		top:0;
+		min-height:100%;
+	}
+	</style>
+</head>
+<body>
+<div>
+	
+<header><div>header<br><br></div></header>
+<aside><div>aside<br><br>aside<br><br>aside<br><br></div></aside>
+<section><div>section<br><br></div></section>
+<footer><div>footer<br><br></div></footer>
+
+</div>
+</body>
+</html>

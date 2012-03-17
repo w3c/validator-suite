@@ -1,0 +1,123 @@
+
+.bodyLayout(@h, @f) {
+	body {
+		padding-top: @h + @borderSize;
+		padding-bottom: @f + @borderSize;
+		> header {
+			height: @h;
+		}
+		> footer {
+			height: @f - (2 * @spacing);
+			padding: @spacing 0;
+		}
+	}
+}
+.toolBarLayout(@e) {
+	#toolbar {
+		width: @e - (2 * @spacing);
+		padding: @spacing;
+	}
+	#main {
+		padding-left: @e;
+	}
+}
+
+body {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	min-height: @bodyH;
+	min-width: @bodyH;
+	.border-sizing;
+	> header {
+		position: absolute;
+		width: 100%;
+		top: 0;
+		z-index: 1;
+		border-bottom: @borderSize solid @borderColor;
+	}
+	> div {
+		min-height: 100%;
+		position: relative;
+	}
+	> footer {
+		border-top:1px solid @borderColor;
+	}
+}
+
+.bodyLayout(@headerH, @footerH);
+
+#toolbar {
+	padding: @spacing;
+	background: @headerBgColor;
+	border: solid @borderColor;
+	border-width: 0 0 @borderSize 0;
+}	
+
+#main {
+	width: 100%;
+	.border-sizing;
+}
+
+#main > nav,
+#main > section {
+	padding: @spacing;
+	border-bottom: 1px solid @borderColor;
+}
+#main > :last-child {
+	border-bottom: none;
+}
+
+.list {
+	padding: @spacing / 2 !important;
+	font-size: 0rem;
+	line-height: 0rem;
+}
+.list article {
+	font-size:@baseFontSize;
+	line-height:@baseFontSize;
+	padding: @spacing / 2;
+	display: inline-block;
+	width: 100%;
+	.border-sizing;
+}
+.list article > div {
+	padding: @spacing;
+	border: 1px solid @borderColor;
+}
+
+.structureMedia () {
+	@media screen and (min-width: 450px) {
+		.bodyLayout(80px, @footerH);
+		.header(80px, 8px);
+		#toolbar {
+			height: auto;
+			position: absolute;
+			left: 0;
+			bottom: 0;
+			top: 0;
+			border-width: 0 @borderSize 0 0;
+		}
+		.toolBarLayout(50px);
+	}
+	@media screen and (min-width: 580px) {
+		.header(100px, 10px);
+		.bodyLayout(100px, @footerH);
+		.toolBarLayout(180px);
+	}
+	@media screen and (min-width: 980px) {
+		.list article {
+			width:50%;
+		}
+	}
+	@media screen and (min-width: 1380px) {
+		.list article {
+			width:33.33%;
+		}
+	}
+	@media screen and (min-width: 1780px) {
+		.list article {
+			width:25%;
+		}
+	}
+}

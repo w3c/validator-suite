@@ -1,26 +1,31 @@
-@(form: Form[Job])(implicit userOpt: Option[User], idOpt: Option[java.util.UUID])
+@(form: Form[Job])(implicit userOpt: Option[User], idOpt: Option[java.util.UUID], flash: Flash)
 
-@libs.main("Validator Suite", stylesheets = List("dashboard.css")) {
-	
+@libs.main("Validator Suite",
+  stylesheets = List("dashboard.css")){
+   
+   @***** Header ******@
+   
 	@libs.header(userOpt)
 	
-	<nav id="nav">
-		<ul>
-			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-			<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
-		</ul>
-	</nav>
-		
-	<section id="main">
-	<div>
+}{ @***** Toolbar *****@
+
+	<ul>
+		<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
+		<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
+	</ul>
+
+}{ @***** Content *****@ 
+
 	@libs.navigation(List((form("name").value.getOrElse("New Job"), "")))
+	@libs.errors()
 	
+	@** TODO **@
 	<script type="text/javascript">
 	function showValue(newValue) {
 		document.getElementById("dist").innerHTML=newValue;
 	}
 	</script>
-	
+
 	<form method="post">
 		<label for="name">Name: </label>
 		<input id="name" name="name" type="text" value="@form("name").value" required></input><br>
@@ -37,9 +42,8 @@
 		}
 	</form>
 	
-	</div>
-	</section>
-	
+}{ @***** Footer *****@
+
 	@libs.footer()
-	
+
 }

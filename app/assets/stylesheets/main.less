@@ -1,5 +1,5 @@
-@import 'libs/_reset.less';
 @import 'libs/_theme.less';
+@import 'inc/_reset.less';
 
 body {
 	font-family: @baseFontFamily;
@@ -18,15 +18,15 @@ body > header {
 	border-bottom: @borderSize solid @borderColor;
 	
 	svg {
-		width: @headerHeight - @smallSpacing;
-		height: @headerHeight - @smallSpacing;
+		width: @headerHeight - @spacing;
+		height: @headerHeight - @spacing;
 		float: left;
-		margin: (@headerHeight / 10) 0 0 @smallSpacing;
+		margin: (@headerHeight / 10) 0 0 @spacing;
 	}
 	
 	h1 {
-		font-size: round((@headerHeight - @smallSpacing) / 3.5px * 10) / 10;
-		margin-top: round((@headerHeight - @smallSpacing) / 3.5px * 10) / 10 + 3px;
+		font-size: round((@headerHeight - @spacing) / 3.5px * 10) / 10;
+		margin-top: round((@headerHeight - @spacing) / 3.5px * 10) / 10 + 3px;
 		float: left;
 		text-align: left;
 		
@@ -56,8 +56,8 @@ body > header {
 	}
 	
 	#admin {
-		padding-right: @smallSpacing;
-		padding-top: @headerHeight - @smallSpacing - @baseFontSize;
+		padding-right: @spacing;
+		padding-top: @headerHeight - @spacing - @baseFontSize;
 	}
 }
 

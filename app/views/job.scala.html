@@ -3,62 +3,49 @@
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"), 
 	scripts = List("dashboard.js", "report.js"),
-	exec = """$(function(){window.Report = new ReportView();});""") {
-	
+	exec = """$(function(){window.Report = new ReportView();});"""){
+   
+   @***** Header ******@
+   
 	@libs.header(userOpt)
 	
-	<nav id="nav">
-		<ul>
-			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-			<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
-		</ul>
-	</nav>
-	
-	<section id="main"><div>
-		@libs.navigation()
-		
-		@flash.data.map { case (key, message) =>
-			<div class="@key vsmessage">@message</div>
-		}
-		
-		@errors.map { case (key, message) =>
-			<div class="@key vsmessage">@message</div>
-		}
-		
-		<section id="report"><div>
-		
-		
-		<br>
-		@if(assertions.isDefined) {
-		  @assertions.get.collect{case sertion: Assertions =>
-		
-		<details>
-			<summary>
-				<a href="#">@sertion.url</a>
-				<ul>
-					<li>Errors: @sertion.numberOfErrors</li>
-					<li>Warnings: @sertion.numberOfWarnings</li>
-					<li>Timestamp: @sertion.timestamp</li>
-				</ul>
-			</summary>
-			<ul class="messages">
-			@defining(sertion.assertions) { raws =>
-			@raws.map { raw =>
-				<li class="@raw.severity" lang="@raw.lang">@raw.title</li>
-			}}
-			</ul>
-		</details>
-		
-		  }
-		}
-		
+}{ @***** Toolbar *****@
 
-		
-		
-		</div></section>
-		
-	</div></section>
+	<ul><li><a href="@routes.Dashboard.dashboard">Dashboard</a></li></ul>
 	
+}{ @***** Content *****@ 
+	
+	@libs.navigation()
+	@libs.errors(errors)
+	
+	<section id="report" class="list">
+	
+	@if(assertions.isDefined) {
+	  @assertions.get.collect{case sertion: Assertions =>
+	
+	<article><div>
+		<a href="#">@sertion.url</a>
+		<ul>
+			<li>Errors: @sertion.numberOfErrors</li>
+			<li>Warnings: @sertion.numberOfWarnings</li>
+			<li>Timestamp: @sertion.timestamp</li>
+		</ul>
+		
+		<ul class="messages">
+		@defining(sertion.assertions) { raws =>
+		@raws.map { raw =>
+			<li class="@raw.severity" lang="@raw.lang">@raw.title</li>
+		}}
+		</ul>
+	</div></article>
+	
+	  }
+	}
+	
+	</section>
+	
+}{ @***** Footer *****@
+
 	@libs.footer()
-	
+
 }

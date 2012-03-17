@@ -4,68 +4,61 @@
 @import org.w3.vs.run._
 
 @libs.main("Validator Suite", 
-	stylesheets = List("dashboard.css"), 
-	scripts = List("dashboard.js"),
-	exec = """$(function(){window.Dashboard = new DashboardView();});""") {
-	
+  stylesheets = List("dashboard.css", "libs/_reset.css"),
+      scripts = List("dashboard.js"), 
+         exec = "$(function(){window.Dashboard = new DashboardView();});"){
+   
+   @***** Header ******@
+   
 	@libs.header(userOpt)
 	
-	<nav id="nav">
-		<ul>
-			<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-			<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
-		</ul>
-	</nav>
+}{ @***** Toolbar *****@
 	
-	<section id="main">
-	<div>
-		@libs.navigation()
-		
-		@flash.data.map { case (key, message) =>
-			<div class="@key vsmessage">@message</div>
-		}
-		
-		<section id="jobs">
-		<div>
+		<ul><li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li></ul>
+	
+}{ @***** Content *****@ 
+	
+	@libs.navigation()
+	@libs.errors()
+	
+	<section id="jobs" class="list">
+	
 		@for((job, data) <- jobs) {
-			<article class="job" data-id="@job.id">
-				<ul>
-					<li>Name: <span class="name">@job.name</span></li>
-					<li>Uri: <span class="uri">@job.strategy.seedURLs.head</span></li>
-					<li>Distance: <span class="distance">@job.strategy.distance</span></li>
-					<li>Status: <span class="status">@data.activity</span></li>
-					<li>Resources: <span class="resources">@data.resources</span></li>
-				</ul>
-				<ul>
-					<li>Last run: <time datetime="">-</time></li>
-					<li>Last updated: <time datetime="">-</time></li>
-					<li>Valid: <span class="oks">@data.oks</span></li>
-					<li>Errors: <span class="errors">@data.errors</span></li>
-					<li>Warnings: <span class="warnings">@data.warnings</span></li>
-				</ul>
-				<form action="@routes.Dashboard.jobDispatcher(job.id)" method="post">
-				<ul>
-					<li><button type="submit" class="show" formmethod="get">Show</button></li>
-					<li>@defining(data.activity) { state =>
-					  @state match {
-					    case a @ Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
-					    case _ => {<button type="submit" name="action" value="run" class="run">Run</button>}
-					  }
-					}</li>
-					<li><button type="submit" name="action" value="runnow" class="nunnow">Run now</button></li>
-					<li><button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(Some(job.id))">Edit</button></li>
-					<li><button type="submit" name="action" value="delete" class="delete">Delete</button></li>
-				</ul>
-				</form>
-			</article>
+		<article class="job" data-id="@job.id"><div>
+			<ul>
+				<li>Name: <span class="name">@job.name</span></li>
+				<li>Uri: <span class="uri">@job.strategy.seedURLs.head</span></li>
+				<li>Distance: <span class="distance">@job.strategy.distance</span></li>
+				<li>Status: <span class="status">@data.state</span></li>
+				<li>Resources: <span class="resources">@data.resources</span></li>
+			</ul>
+			<ul>
+				<li>Last run: <time datetime="">-</time></li>
+				<li>Last updated: <time datetime="">-</time></li>
+				<li>Valid: <span class="oks">@data.oks</span></li>
+				<li>Errors: <span class="errors">@data.errors</span></li>
+				<li>Warnings: <span class="warnings">@data.warnings</span></li>
+			</ul>
+			<form action="@routes.Dashboard.jobDispatcher(job.id)" method="post">
+				<button type="submit" class="show" formmethod="get">Show</button>
+				@defining(data.activity) { state =>
+				  @state match {
+				    case a @ Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
+				    case _ => {<button type="submit" name="action" value="run" class="run">Run</button>}
+				  }
+				}
+				<button type="submit" name="action" value="runnow" class="nunnow">Run now</button>
+				<button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(Some(job.id))">Edit</button>
+				<button type="submit" name="action" value="delete" class="delete">Delete</button>
+			</form>
+		</div></article>
 		}
-		</div>
-		</section>
-	</div>
 	</section>
 	
+}{ @***** Footer *****@
+
 	<script type="text/template" id="job-template">
-		<ul>
+		<div><ul>
 			<li>Name: <span class="name"><%= name %></span></li>
 			<li>Uri: <span class="uri"><%= seedUri %></span></li>
 			<li>Distance: <span class="distance"><%= distance %></span></li>
@@ -89,9 +82,9 @@
 			<li><a href="/job/<%= id %>" class="runnow">Run now</a></li>
 			<li><a href="/job/<%= id %>/edit" class="edit">Edit</a></li>
 			<li><a href="/job/<%= id %>" class="delete">Delete</a></li>
-		</ul>
+		</ul></div>
 	</script>
-	
+
 	@libs.footer()
-	
+
 }

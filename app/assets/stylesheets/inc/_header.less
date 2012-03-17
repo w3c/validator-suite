@@ -1,4 +1,3 @@
-@import 'libs/_theme.less';
 
 body {
 	font-family: @baseFontFamily;
@@ -12,20 +11,14 @@ body {
 body > header {
 	
 	background: @headerBgColor;
-	height: @headerHeight;
 	text-align: right;
-	border-bottom: @borderSize solid @borderColor;
 	
 	svg {
-		width: @headerHeight - @smallSpacing;
-		height: @headerHeight - @smallSpacing;
 		float: left;
-		margin: (@headerHeight / 10) 0 0 @smallSpacing;
+		margin: (@headerHeight / 10) 0 0 @spacing;
 	}
 	
 	h1 {
-		font-size: round((@headerHeight - @smallSpacing) / 3.5px * 10) / 10;
-		margin-top: round((@headerHeight - @smallSpacing) / 3.5px * 10) / 10 + 3px;
 		float: left;
 		text-align: left;
 		
@@ -49,13 +42,30 @@ body > header {
 			font-style: italic;
 			font-size: 0.95em;
 			position: relative;
-			left: round((-@headerHeight / 15) * 10) / 10px;
-			top: round((-@headerHeight / 50) * 10) / 10px;
 		}
 	}
-	
-	#admin {
-		padding-right: @smallSpacing;
-		padding-top: @headerHeight - @smallSpacing - @baseFontSize;
+}
+
+.header(@headerH, 4px);
+
+.header (@height, @spacing) {
+	body > header {
+		svg {
+			width: @height - @spacing;
+			height: @height - @spacing;
+			margin: (@height / 10) 0 0 @spacing;		
+		}
+		h1 {
+			font-size: round((@height - @spacing) / 3.5px * 10) / 10;
+			margin-top: round((@height - @spacing) / 3.5px * 10) / 10 + @spacing/4;
+		}
+		span:nth-child(2) {
+			left: round((-@height / 15) * 10) / 10px;
+			top: round((-@height / 50) * 10) / 10px;
+		}
+		#admin {
+			padding-right: @spacing;
+			padding-top: @height - @spacing - @baseFontSize;
+		}
 	}
 }
