@@ -4,82 +4,377 @@
 	<title>Validator Suite</title>
 	<meta charset="utf-8">
 	
-	<!-- 
-	
-	
-	
-	 -->
-	
 	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	
 	<style>
 	
-	body {
-		width: 100%;
-		min-width: 700px;
-		min-height:500px;
-		margin: 0;
-		height: 100%;
-		position: absolute;
-		padding-top: 100px;
-		box-sizing: border-box;
-		-moz-box-sizing: border-box;
-		padding-bottom: 50px;
-		background: black;
-	}
-	header {
-		padding: 10px;
-		box-sizing: border-box;
-		-moz-box-sizing: border-box;
-		position:absolute;
-		width:100%;
-		outline:2px solid blue;
-		height:100px;
-		top:0;
-		left:0;
-	}
-	aside {
-		padding: 10px;
-		box-sizing: border-box;
-		-moz-box-sizing: border-box;
-		width: 170px;
-		height: 100%;
-		outline: 2px solid red;
-		float: left;
-	}
-	section {
-		padding: 0px;
-		box-sizing: border-box;
-		-moz-box-sizing: border-box;
-		margin-left:170px;
-		min-height:100%;
-		outline:2px solid green;
-	}
-	section > div {
-		padding: 10px;
-	}
-	footer {
-		padding: 10px;
-		box-sizing: border-box;
-		-moz-box-sizing: border-box;
-		height:50px;
-		outline:2px solid blue;
-	}
-	body > div {
-		position:absolute;
-		width:100%;
-		top:0;
-		min-height:100%;
-	}
+/* 
+html5doctor.com Reset Stylesheet
+v1.6.1
+Last Updated: 2010-09-17
+Author: Richard Clark - http://richclarkdesign.com 
+Twitter: @rich_clark
+*/
+html,
+body,
+div,
+span,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+abbr,
+address,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+samp,
+small,
+strong,
+sub,
+sup,
+var,
+b,
+i,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+}
+body {
+  line-height: 1;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+nav ul {
+  list-style: none;
+}
+blockquote, q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: '';
+  content: none;
+}
+a {
+  margin: 0;
+  padding: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+  background: transparent;
+}
+/* change colours to suit your needs */
+ins {
+  background-color: #ff9;
+  color: #000;
+  text-decoration: none;
+}
+/* change colours to suit your needs */
+mark {
+  background-color: #ff9;
+  color: #000;
+  font-style: italic;
+  font-weight: bold;
+}
+del {
+  text-decoration: line-through;
+}
+abbr[title], dfn[title] {
+  border-bottom: 1px dotted;
+  cursor: help;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+/* change border colour to suit your needs */
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #cccccc;
+  margin: 1em 0;
+  padding: 0;
+}
+input, select {
+  vertical-align: middle;
+}
+ul {
+  list-style-type: none;
+  list-style-position: inside;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+body {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  min-height: 400px;
+  min-width: 400px;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+body > header {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid #e5e5e5;
+}
+body > div {
+  min-height: 100%;
+  position: relative;
+}
+body > footer {
+  border-top: 1px solid #e5e5e5;
+}
+body {
+  padding-top: 61px;
+  padding-bottom: 51px;
+}
+body > header {
+  height: 60px;
+}
+body > footer {
+  height: 30px;
+  padding: 10px 0;
+}
+#toolbar {
+  padding: 10px;
+  border: solid #e5e5e5;
+  border-width: 0 0 1px 0;
+  height:20px;
+}
+#main {
+  width: 100%;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#main > nav, #main > section {
+  padding: 10px;
+  border-bottom: 1px solid #e5e5e5;
+}
+#main > :last-child {
+  border-bottom: none;
+}
+.list {
+  padding: 5px !important;
+  font-size: 0rem;
+  line-height: 0rem;
+}
+.list article {
+  font-size: 13px;
+  line-height: 13px;
+  padding: 5px;
+  display: inline-block;
+  vertical-align: top;
+  width: 100%;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.list article > div {
+  padding: 10px;
+  border: 1px solid #e5e5e5;
+}
+
+/* ############# Header ############# */
+
+@media screen and (min-width: 450px) {
+  body {
+    padding-top: 81px;
+    padding-bottom: 51px;
+  }
+  body > header {
+    height: 80px;
+  }
+  body > footer {
+    height: 30px;
+    padding: 10px 0;
+  }
+  #toolbar {
+    height: auto;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    top: 0;
+    border-width: 0 1px 0 0;
+  }
+  #toolbar {
+    width: 30px;
+    padding: 10px;
+  }
+  #main {
+    padding-left: 50px;
+  }
+}
+@media screen and (min-width: 580px) {
+  body {
+    padding-top: 101px;
+    padding-bottom: 51px;
+  }
+  body > header {
+    height: 100px;
+  }
+  body > footer {
+    height: 30px;
+    padding: 10px 0;
+  }
+  #toolbar {
+    width: 160px;
+    padding: 10px;
+  }
+  #main {
+    padding-left: 180px;
+  }
+}
+@media screen and (min-width: 980px) {
+  .list article {
+    width: 50%;
+  }
+}
+@media screen and (min-width: 1380px) {
+  .list article {
+    width: 33.33%;
+  }
+}
+@media screen and (min-width: 1780px) {
+  .list article {
+    width: 25%;
+  }
+}
+/* Smooth UI. That's a bit severe */
+body * {
+  -webkit-transition: all 0.2s;
+  -moz-transition: all 0.2s;
+  -o-transition: all 0.2s;
+  transition: all 0.2s;
+}
+body {
+  -webkit-transition: padding 0.2s;
+  -moz-transition: padding 0.2s;
+  -o-transition: padding 0.2s;
+  transition: padding 0.2s;
+}
+
+
+
+
+/* test only */
+header, footer {background:blue; opacity:0.3}
+#toolbar {background:red; opacity:0.3}
+#main > section {background:green; opacity:0.3}
+.list article {}
+.list article > div {
+	padding:10px;
+	background:orange;
+	opacity:1;
+	min-height:50px;
+	min-width:200px;
+}
+
+
 	</style>
 </head>
 <body>
-<div>
 	
-<header><div>header<br><br></div></header>
-<aside><div>aside<br><br>aside<br><br>aside<br><br></div></aside>
-<section><div>section<br><br></div></section>
-<footer><div>footer<br><br></div></footer>
+<header></header>
 
+<div>
+	<aside id="toolbar"></aside>
+	
+	<div id="main">
+		<section style="height:20px"></section>
+		<section class="list">
+			<article><div></div></article>
+			<article><div></div></article>
+			<article><div></div></article>
+			<article><div></div></article>
+			<article><div></div></article>
+			<article><div></div></article>
+			<article><div></div></article>
+		</section>
+		<section style="height:50px"></section>
+	</div>
 </div>
+
+<footer></footer>
+
 </body>
 </html>
