@@ -57,7 +57,8 @@ window.Messages = Backbone.Collection.extend({
 
 window.JobData = Backbone.Model.extend({
 	defaults: {
-		status: "-",
+		activity: "",
+		mode: "",
 		resources: 0,
 		oks: 0,
 		errors: 0,
@@ -69,11 +70,12 @@ window.JobData.fromJSON = function (data) {
 		var json = $.parseJSON(data);
 		return new JobData({
 			jobId: json[1],
-			status: json[2],
-			resources: json[3],
-			oks: json[4],
-			errors: json[5],
-			warnings: json[6]
+			activity: json[2],
+			mode: json[3],
+			resources: json[4],
+			oks: json[5],
+			errors: json[6],
+			warnings: json[7]
 		});
 	} catch(ex) {
 		console.log(ex);
@@ -105,12 +107,14 @@ window.Job = Backbone.Model.extend({
 		messages: new Messages()
 	},
 	
-	run: function(options) {this._serverEvent('run', options);},
+	putOn: function(options) {this._serverEvent('on', options);},
 	
-	runnow: function(options) {this._serverEvent('refresh', options);},
+	putOff: function(options) {this._serverEvent('off', options);},
 	
 	stop: function(options) {this._serverEvent('stop', options);},
 	
+	refresh: function(options) {this._serverEvent('refresh', options);},
+		
 	_serverEvent: function(event, options) {
 		options = options ? _.clone(options) : {};
 		var model = this;
@@ -166,7 +170,8 @@ window.Job.fromHTML = function(elem) {
 		distance: parseInt($(".distance", elem).text()),
 		data: new JobData({
 			jobId: $(elem).attr("data-id"),
-			status: $(".status", elem).text(),
+			activity: $(".activity", elem).text(),
+			mode: $(".mode", elem).text(),
 			resources: parseInt($(".resources", elem).text()),
 			oks: parseInt($(".oks", elem).text()),
 			errors: parseInt($(".errors", elem).text()),
@@ -187,39 +192,44 @@ window.JobView = Backbone.View.extend({
 	
 	events: {
 		"click .edit"	 : "edit",
-		"click .run"	 : "run",
-		"click .runnow"	 : "runnow",
+		"click .on"		 : "putOn",
+		"click .off"	 : "putOff",
 		"click .stop"	 : "stop",
+		"click .refresh" : "refresh",
 		"click .delete"	 : "_delete"
 	},
 	
 	initialize: function () {
 		if(this.model !== undefined) {
-			this.model.bind('change', this.render, this);
-			this.model.bind('destroy', this.remove, this);
-			//this.model.bind('run', function () {alert("run");}, this);
-			//this.model.bind('stop', function () {alert("run");}, this);
+			this.model.on('change', this.render, this);
+			this.model.on('destroy', this.remove, this);
+			//this.model.on('run', function () {alert("run");}, this);
+			//this.model.on('stop', function () {alert("run");}, this);
 		}
 	},
 	
 	render: function () {
-		this.$el.html(this.template(this.model.toJSON()));
+		this.$el.html(this.template(_.extend(this.model.toJSON(), {url : this.model.url()})));
 		return this;
 	},
 	edit: function () {
 		window.location = this.model.url() + "/edit";
 		return false;
 	},
-	run: function () {
-		this.model.run({wait:true});
+	putOn: function () {
+		this.model.putOn({wait:true});
 		return false;
 	},
-	runnow: function () {
-		this.model.runnow({wait:true});
+	putOff: function () {
+		this.model.putOff({wait:true});
 		return false;
 	},
 	stop: function () {
 		this.model.stop({wait:true});
+		return false;
+	},
+	refresh: function () {
+		this.model.refresh({wait:true});
 		return false;
 	},
 	_delete: function () {

@@ -23,7 +23,7 @@
 	@if(assertions.isDefined) {
 	  @assertions.get.collect{case sertion: Assertions =>
 	
-	<article><div>
+	<article class="assertion"><div>
 		<a href="#">@sertion.url</a>
 		<ul>
 			<li>Errors: @sertion.numberOfErrors</li>

@@ -24,6 +24,7 @@ case class UpdateData(data: JobData) extends RunUpdate {
       JsString("JobStatus"),
       JsString(data.jobId.toString),
       JsString(data.activity.toString),
+      JsString(data.explorationMode.toString),
       JsNumber(data.resources),
       JsNumber(data.oks),
       JsNumber(data.errors),

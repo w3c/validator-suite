@@ -7,11 +7,17 @@
 .structureMedia;
 
 /* Smooth UI. That's a bit severe */
-* {
+body > * {
 	-webkit-transition: all 0.2s;
 	-moz-transition: all 0.2s;
 	-o-transition: all 0.2s;
 	transition: all 0.2s;
+}
+body {
+	-webkit-transition: padding 0.2s;
+	-moz-transition:  padding 0.2s;
+	-o-transition:  padding 0.2s;
+	transition:  padding 0.2s;
 }
 
 #crumbs li {display:inline;}
@@ -53,6 +59,7 @@ body > footer {
 .job > div > *:last-child {width:17%;}
 .job form {line-height:1.2em}
 .job form button {display:block; float:right; clear:right;}
+.job a {float:right; clear:right;}
 .job .report {}
 .job .filters h1 {
 	display:inline;
@@ -62,3 +69,14 @@ body > footer {
 	padding:5px;
 	margin-right:10px
 }
+
+
+
+
+
+/* Report */
+
+.assertion .messages {
+	display:none;
+}
+

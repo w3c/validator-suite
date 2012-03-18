@@ -33,13 +33,13 @@ case class Job(
   // should this be private?
   def jobLive()(implicit conf: VSConfiguration): JobLive = JobLive.getJobLiveOrCreate(id, this)
   
-  def refresh()(implicit conf: VSConfiguration) = jobLive().refresh()
-  
   def on()(implicit conf: VSConfiguration) = jobLive().on()
   
   def off()(implicit conf: VSConfiguration) = jobLive().off()
 
   def stop()(implicit conf: VSConfiguration) = jobLive().stop()
+
+  def refresh()(implicit conf: VSConfiguration) = jobLive().refresh()
   
   def getData()(implicit conf: VSConfiguration): Future[JobData] = jobLive().jobData()
   
