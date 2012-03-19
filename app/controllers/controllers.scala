@@ -50,7 +50,7 @@ package object controllers {
       "distance" -> of[Int],
       "linkCheck" -> of[Boolean](booleanFormatter)
     )((name, url, distance, linkCheck) => {
-      Job(
+      JobConfiguration(
         name = name,
         organization = null,
         creator = null,
@@ -61,7 +61,7 @@ package object controllers {
           linkCheck=linkCheck,
           filter=Filter(include=Everything, exclude=Nothing)))
     })
-    ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
+    ((job: JobConfiguration) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
   )
 
   class FormW[T](form: Form[T]) {

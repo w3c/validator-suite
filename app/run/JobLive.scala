@@ -17,7 +17,7 @@ import java.nio.channels.ClosedChannelException
 
 object JobLive {
 
-  def getJobLiveOrCreate(id: Job#Id, job: => Job)(implicit conf: VSConfiguration): JobLive = {
+  def getJobLiveOrCreate(id: JobConfiguration#Id, job: => JobConfiguration)(implicit conf: VSConfiguration): JobLive = {
     import conf.runCreator
     runCreator.byJobId(id) getOrElse runCreator.runOf(job)
   }

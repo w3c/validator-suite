@@ -53,7 +53,7 @@ object Dashboard extends Controller {
   }
   
   // * Jobs
-  def jobDispatcher(implicit id: Job#Id) = Action { implicit req ⇒
+  def jobDispatcher(implicit id: JobConfiguration#Id) = Action { implicit req ⇒
     (for {
         body ← req.body.asFormUrlEncoded
        param ← body.get("action")
@@ -69,7 +69,7 @@ object Dashboard extends Controller {
     }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
   }
   
-  def showReport(implicit id: Job#Id) = Action { implicit req ⇒
+  def showReport(implicit id: JobConfiguration#Id) = Action { implicit req ⇒
     (for {
       user ← isAuth failMap failWithGrace 
        job ← ownsJob(user)(id) failMap failWithGrace
@@ -77,7 +77,7 @@ object Dashboard extends Controller {
     } yield Ok(views.html.job(Some(job), Some(ars))())).fold(f ⇒ f, s ⇒ s)
   }
   
-  def editJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req ⇒
+  def editJob(implicit idOpt: Option[JobConfiguration#Id] = None) = Action { implicit req ⇒
     (for {
       user ← isAuth failMap failWithGrace
         id ← idOpt toSuccess Ok(views.html.jobForm(jobForm))
@@ -85,7 +85,7 @@ object Dashboard extends Controller {
     } yield Ok(views.html.jobForm(jobForm.fill(job)))).fold(f ⇒ f, s ⇒ s)
   }
   
-  def deleteJob(implicit id: Job#Id) = Action { implicit req ⇒
+  def deleteJob(implicit id: JobConfiguration#Id) = Action { implicit req ⇒
     (for {
       user ← isAuth failMap failWithGrace
        job ← ownsJob(user) failMap failWithGrace
@@ -93,7 +93,7 @@ object Dashboard extends Controller {
     } yield seeDashboard(Ok, ("info" -> "Job deleted"))).fold(f ⇒ f, s ⇒ s)
   }
   
-  def createOrUpdateJob(implicit idOpt: Option[Job#Id] = None) = Action { implicit req ⇒
+  def createOrUpdateJob(implicit idOpt: Option[JobConfiguration#Id] = None) = Action { implicit req ⇒
     (for {
       user ← isAuth failMap failWithGrace
       jobF ← isValidForm(jobForm) failMap {formWithErrors ⇒ BadRequest(views.html.jobForm(formWithErrors))}
@@ -127,15 +127,15 @@ object Dashboard extends Controller {
     } yield Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)).fold(f ⇒ f, s ⇒ s)
   }
   
-  def onJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.on())("run on")
+  def onJob(implicit id: JobConfiguration#Id) = simpleJobAction(user ⇒ job ⇒ job.on())("run on")
 
-  def offJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.off())("run off")
+  def offJob(implicit id: JobConfiguration#Id) = simpleJobAction(user ⇒ job ⇒ job.off())("run off")
 
-  def refreshJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.refresh())("run refresh")
+  def refreshJob(implicit id: JobConfiguration#Id) = simpleJobAction(user ⇒ job ⇒ job.refresh())("run refresh")
   
-  def stopJob(implicit id: Job#Id) = simpleJobAction(user ⇒ job ⇒ job.stop())("run stop")
+  def stopJob(implicit id: JobConfiguration#Id) = simpleJobAction(user ⇒ job ⇒ job.stop())("run stop")
 
-  private def simpleJobAction(action: User ⇒ Job ⇒ Any)(msg: String)(implicit id: Job#Id) = Action { implicit req ⇒
+  private def simpleJobAction(action: User ⇒ JobConfiguration ⇒ Any)(msg: String)(implicit id: JobConfiguration#Id) = Action { implicit req ⇒
     (for {
       user ← isAuth failMap failWithGrace
        job ← ownsJob(user) failMap failWithGrace
@@ -183,11 +183,11 @@ object Dashboard extends Controller {
     }
   }
   
-  private def ownsJob(user: User)(implicit id: Job#Id): Validation[SuiteException, Job] = {
+  private def ownsJob(user: User)(implicit id: JobConfiguration#Id): Validation[SuiteException, JobConfiguration] = {
     for {
       jobOpt ← store getJobById(id) failMap {StoreException(_)}
          job ← jobOpt toSuccess UnknownJob
-      j: Job ← (if (job.organization == user.organization) Some(job) else None) toSuccess UnauthorizedJob
+      j: JobConfiguration ← (if (job.organization == user.organization) Some(job) else None) toSuccess UnauthorizedJob
     } yield j
   }
   

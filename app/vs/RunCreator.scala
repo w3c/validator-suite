@@ -10,16 +10,16 @@ import Validation._
 import akka.util.Timeout
 
 trait RunCreator {
-  def byJobId(jobId: Job#Id): Option[JobLive]
+  def byJobId(jobId: JobConfiguration#Id): Option[JobLive]
   def byJobId(jobId: String): Option[JobLive]
-  def runOf(job: Job): JobLive
+  def runOf(job: JobConfiguration): JobLive
 }
 
 class RunCreatorImpl()(implicit configuration: VSConfiguration, timeout: Timeout) extends RunCreator {
   
-  var registry = Map[Job#Id, ActorRef]()
+  var registry = Map[JobConfiguration#Id, ActorRef]()
   
-  def byJobId(jobId: Job#Id): Option[JobLive] = registry.get(jobId) map { new JobLive(_) }
+  def byJobId(jobId: JobConfiguration#Id): Option[JobLive] = registry.get(jobId) map { new JobLive(_) }
   
   def byJobId(jobIdString: String): Option[JobLive] =
     for {
@@ -27,7 +27,7 @@ class RunCreatorImpl()(implicit configuration: VSConfiguration, timeout: Timeout
       jobLive <- byJobId(jobId)
     } yield jobLive
   
-  def runOf(job: Job): JobLive = {
+  def runOf(job: JobConfiguration): JobLive = {
     val actor = TypedActor.context.actorOf(
       Props(new JobActor(job)), name = job.id.toString)
     registry += (job.id -> actor)

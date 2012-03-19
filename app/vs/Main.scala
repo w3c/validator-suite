@@ -20,7 +20,7 @@ object Main {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = Job.fake(strategy = strategy)
+  val job = JobConfiguration.fake(strategy = strategy)
   
   def main(args: Array[String]): Unit = {
     

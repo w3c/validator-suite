@@ -18,7 +18,7 @@ object Global extends GlobalSettings {
     val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id)
     val bertails = User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id)
     
-    val job = Job(
+    val job = JobConfiguration(
       name = "W3C",
       creator = bertails.id,
       organization = w3c.id,
@@ -29,7 +29,7 @@ object Global extends GlobalSettings {
         linkCheck=false,
         filter=Filter(include=Everything, exclude=Nothing)))
     
-    var a = List[Job]()
+    var a = List[JobConfiguration]()
     for (i <- 0 until 8)
       a = a :+ job.copy(id = java.util.UUID.randomUUID, strategy = job.strategy.copy(distance = i)) 
     a.map(store.putJob)

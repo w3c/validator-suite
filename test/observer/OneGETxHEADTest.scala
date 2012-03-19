@@ -27,7 +27,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = Job.fake(strategy = strategy)
+  val job = JobConfiguration.fake(strategy = strategy)
   
   val servers = Seq(
       unfiltered.jetty.Http(9001).filter(Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toPlanify),

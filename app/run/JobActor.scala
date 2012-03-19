@@ -25,7 +25,7 @@ import org.joda.time.DateTime
 
 case object Unique
 
-class JobActor(job: Job)(implicit val configuration: VSConfiguration) extends Actor with FSM[Unit, RunData] {
+class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguration) extends Actor with FSM[Unit, RunData] {
   
   import configuration._
   
