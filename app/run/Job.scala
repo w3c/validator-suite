@@ -15,20 +15,20 @@ import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import akka.actor.Props
 import java.nio.channels.ClosedChannelException
 
-object JobLive {
+object Job {
 
-  def getJobLiveOrCreate(id: JobConfiguration#Id, job: => JobConfiguration)(implicit conf: VSConfiguration): JobLive = {
+  def getJobOrCreate(id: JobConfiguration#Id, job: => JobConfiguration)(implicit conf: VSConfiguration): Job = {
     import conf.runCreator
     runCreator.byJobId(id) getOrElse runCreator.runOf(job)
   }
 
 }
 
-class JobLive(val jobActorRef: ActorRef)(implicit timeout: Timeout, conf: VSConfiguration) {
+class Job(val jobActorRef: ActorRef)(implicit timeout: Timeout, conf: VSConfiguration) {
 
   import conf.system
 
-  val logger = play.Logger.of(classOf[JobLive])
+  val logger = play.Logger.of(classOf[Job])
   
   def refresh(): Unit = jobActorRef ! message.Refresh
   

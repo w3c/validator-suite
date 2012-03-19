@@ -17,7 +17,7 @@ object JobConfiguration {
 
 // I guess the case class is actually just the configuration part
 // we should have a wrapper for that guy that would act as a facade for the JobActor
-// this is now called JobLive, but that sounds wrong
+// this is now called Job, but that sounds wrong
 case class JobConfiguration(
   id: JobConfiguration#Id = UUID.randomUUID, 
   strategy: EntryPointStrategy, 
@@ -32,7 +32,7 @@ case class JobConfiguration(
   def shortId: String = id.toString.substring(0, 6)
 
   // should this be private?
-  def jobLive()(implicit conf: VSConfiguration):JobLive = JobLive.getJobLiveOrCreate(id, this)
+  def jobLive()(implicit conf: VSConfiguration):Job = Job.getJobOrCreate(id, this)
   
   def on()(implicit conf: VSConfiguration) = jobLive().on()
   
