@@ -1,4 +1,4 @@
-@(job: Option[Job] = None, assertions: Option[Iterable[AssertorResult]] = None)(errors: List[(String, String)] = List())(implicit userOpt: Option[User], flash: Flash)
+@(job: Option[JobConfiguration] = None, assertions: Option[Iterable[AssertorResult]] = None)(errors: List[(String, String)] = List())(implicit userOpt: Option[User], flash: Flash)
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"), 

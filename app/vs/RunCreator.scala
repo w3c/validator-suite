@@ -9,13 +9,13 @@ import scalaz._
 import Validation._
 import akka.util.Timeout
 
-trait RunCreator {
+trait JobCreator {
   def byJobId(jobId: JobConfiguration#Id): Option[Job]
   def byJobId(jobId: String): Option[Job]
   def runOf(job: JobConfiguration): Job
 }
 
-class RunCreatorImpl()(implicit configuration: VSConfiguration, timeout: Timeout) extends RunCreator {
+class JobCreatorImpl()(implicit configuration: VSConfiguration, timeout: Timeout) extends JobCreator {
   
   var registry = Map[JobConfiguration#Id, ActorRef]()
   
