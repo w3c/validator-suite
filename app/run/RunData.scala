@@ -44,14 +44,15 @@ object RunData {
 
 }
 
-case class RunId(private val uuid: UUID) {
+case class RunId(private val uuid: UUID)
+
+object RunId {
 
   def fromString(s: String): RunId = RunId(UUID.fromString(s))
 
   def newId(): RunId = RunId(UUID.randomUUID())
 
 }
-
 
 case class Run(id: Run#Id) {
   type Id = UUID
@@ -65,7 +66,7 @@ case class RunData(
     // will never change for a Run, but it's very usefull to have it here
     strategy: Strategy,
     jobId: JobConfiguration#Id,
-    runId: Run#Id = UUID.randomUUID(),
+    runId: RunId = RunId.newId(),
     explorationMode: ExplorationMode = ProActive,
     // the distance from the seed for every known URLs
     distance: Map[URL, Int] = Map.empty,

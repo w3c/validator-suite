@@ -18,7 +18,7 @@ object JobData {
 
 case class JobData(
     jobId: JobConfiguration#Id,
-    runId: Run#Id,
+    runId: RunId,
     activity: RunActivity,
     explorationMode: ExplorationMode,
     resources: Int,

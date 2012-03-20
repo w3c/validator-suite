@@ -145,7 +145,8 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
 
   private final def scheduleNextURLsToFetch(data: RunData): RunData = {
     val (newObservation, explores) = data.takeAtMost(MAX_URL_TO_FETCH)
-    explores foreach fetch
+    val runId = data.runId
+    explores foreach { explore => fetch(explore, runId) }
     newObservation
   }
   
@@ -154,17 +155,17 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
    * 
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
-  private final def fetch(explore: RunData#Explore): Unit = {
+  private final def fetch(explore: RunData#Explore, runId: RunId): Unit = {
     val (url, distance) = explore
     val action = strategy.fetch(url, distance)
     action match {
       case GET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        http.fetch(url, GET, self)
+        http.fetch(url, GET, runId, self)
       }
       case HEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
-        http.fetch(url, HEAD, self)
+        http.fetch(url, HEAD, runId, self)
       }
       case FetchNothing => {
         logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))
@@ -174,10 +175,11 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
 
   
   // pure function (no side-effect)
+  // TODO do something with runId
   private final def receiveResponse(fetchResponse: FetchResponse, _data: RunData): (ResourceInfo, RunData) = {
     val data = _data.withCompletedFetch(fetchResponse.url)
     fetchResponse match {
-      case OkResponse(url, GET, status, headers, body) => {
+      case OkResponse(url, GET, status, headers, body, runId) => {
         logger.debug("%s: GET <<< %s" format (shortId, url))
         val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
         val (extractedURLs, newDistance) = headers.mimetype collect {
@@ -197,7 +199,7 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
         (ri, _newData)
       }
       // HEAD
-      case OkResponse(url, HEAD, status, headers, _) => {
+      case OkResponse(url, HEAD, status, headers, _, runId) => {
         logger.debug("%s: HEAD <<< %s" format (shortId, url))
         val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
         val ri = ResourceInfo(
@@ -208,7 +210,7 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
           result = Fetch(status, headers, List.empty))
         (ri, data)
       }
-      case KoResponse(url, action, why) => {
+      case KoResponse(url, action, why, runId) => {
         logger.debug("%s: Exception for %s: %s" format (shortId, url, why.getMessage))
         val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
         val ri = ResourceInfo(

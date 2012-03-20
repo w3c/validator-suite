@@ -13,7 +13,7 @@ import org.w3.vs.model.{Response => _, _}
 import org.w3.vs.VSConfiguration
 
 trait AuthorityManager {
-  def fetch(url: URL, action: HttpVerb, run: ActorRef): Unit
+  def fetch(url: URL, action: HttpVerb, runId: RunId, jobActorRef: ActorRef): Unit
   def sleepTime: Long
   def sleepTime_= (value: Long): Unit
 }
@@ -50,7 +50,7 @@ extends AuthorityManager with TypedActor.PostStop {
     lastFetchTimestamp = current
   }
   
-  def fetch(url: URL, action: HttpVerb, run: ActorRef): Unit = {
+  def fetch(url: URL, action: HttpVerb, runId: RunId, jobActorRef: ActorRef): Unit = {
     
       val httpHandler: AsyncHandler[Unit] = new AsyncHandler[Unit]() {
         
@@ -69,7 +69,7 @@ extends AuthorityManager with TypedActor.PostStop {
               body
             } catch {
               case t: Throwable => {
-                run ! KoResponse(url, action, t)
+                jobActorRef ! KoResponse(url, action, t, runId)
                 throw t // rethrow for benefit of AsyncHttpClient
               }
             } finally {
@@ -111,8 +111,8 @@ extends AuthorityManager with TypedActor.PostStop {
             val headers: Headers =
               (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
             val body = response.getResponseBody()
-            val fetchResponse = OkResponse(url, action, status, headers, body)
-            run ! fetchResponse
+            val fetchResponse = OkResponse(url, action, status, headers, body, runId)
+            jobActorRef ! fetchResponse
           }
         }
       }
