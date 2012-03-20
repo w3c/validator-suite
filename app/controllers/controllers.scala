@@ -66,7 +66,7 @@ package object controllers {
 
   class FormW[T](form: Form[T]) {
     def toValidation: Validation[Form[T], T] =
-      form.fold(f ⇒ Failure(f), s ⇒ Success(s))
+      form.fold(f => Failure(f), s => Success(s))
   }
 
   implicit def toFormW[T](form: Form[T]): FormW[T] = new FormW(form)

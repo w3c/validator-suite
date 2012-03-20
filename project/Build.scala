@@ -39,7 +39,7 @@ object ApplicationBuild extends Build {
     ensimeConfig := sexp(
       key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),
       key(":formatting-prefs"), sexp(
-        key(":rewriteArrowSymbols"), true,
+        key(":rewriteArrowSymbols"), false,
         key(":doubleIndentClassDeclaration"), true
       )
     )

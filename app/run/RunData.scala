@@ -118,8 +118,8 @@ case class RunData(
    * Returns an Observation with the new urls to be explored
    */
   def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (RunData, List[URL]) = {
-    val filteredUrls = urls.filterNot { url ⇒ shouldIgnore(url, atDistance) }.distinct
-    val newDistance = distance ++ filteredUrls.map { url ⇒ url -> atDistance }
+    val filteredUrls = urls.filterNot { url => shouldIgnore(url, atDistance) }.distinct
+    val newDistance = distance ++ filteredUrls.map { url => url -> atDistance }
     val newData = this.copy(
       toBeExplored = toBeExplored ++ filteredUrls,
       distance = newDistance)
@@ -134,7 +134,7 @@ case class RunData(
     // also, the ListMap preserves the order of insertion
 
     val map: ListMap[URL, Int] = ListMap.empty
-    map ++= urlsWithDistance.filterNot { case (url, distance) ⇒ shouldIgnore(url, distance) }
+    map ++= urlsWithDistance.filterNot { case (url, distance) => shouldIgnore(url, distance) }
     val newUrls = map.keys.toList
     val newData = this.copy(
       toBeExplored = toBeExplored ++ newUrls,
@@ -158,7 +158,7 @@ case class RunData(
    */
   private def takeFromMainAuthority: Option[(RunData, URL)] = {
     val optUrl = toBeExplored find { _.authority == mainAuthority }
-    optUrl map { url ⇒
+    optUrl map { url =>
       (this.copy(
         pending = pending + url,
         toBeExplored = toBeExplored filterNot { _ == url }),
@@ -175,8 +175,8 @@ case class RunData(
    */
   private def takeFromOtherAuthorities: Option[(RunData, URL)] = {
     val pendingToConsiderer =
-      toBeExplored.view filterNot { url ⇒ url.authority == mainAuthority || (pendingAuthorities contains url.getAuthority) }
-    pendingToConsiderer.headOption map { url ⇒
+      toBeExplored.view filterNot { url => url.authority == mainAuthority || (pendingAuthorities contains url.getAuthority) }
+    pendingToConsiderer.headOption map { url =>
       (this.copy(
         pending = pending + url,
         toBeExplored = toBeExplored filterNot { _ == url }),
@@ -208,13 +208,13 @@ case class RunData(
     var current: RunData = this
     var urls: List[URL] = List.empty
     for {
-      i ← 1 to (n - pending.size)
-      (observation, url) ← current.take
+      i <- 1 to (n - pending.size)
+      (observation, url) <- current.take
     } {
       current = observation
       urls ::= url
     }
-    (current, urls.reverse map { url ⇒ url -> distance(url) })
+    (current, urls.reverse map { url => url -> distance(url) })
   }
 
   def withCompletedFetch(url: URL): RunData = this.copy(
@@ -222,12 +222,12 @@ case class RunData(
     fetched = fetched + url)
 
   def withAssertorResult(result: AssertorResult): RunData = result match {
-    case assertions: Assertions ⇒ this.copy(
+    case assertions: Assertions => this.copy(
       oks = oks + assertions.numberOfOks,
       errors = errors + assertions.numberOfErrors,
       warnings = warnings + assertions.numberOfWarnings,
       receivedAssertorResults = receivedAssertorResults + 1)
-    case fail: AssertorFail ⇒ this // should do something about that
+    case fail: AssertorFail => this // should do something about that
   }
 
   def assertionPhaseIsFinished: Boolean =
