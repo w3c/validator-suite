@@ -44,6 +44,15 @@ object RunData {
 
 }
 
+case class RunId(private val uuid: UUID) {
+
+  def fromString(s: String): RunId = RunId(UUID.fromString(s))
+
+  def newId(): RunId = RunId(UUID.randomUUID())
+
+}
+
+
 case class Run(id: Run#Id) {
   type Id = UUID
 }

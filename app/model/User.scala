@@ -20,22 +20,31 @@ object User {
 
 }
 
+case class UserId(private val uuid: UUID) {
+
+  def fromString(s: String): UserId = UserId(UUID.fromString(s))
+
+  def newId(): UserId = UserId(UUID.randomUUID())
+
+}
+
 case class User(
+    // TODO: id: UserId = UserId.newId(),
     id: User#Id = UUID.randomUUID,
     organization: Organization#Id,
     email: String,
     name: String,
     password: String) {
-  
+
   type Id = UUID
-  
+
   // TODO we shoudnl't swallow the Failure here, that's bad
-//  def owns(jobId: Job#Id)(implicit configuration: VSConfiguration): Boolean = {
-//    import configuration.store
-//    store.getJobById(jobId) match {
-//      case Success(Some(_)) => true
-//      case _ => false
-//    }
-//  }
-  
+  //  def owns(jobId: Job#Id)(implicit configuration: VSConfiguration): Boolean = {
+  //    import configuration.store
+  //    store.getJobById(jobId) match {
+  //      case Success(Some(_)) => true
+  //      case _ => false
+  //    }
+  //  }
+
 }
