@@ -24,7 +24,7 @@ object RunSnapshot {
 }
 
 case class RunSnapshot(
-    jobId: JobConfiguration#Id,
+    jobId: JobId,
     runId: RunId,
     explorationMode: ExplorationMode,
     distance: Map[URL, Int],

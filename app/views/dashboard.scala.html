@@ -14,7 +14,7 @@
 	
 }{ @***** Toolbar *****@
 	
-		<ul><li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li></ul>
+		<ul><li><a href="@routes.Dashboard.newJob()">Add new job</a></li></ul>
 	
 }{ @***** Content *****@ 
 	
@@ -55,7 +55,7 @@
 				  }
 				}
 				<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
-				<button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(Some(jobConf.id))">Edit</button>
+				<button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(jobConf.id)">Edit</button>
 				<button type="submit" name="action" value="delete" class="delete">Delete</button>
 			</form>
 		</div></article>

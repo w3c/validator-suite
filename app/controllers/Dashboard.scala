@@ -52,7 +52,7 @@ object Dashboard extends Controller {
   }
 
   // * Jobs
-  def jobDispatcher(implicit id: JobConfiguration#Id) = Action { implicit req =>
+  def jobDispatcher(implicit id: JobId) = Action { implicit req =>
     (for {
       body <- req.body.asFormUrlEncoded
       param <- body.get("action")
@@ -68,31 +68,37 @@ object Dashboard extends Controller {
     }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
   }
 
-  def showReport(implicit id: JobConfiguration#Id) = Action { implicit req =>
+  def showReport(implicit id: JobId) = Action { implicit req =>
     (for {
       user <- isAuth failMap failWithGrace
-      job <- ownsJob(user)(id) failMap failWithGrace
+      job <- ownsJob(user, id) failMap failWithGrace
       ars <- store.listAssertorResults(job.configuration.id) failMap (t => failWithGrace(StoreException(t)))
     } yield Ok(views.html.job(Some(job.configuration), Some(ars))())).fold(f => f, s => s)
   }
 
-  def editJob(implicit idOpt: Option[JobConfiguration#Id] = None) = Action { implicit req =>
+  def newJob() = newOrEditJob(None) 
+  
+  def editJob(implicit id: JobId) = newOrEditJob(Some(id))
+  
+  def newOrEditJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
     (for {
       user <- isAuth failMap failWithGrace
       id <- idOpt toSuccess Ok(views.html.jobForm(jobForm))
-      job <- ownsJob(user)(id) failMap failWithGrace
+      job <- ownsJob(user, id) failMap failWithGrace
     } yield Ok(views.html.jobForm(jobForm.fill(job.configuration)))).fold(f => f, s => s)
   }
 
-  def deleteJob(implicit id: JobConfiguration#Id) = Action { implicit req =>
+  def deleteJob(implicit id: JobId) = Action { implicit req =>
     (for {
       user <- isAuth failMap failWithGrace
-      job <- ownsJob(user) failMap failWithGrace
+      job <- ownsJob(user, id) failMap failWithGrace
       _ <- store.removeJob(id) failMap { t => failWithGrace(StoreException(t)) }
     } yield seeDashboard(Ok, ("info" -> "Job deleted"))).fold(f => f, s => s)
   }
+  
+  def createJob = createOrUpdateJob(None) 
 
-  def createOrUpdateJob(implicit idOpt: Option[JobConfiguration#Id] = None) = Action { implicit req =>
+  def createOrUpdateJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
     (for {
       user <- isAuth failMap failWithGrace
       jobF <- isValidForm(jobForm) failMap { formWithErrors => BadRequest(views.html.jobForm(formWithErrors)) }
@@ -101,7 +107,7 @@ object Dashboard extends Controller {
           t => failWithGrace(StoreException(t)),
           _ => seeDashboard(Created, ("info" -> "Job created")))
       }
-      job <- ownsJob(user)(id) failMap failWithGrace
+      job <- ownsJob(user, id) failMap failWithGrace
       _ <- store putJob (job.configuration.copy(strategy = jobF.strategy, name = jobF.name)) failMap { t => failWithGrace(StoreException(t)) }
     } yield seeDashboard(Ok, ("info" -> "Job updated"))).fold(f => f, s => s)
   }
@@ -128,18 +134,18 @@ object Dashboard extends Controller {
     } yield Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)).fold(f => f, s => s)
   }
 
-  def onJob(implicit id: JobConfiguration#Id) = simpleJobAction(user => job => job.on())("run on")
+  def onJob(implicit id: JobId) = simpleJobAction(user => job => job.on())("run on")
 
-  def offJob(implicit id: JobConfiguration#Id) = simpleJobAction(user => job => job.off())("run off")
+  def offJob(implicit id: JobId) = simpleJobAction(user => job => job.off())("run off")
 
-  def refreshJob(implicit id: JobConfiguration#Id) = simpleJobAction(user => job => job.refresh())("run refresh")
+  def refreshJob(implicit id: JobId) = simpleJobAction(user => job => job.refresh())("run refresh")
 
-  def stopJob(implicit id: JobConfiguration#Id) = simpleJobAction(user => job => job.stop())("run stop")
+  def stopJob(implicit id: JobId) = simpleJobAction(user => job => job.stop())("run stop")
 
-  private def simpleJobAction(action: User => Job => Any)(msg: String)(implicit id: JobConfiguration#Id) = Action { implicit req =>
+  private def simpleJobAction(action: User => Job => Any)(msg: String)(implicit id: JobId) = Action { implicit req =>
     (for {
       user <- isAuth failMap failWithGrace
-      job <- ownsJob(user) failMap failWithGrace
+      job <- ownsJob(user, id) failMap failWithGrace
     } yield {
       action(user)(job)
       seeDashboard(Accepted, ("info", msg))
@@ -187,7 +193,7 @@ object Dashboard extends Controller {
   // aren't user.organization and id the same here?
   // also, this code will get all the way to the real actor, even if only the configuration is needed
   // TODO discuss with alex the real intent for this following snippet
-  private def ownsJob(user: User)(implicit id: JobConfiguration#Id): Validation[SuiteException, Job] = {
+  private def ownsJob(user: User, id: JobId): Validation[SuiteException, Job] = {
     for {
       jobConfOpt <- store getJobById (id) failMap { StoreException(_) }
       jobConf <- jobConfOpt toSuccess UnknownJob

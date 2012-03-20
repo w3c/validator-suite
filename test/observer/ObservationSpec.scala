@@ -34,7 +34,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
   val googlebar = URL("http://www.google.com/bar")
       
   "an observation with some urls to be explored" should {
-    val (data, _) = RunData(jobId = java.util.UUID.randomUUID(), strategy = strategy).withNewUrlsToBeExplored(List(w3_home -> 0, w3_standards -> 1))
+    val (data, _) = RunData(jobId = JobId(), strategy = strategy).withNewUrlsToBeExplored(List(w3_home -> 0, w3_standards -> 1))
     "expose a distance for the known urls" in {
       data.distance.get(w3_home) must equal (Some(0))
       data.distance.get(w3_standards) must equal (Some(1))
@@ -45,7 +45,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
   }
   
   "an observation" should {
-    val (initialData, _) = RunData(jobId = java.util.UUID.randomUUID(), strategy = strategy).withNewUrlsToBeExplored(List(w3_home -> 0, w3_standards -> 1))
+    val (initialData, _) = RunData(jobId = JobId(), strategy = strategy).withNewUrlsToBeExplored(List(w3_home -> 0, w3_standards -> 1))
     "should be able to filter URLs to be added" in {
       val (data, newUrls) = initialData.withNewUrlsToBeExplored(List(w3_home, w3_standards, w3_participate), 2)
       newUrls must equal (List(w3_participate))
@@ -61,7 +61,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
         w3_membership -> 1,
         w3_consortium -> 1)
 
-    val (initialData, _) = RunData(jobId = java.util.UUID.randomUUID(), strategy = strategy).withNewUrlsToBeExplored(urls)
+    val (initialData, _) = RunData(jobId = JobId(), strategy = strategy).withNewUrlsToBeExplored(urls)
     
     "take a URL" in {
       val (data, url) = initialData.take.get
@@ -87,7 +87,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
         w3_consortium -> 1,
         google -> 1)
 
-    val (initialData, _) = RunData(jobId = java.util.UUID.randomUUID(), strategy = strategy).withNewUrlsToBeExplored(urls)
+    val (initialData, _) = RunData(jobId = JobId(), strategy = strategy).withNewUrlsToBeExplored(urls)
     
     "take a URL from the main authority in priority regardless of the order in the url list" in {
       val (data, nextUrl) = initialData.take.get
@@ -121,7 +121,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
         google -> 1)
 
     val (initialData, _) =
-      RunData(jobId = java.util.UUID.randomUUID(), strategy = strategy)
+      RunData(jobId = JobId(), strategy = strategy)
       .copy(distance = Map(w3_home -> 0), pending = Set(w3_home))
       .withNewUrlsToBeExplored(urls)
     
@@ -146,7 +146,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
         w3_consortium -> 1)
     
     val (initialData, _) =
-      RunData(jobId = java.util.UUID.randomUUID(), strategy = strategy)
+      RunData(jobId = JobId(), strategy = strategy)
       .copy(distance = Map(google -> 1), pending = Set(google))
       .withNewUrlsToBeExplored(urls)
     
@@ -162,7 +162,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
   "an observation with pending fetches" should {
 
     val initialData =
-      RunData(jobId = java.util.UUID.randomUUID(), strategy = strategy).copy(
+      RunData(jobId = JobId(), strategy = strategy).copy(
         distance = Map(w3_home -> 0, google -> 1, mobilevoice -> 2),
         pending = Set(w3_home, google, mobilevoice))
     

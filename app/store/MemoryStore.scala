@@ -18,11 +18,11 @@ class MemoryStore extends Store {
     
   val resourceInfos: ConcurrentMap[ResourceInfo#Id, ResourceInfo] = new ConcurrentHashMap[ResourceInfo#Id, ResourceInfo]().asScala
   
-  val users: ConcurrentMap[User#Id, User] = new ConcurrentHashMap[User#Id, User]().asScala
+  val users: ConcurrentMap[UserId, User] = new ConcurrentHashMap[UserId, User]().asScala
   
-  val jobs: ConcurrentMap[JobConfiguration#Id, JobConfiguration] = new ConcurrentHashMap[JobConfiguration#Id, JobConfiguration]().asScala
+  val jobs: ConcurrentMap[JobId, JobConfiguration] = new ConcurrentHashMap[JobId, JobConfiguration]().asScala
   
-  val snapshots: ConcurrentMap[JobConfiguration#Id, RunSnapshot] = new ConcurrentHashMap[JobConfiguration#Id, RunSnapshot]().asScala
+  val snapshots: ConcurrentMap[JobId, RunSnapshot] = new ConcurrentHashMap[JobId, RunSnapshot]().asScala
   
   def init(): Validation[Throwable, Unit] = Success()
   
@@ -38,11 +38,11 @@ class MemoryStore extends Store {
     jobs += job.id -> job
   }
   
-  def removeJob(jobId: JobConfiguration#Id): Validation[Throwable, Unit] = fromTryCatch {
+  def removeJob(jobId: JobId): Validation[Throwable, Unit] = fromTryCatch {
     jobs -= jobId
   }
   
-  def getJobById(id: JobConfiguration#Id) = fromTryCatch {
+  def getJobById(id: JobId) = fromTryCatch {
    jobs.get(id)
   }
     
@@ -50,23 +50,23 @@ class MemoryStore extends Store {
     jobs collect { case (_, job) if organizationId == job.organization => job }
   }
   
-  def getResourceInfo(url: URL, jobId: JobConfiguration#Id): Validation[Throwable, ResourceInfo] = {
+  def getResourceInfo(url: URL, jobId: JobId): Validation[Throwable, ResourceInfo] = {
     val riOpt = resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.jobId == jobId => ri }
     riOpt toSuccess (new Throwable("job %s: couldn't find %s" format (jobId.toString, url.toString)))
   }
   
-  def distance(url: URL, jobId: JobConfiguration#Id): Validation[Throwable, Int] = {
+  def distance(url: URL, jobId: JobId): Validation[Throwable, Int] = {
     getResourceInfo(url, jobId) map { _.distancefromSeed }
   }
   
-  def listResourceInfos(jobId: JobConfiguration#Id, after: Option[DateTime] = None): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
+  def listResourceInfos(jobId: JobId, after: Option[DateTime] = None): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
     after match {
       case None => resourceInfos.values filter { _.jobId == jobId }
       case Some(date) => resourceInfos.values.filter{ ri => ri.jobId == jobId && ri.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
     }
   }
   
-  def listAssertorResults(jobId: JobConfiguration#Id, after: Option[DateTime] = None): Validation[Throwable, Iterable[AssertorResult]] = fromTryCatch {
+  def listAssertorResults(jobId: JobId, after: Option[DateTime] = None): Validation[Throwable, Iterable[AssertorResult]] = fromTryCatch {
     after match {
       case None => results.values filter { _.jobId == jobId }
       case Some(date) => results.values.filter{ r => r.jobId == jobId && r.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
@@ -89,7 +89,7 @@ class MemoryStore extends Store {
     snapshots += snapshot.jobId -> snapshot
   }
   
-  def latestSnapshotFor(jobId: JobConfiguration#Id): Validation[Throwable, Option[RunSnapshot]] = fromTryCatch {
+  def latestSnapshotFor(jobId: JobId): Validation[Throwable, Option[RunSnapshot]] = fromTryCatch {
     def latest = snapshots.filterKeys{ _ == jobId }.values.maxBy(_.createdAt)(DateTimeOrdering)
     try Some(latest) catch { case t => None }
   }

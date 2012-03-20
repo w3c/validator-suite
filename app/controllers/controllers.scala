@@ -109,6 +109,19 @@ package object controllers {
     }
   }
   
+  implicit val bindableJobId = new PathBindable[JobId] {
+    def bind (key: String, value: String): Either[String, JobId] = {
+      try {
+        Right(JobId.fromString(value))
+      } catch { case e: Exception =>
+        Left("invalid id: " + value)
+      }
+    }
+    def unbind (key: String, value: JobId): String = {
+      value.toString
+    }
+  }
+  
   implicit val bindableUUIDOption = new PathBindable[Option[UUID]] {
     def bind (key: String, value: String): Either[String, Option[UUID]] = {
       try {

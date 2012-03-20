@@ -7,7 +7,7 @@ import java.util.UUID
 case class ResourceInfo(
     id: ResourceInfo#Id = UUID.randomUUID(),
     url: URL,
-    jobId: JobConfiguration#Id,
+    jobId: JobId,
     action: HttpVerb,
     timestamp: DateTime = new DateTime,
     distancefromSeed: Int,

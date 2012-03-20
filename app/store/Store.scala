@@ -14,22 +14,22 @@ trait Store {
   
   def putJob(job: JobConfiguration): Validation[Throwable, Unit]
   
-  def removeJob(jobId: JobConfiguration#Id): Validation[Throwable, Unit]
+  def removeJob(jobId: JobId): Validation[Throwable, Unit]
   
-  def getJobById(id: JobConfiguration#Id): Validation[Throwable, Option[JobConfiguration]]
+  def getJobById(id: JobId): Validation[Throwable, Option[JobConfiguration]]
   
   def listJobs(organizationId: Organization#Id): Validation[Throwable, Iterable[JobConfiguration]]
   
-  def getResourceInfo(url: URL, jobId: JobConfiguration#Id): Validation[Throwable, ResourceInfo]
+  def getResourceInfo(url: URL, jobId: JobId): Validation[Throwable, ResourceInfo]
   
-  def distance(url: URL, jobId: JobConfiguration#Id): Validation[Throwable, Int]
+  def distance(url: URL, jobId: JobId): Validation[Throwable, Int]
   
-  def listResourceInfos(jobId: JobConfiguration#Id, after: Option[DateTime] = None): Validation[Throwable, Iterable[ResourceInfo]]
+  def listResourceInfos(jobId: JobId, after: Option[DateTime] = None): Validation[Throwable, Iterable[ResourceInfo]]
   
   // this is not really safe (goes through the entire collection)
   // def listAllResourceInfos(): Validation[Throwable, Iterable[ResourceInfo]]
   
-  def listAssertorResults(jobId: JobConfiguration#Id, after: Option[DateTime] = None): Validation[Throwable, Iterable[AssertorResult]]
+  def listAssertorResults(jobId: JobId, after: Option[DateTime] = None): Validation[Throwable, Iterable[AssertorResult]]
   
   def saveUser(user: User): Validation[Throwable, Unit]
   
@@ -39,7 +39,7 @@ trait Store {
   
   def putSnapshot(snapshot: RunSnapshot): Validation[Throwable, Unit]
   
-  def latestSnapshotFor(jobId: JobConfiguration#Id): Validation[Throwable, Option[RunSnapshot]]
+  def latestSnapshotFor(jobId: JobId): Validation[Throwable, Option[RunSnapshot]]
   
 }
 

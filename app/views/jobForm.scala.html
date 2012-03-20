@@ -1,4 +1,4 @@
-@(form: Form[JobConfiguration])(implicit userOpt: Option[User], idOpt: Option[java.util.UUID], flash: Flash)
+@(form: Form[JobConfiguration])(implicit userOpt: Option[User], idOpt: Option[JobId], flash: Flash)
 
 @libs.main("Validator Suite",
   stylesheets = List("dashboard.css")){
@@ -11,7 +11,7 @@
 
 	<ul>
 		<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-		<li><a href="@routes.Dashboard.editJob(None)">Add new job</a></li>
+		<li><a href="@routes.Dashboard.newJob()">Add new job</a></li>
 	</ul>
 
 }{ @***** Content *****@ 
@@ -38,7 +38,7 @@
 		@if(idOpt.isDefined) {
 		<input type=submit name=action value=Update formaction="@routes.Dashboard.jobDispatcher(idOpt.get)">
 		} else {
-		<input type=submit name=action value=Create formaction="@routes.Dashboard.createOrUpdateJob">
+		<input type=submit name=action value=Create formaction="@routes.Dashboard.createJob()">
 		}
 	</form>
 	

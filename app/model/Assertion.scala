@@ -15,7 +15,7 @@ sealed trait AssertorResult {
   // the id of the assertor that generated this assertion
   val assertorId: AssertorId
   // an assertion was produced in the context of a run
-  val jobId: JobConfiguration#Id
+  val jobId: JobId
   // when this assertion was produced
   val timestamp: DateTime
 }
@@ -25,7 +25,7 @@ case class Assertions(
     id: AssertorResult#Id = UUID.randomUUID(),
     url: URL,
     assertorId: AssertorId,
-    jobId: JobConfiguration#Id,
+    jobId: JobId,
     timestamp: DateTime = new DateTime,
     assertions: Iterable[RawAssertion]) extends AssertorResult {
   
@@ -44,7 +44,7 @@ case class AssertorFail(
     id: AssertorResult#Id = UUID.randomUUID(),
     url: URL,
     assertorId: AssertorId,
-    jobId: JobConfiguration#Id,
+    jobId: JobId,
     timestamp: DateTime = new DateTime,
     why: String) extends AssertorResult
 
