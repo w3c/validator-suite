@@ -31,19 +31,6 @@ case class JobConfiguration(
   
   def shortId: String = id.toString.substring(0, 6)
 
-  // should this be private?
-  def jobLive()(implicit conf: VSConfiguration):Job = Job.getJobOrCreate(id, this)
-  
-  def on()(implicit conf: VSConfiguration) = jobLive().on()
-  
-  def off()(implicit conf: VSConfiguration) = jobLive().off()
-
-  def stop()(implicit conf: VSConfiguration) = jobLive().stop()
-
-  def refresh()(implicit conf: VSConfiguration) = jobLive().refresh()
-  
-  def getData()(implicit conf: VSConfiguration): Future[JobData] = jobLive().jobData()
-  
   def assignTo(user: User): JobConfiguration = {
     copy(creator = user.id, organization = user.organization)
   }

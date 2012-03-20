@@ -20,5 +20,7 @@ class FutureValidation[F, S](val futureValidation: Future[Validation[F, S]]) {
   def failMap[T](f: F => T): FutureValidation[T, S] =
     new FutureValidation(futureValidation map { v => new ValidationW(v) failMap f })
 
+//  def sequence[A, M[_] <: Traversable[_]](implicit executor: ExecutionContext, ev: S =:= M[A]): M[Future]
+
 }
 

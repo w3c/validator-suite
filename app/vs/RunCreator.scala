@@ -17,9 +17,10 @@ trait JobCreator {
 
 class JobCreatorImpl()(implicit configuration: VSConfiguration, timeout: Timeout) extends JobCreator {
   
-  var registry = Map[JobConfiguration#Id, ActorRef]()
+  var registry = Map[JobConfiguration#Id, (JobConfiguration, ActorRef)]()
   
-  def byJobId(jobId: JobConfiguration#Id): Option[Job] = registry.get(jobId) map { new Job(_) }
+  def byJobId(jobId: JobConfiguration#Id): Option[Job] =
+    registry.get(jobId) map { case (conf, ref) => new Job(conf, ref) }
   
   def byJobId(jobIdString: String): Option[Job] =
     for {
@@ -27,11 +28,11 @@ class JobCreatorImpl()(implicit configuration: VSConfiguration, timeout: Timeout
       jobLive <- byJobId(jobId)
     } yield jobLive
   
-  def runOf(job: JobConfiguration): Job = {
-    val actor = TypedActor.context.actorOf(
-      Props(new JobActor(job)), name = job.id.toString)
-    registry += (job.id -> actor)
-    new Job(actor)
+  def runOf(jobConf: JobConfiguration): Job = {
+    val actorRef = TypedActor.context.actorOf(
+      Props(new JobActor(jobConf)), name = jobConf.id.toString)
+    registry += (jobConf.id -> (jobConf, actorRef))
+    new Job(jobConf, actorRef)
   }
 
 }

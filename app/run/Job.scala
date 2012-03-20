@@ -17,14 +17,19 @@ import java.nio.channels.ClosedChannelException
 
 object Job {
 
-  def getJobOrCreate(id: JobConfiguration#Id, job: => JobConfiguration)(implicit conf: VSConfiguration): Job = {
+  def getJobOrCreate(job: JobConfiguration)(implicit conf: VSConfiguration): Job = {
+    val id = job.id
     import conf.jobCreator
     jobCreator.byJobId(id) getOrElse jobCreator.runOf(job)
   }
 
 }
 
-class Job(val jobActorRef: ActorRef)(implicit timeout: Timeout, conf: VSConfiguration) {
+class Job(
+  val configuration: JobConfiguration,
+  val jobActorRef: ActorRef)(
+  implicit timeout: Timeout,
+  conf: VSConfiguration) {
 
   import conf.system
 
