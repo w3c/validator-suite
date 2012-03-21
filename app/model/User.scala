@@ -3,7 +3,7 @@ package org.w3.vs.model
 import org.w3.vs.VSConfiguration
 import org.w3.util._
 import org.w3.util.Pimps._
-import org.w3.vs.run._
+import org.w3.vs.actor._
 import scalaz._
 import akka.dispatch._
 

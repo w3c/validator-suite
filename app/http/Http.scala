@@ -10,7 +10,7 @@ import org.w3.util._
 import akka.util.Duration
 import akka.util.duration._
 import play.Logger
-import org.w3.vs.run._
+import org.w3.vs.actor._
 import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
 

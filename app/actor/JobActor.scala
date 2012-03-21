@@ -1,4 +1,4 @@
-package org.w3.vs.run
+package org.w3.vs.actor
 
 import org.w3.vs._
 import org.w3.vs.model._

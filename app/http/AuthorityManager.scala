@@ -4,7 +4,7 @@ import com.ning.http.client._
 import akka.actor._
 import akka.dispatch._
 import org.w3.util._
-import org.w3.vs.run._
+import org.w3.vs.actor._
 import akka.util.Duration
 import akka.util.duration._
 import java.lang.System.currentTimeMillis

@@ -1,10 +1,10 @@
-package org.w3.vs
+package org.w3.vs.actor
 
 import akka.actor.{ ActorSystem, TypedActor, Props, ActorRef }
 import org.w3.vs.http.{ Http, HttpImpl }
-import org.w3.vs.run._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
+import org.w3.vs.VSConfiguration
 import scalaz._
 import Validation._
 import akka.util.Timeout

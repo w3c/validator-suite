@@ -1,7 +1,7 @@
 package org.w3.vs.store
 
 import org.w3.vs.model._
-import org.w3.vs.run._
+import org.w3.vs.actor._
 import org.w3.util._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ConcurrentMap

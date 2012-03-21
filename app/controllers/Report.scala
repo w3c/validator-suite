@@ -1,8 +1,8 @@
 //package controllers
 //
 //import org.w3.vs.model.Job
-//import org.w3.vs.run.Run
-//import org.w3.vs.run.message._
+//import org.w3.vs.actor.Run
+//import org.w3.vs.actor.message._
 //import org.w3.vs.controllers._
 //import play.api.mvc.Controller
 //import play.api.mvc.WebSocket

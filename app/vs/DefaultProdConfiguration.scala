@@ -2,7 +2,7 @@ package org.w3.vs
 
 import akka.actor.{ActorSystem, TypedActor, TypedProps}
 import org.w3.vs.http.{Http, HttpImpl}
-import org.w3.vs.run._
+import org.w3.vs.actor._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
 import akka.util.duration._

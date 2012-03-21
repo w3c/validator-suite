@@ -2,7 +2,7 @@ package org.w3.vs.model
 
 import java.util.UUID
 import org.joda.time.DateTime
-import org.w3.vs.run._
+import org.w3.vs.actor._
 import akka.dispatch._
 import org.w3.vs.VSConfiguration
 

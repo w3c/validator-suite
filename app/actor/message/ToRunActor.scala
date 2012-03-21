@@ -1,4 +1,4 @@
-package org.w3.vs.run.message
+package org.w3.vs.actor.message
 
 import akka.actor.ActorRef
 

@@ -12,8 +12,8 @@ import org.w3.util.Pimps._
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
-import org.w3.vs.run._
-import org.w3.vs.run.message._
+import org.w3.vs.actor._
+import org.w3.vs.actor.message._
 import scalaz._
 import Scalaz._
 import Validation._

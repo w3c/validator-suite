@@ -1,9 +1,9 @@
-package org.w3.vs.run.message
+package org.w3.vs.actor.message
 
 import org.w3.util.URL
 import org.w3.vs.assertor.AssertorId
 import org.w3.vs.model._
-import org.w3.vs.run._
+import org.w3.vs.actor._
 import play.api.libs.json._
 import org.w3.vs.model._
 import play.api.libs.json.JsNumber
