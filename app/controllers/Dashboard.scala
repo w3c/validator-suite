@@ -197,7 +197,7 @@ object Dashboard extends Controller {
     for {
       jobConfOpt <- store getJobById (id) failMap { StoreException(_) }
       jobConf <- jobConfOpt toSuccess UnknownJob
-      jobConfValidation <- if (jobConf.organization == user.organization) Success(jobConf) else Failure(UnauthorizedJob)
+      jobConfValidation <- if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
     } yield {
       Job.getJobOrCreate(jobConfValidation)
     }

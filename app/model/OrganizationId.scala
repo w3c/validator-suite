@@ -1,6 +1,7 @@
 package org.w3.vs.model
 
 import java.util.UUID
+import scalaz._
 
 case class OrganizationId(private val uuid: UUID) {
   
@@ -13,5 +14,10 @@ object OrganizationId {
   def fromString(s: String): OrganizationId = OrganizationId(UUID.fromString(s))
   
   def newId(): OrganizationId = OrganizationId(UUID.randomUUID())
+
+  implicit def equalOrganizationId: Equal[OrganizationId] = new Equal[OrganizationId] {
+    def equal(left: OrganizationId, right: OrganizationId): Boolean =
+      left.uuid == right.uuid
+  }
   
 }
