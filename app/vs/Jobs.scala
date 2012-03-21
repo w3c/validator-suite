@@ -10,9 +10,11 @@ import Validation._
 import akka.util.Timeout
 
 trait Jobs {
+
   def byJobId(jobId: JobId): Option[Job]
-  //def byJobId(jobId: String): Option[Job]
+
   def runOf(job: JobConfiguration): Job
+
 }
 
 class JobsImpl()(implicit configuration: VSConfiguration, timeout: Timeout) extends Jobs {

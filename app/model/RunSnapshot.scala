@@ -1,6 +1,5 @@
-package org.w3.vs.run
+package org.w3.vs.model
 
-import org.w3.vs.model._
 import org.w3.util._
 
 import org.joda.time.DateTime

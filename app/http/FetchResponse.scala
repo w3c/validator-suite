@@ -1,8 +1,7 @@
 package org.w3.vs.http
 
 import org.w3.util._
-import org.w3.vs.model.HttpVerb
-import org.w3.vs.run.RunId
+import org.w3.vs.model._
 
 sealed trait FetchResponse {
   val url: URL

@@ -1,7 +1,6 @@
-package org.w3.vs.run
+package org.w3.vs.model
 
 import org.w3.vs._
-import org.w3.vs.model._
 import org.w3.util._
 import org.w3.vs.assertor._
 import akka.dispatch._

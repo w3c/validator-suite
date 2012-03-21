@@ -1,4 +1,4 @@
-package org.w3.vs.run
+package org.w3.vs.model
 
 //case class RunState(activity: RunActivity, explorationMode: ExplorationMode)
 
