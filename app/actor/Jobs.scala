@@ -9,6 +9,17 @@ import scalaz._
 import Validation._
 import akka.util.Timeout
 
+object Jobs {
+
+  def getJobOrCreate(job: JobConfiguration)(implicit conf: VSConfiguration): Job = {
+    val id = job.id
+    import conf.jobs
+    jobs.byJobId(id) getOrElse jobs.runOf(job)
+  }
+
+
+}
+
 trait Jobs {
 
   def byJobId(jobId: JobId): Option[Job]

@@ -14,7 +14,7 @@ object User {
 
   def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[Throwable, Iterable[Job]] = {
     import configuration.store
-    Future(store.listJobs(organizationId)).toFutureValidation map { _ map Job.getJobOrCreate }
+    Future(store.listJobs(organizationId)).toFutureValidation map { _ map Jobs.getJobOrCreate }
   }
 
 }

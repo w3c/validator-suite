@@ -17,11 +17,6 @@ import java.nio.channels.ClosedChannelException
 
 object Job {
 
-  def getJobOrCreate(job: JobConfiguration)(implicit conf: VSConfiguration): Job = {
-    val id = job.id
-    import conf.jobs
-    jobs.byJobId(id) getOrElse jobs.runOf(job)
-  }
 
 }
 

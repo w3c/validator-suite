@@ -40,7 +40,7 @@ object Dashboard extends Controller {
         user <- isAuth failMap { e => Promise.pure(failWithGrace(e)) }
         jobConfs <- store listJobs (user.organization) failMap { t => Promise.pure(failWithGrace(StoreException(t))) }
       } yield {
-        val jobDatas = jobConfs map { jobConf => Job.getJobOrCreate(jobConf).jobData }
+        val jobDatas = jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).jobData }
         val result = Future.sequence(jobDatas).asPromise orTimeout (Timeout(new Throwable), 1, SECONDS) // validation in scalaz.syntax.ValidationV -> fail[X](x): Validation[Future,X]
         result map { either =>
           either.fold[Result](
@@ -199,7 +199,7 @@ object Dashboard extends Controller {
       jobConf <- jobConfOpt toSuccess UnknownJob
       jobConfValidation <- if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
     } yield {
-      Job.getJobOrCreate(jobConfValidation)
+      Jobs.getJobOrCreate(jobConfValidation)
     }
   }
 
@@ -225,7 +225,7 @@ object Dashboard extends Controller {
         // The seed for the future scan, ie the initial jobData of a run
         def seed = new UpdateData(null)
         // Mapping through a list of (jobId, enum)
-        var out = jobConfs.map(jobConf => Job.getJobOrCreate(jobConf).subscribeToUpdates).map { enum =>
+        var out = jobConfs.map(jobConf => Jobs.getJobOrCreate(jobConf).subscribeToUpdates).map { enum =>
           // Filter the enumerator, taking only the UpdateData messages
           enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData => e } &>
             // Transform to a tuple (updateData, sameAsPrevious)
