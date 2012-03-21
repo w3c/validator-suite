@@ -8,9 +8,5 @@ object Organization {
 }
 
 case class Organization(
-    id: Organization#Id = UUID.randomUUID,
-    name: String) {
-  
-  type Id = UUID
-  
-}
+    id: OrganizationId = OrganizationId.newId(),
+    name: String)

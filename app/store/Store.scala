@@ -18,7 +18,7 @@ trait Store {
   
   def getJobById(id: JobId): Validation[Throwable, Option[JobConfiguration]]
   
-  def listJobs(organizationId: Organization#Id): Validation[Throwable, Iterable[JobConfiguration]]
+  def listJobs(organizationId: OrganizationId): Validation[Throwable, Iterable[JobConfiguration]]
   
   def getResourceInfo(url: URL, jobId: JobId): Validation[Throwable, ResourceInfo]
   

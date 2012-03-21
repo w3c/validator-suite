@@ -46,7 +46,7 @@ class MemoryStore extends Store {
    jobs.get(id)
   }
     
-  def listJobs(organizationId: Organization#Id): Validation[Throwable, Iterable[JobConfiguration]] = fromTryCatch {
+  def listJobs(organizationId: OrganizationId): Validation[Throwable, Iterable[JobConfiguration]] = fromTryCatch {
     jobs collect { case (_, job) if organizationId == job.organization => job }
   }
   
