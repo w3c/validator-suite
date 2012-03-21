@@ -31,6 +31,7 @@ object ApplicationBuild extends Build {
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
     testOptions in Test := Nil,
     routesImport += "org.w3.vs.controllers._",
+    routesImport += "org.w3.vs.model._",
     routesImport += "java.util.UUID",
     templatesImport += "org.w3.vs.model._",
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
