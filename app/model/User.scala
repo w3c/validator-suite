@@ -10,7 +10,7 @@ import akka.dispatch._
 object User {
 
   def fake: User =
-    User(organization = Organization.fake.id, email = "foo@bar.com", name = "foo", password = "bar")
+    User(organization = OrganizationData.fake.id, email = "foo@bar.com", name = "foo", password = "bar")
 
   def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[Throwable, Iterable[Job]] = {
     import configuration.store

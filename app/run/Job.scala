@@ -19,8 +19,8 @@ object Job {
 
   def getJobOrCreate(job: JobConfiguration)(implicit conf: VSConfiguration): Job = {
     val id = job.id
-    import conf.jobCreator
-    jobCreator.byJobId(id) getOrElse jobCreator.runOf(job)
+    import conf.jobs
+    jobs.byJobId(id) getOrElse jobs.runOf(job)
   }
 
 }

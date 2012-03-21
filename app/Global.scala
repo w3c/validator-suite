@@ -13,7 +13,7 @@ object Global extends GlobalSettings {
   
   override def onStart(app: Application): Unit = {
     
-    val w3c = Organization(name="World Wide Web Consortium")
+    val w3c = OrganizationData(name="World Wide Web Consortium")
     
     val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id)
     val bertails = User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id)

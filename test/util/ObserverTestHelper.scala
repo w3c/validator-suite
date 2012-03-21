@@ -21,7 +21,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   
   def servers: Seq[unfiltered.util.RunnableServer]
   
-  val jobCreator = configuration.jobCreator
+  val jobCreator = configuration.jobs
   val http = configuration.http
   val store = configuration.store
   

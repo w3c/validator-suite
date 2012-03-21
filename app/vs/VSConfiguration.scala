@@ -12,7 +12,7 @@ trait VSConfiguration {
   
   val http: Http
 
-  val jobCreator: JobCreator
+  val jobs: Jobs
   
   val MAX_URL_TO_FETCH: Int
   

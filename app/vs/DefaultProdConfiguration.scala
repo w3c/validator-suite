@@ -39,11 +39,11 @@ trait DefaultProdConfiguration extends VSConfiguration {
       "http")
     
   
-  val jobCreator: JobCreator =
+  val jobs: Jobs =
     TypedActor(system).typedActorOf(
       TypedProps(
-        classOf[JobCreator],
-        new JobCreatorImpl()(this, 5 seconds)),
+        classOf[Jobs],
+        new JobsImpl()(this, 5 seconds)),
       "run")
   
   /**

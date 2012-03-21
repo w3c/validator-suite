@@ -9,7 +9,7 @@ import akka.actor._
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import play.Logger
-import System.{currentTimeMillis => now}
+import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
 import akka.util.duration._
 import akka.util.Duration
@@ -25,33 +25,36 @@ import org.joda.time.DateTime
 
 case object Unique
 
-class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguration) extends Actor with FSM[Unit, RunData] {
-  
+// TODO extract all pure function in a companion object
+class JobActor(job: JobConfiguration)(
+  implicit val configuration: VSConfiguration)
+    extends Actor with FSM[Unit, RunData] {
+
   import configuration._
-  
+
   // TODO is it really what we want? I don't think so
   import TypedActor.dispatcher
 
   val logger = Logger.of(classOf[JobActor])
-  
+
   /**
    * A shorten id for logs readability
    */
   val shortId = job.shortId
-  
+
   implicit def strategy = job.strategy
-  
+
   final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
     var data = _data
-    store.listResourceInfos(job.id, after = afterOpt).fold( t => throw t, ris => ris) foreach { resourceInfo =>
+    store.listResourceInfos(job.id, after = afterOpt).fold(t => throw t, ris => ris) foreach { resourceInfo =>
       data = data.withCompletedFetch(resourceInfo.url)
     }
-    store.listAssertorResults(job.id, after = afterOpt).fold( t => throw t, ars => ars) foreach { assertorResult =>
+    store.listAssertorResults(job.id, after = afterOpt).fold(t => throw t, ars => ars) foreach { assertorResult =>
       data = data.withAssertorResult(assertorResult)
     }
     data
   }
-  
+
   /**
    * tries to get the latest snapshot, then replays the events that happened on it
    */
@@ -60,14 +63,14 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
     case Success(None) => RunData(jobId = job.id, strategy = strategy)
     case Success(Some(snapshot)) => replayEventsOn(RunData(strategy, snapshot), Some(snapshot.createdAt))
   }
-  
+
   // at instanciation of this actor
 
   configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, message.TellTheWorldYouAreAlive)
 
   startWith(Unique, initialConditions)
 
-  when( () ) {
+  when(()) {
     case Event(message.GetJobData, data) => {
       val jobData = JobData(data)
       sender ! jobData
@@ -126,7 +129,7 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
       val jobData = JobData(nextStateData)
       broadcast(message.UpdateData(jobData), nextStateData)
       if (nextStateData.noMoreUrlToExplore) {
-        logger.info("%s: Exploration phase finished. Fetched %d pages" format(shortId, nextStateData.fetched.size))
+        logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
       }
       if (nextStateData.assertionPhaseIsFinished) {
         logger.info("%s: no pending assertions" format shortId)
@@ -139,7 +142,7 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
     val firstURLs = strategy.seedURLs.toList
     // update the observation state
     val (data, _) = RunData(jobId = job.id, strategy = strategy).withNewUrlsToBeExplored(firstURLs, 0)
-    logger.info("%s: Starting exploration phase with %d url(s)" format(shortId, firstURLs.size))
+    logger.info("%s: Starting exploration phase with %d url(s)" format (shortId, firstURLs.size))
     data
   }
 
@@ -149,10 +152,10 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
     explores foreach { explore => fetch(explore, runId) }
     newObservation
   }
-  
+
   /**
    * Fetch one URL
-   * 
+   *
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
   private final def fetch(explore: RunData#Explore, runId: RunId): Unit = {
@@ -173,7 +176,6 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
     }
   }
 
-  
   // pure function (no side-effect)
   // TODO do something with runId
   private final def receiveResponse(fetchResponse: FetchResponse, _data: RunData): (ResourceInfo, RunData) = {
@@ -188,7 +190,7 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
         } getOrElse (List.empty, distance)
         // TODO do something with the newUrls
         val (_newData, newUrls) = data.withNewUrlsToBeExplored(extractedURLs, newDistance)
-        if (! newUrls.isEmpty)
+        if (!newUrls.isEmpty)
           logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, data.numberOfKnownUrls))
         val ri = ResourceInfo(
           url = url,
@@ -223,12 +225,14 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
       }
     }
   }
-  
+
   // has side-effects
+  // TODO pass the runId here too
+  // TODO use an actor to get a finer control over the process of the assertions
   private final def scheduleAssertion(resourceInfo: ResourceInfo, data: RunData): RunData = {
     val assertors = strategy.assertorsFor(resourceInfo)
     val url = resourceInfo.url
-    
+
     assertors foreach { assertor =>
       val f = Future {
         assertor.assert(url) fold (
@@ -236,35 +240,34 @@ class JobActor(job: JobConfiguration)(implicit val configuration: VSConfiguratio
             url = url,
             assertorId = assertor.id,
             jobId = job.id,
-            why = throwable.getMessage
-          ),
+            why = throwable.getMessage),
           assertions => Assertions(
             url = url,
             assertorId = assertor.id,
             jobId = job.id,
-            assertions = assertions
-          )
-        )
-      }(assertorExecutionContext) recoverWith { case throwable: Throwable =>
-        Future {
-          AssertorFail(
-            url = url,
-            assertorId = assertor.id,
-            jobId = job.id,
-            why = throwable.getMessage)
-        }
+            assertions = assertions))
+      }(assertorExecutionContext) recoverWith {
+        case throwable: Throwable =>
+          Future {
+            AssertorFail(
+              url = url,
+              assertorId = assertor.id,
+              jobId = job.id,
+              why = throwable.getMessage)
+          }
       }
       f pipeTo self
     }
-    
+
     data.copy(sentAssertorResults = data.sentAssertorResults + assertors.size)
   }
-  
+
   /**
    * To broadcast messages to subscribers.
+   * TODO should we encapsulate the messaging/notification thing in a specialized actor? I'm not sure yet
    */
   private final def broadcast(msg: message.RunUpdate, data: RunData): Unit = {
-    data.subscribers foreach ( s => s ! msg )
+    data.subscribers foreach (s => s ! msg)
   }
-  
+
 }
