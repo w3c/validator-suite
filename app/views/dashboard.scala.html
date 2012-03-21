@@ -1,4 +1,4 @@
-@(jobs: Iterable[(JobConfiguration, JobData)] = None)()(implicit flash: Flash, userOpt: Option[User])
+@(jobs: Iterable[(JobConfiguration, JobData)] = None)()(implicit userV: Validation[SuiteException, User], flash: Flash)
 
 @import views.Helper._
 @import org.w3.vs.run._
@@ -10,7 +10,7 @@
    
    @***** Header ******@
    
-	@libs.header(userOpt)
+	@libs.header(userV)
 	
 }{ @***** Toolbar *****@
 	

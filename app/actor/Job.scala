@@ -30,6 +30,8 @@ class Job(
 
   val logger = play.Logger.of(classOf[Job])
   
+  def id = configuration.id
+  
   def refresh(): Unit = jobActorRef ! message.Refresh
   
   def stop(): Unit = jobActorRef ! message.Stop
