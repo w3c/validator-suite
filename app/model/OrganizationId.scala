@@ -15,7 +15,7 @@ object OrganizationId {
   
   def newId(): OrganizationId = OrganizationId(UUID.randomUUID())
 
-  implicit def equalOrganizationId: Equal[OrganizationId] = new Equal[OrganizationId] {
+  implicit val equalOrganizationId: Equal[OrganizationId] = new Equal[OrganizationId] {
     def equal(left: OrganizationId, right: OrganizationId): Boolean =
       left.uuid == right.uuid
   }
