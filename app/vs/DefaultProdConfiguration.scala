@@ -1,6 +1,6 @@
 package org.w3.vs
 
-import akka.actor.{ActorSystem, TypedActor, TypedProps}
+import akka.actor._
 import org.w3.vs.http.{Http, HttpImpl}
 import org.w3.vs.actor._
 import org.w3.vs.model._
@@ -29,7 +29,11 @@ trait DefaultProdConfiguration extends VSConfiguration {
     ExecutionContext.fromExecutorService(executor)
   }
   
-  val system: ActorSystem = ActorSystem("vs")
+  val system: ActorSystem = {
+    val actorSystem = ActorSystem("vs")
+    val jobsRef = actorSystem.actorOf(Props(new JobsActor()(this)), "jobs")
+    actorSystem
+  }
   
   val http: Http =
     TypedActor(system).typedActorOf(
@@ -38,14 +42,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
         new HttpImpl()(this)),
       "http")
     
-  
-  val jobs: Jobs =
-    TypedActor(system).typedActorOf(
-      TypedProps(
-        classOf[Jobs],
-        new JobsImpl()(this, 5 seconds)),
-      "run")
-  
   /**
    * note: an AsyncHttpClient is a heavy object with a thread
    * and connection pool associated with it, it's supposed to

@@ -9,6 +9,7 @@ import akka.util.duration._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import org.w3.vs.DefaultProdConfiguration
+import org.w3.vs.actor._
 
 /**
   * Server 1 -> Server 2
@@ -27,7 +28,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = JobConfiguration.fake(strategy = strategy)
+  val jobConf = JobConfiguration.fake(strategy = strategy)
   
   val servers = Seq(
       unfiltered.jetty.Http(9001).filter(Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toPlanify),
@@ -36,9 +37,9 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
 
   "test OneGETxHEAD" in {
     http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
-    val run = jobCreator.runOf(job)
-    run.refresh()
-    def ris = store.listResourceInfos(job.id) getOrElse sys.error("was not a Success")
+    val job = Jobs.getJobOrCreate(jobConf)
+    job map (_.refresh())
+    def ris = store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
     val urls8081 = ris filter { _.url.authority == "localhost:9002" }

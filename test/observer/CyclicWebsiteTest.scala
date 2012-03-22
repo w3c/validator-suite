@@ -11,6 +11,7 @@ import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import akka.testkit.TestKit
 import org.w3.vs.DefaultProdConfiguration
+import org.w3.vs.actor._
 
 class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) {
   
@@ -23,15 +24,15 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = JobConfiguration.fake(strategy = strategy)
+  val jobConf = JobConfiguration.fake(strategy = strategy)
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
   "test cyclic(10)" in {
     http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
-    val run = jobCreator.runOf(job)
-    run.refresh()
-    def cond = (store.listResourceInfos(job.id) getOrElse sys.error("was not a Success") ).size == 11
+    val job = Jobs.getJobOrCreate(jobConf)
+    job map (_.refresh())
+    def cond = (store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success") ).size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
   }
   

@@ -14,7 +14,16 @@ object User {
 
   def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[Throwable, Iterable[Job]] = {
     import configuration.store
-    Future(store.listJobs(organizationId)).toFutureValidation map { _ map Jobs.getJobOrCreate }
+    for {
+      jobConfs <- store.listJobs(organizationId).toDelayedValidation
+      jobs <- {
+        val jobs = jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf) }
+        val futureJobs = Future.sequence(jobs)
+        futureJobs.lift
+      }
+    } yield {
+      jobs
+    }
   }
 
 }

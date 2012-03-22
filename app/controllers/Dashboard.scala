@@ -37,17 +37,16 @@ object Dashboard extends Controller {
   def dashboard = Action { implicit req =>
     AsyncResult {
       (for {
-        user <- isAuth failMap { e => Promise.pure(failWithGrace(e)) }
-        jobConfs <- store listJobs (user.organization) failMap { t => Promise.pure(failWithGrace(StoreException(t))) }
-      } yield {
-        val jobDatas = jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).jobData }
-        val result = Future.sequence(jobDatas).asPromise orTimeout (Timeout(new Throwable), 1, SECONDS) // validation in scalaz.syntax.ValidationV -> fail[X](x): Validation[Future,X]
-        result map { either =>
-          either.fold[Result](
-            data => Ok(views.html.dashboard(jobConfs zip data)),
-            timeout => failWithGrace(timeout))
+        user <- isAuth.toImmediateValidation.failMap{ e => failWithGrace(e) }
+        jobs <- User.getJobs(user.organization).failMap( t => failWithGrace(StoreException(t)))
+        viewInputs <- {
+          val iterableFuture = jobs map { job => job.jobData map ( data => (job.configuration, data) ) }
+          val futureIterable = Future.sequence(iterableFuture)
+          futureIterable.liftWith{case t => failWithGrace(t)}
         }
-      }).fold(f => f, s => s)
+      } yield {
+        Ok(views.html.dashboard(viewInputs))
+      }).expiresWith(failWithGrace(Timeout(new Throwable)), 1, SECONDS)
     }
   }
 
@@ -69,11 +68,13 @@ object Dashboard extends Controller {
   }
 
   def showReport(implicit id: JobId) = Action { implicit req =>
-    (for {
-      user <- isAuth failMap failWithGrace
-      job <- ownsJob(user, id) failMap failWithGrace
-      ars <- store.listAssertorResults(job.configuration.id) failMap (t => failWithGrace(StoreException(t)))
-    } yield Ok(views.html.job(Some(job.configuration), Some(ars))())).fold(f => f, s => s)
+    AsyncResult {
+      (for {
+        user <- isAuth.toImmediateValidation.failMap{ e => failWithGrace(e) }
+        job <- ownsJob(user, id) failMap failWithGrace
+        ars <- store.listAssertorResults(job.configuration.id).toDelayedValidation failMap (t => failWithGrace(StoreException(t)))
+      } yield Ok(views.html.job(Some(job.configuration), Some(ars))())).toPromise()
+    }
   }
 
   def newJob() = newOrEditJob(None) 
@@ -81,35 +82,41 @@ object Dashboard extends Controller {
   def editJob(implicit id: JobId) = newOrEditJob(Some(id))
   
   def newOrEditJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
-    (for {
-      user <- isAuth failMap failWithGrace
-      id <- idOpt toSuccess Ok(views.html.jobForm(jobForm))
-      job <- ownsJob(user, id) failMap failWithGrace
-    } yield Ok(views.html.jobForm(jobForm.fill(job.configuration)))).fold(f => f, s => s)
+    AsyncResult {
+      (for {
+        user <- isAuth.toImmediateValidation.failMap{ e => failWithGrace(e) }
+        id <- idOpt.toSuccess(Ok(views.html.jobForm(jobForm))).toImmediateValidation
+        job <- ownsJob(user, id) failMap failWithGrace
+      } yield Ok(views.html.jobForm(jobForm.fill(job.configuration)))).toPromise
+    }
   }
 
   def deleteJob(implicit id: JobId) = Action { implicit req =>
-    (for {
-      user <- isAuth failMap failWithGrace
-      job <- ownsJob(user, id) failMap failWithGrace
-      _ <- store.removeJob(id) failMap { t => failWithGrace(StoreException(t)) }
-    } yield seeDashboard(Ok, ("info" -> "Job deleted"))).fold(f => f, s => s)
+    AsyncResult {
+      (for {
+        user <- isAuth.toImmediateValidation.failMap{ e => failWithGrace(e) }
+        job <-  ownsJob(user, id) failMap failWithGrace
+        _ <-  store.removeJob(id).toDelayedValidation.failMap{ t => failWithGrace(StoreException(t)) }
+      } yield seeDashboard(Ok, ("info" -> "Job deleted"))).toPromise
+    }
   }
   
   def createJob = createOrUpdateJob(None) 
 
   def createOrUpdateJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
-    (for {
-      user <- isAuth failMap failWithGrace
-      jobF <- isValidForm(jobForm) failMap { formWithErrors => BadRequest(views.html.jobForm(formWithErrors)) }
-      id <- idOpt toSuccess {
-        store putJob (jobF.assignTo(user)) fold (
-          t => failWithGrace(StoreException(t)),
-          _ => seeDashboard(Created, ("info" -> "Job created")))
-      }
-      job <- ownsJob(user, id) failMap failWithGrace
-      _ <- store putJob (job.configuration.copy(strategy = jobF.strategy, name = jobF.name)) failMap { t => failWithGrace(StoreException(t)) }
-    } yield seeDashboard(Ok, ("info" -> "Job updated"))).fold(f => f, s => s)
+    AsyncResult {
+      (for {
+        user <- isAuth.toImmediateValidation failMap failWithGrace
+        jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors => BadRequest(views.html.jobForm(formWithErrors)) }
+        id <- idOpt.toSuccess {
+          store putJob (jobF.assignTo(user)) fold (
+            t => failWithGrace(StoreException(t)),
+            _ => seeDashboard(Created, ("info" -> "Job created")))
+        }.toImmediateValidation
+        job <- ownsJob(user, id) failMap failWithGrace
+        _ <- store.putJob(job.configuration.copy(strategy = jobF.strategy, name = jobF.name)).toDelayedValidation failMap { t => failWithGrace(StoreException(t)) }
+      } yield seeDashboard(Ok, ("info" -> "Job updated"))).toPromise
+    }
   }
 
   def login = Action { implicit req =>
@@ -143,13 +150,15 @@ object Dashboard extends Controller {
   def stopJob(implicit id: JobId) = simpleJobAction(user => job => job.stop())("run stop")
 
   private def simpleJobAction(action: User => Job => Any)(msg: String)(implicit id: JobId) = Action { implicit req =>
-    (for {
-      user <- isAuth failMap failWithGrace
-      job <- ownsJob(user, id) failMap failWithGrace
-    } yield {
-      action(user)(job)
-      seeDashboard(Accepted, ("info", msg))
-    }).fold(f => f, s => s)
+    AsyncResult {
+      (for {
+        user <- isAuth.toImmediateValidation failMap failWithGrace
+        job <- ownsJob(user, id) failMap failWithGrace
+      } yield {
+        action(user)(job)
+        seeDashboard(Accepted, ("info", msg))
+      }).toPromise
+    }
   }
 
   private def seeDashboard(status: Status, message: (String, String))(implicit req: Request[_]): Result = {
@@ -193,13 +202,17 @@ object Dashboard extends Controller {
   // aren't user.organization and id the same here?
   // also, this code will get all the way to the real actor, even if only the configuration is needed
   // TODO discuss with alex the real intent for this following snippet
-  private def ownsJob(user: User, id: JobId): Validation[SuiteException, Job] = {
+  private def ownsJob(user: User, id: JobId): FutureValidation[SuiteException, Job] = {
     for {
-      jobConfOpt <- store getJobById (id) failMap { StoreException(_) }
-      jobConf <- jobConfOpt toSuccess UnknownJob
-      jobConfValidation <- if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
+      jobConfOpt <- store.getJobById(id).failMap{ StoreException(_) }.toDelayedValidation
+      jobConf <- jobConfOpt.toSuccess(UnknownJob).toImmediateValidation
+      jobConfValidation <- {
+        val validation = if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
+        validation.toImmediateValidation
+      }
+      job <- Jobs.getJobOrCreate(jobConfValidation).liftWith{case t => Unexpected }
     } yield {
-      Jobs.getJobOrCreate(jobConfValidation)
+      job
     }
   }
 
@@ -215,32 +228,41 @@ object Dashboard extends Controller {
     } yield user
   }
 
+  def closeSocket(): (Iteratee[JsValue, _], Enumerator[JsValue]) = (Iteratee.ignore[JsValue], Enumerator.eof)
+
   // * Sockets
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>
     isAuth.fold(
-      f => (Iteratee.ignore[JsValue], Enumerator.eof),
+      f => closeSocket(),
       user => {
         val in = Iteratee.ignore[JsValue]
-        val jobConfs = store listJobs (user.organization) fold (t => throw t, jobs => jobs)
-        // The seed for the future scan, ie the initial jobData of a run
-        def seed = new UpdateData(null)
-        // Mapping through a list of (jobId, enum)
-        var out = jobConfs.map(jobConf => Jobs.getJobOrCreate(jobConf).subscribeToUpdates).map { enum =>
-          // Filter the enumerator, taking only the UpdateData messages
-          enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData => e } &>
-            // Transform to a tuple (updateData, sameAsPrevious)
-            Enumeratee.scanLeft[UpdateData]((seed, false)) { (from: (UpdateData, Boolean), to: UpdateData) =>
-              from match {
-                case (prev, _) if (to != prev) => (to, false)
-                case _ => (to, true)
+        val promiseEnumerator: Promise[Enumerator[JsValue]] =
+          (for {
+            jobConfs <- store.listJobs(user.organization).toDelayedValidation
+            seed = new UpdateData(null)
+            enumerators <- Future.sequence(jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
+            out = {
+              val foo = enumerators map { (enum: Enumerator[RunUpdate]) =>
+                // Filter the enumerator, taking only the UpdateData messages
+                enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData => e } &>
+                // Transform to a tuple (updateData, sameAsPrevious)
+                  Enumeratee.scanLeft[UpdateData]((seed, false)) {
+                    case ((prev, _), to) if to != prev => (to, false)
+                    case (_, to) => (to, true)
+                  }
+                // Interleave the resulting enumerators
               }
+              foo.reduce((e1, e2) => e1 >- e2) &>
+              // And collect messages that are marked as changed
+              Enumeratee.collect { case (a, false) => a.toJS }
             }
-          // Interleave the resulting enumerators
-        }.reduce((e1, e2) => e1 >- e2) &>
-          // And collect messages that are marked as changed
-          Enumeratee.collect { case (a, false) => a.toJS }
-        (in, out)
-      })
+          } yield {
+            out
+          }).failMap(_ => Enumerator.eof[JsValue]).toPromiseT[Enumerator[JsValue]]()
+        val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseEnumerator)
+        (in, enumerator)
+      }
+    )
   }
   // jobSocket
   // uriSocket

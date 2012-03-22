@@ -1,46 +1,43 @@
 package org.w3.vs.actor
 
-import akka.actor.{ ActorSystem, TypedActor, Props, ActorRef }
+import akka.actor._
+import akka.dispatch._
+import akka.pattern.ask
 import org.w3.vs.http.{ Http, HttpImpl }
 import org.w3.vs.model._
 import org.w3.vs.assertor._
 import org.w3.vs.VSConfiguration
-import scalaz._
-import Validation._
+// import scalaz._
+// import Validation._
 import akka.util.Timeout
+import akka.util.duration._
+
+case class GetJobOrCreate(jobConfiguration: JobConfiguration)
+
+class JobsActor()(implicit configuration: VSConfiguration) extends Actor {
+
+  /* see https://groups.google.com/forum/#!msg/akka-user/uaFTSpLoGp0/8Fh18YN4lewJ */
+  def receive = {
+    case GetJobOrCreate(jobConfiguration) => {
+      val name = jobConfiguration.id.toString
+      def createChild =
+        context.actorOf(Props(new JobActor(jobConfiguration)), name = name)
+      val child = context.children.find(_.path.name == name).getOrElse(createChild)
+      sender ! child
+    }
+  }
+
+}
 
 object Jobs {
 
-  def getJobOrCreate(job: JobConfiguration)(implicit conf: VSConfiguration): Job = {
-    val id = job.id
-    import conf.jobs
-    jobs.byJobId(id) getOrElse jobs.runOf(job)
-  }
-
-
-}
-
-trait Jobs {
-
-  def byJobId(jobId: JobId): Option[Job]
-
-  def runOf(job: JobConfiguration): Job
+  def getJobOrCreate(
+    jobConf: JobConfiguration)(
+    implicit configuration: VSConfiguration): Future[Job] = {
+      val context = configuration.system
+      val jobsRef: ActorRef = context.actorFor("/user/jobs")
+      implicit val timeout: Timeout = 10.seconds
+      (jobsRef ? GetJobOrCreate(jobConf)).mapTo[ActorRef] map { jobRef => new Job(jobConf, jobRef) }
+    }
 
 }
-
-class JobsImpl()(implicit configuration: VSConfiguration, timeout: Timeout) extends Jobs {
-
-  var registry = Map[JobId, (JobConfiguration, ActorRef)]()
-
-  def byJobId(jobId: JobId): Option[Job] =
-    registry.get(jobId) map { case (conf, ref) => new Job(conf, ref) }
-
-  def runOf(jobConf: JobConfiguration): Job = {
-    val actorRef = TypedActor.context.actorOf(
-      Props(new JobActor(jobConf)), name = jobConf.id.toString)
-    registry += (jobConf.id -> (jobConf, actorRef))
-    new Job(jobConf, actorRef)
-  }
-
-}
-

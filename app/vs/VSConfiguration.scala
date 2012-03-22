@@ -13,8 +13,6 @@ trait VSConfiguration {
   
   val http: Http
 
-  val jobs: Jobs
-  
   val MAX_URL_TO_FETCH: Int
   
   val assertorExecutionContext: ExecutionContext

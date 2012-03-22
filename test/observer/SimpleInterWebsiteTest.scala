@@ -9,6 +9,7 @@ import akka.util.duration._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import org.w3.vs.DefaultProdConfiguration
+import org.w3.vs.actor._
 
 /**
   * Server 1 -> Server 2
@@ -25,7 +26,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = JobConfiguration.fake(strategy = strategy)
+  val jobConf = JobConfiguration.fake(strategy = strategy)
   
   val servers = Seq(
       unfiltered.jetty.Http(9001).filter(Website(Seq("/" --> "http://localhost:9002/")).toPlanify),
@@ -33,9 +34,9 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
   )
 
   "test simpleInterWebsite" in {
-    val run = jobCreator.runOf(job)
-    run.refresh()
-    def ris = store.listResourceInfos(job.id) getOrElse sys.error("was not a Success")
+    val job = Jobs.getJobOrCreate(jobConf)
+    job map (_.refresh())
+    def ris = store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 2
     awaitCond(cond, 3 seconds, 50 milliseconds)
   }

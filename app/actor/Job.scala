@@ -23,8 +23,8 @@ object Job {
 class Job(
   val configuration: JobConfiguration,
   val jobActorRef: ActorRef)(
-  implicit timeout: Timeout,
-  conf: VSConfiguration) {
+  implicit conf: VSConfiguration,
+  timeout: Timeout) {
 
   import conf.system
 
