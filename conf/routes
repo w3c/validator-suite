@@ -8,12 +8,12 @@ GET     /dashboard                  controllers.Dashboard.dashboard()
 
 # Jobs
 GET     /job                        controllers.Dashboard.newJob()
-GET     /job/:id/edit               controllers.Dashboard.editJob(id: org.w3.vs.model.JobId)
+GET     /job/:id/edit               controllers.Dashboard.editJob(id: JobId)
 
 POST    /job                        controllers.Dashboard.createJob()
 # delete, run, stop or put are all POSTed actions, handled by jobDispatcher
-POST    /job/:id                    controllers.Dashboard.jobDispatcher(id: org.w3.vs.model.JobId)
-GET     /job/:id                    controllers.Dashboard.showReport(id: org.w3.vs.model.JobId)
+POST    /job/:id                    controllers.Dashboard.jobDispatcher(id: JobId)
+GET     /job/:id                    controllers.Dashboard.showReport(id: JobId)
 GET     /jobs                       controllers.Dashboard.dashboardSocket()
 
 # Authentication

@@ -4,20 +4,42 @@ import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.util._
 import org.w3.vs.assertor._
-import akka.dispatch._
 import akka.actor._
-import play.Logger
-import akka.util.duration._
-import akka.util.Duration
+import akka.dispatch._
 import akka.pattern.ask
+import akka.util.Duration
 import akka.util.Timeout
+import akka.util.duration._
+import scalaz.Validation
+import play.Logger
 import play.api.libs.iteratee.{Enumerator, PushEnumerator}
-import akka.actor.Props
 import java.nio.channels.ClosedChannelException
+import org.joda.time.DateTime
+import org.w3.vs.exception._
+import org.w3.util._
+import org.w3.util.Pimps._
 
 object Job {
-
-
+  
+  def store = org.w3.vs.Prod.configuration.store
+  
+  // I think that the store should use typed exceptions (StoreException) instead of Throwables 
+  
+  def get(id: JobId): Validation[SuiteException, Option[JobConfiguration]] = 
+    store getJobById id failMap (t => StoreException(t))
+  
+  def getAll(id: OrganizationId): Validation[SuiteException, Iterable[JobConfiguration]] =
+    store listJobs id failMap (t => StoreException(t))
+  
+  def delete(id: JobId): Validation[SuiteException, Unit] =
+    store removeJob id failMap (t => StoreException(t))
+  
+  def save(job: JobConfiguration): Validation[SuiteException, Unit] =
+    store putJob job failMap (t => StoreException(t))
+  
+  def getAssertorResults(id: JobId, after: Option[DateTime] = None): Validation[SuiteException, Iterable[AssertorResult]] =
+    store listAssertorResults (id, after) failMap (t => StoreException(t))
+  
 }
 
 class Job(
@@ -29,6 +51,8 @@ class Job(
   import conf.system
 
   val logger = play.Logger.of(classOf[Job])
+  
+  def id = configuration.id
   
   def refresh(): Unit = jobActorRef ! message.Refresh
   
