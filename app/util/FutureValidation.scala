@@ -37,8 +37,7 @@ class FutureValidation[+F, +S](val futureValidation: Future[Validation[F, S]]) {
 
   def toPromiseT[T]()(
     implicit evF: F <:< T,
-    evS: S <:< T): Promise[T] =
-      futureValidation.map{ _.fold(evF, evS) }.asPromise
+    evS: S <:< T): Promise[T] = toFuture().asPromise
 
   def expiresWith(
     result: Result,
@@ -49,6 +48,11 @@ class FutureValidation[+F, +S](val futureValidation: Future[Validation[F, S]]) {
       val akkaFutureResult = futureValidation map { _.fold(evF, evS) }
       akkaFutureResult.asPromise.orTimeout(result, duration, unit).map(_.fold(f => f, s => s))
     }
+
+  def toFuture[T]()(
+    implicit evF: F <:< T,
+    evS: S <:< T): Future[T] =
+      futureValidation.map{ _.fold(evF, evS) }
 
 //  def sequence[A, M[_] <: Traversable[_]](implicit executor: ExecutionContext, ev: S =:= M[A]): M[Future]
 

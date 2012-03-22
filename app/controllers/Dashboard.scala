@@ -26,48 +26,29 @@ object Dashboard extends Controller {
   val logger = play.Logger.of("Controller.Dashboard")
 
   // TODO: make the implicit explicit!!!
-  import org.w3.vs.Prod.configuration
+  implicit def configuration = org.w3.vs.Prod.configuration
+  def store = configuration.store
+  //implicit def webContext = configuration.webExecutionContext
 
   def index = Action { _ => Redirect(routes.Dashboard.dashboard) }
 
   def dashboard = Action { implicit req =>
     AsyncResult {
-      (for {
-        user <- isAuth.toImmediateValidation.failMap{ e => failWithGrace(e) }
-        jobs <- User.getJobs(user.organization).failMap( t => failWithGrace(StoreException(t)))
+      val futureResult = for {
+        user <- getAuthenticatedUser().failMap(failWithGrace)
+        jobs <- User.getJobs(user.organization).failMap(failWithGrace)
         viewInputs <- {
-          val iterableFuture = jobs map { job => job.jobData map ( data => (job.configuration, data) ) }
+          val iterableFuture = jobs map { job => job.jobData map (data => (job.configuration, data)) }
           val futureIterable = Future.sequence(iterableFuture)
-          futureIterable.liftWith{case t => failWithGrace(t)}
-        }
+          futureIterable.lift
+        }.failMap(t => failWithGrace(StoreException(t)))
       } yield {
         Ok(views.html.dashboard(viewInputs))
-      }).expiresWith(failWithGrace(Timeout(new Throwable)), 1, SECONDS)
-      )
+      }
+      futureResult.expiresWith(failWithGrace(Timeout(new Throwable)), 1, SECONDS)
     }
   }
 
-  def dashboard = Action { implicit req =>
-    AsyncResult {
-      (for {
-        user <- getAuthenticatedUser
-        jobConfs <- Job.getAll(user.organization)
-      } yield {
-        val jobDatas = jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).jobData }
-        val result = Future.sequence(jobDatas).asPromise orTimeout (Timeout(new Throwable), 1, SECONDS) // validation in scalaz.syntax.ValidationV -> fail[X](x): Validation[Future,X]
-        result map { either =>
-          either.fold[Result](
-            data => Ok(views.html.dashboard(jobConfs zip data)),
-            timeout => failWithGrace(timeout))
-        }
-      }).fold(
-        e => Promise.pure(failWithGrace(e)),
-        s => s
-      )
-    }
-  }
-
-  
   // * Jobs
   def jobDispatcher(implicit id: JobId) = Action { implicit req =>
     (for {
@@ -87,118 +68,108 @@ object Dashboard extends Controller {
 
   def showReport(implicit id: JobId) = Action { implicit req =>
     AsyncResult {
-      (for {
-        user <- isAuth.toImmediateValidation.failMap{ e => failWithGrace(e) }
-        job <- ownsJob(user, id) failMap failWithGrace
-        ars <- store.listAssertorResults(job.configuration.id).toDelayedValidation failMap (t => failWithGrace(StoreException(t)))
-      } yield Ok(views.html.job(Some(job.configuration), Some(ars))())).toPromise()
+      val futureResult =
+        for {
+          user <- getAuthenticatedUser
+          jobC <- getJobConfIfAllowed(user, id)
+          ars <- Job.getAssertorResults(jobC.id)
+        } yield {
+          Ok(views.html.job(Some(jobC), Some(ars)))
+        }
+      futureResult.failMap(failWithGrace).toPromise()
     }
-      s => s
-    )
-  }
-  
-  def showReport(implicit id: JobId) = Action { implicit req =>
-    (for {
-      user <- getAuthenticatedUser
-      jobC <- getJobConfIfAllowed(user, id)
-      ars <- Job.getAssertorResults(jobC.id)
-    } yield Ok(views.html.job(Some(jobC), Some(ars)))).fold(
-      e => failWithGrace(e),
-      s => s
-    )
   }
 
+  def newJob() = newOrEditJob(None)
 
-  def newJob() = newOrEditJob(None) 
-  
   def editJob(implicit id: JobId) = newOrEditJob(Some(id))
-  
+
   def newOrEditJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
     AsyncResult {
-      (for {
-        user <- isAuth.toImmediateValidation.failMap{ e => failWithGrace(e) }
-        id <- idOpt.toSuccess(Ok(views.html.jobForm(jobForm))).toImmediateValidation
-        job <- ownsJob(user, id) failMap failWithGrace
-      } yield Ok(views.html.jobForm(jobForm.fill(job.configuration)))).toPromise
+      val futureResult =
+        for {
+          user <- getAuthenticatedUser failMap { e => failWithGrace(e) }
+          id <- {
+            idOpt.toSuccess(Ok(views.html.jobForm(jobForm))).toImmediateValidation
+          }
+          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
+        } yield {
+          Ok(views.html.jobForm(jobForm.fill(jobC)))
+        }
+      futureResult.toPromise
     }
   }
-  
-  def newOrEditJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
-    (for {
-      user <- getAuthenticatedUser failMap failWithGrace
-      id <- idOpt toSuccess Ok(views.html.jobForm(jobForm))
-      jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
-    } yield Ok(views.html.jobForm(jobForm.fill(jobC)))).fold(f => f, s => s)
-  }
-
 
   def deleteJob(implicit id: JobId) = Action { implicit req =>
     AsyncResult {
-      (for {
-        user <- isAuth.toImmediateValidation.failMap{ e => failWithGrace(e) }
-        job <-  ownsJob(user, id) failMap failWithGrace
-        _ <-  store.removeJob(id).toDelayedValidation.failMap{ t => failWithGrace(StoreException(t)) }
-      } yield seeDashboard(Ok, ("info" -> "Job deleted"))).toPromise
+      val futureResult =
+        for {
+          user <- getAuthenticatedUser
+          job <- getJobIfAllowed(user, id)
+          _ <- Job.delete(id)
+        } yield {
+          seeDashboard(Ok, ("info" -> "Job deleted"))
+        }
+      futureResult.failMap(failWithGrace).toPromise
     }
-      s => s
-    )
-  }
-  
-  def deleteJob(implicit id: JobId) = Action { implicit req =>
-    (for {
-      user <- getAuthenticatedUser
-      job <- getJobIfAllowed(user, id)
-      _ <- Job.delete(id)
-    } yield seeDashboard(Ok, ("info" -> "Job deleted"))).fold(
-      e => failWithGrace(e),
-      s => s
-    )
   }
 
-  
-  
-  def createJob = createOrUpdateJob(None) 
+  def createJob = createOrUpdateJob(None)
 
   def createOrUpdateJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
     AsyncResult {
-      (for {
-        user <- isAuth.toImmediateValidation failMap failWithGrace
-        jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors => BadRequest(views.html.jobForm(formWithErrors)) }
-        id <- idOpt.toSuccess {
-          store putJob (jobF.assignTo(user)) fold (
-            t => failWithGrace(StoreException(t)),
-            _ => seeDashboard(Created, ("info" -> "Job created")))
-        }.toImmediateValidation
-        job <- ownsJob(user, id) failMap failWithGrace
-        _ <- store.putJob(job.configuration.copy(strategy = jobF.strategy, name = jobF.name)).toDelayedValidation failMap { t => failWithGrace(StoreException(t)) }
-      } yield seeDashboard(Ok, ("info" -> "Job updated"))).toPromise
+      val futureResult =
+        for {
+          user <- getAuthenticatedUser failMap failWithGrace
+          jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors =>
+            BadRequest(views.html.jobForm(formWithErrors))
+          }
+          id <- idOpt match {
+            case None => {
+              val errorResult =
+                for {
+                  _ <- Job.save(jobF.assignTo(user)) failMap failWithGrace
+                } yield seeDashboard(Created, ("info" -> "Job created"))
+              new FutureValidation(errorResult.toFuture map { e => Failure(e) })
+            }
+            case Some(id) => Success(id).toImmediateValidation
+          }
+          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
+          _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap failWithGrace
+        } yield {
+          seeDashboard(Ok, ("info" -> "Job updated"))
+        }
+      futureResult.toPromise
     }
   }
 
-  def createOrUpdateJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
-    (for {
-      user <- getAuthenticatedUser failMap failWithGrace
-      jobF <- isValidForm(jobForm) failMap { formWithErrors => BadRequest(views.html.jobForm(formWithErrors)) }
-      id <- idOpt toSuccess {
-        Job save(jobF.assignTo(user)) fold (
-          e => failWithGrace(e),
-          _ => seeDashboard(Created, ("info" -> "Job created")))
-      }
-      jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
-      _ <- Job save (jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap { e => failWithGrace(e) }
-    } yield seeDashboard(Ok, ("info" -> "Job updated"))).fold(f => f, s => s)
-  }
+  // def createOrUpdateJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
+  //   (for {
+  //     user <- getAuthenticatedUser failMap failWithGrace
+  //     jobF <- isValidForm(jobForm) failMap { formWithErrors => BadRequest(views.html.jobForm(formWithErrors)) }
+  //     id <- idOpt toSuccess {
+  //       Job save(jobF.assignTo(user)) fold (
+  //         e => failWithGrace(e),
+  //         _ => seeDashboard(Created, ("info" -> "Job created")))
+  //     }
+  //     jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
+  //     _ <- Job save (jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap { e => failWithGrace(e) }
+  //   } yield seeDashboard(Ok, ("info" -> "Job updated"))).fold(f => f, s => s)
+  // }
 
-
-  
   def login = Action { implicit req =>
-    getAuthenticatedUser.fold(
-      ex => ex match {
-        case s: StoreException => failWithGrace(s)
-        case _ => Ok(views.html.login(loginForm)) // Other exceptions are just silent
-      },
-      user => Redirect(routes.Dashboard.dashboard) // If the user is already logged in send him to the dashboard
-    )
+    AsyncResult {
+      val futureResult =
+        for {
+          user <- getAuthenticatedUser() failMap {
+            case s: StoreException => failWithGrace(s)
+            case _ => Ok(views.html.login(loginForm)) // Other exceptions are just silent
+          }
+        } yield {
+          Redirect(routes.Dashboard.dashboard) // If the user is already logged in send him to the dashboard
+        }
+      futureResult.toPromise
+    }
   }
 
   def logout = Action {
@@ -206,11 +177,17 @@ object Dashboard extends Controller {
   }
 
   def authenticate = Action { implicit req =>
-    (for {
-      userF <- isValidForm(loginForm) failMap { formWithErrors => BadRequest(views.html.login(formWithErrors)) }
-      userO <- User authenticate (userF._1, userF._2) failMap { e => failWithGrace(e) }
-      user <- userO toSuccess Unauthorized(views.html.login(loginForm)).withNewSession
-    } yield Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)).fold(f => f, s => s)
+    AsyncResult {
+      val futureResult =
+        for {
+          userF <- isValidForm(loginForm).toImmediateValidation failMap { formWithErrors => BadRequest(views.html.login(formWithErrors)) }
+          userO <- User.authenticate(userF._1, userF._2) failMap { e => failWithGrace(e) }
+          user <- userO.toSuccess(Unauthorized(views.html.login(loginForm)).withNewSession).toImmediateValidation
+        } yield {
+          Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)
+        }
+      futureResult.toPromise
+    }
   }
 
   def onJob(implicit id: JobId) = simpleJobAction(user => job => job.on())("run on")
@@ -223,31 +200,17 @@ object Dashboard extends Controller {
 
   private def simpleJobAction(action: User => Job => Any)(msg: String)(implicit id: JobId) = Action { implicit req =>
     AsyncResult {
-      (for {
-        user <- isAuth.toImmediateValidation failMap failWithGrace
-        job <- ownsJob(user, id) failMap failWithGrace
-      } yield {
-        action(user)(job)
-        seeDashboard(Accepted, ("info", msg))
-      }).toPromise
+      val futureResult =
+        for {
+          user <- getAuthenticatedUser
+          job <- getJobIfAllowed(user, id)
+        } yield {
+          action(user)(job)
+          seeDashboard(Accepted, ("info", msg))
+        }
+      futureResult.failMap(failWithGrace).toPromise
     }
-      s => s
-    )
   }
-  
-  private def simpleJobAction(action: User => Job => Any)(msg: String)(implicit id: JobId) = Action { implicit req =>
-    (for {
-      user <- getAuthenticatedUser
-      job <- getJobIfAllowed(user, id)
-    } yield {
-      action(user)(job)
-      seeDashboard(Accepted, ("info", msg))
-    }).fold(
-      e => failWithGrace(e),
-      s => s
-    )
-  }
-
 
   private def seeDashboard(status: Status, message: (String, String))(implicit req: Request[_]): Result = {
     if (isAjax) status else SeeOther(routes.Dashboard.dashboard.toString).flashing(message)
@@ -287,35 +250,33 @@ object Dashboard extends Controller {
     }
   }
 
-  private def getJobIfAllowed(user: User, id: JobId): Validation[SuiteException, Job] = getJobConfIfAllowed(user, id).map(Jobs.getJobOrCreate(_))
-
-  private def getJobConfIfAllowed(user: User, id: JobId): Validation[SuiteException, JobConfiguration] = {
-  private def ownsJob(user: User, id: JobId): FutureValidation[SuiteException, Job] = {
+  private def getJobIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, Job] =
     for {
-      jobConfOpt <- store.getJobById(id).failMap{ StoreException(_) }.toDelayedValidation
-      jobConf <- jobConfOpt.toSuccess(UnknownJob).toImmediateValidation
-      jobConfValidation <- {
+      jobConf <- getJobConfIfAllowed(user, id)
+      job <- Jobs.getJobOrCreate(jobConf).liftWith { case t => StoreException(t) }
+    } yield job
+
+  private def getJobConfIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, JobConfiguration] = {
+    for {
+      jobConfO <- Job.get(id)
+      jobConf <- jobConfO.toSuccess(UnknownJob).toImmediateValidation
+      jobConfAllowed <- {
         val validation = if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
         validation.toImmediateValidation
       }
-      job <- Jobs.getJobOrCreate(jobConfValidation).liftWith{case t => Unexpected }
-    } yield {
-      job
-  }
-  
-  private def getJobConfIfAllowed(user: User, id: JobId): Validation[SuiteException, JobConfiguration] = {
-    for {
-      jobConfO <- Job get (id)
-      jobConf <- jobConfO toSuccess UnknownJob
-      jobConfAllowed <- if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
     } yield jobConfAllowed
+  }
 
-  
-  private implicit def getAuthenticatedUser(implicit session: Session): Validation[SuiteException, User] = {
+  // TODO
+  // https://github.com/playframework/Play20/wiki/Scalacache
+
+  private implicit def makeItCompile: Validation[SuiteException, User] = null
+
+  private implicit def getAuthenticatedUser()(implicit session: Session): FutureValidation[SuiteException, User] = {
     for {
-      email <- session get ("email") toSuccess Unauthenticated
+      email <- session.get("email").toSuccess(Unauthenticated).toImmediateValidation
       userO <- User getByEmail (email)
-      user <- userO toSuccess UnknownUser
+      user <- userO.toSuccess(UnknownUser).toImmediateValidation
     } yield user
   }
 
@@ -323,38 +284,34 @@ object Dashboard extends Controller {
 
   // * Sockets
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>
-    getAuthenticatedUser.fold(
-      f => closeSocket(),
-      user => {
-        val in = Iteratee.ignore[JsValue]
-        val promiseEnumerator: Promise[Enumerator[JsValue]] =
-          (for {
-            jobConfs <- store.listJobs(user.organization).toDelayedValidation
-            seed = new UpdateData(null)
-            enumerators <- Future.sequence(jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
-            out = {
-              val foo = enumerators map { (enum: Enumerator[RunUpdate]) =>
-                // Filter the enumerator, taking only the UpdateData messages
-                enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData => e } &>
-                // Transform to a tuple (updateData, sameAsPrevious)
-                  Enumeratee.scanLeft[UpdateData]((seed, false)) {
-                    case ((prev, _), to) if to != prev => (to, false)
-                    case (_, to) => (to, true)
-                  }
-                // Interleave the resulting enumerators
-              }
-              foo.reduce((e1, e2) => e1 >- e2) &>
-              // And collect messages that are marked as changed
-              Enumeratee.collect { case (a, false) => a.toJS }
+    val in = Iteratee.ignore[JsValue]
+    val seed = new UpdateData(null)
+    val promiseEnumerator = (for {
+      user <- getAuthenticatedUser()
+      jobConfs <- store.listJobs(user.organization).toDelayedValidation
+      enumerators <- Future.sequence(jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
+    } yield {
+      val out = {
+        val foo = enumerators map { (enum: Enumerator[RunUpdate]) =>
+          // Filter the enumerator, taking only the UpdateData messages
+          enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData => e } &>
+            // Transform to a tuple (updateData, sameAsPrevious)
+            Enumeratee.scanLeft[UpdateData]((seed, false)) {
+              case ((prev, _), to) if to != prev => (to, false)
+              case (_, to) => (to, true)
             }
-          } yield {
-            out
-          }).failMap(_ => Enumerator.eof[JsValue]).toPromiseT[Enumerator[JsValue]]()
-        val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseEnumerator)
-        (in, enumerator)
+          // Interleave the resulting enumerators
+        }
+        foo.reduce((e1, e2) => e1 >- e2) &>
+          // And collect messages that are marked as changed
+          Enumeratee.collect { case (a, false) => a.toJS }
       }
-    )
+      out
+    }).failMap(_ => Enumerator.eof[JsValue]).toPromiseT[Enumerator[JsValue]]()
+    val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseEnumerator)
+    (in, enumerator)
   }
+
   // jobSocket
   // uriSocket
 

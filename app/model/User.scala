@@ -10,29 +10,32 @@ import org.w3.vs.exception._
 
 object User {
 
-  def store = org.w3.vs.Prod.configuration.store
-  
   def fake: User =
     User(organization = OrganizationData.fake.id, email = "foo@bar.com", name = "foo", password = "bar")
 
-  def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[Throwable, Iterable[Job]] = {
+  def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Iterable[Job]] = {
+    import configuration.store
     for {
-      jobConfs <- store.listJobs(organizationId).toDelayedValidation
+      jobConfs <- store.listJobs(organizationId).toDelayedValidation failMap (t => StoreException(t))
       jobs <- {
         val jobs = jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf) }
         val futureJobs = Future.sequence(jobs)
         futureJobs.lift
-      }
+      } failMap (t => StoreException(t))
     } yield {
       jobs
     }
   }
   
-  def authenticate(email: String, password: String): Validation[SuiteException, Option[User]] =
-    store authenticate (email, password) failMap (t => StoreException(t))
+  def authenticate(email: String, password: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Option[User]] = {
+    import configuration.store
+    store.authenticate(email, password).toDelayedValidation failMap (t => StoreException(t))
+  }
   
-  def getByEmail(email: String): Validation[SuiteException, Option[User]] =
-    store getUserByEmail (email) failMap (t => StoreException(t))
+  def getByEmail(email: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Option[User]] = {
+    import configuration.store
+    store.getUserByEmail(email).toDelayedValidation failMap (t => StoreException(t))
+  }
 
 }
 
