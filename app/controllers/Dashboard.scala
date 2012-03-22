@@ -23,22 +23,18 @@ import play.api.data.Form
 
 object Dashboard extends Controller {
 
-  def store = org.w3.vs.Prod.configuration.store
-
   val logger = play.Logger.of("Controller.Dashboard")
 
   // TODO: make the implicit explicit!!!
   import org.w3.vs.Prod.configuration
-
-  // Future  -->  Validation
 
   def index = Action { _ => Redirect(routes.Dashboard.dashboard) }
 
   def dashboard = Action { implicit req =>
     AsyncResult {
       (for {
-        user <- getAuthenticatedUser failMap { e => Promise.pure(failWithGrace(e)) }
-        jobConfs <- store listJobs (user.organization) failMap { t => Promise.pure(failWithGrace(StoreException(t))) }
+        user <- getAuthenticatedUser
+        jobConfs <- Job.getAll(user.organization)
       } yield {
         val jobDatas = jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).jobData }
         val result = Future.sequence(jobDatas).asPromise orTimeout (Timeout(new Throwable), 1, SECONDS) // validation in scalaz.syntax.ValidationV -> fail[X](x): Validation[Future,X]
@@ -47,7 +43,10 @@ object Dashboard extends Controller {
             data => Ok(views.html.dashboard(jobConfs zip data)),
             timeout => failWithGrace(timeout))
         }
-      }).fold(f => f, s => s)
+      }).fold(
+        e => Promise.pure(failWithGrace(e)),
+        s => s
+      )
     }
   }
 
@@ -70,10 +69,13 @@ object Dashboard extends Controller {
 
   def showReport(implicit id: JobId) = Action { implicit req =>
     (for {
-        user <- getAuthenticatedUser failMap failWithGrace
-        jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
-        ars <- store.listAssertorResults(jobC.id) failMap (t => failWithGrace(StoreException(t)))
-      } yield Ok(views.html.job(Some(jobC), Some(ars)))).fold(f => f, s => s)
+      user <- getAuthenticatedUser
+      jobC <- getJobConfIfAllowed(user, id)
+      ars <- Job.getAssertorResults(jobC.id)
+    } yield Ok(views.html.job(Some(jobC), Some(ars)))).fold(
+      e => failWithGrace(e),
+      s => s
+    )
   }
 
   def newJob() = newOrEditJob(None) 
@@ -90,10 +92,13 @@ object Dashboard extends Controller {
 
   def deleteJob(implicit id: JobId) = Action { implicit req =>
     (for {
-      user <- getAuthenticatedUser failMap failWithGrace
-      job <- getJobIfAllowed(user, id) failMap failWithGrace
-      _ <- store.removeJob(id) failMap { t => failWithGrace(StoreException(t)) }
-    } yield seeDashboard(Ok, ("info" -> "Job deleted"))).fold(f => f, s => s)
+      user <- getAuthenticatedUser
+      job <- getJobIfAllowed(user, id)
+      _ <- Job.delete(id)
+    } yield seeDashboard(Ok, ("info" -> "Job deleted"))).fold(
+      e => failWithGrace(e),
+      s => s
+    )
   }
   
   def createJob = createOrUpdateJob(None) 
@@ -103,12 +108,12 @@ object Dashboard extends Controller {
       user <- getAuthenticatedUser failMap failWithGrace
       jobF <- isValidForm(jobForm) failMap { formWithErrors => BadRequest(views.html.jobForm(formWithErrors)) }
       id <- idOpt toSuccess {
-        store putJob (jobF.assignTo(user)) fold (
-          t => failWithGrace(StoreException(t)),
+        Job save(jobF.assignTo(user)) fold (
+          e => failWithGrace(e),
           _ => seeDashboard(Created, ("info" -> "Job created")))
       }
       jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
-      _ <- store putJob (jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap { t => failWithGrace(StoreException(t)) }
+      _ <- Job save (jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap { e => failWithGrace(e) }
     } yield seeDashboard(Ok, ("info" -> "Job updated"))).fold(f => f, s => s)
   }
 
@@ -119,7 +124,7 @@ object Dashboard extends Controller {
         case _ => Ok(views.html.login(loginForm)) // Other exceptions are just silent
       },
       user => Redirect(routes.Dashboard.dashboard) // If the user is already logged in send him to the dashboard
-      )
+    )
   }
 
   def logout = Action {
@@ -129,8 +134,8 @@ object Dashboard extends Controller {
   def authenticate = Action { implicit req =>
     (for {
       userF <- isValidForm(loginForm) failMap { formWithErrors => BadRequest(views.html.login(formWithErrors)) }
-      userO <- store.authenticate(userF._1, userF._2) failMap { t => failWithGrace(StoreException(t)) }
-      user <- userO toSuccess Unauthorized(views.html.login(loginForm)).withNewSession //failWithGrace(UnknownUser)
+      userO <- User authenticate (userF._1, userF._2) failMap { e => failWithGrace(e) }
+      user <- userO toSuccess Unauthorized(views.html.login(loginForm)).withNewSession
     } yield Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)).fold(f => f, s => s)
   }
 
@@ -144,19 +149,22 @@ object Dashboard extends Controller {
 
   private def simpleJobAction(action: User => Job => Any)(msg: String)(implicit id: JobId) = Action { implicit req =>
     (for {
-      user <- getAuthenticatedUser failMap failWithGrace
-      job <- getJobIfAllowed(user, id) failMap failWithGrace
+      user <- getAuthenticatedUser
+      job <- getJobIfAllowed(user, id)
     } yield {
       action(user)(job)
       seeDashboard(Accepted, ("info", msg))
-    }).fold(f => f, s => s)
+    }).fold(
+      e => failWithGrace(e),
+      s => s
+    )
   }
 
   private def seeDashboard(status: Status, message: (String, String))(implicit req: Request[_]): Result = {
     if (isAjax) status else SeeOther(routes.Dashboard.dashboard.toString).flashing(message)
   }
 
-  private def failWithGrace[E >: SuiteException](e: E)(implicit req: Request[_]): Result = {
+  private def failWithGrace(e: SuiteException)(implicit req: Request[_]): Result = {
     e match {
       case UnknownJob => {
         if (isAjax) NotFound
@@ -194,7 +202,7 @@ object Dashboard extends Controller {
 
   private def getJobConfIfAllowed(user: User, id: JobId): Validation[SuiteException, JobConfiguration] = {
     for {
-      jobConfO <- store getJobById (id) failMap { StoreException(_) }
+      jobConfO <- Job get (id)
       jobConf <- jobConfO toSuccess UnknownJob
       jobConfAllowed <- if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
     } yield jobConfAllowed
@@ -203,7 +211,7 @@ object Dashboard extends Controller {
   private implicit def getAuthenticatedUser(implicit session: Session): Validation[SuiteException, User] = {
     for {
       email <- session get ("email") toSuccess Unauthenticated
-      userO <- store getUserByEmail (email) failMap { StoreException(_) }
+      userO <- User getByEmail (email)
       user <- userO toSuccess UnknownUser
     } yield user
   }
@@ -214,7 +222,7 @@ object Dashboard extends Controller {
       f => (Iteratee.ignore[JsValue], Enumerator.eof),
       user => {
         val in = Iteratee.ignore[JsValue]
-        val jobConfs = store listJobs (user.organization) fold (t => throw t, jobs => jobs)
+        val jobConfs = Job.getAll(user.organization) fold (t => throw new Exception(), jobs => jobs)
         // The seed for the future scan, ie the initial jobData of a run
         def seed = new UpdateData(null)
         // Mapping through a list of (jobId, enum)

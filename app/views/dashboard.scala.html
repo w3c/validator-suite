@@ -1,7 +1,7 @@
 @(jobs: Iterable[(JobConfiguration, JobData)] = None)()(implicit userV: Validation[SuiteException, User], flash: Flash)
 
 @import views.Helper._
-@import org.w3.vs.run._
+@import org.w3.vs.actor._
 
 @libs.main("Validator Suite", 
   stylesheets = List("dashboard.css"),
