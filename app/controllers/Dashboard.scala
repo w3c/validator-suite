@@ -35,17 +35,18 @@ object Dashboard extends Controller {
   def dashboard = Action { implicit req =>
     AsyncResult {
       val futureResult = for {
-        user <- getAuthenticatedUser().failMap(failWithGrace)
-        jobs <- User.getJobs(user.organization).failMap(failWithGrace)
+        user <- getAuthenticatedUser() failMap failWithGrace(None)
+        jobs <- User.getJobs(user.organization) failMap failWithGrace(Some(user))
         viewInputs <- {
           val iterableFuture = jobs map { job => job.jobData map (data => (job.configuration, data)) }
           val futureIterable = Future.sequence(iterableFuture)
           futureIterable.lift
-        }.failMap(t => failWithGrace(StoreException(t)))
+        }.failMap(t => failWithGrace(Some(user))(StoreException(t)))
       } yield {
-        Ok(views.html.dashboard(viewInputs))
+        implicit val userSuccess = Success(user)
+        Ok(views.html.dashboard(viewInputs)())
       }
-      futureResult.expiresWith(failWithGrace(Timeout(new Throwable)), 1, SECONDS)
+      futureResult.expiresWith(InternalServerError, 1, SECONDS)
     }
   }
 
@@ -70,13 +71,14 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser
-          jobC <- getJobConfIfAllowed(user, id)
-          ars <- Job.getAssertorResults(jobC.id)
+          user <- getAuthenticatedUser failMap failWithGrace(None)
+          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
+          ars <- Job.getAssertorResults(jobC.id) failMap failWithGrace(Some(user))
         } yield {
+          implicit val userSuccess = Success(user)
           Ok(views.html.job(Some(jobC), Some(ars)))
         }
-      futureResult.failMap(failWithGrace).toPromise()
+      futureResult.toPromise()
     }
   }
 
@@ -88,12 +90,16 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser failMap { e => failWithGrace(e) }
+          user <- getAuthenticatedUser failMap failWithGrace(None)
           id <- {
-            idOpt.toSuccess(Ok(views.html.jobForm(jobForm))).toImmediateValidation
+            idOpt.toSuccess {
+              implicit val unkownUser = Failure(UnknownUser)
+              Ok(views.html.jobForm(jobForm))
+            }.toImmediateValidation
           }
-          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
+          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
         } yield {
+          implicit val userSuccess = Success(user)
           Ok(views.html.jobForm(jobForm.fill(jobC)))
         }
       futureResult.toPromise
@@ -104,13 +110,13 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser
-          job <- getJobIfAllowed(user, id)
-          _ <- Job.delete(id)
+          user <- getAuthenticatedUser failMap failWithGrace(None)
+          job <- getJobIfAllowed(user, id) failMap failWithGrace(Some(user))
+          _ <- Job.delete(id) failMap failWithGrace(Some(user))
         } yield {
           seeDashboard(Ok, ("info" -> "Job deleted"))
         }
-      futureResult.failMap(failWithGrace).toPromise
+      futureResult.toPromise
     }
   }
 
@@ -120,22 +126,23 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser failMap failWithGrace
+          user <- getAuthenticatedUser failMap failWithGrace(None)
           jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors =>
+            implicit val userSuccess = Success(user)
             BadRequest(views.html.jobForm(formWithErrors))
           }
           id <- idOpt match {
             case None => {
               val errorResult =
                 for {
-                  _ <- Job.save(jobF.assignTo(user)) failMap failWithGrace
+                  _ <- Job.save(jobF.assignTo(user)) failMap failWithGrace(Some(user))
                 } yield seeDashboard(Created, ("info" -> "Job created"))
               new FutureValidation(errorResult.toFuture map { e => Failure(e) })
             }
             case Some(id) => Success(id).toImmediateValidation
           }
-          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
-          _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap failWithGrace
+          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
+          _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap failWithGrace(Some(user))
         } yield {
           seeDashboard(Ok, ("info" -> "Job updated"))
         }
@@ -162,7 +169,7 @@ object Dashboard extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUser() failMap {
-            case s: StoreException => failWithGrace(s)
+            case s: StoreException => failWithGrace(None)(s)
             case _ => Ok(views.html.login(loginForm)) // Other exceptions are just silent
           }
         } yield {
@@ -181,7 +188,7 @@ object Dashboard extends Controller {
       val futureResult =
         for {
           userF <- isValidForm(loginForm).toImmediateValidation failMap { formWithErrors => BadRequest(views.html.login(formWithErrors)) }
-          userO <- User.authenticate(userF._1, userF._2) failMap { e => failWithGrace(e) }
+          userO <- User.authenticate(userF._1, userF._2).failMap(failWithGrace(None))
           user <- userO.toSuccess(Unauthorized(views.html.login(loginForm)).withNewSession).toImmediateValidation
         } yield {
           Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)
@@ -202,13 +209,13 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser
-          job <- getJobIfAllowed(user, id)
+          user <- getAuthenticatedUser.failMap(failWithGrace(None))
+          job <- getJobIfAllowed(user, id).failMap(failWithGrace(Some(user)))
         } yield {
           action(user)(job)
           seeDashboard(Accepted, ("info", msg))
         }
-      futureResult.failMap(failWithGrace).toPromise
+      futureResult.toPromise
     }
   }
 
@@ -216,7 +223,9 @@ object Dashboard extends Controller {
     if (isAjax) status else SeeOther(routes.Dashboard.dashboard.toString).flashing(message)
   }
 
-  private def failWithGrace(e: SuiteException)(implicit req: Request[_]): Result = {
+  private def failWithGrace(authenticatedUserOpt: Option[User])(e: SuiteException)(implicit req: Request[_]): Result = {
+    implicit val userV: Validation[SuiteException, User] =
+      authenticatedUserOpt toSuccess UnknownUser
     e match {
       case UnknownJob => {
         if (isAjax) NotFound
@@ -270,9 +279,7 @@ object Dashboard extends Controller {
   // TODO
   // https://github.com/playframework/Play20/wiki/Scalacache
 
-  private implicit def makeItCompile: Validation[SuiteException, User] = null
-
-  private implicit def getAuthenticatedUser()(implicit session: Session): FutureValidation[SuiteException, User] = {
+  private def getAuthenticatedUser()(implicit session: Session): FutureValidation[SuiteException, User] = {
     for {
       email <- session.get("email").toSuccess(Unauthenticated).toImmediateValidation
       userO <- User getByEmail (email)
