@@ -11,7 +11,7 @@ class ValidationW[E, S](private val inner: Validation[E, S]) {
    * injects a Validation[E, S] into a FutureValidation[E, S]
    * where the result is supposed to be immediatly available
    */
-  def toImmediateValidation(implicit context: ExecutionContext): FutureValidation[E, S, Nothing, FALSE] =
+  def toImmediateValidation(implicit context: ExecutionContext): FutureValidation[E, S, Nothing, NOTSET] =
     FutureValidation(Promise.successful(inner))
 
   /**
@@ -19,7 +19,7 @@ class ValidationW[E, S](private val inner: Validation[E, S]) {
    * where the result can take some time to be computed
    * (typically while interacting with a database)
    */
-  def toDelayedValidation(implicit context: ExecutionContext): FutureValidation[E, S, Nothing, FALSE] =
+  def toDelayedValidation(implicit context: ExecutionContext): FutureValidation[E, S, Nothing, NOTSET] =
     FutureValidation(Future(inner))
 
 }

@@ -8,14 +8,14 @@ import play.api.mvc.Result
 import play.api.libs.concurrent.{Promise => PlayPromise, _}
 import annotation.implicitNotFound
 
-abstract class TRUE
-abstract class FALSE
+abstract class SET
+abstract class NOTSET
 
 case class SetTimeOut[T](result: T, duration: Long, unit: TimeUnit)
 
 object FutureValidation {
 
-  def apply[F, S](futureValidation: Future[Validation[F, S]]): FutureValidation[F, S, Nothing, FALSE] =
+  def apply[F, S](futureValidation: Future[Validation[F, S]]): FutureValidation[F, S, Nothing, NOTSET] =
     new FutureValidation(futureValidation, None)
 
 }
@@ -23,14 +23,14 @@ object FutureValidation {
 /**
  * the combination of a Future and a Validation
  */
-class FutureValidation[+F, +S, TO, TimeOutIsSet] private (
+class FutureValidation[+F, +S, TO, TimeOut] private (
   private val futureValidation: Future[Validation[F, S]],
   timeout: Option[(TO, Long, TimeUnit)]) {
 
   /**
    * combines the computations in the future while respecting the semantics of the Validation
    */
-  def flatMap[FF >: F, T](f: S => FutureValidation[FF, T, TO, TimeOutIsSet])(implicit executor: ExecutionContext): FutureValidation[FF, T, TO, TimeOutIsSet] = {
+  def flatMap[FF >: F, T](f: S => FutureValidation[FF, T, TO, TimeOut])(implicit executor: ExecutionContext): FutureValidation[FF, T, TO, TimeOut] = {
     val futureResult = futureValidation.flatMap[Validation[FF, T]] {
       case Failure(failure) => Promise.successful(Failure(failure))
       case Success(value) => f(value).futureValidation
@@ -38,26 +38,26 @@ class FutureValidation[+F, +S, TO, TimeOutIsSet] private (
     new FutureValidation(futureResult, timeout)
   }
 
-  def flatMap[T](f: () => SetTimeOut[T]): FutureValidation[F, S, T, TRUE] = {
+  def flatMap[T](f: () => SetTimeOut[T]): FutureValidation[F, S, T, SET] = {
     val SetTimeOut(result, duration, unit) = f()
-    new FutureValidation[F, S, T, TRUE](futureValidation, Some((result, duration, unit)))
+    new FutureValidation[F, S, T, SET](futureValidation, Some((result, duration, unit)))
   }
     
 
-  def map[T](f: S => T): FutureValidation[F, T, TO, TimeOutIsSet] = 
+  def map[T](f: S => T): FutureValidation[F, T, TO, TimeOut] = 
     new FutureValidation(futureValidation map { _ map f }, timeout)
 
-  def failMap[T](f: F => T): FutureValidation[T, S, TO, TimeOutIsSet] =
+  def failMap[T](f: F => T): FutureValidation[T, S, TO, TimeOut] =
     new FutureValidation(futureValidation map { v => new ValidationW(v) failMap f }, timeout)
 
   def toPromise()(
-    implicit ev: TimeOutIsSet =:= TRUE,
+    implicit ev: TimeOut =:= SET,
     evF: F <:< Result,
     evS: S <:< Result,
     evTO: TO <:< Result): PlayPromise[Result] = toPromiseT[Result]
 
   def toPromiseT[T](
-    implicit ev: TimeOutIsSet =:= TRUE,
+    implicit ev: TimeOut =:= SET,
     evF: F <:< T,
     evS: S <:< T,
     evTO: TO <:< T): PlayPromise[T] = {
@@ -69,7 +69,7 @@ class FutureValidation[+F, +S, TO, TimeOutIsSet] private (
   def expiresWith[T](
     result: T,
     duration: Long,
-    unit: TimeUnit): FutureValidation[F, S, T, TRUE] =
+    unit: TimeUnit): FutureValidation[F, S, T, SET] =
       new FutureValidation(futureValidation, Some((result, duration, unit)))
 
   def toFuture[T](

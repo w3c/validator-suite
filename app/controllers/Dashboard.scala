@@ -240,13 +240,13 @@ object Dashboard extends Controller {
     }
   }
 
-  private def getJobIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, Job, Nothing, FALSE] =
+  private def getJobIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, Job, Nothing, NOTSET] =
     for {
       jobConf <- getJobConfIfAllowed(user, id)
       job <- Jobs.getJobOrCreate(jobConf).liftWith { case t => StoreException(t) }
     } yield job
 
-  private def getJobConfIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, JobConfiguration, Nothing, FALSE] = {
+  private def getJobConfIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, JobConfiguration, Nothing, NOTSET] = {
     for {
       jobConfO <- Job.get(id)
       jobConf <- jobConfO.toSuccess(UnknownJob).toImmediateValidation
@@ -260,7 +260,7 @@ object Dashboard extends Controller {
   // TODO
   // https://github.com/playframework/Play20/wiki/Scalacache
 
-  private def getAuthenticatedUser()(implicit session: Session): FutureValidation[SuiteException, User, Nothing, FALSE] = {
+  private def getAuthenticatedUser()(implicit session: Session): FutureValidation[SuiteException, User, Nothing, NOTSET] = {
     for {
       email <- session.get("email").toSuccess(Unauthenticated).toImmediateValidation
       userO <- User getByEmail (email)

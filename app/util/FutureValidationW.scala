@@ -5,6 +5,6 @@ import scalaz.Validation
 
 class FutureValidationW[F, S](futureValidation: Future[Validation[F, S]]) {
 
-  def toFutureValidation: FutureValidation[F, S, Nothing, FALSE] = FutureValidation(futureValidation)
+  def toFutureValidation: FutureValidation[F, S, Nothing, NOTSET] = FutureValidation(futureValidation)
 
 }

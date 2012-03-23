@@ -13,7 +13,7 @@ object User {
   def fake: User =
     User(organization = OrganizationData.fake.id, email = "foo@bar.com", name = "foo", password = "bar")
 
-  def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Iterable[Job], Nothing, FALSE] = {
+  def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Iterable[Job], Nothing, NOTSET] = {
     import configuration.store
     for {
       jobConfs <- store.listJobs(organizationId).toDelayedValidation failMap (t => StoreException(t))
@@ -27,12 +27,12 @@ object User {
     }
   }
   
-  def authenticate(email: String, password: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Option[User], Nothing, FALSE] = {
+  def authenticate(email: String, password: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Option[User], Nothing, NOTSET] = {
     import configuration.store
     store.authenticate(email, password).toDelayedValidation failMap (t => StoreException(t))
   }
   
-  def getByEmail(email: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Option[User], Nothing, FALSE] = {
+  def getByEmail(email: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Option[User], Nothing, NOTSET] = {
     import configuration.store
     store.getUserByEmail(email).toDelayedValidation failMap (t => StoreException(t))
   }
