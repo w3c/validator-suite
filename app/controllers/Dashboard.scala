@@ -20,6 +20,9 @@ import Validation._
 import akka.dispatch.Await
 import akka.util.Duration
 import play.api.data.Form
+import akka.dispatch.Await
+import akka.dispatch.Future
+import akka.util.duration._
 
 object Dashboard extends Controller {
 
@@ -72,11 +75,12 @@ object Dashboard extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUser failMap failWithGrace(None)
-          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
-          ars <- Job.getAssertorResults(jobC.id) failMap failWithGrace(Some(user))
+          job <- getJobIfAllowed(user, id) failMap failWithGrace(Some(user))
+          //data <- job.jobData
+          ars <- Job.getAssertorResults(job.id) failMap failWithGrace(Some(user))
         } yield {
           implicit val userSuccess = Success(user)
-          Ok(views.html.job(Some(jobC), Some(ars)))
+          Ok(views.html.job(job.configuration, Await.result(job.jobData, 1 second), ars)) // TODO
         }
       futureResult.toPromise()
     }
@@ -149,20 +153,6 @@ object Dashboard extends Controller {
       futureResult.toPromise
     }
   }
-
-  // def createOrUpdateJob(implicit idOpt: Option[JobId]) = Action { implicit req =>
-  //   (for {
-  //     user <- getAuthenticatedUser failMap failWithGrace
-  //     jobF <- isValidForm(jobForm) failMap { formWithErrors => BadRequest(views.html.jobForm(formWithErrors)) }
-  //     id <- idOpt toSuccess {
-  //       Job save(jobF.assignTo(user)) fold (
-  //         e => failWithGrace(e),
-  //         _ => seeDashboard(Created, ("info" -> "Job created")))
-  //     }
-  //     jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace
-  //     _ <- Job save (jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap { e => failWithGrace(e) }
-  //   } yield seeDashboard(Ok, ("info" -> "Job updated"))).fold(f => f, s => s)
-  // }
 
   def login = Action { implicit req =>
     AsyncResult {

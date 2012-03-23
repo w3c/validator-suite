@@ -1,12 +1,12 @@
-@(job: Option[JobConfiguration] = None, assertions: Option[Iterable[AssertorResult]] = None, errors: List[(String, String)] = List())(implicit userV: Validation[SuiteException, User], flash: Flash)
+@(jobConf: JobConfiguration, data: JobData, assertions: Iterable[AssertorResult], errors: List[(String, String)] = List())(implicit userV: Validation[SuiteException, User], flash: Flash)
 
 @libs.main("Validator Suite", 
-	stylesheets = List("dashboard.css"), 
+	stylesheets = List("dashboard.css"),
 	scripts = List("dashboard.js", "report.js"),
 	exec = """$(function(){window.Report = new ReportView();});"""){
    
    @***** Header ******@
-   
+	
 	@libs.header(userV)
 	
 }{ @***** Toolbar *****@
@@ -18,19 +18,54 @@
 	@libs.navigation()
 	@libs.errors(errors)
 	
+		<section class="job" data-id="@jobConf.id"><div>
+			<ul>
+				<li>Name: <span class="name">@jobConf.name</span></li>
+				<li>Uri: <span class="uri">@jobConf.strategy.seedURLs.head</span></li>
+				<li>Distance: <span class="distance">@jobConf.strategy.distance</span></li>
+				<li>Activity: <span class="activity">@data.activity</span></li>
+				<li>Explo mode: <span class="mode">@data.explorationMode</span></li>
+			</ul>
+			<ul>
+				<!-- <li>Last run: <time datetime="">-</time></li> -->
+				<li>Last updated: <time datetime="">-</time></li>
+				<li>Resources: <span class="resources">@data.resources</span></li>
+				<li>Valid: <span class="oks">@data.oks</span></li>
+				<li>Errors: <span class="errors">@data.errors</span></li>
+				<li>Warnings: <span class="warnings">@data.warnings</span></li>
+			</ul>
+			<form action="@routes.Dashboard.jobDispatcher(jobConf.id)" method="post">
+				<button type="submit" class="show" formmethod="get">Show</button>
+				@defining(data.explorationMode) { mode =>
+				  @mode match {
+				    case ProActive => {<button type="submit" name="action" value="off" class="off">Off</button>}
+				    case Lazy => {<button type="submit" name="action" value="on" class="on">On</button>}
+				  }
+				}
+				@defining(data.activity) { activity =>
+				  @activity match {
+				    case Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
+				    case Idle => {}
+				  }
+				}
+				<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
+				<button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(jobConf.id)">Edit</button>
+				<button type="submit" name="action" value="delete" class="delete">Delete</button>
+			</form>
+		</div></section>
+	
 	<section id="report" class="list">
 	
-	@if(assertions.isDefined) {
-	  @assertions.get.collect{case sertion: Assertions =>
 	
-	<article class="assertion"><div>
+	@assertions.collect{case sertion: Assertions =>
+	
+	<article><div>
 		<a href="#">@sertion.url</a>
-		<ul>
+		<ul class="meta">
 			<li>Errors: @sertion.numberOfErrors</li>
 			<li>Warnings: @sertion.numberOfWarnings</li>
 			<li>Timestamp: @sertion.timestamp</li>
 		</ul>
-		
 		<ul class="messages">
 		@defining(sertion.assertions) { raws =>
 		@raws.map { raw =>
@@ -39,7 +74,6 @@
 		</ul>
 	</div></article>
 	
-	  }
 	}
 	
 	</section>

@@ -68,8 +68,8 @@ body {
 	border-bottom: none;
 }
 
-.list {
-	padding: @spacing / 2 !important;
+#main > .list {
+	padding: @spacing / 2;
 	font-size: 0rem;
 	line-height: 0rem;
 }
@@ -85,6 +85,7 @@ body {
 .list article > div {
 	padding: @spacing;
 	border: 1px solid @borderColor;
+	position: relative; /* become a ref for children positionning */
 }
 
 .structureMedia () {
