@@ -3,56 +3,82 @@ package org.w3.util
 import akka.dispatch._
 import scalaz._
 import Scalaz._
+import java.util.concurrent.TimeUnit
+import play.api.mvc.Result
+import play.api.libs.concurrent.{Promise => PlayPromise, _}
+import annotation.implicitNotFound
+
+abstract class TRUE
+abstract class FALSE
+
+case class SetTimeOut[T](result: T, duration: Long, unit: TimeUnit)
+
+object FutureValidation {
+
+  def apply[F, S](futureValidation: Future[Validation[F, S]]): FutureValidation[F, S, Nothing, FALSE] =
+    new FutureValidation(futureValidation, None)
+
+}
 
 /**
  * the combination of a Future and a Validation
  */
-class FutureValidation[+F, +S](val futureValidation: Future[Validation[F, S]]) {
+class FutureValidation[+F, +S, TO, TimeOutIsSet] private (
+  private val futureValidation: Future[Validation[F, S]],
+  timeout: Option[(TO, Long, TimeUnit)]) {
 
   /**
    * combines the computations in the future while respecting the semantics of the Validation
    */
-  def flatMap[FF >: F, T](f: S => FutureValidation[FF, T])(implicit executor: ExecutionContext): FutureValidation[FF, T] = {
+  def flatMap[FF >: F, T](f: S => FutureValidation[FF, T, TO, TimeOutIsSet])(implicit executor: ExecutionContext): FutureValidation[FF, T, TO, TimeOutIsSet] = {
     val futureResult = futureValidation.flatMap[Validation[FF, T]] {
       case Failure(failure) => Promise.successful(Failure(failure))
       case Success(value) => f(value).futureValidation
     }
-    new FutureValidation(futureResult)
+    new FutureValidation(futureResult, timeout)
   }
 
-  def map[T](f: S => T): FutureValidation[F, T] = 
-    new FutureValidation(futureValidation map { _ map f })
+  def flatMap[T](f: () => SetTimeOut[T]): FutureValidation[F, S, T, TRUE] = {
+    val SetTimeOut(result, duration, unit) = f()
+    new FutureValidation[F, S, T, TRUE](futureValidation, Some((result, duration, unit)))
+  }
+    
 
-  def failMap[T](f: F => T): FutureValidation[T, S] =
-    new FutureValidation(futureValidation map { v => new ValidationW(v) failMap f })
+  def map[T](f: S => T): FutureValidation[F, T, TO, TimeOutIsSet] = 
+    new FutureValidation(futureValidation map { _ map f }, timeout)
 
-  import java.util.concurrent.TimeUnit
-  import play.api.mvc.Result
-  import play.api.libs.concurrent._
+  def failMap[T](f: F => T): FutureValidation[T, S, TO, TimeOutIsSet] =
+    new FutureValidation(futureValidation map { v => new ValidationW(v) failMap f }, timeout)
 
   def toPromise()(
-    implicit evF: F <:< Result,
-    evS: S <:< Result): Promise[Result] =
-      futureValidation.map{ _.fold(evF, evS) }.asPromise
+    implicit ev: TimeOutIsSet =:= TRUE,
+    evF: F <:< Result,
+    evS: S <:< Result,
+    evTO: TO <:< Result): PlayPromise[Result] = toPromiseT[Result]
 
-  def toPromiseT[T]()(
-    implicit evF: F <:< T,
-    evS: S <:< T): Promise[T] = toFuture().asPromise
-
-  def expiresWith(
-    result: Result,
+  def toPromiseT[T](
+    implicit ev: TimeOutIsSet =:= TRUE,
+    evF: F <:< T,
+    evS: S <:< T,
+    evTO: TO <:< T): PlayPromise[T] = {
+    val Some((result, duration, unit)) = timeout
+    val akkaFutureResult = futureValidation map { _.fold(evF, evS) }
+    akkaFutureResult.asPromise.orTimeout(result, duration, unit).map(_.fold(f => f, s => s))
+  }
+  
+  def expiresWith[T](
+    result: T,
     duration: Long,
-    unit: TimeUnit)(
-    implicit evF: F <:< Result,
-    evS: S <:< Result): Promise[Result] = {
-      val akkaFutureResult = futureValidation map { _.fold(evF, evS) }
-      akkaFutureResult.asPromise.orTimeout(result, duration, unit).map(_.fold(f => f, s => s))
-    }
+    unit: TimeUnit): FutureValidation[F, S, T, TRUE] =
+      new FutureValidation(futureValidation, Some((result, duration, unit)))
 
-  def toFuture[T]()(
+  def toFuture[T](
     implicit evF: F <:< T,
-    evS: S <:< T): Future[T] =
-      futureValidation.map{ _.fold(evF, evS) }
+    evS: S <:< T): Future[T] = futureValidation.map{ _.fold(evF, evS) }
+
+  // def toPromiseT[T]()(
+  //   implicit evF: F <:< T,
+  //   evS: S <:< T): PlayPromise[T] = futureValidation.map{ _.fold(evF, evS) }.asPromise
 
 //  def sequence[A, M[_] <: Traversable[_]](implicit executor: ExecutionContext, ev: S =:= M[A]): M[Future]
 

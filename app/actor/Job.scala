@@ -24,25 +24,25 @@ object Job {
   // I think that the store should use typed exceptions (StoreException) instead of Throwables 
   // agree,   + FutureValidation and actor-based
   
-  def get(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Option[JobConfiguration]] = {
+  def get(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Option[JobConfiguration], Nothing, FALSE] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
     store.getJobById(id).toDelayedValidation failMap (t => StoreException(t))
   }
     
-  def getAll(id: OrganizationId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[JobConfiguration]] = {
+  def getAll(id: OrganizationId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[JobConfiguration], Nothing, FALSE] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
     store.listJobs(id).toDelayedValidation failMap (t => StoreException(t))
   }
   
-  def delete(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit] = {
+  def delete(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit, Nothing, FALSE] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
     store.removeJob(id).toDelayedValidation failMap (t => StoreException(t))
   }
   
-  def save(job: JobConfiguration)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit] = {
+  def save(job: JobConfiguration)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit, Nothing, FALSE] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
     store.putJob(job).toDelayedValidation failMap (t => StoreException(t))
@@ -51,7 +51,7 @@ object Job {
   def getAssertorResults(
     id: JobId,
     after: Option[DateTime] = None)(
-    implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[AssertorResult]] = {
+    implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[AssertorResult], Nothing, FALSE] = {
       import configuration.store
       implicit def context = configuration.webExecutionContext
       store.listAssertorResults(id, after).toDelayedValidation failMap (t => StoreException(t))

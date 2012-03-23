@@ -49,7 +49,7 @@ object Dashboard extends Controller {
         implicit val userSuccess = Success(user)
         Ok(views.html.dashboard(viewInputs)())
       }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS)
+      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
   }
 
@@ -82,7 +82,7 @@ object Dashboard extends Controller {
           implicit val userSuccess = Success(user)
           Ok(views.html.job(job.configuration, Await.result(job.jobData, 1 second), ars)) // TODO
         }
-      futureResult.toPromise()
+      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise()
     }
   }
 
@@ -106,7 +106,7 @@ object Dashboard extends Controller {
           implicit val userSuccess = Success(user)
           Ok(views.html.jobForm(jobForm.fill(jobC)))
         }
-      futureResult.toPromise
+      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
   }
 
@@ -120,7 +120,7 @@ object Dashboard extends Controller {
         } yield {
           seeDashboard(Ok, ("info" -> "Job deleted"))
         }
-      futureResult.toPromise
+      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
   }
 
@@ -141,7 +141,7 @@ object Dashboard extends Controller {
                 for {
                   _ <- Job.save(jobF.assignTo(user)) failMap failWithGrace(Some(user))
                 } yield seeDashboard(Created, ("info" -> "Job created"))
-              new FutureValidation(errorResult.toFuture map { e => Failure(e) })
+              FutureValidation(errorResult.toFuture map { e => Failure(e) })
             }
             case Some(id) => Success(id).toImmediateValidation
           }
@@ -150,7 +150,7 @@ object Dashboard extends Controller {
         } yield {
           seeDashboard(Ok, ("info" -> "Job updated"))
         }
-      futureResult.toPromise
+      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
   }
 
@@ -165,7 +165,7 @@ object Dashboard extends Controller {
         } yield {
           Redirect(routes.Dashboard.dashboard) // If the user is already logged in send him to the dashboard
         }
-      futureResult.toPromise
+      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
   }
 
@@ -183,7 +183,7 @@ object Dashboard extends Controller {
         } yield {
           Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)
         }
-      futureResult.toPromise
+      futureResult.expiresWith(InternalServerError, 1, SECONDS).expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
   }
 
@@ -205,7 +205,7 @@ object Dashboard extends Controller {
           action(user)(job)
           seeDashboard(Accepted, ("info", msg))
         }
-      futureResult.toPromise
+      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
   }
 
@@ -249,13 +249,13 @@ object Dashboard extends Controller {
     }
   }
 
-  private def getJobIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, Job] =
+  private def getJobIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, Job, Nothing, FALSE] =
     for {
       jobConf <- getJobConfIfAllowed(user, id)
       job <- Jobs.getJobOrCreate(jobConf).liftWith { case t => StoreException(t) }
     } yield job
 
-  private def getJobConfIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, JobConfiguration] = {
+  private def getJobConfIfAllowed(user: User, id: JobId): FutureValidation[SuiteException, JobConfiguration, Nothing, FALSE] = {
     for {
       jobConfO <- Job.get(id)
       jobConf <- jobConfO.toSuccess(UnknownJob).toImmediateValidation
@@ -269,7 +269,7 @@ object Dashboard extends Controller {
   // TODO
   // https://github.com/playframework/Play20/wiki/Scalacache
 
-  private def getAuthenticatedUser()(implicit session: Session): FutureValidation[SuiteException, User] = {
+  private def getAuthenticatedUser()(implicit session: Session): FutureValidation[SuiteException, User, Nothing, FALSE] = {
     for {
       email <- session.get("email").toSuccess(Unauthenticated).toImmediateValidation
       userO <- User getByEmail (email)
@@ -304,7 +304,7 @@ object Dashboard extends Controller {
           Enumeratee.collect { case (a, false) => a.toJS }
       }
       out
-    }).failMap(_ => Enumerator.eof[JsValue]).toPromiseT[Enumerator[JsValue]]()
+    }).failMap(_ => Enumerator.eof[JsValue]).expiresWith(Enumerator.eof[JsValue], 1, SECONDS).toPromiseT[Enumerator[JsValue]]
     val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseEnumerator)
     (in, enumerator)
   }
