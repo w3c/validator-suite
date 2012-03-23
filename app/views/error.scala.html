@@ -1,11 +1,11 @@
-@(errors: List[(String, String)] = List())(implicit userV: Validation[SuiteException, User], flash: Flash)
+@(errors: List[(String, String)] = List(), userO: Option[User] = None)(implicit flash: Flash)
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css")){
    
    @***** Header ******@
    
-	@libs.header(userV)
+	@libs.header(userO)
 	
 }{ @***** Toolbar *****@
 

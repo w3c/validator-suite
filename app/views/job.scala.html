@@ -1,4 +1,4 @@
-@(jobConf: JobConfiguration, data: JobData, assertions: Iterable[AssertorResult], errors: List[(String, String)] = List())(implicit userV: Validation[SuiteException, User], flash: Flash)
+@(jobConf: JobConfiguration, data: JobData, assertions: Iterable[AssertorResult], userO: Option[User] = None, errors: List[(String, String)] = List())(implicit flash: Flash)
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
@@ -7,7 +7,7 @@
    
    @***** Header ******@
 	
-	@libs.header(userV)
+	@libs.header(userO)
 	
 }{ @***** Toolbar *****@
 

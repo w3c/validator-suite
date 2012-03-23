@@ -30,8 +30,6 @@ object Dashboard extends Controller {
 
   // TODO: make the implicit explicit!!!
   implicit def configuration = org.w3.vs.Prod.configuration
-  def store = configuration.store
-  //implicit def webContext = configuration.webExecutionContext
 
   def index = Action { _ => Redirect(routes.Dashboard.dashboard) }
 
@@ -46,8 +44,7 @@ object Dashboard extends Controller {
           futureIterable.lift
         }.failMap(t => failWithGrace(Some(user))(StoreException(t)))
       } yield {
-        implicit val userSuccess = Success(user)
-        Ok(views.html.dashboard(viewInputs)())
+        Ok(views.html.dashboard(viewInputs, Some(user)))
       }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
@@ -76,11 +73,10 @@ object Dashboard extends Controller {
         for {
           user <- getAuthenticatedUser failMap failWithGrace(None)
           job <- getJobIfAllowed(user, id) failMap failWithGrace(Some(user))
-          //data <- job.jobData
+          data <- job.jobData.lift failMap {t => failWithGrace(Some(user))(StoreException(t))}
           ars <- Job.getAssertorResults(job.id) failMap failWithGrace(Some(user))
         } yield {
-          implicit val userSuccess = Success(user)
-          Ok(views.html.job(job.configuration, Await.result(job.jobData, 1 second), ars)) // TODO
+          Ok(views.html.job(job.configuration, data, ars, Some(user)))
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise()
     }
@@ -97,13 +93,11 @@ object Dashboard extends Controller {
           user <- getAuthenticatedUser failMap failWithGrace(None)
           id <- {
             idOpt.toSuccess {
-              implicit val unkownUser = Failure(UnknownUser)
               Ok(views.html.jobForm(jobForm))
             }.toImmediateValidation
           }
           jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
         } yield {
-          implicit val userSuccess = Success(user)
           Ok(views.html.jobForm(jobForm.fill(jobC)))
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
@@ -132,8 +126,7 @@ object Dashboard extends Controller {
         for {
           user <- getAuthenticatedUser failMap failWithGrace(None)
           jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors =>
-            implicit val userSuccess = Success(user)
-            BadRequest(views.html.jobForm(formWithErrors))
+            BadRequest(views.html.jobForm(formWithErrors, Some(user)))
           }
           id <- idOpt match {
             case None => {
@@ -214,8 +207,6 @@ object Dashboard extends Controller {
   }
 
   private def failWithGrace(authenticatedUserOpt: Option[User])(e: SuiteException)(implicit req: Request[_]): Result = {
-    implicit val userV: Validation[SuiteException, User] =
-      authenticatedUserOpt toSuccess UnknownUser
     e match {
       case UnknownJob => {
         if (isAjax) NotFound
@@ -227,15 +218,15 @@ object Dashboard extends Controller {
       }
       case UnauthorizedJob => {
         if (isAjax) Forbidden
-        else Forbidden(views.html.error(List(("error" -> "Forbidden"))))
+        else Forbidden(views.html.error(List(("error" -> "Forbidden")), authenticatedUserOpt))
       }
       case StoreException(t) => {
         if (isAjax) InternalServerError
-        else InternalServerError(views.html.error(List(("error" -> "Store Exception"))))
+        else InternalServerError(views.html.error(List(("error" -> "Store Exception")), authenticatedUserOpt))
       }
       case Timeout(t) => {
         if (isAjax) InternalServerError
-        else InternalServerError(views.html.error(List(("error" -> "Timeout Exception"))))
+        else InternalServerError(views.html.error(List(("error" -> "Timeout Exception")), authenticatedUserOpt))
       }
     }
   }
@@ -277,15 +268,13 @@ object Dashboard extends Controller {
     } yield user
   }
 
-  def closeSocket(): (Iteratee[JsValue, _], Enumerator[JsValue]) = (Iteratee.ignore[JsValue], Enumerator.eof)
-
   // * Sockets
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>
     val in = Iteratee.ignore[JsValue]
     val seed = new UpdateData(null)
     val promiseEnumerator = (for {
       user <- getAuthenticatedUser()
-      jobConfs <- store.listJobs(user.organization).toDelayedValidation
+      jobConfs <- Job.getAll(user.organization)
       enumerators <- Future.sequence(jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
     } yield {
       val out = {
