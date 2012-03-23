@@ -76,10 +76,51 @@ body > footer {
 
 /* Report */
 
-.assertion .messages {
-	display:none;
+#report {
+	padding: 10px !important;
 }
 
-article.assertion {
-	width:100% !important;
+#report article {
+	width:100%;
+	padding:0;
 }
+#report article div {
+	border-bottom: none;
+}
+#report article:last-child div {
+	border-bottom: 1px solid #e5e5e5;
+}
+
+#report article a {
+	float: left;
+	margin-bottom:10px;
+}
+#report article .meta {
+	float: right;
+	margin-bottom:10px;
+}
+#report article .meta li {
+	display: inline;
+}
+
+.messages {
+	clear: both;
+}
+.messages li {
+	margin-bottom: 5px;
+	padding-left: 10px;
+}
+.messages li:last-child {
+	margin-bottom:0;
+}
+.messages .warning {
+	border-left: 5px solid orange;
+}
+.messages .info {
+	border-left: 5px solid #3C7FB1;
+}
+.messages .error {
+	border-left: 5px solid red;
+}
+
+
