@@ -91,11 +91,7 @@ object Dashboard extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUser failMap failWithGrace(None)
-          id <- {
-            idOpt.toSuccess {
-              Ok(views.html.jobForm(jobForm))
-            }.toImmediateValidation
-          }
+          id <- idOpt.toImmediateSuccess(ifNone = Ok(views.html.jobForm(jobForm)))
           jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
         } yield {
           Ok(views.html.jobForm(jobForm.fill(jobC)))

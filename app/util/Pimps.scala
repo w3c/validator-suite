@@ -11,6 +11,8 @@ object Pimps {
 
   implicit def wrapFuture[T](future: Future[T]): FutureW[T] = new FutureW(future)
 
+  implicit def wrapOption[T](opt: Option[T]): OptionW[T] = new OptionW(opt)
+
   implicit def wrapFutureValidation[F, S](futureValidation: Future[Validation[F, S]]): FutureValidationW[F, S] =
     new FutureValidationW(futureValidation)
   
