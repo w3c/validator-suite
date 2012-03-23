@@ -30,8 +30,6 @@ object Dashboard extends Controller {
 
   // TODO: make the implicit explicit!!!
   implicit def configuration = org.w3.vs.Prod.configuration
-  def store = configuration.store
-  //implicit def webContext = configuration.webExecutionContext
 
   def index = Action { _ => Redirect(routes.Dashboard.dashboard) }
 
@@ -285,7 +283,7 @@ object Dashboard extends Controller {
     val seed = new UpdateData(null)
     val promiseEnumerator = (for {
       user <- getAuthenticatedUser()
-      jobConfs <- store.listJobs(user.organization).toDelayedValidation
+      jobConfs <- Job.getAll(user.organization)
       enumerators <- Future.sequence(jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
     } yield {
       val out = {
