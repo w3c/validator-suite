@@ -74,11 +74,11 @@ object Dashboard extends Controller {
         for {
           user <- getAuthenticatedUser failMap failWithGrace(None)
           job <- getJobIfAllowed(user, id) failMap failWithGrace(Some(user))
-          //data <- job.jobData
+          data <- job.jobData.lift failMap {t => failWithGrace(Some(user))(StoreException(t))}
           ars <- Job.getAssertorResults(job.id) failMap failWithGrace(Some(user))
         } yield {
           implicit val userSuccess = Success(user)
-          Ok(views.html.job(job.configuration, Await.result(job.jobData, 1 second), ars)) // TODO
+          Ok(views.html.job(job.configuration, data, ars))
         }
       futureResult.toPromise()
     }
@@ -274,8 +274,6 @@ object Dashboard extends Controller {
       user <- userO.toSuccess(UnknownUser).toImmediateValidation
     } yield user
   }
-
-  def closeSocket(): (Iteratee[JsValue, _], Enumerator[JsValue]) = (Iteratee.ignore[JsValue], Enumerator.eof)
 
   // * Sockets
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>
