@@ -1,4 +1,4 @@
-package org.w3.vs.run
+package org.w3.vs.util
 
 import org.w3.vs.model._
 import org.w3.vs.http.Http

@@ -36,7 +36,7 @@ object Jobs {
     implicit configuration: VSConfiguration): Future[Job] = {
       val context = configuration.system
       val jobsRef: ActorRef = context.actorFor("/user/jobs")
-      implicit val timeout: Timeout = 10.seconds
+      implicit val timeout: Timeout = 5.seconds
       (jobsRef ? GetJobOrCreate(jobConf)).mapTo[ActorRef] map { jobRef => new Job(jobConf, jobRef) }
     }
 

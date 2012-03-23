@@ -1,4 +1,4 @@
-package org.w3.vs.run
+package org.w3.vs.actor
 
 import org.w3.util._
 import org.w3.vs.util._
@@ -14,8 +14,10 @@ import akka.testkit.TestKit
 import org.w3.vs.DefaultProdConfiguration
 import org.w3.vs.actor._
 
-class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) {
+class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
   
+  val servers = Seq.empty
+
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
@@ -26,19 +28,25 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
       filter=Filter(include=Everything, exclude=Nothing))
   
   val jobConf = JobConfiguration.fake(strategy = strategy)
+
   
-  val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
-  
-  "test cyclic(10)" in {
-    http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
-    val job = Jobs.getJobOrCreate(jobConf)
-    job map (_.refresh())
-    def cond = (store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success") ).size == 11
-    awaitCond(cond, 3 seconds, 50 milliseconds)
+  "create and asking for jobs" in {
+
+    val testF =
+      for {
+        // first time: job is created
+        createdJob <- Jobs.getJobOrCreate(jobConf)
+        createdJobData <- createdJob.jobData()
+        retrievedJob <- Jobs.getJobOrCreate(jobConf)
+        //_ <- job.refresh()
+      } yield {
+        createdJobData.jobId must be === (jobConf.id)
+        retrievedJob.configuration.id must be === (jobConf.id)
+      }
+
+    Await.result(testF, 5.seconds)
+
   }
   
-//    val (links, timestamps) = responseDAO.getLinksAndTimestamps(actionId) .unzip
-//    val a = Response.averageDelay(timestamps)
-//    assert(a >= 200 && a < 250)
   
 }
