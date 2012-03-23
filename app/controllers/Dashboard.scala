@@ -36,7 +36,7 @@ object Dashboard extends Controller {
   def dashboard = Action { implicit req =>
     AsyncResult {
       val futureResult = for {
-        user <- getAuthenticatedUser() failMap failWithGrace(None)
+        user <- getAuthenticatedUser() failMap failWithGrace()
         jobs <- User.getJobs(user.organization) failMap failWithGrace(Some(user))
         viewInputs <- {
           val iterableFuture = jobs map { job => job.jobData map (data => (job.configuration, data)) }
@@ -71,9 +71,9 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser failMap failWithGrace(None)
+          user <- getAuthenticatedUser failMap failWithGrace()
           job <- getJobIfAllowed(user, id) failMap failWithGrace(Some(user))
-          data <- job.jobData.lift failMap {t => failWithGrace(Some(user))(StoreException(t))}
+          data <- job.jobData.lift failMap {t => failWithGrace(Some(user))(Unexpected(t))}
           ars <- Job.getAssertorResults(job.id) failMap failWithGrace(Some(user))
         } yield {
           Ok(views.html.job(job.configuration, data, ars, Some(user)))
@@ -90,7 +90,7 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser failMap failWithGrace(None)
+          user <- getAuthenticatedUser failMap failWithGrace()
           id <- idOpt.toImmediateSuccess(ifNone = Ok(views.html.jobForm(jobForm)))
           jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
         } yield {
@@ -104,7 +104,7 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser failMap failWithGrace(None)
+          user <- getAuthenticatedUser failMap failWithGrace()
           job <- getJobIfAllowed(user, id) failMap failWithGrace(Some(user))
           _ <- Job.delete(id) failMap failWithGrace(Some(user))
         } yield {
@@ -120,7 +120,7 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser failMap failWithGrace(None)
+          user <- getAuthenticatedUser failMap failWithGrace()
           jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors =>
             BadRequest(views.html.jobForm(formWithErrors, Some(user)))
           }
@@ -151,7 +151,7 @@ object Dashboard extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUser() failMap {
-            case s: StoreException => failWithGrace(None)(s)
+            case s: StoreException => failWithGrace()(s)
             case _ => Ok(views.html.login(loginForm)) // Other exceptions are just silent
           }
         } yield {
@@ -170,7 +170,7 @@ object Dashboard extends Controller {
       val futureResult =
         for {
           userF <- isValidForm(loginForm).toImmediateValidation failMap { formWithErrors => BadRequest(views.html.login(formWithErrors)) }
-          userO <- User.authenticate(userF._1, userF._2).failMap(failWithGrace(None))
+          userO <- User.authenticate(userF._1, userF._2).failMap(failWithGrace())
           user <- userO.toSuccess(Unauthorized(views.html.login(loginForm)).withNewSession).toImmediateValidation
         } yield {
           Redirect(routes.Dashboard.dashboard).withSession("email" -> user.email)
@@ -191,7 +191,7 @@ object Dashboard extends Controller {
     AsyncResult {
       val futureResult =
         for {
-          user <- getAuthenticatedUser.failMap(failWithGrace(None))
+          user <- getAuthenticatedUser.failMap(failWithGrace())
           job <- getJobIfAllowed(user, id).failMap(failWithGrace(Some(user)))
         } yield {
           action(user)(job)
@@ -205,7 +205,7 @@ object Dashboard extends Controller {
     if (isAjax) status else SeeOther(routes.Dashboard.dashboard.toString).flashing(message)
   }
 
-  private def failWithGrace(authenticatedUserOpt: Option[User])(e: SuiteException)(implicit req: Request[_]): Result = {
+  private def failWithGrace(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
     e match {
       case UnknownJob => {
         if (isAjax) NotFound
@@ -223,9 +223,9 @@ object Dashboard extends Controller {
         if (isAjax) InternalServerError
         else InternalServerError(views.html.error(List(("error" -> "Store Exception")), authenticatedUserOpt))
       }
-      case Timeout(t) => {
+      case Unexpected(t) => {
         if (isAjax) InternalServerError
-        else InternalServerError(views.html.error(List(("error" -> "Timeout Exception")), authenticatedUserOpt))
+        else InternalServerError(views.html.error(List(("error" -> "Unexpected Exception")), authenticatedUserOpt))
       }
     }
   }

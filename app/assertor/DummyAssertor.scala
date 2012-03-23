@@ -18,7 +18,7 @@ object DummyAssertor extends FromURLAssertor {
   override def assert(url: URL) = {
     val event = RawAssertion(
         severity="info",
-        id="dummy",
+        assertId="dummy",
         lang="en",
         title="Dummy title",
         contexts=Seq(Context("Dummy context", url.toString, None, None)),

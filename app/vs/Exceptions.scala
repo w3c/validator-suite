@@ -5,8 +5,5 @@ case object UnknownJob extends SuiteException
 case object UnauthorizedJob extends SuiteException
 case object UnknownUser extends SuiteException
 case object Unauthenticated extends SuiteException
-case object Unexpected extends SuiteException
-case class Timeout(t: Throwable) extends SuiteException
-case class StoreException(t: Throwable) extends SuiteException {
-  t.printStackTrace()
-}
+case class StoreException(t: Throwable) extends SuiteException
+case class Unexpected(t: Throwable) extends SuiteException

@@ -8,16 +8,16 @@
 
 /* Smooth UI. That's a bit severe */
 body * {
-	-webkit-transition: all 0.2s;
-	-moz-transition: all 0.2s;
-	-o-transition: all 0.2s;
-	transition: all 0.2s;
+	-webkit-transition: all 0.2s linear;
+	-moz-transition: all 0.2s linear;
+	-o-transition: all 0.2s linear;
+	transition: all 0.2s linear;
 }
 body {
-	-webkit-transition: padding 0.2s;
-	-moz-transition:  padding 0.2s;
-	-o-transition:  padding 0.2s;
-	transition:  padding 0.2s;
+	-webkit-transition: padding 0.2s linear;
+	-moz-transition:  padding 0.2s linear;
+	-o-transition:  padding 0.2s linear;
+	transition:  padding 0.2s linear;
 }
 
 #crumbs li {display:inline;}
@@ -84,14 +84,14 @@ body > footer {
 	width:100%;
 	padding:0;
 }
-#report article div {
+#report article > div {
 	border-bottom: none;
 }
-#report article:last-child div {
+#report article:last-child > div {
 	border-bottom: 1px solid #e5e5e5;
 }
 
-#report article a {
+#report article > a {
 	float: left;
 	margin-bottom:10px;
 }
@@ -102,15 +102,18 @@ body > footer {
 #report article .meta li {
 	display: inline;
 }
+#report article .meta li:not(:last-child):after {
+	content:" | "
+}
 
 .messages {
 	clear: both;
 }
-.messages li {
+.messages > li {
 	margin-bottom: 5px;
 	padding-left: 10px;
 }
-.messages li:last-child {
+.messages > li:last-child {
 	margin-bottom:0;
 }
 .messages .warning {
@@ -122,5 +125,28 @@ body > footer {
 .messages .error {
 	border-left: 5px solid red;
 }
-
-
+.messages .title {
+	color:black;
+	text-decoration:none;
+	font-weight:bold;
+}
+.messages .description,
+.messages .contexts {
+	padding: 5px;
+	line-height: 1.6em;
+	/*border: 1px dotted #e5e5e5;*/
+	margin: 5px 0;
+}
+.messages .contexts span:not(:last-child):after {
+	content:" | ";
+}
+/*.messages .description,
+.messages .contexts {
+	height:0;
+	overflow:hidden;
+}
+.messages > li:target .description,
+.messages > li:target .contexts {
+	height:auto;
+	overflow:hidden;
+}*/

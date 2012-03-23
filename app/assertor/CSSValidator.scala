@@ -13,7 +13,7 @@ object CSSValidator extends FromURLAssertor {
   val id = AssertorId("CSSValidator")
   
   def validatorURL(encodedURL: String) =
-    "http://qa-dev.w3.org:8001/css-validator/validator?uri=" + encodedURL + "&output=ucn"
+    "http://qa-dev.w3.org:8001/css-validator/validator?uri=" + encodedURL + "&output=ucn&vextwarning=true&profile=css3"
   
   def validatorURLForMachine(url: URL): URL =
     URL(validatorURL(encodedURL(url)))

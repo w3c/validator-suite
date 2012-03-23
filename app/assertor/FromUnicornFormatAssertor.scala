@@ -32,12 +32,12 @@ trait FromUnicornFormatAssertor extends FromSourceAssertor {
             val contextRef = context.attrs get "ref" getOrElse eventRef
             val line = context.attrs get "line" map { s => s.toInt }
             val column = context.attrs get "column" map { s => s.toInt }
-            Context(content, contextRef, line, column)
+            Context(content.trim, contextRef, line, column)
           }
         val descriptionOpt = (message \ "description").headOption map { description =>
-          description.children.map(removeScope).mkString("")
+          description.children.map(removeScope).mkString("").trim
         }
-        RawAssertion(typ, id, eventLang, contexts, title, descriptionOpt)
+        RawAssertion(typ, id, eventLang, contexts, title.trim, descriptionOpt)
       }
     events
   }
