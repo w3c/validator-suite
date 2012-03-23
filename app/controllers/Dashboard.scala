@@ -124,20 +124,23 @@ object Dashboard extends Controller {
           jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors =>
             BadRequest(views.html.jobForm(formWithErrors, Some(user)))
           }
-          id <- idOpt match {
-            case None => {
-              val errorResult =
-                for {
-                  _ <- Job.save(jobF.assignTo(user)) failMap failWithGrace(Some(user))
-                } yield seeDashboard(Created, ("info" -> "Job created"))
-              FutureValidation(errorResult.toFuture map { e => Failure(e) })
-            }
-            case Some(id) => Success(id).toImmediateValidation
+          result <- idOpt match {
+            case None =>
+              for {
+                _ <- Job.save(jobF.assignTo(user)) failMap failWithGrace(Some(user))
+              } yield {
+                seeDashboard(Created, ("info" -> "Job created"))
+              }
+            case Some(id) =>
+              for {
+                jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
+                 _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap failWithGrace(Some(user))
+              } yield {
+                seeDashboard(Ok, ("info" -> "Job updated"))
+              }
           }
-          jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
-          _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap failWithGrace(Some(user))
         } yield {
-          seeDashboard(Ok, ("info" -> "Job updated"))
+          result
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
