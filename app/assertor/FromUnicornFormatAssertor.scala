@@ -17,22 +17,24 @@ trait FromUnicornFormatAssertor extends FromSourceAssertor {
         message <- response \ "message"
         typ <- message.attrs get "type"
       } yield {
-        val id = message.attrs get "id" getOrElse {
-          val title = (message \ "title" \ text headOption) getOrElse "UNKNOWN"
-          title.hashCode.toString
+        val title = (message \ "title").headOption.map{
+          title => title.children.map(removeScope).mkString("").trim 
+        }.getOrElse("No Title")
+        val id = message.attrs get "id" match {
+          case Some(id) if id != "html5" => id
+          case _ => title.hashCode.toString
         }
         val eventRef = message.attrs get "ref" getOrElse obversationRef
         val eventLang = message.attrs get "lang" getOrElse obversationLang
-        val title = (message \ "title" \ text).headOption.getOrElse("") // Title is mandatory
         val contexts =
           for {
             context <- message \ "context"
-            content <- context \ text
           } yield {
+            val content = context.children.map(removeScope).mkString("").trim
             val contextRef = context.attrs get "ref" getOrElse eventRef
             val line = context.attrs get "line" map { s => s.toInt }
             val column = context.attrs get "column" map { s => s.toInt }
-            Context(content.trim, contextRef, line, column)
+            Context(content, contextRef, line, column)
           }
         val descriptionOpt = (message \ "description").headOption map { description =>
           description.children.map(removeScope).mkString("").trim

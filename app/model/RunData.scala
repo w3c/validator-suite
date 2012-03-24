@@ -232,7 +232,7 @@ case class RunData(
 
   def withAssertorResult(result: AssertorResult): RunData = result match {
     case assertions: Assertions => this.copy(
-      oks = oks + assertions.numberOfOks,
+      oks = oks + (if (assertions.isValid) 1 else 0),
       errors = errors + assertions.numberOfErrors,
       warnings = warnings + assertions.numberOfWarnings,
       receivedAssertorResults = receivedAssertorResults + 1)
