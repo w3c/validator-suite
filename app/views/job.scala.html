@@ -2,8 +2,7 @@
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
-	scripts = List("dashboard.js", "report.js"),
-	exec = """$(function(){window.Report = new ReportView();});"""){
+   scripts = List("model.js", "vs.js", "report.js")){
    
    @***** Header ******@
 	
@@ -59,38 +58,42 @@
 	
 	@assertionsResults.collect{case sertion: Assertions if (!sertion.isValid) =>
 	
-	<article><div>
-		<a href="#">@sertion.url</a>
-		<ul class="meta">
-			<li>Assertor: @sertion.assertorId</li>
-			<li>Errors: @sertion.numberOfErrors</li>
-			<li>Warnings: @sertion.numberOfWarnings</li>
-			<li>Timestamp: @sertion.timestamp</li>
-		</ul>
-		<ul class="messages">
-		@defining(sertion.assertions) { raws =>
-		@raws.map { raw =>
-		<li class="@raw.severity" lang="@raw.lang" id="@raw.id">
-			<a class="title" href="#@raw.id">@HtmlFormat.raw(raw.title)</a>
-			@if(raw.description.isDefined) {
-			<div class="description">@Html(raw.description.get)</div>
-			}
-			@if(raw.contexts.size > 0) {
-			<ul class="contexts">
-			@defining(raw.contexts) { contexts =>
-			@contexts.map { context =>
-				<li>
-					@if(context.line.isDefined){<span class="line">Line: @context.line</span>}
-					@if(context.column.isDefined){<span class="column">Column: @context.column</span>}
-					<code class="context">@context.content</code>
-				</li>
+	<article id="@sertion.id" tabindex="1">
+		<div>
+			<a class="resource" href="#@sertion.id">@sertion.url</a>
+			<ul class="meta">
+				<li>@sertion.assertorId</li>
+				<li>Errors: @sertion.numberOfErrors</li>
+				<li>Warnings: @sertion.numberOfWarnings</li>
+				<!-- <li>Timestamp: @sertion.timestamp</li> -->
+			</ul>
+		</div>
+		<div>
+			<ul class="messages">
+			@defining(sertion.assertions) { raws =>
+			@raws.map { raw =>
+			<li class="@raw.severity" lang="@raw.lang" id="@raw.id">
+				<a class="title" href="#@raw.id">@HtmlFormat.raw(raw.title)</a>
+				@if(raw.description.isDefined) {
+				<div class="description">@Html(raw.description.get)</div>
+				}
+				@if(raw.contexts.size > 0) {
+				<ul class="contexts">
+				@defining(raw.contexts) { contexts =>
+				@contexts.map { context =>
+					<li>
+						@if(context.line.isDefined){<span class="line">Line: @context.line</span>}
+						@if(context.column.isDefined){<span class="column">Column: @context.column</span>}
+						@if(context.content != ""){<code class="context">@Html(context.content)</code>}
+					</li>
+				}}
+				</ul>
+				}
+			</li>
 			}}
 			</ul>
-			}
-		</li>
-		}}
-		</ul>
-	</div></article>
+		</div>
+	</article>
 	
 	}
 	

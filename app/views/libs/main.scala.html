@@ -29,7 +29,7 @@
 	@scripts.map { script =><script src="@routes.Assets.at("javascripts/"+script)"></script>
 	}
 	@if(exec != "") {
-	<script>@exec</script>
+	<script>@Html(exec)</script>
 	}
 </body>
 </html>

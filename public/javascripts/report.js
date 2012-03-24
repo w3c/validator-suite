@@ -1,5 +1,4 @@
-$(function () {
-		
+
 window.ReportView = Backbone.View.extend({
 	el: $("#report > div"),
 	messages: new MessageList(),
@@ -24,7 +23,23 @@ window.ReportView = Backbone.View.extend({
 	}
 });
 
-window.Report = new window.ReportView();
-	
-	
+$(function () {
+	window.Report = new ReportView();
+	  
+	var setHash = function(hash) {
+		// Make sure that the hash is the first character, and extract from (presumably) full URL if not
+		if (hash.indexOf('#') > 0) {
+			hash = hash.substr(hash.lastIndexOf('#'));
+		} else if (hash.substr(0, 1) !== '#') {
+			hash = '#' + hash;
+		}
+		// Add our hash element to the history/URL
+		if (window.history.pushState) {
+			window.history.pushState(null, null, hash);
+		} else {
+			window.location = hash;
+		}
+	};
+
+	//$("a.resource").click(function (e){e.preventDefault(); setHash($(this).attr('href'));});
 });
