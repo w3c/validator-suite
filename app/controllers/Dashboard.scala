@@ -39,7 +39,8 @@ object Dashboard extends Controller {
         user <- getAuthenticatedUser() failMap failWithGrace()
         jobs <- User.getJobs(user.organization) failMap failWithGrace(Some(user))
         viewInputs <- {
-          val iterableFuture = jobs map { job => job.jobData map (data => (job.configuration, data)) }
+          val sortedJobs = jobs.toList.sortWith{(a, b) => a.configuration.createdAt.toString() < b.configuration.createdAt.toString()}
+          val iterableFuture = sortedJobs map { job => job.jobData map (data => (job.configuration, data)) }
           val futureIterable = Future.sequence(iterableFuture)
           futureIterable.lift
         }.failMap(t => failWithGrace(Some(user))(StoreException(t)))
@@ -76,10 +77,18 @@ object Dashboard extends Controller {
           data <- job.jobData.lift failMap {t => failWithGrace(Some(user))(Unexpected(t))}
           ars <- Job.getAssertorResults(job.id) failMap failWithGrace(Some(user))
         } yield {
-          Ok(views.html.job(job.configuration, data, ars, Some(user)))
+          Ok(views.html.job(job.configuration, data, sort(filter(ars)), Some(user)))
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise()
     }
+  }
+  
+  def sort(ar: Iterable[AssertorResult]) = {
+    ar
+  }
+  
+  def filter(ar: Iterable[AssertorResult]) = {
+    ar.collect{case a: Assertions => a}
   }
 
   def newJob() = newOrEditJob(None)
