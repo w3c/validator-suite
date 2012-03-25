@@ -39,7 +39,7 @@ object Dashboard extends Controller {
         user <- getAuthenticatedUser() failMap failWithGrace()
         jobs <- User.getJobs(user.organization) failMap failWithGrace(Some(user))
         viewInputs <- {
-          val sortedJobs = jobs.toList.sortWith{(a, b) => a.configuration.createdAt.toString() < b.configuration.createdAt.toString()}
+          val sortedJobs = jobs.toList.sortWith{(a, b) => a.configuration.createdOn.toString() < b.configuration.createdOn.toString()}
           val iterableFuture = sortedJobs map { job => job.jobData map (data => (job.configuration, data)) }
           val futureIterable = Future.sequence(iterableFuture)
           futureIterable.lift

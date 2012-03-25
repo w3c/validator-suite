@@ -19,7 +19,7 @@ object JobConfiguration {
 case class JobConfiguration(
     id: JobId = JobId.newId(),
     strategy: EntryPointStrategy,
-    createdAt: DateTime = new DateTime,
+    createdOn: DateTime = new DateTime,
     creator: UserId,
     organization: OrganizationId,
     name: String) {

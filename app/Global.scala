@@ -32,7 +32,7 @@ object Global extends GlobalSettings {
     
     var a = List[JobConfiguration]()
     for (i <- 0 until 8)
-      a = a :+ job.copy(JobId(), strategy = job.strategy.copy(distance = i), createdAt = DateTime.now.plus(i)) 
+      a = a :+ job.copy(JobId(), strategy = job.strategy.copy(distance = i), createdOn = DateTime.now.plus(i)) 
     a.map(store.putJob)
     
     store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id))
