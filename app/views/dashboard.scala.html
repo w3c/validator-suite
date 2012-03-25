@@ -1,4 +1,4 @@
-@(jobs: Iterable[(JobConfiguration, JobData)] = None, userO: Option[User] = None)(implicit flash: Flash)
+@(jobs: Iterable[(JobConfiguration, JobData)] = None, user: User)(implicit flash: Flash)
 
 @import views.Helper._
 @import org.w3.vs.actor._
@@ -9,7 +9,7 @@
    
    @***** Header ******@
    
-	@libs.header(userO)
+	@libs.header(Some(user))
 	
 }{ @***** Toolbar *****@
 	

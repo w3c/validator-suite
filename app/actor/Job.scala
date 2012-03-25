@@ -82,7 +82,7 @@ class Job(
   def jobData(): Future[JobData] =
     (jobActorRef ? message.GetJobData).mapTo[JobData]
 
-  def subscribeToUpdates(): Enumerator[message.RunUpdate] = {
+  def subscribeToUpdates(): PushEnumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
         case msg: message.RunUpdate =>
@@ -90,12 +90,11 @@ class Job(
             enumerator.push(msg)
           } catch { 
             case e: ClosedChannelException => enumerator.close; logger.error("ClosedChannel exception: ", e)
-          	case e => enumerator.close; logger.error("Socket exception: ", e)
+          	case e => enumerator.close; logger.error("Enumerator exception: ", e)
           }
         case msg => logger.debug("subscriber got "+msg)
       }
     }))
-    // TODO make the enumerator to stop the actor and unsubscribe it when an error occurs (or when it's 
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
         onStart = jobActorRef.tell(message.Subscribe, subscriber),

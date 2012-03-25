@@ -1,11 +1,11 @@
-@(form: Form[JobConfiguration], userO: Option[User] = None, idOpt: Option[JobId] = None)(implicit flash: Flash)
+@(form: Form[JobConfiguration], user: User, idOpt: Option[JobId] = None)(implicit flash: Flash)
 
 @libs.main("Validator Suite",
   stylesheets = List("dashboard.css")){
    
    @***** Header ******@
    
-	@libs.header(userO)
+	@libs.header(Some(user))
 	
 }{ @***** Toolbar *****@
 

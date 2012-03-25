@@ -45,7 +45,7 @@ object Dashboard extends Controller {
           futureIterable.lift
         }.failMap(t => failWithGrace(Some(user))(StoreException(t)))
       } yield {
-        Ok(views.html.dashboard(viewInputs, Some(user)))
+        Ok(views.html.dashboard(viewInputs, user))
       }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
@@ -77,7 +77,7 @@ object Dashboard extends Controller {
           data <- job.jobData.lift failMap {t => failWithGrace(Some(user))(Unexpected(t))}
           ars <- Job.getAssertorResults(job.id) failMap failWithGrace(Some(user))
         } yield {
-          Ok(views.html.job(job.configuration, data, sort(filter(ars)), Some(user)))
+          Ok(views.html.job(job.configuration, data, sort(filter(ars)), user))
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise()
     }
@@ -100,10 +100,10 @@ object Dashboard extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUser failMap failWithGrace()
-          id <- idOpt.toImmediateSuccess(ifNone = Ok(views.html.jobForm(jobForm)))
+          id <- idOpt.toImmediateSuccess(ifNone = Ok(views.html.jobForm(jobForm, user )))
           jobC <- getJobConfIfAllowed(user, id) failMap failWithGrace(Some(user))
         } yield {
-          Ok(views.html.jobForm(jobForm.fill(jobC)))
+          Ok(views.html.jobForm(jobForm.fill(jobC), user))
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
@@ -131,7 +131,7 @@ object Dashboard extends Controller {
         for {
           user <- getAuthenticatedUser failMap failWithGrace()
           jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors =>
-            BadRequest(views.html.jobForm(formWithErrors, Some(user)))
+            BadRequest(views.html.jobForm(formWithErrors, user))
           }
           result <- idOpt match {
             case None =>
@@ -278,8 +278,22 @@ object Dashboard extends Controller {
 
   // * Sockets
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>
-    val in = Iteratee.ignore[JsValue]
     val seed = new UpdateData(null)
+    
+    // I don't know how to flatten a Promise[(iteratee, enumerator)] so i use another for loop for now
+    val promiseIteratee = (for {
+      user <- getAuthenticatedUser()
+      jobConfs <- Job.getAll(user.organization)
+      enumerators <- Future.sequence(jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
+    } yield {
+      Iteratee.ignore[JsValue].mapDone[Unit]{_ => 
+      	enumerators map { enum =>
+      	  logger.error("Closing enumerator: " + enum)
+      	  enum.close // This doesn't work: PushEnumerator:close() does not call the enumerator's onComplete method, possibly a bug.
+      	}
+      }
+    }).failMap(_ => Iteratee.ignore[JsValue]).expiresWith(Iteratee.ignore[JsValue], 1, SECONDS).toPromiseT[Iteratee[JsValue, Unit]]
+
     val promiseEnumerator = (for {
       user <- getAuthenticatedUser()
       jobConfs <- Job.getAll(user.organization)
@@ -302,11 +316,11 @@ object Dashboard extends Controller {
       }
       out
     }).failMap(_ => Enumerator.eof[JsValue]).expiresWith(Enumerator.eof[JsValue], 1, SECONDS).toPromiseT[Enumerator[JsValue]]
+    
     val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseEnumerator)
-    (in, enumerator)
+    val iteratee: Iteratee[JsValue, Unit] = Iteratee.flatten(promiseIteratee)
+    
+    (iteratee, enumerator)
   }
-
-  // jobSocket
-  // uriSocket
 
 }

@@ -1,4 +1,4 @@
-@(jobConf: JobConfiguration, data: JobData, assertionsResults: Iterable[AssertorResult], userO: Option[User] = None, errors: List[(String, String)] = List())(implicit flash: Flash)
+@(jobConf: JobConfiguration, data: JobData, assertionsResults: Iterable[AssertorResult], user: User, errors: List[(String, String)] = List())(implicit flash: Flash)
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
@@ -6,7 +6,7 @@
    
    @***** Header ******@
 	
-	@libs.header(userO)
+	@libs.header(Some(user))
 	
 }{ @***** Toolbar *****@
 
@@ -62,9 +62,9 @@
 		<div>
 			<a class="resource" href="#@{sertion.id.toString.substring(0,6)}">@sertion.url</a>
 			<ul class="meta">
-				<li>@sertion.assertorId</li>
-				<li>Errors: @sertion.numberOfErrors</li>
-				<li>Warnings: @sertion.numberOfWarnings</li>
+				<li class="assertor">@sertion.assertorId</li>
+				<li class="errors">@sertion.numberOfErrors</li>
+				<li class="warnings">@sertion.numberOfWarnings</li>
 				<!-- <li>Timestamp: @sertion.timestamp</li> -->
 			</ul>
 		</div>
