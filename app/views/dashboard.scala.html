@@ -42,17 +42,17 @@
 			<form action="@routes.Dashboard.jobDispatcher(jobConf.id)" method="post">
 				<button type="submit" class="show" formmethod="get">Show</button>
 				@defining(data.explorationMode) { mode =>
-				  @mode match {
-				    case ProActive => {<button type="submit" name="action" value="off" class="off">Off</button>}
-				    case Lazy => {<button type="submit" name="action" value="on" class="on">On</button>}
-				  }
-				}
 				@defining(data.activity) { activity =>
 				  @activity match {
 				    case Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
-				    case Idle => {}
+				    case Idle => {
+				      @mode match {
+				        case ProActive => {<button type="submit" name="action" value="off" class="off">Off</button>}
+				        case      Lazy => {<button type="submit" name="action" value="on" class="on">On</button>}
+				      }
+				    }
 				  }
-				}
+				}}
 				<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
 				<button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(jobConf.id)">Edit</button>
 				<button type="submit" name="action" value="delete" class="delete">Delete</button>
@@ -81,12 +81,12 @@
 		</ul>
 		<ul>
 			<li><a href="<%= url %>" class="show">Show</a></li>
-			<% if (data.get("mode") == "ProActive") { %>
+			<% if (data.get("activity") == "Busy") { %>
+			<li><a href="<%= url + '/stop' %>" class="stop">Stop</a></li>
+			<% } else if (data.get("mode") == "ProActive") { %>
 			<li><a href="<%= url + '/off' %>" class="off">Off</a></li>
 			<% } else if (data.get("mode") == "Lazy") { %>
 			<li><a href="<%= url + '/on' %>" class="on">On</a></li>
-			<% } if (data.get("activity") == "Busy") { %>
-			<li><a href="<%= url + '/stop' %>" class="stop">Stop</a></li>
 			<% } %>
 			<li><a href="<%= url + '/refresh' %>" class="refresh">Refresh</a></li>
 			<li><a href="<%= url + '/edit' %>" class="edit">Edit</a></li>

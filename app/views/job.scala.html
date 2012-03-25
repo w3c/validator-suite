@@ -36,17 +36,17 @@
 		<form action="@routes.Dashboard.jobDispatcher(jobConf.id)" method="post">
 			<button type="submit" class="show" formmethod="get">Show</button>
 			@defining(data.explorationMode) { mode =>
-			  @mode match {
-			    case ProActive => {<button type="submit" name="action" value="off" class="off">Off</button>}
-			    case Lazy => {<button type="submit" name="action" value="on" class="on">On</button>}
-			  }
-			}
 			@defining(data.activity) { activity =>
 			  @activity match {
 			    case Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
-			    case Idle => {}
+			    case Idle => {
+			      @mode match {
+			        case ProActive => {<button type="submit" name="action" value="off" class="off">Off</button>}
+			        case      Lazy => {<button type="submit" name="action" value="on" class="on">On</button>}
+			      }
+			    }
 			  }
-			}
+			}}
 			<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
 			<button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(jobConf.id)">Edit</button>
 			<button type="submit" name="action" value="delete" class="delete">Delete</button>
@@ -58,9 +58,9 @@
 	
 	@assertionsResults.collect{case sertion: Assertions if (!sertion.isValid) =>
 	
-	<article id="@sertion.id" tabindex="1">
+	<article id="@{sertion.id.toString.substring(0,6)}" tabindex="1">
 		<div>
-			<a class="resource" href="#@sertion.id">@sertion.url</a>
+			<a class="resource" href="#@{sertion.id.toString.substring(0,6)}">@sertion.url</a>
 			<ul class="meta">
 				<li>@sertion.assertorId</li>
 				<li>Errors: @sertion.numberOfErrors</li>
@@ -72,8 +72,8 @@
 			<ul class="messages">
 			@defining(sertion.assertions) { raws =>
 			@raws.map { raw =>
-			<li class="@raw.severity" lang="@raw.lang" id="@raw.id">
-				<a class="title" href="#@raw.id">@HtmlFormat.raw(raw.title)</a>
+			<li class="@raw.severity" lang="@raw.lang">
+				<h1 class="title">@HtmlFormat.raw(raw.title)</h1>
 				@if(raw.description.isDefined) {
 				<div class="description">@Html(raw.description.get)</div>
 				}
