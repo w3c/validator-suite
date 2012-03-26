@@ -92,7 +92,7 @@ object Jobs extends Controller {
   def update(id: JobId) = createOrUpdateJob(Some(id))
   
   def on(id: JobId) = simpleJobAction(id)(user => job => job.on())("Job on")
-  def off(id: JobId) = simpleJobAction(id)(user => job => job.on())("Job off")
+  def off(id: JobId) = simpleJobAction(id)(user => job => job.off())("Job off")
   def refresh(id: JobId) = simpleJobAction(id)(user => job => job.refresh())("Job restarted")
   def stop(id: JobId) = simpleJobAction(id)(user => job => job.stop())("Job stopped")
   
