@@ -2,7 +2,7 @@ window.VS = {
 	
 	Socket: {
 		
-		url: "ws://" + window.location.host + "/jobs",
+		url: "ws://" + window.location.host + "/jobs/ws",
 		type: window['MozWebSocket'] ? MozWebSocket : WebSocket,
 		
 		open: function (options) {
