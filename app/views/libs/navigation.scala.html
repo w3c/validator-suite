@@ -1,7 +1,7 @@
 @(crumbs: Iterable[(String, String)] = List())
 		<nav id="crumbs">
 			<ul>
-				<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
+				<li><a href="@routes.Jobs.index">Dashboard</a></li>
 				@crumbs.map { crumb =>
 				  @if(crumb._2 == "") {
 			  	    <li>@crumb._1</li>

@@ -13,12 +13,12 @@
 	
 }{ @***** Toolbar *****@
 	
-		<ul><li><a href="@routes.Dashboard.newJob()">Add new job</a></li></ul>
+		<ul><li><a href="@routes.Jobs.new1">Add new job</a></li></ul>
 	
 }{ @***** Content *****@ 
 	
 	@libs.navigation()
-	@libs.errors()
+	@libs.messages()
 	
 	<section id="jobs" class="list">
 	
@@ -39,7 +39,7 @@
 				<li>Errors: <span class="errors">@data.errors</span></li>
 				<li>Warnings: <span class="warnings">@data.warnings</span></li>
 			</ul>
-			<form action="@routes.Dashboard.jobDispatcher(jobConf.id)" method="post">
+			<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
 				<button type="submit" class="show" formmethod="get">Show</button>
 				@defining(data.explorationMode) { mode =>
 				@defining(data.activity) { activity =>
@@ -54,7 +54,7 @@
 				  }
 				}}
 				<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
-				<button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(jobConf.id)">Edit</button>
+				<button type="submit" class="edit" formmethod="get" formaction="@routes.Jobs.edit(jobConf.id)">Edit</button>
 				<button type="submit" name="action" value="delete" class="delete">Delete</button>
 			</form>
 		</div></article>

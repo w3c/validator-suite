@@ -1,4 +1,4 @@
-@(jobConf: JobConfiguration, data: JobData, assertionsResults: Iterable[AssertorResult], user: User, errors: List[(String, String)] = List())(implicit flash: Flash)
+@(jobConf: JobConfiguration, data: JobData, assertionsResults: Iterable[AssertorResult], user: User, errors: List[(String, String)] = List.empty)(implicit flash: Flash)
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
@@ -10,12 +10,10 @@
 	
 }{ @***** Toolbar *****@
 
-	<!-- <ul><li><a href="@routes.Dashboard.dashboard">Dashboard</a></li></ul> -->
-	
 }{ @***** Content *****@ 
 	
 	@libs.navigation()
-	@libs.errors(errors)
+	@libs.messages(errors)
 	
 	<section class="job" data-id="@jobConf.id"><div>
 		<ul>
@@ -33,7 +31,7 @@
 			<li>Errors: <span class="errors">@data.errors</span></li>
 			<li>Warnings: <span class="warnings">@data.warnings</span></li>
 		</ul>
-		<form action="@routes.Dashboard.jobDispatcher(jobConf.id)" method="post">
+		<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
 			<button type="submit" class="show" formmethod="get">Show</button>
 			@defining(data.explorationMode) { mode =>
 			@defining(data.activity) { activity =>
@@ -48,7 +46,7 @@
 			  }
 			}}
 			<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
-			<button type="submit" class="edit" formmethod="get" formaction="@routes.Dashboard.editJob(jobConf.id)">Edit</button>
+			<button type="submit" class="edit" formmethod="get" formaction="@routes.Jobs.edit(jobConf.id)">Edit</button>
 			<button type="submit" name="action" value="delete" class="delete">Delete</button>
 		</form>
 	</div></section>

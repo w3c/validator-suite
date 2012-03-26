@@ -1,33 +1,37 @@
-@(form: Form[(String,String)])(implicit flash: Flash)
+@(form: Form[(String,String)])(implicit flash: Flash, req: Request[_])
 
-@libs.main(title= "Validator Suite",
-  stylesheets = List("dashboard.css")){
-   
-   @***** Header ******@
-   
-	@libs.header()
-	
-}{ @***** Toolbar *****@
-	
-}{ @***** Content *****@ 
-	
-	@libs.navigation()
-	@libs.errors()
-	
-	<section id="content" class="login"><div>
-	@helper.form(routes.Dashboard.authenticate) {
-		@form.globalError.map { error =>
-		<p class="error">@error.message</p>
+@import org.w3.vs.controllers.isAjax
+
+@if(!isAjax) {
+
+	@libs.main(title= "Validator Suite", stylesheets = List("dashboard.css")){
+	   
+	   @***** Header ******@
+	   
+		@libs.header()
+		
+	}{ @***** Toolbar *****@
+		
+	}{ @***** Content *****@ 
+		
+		@libs.navigation()
+		@libs.messages()
+		
+		<section id="login"><div>
+		@helper.form(routes.Application.authenticate) {
+			@form.globalError.map { error =>
+			<p class="error">@error.message</p>
+			}
+			<p><input type="email" id="email" name="email" placeholder="Email" value="@form("email").value">
+			<p><input type="password" id="password" name="password" placeholder="Password">
+			<p><button id="submit-login" type="submit">Login</button>
 		}
-		<p><input type="email" id="email" name="email" placeholder="Email" value="@form("email").value">
-		<p><input type="password" id="password" name="password" placeholder="Password">
-		<p><button id="submit-login" type="submit">Login</button>
-	}
-
-	</div></section>
+		</div></section>
+		
+	}{ @***** Footer *****@
 	
-}{ @***** Footer *****@
-
-	@libs.footer()
+		@libs.footer()
+	
+	}
 
 }

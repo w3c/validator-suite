@@ -38,7 +38,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
 
   "test OneGETxHEAD" in {
     http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
-    val job = Jobs.getJobOrCreate(jobConf)
+    val job = JobsActor.getJobOrCreate(jobConf)
     job map (_.refresh())
     def ris = store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 11

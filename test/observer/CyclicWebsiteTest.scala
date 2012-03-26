@@ -31,7 +31,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
   
   "test cyclic(10)" in {
     http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
-    val job = Jobs.getJobOrCreate(jobConf)
+    val job = JobsActor.getJobOrCreate(jobConf)
     job map (_.refresh())
     def cond = (store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success") ).size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)

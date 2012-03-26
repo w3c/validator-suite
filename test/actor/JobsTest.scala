@@ -35,9 +35,9 @@ class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
     val testF =
       for {
         // first time: job is created
-        createdJob <- Jobs.getJobOrCreate(jobConf)
+        createdJob <- JobsActor.getJobOrCreate(jobConf)
         createdJobData <- createdJob.jobData()
-        retrievedJob <- Jobs.getJobOrCreate(jobConf)
+        retrievedJob <- JobsActor.getJobOrCreate(jobConf)
         //_ <- job.refresh()
       } yield {
         createdJobData.jobId must be === (jobConf.id)

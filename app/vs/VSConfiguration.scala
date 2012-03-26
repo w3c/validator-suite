@@ -5,7 +5,7 @@ import org.w3.vs.http.Http
 import akka.dispatch.ExecutionContext
 import com.ning.http.client.AsyncHttpClient
 import org.w3.vs.store.Store
-import org.w3.vs.actor.Jobs
+import org.w3.vs.actor.JobsActor
 
 trait VSConfiguration {
   

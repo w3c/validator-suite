@@ -1,4 +1,4 @@
-@(errors: List[(String, String)] = List[(String, String)]())(implicit flash: Flash)
+@(errors: List[(String, String)] = List.empty)(implicit flash: Flash)
 
 @if(flash.data.size + errors.size > 0) {
 

@@ -35,7 +35,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
   )
 
   "test simpleInterWebsite" in {
-    val job = Jobs.getJobOrCreate(jobConf)
+    val job = JobsActor.getJobOrCreate(jobConf)
     job map (_.refresh())
     def ris = store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 2

@@ -3,29 +3,22 @@
 # ~~~~
 
 # Indexes
-GET     /                           controllers.Dashboard.index()
-GET     /dashboard                  controllers.Dashboard.dashboard()
+GET     /                           controllers.Jobs.redirect
+GET     /dashboard                  controllers.Jobs.index
 
 # Jobs
-GET     /job                        controllers.Dashboard.newJob()
-GET     /job/:id/edit               controllers.Dashboard.editJob(id: JobId)
+GET     /jobs                       controllers.Jobs.index
+POST    /jobs                       controllers.Jobs.create
+GET     /jobs/new                   controllers.Jobs.new1
+GET     /jobs/:id                   controllers.Jobs.show(id: JobId)
+POST    /jobs/:id                   controllers.Jobs.dispatcher(id: JobId)
+GET     /jobs/:id/edit              controllers.Jobs.edit(id: JobId)
+GET     /jobs/ws                    controllers.Jobs.dashboardSocket()
 
-POST    /job                        controllers.Dashboard.createJob()
-# delete, run, stop or put are all POSTed actions, handled by jobDispatcher
-POST    /job/:id                    controllers.Dashboard.jobDispatcher(id: JobId)
-GET     /job/:id                    controllers.Dashboard.showReport(id: JobId)
-GET     /jobs                       controllers.Dashboard.dashboardSocket()
-
-# Authentication
-GET     /login                      controllers.Dashboard.login
-POST    /login                      controllers.Dashboard.authenticate
-GET     /logout                     controllers.Dashboard.logout
-
-# Observations
-#POST    /observation                controllers.Demo.validate()
-#GET     /observation/:id            controllers.Demo.redirect(id: String)
-#GET     /observation/:id/ws         controllers.Demo.subscribe(id: String)
-#GET     /observation/:id/stop       controllers.Demo.stop(id: String)
+# Application
+GET     /login                      controllers.Application.login
+POST    /login                      controllers.Application.authenticate
+GET     /logout                     controllers.Application.logout
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /public/*file               controllers.Assets.at(path="/public", file)

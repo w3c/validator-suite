@@ -142,6 +142,6 @@ window.Job.fromHTML = function(elem) {
 };
 
 window.JobList = Backbone.Collection.extend({
-	url: '/job',
+	url: '/jobs',
 	model: Job,
 });

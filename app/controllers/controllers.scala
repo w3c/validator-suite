@@ -1,15 +1,9 @@
 package org.w3.vs
 
-import play.api.mvc.Request
-import play.api.mvc.AnyContent
-import play.api.mvc.Result
-import play.api.mvc.Results
-import play.api.mvc.Action
-import play.api.mvc.WebSocket
-import play.api.mvc.RequestHeader
-import play.api.mvc.AsyncResult
-import play.api.libs.iteratee.Enumerator
-import play.api.libs.iteratee.Iteratee
+import play.api._
+import play.api.mvc._
+import play.api.mvc.Results._
+import play.api.libs.iteratee._
 import play.api.libs.json.JsValue
 import play.api.libs.concurrent.Promise
 import play.api.data._
@@ -20,6 +14,7 @@ import play.api.data.format.Formatter
 import org.w3.util._
 import org.w3.vs.Prod.configuration
 import org.w3.vs.model._
+import org.w3.vs.exception._
 import play.api.mvc.PathBindable
 import play.api.mvc.JavascriptLitteral
 import java.util.UUID
@@ -32,6 +27,13 @@ package object controllers {
   implicit def ec = configuration.webExecutionContext
   
   def CloseWebsocket = (Iteratee.ignore[JsValue], Enumerator.eof)
+  
+  def isAjax(implicit req: Request[_]) = {
+    req.headers get ("x-requested-with") match {
+      case Some("XMLHttpRequest") => true
+      case _ => false
+    }
+  }
   
   /*
    *  Forms
@@ -71,6 +73,8 @@ package object controllers {
 
   implicit def toFormW[T](form: Form[T]): FormW[T] = new FormW(form)
   
+  def isValidForm[E](form: Form[E])(implicit req: Request[_]) = form.bindFromRequest.toValidation
+  
   /*
    *  Formatters
    */
@@ -96,19 +100,6 @@ package object controllers {
   /*
    *  Bindables
    */
-  implicit val bindableUUID = new PathBindable[UUID] {
-    def bind (key: String, value: String): Either[String, UUID] = {
-      try {
-        Right(UUID.fromString(value))
-      } catch { case e: Exception =>
-        Left("invalid id: " + value)
-      }
-    }
-    def unbind (key: String, value: UUID): String = {
-      value.toString
-    }
-  }
-  
   implicit val bindableJobId = new PathBindable[JobId] {
     def bind (key: String, value: String): Either[String, JobId] = {
       try {
@@ -119,22 +110,6 @@ package object controllers {
     }
     def unbind (key: String, value: JobId): String = {
       value.toString
-    }
-  }
-  
-  implicit val bindableUUIDOption = new PathBindable[Option[UUID]] {
-    def bind (key: String, value: String): Either[String, Option[UUID]] = {
-      try {
-        Right(Some(UUID.fromString(value)))
-      } catch { case e: Exception =>
-        Left("invalid id: " + value)
-      }
-    }
-    def unbind (key: String, value: Option[UUID]): String = {
-      value match {
-        case Some(id) => id.toString
-        case _ => ""
-      }
     }
   }
   

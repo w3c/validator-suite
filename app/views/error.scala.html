@@ -1,23 +1,30 @@
-@(errors: List[(String, String)] = List(), userO: Option[User] = None)(implicit flash: Flash)
+@(errors: List[(String, String)] = List(), userO: Option[User] = None)(implicit flash: Flash, req: Request[_])
 
-@libs.main("Validator Suite", 
-	stylesheets = List("dashboard.css")){
-   
-   @***** Header ******@
-   
-	@libs.header(userO)
-	
-}{ @***** Toolbar *****@
+@import org.w3.vs.controllers.isAjax
 
-	<ul><li><a href="@routes.Dashboard.dashboard">Dashboard</a></li></ul>
-	
-}{ @***** Content *****@ 
-	
-	@libs.navigation()
-	@libs.errors(errors)
-	
-}{ @***** Footer *****@
+@if(isAjax) {
 
-	@libs.footer()
+	@libs.messages(errors)
+
+} else {
+
+	@libs.main("Validator Suite", stylesheets = List("dashboard.css")){
+	   
+	   @***** Header ******@
+	   
+		@libs.header(userO)
+		
+	}{ @***** Toolbar *****@
+		
+	}{ @***** Content *****@ 
+		
+		@libs.navigation()
+		@libs.messages(errors)
+		
+	}{ @***** Footer *****@
+	
+		@libs.footer()
+	
+	}
 
 }

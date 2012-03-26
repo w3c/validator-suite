@@ -18,7 +18,7 @@ object User {
     for {
       jobConfs <- store.listJobs(organizationId).toDelayedValidation failMap (t => StoreException(t))
       jobs <- {
-        val jobs = jobConfs map { jobConf => Jobs.getJobOrCreate(jobConf) }
+        val jobs = jobConfs map { jobConf => JobsActor.getJobOrCreate(jobConf) }
         val futureJobs = Future.sequence(jobs)
         futureJobs.lift
       } failMap (t => StoreException(t))
@@ -27,12 +27,14 @@ object User {
     }
   }
   
-  def authenticate(email: String, password: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Option[User], Nothing, NOTSET] = {
+  
+  // TODO: For now these only fail with StoreExceptions but should also fail with a Unauthorized exception 
+  def authenticate(email: String, password: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[StoreException, Option[User], Nothing, NOTSET] = {
     import configuration.store
     store.authenticate(email, password).toDelayedValidation failMap (t => StoreException(t))
   }
   
-  def getByEmail(email: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Option[User], Nothing, NOTSET] = {
+  def getByEmail(email: String)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[StoreException, Option[User], Nothing, NOTSET] = {
     import configuration.store
     store.getUserByEmail(email).toDelayedValidation failMap (t => StoreException(t))
   }

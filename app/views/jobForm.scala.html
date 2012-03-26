@@ -10,14 +10,16 @@
 }{ @***** Toolbar *****@
 
 	<ul>
-		<li><a href="@routes.Dashboard.dashboard">Dashboard</a></li>
-		<li><a href="@routes.Dashboard.newJob()">Add new job</a></li>
+		<li><a href="@routes.Jobs.index">Dashboard</a></li>
+		<li><a href="@routes.Jobs.new1">Add new job</a></li>
 	</ul>
 
 }{ @***** Content *****@ 
 
 	@libs.navigation(List((form("name").value.getOrElse("New Job"), "")))
-	@libs.errors()
+	@libs.messages()
+	
+	<section>
 	
 	@** TODO **@
 	<script type="text/javascript">
@@ -36,11 +38,13 @@
 		<label for="linkCheck">Check external links: </label>
 		<input type=checkbox id=linkCheck name=linkCheck @if(form("linkCheck").value == Some("on")) {checked}/><br>
 		@if(idOpt.isDefined) {
-		<input type=submit name=action value=Update formaction="@routes.Dashboard.jobDispatcher(idOpt.get)">
+		<input type=submit name=action value=Update formaction="@routes.Jobs.dispatcher(idOpt.get)">
 		} else {
-		<input type=submit name=action value=Create formaction="@routes.Dashboard.createJob()">
+		<input type=submit name=action value=Create formaction="@routes.Jobs.create">
 		}
 	</form>
+	
+	</section>
 	
 }{ @***** Footer *****@
 
