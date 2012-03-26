@@ -68,7 +68,7 @@ object Jobs extends Controller {
     ar
   }
   private def filter(ar: Iterable[AssertorResult]) = {
-    ar.collect{case a: Assertions => a}
+    ar.collect{case a: Assertions => a}.take(50)
   }
   
   // TODO: This should also stop the job and kill the actor
@@ -114,28 +114,20 @@ object Jobs extends Controller {
   
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>
     val seed = new UpdateData(null)
-    
-    // I don't know how to flatten a Promise[(iteratee, enumerator)] so i use another for loop for now
-    val promiseIteratee = (for {
+
+    val promiseIterateeEnumerator = (for {
       user <- getAuthenticatedUser
       jobConfs <- Job.getAll(user.organization)
       enumerators <- Future.sequence(jobConfs map { jobConf => JobsActor.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
     } yield {
-      Iteratee.ignore[JsValue].mapDone[Unit]{_ => 
+      val in = Iteratee.ignore[JsValue].mapDone[Unit]{_ => 
       	enumerators map { enum =>
       	  logger.error("Closing enumerator: " + enum)
       	  enum.close // This doesn't work: PushEnumerator:close() does not call the enumerator's onComplete method, possibly a bug.
       	}
       }
-    }).failMap(_ => Iteratee.ignore[JsValue]).expiresWith(Iteratee.ignore[JsValue], 1, SECONDS).toPromiseT[Iteratee[JsValue, Unit]]
-
-    val promiseEnumerator = (for {
-      user <- getAuthenticatedUser
-      jobConfs <- Job.getAll(user.organization)
-      enumerators <- Future.sequence(jobConfs map { jobConf => JobsActor.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
-    } yield {
       val out = {
-        val foo = enumerators map { (enum: Enumerator[RunUpdate]) =>
+        enumerators.map {(enum: Enumerator[RunUpdate]) =>
           // Filter the enumerator, taking only the UpdateData messages
           enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData => e } &>
             // Transform to a tuple (updateData, sameAsPrevious)
@@ -143,17 +135,16 @@ object Jobs extends Controller {
               case ((prev, _), to) if to != prev => (to, false)
               case (_, to) => (to, true)
             }
-          // Interleave the resulting enumerators
-        }
-        foo.reduce((e1, e2) => e1 >- e2) &>
-          // And collect messages that are marked as changed
-          Enumeratee.collect { case (a, false) => a.toJS }
+          // Interleave the resulting enumerators and collect messages that are marked as changed
+        }.reduce((e1, e2) => e1 >- e2) &>  Enumeratee.collect { case (a, false) => a.toJS }
       }
-      out
-    }).failMap(_ => Enumerator.eof[JsValue]).expiresWith(Enumerator.eof[JsValue], 1, SECONDS).toPromiseT[Enumerator[JsValue]]
+      (in, out)
+    }).failMap(_ => (Iteratee.ignore[JsValue], Enumerator.eof[JsValue]))
+      .expiresWith((Iteratee.ignore[JsValue], Enumerator.eof[JsValue]), 1, SECONDS)
+      .toPromiseT[(Iteratee[JsValue, _], Enumerator[JsValue])]
     
-    val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseEnumerator)
-    val iteratee: Iteratee[JsValue, Unit] = Iteratee.flatten(promiseIteratee)
+    val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseIterateeEnumerator.map(_._2))
+    val iteratee: Iteratee[JsValue, _] = Iteratee.flatten(promiseIterateeEnumerator.map(_._1))
     
     (iteratee, enumerator)
   }
