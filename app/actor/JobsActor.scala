@@ -29,15 +29,15 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor {
 
 }
 
-object Jobs {
+object JobsActor {
 
   def getJobOrCreate(
-    jobConf: JobConfiguration)(
-    implicit configuration: VSConfiguration): Future[Job] = {
-      val context = configuration.system
-      val jobsRef: ActorRef = context.actorFor("/user/jobs")
-      implicit val timeout: Timeout = 5.seconds
-      (jobsRef ? GetJobOrCreate(jobConf)).mapTo[ActorRef] map { jobRef => new Job(jobConf, jobRef) }
-    }
+      jobConf: JobConfiguration)(
+      implicit configuration: VSConfiguration): Future[Job] = {
+    val context = configuration.system
+    val jobsRef: ActorRef = context.actorFor("/user/jobs")
+    implicit val timeout: Timeout = 5.seconds
+    (jobsRef ? GetJobOrCreate(jobConf)).mapTo[ActorRef] map { jobRef => new Job(jobConf, jobRef) }
+  }
 
 }
