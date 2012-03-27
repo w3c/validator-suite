@@ -7,6 +7,7 @@ import play.api.data.Form
 import play.api.libs.json._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
+import play.api.Play.current
 import akka.dispatch.Future
 import org.w3.util._
 import org.w3.util.Pimps._
@@ -23,6 +24,7 @@ import akka.util.duration._
 import akka.dispatch.Await
 import akka.dispatch.Future
 import java.util.concurrent.TimeUnit._
+import play.api.cache.Cache
 
 object Application extends Controller {
   
@@ -67,14 +69,19 @@ object Application extends Controller {
     }
   }
   
-  // TODO
-  // https://github.com/playframework/Play20/wiki/Scalacache
-  
   def getAuthenticatedUser()(implicit session: Session): FutureValidationNoTimeOut[SuiteException, User] = {
     for {
       email <- session.get("email").toSuccess(Unauthenticated).toImmediateValidation
-      userO <- User getByEmail (email)
-      user <- userO.toSuccess(UnknownUser).toImmediateValidation
+      user <- Cache.getAs[User](email) match {
+        case Some(user) => Success(user).toImmediateValidation
+        case _ => for {
+          userO <- User getByEmail (email)
+          user <- userO.toSuccess(UnknownUser).toImmediateValidation
+        } yield {
+          Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
+          user
+        }
+      }
     } yield user
   }
   
