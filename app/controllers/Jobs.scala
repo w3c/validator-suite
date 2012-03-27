@@ -47,7 +47,7 @@ object Jobs extends Controller {
       } yield {
         Ok(views.html.dashboard(viewInputs, user))
       }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
   
@@ -62,7 +62,7 @@ object Jobs extends Controller {
         } yield {
           Ok(views.html.job(job.configuration, data, sort(filter(ars)), user, messages))
         }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise()
+      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise()
     }
   }
   private def sort(ar: Iterable[AssertorResult]) = {
@@ -84,7 +84,7 @@ object Jobs extends Controller {
           job.stop
           if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.configuration.name)))
         }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
   
@@ -164,7 +164,7 @@ object Jobs extends Controller {
         } yield {
           Ok(views.html.jobForm(jobForm.fill(jobC), user))
         }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
   
@@ -196,7 +196,7 @@ object Jobs extends Controller {
         } yield {
           result
         }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
   
@@ -211,7 +211,7 @@ object Jobs extends Controller {
           if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.configuration.name))))) 
           else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.configuration.name)))
         }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
 

@@ -17,4 +17,6 @@ jobs.deleted=Job {0} deleted
 exceptions.store=Store Exception: {0}
 exceptions.unexpected=Unexpected Exception: {0}
 
+error.timeout=Request timed out
+
 debug.unexpected=Unexpected: {0}

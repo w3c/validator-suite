@@ -41,7 +41,7 @@ object Application extends Controller {
         } yield {
           Redirect(routes.Jobs.index) // If the user is already logged in send him to the dashboard
         }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
 
@@ -65,7 +65,7 @@ object Application extends Controller {
             SeeOther(uri).withSession("email" -> user.email)
           }).getOrElse(SeeOther(routes.Jobs.index.toString).withSession("email" -> user.email))
         }
-      futureResult.expiresWith(InternalServerError, 1, SECONDS).expiresWith(InternalServerError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
   
@@ -88,6 +88,8 @@ object Application extends Controller {
   def getAuthenticatedUserOrResult()(implicit req: Request[_]): FutureValidationNoTimeOut[Result, User] = {
     getAuthenticatedUser failMap toResult(None)
   }
+  
+  def FutureTimeoutError(implicit req: Request[_]) = InternalServerError(views.html.error(List(("error", Messages("error.timeout")))))
   
   def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
     e match {
