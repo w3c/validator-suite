@@ -2,11 +2,7 @@
 
 @import org.w3.vs.controllers.isAjax
 
-@if(isAjax) {
-
-	@libs.messages(messages)
-
-} else {
+@if(!isAjax) {
 
 	@libs.main("Validator Suite", stylesheets = List("dashboard.css")){
 	   
@@ -18,7 +14,6 @@
 		
 	}{ @***** Content *****@ 
 		
-		@libs.navigation()
 		@libs.messages(messages)
 		
 	}{ @***** Footer *****@
@@ -26,5 +21,9 @@
 		@libs.footer()
 	
 	}
+
+} else { @***** Ajax *****@ 
+
+	@libs.messages(messages)
 
 }

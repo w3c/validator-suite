@@ -65,11 +65,12 @@ object Jobs extends Controller {
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise()
     }
   }
-  private def sort(ar: Iterable[AssertorResult]) = {
+  private def sort(ar: Iterable[Assertions]) = {
     ar
   }
-  private def filter(ar: Iterable[AssertorResult]) = {
+  private def filter(ar: Iterable[AssertorResult])(implicit req: Request[_]): Iterable[Assertions] = {
     ar.collect{case a: Assertions => a}.take(50)
+    
   }
   
   // TODO: This should also stop the job and kill the actor

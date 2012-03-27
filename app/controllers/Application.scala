@@ -71,7 +71,7 @@ object Application extends Controller {
   
   def getAuthenticatedUser()(implicit session: Session): FutureValidationNoTimeOut[SuiteException, User] = {
     for {
-      email <- session.get("email").toSuccess(Unauthenticated).toImmediateValidation
+      email <- session.get("email").toImmediateSuccess(Unauthenticated)
       user <- Cache.getAs[User](email) match {
         case Some(user) => Success(user).toImmediateValidation
         case _ => for {
