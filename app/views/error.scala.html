@@ -1,10 +1,10 @@
-@(errors: List[(String, String)] = List(), userO: Option[User] = None)(implicit flash: Flash, req: Request[_])
+@(messages: List[(String, String)] = List(), userO: Option[User] = None)(implicit flash: Flash, req: Request[_])
 
 @import org.w3.vs.controllers.isAjax
 
 @if(isAjax) {
 
-	@libs.messages(errors)
+	@libs.messages(messages)
 
 } else {
 
@@ -19,7 +19,7 @@
 	}{ @***** Content *****@ 
 		
 		@libs.navigation()
-		@libs.messages(errors)
+		@libs.messages(messages)
 		
 	}{ @***** Footer *****@
 	

@@ -109,7 +109,7 @@ object Jobs extends Controller {
       case "stop" => stop(id)(req)
       case "refresh" => refresh(id)(req)
       case _ => BadRequest("BadRequest: unknown action")
-    }).getOrElse(BadRequest("BadRequest: JobDispatcher"))
+    }).getOrElse(BadRequest("BadRequest: JobDispatcher")) // Unexpected
   }
   
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>

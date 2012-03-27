@@ -2,6 +2,7 @@ package controllers
 
 import play.api._
 import play.api.mvc._
+import play.api.i18n._
 import play.api.data.Form
 import play.api.libs.json._
 import play.api.libs.iteratee._
@@ -32,7 +33,7 @@ object Application extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUser() failMap {
-            case e: StoreException => InternalServerError(views.html.error(List(("error", "Store Exception: " + e.t.getMessage()))))
+            case e: StoreException => toResult(None)(e)
             case _ => Ok(views.html.login(loginForm)).withNewSession
           }
         } yield {
@@ -43,7 +44,7 @@ object Application extends Controller {
   }
 
   def logout = Action {
-    Redirect(routes.Application.login).withNewSession.flashing("success" -> "You've been logged out")
+    Redirect(routes.Application.login).withNewSession.flashing("success" -> Messages("application.loggedOut"))
   }
 
   def authenticate = Action { implicit req =>
@@ -51,10 +52,16 @@ object Application extends Controller {
       val futureResult =
         for {
           userF <- isValidForm(loginForm).toImmediateValidation failMap { formWithErrors => BadRequest(views.html.login(formWithErrors)) }
-          userO <- User.authenticate(userF._1, userF._2).failMap{e => InternalServerError(views.html.error(List(("error", "Store Exception: " + e.t.getMessage()))))}
-          user <- userO.toSuccess(Unauthorized(views.html.login(loginForm)).withNewSession).toImmediateValidation
+          userO <- User.authenticate(userF._1, userF._2) failMap toResult(None)
+          user <- userO.toSuccess(Unauthorized(views.html.login(loginForm, List(("error", Messages("application.invalidCredentials"))))).withNewSession).toImmediateValidation
         } yield {
-          Redirect(routes.Jobs.index).withSession("email" -> user.email)
+          (for {
+            body <- req.body.asFormUrlEncoded
+            param <- body.get("uri")
+            uri <- param.headOption
+          } yield {
+            SeeOther(uri).withSession("email" -> user.email)
+          }).getOrElse(SeeOther(routes.Jobs.index.toString).withSession("email" -> user.email))
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
@@ -77,10 +84,10 @@ object Application extends Controller {
   
   def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
     e match {
-      case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> "Job not found")))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> "Job not found"))
-      case _@ (UnknownUser | Unauthenticated) => Unauthorized(views.html.login(loginForm)).withNewSession
-      case                  StoreException(t) => InternalServerError(views.html.error(List(("error", "Store Exception: " + t.getMessage)), authenticatedUserOpt))
-      case                      Unexpected(t) => InternalServerError(views.html.error(List(("error", "Unexpected Exception: " + t.getMessage)), authenticatedUserOpt))
+      case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> Messages("jobs.notfound"))))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> "Job not found"))
+      case _@ (UnknownUser | Unauthenticated) => Unauthorized(views.html.login(loginForm, List(("error" -> Messages("application.unauthorized"))))).withNewSession
+      case                  StoreException(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.store", t.getMessage))), authenticatedUserOpt))
+      case                      Unexpected(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage))), authenticatedUserOpt))
     }
   }
   

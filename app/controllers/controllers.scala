@@ -113,16 +113,4 @@ package object controllers {
     }
   }
   
-  /*
-   *  JavascriptLitteral
-   */
-  implicit val litteralOptionUUID: JavascriptLitteral[Option[UUID]] = new JavascriptLitteral[Option[UUID]] {
-    def to (option: Option[UUID]): String = {
-      option match {
-        case Some(id) => id.toString
-        case _ => ""
-      }
-    }
-  }
-  
 }

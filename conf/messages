@@ -1,0 +1,19 @@
+# Application
+application.loggedOut=You''ve been logged out
+application.invalidCredentials=Invalid credentials
+application.unauthorized=You must be logged in to access this page
+
+# Jobs
+jobs.notfound=The requested job does not exist
+jobs.created=Job {0} created, en-US
+jobs.updated=Job {0} updated
+jobs.on=Job {0} activated
+jobs.off=Job {0} deactivated
+jobs.refreshed=Job {0} restarted
+jobs.stopped=Job {0} stopped
+jobs.deleted=Job {0} deleted
+jobs.invalidAction=BadRequest: unknown action "{0}"
+
+# Exceptions
+exceptions.store=Store Exception: {0}
+exceptions.unexpected=Unexpected Exception: {0}
