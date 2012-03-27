@@ -2,6 +2,7 @@ package controllers
 
 import play.api._
 import play.api.mvc._
+import play.api.i18n._
 import play.api.data.Form
 import play.api.libs.json._
 import play.api.libs.iteratee._
@@ -80,7 +81,8 @@ object Jobs extends Controller {
           job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
           _ <- Job.delete(id) failMap toResult(Some(user))
         } yield {
-          if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> "Job deleted"))
+          job.stop
+          if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.configuration.name)))
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
@@ -91,10 +93,10 @@ object Jobs extends Controller {
   def create = createOrUpdateJob(None)
   def update(id: JobId) = createOrUpdateJob(Some(id))
   
-  def on(id: JobId) = simpleJobAction(id)(user => job => job.on())("Job on")
-  def off(id: JobId) = simpleJobAction(id)(user => job => job.off())("Job off")
-  def refresh(id: JobId) = simpleJobAction(id)(user => job => job.refresh())("Job restarted")
-  def stop(id: JobId) = simpleJobAction(id)(user => job => job.stop())("Job stopped")
+  def on(id: JobId) = simpleJobAction(id)(user => job => job.on())("jobs.on")
+  def off(id: JobId) = simpleJobAction(id)(user => job => job.off())("jobs.off")
+  def refresh(id: JobId) = simpleJobAction(id)(user => job => job.refresh())("jobs.refreshed")
+  def stop(id: JobId) = simpleJobAction(id)(user => job => job.stop())("jobs.stopped")
   
   def dispatcher(implicit id: JobId) = Action { implicit req =>
     (for {
@@ -108,8 +110,8 @@ object Jobs extends Controller {
       case "off" => off(id)(req)
       case "stop" => stop(id)(req)
       case "refresh" => refresh(id)(req)
-      case _ => BadRequest("BadRequest: unknown action")
-    }).getOrElse(BadRequest("BadRequest: JobDispatcher")) // Unexpected
+      case a => BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "unknown action " + a))))) // TODO Logging
+    }).getOrElse(BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
   }
   
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>
@@ -179,16 +181,16 @@ object Jobs extends Controller {
               for {
                 _ <- Job.save(jobF.assignTo(user)) failMap toResult(Some(user))
               } yield {
-                if (isAjax) Created(views.html.libs.messages(List(("info" -> "Job created")))) 
-                else        SeeOther(routes.Jobs.show(jobF.id).toString).flashing(("info" -> "Job created"))
+                if (isAjax) Created(views.html.libs.messages(List(("info" -> Messages("jobs.created", jobF.name))))) 
+                else        SeeOther(routes.Jobs.show(jobF.id).toString).flashing(("info" -> Messages("jobs.created", jobF.name)))
               }
             case Some(id) =>
               for {
                 jobC <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
                  _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap toResult(Some(user))
               } yield {
-                if (isAjax) Created(views.html.libs.messages(List(("info" -> "Job updated")))) 
-                else        SeeOther(routes.Jobs.show(jobF.id).toString).flashing(("info" -> "Job updated"))
+                if (isAjax) Created(views.html.libs.messages(List(("info" -> Messages("jobs.updated", jobC.name))))) 
+                else        SeeOther(routes.Jobs.show(jobF.id).toString).flashing(("info" -> Messages("jobs.updated", jobC.name)))
               }
           }
         } yield {
@@ -206,8 +208,8 @@ object Jobs extends Controller {
           job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
         } yield {
           action(user)(job)
-          if (isAjax) Accepted(views.html.libs.messages(List(("info" -> msg)))) 
-          else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> msg))
+          if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.configuration.name))))) 
+          else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.configuration.name)))
         }
       futureResult.expiresWith(InternalServerError, 1, SECONDS).toPromise
     }
