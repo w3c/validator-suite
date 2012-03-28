@@ -65,12 +65,16 @@ object Jobs extends Controller {
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise()
     }
   }
-  private def sort(ar: Iterable[Assertions]) = {
+  private def sort(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
     ar
   }
-  private def filter(ar: Iterable[AssertorResult])(implicit req: Request[_]): Iterable[Assertions] = {
-    ar.collect{case a: Assertions => a}.take(50)
-    
+  private def filter(ar: Iterable[AssertorResult])(implicit req: Request[AnyContent]): Iterable[Assertions] = {
+    val assertions = ar.collect{case a: Assertions => a}.view
+    val assertorsParams = req.queryString.get("assertor").flatten // eg Seq(HTMLValidator, CSSValidator)
+    val validOnlyParam = req.queryString.get("validOnly").flatten.headOption == Some("true")
+    val result = if (assertorsParams.isEmpty) assertions else assertions.filter{a => assertorsParams.exists(_ === a.assertorId.toString)}
+    val result2 = if (validOnlyParam) result.filter{_.isValid} else result.filter{!_.isValid}
+    result2.take(50)
   }
   
   // TODO: This should also stop the job and kill the actor
