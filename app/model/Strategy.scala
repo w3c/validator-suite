@@ -23,7 +23,7 @@ trait Strategy {
     resourceInfo match {
       case ResourceInfo(id, url, runId, action, timestamp, distanceFromSeed, Fetch(status, headers, _)) if fetch(url, distanceFromSeed) == GET =>
         headers.mimetype match {
-          case Some("text/html") | Some("application/xhtml+xml") => List(HTMLValidator)
+          case Some("text/html") | Some("application/xhtml+xml") => List(ValidatorNu)
           case Some("text/css") => List(CSSValidator)
           case _ => List.empty
         }

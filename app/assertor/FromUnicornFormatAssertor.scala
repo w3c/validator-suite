@@ -1,5 +1,6 @@
 package org.w3.vs.assertor
 
+import org.w3.util._
 import org.w3.vs.model._
 import com.codecommit.antixml._
 import scala.io.Source
@@ -7,7 +8,7 @@ import scala.io.Source
 /** An Assertor that reads [[http://code.w3.org/unicorn/wiki/Documentation/Run/Response ObservationResponse]]s from [[scala.io.Source]]s
  */
 trait FromUnicornFormatAssertor extends FromSourceAssertor {
-
+  
   def assert(source: Source): Iterable[RawAssertion] = {
     val response:Elem = XML.fromSource(source)
     val obversationRef = response.attrs get "ref" getOrElse sys.error("malformed xml")

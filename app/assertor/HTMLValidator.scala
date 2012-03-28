@@ -3,12 +3,14 @@ package org.w3.vs.assertor
 import org.w3.util._
 import org.w3.vs.model._
 import scala.io.Source
+import scalaz._
+import Validation._
 
 /** An instance of the HTMLValidator
  *
  *  It speaks with the instance deployed at [[http://qa-dev.w3.org/wmvs/HEAD http://qa-dev.w3.org/wmvs/HEAD]]
  */
-object HTMLValidator extends FromURLAssertor {
+object HTMLValidator extends FromURLAssertor with FromUnicornFormatAssertor with URLToSourceAssertor {
 
   val id = AssertorId("HTMLValidator")
   
