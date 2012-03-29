@@ -28,3 +28,4 @@ test/observer/TempTest.scala
 *.egp
 .idea
 .ensime
+.externalToolBuilders
