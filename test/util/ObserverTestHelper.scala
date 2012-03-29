@@ -25,6 +25,10 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val http = configuration.http
   val store = configuration.store
+
+  val organizationTest = OrganizationData(name = "test orga")
+
+  val userTest = User(organization = organizationTest.id, email = "", name = "", password = "")
   
   val logger = play.Logger.of(classOf[RunTestHelper])
   

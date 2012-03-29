@@ -1,6 +1,7 @@
 package org.w3.vs.exception
 
 sealed trait SuiteException
+case object Unknown extends SuiteException
 case object UnknownJob extends SuiteException
 case object UnauthorizedJob extends SuiteException
 case object UnknownUser extends SuiteException

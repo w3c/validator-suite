@@ -1,6 +1,8 @@
 package org.w3.util
 
 import akka.dispatch._
+import akka.util.duration._
+import akka.util.Duration
 import scalaz._
 import Scalaz._
 import java.util.concurrent.TimeUnit
@@ -28,6 +30,15 @@ class FutureValidation[+F, +S, TO, TimeOut] private (
   timeout: Option[(TO, Long, TimeUnit)]) {
 
   /**
+   * DO NOT CALL THIS OUTSIDE OF TESTS
+   */
+  def waitResult(): S =
+    Await.result(futureValidation, 2.seconds) match {
+      case Failure(f) => sys.error(f.toString)
+      case Success(s) => s
+    }
+
+  /**
    * combines the computations in the future while respecting the semantics of the Validation
    */
   def flatMap[FF >: F, T](f: S => FutureValidation[FF, T, TO, TimeOut])(implicit executor: ExecutionContext): FutureValidation[FF, T, TO, TimeOut] = {
@@ -46,6 +57,9 @@ class FutureValidation[+F, +S, TO, TimeOut] private (
 
   def map[T](f: S => T): FutureValidation[F, T, TO, TimeOut] = 
     new FutureValidation(futureValidation map { _ map f }, timeout)
+
+  def foreach(f: S => Unit): Unit =
+    futureValidation foreach { _ foreach f }
 
   def failMap[T](f: F => T): FutureValidation[T, S, TO, TimeOut] =
     new FutureValidation(futureValidation map { v => new ValidationW(v) failMap f }, timeout)

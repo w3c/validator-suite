@@ -29,7 +29,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val jobConf = JobConfiguration.fake(strategy = strategy)
+  val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
   
   val servers = Seq(
       unfiltered.jetty.Http(9001).filter(Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toPlanify),
@@ -37,9 +37,12 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
   )
 
   "test OneGETxHEAD" in {
+    store.putOrganization(organizationTest)
+    store.putJob(jobConf)
+    Thread.sleep(200)
     http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
-    val job = JobsActor.getJobOrCreate(jobConf)
-    job map (_.refresh())
+    val job = Job(jobConf)
+    job.refresh()
     def ris = store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)

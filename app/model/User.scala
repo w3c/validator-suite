@@ -13,19 +13,19 @@ object User {
   def fake: User =
     User(organization = OrganizationData.fake.id, email = "foo@bar.com", name = "foo", password = "bar")
 
-  def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Iterable[Job], Nothing, NOTSET] = {
-    import configuration.store
-    for {
-      jobConfs <- store.listJobs(organizationId).toDelayedValidation failMap (t => StoreException(t))
-      jobs <- {
-        val jobs = jobConfs map { jobConf => JobsActor.getJobOrCreate(jobConf) }
-        val futureJobs = Future.sequence(jobs)
-        futureJobs.lift
-      } failMap (t => StoreException(t))
-    } yield {
-      jobs
-    }
-  }
+  // def getJobs(organizationId: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureValidation[SuiteException, Iterable[(JobConfiguration, Job)], Nothing, NOTSET] = {
+  //   import configuration.store
+  //   for {
+  //     jobConfs <- store.listJobs(organizationId).toDelayedValidation failMap (t => StoreException(t))
+  //     jobs <- {
+  //       val jobs = jobConfs map { jobConf => JobsActor.getJobOrCreate(jobConf) }
+  //       val futureJobs = Future.sequence(jobs)
+  //       futureJobs.lift
+  //     } failMap (t => StoreException(t))
+  //   } yield {
+  //     jobs
+  //   }
+  // }
   
   
   // TODO: For now these only fail with StoreExceptions but should also fail with a Unauthorized exception 

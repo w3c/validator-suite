@@ -22,6 +22,8 @@ class MemoryStore extends Store {
 
   val jobs: ConcurrentMap[JobId, JobConfiguration] = new ConcurrentHashMap[JobId, JobConfiguration]().asScala
 
+  val organizations: ConcurrentMap[OrganizationId, OrganizationData] = new ConcurrentHashMap[OrganizationId, OrganizationData]().asScala
+
   val snapshots: ConcurrentMap[JobId, RunSnapshot] = new ConcurrentHashMap[JobId, RunSnapshot]().asScala
 
   def init(): Validation[Throwable, Unit] = Success()
@@ -48,6 +50,20 @@ class MemoryStore extends Store {
 
   def listJobs(organizationId: OrganizationId): Validation[Throwable, Iterable[JobConfiguration]] = fromTryCatch {
     jobs collect { case (_, job) if organizationId === job.organization => job }
+  }
+
+  /* organizations */
+
+  def putOrganization(organizationData: OrganizationData): Validation[Throwable, Unit] = fromTryCatch {
+    organizations += organizationData.id -> organizationData
+  }
+  
+  def removeOrganization(organizationId: OrganizationId): Validation[Throwable, Unit] = fromTryCatch {
+    organizations -= organizationId
+  }
+
+  def getOrganizationDataById(id: OrganizationId): Validation[Throwable, Option[OrganizationData]] = fromTryCatch {
+    organizations.get(id)
   }
 
   def getResourceInfo(url: URL, jobId: JobId): Validation[Throwable, ResourceInfo] = {

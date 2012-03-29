@@ -15,10 +15,16 @@ trait Store {
   def putJob(job: JobConfiguration): Validation[Throwable, Unit]
   
   def removeJob(jobId: JobId): Validation[Throwable, Unit]
-  
+
   def getJobById(id: JobId): Validation[Throwable, Option[JobConfiguration]]
   
   def listJobs(organizationId: OrganizationId): Validation[Throwable, Iterable[JobConfiguration]]
+  
+  def putOrganization(organizationData: OrganizationData): Validation[Throwable, Unit]
+  
+  def removeOrganization(organizationId: OrganizationId): Validation[Throwable, Unit]
+
+  def getOrganizationDataById(id: OrganizationId): Validation[Throwable, Option[OrganizationData]]
   
   def getResourceInfo(url: URL, jobId: JobId): Validation[Throwable, ResourceInfo]
   

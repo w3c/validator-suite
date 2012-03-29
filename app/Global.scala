@@ -15,9 +15,14 @@ object Global extends GlobalSettings {
   override def onStart(app: Application): Unit = {
     
     val w3c = OrganizationData(name="World Wide Web Consortium")
+
+    store.putOrganization(w3c)
     
     val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id)
     val bertails = User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id)
+
+    store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id))
+    store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id))
     
     val job = JobConfiguration(
       name = "W3C",
@@ -34,9 +39,7 @@ object Global extends GlobalSettings {
     for (i <- 0 until 8)
       a = a :+ job.copy(JobId(), strategy = job.strategy.copy(distance = i), createdOn = DateTime.now.plus(i)) 
     a.map(store.putJob)
-    
-    store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id))
-    store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id))
+
   }
   
   override def onStop(app: Application): Unit = {
@@ -44,3 +47,7 @@ object Global extends GlobalSettings {
   }
   
 }
+
+
+
+

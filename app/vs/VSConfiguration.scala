@@ -6,6 +6,7 @@ import akka.dispatch.ExecutionContext
 import com.ning.http.client.AsyncHttpClient
 import org.w3.vs.store.Store
 import org.w3.vs.actor.JobsActor
+import akka.util.Timeout
 
 trait VSConfiguration {
   
@@ -22,5 +23,7 @@ trait VSConfiguration {
   val httpClient: AsyncHttpClient
   
   val store: Store
+
+  val timeout: Timeout
   
 }

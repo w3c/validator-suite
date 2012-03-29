@@ -25,14 +25,17 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val jobConf = JobConfiguration.fake(strategy = strategy)
+  val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
   "test cyclic(10)" in {
+    store.putOrganization(organizationTest)
+    store.putJob(jobConf)
+    Thread.sleep(200)
     http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
-    val job = JobsActor.getJobOrCreate(jobConf)
-    job map (_.refresh())
+    val job = Job(jobConf)
+    job.refresh()
     def cond = (store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success") ).size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
   }

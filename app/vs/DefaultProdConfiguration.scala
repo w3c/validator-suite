@@ -6,6 +6,7 @@ import org.w3.vs.actor._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
 import akka.util.duration._
+import akka.util.Timeout
 import akka.util.Duration
 import akka.dispatch.ExecutionContext
 import java.util.concurrent.Executors
@@ -30,9 +31,9 @@ trait DefaultProdConfiguration extends VSConfiguration {
   }
   
   val system: ActorSystem = {
-    val actorSystem = ActorSystem("vs")
-    val jobsRef = actorSystem.actorOf(Props(new JobsActor()(this)), "jobs")
-    actorSystem
+    val vs = ActorSystem("vs")
+    vs.actorOf(Props(new OrganizationsActor()(this)), "organizations")
+    vs
   }
   
   val http: Http =
@@ -63,6 +64,8 @@ trait DefaultProdConfiguration extends VSConfiguration {
   }
   
   val store = new MemoryStore
+
+  val timeout: Timeout = 5.seconds
   
   // ouch :-)
   http.authorityManagerFor("w3.org").sleepTime = 0

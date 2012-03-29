@@ -22,6 +22,7 @@ import akka.dispatch.Future
 import akka.util.Duration
 import akka.util.duration._
 import java.util.concurrent.TimeUnit._
+import org.w3.util.Pimps._
 
 object Jobs extends Controller {
   
@@ -35,16 +36,18 @@ object Jobs extends Controller {
   
   def index = Action { implicit req =>
     AsyncResult {
-      val futureResult = for {
+      val futureResult/*: FutureValidationNoTimeOut[Result, Result]*/ = for {
         user <- getAuthenticatedUserOrResult
-        jobs <- User.getJobs(user.organization) failMap toResult(Some(user))
-        viewInputs <- {
-          val sortedJobs = jobs.toList.sortWith{(a, b) => a.configuration.createdOn.toString() < b.configuration.createdOn.toString()}
-          val iterableFuture = sortedJobs map { job => job.jobData map (data => (job.configuration, data)) }
-          val futureIterable = Future.sequence(iterableFuture)
-          futureIterable.lift
+        jobConfs <- configuration.store.listJobs(user.organization).toDelayedValidation.failMap(t => toResult(Some(user))(StoreException(t)))
+        jobDatas <- {
+          val jobs: Iterable[Job] = jobConfs map { jobConf => Job(jobConf.organization, jobConf.id) }
+          val futureJobDatas: Future[Iterable[JobData]] = Future.sequence(jobs map { _.jobData() })
+          futureJobDatas.lift
         }.failMap(t => toResult(Some(user))(StoreException(t)))
       } yield {
+        val sortedJobsConf = jobConfs.toSeq.sortBy(_.createdOn)
+        val map: Map[JobId, JobData] = jobDatas.map{ jobData => (jobData.jobId, jobData) }.toMap
+        val viewInputs = sortedJobsConf map { jobConf => (jobConf, map(jobConf.id)) }
         Ok(views.html.dashboard(viewInputs, user))
       }
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
@@ -56,11 +59,12 @@ object Jobs extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUserOrResult
-          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
+          jobConf <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
+          job = Job(jobConf)
           data <- job.jobData.lift failMap {t => toResult(Some(user))(Unexpected(t))}
-          ars <- Job.getAssertorResults(job.id) failMap toResult(Some(user))
+          ars <- Job.getAssertorResults(jobConf.id) failMap toResult(Some(user))
         } yield {
-          Ok(views.html.job(job.configuration, data, sort(filter(ars)), user, messages))
+          Ok(views.html.job(jobConf, data, sort(filter(ars)), user, messages))
         }
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise()
     }
@@ -83,7 +87,7 @@ object Jobs extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUserOrResult
-          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
+          jobConf <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
           _ <- Job.delete(id) failMap toResult(Some(user))
         } yield {
           job.stop
@@ -125,14 +129,14 @@ object Jobs extends Controller {
     val promiseIterateeEnumerator = (for {
       user <- getAuthenticatedUser
       jobConfs <- Job.getAll(user.organization)
-      enumerators <- Future.sequence(jobConfs map { jobConf => JobsActor.getJobOrCreate(jobConf).map(_.subscribeToUpdates) }).lift
     } yield {
-      val in = Iteratee.ignore[JsValue].mapDone[Unit]{_ => 
+      val enumerators: Iterable[PushEnumerator[message.RunUpdate]] = jobConfs map { jobConf => Job(jobConf).subscribeToUpdates() }
       	enumerators map { enum =>
       	  logger.error("Closing enumerator: " + enum)
       	  enum.close // This doesn't work: PushEnumerator:close() does not call the enumerator's onComplete method, possibly a bug.
       	}
       }
+      val enumerators: Iterable[PushEnumerator[message.RunUpdate]] = jobConfs map { jobConf => Job(jobConf).subscribeToUpdates() }
       val out = {
         enumerators.map {(enum: Enumerator[RunUpdate]) =>
           // Filter the enumerator, taking only the UpdateData messages
@@ -210,21 +214,16 @@ object Jobs extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUserOrResult
-          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
+          jobConf <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
         } yield {
+          val job = Job(jobConf)
           action(user)(job)
           if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.configuration.name))))) 
-          else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.configuration.name)))
+          else        SeeOther(routes.Jobs.show(jobConf.id).toString).flashing(("info" -> msg))
         }
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
-
-  private def getJobIfAllowed(user: User, id: JobId): FutureValidationNoTimeOut[SuiteException, Job] =
-    for {
-      jobConf <- getJobConfIfAllowed(user, id)
-      job <- JobsActor.getJobOrCreate(jobConf).liftWith { case t => Unexpected(t) }
-    } yield job
 
   private def getJobConfIfAllowed(user: User, id: JobId): FutureValidationNoTimeOut[SuiteException, JobConfiguration] = {
     for {

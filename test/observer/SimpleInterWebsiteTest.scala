@@ -27,7 +27,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       linkCheck=true,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val jobConf = JobConfiguration.fake(strategy = strategy)
+  val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
   
   val servers = Seq(
       unfiltered.jetty.Http(9001).filter(Website(Seq("/" --> "http://localhost:9002/")).toPlanify),
@@ -35,8 +35,11 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
   )
 
   "test simpleInterWebsite" in {
-    val job = JobsActor.getJobOrCreate(jobConf)
-    job map (_.refresh())
+    store.putOrganization(organizationTest)
+    store.putJob(jobConf)
+    Thread.sleep(200)
+    val job = Job(jobConf)
+    job.refresh()
     def ris = store.listResourceInfos(jobConf.id) getOrElse sys.error("was not a Success")
     def cond = ris.size == 2
     awaitCond(cond, 3 seconds, 50 milliseconds)

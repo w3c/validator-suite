@@ -18,9 +18,16 @@ import org.joda.time.DateTime
 import org.w3.vs.exception._
 import org.w3.util._
 import org.w3.util.Pimps._
+import message._
 
 object Job {
   
+  def apply(organizationId: OrganizationId, jobId: JobId)(implicit configuration: VSConfiguration): Job =
+    new Job(organizationId, jobId)
+
+  def apply(jobConfiguration: JobConfiguration)(implicit configuration: VSConfiguration): Job =
+    Job(jobConfiguration.organization, jobConfiguration.id)
+
   // I think that the store should use typed exceptions (StoreException) instead of Throwables 
   // agree,   + FutureValidation and actor-based
   
@@ -29,7 +36,7 @@ object Job {
     implicit def context = configuration.webExecutionContext
     store.getJobById(id).toDelayedValidation failMap (t => StoreException(t))
   }
-    
+  
   def getAll(id: OrganizationId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[JobConfiguration], Nothing, NOTSET] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
@@ -59,28 +66,26 @@ object Job {
   
 }
 
-class Job(
-  val configuration: JobConfiguration,
-  val jobActorRef: ActorRef)(
-  implicit conf: VSConfiguration,
-  timeout: Timeout) {
+class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration) {
 
   import conf.system
 
   val logger = play.Logger.of(classOf[Job])
-  
-  def id = configuration.id
-  
-  def refresh(): Unit = jobActorRef ! message.Refresh
-  
-  def stop(): Unit = jobActorRef ! message.Stop
 
-  def on(): Unit = jobActorRef ! message.BeProactive
+  implicit def timeout = conf.timeout
 
-  def off(): Unit = jobActorRef ! message.BeLazy
+  val organizationsRef = system.actorFor(system / "organizations")
+  
+  def refresh(): Unit = organizationsRef ! Message(organizationId, jobId, message.Refresh)
+  
+  def stop(): Unit = organizationsRef ! Message(organizationId, jobId, message.Stop)
+
+  def on(): Unit = organizationsRef ! Message(organizationId, jobId, message.BeProactive)
+
+  def off(): Unit = organizationsRef ! Message(organizationId, jobId, message.BeLazy)
 
   def jobData(): Future[JobData] =
-    (jobActorRef ? message.GetJobData).mapTo[JobData]
+    (organizationsRef ? Message(organizationId, jobId, message.GetJobData)).mapTo[JobData]
 
   def subscribeToUpdates(): PushEnumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
@@ -90,16 +95,16 @@ class Job(
             enumerator.push(msg)
           } catch { 
             case e: ClosedChannelException => enumerator.close; logger.error("ClosedChannel exception: ", e)
-          	case e => enumerator.close; logger.error("Enumerator exception: ", e)
+            case e => enumerator.close; logger.error("Enumerator exception: ", e)
           }
         case msg => logger.debug("subscriber got "+msg)
       }
     }))
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
-        onStart = jobActorRef.tell(message.Subscribe, subscriber),
-        onComplete = jobActorRef.tell(message.Unsubscribe, subscriber),
-        onError = (_,_) => jobActorRef.tell(message.Unsubscribe, subscriber)
+        onStart = organizationsRef.tell(Message(organizationId, jobId, message.Subscribe), subscriber),
+        onComplete = organizationsRef.tell(Message(organizationId, jobId, message.Unsubscribe), subscriber),
+        onError = (_,_) => organizationsRef.tell(Message(organizationId, jobId, message.Unsubscribe), subscriber)
       )
     enumerator
   }
