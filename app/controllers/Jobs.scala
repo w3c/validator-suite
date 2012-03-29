@@ -36,7 +36,7 @@ object Jobs extends Controller {
   
   def index = Action { implicit req =>
     AsyncResult {
-      val futureResult/*: FutureValidationNoTimeOut[Result, Result]*/ = for {
+      val futureResult = for {
         user <- getAuthenticatedUserOrResult
         jobConfs <- configuration.store.listJobs(user.organization).toDelayedValidation.failMap(t => toResult(Some(user))(StoreException(t)))
         jobDatas <- {
@@ -64,21 +64,45 @@ object Jobs extends Controller {
           data <- job.jobData.lift failMap {t => toResult(Some(user))(Unexpected(t))}
           ars <- Job.getAssertorResults(jobConf.id) failMap toResult(Some(user))
         } yield {
-          Ok(views.html.job(jobConf, data, sort(filter(ars)), user, messages))
+          Ok(views.html.job(jobConf, data, group(sort(filter(ars))), user, messages))
         }
-      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise()
+      futureResult.expiresWith(FutureTimeoutError, 10, SECONDS).toPromise()
+    }
+  }
+  private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
+    val groupParam = req.queryString.get("group").flatten.headOption
+    groupParam match {
+      case Some("contexts") => {
+        // This is bad, this bad
+        val flatten = ar.flatten(ass => ass.assertions.flatMap(raw => raw.contexts.map(context => ass.copy(assertions = List(raw.copy(contexts = List(context)))))))
+        val grouped = flatten.groupBy(_.assertions.headOption.map(a => a.contexts.headOption.map(_.content).getOrElse("")).getOrElse(""))
+        val sorted = grouped.toList.sortBy{case (_, a) => a.size}
+        Right(sorted.reverse)
+      }
+      case _ => Left(ar.take(50))
     }
   }
   private def sort(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
-    ar
+    val sortParam = req.queryString.get("sort").flatten.headOption
+    ar.toList.sortWith{(a, b) =>
+      val perErrors = if (a.numberOfErrors === b.numberOfErrors) a.url.toString < b.url.toString else a.numberOfErrors > b.numberOfErrors
+      val perWarnings = if (a.numberOfWarnings === b.numberOfWarnings) perErrors else a.numberOfWarnings > b.numberOfWarnings
+      val perUrls = a.url.toString < b.url.toString
+      sortParam match {
+        case Some("errors") => perErrors
+        case Some("warnings") => perWarnings
+        case Some("urls") => perUrls
+        case _ => perErrors
+      }
+    }
   }
   private def filter(ar: Iterable[AssertorResult])(implicit req: Request[AnyContent]): Iterable[Assertions] = {
     val assertions = ar.collect{case a: Assertions => a}.view
     val assertorsParams = req.queryString.get("assertor").flatten // eg Seq(HTMLValidator, CSSValidator)
-    val validOnlyParam = req.queryString.get("validOnly").flatten.headOption == Some("true")
+    val validOnlyParam = req.queryString.get("valid").isDefined
     val result = if (assertorsParams.isEmpty) assertions else assertions.filter{a => assertorsParams.exists(_ === a.assertorId.toString)}
     val result2 = if (validOnlyParam) result.filter{_.isValid} else result.filter{!_.isValid}
-    result2.take(50)
+    result2
   }
   
   // TODO: This should also stop the job and kill the actor
@@ -133,10 +157,7 @@ object Jobs extends Controller {
     } yield {
       val enumerators: Iterable[PushEnumerator[message.RunUpdate]] = jobConfs map { jobConf => Job(jobConf).subscribeToUpdates() }
       val in = Iteratee.ignore[JsValue].mapDone[Unit]{_ => 
-      	enumerators map { enum =>
-      	  logger.error("Closing enumerator: " + enum)
-      	  enum.close // This doesn't work: PushEnumerator:close() does not call the enumerator's onComplete method, possibly a bug.
-      	}
+      	enumerators map { _.close } // This doesn't work: PushEnumerator:close() does not call the enumerator's onComplete method, possibly a bug.
       }
       val out = {
         enumerators.map {(enum: Enumerator[RunUpdate]) =>

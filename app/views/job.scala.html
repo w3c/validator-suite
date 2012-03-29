@@ -1,4 +1,4 @@
-@(jobConf: JobConfiguration, data: JobData, assertions: Iterable[Assertions], user: User, errors: List[(String, String)] = List.empty)(implicit flash: Flash)
+@(jobConf: JobConfiguration, data: JobData, assertions: Either[Iterable[Assertions], List[(String, Iterable[Assertions])]], user: User, errors: List[(String, String)] = List.empty)(implicit flash: Flash)
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
@@ -9,6 +9,16 @@
 	@libs.header(Some(user))
 	
 }{ @***** Toolbar *****@
+
+	<ul>
+		<li><a href="?valid">Valids only</a></li>
+		<li><a href="?assertor=ValidatorNu">Validator.nu results</a></li>
+		<li><a href="?assertor=CSSValidator">CSS validator results</a></li>
+		<li><a href="?sort=errors">Sort per errors</a></li>
+		<li><a href="?sort=warnings">Sort per warnings</a></li>
+		<li><a href="?sort=urls">Sort per url</a></li>
+		<li><a href="?group=contexts">Group by context</a></li>
+	</ul>
 
 }{ @***** Content *****@ 
 	
@@ -53,9 +63,9 @@
 	
 	<section id="report" class="list">
 	
-	
-	@assertions.map{sertion =>
-	
+	@assertions match { 
+	  case Left(iterable) => {
+	    @iterable.map{sertion =>
 	<article id="@{sertion.id.toString.substring(0,6)}" tabindex="1">
 		<div>
 			<a class="resource" href="#@{sertion.id.toString.substring(0,6)}">@sertion.url</a>
@@ -92,9 +102,29 @@
 			</ul>
 		</div>
 	</article>
+	    }
+	  }
+	  case Right(map) => {
+	    @map.map{case (code, iterable) =>
+	<article tabindex="1">
+		<div>
+			@HtmlFormat.raw(code)
+		</div>
+		<div>
+			<ul class="messages">
+			<li>@iterable.size</li>
+			@iterable.map { ass =>
+			<li>@ass.url</li>
+			}
+			</ul>
+		</div>
+	</article>
+	    }
+	  }
+	} 
+	  
 	
-	}
-	
+
 	</section>
 	
 }{ @***** Footer *****@
