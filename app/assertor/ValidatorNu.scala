@@ -41,8 +41,12 @@ object ValidatorNu extends FromURLAssertor {
     val messages = json \ "messages"
     messages.asInstanceOf[JsArray].value.map {obj =>
       // really doesn't look like a good habit to use these sys.error calls but you learn by example, you know
-	  val typ = (obj \ "type") match {case JsString(s) => s; case _ => sys.error("malformed json")}
-      val message = (obj \ "message") match {case JsString(s) => s; case _ => sys.error("malformed json")}
+	  val typ = (obj \ "type") match {
+	    case JsString("non-document-error") => sys.error("validator.nu failed");
+	    case JsString(s) => s; 
+	    case _ => sys.error("malformed json")
+	  }
+      val message = (obj \ "message") match {case JsString(s) => HtmlFormat.escape(s).text; case _ => sys.error("malformed json")}
 	  val lastLine = (obj \ "lastLine") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
 	  val lastCol = (obj \ "lastColumn") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
 	  val extract = (obj \ "extract") match {case JsString(s) => Some(HtmlFormat.escape(s).text); case _ => None}
