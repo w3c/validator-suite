@@ -90,8 +90,9 @@ object Jobs extends Controller {
           jobConf <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
           _ <- Job.delete(id) failMap toResult(Some(user))
         } yield {
+          val job = Job(jobConf)
           job.stop
-          if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.configuration.name)))
+          if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", jobConf.name)))
         }
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
@@ -131,12 +132,12 @@ object Jobs extends Controller {
       jobConfs <- Job.getAll(user.organization)
     } yield {
       val enumerators: Iterable[PushEnumerator[message.RunUpdate]] = jobConfs map { jobConf => Job(jobConf).subscribeToUpdates() }
+      val in = Iteratee.ignore[JsValue].mapDone[Unit]{_ => 
       	enumerators map { enum =>
       	  logger.error("Closing enumerator: " + enum)
       	  enum.close // This doesn't work: PushEnumerator:close() does not call the enumerator's onComplete method, possibly a bug.
       	}
       }
-      val enumerators: Iterable[PushEnumerator[message.RunUpdate]] = jobConfs map { jobConf => Job(jobConf).subscribeToUpdates() }
       val out = {
         enumerators.map {(enum: Enumerator[RunUpdate]) =>
           // Filter the enumerator, taking only the UpdateData messages
@@ -218,7 +219,7 @@ object Jobs extends Controller {
         } yield {
           val job = Job(jobConf)
           action(user)(job)
-          if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.configuration.name))))) 
+          if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, jobConf.name))))) 
           else        SeeOther(routes.Jobs.show(jobConf.id).toString).flashing(("info" -> msg))
         }
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
