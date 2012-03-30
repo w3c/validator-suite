@@ -70,43 +70,127 @@ object Jobs extends Controller {
       futureResult.expiresWith(FutureTimeoutError, 10, SECONDS).toPromise()
     }
   }
-  private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]): Either[Iterable[Assertions], Iterable[((String, String, AssertorId), Iterable[(URL, Iterable[(Option[Int], Option[Int])])])]] = {
+  import org.w3.vs.view._
+  private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]): 
+      List[(String, ReportListAside,
+        List[(String, ReportListAside,
+          List[(String, ReportListAside, 
+            List[String]
+          )]
+        )]
+      )] = {
+    
     val groupParam = req.queryString.get("group").flatten.headOption
     groupParam match {
-      case Some("contexts") => {
+      case Some("message.context") => {
         val foo = for {
           ass <- ar
           raw <- ass.assertions
-          if raw.isError
           context <- raw.contexts
         } yield {
-          ((context.content, raw.title, ass.assertorId), ass.url, (context.line, context.column))
+          (ass.url.toString, (ass.assertorId.toString, raw.title, raw.severity), (context.content, context.line, context.column))
         }
-        // Iterable[(code, error, assertor), url, (line, column)]
-        // group by context and sort by number of occurences
-        val byContext = foo.groupBy(_._1).toList.sortBy{case (_, i) => i.size}
-        // Iterable[(code, error, assertor), Iterable[((code, error, assertor), url, (line, column))]]
-        val byContext2 = for {
-          obj <- byContext
-        } yield (obj._1, obj._2.map{case (_, a, b) => (a, b)})
-        // Iterable[(code, error, assertor), Iterable[(url, (line, column))]]
-        val groupByMessage = byContext2.map{case (obj, iterable) =>
-          (obj, for {
-            obj <- iterable.groupBy(_._1).toList.sortBy{_._1.toString}.sortBy{_._2.size}
-          } yield (obj._1, obj._2.map{_._2}))
+        val groupTitle = for {
+          obj <- foo.groupBy(_._2).toList.sortBy(_._2.size)
+        } yield {
+          val newIterable = obj._2.map{case (a, _, b) => (a, b)}
+          val ((assertorId, title, severity), _) = obj // TODO
+          (title, OccurrenceAside(newIterable.size), newIterable)
         }
-        // Iterable[(code, error, assertor), Iterable[(url, Iterable[(line, column)])]]
-        // ie:
-        // Iterable[(
-        //   (String, String, AssertorId),
-        //   Iterable[(
-        //     URL,
-        //     Iterable[(Option[Int], Option[Int])]
-        //   )]
-        // )]
-        Right(groupByMessage.reverse)
+        val groupCode = groupTitle.map{case (title, aside, iterable) =>
+          (title, aside, for {
+            obj <- iterable.groupBy(_._2._1).toList.sortBy(_._2.size)
+          } yield {
+            val newIterable = obj._2.map{case (url, (code, line, column)) => (url, (line, column))}
+            val (code, _) = obj
+            (code, OccurrenceAside(newIterable.size), newIterable)
+          })
+        }
+        val groupUrl = groupCode.map{case (title, aside, iterable) =>
+          (title, aside, iterable.map{case (code, aside, iterable) =>
+            (code, aside, for {
+              obj <- iterable.groupBy(_._1).toList.sortBy(_._2.size)
+            } yield {
+              val newIterable = obj._2.map{case (_, a) => (a)}
+              val (url, _) = obj
+              (url, OccurrenceAside(newIterable.size), newIterable.map(_.toString).toList)
+            })
+          })
+        }
+        groupUrl
       }
-      case _ => Left(ar.take(50))
+      case _@ (Some("message.url") | Some("message")) => {
+        val foo = for {
+          ass <- ar
+          raw <- ass.assertions
+          context <- raw.contexts
+        } yield {
+          (ass.url.toString, (ass.assertorId.toString, raw.title, raw.severity), (context.content, context.line, context.column))
+        }
+        val groupTitle = for {
+          obj <- foo.groupBy(_._2).toList.sortBy(_._2.size)
+        } yield {
+          val newIterable = obj._2.map{case (a, _, b) => (a, b)}
+          val ((assertorId, title, severity), _) = obj // TODO
+          (title, OccurrenceAside(newIterable.size), newIterable)
+        }
+        val groupUrl = groupTitle.map{case (title, aside, iterable) =>
+          (title, aside, for {
+            obj <- iterable.groupBy(_._1).toList.sortBy(_._2.size)
+          } yield {
+            val newIterable = obj._2.map{case (_, a) => (a)}
+            val (url, _) = obj
+            (url, EmptyAside, newIterable)
+          })
+        }
+        val groupCode = groupUrl.map{case (title, aside, iterable) =>
+          (title, aside, iterable.map{case (url, aside, iterable) =>
+            (url, aside, List(("", EmptyAside, iterable.toList.sortBy(_._2).map(_.toString))))
+          })
+        }
+        groupCode
+      }
+      case _ => {
+        val foo = for {
+          ass <- ar
+          raw <- ass.assertions
+          context <- raw.contexts
+        } yield {
+          (ass.url.toString, ass.assertorId.toString, (raw.title, raw.severity), (context.content, context.line, context.column))
+        }
+        val groupUrl = for {
+          obj <- foo.groupBy(_._1).toList.sortBy(_._2.size)
+        } yield {
+          val newIterable = obj._2.map{case (_, a, b, c) => (a, b, c)}
+          val (url, _) = obj
+          val errors = newIterable.count{case (_, (_, severity), _) => severity === "error"}
+          val warnings = newIterable.count{case (_, (_, severity), _) => severity === "warning"}
+          (url, ErrorWarningAside(errors, warnings), newIterable)
+        }
+        val groupAssertor = groupUrl.map{case (url, aside, iterable) =>
+          (url, aside, for {
+            obj <- iterable.groupBy(_._1).toList.sortBy(_._2.size)
+          } yield {
+            val newIterable = obj._2.map{case (_, a, b) => (a, b)}
+            val (assertor, _) = obj
+            (assertor, EmptyAside, newIterable)
+          })
+        }
+        val groupTitle = groupAssertor.map{case (url, aside, iterable) =>
+          (url, aside, iterable.map{case (assertor, aside, iterable) =>
+            (assertor, aside, for {
+              obj <- iterable.groupBy(_._1).toList
+            } yield {
+              val newIterable = (obj._2.map{case (_, a) => (a)})
+              val newIterable2 = newIterable.toList.sortBy(_._2)
+              val (title, _) = obj
+              // TODO don't loose the severity
+              (title._1, FirstLineColAside(newIterable2.firstOption.flatMap(_._2), newIterable2.firstOption.flatMap(_._3)), newIterable2.map(_.toString))
+            })
+          })
+        }
+        groupTitle
+      }
     }
   }
   private def sort(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {

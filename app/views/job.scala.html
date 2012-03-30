@@ -1,4 +1,10 @@
-@(jobConf: JobConfiguration, data: JobData, assertions: Either[Iterable[Assertions], Iterable[((String, String, org.w3.vs.assertor.AssertorId), Iterable[(org.w3.util.URL, Iterable[(Option[Int], Option[Int])])])]], user: User, errors: List[(String, String)] = List.empty)(implicit flash: Flash)
+@(jobConf: JobConfiguration, 
+    data: JobData,
+    report: List[(String, org.w3.vs.view.ReportListAside, List[(String, org.w3.vs.view.ReportListAside, List[(String, org.w3.vs.view.ReportListAside, List[String])] )] )],
+    user: User,
+    errors: List[(String, String)] = List.empty)(implicit flash: Flash)
+
+@import org.w3.vs.view._
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
@@ -19,7 +25,9 @@
 		<li><a href="?sort=errors">Sort per errors</a></li>
 		<li><a href="?sort=warnings">Sort per warnings</a></li>
 		<li><a href="?sort=urls">Sort per url</a></li>
-		<li><a href="?group=contexts">Group by context</a></li>
+		<li><a href="?group=message.context">Group by message then context</a></li>
+		<li><a href="?group=message.url">Group by message then url</a></li>
+		<li><a href="?group=url.assertor">Group by url then assertor (default)</a></li>
 	</ul>
 
 }{ @***** Content *****@ 
@@ -65,75 +73,42 @@
 	
 	<section id="report" class="list">
 	
-	@assertions match { 
-	  case Left(iterable) => {
-	    @iterable.map{sertion =>
-	<article id="@{sertion.id.toString.substring(0,6)}" tabindex="1">
+	@report.map { case (title, aside, sub) =>
+	@defining(java.util.UUID.randomUUID.toString.substring(0,6)) {id =>
+	<article id="@id" tabindex="1">
+	<div>
+		<a href="#@id">@title</a>
+		@aside.toString
+	</div>
+	<div>
+	   @sub.map { case (title, aside, sub) =>
+		<article tabindex="1">
 		<div>
-			<a class="resource" href="#@{sertion.id.toString.substring(0,6)}">@sertion.url</a>
-			<ul class="meta">
-				<li class="assertor">@sertion.assertorId</li>
-				<li class="errors">@sertion.numberOfErrors</li>
-				<li class="warnings">@sertion.numberOfWarnings</li>
-				<!-- <li>Timestamp: @sertion.timestamp</li> -->
-			</ul>
+			<span>@title</span>
+			@aside.toString
 		</div>
 		<div>
-			<ul class="messages">
-			@defining(sertion.assertions) { raws =>
-			@raws.map { raw =>
-			<li class="@raw.severity" lang="@raw.lang">
-				<h1 class="title">@HtmlFormat.raw(raw.title)</h1>
-				@if(raw.description.isDefined) {
-				<div class="description">@Html(raw.description.get)</div>
-				}
-				@if(raw.contexts.size > 0) {
-				<ul class="contexts">
-				@defining(raw.contexts) { contexts =>
-				@contexts.map { context =>
-					<li>
-						@if(context.line.isDefined){<span class="line">Line: @context.line</span>}
-						@if(context.column.isDefined){<span class="column">Column: @context.column</span>}
-						@if(context.content != ""){<code class="context">@Html(context.content)</code>}
-					</li>
-				}}
-				</ul>
-				}
-			</li>
-			}}
-			</ul>
-		</div>
-	</article>
-	    }
-	  }
-	  case Right(map) => {
-	    @map.map{case ((code, error, assertor), iterable) =>
-	<article tabindex="1">
-		<div>
-			@HtmlFormat.raw(error), @assertor
-		</div>
-		<div>
-			<code>@HtmlFormat.raw(code)</code>
-			<ul class="messages">
-			@iterable.map {case (url, contexts) =>
-				<article>
-					<div>@url</div>
-					<div>
-				@contexts.collect {
-				  case (Some(l), Some(c)) => {
-				    Line: @l, Col: @c <br>
-				  }
-				}
-					</div>
-				</article>
+			@sub.map { case (title, aside, sub) =>
+			<article tabindex="1">
+			<div>
+				<span>@title</span>
+				@aside.toString
+			</div>
+			<div>
+		      @sub.map { case (text) =>
+		      	@text
+		      }
+	      </div>
+	      </article>
 			}
-			</ul>
 		</div>
+		</article>
+		}
+	</div>
 	</article>
-	    }
-	  }
-	} 
-	  
+	}}
+	
+
 	
 
 	</section>
