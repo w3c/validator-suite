@@ -86,9 +86,13 @@ object Jobs extends Controller {
     
     val filtered: Data = {
       val assertorsParams = req.queryString.get("assertor").flatten
-      val inter = if (assertorsParams.isEmpty) flat else flat.filter{a => assertorsParams.exists(_ === a._2)}
       val typeParams = req.queryString.get("type").flatten
-      if (typeParams.isEmpty) inter else inter.filter{a => typeParams.exists(_ === a._4)}
+      (assertorsParams, typeParams) match {
+        case (a, t) if (!a.isEmpty && !t.isEmpty) => flat.filter{a => assertorsParams.exists(_ === a._2) && typeParams.exists(_ === a._4)}
+        case (a, _) if (!a.isEmpty) => flat.filter{a => assertorsParams.exists(_ === a._2)}
+        case (_, t) if (!t.isEmpty) => flat.filter{a => typeParams.exists(_ === a._4)}
+        case _ => flat
+      }
     }
     
     def groupByMessage(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
@@ -122,7 +126,7 @@ object Jobs extends Controller {
         case _@ (Some("occurence") | _) => grouped.sortBy(_._2.size).reverse
       }
       Right(for {
-        g <- grouped.sortBy(_._2.size).reverse
+        g <- sorted
       } yield {
         val ((url), iterable) = g
         ReportSection(UrlHeader(url, OccurrenceAside(iterable.size)), f(iterable))
@@ -156,8 +160,11 @@ object Jobs extends Controller {
         if g.list.isRight
         sub <- g.list.right.get
       } yield {
-        val header = g.header // recompute
-        ReportSection(g.header, Right(List(sub))) // resorting
+        val newAside = g.header.aside match {
+          case OccurrenceAside(_) => OccurrenceAside(sub.list.fold(a => a.size, b => b.size))
+          case _ => EmptyAside
+        } // recompute
+        ReportSection(g.header.withAside(newAside), Right(List(sub))) // resorting
       }
     }
 //    req.queryString.get("sort").flatten.headOption match {

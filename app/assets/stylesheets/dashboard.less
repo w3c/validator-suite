@@ -95,6 +95,11 @@ section.job > div {
 #report > article > div {
 	border-bottom: none;
 }
+#report > article:last-child > div:last-child {
+	border-bottom: 1px solid #e5e5e5;
+}
+
+/* Folding first level */
 #report > article:not(:target):not(:focus) > div:last-child:not(:first-child) {
 	height: 0;
 	overflow: hidden;
@@ -105,24 +110,20 @@ section.job > div {
 #report > article:target > div:last-child {
 	height: auto;
 	padding: 10px;
+	padding-bottom: 0;
 	margin-bottom: 0;
 }
-#report > article:focus:before {
-	content:"";
-	display:block;
-}
-#report > article:last-child > div:last-child {
-	border-bottom: 1px solid #e5e5e5;
-}
-#report > article a.group {
+
+/* First level header link */
+#report > article > div:first-child a.group {
 	text-decoration:none;
 	color:#02579e;
 	font-weight:bold;
 }
-#report > article a.group:visited {
+#report > article > div:first-child a.group:visited {
 	color:#02579e;
 }
-#report > article a.group:before {
+#report > article > div:first-child a.group:before {
 	content:"";
 	display:inline-block;
 	width:0px;
@@ -132,31 +133,83 @@ section.job > div {
 	border-left: 4px solid #444444;
 	margin-right:5px;
 }
-#report > article:focus a.group:before,
-#report > article:target a.group:before {
+#report > article:focus > div:first-child a.group:before,
+#report > article:target > div:first-child a.group:before {
 	-webkit-transform: rotate(90deg);
 	-moz-transform: rotate(90deg);
 	-o-transform: rotate(90deg);
 	-ms-transform: rotate(90deg);
 	transform: rotate(90deg);
 }
-#report > article aside {
+
+#report article article > div:first-child {
+	margin-bottom:10px;
+}
+#report article .assertor {
+	font-weight: bold;
+}
+#report article .context {
+	
+}
+#report .context {
+	border: 1px dotted grey;
+	padding: 2px;
+	background: #f5f5f5;
+	margin-left:5px;
+}
+#report .context strong {
+	color:red;
+}
+#report .group.context {
+	vertical-align: middle;
+	margin-left:0;
+}
+#report article .url {
+	font-weight: bold;
+}
+#report article .message {
+	font-weight: bold;
+	padding-left: 8px;
+}
+#report article article .message.warning {
+	border-left: 5px solid orange;
+}
+#report article article .message.info {
+	border-left: 5px solid #02579e; /*#3C7FB1;*/
+}
+#report article article .message.error {
+	border-left: 5px solid red;
+}
+
+#report > article > div:first-child .message.warning {
+	border-left: 5px solid orange;
+}
+#report > article > div:first-child .message.info {
+	border-left: 5px solid #02579e; /*#3C7FB1;*/
+}
+#report > article > div:first-child .message.error {
+	border-left: 5px solid red;
+}
+
+/* Aside */
+#report article > div:first-child aside {
 	float: right;
 }
 #report > article .meta li {
 	display: inline;
 }
-#report > article .assertor {
+
+#report article .assertor {
 	font-style:italic;	
 }
-#report > article .meta .errors {
+#report article > div:first-child aside .errors {
 	font-weight: bold;
 	display: inline-block;
 	min-width: 2.5em;
 	text-align: right;
 	color:red;
 }
-#report > article .meta .warnings {
+#report article > div:first-child aside .warnings {
 	font-weight: bold;
 	display: inline-block;
 	min-width: 1.1em;
@@ -168,67 +221,59 @@ section.job > div {
 	color:#444444;
 }
 
+
+
 .messages {
 	clear: both;
-	line-height:1.3em;
+	line-height:1.4em;
+	margin-bottom:10px;
 }
 .messages > li {
 	margin-bottom: 5px;
-	padding-left: 10px;
+	padding-left:5px;
 }
 .messages > li:last-child {
 	margin-bottom:0;
 }
+.messages .line,
+.messages .column {
+	font-style:italic;
+	font-size:0.9em;
+}
+.messages .column:before {
+	content:" | ";
+}
+
+
+
 @media screen and (min-width: 1780px) {
-	.messages {
-		font-size:0;
-	}
-	.messages > li {
-		-moz-box-sizing:border-box;
-		box-sizing:border-box;
-		display:inline-block;
-		width:50%;
-		vertical-align: top;
-		font-size:13px;
-	}
-	.messages > li:nth-last-child(2):nth-child(2n+1) {
-		margin-bottom:0;
-	}
+/* 	.messages { */
+/* 		font-size:0; */
+/* 	} */
+/* 	.messages > li { */
+/* 		-moz-box-sizing:border-box; */
+/* 		box-sizing:border-box; */
+/* 		display:inline-block; */
+/* 		width:50%; */
+/* 		vertical-align: top; */
+/* 		font-size:13px; */
+/* 	} */
+/* 	.messages > li:nth-last-child(2):nth-child(2n+1) { */
+/* 		margin-bottom:0; */
+/* 	} */
 }
-.messages .warning {
-	border-left: 5px solid orange;
-}
-.messages .info {
-	border-left: 5px solid #02579e ; /*#3C7FB1;*/
-}
-.messages .error {
-	border-left: 5px solid red;
-}
+
 .messages .title {
 	color:black;
 	text-decoration:none;
 	font-weight:bold;
 }
-.messages .description,
-.messages .contexts {
+.messages .description {
 	padding: 5px 5px 2px 5px;
 	line-height: 1.6em;
 }
-.messages .context {
-	border: 1px dotted grey;
-	padding: 2px;
-	background: #f5f5f5;
-	margin-left: 5px;
-}
-.messages .contexts span {
-	font-style:italic;
-}
-.messages .contexts span:not(:first-child):before {
-	content:" | ";
-}
-.messages .contexts strong {
-	color:red;
-}
+
+
 /*.messages .description,
 .messages .contexts {
 	height:0;

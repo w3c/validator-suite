@@ -10,12 +10,16 @@ package org.w3.vs.view
 case class ReportSection(header: ReportHeader, list: Either[List[ReportValue], List[ReportSection]])
 
 sealed trait ReportHeader {
-	def aside: ReportAside
+	var aside: ReportAside
+	def withAside(aside: ReportAside) = {
+	  this.aside = aside
+	  this
+	}
 }
-case class UrlHeader(title: String, aside: ReportAside) extends ReportHeader
-case class ContextHeader(code: String, aside: ReportAside) extends ReportHeader
-case class AssertorHeader(assertor: String, aside: ReportAside) extends ReportHeader
-case class MessageHeader(title: String, aside: ReportAside, severity: String, assertor: String) extends ReportHeader
+case class UrlHeader(title: String, var aside: ReportAside) extends ReportHeader
+case class ContextHeader(code: String, var aside: ReportAside) extends ReportHeader
+case class AssertorHeader(assertor: String, var aside: ReportAside) extends ReportHeader
+case class MessageHeader(title: String, var aside: ReportAside, severity: String, assertor: String) extends ReportHeader
 
 trait ReportAside
 case object EmptyAside extends ReportAside
@@ -35,24 +39,50 @@ object Helper {
       val id = java.util.UUID.randomUUID.toString.substring(0,6)
 """		<article id="%s" tabindex="1">""".format(id) + """ 
 		<div>
-""" + generateHeader(section.header, id) + generateAside(section.header.aside) + """
+""" + generateHeader(section.header, Some(id)) + generateAside(section.header.aside) + """
 		</div>
 		<div>
 """ + {section.list match {
         case Left(list) => generateValues(list)
-        case Right(list) => generateSections(list)
+        case Right(list) => generateInnerSections(list)
       }} + """
 		</div>
 		</article>
 """}.mkString("")
   }
   
-  def generateHeader(header: ReportHeader, id: String): String = {
-    header match {
-      case MessageHeader(title, aside, severity, assertor) => """<a href="#%s" class="group">%s</a>""".format(id, title)
-      case UrlHeader(title, aside) => """<a href="#%s" class="group url">%s</a>""".format(id, title)
-      case ContextHeader(code, aside) => """<a href="#%s" class="group context">%s</a>""".format(id, code)
-      case AssertorHeader(assertor, aside) => """<a href="#%s" class="group assertor">%s</a>""".format(id, assertor)
+  // The only difference is that inner sections don't have an id, an anchor, and a tabindex.
+  def generateInnerSections(sections: List[ReportSection]): String = {
+    sections.map {section =>
+"""		<article>
+		<div>
+""" + generateHeader(section.header) + generateAside(section.header.aside) + """
+		</div>
+		<div>
+""" + {section.list match {
+        case Left(list) => generateValues(list)
+        case Right(list) => generateInnerSections(list)
+      }} + """
+		</div>
+		</article>
+"""}.mkString("")
+  }
+  
+  def generateHeader(header: ReportHeader, id: Option[String] = None): String = {
+    if (id.isDefined) {
+      header match {
+        case MessageHeader(title, aside, severity, assertor) => """<a href="#%s" class="group message %s">%s</a>""".format(id.get, severity, title)
+        case UrlHeader(title, aside) => """<a href="#%s" class="group url">%s</a>""".format(id.get, title)
+        case ContextHeader(code, aside) => """<a href="#%s" class="group context">%s</a>""".format(id.get, if (code != "") code else "Empty context")
+        case AssertorHeader(assertor, aside) => """<a href="#%s" class="group assertor">%s</a>""".format(id.get, assertor)
+      }
+    } else {
+      header match {
+        case MessageHeader(title, aside, severity, assertor) => """<span class="group message %s">%s</span>""".format(severity, title)
+        case UrlHeader(title, aside) => """<span class="group url">%s</span>""".format(title)
+        case ContextHeader(code, aside) => """<span class="group context">%s</span>""".format( if (code != "") code else "Empty context")
+        case AssertorHeader(assertor, aside) => """<span class="group assertor">%s</span>""".format(assertor)
+      }
     }
   }
   
@@ -81,11 +111,11 @@ object Helper {
       case ErrorWarningAside(errors, warnings) => """
 			<aside><span class="errors">%s</span><span class="warning">%s</span></aside>""" format (errors, warnings)
       case OccurrenceAside(occurrences) => """
-			<aside><span class="occurrences">%s</span></aside>""" format (occurrences)
+			<aside><span class="occurrences">%s</span> occurrences</aside>""" format (occurrences)
       case OccurrenceResourceAside(occurrences, resources) => """
 			<aside><span class="occurrences">%s</span><span class="resources">%s</span></aside>""" format (occurrences, resources)
       case FirstLineColAside(line, col) => """
-			<aside><span class="line">%s</span><span class="col">%s</span></aside>""" format (line, col)
+			<aside>First at Line: <span class="line">%s</span> Column: <span class="col">%s</span></aside>""" format (line, col)
       case EmptyAside => ""
     }
   }
