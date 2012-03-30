@@ -71,127 +71,114 @@ object Jobs extends Controller {
     }
   }
   import org.w3.vs.view._
-  private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]): 
-      List[(String, ReportListAside,
-        List[(String, ReportListAside,
-          List[(String, ReportListAside, 
-            List[String]
-          )]
-        )]
-      )] = {
+  private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]): List[ReportSection] = {
+    
+    // (url, assertor, title, severity, context, line, column)    
+    type Data = List[(String, String, String, String, String, Option[Int], Option[Int])]
+    
+    val flat: Data = (for {
+      ass <- ar
+        raw <- ass.assertions
+        context <- raw.contexts
+      } yield {
+        (ass.url.toString, ass.assertorId.toString, raw.title, raw.severity, context.content, context.line, context.column)
+      }).toList
+    
+    val filtered: Data = {
+      val assertorsParams = req.queryString.get("assertor").flatten
+      val inter = if (assertorsParams.isEmpty) flat else flat.filter{a => assertorsParams.exists(_ === a._2)}
+      val typeParams = req.queryString.get("type").flatten
+      if (typeParams.isEmpty) inter else inter.filter{a => typeParams.exists(_ === a._4)}
+    }
+    
+    def groupByMessage(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
+      Right(for {
+        g <- data.groupBy(t => (t._2, t._3, t._4)).toList.sortBy(_._2.size).reverse
+      } yield {
+        val ((assertor, title, severity), iterable) = g
+        ReportSection(MessageHeader(title, OccurrenceAside(iterable.size), severity, assertor), f(iterable))
+      })
+    }
+    def groupByContext(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
+      Right(for {
+        g <- data.groupBy(t => (t._5)).toList.sortBy(_._2.size).reverse
+      } yield {
+        val ((context), iterable) = g
+        ReportSection(ContextHeader(context, OccurrenceAside(iterable.size)), f(iterable))
+      })
+    }
+    def groupByAssertor(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
+      Right(for {
+        g <- data.groupBy(t => (t._2)).toList.sortBy(_._2.size).reverse
+      } yield {
+        val ((assertor), iterable) = g
+        ReportSection(AssertorHeader(assertor, OccurrenceAside(iterable.size)), f(iterable))
+      })
+    }
+    def groupByUrl(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
+      val grouped = data.groupBy(t => (t._1)).toList
+      val sorted = req.queryString.get("sort").flatten.headOption match {
+        case Some("url") => grouped.sortBy(_._2.size).reverse.sortBy(_._1)
+        case _@ (Some("occurence") | _) => grouped.sortBy(_._2.size).reverse
+      }
+      Right(for {
+        g <- grouped.sortBy(_._2.size).reverse
+      } yield {
+        val ((url), iterable) = g
+        ReportSection(UrlHeader(url, OccurrenceAside(iterable.size)), f(iterable))
+      })
+    }
+    def getContextValues(data: Data): Left[List[ReportValue], List[ReportSection]] = {
+      Left(data.map{case (_, _, _, _, context, line, column) => ContextValue(context, line, column)})
+    }
+    def getPositionValues(data: Data): Left[List[ReportValue], List[ReportSection]] = {
+      Left(data.map{case (_, _, _, _, context, line, column) => PositionValue(line, column)})
+    }
     
     val groupParam = req.queryString.get("group").flatten.headOption
-    groupParam match {
-      case Some("message.context") => {
-        val foo = for {
-          ass <- ar
-          raw <- ass.assertions
-          context <- raw.contexts
-        } yield {
-          (ass.url.toString, (ass.assertorId.toString, raw.title, raw.severity), (context.content, context.line, context.column))
-        }
-        val groupTitle = for {
-          obj <- foo.groupBy(_._2).toList.sortBy(_._2.size)
-        } yield {
-          val newIterable = obj._2.map{case (a, _, b) => (a, b)}
-          val ((assertorId, title, severity), _) = obj // TODO
-          (title, OccurrenceAside(newIterable.size), newIterable)
-        }
-        val groupCode = groupTitle.map{case (title, aside, iterable) =>
-          (title, aside, for {
-            obj <- iterable.groupBy(_._2._1).toList.sortBy(_._2.size)
-          } yield {
-            val newIterable = obj._2.map{case (url, (code, line, column)) => (url, (line, column))}
-            val (code, _) = obj
-            (code, OccurrenceAside(newIterable.size), newIterable)
-          })
-        }
-        val groupUrl = groupCode.map{case (title, aside, iterable) =>
-          (title, aside, iterable.map{case (code, aside, iterable) =>
-            (code, aside, for {
-              obj <- iterable.groupBy(_._1).toList.sortBy(_._2.size)
-            } yield {
-              val newIterable = obj._2.map{case (_, a) => (a)}
-              val (url, _) = obj
-              (url, OccurrenceAside(newIterable.size), newIterable.map(_.toString).toList)
-            })
-          })
-        }
-        groupUrl
+    
+    val allGrouped = groupParam match {
+      case _@ (Some("message") | Some("message.url")) => {
+        groupByMessage(groupByUrl(groupByContext(getPositionValues _)))(filtered).b
       }
-      case _@ (Some("message.url") | Some("message")) => {
-        val foo = for {
-          ass <- ar
-          raw <- ass.assertions
-          context <- raw.contexts
-        } yield {
-          (ass.url.toString, (ass.assertorId.toString, raw.title, raw.severity), (context.content, context.line, context.column))
-        }
-        val groupTitle = for {
-          obj <- foo.groupBy(_._2).toList.sortBy(_._2.size)
-        } yield {
-          val newIterable = obj._2.map{case (a, _, b) => (a, b)}
-          val ((assertorId, title, severity), _) = obj // TODO
-          (title, OccurrenceAside(newIterable.size), newIterable)
-        }
-        val groupUrl = groupTitle.map{case (title, aside, iterable) =>
-          (title, aside, for {
-            obj <- iterable.groupBy(_._1).toList.sortBy(_._2.size)
-          } yield {
-            val newIterable = obj._2.map{case (_, a) => (a)}
-            val (url, _) = obj
-            (url, EmptyAside, newIterable)
-          })
-        }
-        val groupCode = groupUrl.map{case (title, aside, iterable) =>
-          (title, aside, iterable.map{case (url, aside, iterable) =>
-            (url, aside, List(("", EmptyAside, iterable.toList.sortBy(_._2).map(_.toString))))
-          })
-        }
-        groupCode
+      case Some("message.context") => {
+        groupByMessage(groupByContext(groupByUrl(getPositionValues _)))(filtered).b
       }
       case _ => {
-        val foo = for {
-          ass <- ar
-          raw <- ass.assertions
-          context <- raw.contexts
-        } yield {
-          (ass.url.toString, ass.assertorId.toString, (raw.title, raw.severity), (context.content, context.line, context.column))
-        }
-        val groupUrl = for {
-          obj <- foo.groupBy(_._1).toList.sortBy(_._2.size)
-        } yield {
-          val newIterable = obj._2.map{case (_, a, b, c) => (a, b, c)}
-          val (url, _) = obj
-          val errors = newIterable.count{case (_, (_, severity), _) => severity === "error"}
-          val warnings = newIterable.count{case (_, (_, severity), _) => severity === "warning"}
-          (url, ErrorWarningAside(errors, warnings), newIterable)
-        }
-        val groupAssertor = groupUrl.map{case (url, aside, iterable) =>
-          (url, aside, for {
-            obj <- iterable.groupBy(_._1).toList.sortBy(_._2.size)
-          } yield {
-            val newIterable = obj._2.map{case (_, a, b) => (a, b)}
-            val (assertor, _) = obj
-            (assertor, EmptyAside, newIterable)
-          })
-        }
-        val groupTitle = groupAssertor.map{case (url, aside, iterable) =>
-          (url, aside, iterable.map{case (assertor, aside, iterable) =>
-            (assertor, aside, for {
-              obj <- iterable.groupBy(_._1).toList
-            } yield {
-              val newIterable = (obj._2.map{case (_, a) => (a)})
-              val newIterable2 = newIterable.toList.sortBy(_._2)
-              val (title, _) = obj
-              // TODO don't loose the severity
-              (title._1, FirstLineColAside(newIterable2.firstOption.flatMap(_._2), newIterable2.firstOption.flatMap(_._3)), newIterable2.map(_.toString))
-            })
-          })
-        }
-        groupTitle
+        groupByUrl(groupByAssertor(groupByMessage(getContextValues _)))(filtered).b
       }
     }
+    
+    val flatParam = req.queryString.get("flat").flatten.headOption
+    val flatten = if (!flatParam.isDefined) allGrouped else {
+      for {
+        g <- allGrouped
+        if g.list.isRight
+        sub <- g.list.right.get
+      } yield {
+        val header = g.header // recompute
+        ReportSection(g.header, Right(List(sub))) // resorting
+      }
+    }
+//    req.queryString.get("sort").flatten.headOption match {
+//      case Some("string") => {
+//        flatten.map(section =>
+//           section.list.fold(
+//              l => l,
+//              r => r.map (section =>
+//                  section.list.fold(
+//                    l => l,
+//                    r => r
+//                  )
+//              )
+//           )
+//        )
+//      }//grouped.sortBy(_._2.size).reverse.sortBy(_._1)
+//      case _@ (Some("occurence") | _) => flatten.sortBy(_._2.size).reverse
+//    }
+    
+    flatten
+    
   }
   private def sort(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
     val sortParam = req.queryString.get("sort").flatten.headOption
@@ -208,12 +195,7 @@ object Jobs extends Controller {
     }
   }
   private def filter(ar: Iterable[AssertorResult])(implicit req: Request[AnyContent]): Iterable[Assertions] = {
-    val assertions = ar.collect{case a: Assertions => a}.view
-    val assertorsParams = req.queryString.get("assertor").flatten // eg Seq(HTMLValidator, CSSValidator)
-    val validOnlyParam = req.queryString.get("valid").isDefined
-    val result = if (assertorsParams.isEmpty) assertions else assertions.filter{a => assertorsParams.exists(_ === a.assertorId.toString)}
-    val result2 = if (validOnlyParam) result.filter{_.isValid} else result.filter{!_.isValid}
-    result2
+    ar.collect{case a: Assertions => a}.view
   }
   
   // TODO: This should also stop the job and kill the actor
@@ -225,8 +207,7 @@ object Jobs extends Controller {
           jobConf <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
           _ <- Job.delete(id) failMap toResult(Some(user))
         } yield {
-          val job = Job(jobConf)
-          job.stop
+          Job(jobConf).stop
           if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", jobConf.name)))
         }
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
@@ -357,7 +338,7 @@ object Jobs extends Controller {
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
   }
-
+  
   private def getJobConfIfAllowed(user: User, id: JobId): FutureValidationNoTimeOut[SuiteException, JobConfiguration] = {
     for {
       jobConfO <- Job.get(id)

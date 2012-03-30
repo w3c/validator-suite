@@ -95,7 +95,7 @@ section.job > div {
 #report > article > div {
 	border-bottom: none;
 }
-#report > article > div:last-child {
+#report > article:not(:target):not(:focus) > div:last-child:not(:first-child) {
 	height: 0;
 	overflow: hidden;
 	padding: 0;
@@ -114,15 +114,15 @@ section.job > div {
 #report > article:last-child > div:last-child {
 	border-bottom: 1px solid #e5e5e5;
 }
-#report > article .resource {
+#report > article a.group {
 	text-decoration:none;
 	color:#02579e;
 	font-weight:bold;
 }
-#report > article a.resource:visited {
+#report > article a.group:visited {
 	color:#02579e;
 }
-#report > article a.resource:before {
+#report > article a.group:before {
 	content:"";
 	display:inline-block;
 	width:0px;
@@ -132,15 +132,15 @@ section.job > div {
 	border-left: 4px solid #444444;
 	margin-right:5px;
 }
-#report > article:focus a.resource:before,
-#report > article:target a.resource:before {
+#report > article:focus a.group:before,
+#report > article:target a.group:before {
 	-webkit-transform: rotate(90deg);
 	-moz-transform: rotate(90deg);
 	-o-transform: rotate(90deg);
 	-ms-transform: rotate(90deg);
 	transform: rotate(90deg);
 }
-#report > article .meta {
+#report > article aside {
 	float: right;
 }
 #report > article .meta li {
