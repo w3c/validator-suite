@@ -88,41 +88,41 @@ section.job > div {
 	padding: 10px !important;
 }
 
-#report article {
+#report > article {
 	width:100%;
 	padding:0;
 }
-#report article > div {
+#report > article > div {
 	border-bottom: none;
 }
-#report article > div:last-child {
+#report > article > div:last-child {
 	height: 0;
 	overflow: hidden;
 	padding: 0;
 	margin-bottom: -1px;
 }
-#report article:focus > div:last-child,
-#report article:target > div:last-child {
+#report > article:focus > div:last-child,
+#report > article:target > div:last-child {
 	height: auto;
 	padding: 10px;
 	margin-bottom: 0;
 }
-#report article:focus:before {
+#report > article:focus:before {
 	content:"";
 	display:block;
 }
-#report article:last-child > div:last-child {
+#report > article:last-child > div:last-child {
 	border-bottom: 1px solid #e5e5e5;
 }
-#report article .resource {
+#report > article .resource {
 	text-decoration:none;
 	color:#02579e;
 	font-weight:bold;
 }
-#report article a.resource:visited {
+#report > article a.resource:visited {
 	color:#02579e;
 }
-#report article a.resource:before {
+#report > article a.resource:before {
 	content:"";
 	display:inline-block;
 	width:0px;
@@ -132,38 +132,38 @@ section.job > div {
 	border-left: 4px solid #444444;
 	margin-right:5px;
 }
-#report article:focus a.resource:before,
-#report article:target a.resource:before {
+#report > article:focus a.resource:before,
+#report > article:target a.resource:before {
 	-webkit-transform: rotate(90deg);
 	-moz-transform: rotate(90deg);
 	-o-transform: rotate(90deg);
 	-ms-transform: rotate(90deg);
 	transform: rotate(90deg);
 }
-#report article .meta {
+#report > article .meta {
 	float: right;
 }
-#report article .meta li {
+#report > article .meta li {
 	display: inline;
 }
-#report article .assertor {
+#report > article .assertor {
 	font-style:italic;	
 }
-#report article .meta .errors {
+#report > article .meta .errors {
 	font-weight: bold;
 	display: inline-block;
 	min-width: 2.5em;
 	text-align: right;
 	color:red;
 }
-#report article .meta .warnings {
+#report > article .meta .warnings {
 	font-weight: bold;
 	display: inline-block;
 	min-width: 1.1em;
 	text-align: left;
 	color:orange;
 }
-#report article .errors:after {
+#report > article .errors:after {
 	content:" | ";
 	color:#444444;
 }

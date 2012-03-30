@@ -23,6 +23,7 @@ import akka.util.Duration
 import akka.util.duration._
 import java.util.concurrent.TimeUnit._
 import org.w3.util.Pimps._
+import org.w3.vs.assertor.AssertorId
 
 object Jobs extends Controller {
   
@@ -69,15 +70,41 @@ object Jobs extends Controller {
       futureResult.expiresWith(FutureTimeoutError, 10, SECONDS).toPromise()
     }
   }
-  private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
+  private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]): Either[Iterable[Assertions], Iterable[((String, String, AssertorId), Iterable[(URL, Iterable[(Option[Int], Option[Int])])])]] = {
     val groupParam = req.queryString.get("group").flatten.headOption
     groupParam match {
       case Some("contexts") => {
-        // This is bad, this bad
-        val flatten = ar.flatten(ass => ass.assertions.flatMap(raw => raw.contexts.map(context => ass.copy(assertions = List(raw.copy(contexts = List(context)))))))
-        val grouped = flatten.groupBy(_.assertions.headOption.map(a => a.contexts.headOption.map(_.content).getOrElse("")).getOrElse(""))
-        val sorted = grouped.toList.sortBy{case (_, a) => a.size}
-        Right(sorted.reverse)
+        val foo = for {
+          ass <- ar
+          raw <- ass.assertions
+          if raw.isError
+          context <- raw.contexts
+        } yield {
+          ((context.content, raw.title, ass.assertorId), ass.url, (context.line, context.column))
+        }
+        // Iterable[(code, error, assertor), url, (line, column)]
+        // group by context and sort by number of occurences
+        val byContext = foo.groupBy(_._1).toList.sortBy{case (_, i) => i.size}
+        // Iterable[(code, error, assertor), Iterable[((code, error, assertor), url, (line, column))]]
+        val byContext2 = for {
+          obj <- byContext
+        } yield (obj._1, obj._2.map{case (_, a, b) => (a, b)})
+        // Iterable[(code, error, assertor), Iterable[(url, (line, column))]]
+        val groupByMessage = byContext2.map{case (obj, iterable) =>
+          (obj, for {
+            obj <- iterable.groupBy(_._1).toList.sortBy{_._1.toString}.sortBy{_._2.size}
+          } yield (obj._1, obj._2.map{_._2}))
+        }
+        // Iterable[(code, error, assertor), Iterable[(url, Iterable[(line, column)])]]
+        // ie:
+        // Iterable[(
+        //   (String, String, AssertorId),
+        //   Iterable[(
+        //     URL,
+        //     Iterable[(Option[Int], Option[Int])]
+        //   )]
+        // )]
+        Right(groupByMessage.reverse)
       }
       case _ => Left(ar.take(50))
     }
@@ -241,7 +268,7 @@ object Jobs extends Controller {
           val job = Job(jobConf)
           action(user)(job)
           if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, jobConf.name))))) 
-          else        SeeOther(routes.Jobs.show(jobConf.id).toString).flashing(("info" -> msg))
+          else        SeeOther(routes.Jobs.show(jobConf.id).toString).flashing(("info" -> Messages(msg, jobConf.name)))
         }
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }

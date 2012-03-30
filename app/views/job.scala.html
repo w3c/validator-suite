@@ -1,4 +1,4 @@
-@(jobConf: JobConfiguration, data: JobData, assertions: Either[Iterable[Assertions], List[(String, Iterable[Assertions])]], user: User, errors: List[(String, String)] = List.empty)(implicit flash: Flash)
+@(jobConf: JobConfiguration, data: JobData, assertions: Either[Iterable[Assertions], Iterable[((String, String, org.w3.vs.assertor.AssertorId), Iterable[(org.w3.util.URL, Iterable[(Option[Int], Option[Int])])])]], user: User, errors: List[(String, String)] = List.empty)(implicit flash: Flash)
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
@@ -11,7 +11,9 @@
 }{ @***** Toolbar *****@
 
 	<ul>
-		<li><a href="?valid">Valids only</a></li>
+		<li><a href="">Default</a></li>
+		<li><a href="?valid">Valid resources</a></li>
+		<li><a href="?type=error">Only show errors</a></li>
 		<li><a href="?assertor=ValidatorNu">Validator.nu results</a></li>
 		<li><a href="?assertor=CSSValidator">CSS validator results</a></li>
 		<li><a href="?sort=errors">Sort per errors</a></li>
@@ -105,16 +107,25 @@
 	    }
 	  }
 	  case Right(map) => {
-	    @map.map{case (code, iterable) =>
+	    @map.map{case ((code, error, assertor), iterable) =>
 	<article tabindex="1">
 		<div>
-			@HtmlFormat.raw(code)
+			@HtmlFormat.raw(error), @assertor
 		</div>
 		<div>
+			<code>@HtmlFormat.raw(code)</code>
 			<ul class="messages">
-			<li>@iterable.size</li>
-			@iterable.map { ass =>
-			<li>@ass.url</li>
+			@iterable.map {case (url, contexts) =>
+				<article>
+					<div>@url</div>
+					<div>
+				@contexts.collect {
+				  case (Some(l), Some(c)) => {
+				    Line: @l, Col: @c <br>
+				  }
+				}
+					</div>
+				</article>
 			}
 			</ul>
 		</div>

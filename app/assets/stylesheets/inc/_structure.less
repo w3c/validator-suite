@@ -73,7 +73,7 @@ body {
 	font-size: 0rem;
 	line-height: 0rem;
 }
-.list article {
+.list > article {
 	font-size:@baseFontSize;
 	line-height:@baseFontSize;
 	padding: @spacing / 2;
@@ -82,7 +82,7 @@ body {
 	width: 100%;
 	.border-sizing;
 }
-.list article > div {
+.list > article > div {
 	padding: @spacing;
 	border: 1px solid @borderColor;
 	position: relative; /* become a ref for children positionning */
@@ -109,17 +109,17 @@ body {
 		.toolBarLayout(180px);
 	}
 	@media screen and (min-width: 980px) {
-		.list article {
+		.list > article {
 			width:50%;
 		}
 	}
 	@media screen and (min-width: 1380px) {
-		.list article {
+		.list > article {
 			width:33.33%;
 		}
 	}
 	@media screen and (min-width: 1780px) {
-		.list article {
+		.list > article {
 			width:25%;
 		}
 	}
