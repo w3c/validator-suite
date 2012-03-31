@@ -100,7 +100,7 @@ object Jobs extends Controller {
         g <- data.groupBy(t => (t._2, t._3, t._4)).toList.sortBy(_._2.size).reverse
       } yield {
         val ((assertor, title, severity), iterable) = g
-        ReportSection(MessageHeader(title, OccurrenceAside(iterable.size), severity, assertor), f(iterable))
+        ReportSection(MessageHeader(title, severity, assertor), f(iterable))
       })
     }
     def groupByContext(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
@@ -108,7 +108,7 @@ object Jobs extends Controller {
         g <- data.groupBy(t => (t._5)).toList.sortBy(_._2.size).reverse
       } yield {
         val ((context), iterable) = g
-        ReportSection(ContextHeader(context, OccurrenceAside(iterable.size)), f(iterable))
+        ReportSection(ContextHeader(context), f(iterable))
       })
     }
     def groupByAssertor(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
@@ -116,20 +116,15 @@ object Jobs extends Controller {
         g <- data.groupBy(t => (t._2)).toList.sortBy(_._2.size).reverse
       } yield {
         val ((assertor), iterable) = g
-        ReportSection(AssertorHeader(assertor, OccurrenceAside(iterable.size)), f(iterable))
+        ReportSection(AssertorHeader(assertor), f(iterable))
       })
     }
     def groupByUrl(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
-      val grouped = data.groupBy(t => (t._1)).toList
-      val sorted = req.queryString.get("sort").flatten.headOption match {
-        case Some("url") => grouped.sortBy(_._2.size).reverse.sortBy(_._1)
-        case _@ (Some("occurence") | _) => grouped.sortBy(_._2.size).reverse
-      }
       Right(for {
-        g <- sorted
+        g <- data.groupBy(t => (t._1)).toList.sortBy(_._1).reverse
       } yield {
         val ((url), iterable) = g
-        ReportSection(UrlHeader(url, OccurrenceAside(iterable.size)), f(iterable))
+        ReportSection(UrlHeader(url), f(iterable))
       })
     }
     def getContextValues(data: Data): Left[List[ReportValue], List[ReportSection]] = {
@@ -160,31 +155,11 @@ object Jobs extends Controller {
         if g.list.isRight
         sub <- g.list.right.get
       } yield {
-        val newAside = g.header.aside match {
-          case OccurrenceAside(_) => OccurrenceAside(sub.list.fold(a => a.size, b => b.size))
-          case _ => EmptyAside
-        } // recompute
-        ReportSection(g.header.withAside(newAside), Right(List(sub))) // resorting
+        ReportSection(g.header, Right(List(sub))) 
       }
     }
-//    req.queryString.get("sort").flatten.headOption match {
-//      case Some("string") => {
-//        flatten.map(section =>
-//           section.list.fold(
-//              l => l,
-//              r => r.map (section =>
-//                  section.list.fold(
-//                    l => l,
-//                    r => r
-//                  )
-//              )
-//           )
-//        )
-//      }//grouped.sortBy(_._2.size).reverse.sortBy(_._1)
-//      case _@ (Some("occurence") | _) => flatten.sortBy(_._2.size).reverse
-//    }
     
-    flatten
+    flatten.sortBy(r => r.list.fold(a => a.size, b => Helper.countValues(b))).reverse
     
   }
   private def sort(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
@@ -200,6 +175,7 @@ object Jobs extends Controller {
         case _ => perErrors
       }
     }
+    ar
   }
   private def filter(ar: Iterable[AssertorResult])(implicit req: Request[AnyContent]): Iterable[Assertions] = {
     ar.collect{case a: Assertions => a}.view
@@ -292,7 +268,7 @@ object Jobs extends Controller {
           id <- idOpt.toImmediateSuccess(ifNone = Ok(views.html.jobForm(jobForm, user )))
           jobC <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
         } yield {
-          Ok(views.html.jobForm(jobForm.fill(jobC), user))
+          Ok(views.html.jobForm(jobForm.fill(jobC), user, idOpt))
         }
       futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
     }
@@ -320,7 +296,7 @@ object Jobs extends Controller {
                  _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap toResult(Some(user))
               } yield {
                 if (isAjax) Created(views.html.libs.messages(List(("info" -> Messages("jobs.updated", jobC.name))))) 
-                else        SeeOther(routes.Jobs.show(jobF.id).toString).flashing(("info" -> Messages("jobs.updated", jobC.name)))
+                else        SeeOther(routes.Jobs.show(jobC.id).toString).flashing(("info" -> Messages("jobs.updated", jobC.name)))
               }
           }
         } yield {

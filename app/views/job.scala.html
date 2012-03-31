@@ -17,13 +17,9 @@
 	
 }{ @***** Toolbar *****@
 
-	<a href="">Default</a>
+	<div class="report">
 
 	<form method="get">
-		<fieldset>
-			<label><input name=valid type="checkbox">Valid resources</label><br>
-			<label><input name=type type="checkbox" value=error checked>Only show errors</label><br>
-		</fieldset>
 		<fieldset>
 			<legend>Assertors</legend>
 			<label><input name=assertor value="ValidatorNu" type="checkbox" checked>Validator.nu results</label><br>
@@ -31,19 +27,26 @@
 			<label><input name=assertor value="CSSValidator" type="checkbox" checked>CSS validator results</label><br>
 		</fieldset>
 		<fieldset>
-			<legend>Sorting</legend>
-			<label><input name=sort type=radio value=occurrences checked>Sort per occurrences</label><br>
-			<label><input name=sort type=radio value=url>Sort per url</label><br>
-		</fieldset>
-		<fieldset>
 			<legend>Grouping</legend>
-			<label><input name=group type=radio value="message.context">Group by message/context</label><br>
-			<label><input name=group type=radio value="message.url">Group by message/url</label><br>
-			<label><input name=group type=radio value="url.assertor" checked>Group by url/assertor</label><br>
+			<label><input name=group type=radio value="url.assertor" checked>By url - assertor</label><br>
+			<label><input name=group type=radio value="message.url">By message - url</label><br>
+			<label><input name=group type=radio value="message.context">By message - context</label><br>
 			<label><input name=flat type="checkbox">Flat</label><br>
 		</fieldset>
+		<fieldset>
+			<legend>Filters</legend>
+			<!-- <label><input name=valid type="checkbox">Valid resources</label><br> -->
+			<label><input name=type type="checkbox" value=error checked>Show errors</label><br>
+			<label><input name=type type="checkbox" value=warning checked>Show warnings</label><br>
+			<label><input name=type type="checkbox" value=info>Show info</label><br>
+		</fieldset>
+		<label><input name=countOnce type="checkbox">Count errors once</label><br>
 		<button>Submit</button>
 	</form>
+	
+	<a href="">Default</a><br>
+	
+	</div>
 
 }{ @***** Content *****@ 
 	

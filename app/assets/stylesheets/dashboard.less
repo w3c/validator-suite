@@ -156,6 +156,7 @@ section.job > div {
 	padding: 2px;
 	background: #f5f5f5;
 	margin-left:5px;
+	display:inline-block;
 }
 #report .context strong {
 	color:red;
@@ -170,6 +171,10 @@ section.job > div {
 #report article .message {
 	font-weight: bold;
 	padding-left: 8px;
+	display:inline-block
+}
+#report article article {
+	line-height:1.5em;	
 }
 #report article article .message.warning {
 	border-left: 5px solid orange;
@@ -202,23 +207,24 @@ section.job > div {
 #report article .assertor {
 	font-style:italic;	
 }
-#report article > div:first-child aside .errors {
+#report article aside .errors {
 	font-weight: bold;
-	display: inline-block;
-	min-width: 2.5em;
-	text-align: right;
 	color:red;
 }
-#report article > div:first-child aside .warnings {
+#report article aside .warnings {
 	font-weight: bold;
-	display: inline-block;
-	min-width: 1.1em;
-	text-align: left;
 	color:orange;
 }
-#report > article .errors:after {
+#report article aside .info {
+	font-weight: bold;
+	color:#02579e;
+}
+#report article aside .assertorCount {
+	color:#888;
+}
+#report article aside .count:not(:last-child):after {
 	content:" | ";
-	color:#444444;
+	color:#444;
 }
 
 
@@ -272,7 +278,27 @@ section.job > div {
 	padding: 5px 5px 2px 5px;
 	line-height: 1.6em;
 }
-
+#toolbar {
+	line-height: 1.5em;
+}
+#toolbar fieldset {
+	display: inline-block;
+	vertical-align: top;
+	min-width: 160px;
+}
+#toolbar legend {
+	font-weight: bold;
+	line-height: 2em;
+}
+#toolbar input {
+	vertical-align:top;
+}
+@media screen and (min-width: 980px) {
+#toolbar .report {
+	position: fixed;
+	width:160px;
+}
+}
 
 /*.messages .description,
 .messages .contexts {
