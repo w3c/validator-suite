@@ -41,7 +41,7 @@ object Application extends Controller {
         } yield {
           Redirect(routes.Jobs.index) // If the user is already logged in send him to the dashboard
         }
-      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
   }
 
@@ -67,7 +67,7 @@ object Application extends Controller {
             SeeOther(uri).withSession("email" -> user.email)
           }).getOrElse(SeeOther(routes.Jobs.index.toString).withSession("email" -> user.email))
         }
-      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
   }
   

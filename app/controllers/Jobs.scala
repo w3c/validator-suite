@@ -51,7 +51,7 @@ object Jobs extends Controller {
         val viewInputs = sortedJobsConf map { jobConf => (jobConf, map(jobConf.id)) }
         Ok(views.html.dashboard(viewInputs, user))
       }
-      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
   }
   
@@ -67,7 +67,7 @@ object Jobs extends Controller {
         } yield {
           Ok(views.html.job(jobConf, data, group(sort(filter(ars))), user, messages))
         }
-      futureResult.expiresWith(FutureTimeoutError, 10, SECONDS).toPromise()
+      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise()
     }
   }
   private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
@@ -119,7 +119,7 @@ object Jobs extends Controller {
           job.stop
           if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", jobConf.name)))
         }
-      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
   }
   
@@ -174,7 +174,7 @@ object Jobs extends Controller {
       }
       (in, out)
     }).failMap(_ => (Iteratee.ignore[JsValue], Enumerator.eof[JsValue]))
-      .expiresWith((Iteratee.ignore[JsValue], Enumerator.eof[JsValue]), 20, SECONDS)
+      .expiresWith((Iteratee.ignore[JsValue], Enumerator.eof[JsValue]), 3, SECONDS)
       .toPromiseT[(Iteratee[JsValue, _], Enumerator[JsValue])]
     
     val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseIterateeEnumerator.map(_._2))
@@ -196,7 +196,7 @@ object Jobs extends Controller {
         } yield {
           Ok(views.html.jobForm(jobForm.fill(jobC), user))
         }
-      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
   }
   
@@ -228,7 +228,7 @@ object Jobs extends Controller {
         } yield {
           result
         }
-      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
   }
   
@@ -244,7 +244,7 @@ object Jobs extends Controller {
           if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, jobConf.name))))) 
           else        SeeOther(routes.Jobs.show(jobConf.id).toString).flashing(("info" -> msg))
         }
-      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
   }
 
