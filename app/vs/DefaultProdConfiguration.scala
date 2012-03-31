@@ -18,15 +18,21 @@ trait DefaultProdConfiguration extends VSConfiguration {
   
   val MAX_URL_TO_FETCH = 10
   
-  lazy val assertorExecutionContext: ExecutionContext = {
+  val assertorExecutionContext: ExecutionContext = {
     import java.util.concurrent.{ExecutorService, Executors}
     val executor: ExecutorService = Executors.newFixedThreadPool(10)
     ExecutionContext.fromExecutorService(executor)
   }
   
-  lazy val webExecutionContext: ExecutionContext = {
+  val webExecutionContext: ExecutionContext = {
     import java.util.concurrent.{ExecutorService, Executors}
     val executor: ExecutorService = Executors.newFixedThreadPool(10)
+    ExecutionContext.fromExecutorService(executor)
+  }
+
+  val storeExecutionContext: ExecutionContext = {
+    import java.util.concurrent.{ExecutorService, Executors}
+    val executor: ExecutorService = Executors.newFixedThreadPool(2)
     ExecutionContext.fromExecutorService(executor)
   }
   
@@ -63,9 +69,9 @@ trait DefaultProdConfiguration extends VSConfiguration {
     new AsyncHttpClient(config)
   }
   
-  val store = new MemoryStore
+  val store = new MemoryStore()(this)
 
-  val timeout: Timeout = 5.seconds
+  val timeout: Timeout = 10.seconds
   
   // ouch :-)
   http.authorityManagerFor("w3.org").sleepTime = 0

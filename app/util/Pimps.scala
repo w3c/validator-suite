@@ -4,8 +4,6 @@ import scalaz.Validation
 import akka.dispatch.Future
 
 object Pimps {
-
-  type FutureValidationNoTimeOut[F, S] = FutureValidation[F, S, Nothing, NOTSET]
   
   implicit def wrapValidation[E, S](validation: Validation[E, S]): ValidationW[E, S] = new ValidationW(validation)
 

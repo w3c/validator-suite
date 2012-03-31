@@ -19,6 +19,8 @@ trait VSConfiguration {
   val assertorExecutionContext: ExecutionContext
   
   val webExecutionContext: ExecutionContext
+
+  val storeExecutionContext: ExecutionContext
   
   val httpClient: AsyncHttpClient
   

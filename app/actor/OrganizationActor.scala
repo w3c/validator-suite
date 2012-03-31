@@ -31,6 +31,7 @@ extends Actor {
 
   def receive = {
     case m: Message => jobsRef.forward(m)
+    case other => println("&&&"+other)
   }
 
 }

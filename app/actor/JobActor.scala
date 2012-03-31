@@ -23,12 +23,13 @@ import scalaz._
 import Scalaz._
 import org.joda.time.DateTime
 
-case object Unique
+sealed trait JobActorState
+case object Unique extends JobActorState
 
 // TODO extract all pure function in a companion object
 class JobActor(job: JobConfiguration)(
   implicit val configuration: VSConfiguration)
-    extends Actor with FSM[Unit, RunData] {
+    extends Actor with FSM[JobActorState, RunData] {
 
   import configuration._
 
@@ -46,10 +47,10 @@ class JobActor(job: JobConfiguration)(
 
   final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
     var data = _data
-    store.listResourceInfos(job.id, after = afterOpt).fold(t => throw t, ris => ris) foreach { resourceInfo =>
+    store.listResourceInfos(job.id, after = afterOpt).waitResult foreach { resourceInfo =>
       data = data.withCompletedFetch(resourceInfo.url)
     }
-    store.listAssertorResults(job.id, after = afterOpt).fold(t => throw t, ars => ars) foreach { assertorResult =>
+    store.listAssertorResults(job.id, after = afterOpt).waitResult foreach { assertorResult =>
       data = data.withAssertorResult(assertorResult)
     }
     data
@@ -58,10 +59,9 @@ class JobActor(job: JobConfiguration)(
   /**
    * tries to get the latest snapshot, then replays the events that happened on it
    */
-  private final def initialConditions: RunData = store.latestSnapshotFor(job.id) match {
-    case Failure(t) => throw t
-    case Success(None) => RunData(jobId = job.id, strategy = strategy)
-    case Success(Some(snapshot)) => replayEventsOn(RunData(strategy, snapshot), Some(snapshot.createdAt))
+  private final def initialConditions: RunData = store.latestSnapshotFor(job.id).waitResult match {
+    case None => RunData(jobId = job.id, strategy = strategy)
+    case Some(snapshot) => replayEventsOn(RunData(strategy, snapshot), Some(snapshot.createdAt))
   }
 
   // at instanciation of this actor
@@ -70,9 +70,10 @@ class JobActor(job: JobConfiguration)(
 
   startWith(Unique, initialConditions)
 
-  when(()) {
+  when(Unique) { // case event => { println(":::: "+event); event match {
     case Event(message.GetJobData, data) => {
       val jobData = JobData(data)
+      println(">>>>>" + sender.path)
       sender ! jobData
       stay()
     }
@@ -121,7 +122,7 @@ class JobActor(job: JobConfiguration)(
     case Event(message.BeLazy, data) => stay() using data.copy(explorationMode = Lazy)
     case Event(message.Refresh, data) => stay() using scheduleNextURLsToFetch(initialData)
     case Event(message.Stop, data) => stay() using data.copy(explorationMode = Lazy, toBeExplored = List.empty)
-  }
+  } //}}
 
   onTransition {
     // detect when the status as changed

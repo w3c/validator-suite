@@ -14,6 +14,9 @@ class FutureW[S](future: Future[S]) {
     val lifted = future.map[Validation[Throwable, S]] { value =>
       Success(value)
     } recover { case t: Throwable =>
+      println("  [[")
+      t.printStackTrace()
+      println("  ]]")
       Failure(t)
     }
     FutureValidation(lifted)
@@ -32,3 +35,5 @@ class FutureW[S](future: Future[S]) {
     FutureValidation(lifted)
   }
 }
+
+

@@ -36,13 +36,22 @@ object Jobs extends Controller {
   
   def index = Action { implicit req =>
     AsyncResult {
+      println("0")
       val futureResult = for {
         user <- getAuthenticatedUserOrResult
-        jobConfs <- configuration.store.listJobs(user.organization).toDelayedValidation.failMap(t => toResult(Some(user))(StoreException(t)))
+        _ = println("1")
+        jobConfs <- configuration.store.listJobs(user.organization).failMap(toResult(Some(user)))
+        _ = println("2")
         jobDatas <- {
           val jobs: Iterable[Job] = jobConfs map { jobConf => Job(jobConf.organization, jobConf.id) }
-          val futureJobDatas: Future[Iterable[JobData]] = Future.sequence(jobs map { _.jobData() })
-          futureJobDatas.lift
+          implicit val context = configuration.webExecutionContext
+          val futureJobDatas: Future[Iterable[JobData]] = Future.sequence(jobs map { _.jobData() }) onSuccess {
+            case e => println("success "+e)
+          } onFailure {
+            case f => println("failure "+f)
+          }
+          val foo = futureJobDatas.lift
+          foo
         }.failMap(t => toResult(Some(user))(StoreException(t)))
       } yield {
         val sortedJobsConf = jobConfs.toSeq.sortBy(_.createdOn)
@@ -50,7 +59,7 @@ object Jobs extends Controller {
         val viewInputs = sortedJobsConf map { jobConf => (jobConf, map(jobConf.id)) }
         Ok(views.html.dashboard(viewInputs, user))
       }
-      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
+      futureResult.expiresWith(InternalServerError("toto"), 5, SECONDS).toPromise
     }
   }
   
@@ -118,7 +127,7 @@ object Jobs extends Controller {
           job.stop
           if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", jobConf.name)))
         }
-      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
     }
   }
   
@@ -173,7 +182,7 @@ object Jobs extends Controller {
       }
       (in, out)
     }).failMap(_ => (Iteratee.ignore[JsValue], Enumerator.eof[JsValue]))
-      .expiresWith((Iteratee.ignore[JsValue], Enumerator.eof[JsValue]), 1, SECONDS)
+      .expiresWith((Iteratee.ignore[JsValue], Enumerator.eof[JsValue]), 20, SECONDS)
       .toPromiseT[(Iteratee[JsValue, _], Enumerator[JsValue])]
     
     val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseIterateeEnumerator.map(_._2))
@@ -195,7 +204,7 @@ object Jobs extends Controller {
         } yield {
           Ok(views.html.jobForm(jobForm.fill(jobC), user))
         }
-      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
     }
   }
   
@@ -227,7 +236,7 @@ object Jobs extends Controller {
         } yield {
           result
         }
-      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
     }
   }
   
@@ -243,14 +252,13 @@ object Jobs extends Controller {
           if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, jobConf.name))))) 
           else        SeeOther(routes.Jobs.show(jobConf.id).toString).flashing(("info" -> msg))
         }
-      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
     }
   }
 
   private def getJobConfIfAllowed(user: User, id: JobId): FutureValidationNoTimeOut[SuiteException, JobConfiguration] = {
     for {
-      jobConfO <- Job.get(id)
-      jobConf <- jobConfO.toSuccess(UnknownJob).toImmediateValidation
+      jobConf <- Job.get(id)
       jobConfAllowed <- {
         val validation = if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
         validation.toImmediateValidation

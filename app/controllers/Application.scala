@@ -41,7 +41,7 @@ object Application extends Controller {
         } yield {
           Redirect(routes.Jobs.index) // If the user is already logged in send him to the dashboard
         }
-      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
     }
   }
 
@@ -54,8 +54,10 @@ object Application extends Controller {
       val futureResult =
         for {
           userF <- isValidForm(loginForm).toImmediateValidation failMap { formWithErrors => BadRequest(views.html.login(formWithErrors)) }
-          userO <- User.authenticate(userF._1, userF._2) failMap toResult(None)
-          user <- userO.toSuccess(Unauthorized(views.html.login(loginForm, List(("error", Messages("application.invalidCredentials"))))).withNewSession).toImmediateValidation
+          user <- User.authenticate(userF._1, userF._2) failMap {
+            case Unknown => toResult(None)(Unknown)
+            case other => Unauthorized(views.html.login(loginForm, List(("error", Messages("application.invalidCredentials"))))).withNewSession
+          }
         } yield {
           (for {
             body <- req.body.asFormUrlEncoded
@@ -65,18 +67,23 @@ object Application extends Controller {
             SeeOther(uri).withSession("email" -> user.email)
           }).getOrElse(SeeOther(routes.Jobs.index.toString).withSession("email" -> user.email))
         }
-      futureResult.expiresWith(FutureTimeoutError, 1, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
     }
   }
   
+  import org.w3.util.FutureValidation._
+
   def getAuthenticatedUser()(implicit session: Session): FutureValidationNoTimeOut[SuiteException, User] = {
     for {
-      email <- session.get("email").toImmediateSuccess(Unauthenticated)
+      email <- immediateValidation {
+        val foo = session.get("email").toSuccess(Unauthenticated)
+        println(foo)
+        foo
+      }
       user <- Cache.getAs[User](email) match {
         case Some(user) => Success(user).toImmediateValidation
         case _ => for {
-          userO <- User getByEmail (email)
-          user <- userO.toSuccess(UnknownUser).toImmediateValidation
+          user <- User getByEmail (email)
         } yield {
           Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
           user
@@ -89,13 +96,16 @@ object Application extends Controller {
     getAuthenticatedUser failMap toResult(None)
   }
   
-  def FutureTimeoutError(implicit req: Request[_]) = InternalServerError(views.html.error(List(("error", Messages("error.timeout")))))
-  
+  def FutureTimeoutError(implicit req: Request[_]) = {
+    //Thread.dumpStack()
+    InternalServerError(views.html.error(List(("error", Messages("error.timeout")))))
+  }
+
   def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
     e match {
       case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> Messages("jobs.notfound"))))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("jobs.notfound")))
       case _@ (UnknownUser | Unauthenticated) => Unauthorized(views.html.login(loginForm, List(("error" -> Messages("application.unauthorized"))))).withNewSession
-      case                  StoreException(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.store", t.getMessage))), authenticatedUserOpt))
+      case                  StoreException(t) => Thread.dumpStack(); InternalServerError(views.html.error(List(("error", Messages("exceptions.store", t.getStackTraceString))), authenticatedUserOpt))
       case                      Unexpected(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage))), authenticatedUserOpt))
     }
   }

@@ -31,28 +31,28 @@ object Job {
   // I think that the store should use typed exceptions (StoreException) instead of Throwables 
   // agree,   + FutureValidation and actor-based
   
-  def get(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Option[JobConfiguration], Nothing, NOTSET] = {
+  def get(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, JobConfiguration, Nothing, NOTSET] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
-    store.getJobById(id).toDelayedValidation failMap (t => StoreException(t))
+    store.getJobById(id)
   }
   
   def getAll(id: OrganizationId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[JobConfiguration], Nothing, NOTSET] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
-    store.listJobs(id).toDelayedValidation failMap (t => StoreException(t))
+    store.listJobs(id)
   }
   
   def delete(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit, Nothing, NOTSET] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
-    store.removeJob(id).toDelayedValidation failMap (t => StoreException(t))
+    store.removeJob(id)
   }
   
   def save(job: JobConfiguration)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit, Nothing, NOTSET] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
-    store.putJob(job).toDelayedValidation failMap (t => StoreException(t))
+    store.putJob(job)
   }
   
   def getAssertorResults(
@@ -61,7 +61,7 @@ object Job {
     implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[AssertorResult], Nothing, NOTSET] = {
       import configuration.store
       implicit def context = configuration.webExecutionContext
-      store.listAssertorResults(id, after).toDelayedValidation failMap (t => StoreException(t))
+      store.listAssertorResults(id, after)
     }
   
 }
@@ -84,8 +84,12 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
 
   def off(): Unit = organizationsRef ! Message(organizationId, jobId, message.BeLazy)
 
-  def jobData(): Future[JobData] =
-    (organizationsRef ? Message(organizationId, jobId, message.GetJobData)).mapTo[JobData]
+  def jobData()/*(implicit sender: ActorRef)*/: Future[JobData] =
+    (organizationsRef ? Message(organizationId, jobId, message.GetJobData)).mapTo[JobData] onSuccess {
+      case x => println("x -> "+x)
+    } onFailure {
+      case f => println("f -> " + f)
+    }
 
   def subscribeToUpdates(): PushEnumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
