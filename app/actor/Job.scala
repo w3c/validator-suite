@@ -84,12 +84,8 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
 
   def off(): Unit = organizationsRef ! Message(organizationId, jobId, message.BeLazy)
 
-  def jobData()/*(implicit sender: ActorRef)*/: Future[JobData] =
-    (organizationsRef ? Message(organizationId, jobId, message.GetJobData)).mapTo[JobData] onSuccess {
-      case x => println("x -> "+x)
-    } onFailure {
-      case f => println("f -> " + f)
-    }
+  def jobData(): Future[JobData] =
+    (organizationsRef ? Message(organizationId, jobId, message.GetJobData)).mapTo[JobData]
 
   def subscribeToUpdates(): PushEnumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
@@ -106,9 +102,9 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
     }))
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
-        onStart = organizationsRef.tell(Message(organizationId, jobId, message.Subscribe), subscriber),
-        onComplete = organizationsRef.tell(Message(organizationId, jobId, message.Unsubscribe), subscriber),
-        onError = (_,_) => organizationsRef.tell(Message(organizationId, jobId, message.Unsubscribe), subscriber)
+        onStart = () => organizationsRef.tell(Message(organizationId, jobId, message.Subscribe), subscriber),
+        onComplete = () => organizationsRef.tell(Message(organizationId, jobId, message.Unsubscribe), subscriber),
+        onError = (_,_) => () => organizationsRef.tell(Message(organizationId, jobId, message.Unsubscribe), subscriber)
       )
     enumerator
   }

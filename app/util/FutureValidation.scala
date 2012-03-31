@@ -42,8 +42,7 @@ class FutureValidation[+F, +S, TO, TimeOut] private (
    * DO NOT CALL THIS OUTSIDE OF TESTS
    */
   def waitResult(): S = {
-    println("#######"+futureValidation.value)
-    Await.result(futureValidation, 10.seconds) match {
+    Await.result(futureValidation, 3.seconds) match {
       case Failure(f) => sys.error(f.toString)
       case Success(s) => s
     }
@@ -56,9 +55,7 @@ class FutureValidation[+F, +S, TO, TimeOut] private (
    */
   def flatMap[FF >: F, T](f: S => FutureValidation[FF, T, TO, TimeOut])(implicit executor: ExecutionContext): FutureValidation[FF, T, TO, TimeOut] = {
     val futureResult = futureValidation.flatMap[Validation[FF, T]] {
-      case Failure(failure) => {
-        Promise.successful(Failure(failure))
-      }
+      case Failure(failure) => Promise.successful(Failure(failure))
       case Success(value) => f(value).futureValidation
     }
     new FutureValidation(futureResult, timeout)
@@ -73,11 +70,7 @@ class FutureValidation[+F, +S, TO, TimeOut] private (
   def failMap[T](f: F => T): FutureValidation[T, S, TO, TimeOut] =
     new FutureValidation(futureValidation map { v => new ValidationW(v) failMap f }, timeout)
 
-  def isCompleted: Boolean = {
-    val b = futureValidation.isCompleted
-    if (b) println(futureValidation.value)
-    b
-  }
+  def isCompleted: Boolean = futureValidation.isCompleted
 
   def toPromise()(
     implicit ev: TimeOut =:= SET,
@@ -92,10 +85,7 @@ class FutureValidation[+F, +S, TO, TimeOut] private (
     evTO: TO <:< T): PlayPromise[T] = {
     val Some((result, duration, unit)) = timeout
     val akkaFutureResult: Future[T] = futureValidation map { _.fold(evF, evS) }
-    //Thread.sleep(3000)
-    println("***"+akkaFutureResult.isCompleted)
-    println("***"+akkaFutureResult.value)
-    akkaFutureResult.asPromise.orTimeout(result, duration*1000, unit).map(_.fold(s => s, evTO))
+    akkaFutureResult.asPromise.orTimeout(result, duration, unit).map(_.fold(s => s, evTO))
   }
   
   def expiresWith[T](

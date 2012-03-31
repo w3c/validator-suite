@@ -75,11 +75,7 @@ object Application extends Controller {
 
   def getAuthenticatedUser()(implicit session: Session): FutureValidationNoTimeOut[SuiteException, User] = {
     for {
-      email <- immediateValidation {
-        val foo = session.get("email").toSuccess(Unauthenticated)
-        println(foo)
-        foo
-      }
+      email <- immediateValidation { session.get("email").toSuccess(Unauthenticated) }
       user <- Cache.getAs[User](email) match {
         case Some(user) => Success(user).toImmediateValidation
         case _ => for {
@@ -97,7 +93,6 @@ object Application extends Controller {
   }
   
   def FutureTimeoutError(implicit req: Request[_]) = {
-    //Thread.dumpStack()
     InternalServerError(views.html.error(List(("error", Messages("error.timeout")))))
   }
 
@@ -105,7 +100,7 @@ object Application extends Controller {
     e match {
       case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> Messages("jobs.notfound"))))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("jobs.notfound")))
       case _@ (UnknownUser | Unauthenticated) => Unauthorized(views.html.login(loginForm, List(("error" -> Messages("application.unauthorized"))))).withNewSession
-      case                  StoreException(t) => Thread.dumpStack(); InternalServerError(views.html.error(List(("error", Messages("exceptions.store", t.getStackTraceString))), authenticatedUserOpt))
+      case                  StoreException(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.store", t.getMessage))), authenticatedUserOpt))
       case                      Unexpected(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage))), authenticatedUserOpt))
     }
   }

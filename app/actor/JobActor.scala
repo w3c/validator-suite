@@ -70,10 +70,9 @@ class JobActor(job: JobConfiguration)(
 
   startWith(Unique, initialConditions)
 
-  when(Unique) { // case event => { println(":::: "+event); event match {
+  when(Unique) {
     case Event(message.GetJobData, data) => {
       val jobData = JobData(data)
-      println(">>>>>" + sender.path)
       sender ! jobData
       stay()
     }
@@ -122,7 +121,7 @@ class JobActor(job: JobConfiguration)(
     case Event(message.BeLazy, data) => stay() using data.copy(explorationMode = Lazy)
     case Event(message.Refresh, data) => stay() using scheduleNextURLsToFetch(initialData)
     case Event(message.Stop, data) => stay() using data.copy(explorationMode = Lazy, toBeExplored = List.empty)
-  } //}}
+  }
 
   onTransition {
     // detect when the status as changed

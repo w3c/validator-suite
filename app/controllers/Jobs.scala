@@ -36,22 +36,14 @@ object Jobs extends Controller {
   
   def index = Action { implicit req =>
     AsyncResult {
-      println("0")
       val futureResult = for {
         user <- getAuthenticatedUserOrResult
-        _ = println("1")
         jobConfs <- configuration.store.listJobs(user.organization).failMap(toResult(Some(user)))
-        _ = println("2")
         jobDatas <- {
           val jobs: Iterable[Job] = jobConfs map { jobConf => Job(jobConf.organization, jobConf.id) }
           implicit val context = configuration.webExecutionContext
-          val futureJobDatas: Future[Iterable[JobData]] = Future.sequence(jobs map { _.jobData() }) onSuccess {
-            case e => println("success "+e)
-          } onFailure {
-            case f => println("failure "+f)
-          }
-          val foo = futureJobDatas.lift
-          foo
+          val futureJobDatas: Future[Iterable[JobData]] = Future.sequence(jobs map { _.jobData() })
+          futureJobDatas.lift
         }.failMap(t => toResult(Some(user))(StoreException(t)))
       } yield {
         val sortedJobsConf = jobConfs.toSeq.sortBy(_.createdOn)
@@ -59,7 +51,7 @@ object Jobs extends Controller {
         val viewInputs = sortedJobsConf map { jobConf => (jobConf, map(jobConf.id)) }
         Ok(views.html.dashboard(viewInputs, user))
       }
-      futureResult.expiresWith(InternalServerError("toto"), 5, SECONDS).toPromise
+      futureResult.expiresWith(FutureTimeoutError, 5, SECONDS).toPromise
     }
   }
   

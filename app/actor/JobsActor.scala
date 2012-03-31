@@ -14,7 +14,7 @@ import akka.util.duration._
 import message._
 import scalaz._
 
-case class CreateJobAndForward(jobConfiguration: JobConfiguration, msg: Message, sender: ActorRef)
+case class CreateJobAndForward(jobConfiguration: JobConfiguration, msg: Message)
 
 class JobsActor()(implicit configuration: VSConfiguration) extends Actor {
 
@@ -26,26 +26,24 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor {
     try {
       context.actorOf(Props(new JobActor(jobConfiguration)), name = name)
     } catch {
-      case iane: InvalidActorNameException => context.children.find(_.path.name === name).get //context.actorFor(self.path / name)
+      case iane: InvalidActorNameException => context.actorFor(self.path / name)
     }
   }
-
-  def thesender = context.sender
 
   def receive = {
 
     case m @ Message(_, jobId, msg) => {
       val name = jobId.toString
+      val from = sender
+      val to = self
       context.children.find(_.path.name === name) match {
         case Some(jobRef) => jobRef forward msg
         case None => {
           configuration.store.getJobById(jobId).asFuture onSuccess {
             case Success(jobConfiguration) => {
-              logger.debug(jobConfiguration.toString)
-              self forward CreateJobAndForward(jobConfiguration, m, thesender)
+              to.tell(CreateJobAndForward(jobConfiguration, m), from)
             }
             case Failure(storeException) => {
-              logger.error(storeException.toString)
               sys.error(storeException.toString)
             }
           }
@@ -53,10 +51,9 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor {
       }
     }
 
-    case CreateJobAndForward(jobConfiguration, Message(_, _, msg), s) => {
-      logger.debug("CreateJobAndForward " + jobConfiguration.toString)
+    case CreateJobAndForward(jobConfiguration, Message(_, _, msg)) => {
       val jobRef = getJobRefOrCreate(jobConfiguration)
-      jobRef.tell(msg, s)
+      jobRef forward msg
     }
 
   }

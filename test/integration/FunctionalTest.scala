@@ -24,20 +24,19 @@ class FunctionalTest extends WordSpec with MustMatchers {
         click("#submit-login")
         url must be === ("http://localhost:9001/dashboard")
 
-        // println($("#admin").first().getText())
-        // $("#admin").first().getText() must include ("Alexandre Bertails")       
+        $("#admin").first().getText() must include ("Alexandre Bertails")       
         
-        // // and log out
-        // goTo("http://localhost:9001/logout")
-        // url must be === ("http://localhost:9001/login")
-        // goTo("http://localhost:9001/dashboard")
-        // $("form[action='/login']").isEmpty must be (false)
+        // and log out
+        goTo("http://localhost:9001/logout")
+        url must be === ("http://localhost:9001/login")
+        goTo("http://localhost:9001/dashboard")
+        $("form[action='/login']").isEmpty must be (false)
         
-        // // can't log in with wrong password
-        // fill("#email").`with`("bertails@w3.org")
-        // fill("#password").`with`("wrong")
-        // click("#submit-login")
-        // url must be === ("http://localhost:9001/login")
+        // can't log in with wrong password
+        fill("#email").`with`("bertails@w3.org")
+        fill("#password").`with`("wrong")
+        click("#submit-login")
+        url must be === ("http://localhost:9001/login")
       }
     }
   }
