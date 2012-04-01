@@ -91,13 +91,13 @@ object Jobs extends Controller {
         case (a, t) if (!a.isEmpty && !t.isEmpty) => flat.filter{a => assertorsParams.exists(_ === a._2) && typeParams.exists(_ === a._4)}
         case (a, _) if (!a.isEmpty) => flat.filter{a => assertorsParams.exists(_ === a._2)}
         case (_, t) if (!t.isEmpty) => flat.filter{a => typeParams.exists(_ === a._4)}
-        case _ => flat
+        case _ => flat.filter{a => List("error", "warning").exists(_ === a._4)}
       }
     }
     
     def groupByMessage(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
       Right(for {
-        g <- data.groupBy(t => (t._2, t._3, t._4)).toList.sortBy(_._2.size).reverse
+        g <- data.groupBy(t => (t._2, t._3, t._4)).toList.sortBy(_._1._3) //.sortBy(_._2.size).reverse
       } yield {
         val ((assertor, title, severity), iterable) = g
         ReportSection(MessageHeader(title, severity, assertor), f(iterable))
@@ -105,7 +105,7 @@ object Jobs extends Controller {
     }
     def groupByContext(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
       Right(for {
-        g <- data.groupBy(t => (t._5)).toList.sortBy(_._2.size).reverse
+        g <- data.groupBy(t => (t._5)).toList.sortBy(_._1.length).reverse //.sortBy(_._2.size).reverse
       } yield {
         val ((context), iterable) = g
         ReportSection(ContextHeader(context), f(iterable))
@@ -113,7 +113,7 @@ object Jobs extends Controller {
     }
     def groupByAssertor(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
       Right(for {
-        g <- data.groupBy(t => (t._2)).toList.sortBy(_._2.size).reverse
+        g <- data.groupBy(t => (t._2)).toList.sortBy(_._1) //.sortBy(_._2.size).reverse
       } yield {
         val ((assertor), iterable) = g
         ReportSection(AssertorHeader(assertor), f(iterable))
@@ -121,7 +121,7 @@ object Jobs extends Controller {
     }
     def groupByUrl(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
       Right(for {
-        g <- data.groupBy(t => (t._1)).toList.sortBy(_._1).reverse
+        g <- data.groupBy(t => (t._1)).toList.sortBy(_._1).reverse //.sortBy(_._2.size).reverse
       } yield {
         val ((url), iterable) = g
         ReportSection(UrlHeader(url), f(iterable))
@@ -133,10 +133,23 @@ object Jobs extends Controller {
     def getPositionValues(data: Data): Left[List[ReportValue], List[ReportSection]] = {
       Left(data.map{case (_, _, _, _, context, line, column) => PositionValue(line, column)})
     }
+    def sortOnUrl(sections: List[ReportSection]): List[ReportSection] = {
+      if (!sections.isEmpty) {
+        sections(0).header match {
+          case UrlHeader(url) => sections.sortBy(_.header match {case UrlHeader(url) => url; case _ => ""})
+          case _ => sections.map{sect => ReportSection(sect.header, sect.list.fold(v => Left(v), s => Right(sortOnUrl(s))))}
+        }
+      } else sections
+    }
+    def sortOnOccurences(sections: List[ReportSection]): List[ReportSection] = {
+      sections.sortBy(_.list.fold(
+        values => values.size,
+        sections => Helper.countValues(sections)
+      )).map(section => ReportSection(section.header, section.list.fold(v => Left(v), s => Right(sortOnOccurences(s))))).reverse
+    }
     
     val groupParam = req.queryString.get("group").flatten.headOption
-    
-    val allGrouped = groupParam match {
+    val grouped = groupParam match {
       case _@ (Some("message") | Some("message.url")) => {
         groupByMessage(groupByUrl(groupByContext(getPositionValues _)))(filtered).b
       }
@@ -149,9 +162,9 @@ object Jobs extends Controller {
     }
     
     val flatParam = req.queryString.get("flat").flatten.headOption
-    val flatten = if (!flatParam.isDefined) allGrouped else {
+    val flatten = if (!flatParam.isDefined) grouped else {
       for {
-        g <- allGrouped
+        g <- grouped
         if g.list.isRight
         sub <- g.list.right.get
       } yield {
@@ -159,22 +172,14 @@ object Jobs extends Controller {
       }
     }
     
-    flatten.sortBy(r => r.list.fold(a => a.size, b => Helper.countValues(b))).reverse
+    val sortParam = req.queryString.get("sort").flatten.headOption
+    sortParam match {
+      case Some("url") => sortOnUrl(sortOnOccurences(flatten)) 
+      case _ => sortOnOccurences(flatten)
+    }
     
   }
   private def sort(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
-    val sortParam = req.queryString.get("sort").flatten.headOption
-    ar.toList.sortWith{(a, b) =>
-      val perErrors = if (a.numberOfErrors === b.numberOfErrors) a.url.toString < b.url.toString else a.numberOfErrors > b.numberOfErrors
-      val perWarnings = if (a.numberOfWarnings === b.numberOfWarnings) perErrors else a.numberOfWarnings > b.numberOfWarnings
-      val perUrls = a.url.toString < b.url.toString
-      sortParam match {
-        case Some("errors") => perErrors
-        case Some("warnings") => perWarnings
-        case Some("urls") => perUrls
-        case _ => perErrors
-      }
-    }
     ar
   }
   private def filter(ar: Iterable[AssertorResult])(implicit req: Request[AnyContent]): Iterable[Assertions] = {

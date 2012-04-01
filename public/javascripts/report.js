@@ -8,7 +8,7 @@ window.ReportView = Backbone.View.extend({
 		this.messages.on('add', this.addOne, this);
 		this.messages.on('reset', this.addAll, this);
 		// Subscribe to job updates through a WebSocket
-		this.subscribe();
+		//this.subscribe();
 	},
 	addOne: function(job) {
 		var view = new JobView({model: job});
@@ -19,27 +19,48 @@ window.ReportView = Backbone.View.extend({
 		this.jobs.each(this.addOne, this);
 	},
 	subscribe: function () {
-		VS.Socket.open("/job/" + this.$el.text() + "/socket");
+		//VS.Socket.open("/job/" + this.$el.text() + "/socket");
 	}
 });
 
 $(function () {
 	window.Report = new ReportView();
-	  
-	var setHash = function(hash) {
-		// Make sure that the hash is the first character, and extract from (presumably) full URL if not
-		if (hash.indexOf('#') > 0) {
-			hash = hash.substr(hash.lastIndexOf('#'));
-		} else if (hash.substr(0, 1) !== '#') {
-			hash = '#' + hash;
+	var a = $("#report article");
+	a.each(function (i, article) {
+		var ar = $(article);
+		ar.addClass("folded");
+//		if ($(".messages li", ar).length == 1)
+//			ar.removeClass("folded");
+	});
+	$("#report article > :first-child").click(
+		function (e){
+			e.preventDefault(); 
+			$(this).parent().toggleClass("folded");
+			return false;
 		}
-		// Add our hash element to the history/URL
-		if (window.history.pushState) {
-			window.history.pushState(null, null, hash);
-		} else {
-			window.location = hash;
+	);
+	$(".compact").click(
+		function (e){
+			e.preventDefault(); 
+			a.toggleClass("compact");
+			return false;
 		}
-	};
-
-	//$("a.resource").click(function (e){e.preventDefault(); setHash($(this).attr('href'));});
+	);
+	
+//	var setHash = function(hash) {
+//		// Make sure that the hash is the first character, and extract from (presumably) full URL if not
+//		if (hash.indexOf('#') > 0) {
+//			hash = hash.substr(hash.lastIndexOf('#'));
+//		} else if (hash.substr(0, 1) !== '#') {
+//			hash = '#' + hash;
+//		}
+//		// Add our hash element to the history/URL
+//		if (window.history.pushState) {
+//			window.history.pushState(null, null, hash);
+//		} else {
+//			window.location = hash;
+//		}
+//	};
+//
+//	//$("a.resource").click(function (e){e.preventDefault(); setHash($(this).attr('href'));});
 });

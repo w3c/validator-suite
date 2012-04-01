@@ -15,12 +15,12 @@ case class ContextHeader(code: String) extends ReportHeader
 case class AssertorHeader(assertor: String) extends ReportHeader
 case class MessageHeader(title: String, severity: String, assertor: String) extends ReportHeader
 
-trait ReportAside
-case object EmptyAside extends ReportAside
-case class OccurrenceAside(occurences: Int) extends ReportAside
-case class ErrorWarningAside(errors: Int, warnings: Int) extends ReportAside
-case class OccurrenceResourceAside(occurences: Int, resources: Int) extends ReportAside
-case class FirstLineColAside(line: Option[Int], column: Option[Int]) extends ReportAside
+//trait ReportAside
+//case object EmptyAside extends ReportAside
+//case class OccurrenceAside(occurences: Int) extends ReportAside
+//case class ErrorWarningAside(errors: Int, warnings: Int) extends ReportAside
+//case class OccurrenceResourceAside(occurences: Int, resources: Int) extends ReportAside
+//case class FirstLineColAside(line: Option[Int], column: Option[Int]) extends ReportAside
 
 sealed trait ReportValue
 case class PositionValue(line: Option[Int], column: Option[Int]) extends ReportValue
@@ -85,16 +85,20 @@ object Helper {
 """ + values.map {
       case ContextValue(code, line, col) => {
         val context = 
-          line.map(l => """<span class="line">Line: %s</span>""" format (l)).getOrElse("") +
-          col.map(c => """<span class="column">Column: %s</span>""" format (c)).getOrElse("") +
+          """<span class="pos">Position: """ +
+          """<span class="line" title="Line %s">%s</span>""".format(line.getOrElse("not specified"), line.getOrElse("-")) +
+          """<span class="col" title="Column %s">%s</span>""".format(col.getOrElse("not specified"), col.getOrElse("-")) +
+          """</span>""" +
 	      (if(code != "") """<code class="context">%s</code>""" format (code) else "")
-	    if (context != "") "<li>" + context + "</li>"
+	    "<li>" + context + "</li>"
       }
       case PositionValue(line, col) => {
-        val position = 
-          line.map(l => """<span class="line">Line: %s</span>""" format (l)).getOrElse("") +
-          col.map(c => """<span class="column">Column: %s</span>""" format (c)).getOrElse("")
-	    if (position != "") "<li>" + position + "</li>"
+        val position =
+          """<span class="pos">Position: """ +
+          """<span class="line" title="Line %s">%s</span>""".format(line.getOrElse("not specified"), line.getOrElse("-")) +
+          """<span class="col" title="Column %s">%s</span>""".format(col.getOrElse("not specified"), col.getOrElse("-")) +
+          """</span>"""
+	    "<li>" + position + "</li>"
       }
     }.mkString("\n") + """
 	</ul>"""
@@ -110,14 +114,51 @@ object Helper {
         section.header match {
           case MessageHeader(title, severity, assertor) => {
             // HtmlValisator | 10 occurrences in 3 resources
-            """<aside><span class="assertor">%s</span><span class="occurrences">%s</span> times%s</aside>""" format (assertor, countValues(list), countSubs(list))
+            val values = countValues(list)
+"""			<aside>
+"""         + (if (values > 1) {
+"""        		<span class="occurrences">%s</span> times
+"""         } format (values) else {""}) + countSubs(list) +
+"""        		<span class="assertor">%s</span>
+        	</aside>
+"""         format (assertor)
           }
           case UrlHeader(url) => {
             // 25 | 50 (3 assertors)
             val errors = countType("error", list)
             val warnings = countType("warning", list)
             val info = countType("info", list)
-"""			<aside>""" + countSubs(list) +
+"""			<aside>""" + 
+            (if (errors > 0) {
+"""				<span class="errors count" title="%s errors">%s</span>
+"""         format (errors, errors) } else "") + (if (warnings > 0) {
+"""				<span class="warnings count" title="%s warnings">%s</span>
+"""         format (warnings, warnings) } else "") + (if (info > 0) {
+"""				<span class="info count" title="%s info">%s</span>
+"""         format (info, info) } else "") +
+            {if (info == 0 && errors == 0 && warnings == 0) {
+              val values = countValues(list)
+              if (values > 1) {
+"""				<span class="occurrences">%s</span> times 
+"""           format (values)} else ""} else ""} + countSubs(list) +
+"""			</aside>"""
+          }
+          case ContextHeader(code) => {
+            val values = countValues(list)
+"""			<aside>
+"""         + (if (values > 1) {
+"""        		<span class="occurrences">%s</span> times
+"""         } else {""}) + countSubs(list) +
+"""        	</aside>
+"""         format (values)
+          }
+          case AssertorHeader(assertor) => {
+            // 25 | 50 (3 assertors)
+            val errors = countType("error", list)
+            val warnings = countType("warning", list)
+            val info = countType("info", list)
+"""			<aside>
+"""         + countSubs(list) +
             (if (errors > 0) {
 """				<span class="errors count" title="%s errors">%s</span>
 """         format (errors, errors) } else "") + (if (warnings > 0) {
@@ -126,12 +167,6 @@ object Helper {
 """				<span class="info count" title="%s info">%s</span>
 """         format (info, info) } else "") + 
 """			</aside>"""
-          }
-          case ContextHeader(code) => {
-            """<aside><span class="occurrences">%s</span> times%s</aside>""" format (countValues(list), countSubs(list))
-          }
-          case AssertorHeader(assertor) => {
-            """<aside><span class="occurrences">%s</span> times%s</aside>""" format (countValues(list), countSubs(list))
           }
         }
       }
@@ -147,22 +182,20 @@ object Helper {
   }
   def countResources(sections: List[ReportSection]): Int = sections.map(sect => countResources(sect)).reduce(_+_)
   def countResources(section: ReportSection): Int = {
-    section.list.fold(
-      values => 0,
-      sections => sections.map(sect => sect.header match {case UrlHeader(_) => 1; case _ => countResources(sect)}).reduce(_+_)
-    )
+    section.header match {
+      case UrlHeader(_) => 1
+      case _ => section.list.fold(values => 0, sections => countResources(sections)) 
+    }
   }
   def countType(typ: String, sections: List[ReportSection]): Int = sections.map(sect => countType(typ, sect)).reduce(_+_)
   def countType(typ: String, section: ReportSection): Int = {
-    section.list.fold(
-      values => 0,
-      sections => sections.map(sect => 
-        sect.header match {
-          case MessageHeader(title, severity, assertor) if (severity == typ) => countValues(sect);
-          case _ => countType(typ, sect)
-        }
-      ).reduce(_+_)
-    )
+    section.header match {
+      case MessageHeader(title, severity, assertor) => {
+         if (severity == typ) countValues(section)
+         else 0
+      } 
+      case _ => section.list.fold(values => 0, sections => countType(typ, sections)) 
+    }
   }
   def countSubs(sections: List[ReportSection]): String = {
     if (sections.size > 1) {

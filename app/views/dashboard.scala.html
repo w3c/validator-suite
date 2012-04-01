@@ -28,13 +28,13 @@
 				<li>Uri: <span class="uri">@jobConf.strategy.seedURLs.head</span></li>
 				<li>Distance: <span class="distance">@jobConf.strategy.distance</span></li>
 				<li>Activity: <span class="activity">@data.activity</span></li>
-				<li>Explo mode: <span class="mode">@data.explorationMode</span></li>
+				<!-- <li>Explo mode: <span class="mode">@data.explorationMode</span></li> -->
 			</ul>
 			<ul>
 				<!-- <li>Last run: <time datetime="">-</time></li> -->
 				<li>Last updated: <time datetime="">-</time></li>
 				<li>Resources: <span class="resources">@data.resources</span></li>
-				<li>Valid: <span class="oks">@data.oks</span></li>
+				<!-- <li>Valid: <span class="oks">@data.oks</span></li> -->
 				<li>Errors: <span class="errors">@data.errors</span></li>
 				<li>Warnings: <span class="warnings">@data.warnings</span></li>
 			</ul>
@@ -46,14 +46,14 @@
 				    case Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
 				    case Idle => {
 				      @mode match {
-				        case ProActive => {<button type="submit" name="action" value="off" class="off">Off</button>}
-				        case      Lazy => {<button type="submit" name="action" value="on" class="on">On</button>}
+				        case ProActive => {<!-- <button type="submit" name="action" value="off" class="off">Off</button>-->}
+				        case      Lazy => {<!-- <button type="submit" name="action" value="on" class="on">On</button>-->}
 				      }
 				    }
 				  }
 				}}
 				<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
-				<button type="submit" class="edit" formmethod="get" formaction="@routes.Jobs.edit(jobConf.id)">Edit</button>
+				<!-- <button type="submit" class="edit" formmethod="get" formaction="routes.Jobs.edit(jobConf.id)">Edit</button> -->
 				<button type="submit" name="action" value="delete" class="delete">Delete</button>
 			</form>
 		</div></article>
@@ -68,13 +68,13 @@
 			<li>Uri: <span class="uri"><%= seedUri %></span></li>
 			<li>Distance: <span class="distance"><%= distance %></span></li>
 			<li>Activity: <span class="activity"><%= data.get('activity') %></span></li>
-			<li>Explo mode: <span class="mode"><%= data.get('mode') %></span></li>
+			<!-- <li>Explo mode: <span class="mode"><%= data.get('mode') %></span></li> -->
 		</ul>
 		<ul>
 			<!--<li>Last run: <time datetime="">-</time></li>-->
 			<li>Last updated: <time datetime="">-</time></li>
 			<li>Resources: <span class="resources"><%= data.get('resources') %></span></li>
-			<li>Valid: <span class="oks"><%= data.get('oks') %></span></li>
+			<!-- <li>Valid: <span class="oks"><%= data.get('oks') %></span></li> -->
 			<li>Errors: <span class="errors"><%= data.get('errors') %></span></li>
 			<li>Warnings: <span class="warnings"><%= data.get('warnings') %></span></li>
 		</ul>
@@ -82,13 +82,13 @@
 			<li><a href="<%= url %>" class="show">Show</a></li>
 			<% if (data.get("activity") == "Busy") { %>
 			<li><a href="<%= url + '/stop' %>" class="stop">Stop</a></li>
-			<% } else if (data.get("mode") == "ProActive") { %>
+			<% } else if (data.get("mode") == "ProActive" && false) { %>
 			<li><a href="<%= url + '/off' %>" class="off">Off</a></li>
-			<% } else if (data.get("mode") == "Lazy") { %>
+			<% } else if (data.get("mode") == "Lazy" && false) { %>
 			<li><a href="<%= url + '/on' %>" class="on">On</a></li>
 			<% } %>
 			<li><a href="<%= url + '/refresh' %>" class="refresh">Refresh</a></li>
-			<li><a href="<%= url + '/edit' %>" class="edit">Edit</a></li>
+			<!-- <li><a href="<%= url + '/edit' %>" class="edit">Edit</a></li> -->
 			<li><a href="<%= url + '/delete' %>" class="delete">Delete</a></li>
 		</ul></div>
 	</script>

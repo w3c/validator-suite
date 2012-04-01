@@ -22,29 +22,34 @@
 	<form method="get">
 		<fieldset>
 			<legend>Assertors</legend>
-			<label><input name=assertor value="ValidatorNu" type="checkbox" checked>Validator.nu results</label><br>
-			<label><input name=assertor value="HTMLValidator" type="checkbox" checked>Markup validator results</label><br>
-			<label><input name=assertor value="CSSValidator" type="checkbox" checked>CSS validator results</label><br>
+			<label><input name=assertor value=ValidatorNu type=checkbox checked>Validator.nu results</label><br>
+			<label><input name=assertor value=HTMLValidator type=checkbox checked>Markup validator results</label><br>
+			<label><input name=assertor value=CSSValidator type=checkbox checked>CSS validator results</label><br>
 		</fieldset>
 		<fieldset>
 			<legend>Grouping</legend>
 			<label><input name=group type=radio value="url.assertor" checked>By url - assertor</label><br>
 			<label><input name=group type=radio value="message.url">By message - url</label><br>
 			<label><input name=group type=radio value="message.context">By message - context</label><br>
-			<label><input name=flat type="checkbox">Flat</label><br>
+			<label><input name=flat type=checkbox>Flat</label><br>
 		</fieldset>
 		<fieldset>
 			<legend>Filters</legend>
-			<!-- <label><input name=valid type="checkbox">Valid resources</label><br> -->
-			<label><input name=type type="checkbox" value=error checked>Show errors</label><br>
-			<label><input name=type type="checkbox" value=warning checked>Show warnings</label><br>
-			<label><input name=type type="checkbox" value=info>Show info</label><br>
+			<!-- <label><input name=valid type=checkbox>Valid resources</label><br> -->
+			<label><input name=type type=checkbox value=error checked>Errors</label><br>
+			<label><input name=type type=checkbox value=warning checked>Warnings</label><br>
+			<label><input name=type type=checkbox value=info>Info</label><br>
 		</fieldset>
-		<label><input name=countOnce type="checkbox">Count errors once</label><br>
+		<fieldset>
+			<legend>Sort</legend>
+			<label><input name=sort type=radio value=url checked>By URL</label><br>
+			<label><input name=sort type=radio value=occurrences checked>By occurrences</label><br>
+		</fieldset>
 		<button>Submit</button>
 	</form>
 	
 	<a href="">Default</a><br>
+	<a href="#" class="compact">Compact</a><br>
 	
 	</div>
 
@@ -59,37 +64,32 @@
 			<li>Uri: <span class="uri">@jobConf.strategy.seedURLs.head</span></li>
 			<li>Distance: <span class="distance">@jobConf.strategy.distance</span></li>
 			<li>Activity: <span class="activity">@data.activity</span></li>
-			<li>Explo mode: <span class="mode">@data.explorationMode</span></li>
 		</ul>
 		<ul>
-			<!-- <li>Last run: <time datetime="">-</time></li> -->
 			<li>Last updated: <time datetime="">-</time></li>
 			<li>Resources: <span class="resources">@data.resources</span></li>
-			<li>Valid: <span class="oks">@data.oks</span></li>
 			<li>Errors: <span class="errors">@data.errors</span></li>
 			<li>Warnings: <span class="warnings">@data.warnings</span></li>
 		</ul>
 		<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
-			<button type="submit" class="show" formmethod="get">Show</button>
 			@defining(data.explorationMode) { mode =>
 			@defining(data.activity) { activity =>
 			  @activity match {
 			    case Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
 			    case Idle => {
 			      @mode match {
-			        case ProActive => {<button type="submit" name="action" value="off" class="off">Off</button>}
-			        case      Lazy => {<button type="submit" name="action" value="on" class="on">On</button>}
+			        case ProActive => {}
+			        case      Lazy => {}
 			      }
 			    }
 			  }
 			}}
 			<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
-			<button type="submit" class="edit" formmethod="get" formaction="@routes.Jobs.edit(jobConf.id)">Edit</button>
 			<button type="submit" name="action" value="delete" class="delete">Delete</button>
 		</form>
 	</div></section>
 	
-	<section id="report" class="list">
+	<section id="report" class="nested">
 
 	@Html(generateSections(report))
 
