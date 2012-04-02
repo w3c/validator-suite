@@ -51,10 +51,10 @@ object ValidatorNu extends FromURLAssertor {
 	  val lastCol = (obj \ "lastColumn") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
 	  val extract = (obj \ "extract") match {case JsString(s) => Some(HtmlFormat.escape(s).text); case _ => None}
 	  val context = extract match {
-	    case Some(code) => Seq(Context(code, url.toString, lastLine, lastCol)) // The model needs to accept a range of lines/column
+	    case Some(code) => Seq(Context(code.trim, url.toString, lastLine, lastCol)) // The model needs to accept a range of lines/column
 	    case _ => Seq()
 	  }
-	  RawAssertion(typ, "no freakin id", "en", context, message, None)
+	  RawAssertion(typ, "no freakin id", "en", context, message.trim, None)
 	}
   }
   

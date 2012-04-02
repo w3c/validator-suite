@@ -90,6 +90,8 @@ section.job > div {
 	padding:10px;
 	border-bottom:1px solid #e5e5e5;
 	overflow: auto;
+}
+.nested article:not(.empty) > div:first-child {
 	cursor:pointer;
 }
 .nested article.compact > div:first-child {
@@ -110,25 +112,26 @@ section.job > div {
 .nested > article:last-child {
 	border-bottom:1px solid #e5e5e5;
 }
-.nested article:hover > div:first-child {
+.nested article:hover:not(.empty) > div:first-child {
 	background: #f5f5f5;
 }
 
 /* Folding first level */
 .no-js .nested > article:not(:target):not(:focus) > div:last-child:not(:first-child),
-.nested article.folded > div:last-child:not(:first-child) {
+.js .nested article.folded > div:last-child:not(:first-child),
+.js .nested article.empty > div:last-child:not(:first-child) {
 	height: 0;
 	overflow: hidden;
 	margin-bottom:-1px;
 }
 .no-js .nested > article:focus > div:last-child,
 .no-js .nested > article:target > div:last-child,
-.nested article:not(.folded) > div:last-child {
+.js .nested article:not(.folded) > div:last-child {
 	height: auto;
 	margin-bottom:0;
 } 
 .no-js .nested > article:not(:target):not(:focus) > div:first-child:before,
-.nested article > div:first-child:before {
+.js .nested article:not(.empty) > div:first-child:before {
 	content:"";
 	display:inline-block;
 	vertical-align:middle;
@@ -141,12 +144,21 @@ section.job > div {
 }
 .no-js .nested > article:focus > div:first-child:before,
 .no-js .nested > article:target > div:first-child:before,
-.nested article:not(.folded) > div:first-child:before {
+.js .nested article:not(.folded):not(.empty) > div:first-child:before {
 	-webkit-transform: rotate(90deg);
 	-moz-transform: rotate(90deg);
 	-o-transform: rotate(90deg);
 	-ms-transform: rotate(90deg);
 	transform: rotate(90deg);
+	content:"";
+	display:inline-block;
+	vertical-align:middle;
+	width:0px;
+	height:0px;
+	border-top: 4px solid transparent;
+	border-bottom: 4px solid transparent;
+	border-left: 4px solid #444444;
+	margin-right: 4px;
 }
 
 

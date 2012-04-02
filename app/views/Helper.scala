@@ -1,13 +1,8 @@
 package org.w3.vs.view
 
-// import org.w3.vs.model.Job
-// import akka.dispatch.Await
-// import akka.util.duration._
-// import org.w3.vs.actor.Stopped
-// import akka.pattern.AskTimeoutException
-// import org.w3.vs.actor._
-
-case class ReportSection(header: ReportHeader, list: Either[List[ReportValue], List[ReportSection]])
+sealed trait Section
+case class ReportSection(header: ReportHeader, list: Either[List[ReportValue], List[ReportSection]]) extends Section
+case object EmptySection extends Section
 
 sealed trait ReportHeader
 case class UrlHeader(title: String) extends ReportHeader
@@ -81,9 +76,11 @@ object Helper {
   }
   
   def generateValues(values: List[ReportValue]): String = {
+    val result =
 """	<ul class="messages">
 """ + values.map {
       case ContextValue(code, line, col) => {
+        if (code != "" || line.isDefined || col.isDefined) {
         val context = 
           """<span class="pos">Position: """ +
           """<span class="line" title="Line %s">%s</span>""".format(line.getOrElse("not specified"), line.getOrElse("-")) +
@@ -91,17 +88,22 @@ object Helper {
           """</span>""" +
 	      (if(code != "") """<code class="context">%s</code>""" format (code) else "")
 	    "<li>" + context + "</li>"
+        } else {""}
       }
       case PositionValue(line, col) => {
-        val position =
-          """<span class="pos">Position: """ +
-          """<span class="line" title="Line %s">%s</span>""".format(line.getOrElse("not specified"), line.getOrElse("-")) +
-          """<span class="col" title="Column %s">%s</span>""".format(col.getOrElse("not specified"), col.getOrElse("-")) +
-          """</span>"""
-	    "<li>" + position + "</li>"
+        if (line.isDefined || col.isDefined) {
+          val position =
+            """<span class="pos">Position: """ +
+            """<span class="line" title="Line %s">%s</span>""".format(line.getOrElse("not specified"), line.getOrElse("-")) +
+            """<span class="col" title="Column %s">%s</span>""".format(col.getOrElse("not specified"), col.getOrElse("-")) +
+            """</span>"""
+	      "<li>" + position + "</li>"
+        } else {""}
       }
     }.mkString("\n") + """
 	</ul>"""
+    
+    if (!result.contains("<li>")) "" else result
   }
   
   def generateAsideFor(section: ReportSection): String = {

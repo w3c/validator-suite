@@ -22,16 +22,11 @@
 	<form method="get">
 		<fieldset>
 			<legend>Assertors</legend>
-			<label><input name=assertor value=ValidatorNu type=checkbox checked>Validator.nu results</label><br>
-			<label><input name=assertor value=HTMLValidator type=checkbox checked>Markup validator results</label><br>
-			<label><input name=assertor value=CSSValidator type=checkbox checked>CSS validator results</label><br>
-		</fieldset>
-		<fieldset>
-			<legend>Grouping</legend>
-			<label><input name=group type=radio value="url.assertor" checked>By url - assertor</label><br>
-			<label><input name=group type=radio value="message.url">By message - url</label><br>
-			<label><input name=group type=radio value="message.context">By message - context</label><br>
-			<label><input name=flat type=checkbox>Flat</label><br>
+			<label><input name=assertor value=ValidatorNu type=checkbox checked>Validator.nu</label><br>
+			<label><input name=assertor value=HTMLValidator type=checkbox checked>Markup validator</label><br>
+			<label><input name=assertor value=CSSValidator type=checkbox checked>CSS validator</label><br>
+			<label><input name=assertor value=I18n-Checker type=checkbox checked>I18n Checker</label><br>
+			<label><input name=valid type=checkbox>Include valid results</label><br>
 		</fieldset>
 		<fieldset>
 			<legend>Filters</legend>
@@ -41,9 +36,16 @@
 			<label><input name=type type=checkbox value=info>Info</label><br>
 		</fieldset>
 		<fieldset>
+			<legend>Group</legend>
+			<label><input name=group type=radio value="url.assertor" checked>By url - assertor</label><br>
+			<label><input name=group type=radio value="message.url">By message - url</label><br>
+			<label><input name=group type=radio value="message.context">By message - context</label><br>
+			<label><input name=flat type=checkbox>Flat</label><br>
+		</fieldset>
+		<fieldset>
 			<legend>Sort</legend>
-			<label><input name=sort type=radio value=url checked>By URL</label><br>
 			<label><input name=sort type=radio value=occurrences checked>By occurrences</label><br>
+			<label><input name=sort type=radio value=url>By URL</label><br>
 		</fieldset>
 		<button>Submit</button>
 	</form>
@@ -66,7 +68,6 @@
 			<li>Activity: <span class="activity">@data.activity</span></li>
 		</ul>
 		<ul>
-			<li>Last updated: <time datetime="">-</time></li>
 			<li>Resources: <span class="resources">@data.resources</span></li>
 			<li>Errors: <span class="errors">@data.errors</span></li>
 			<li>Warnings: <span class="warnings">@data.warnings</span></li>

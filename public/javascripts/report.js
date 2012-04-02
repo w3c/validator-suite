@@ -26,11 +26,13 @@ window.ReportView = Backbone.View.extend({
 $(function () {
 	window.Report = new ReportView();
 	var a = $("#report article");
+	$("body").removeClass("no-js").addClass("js");
 	a.each(function (i, article) {
 		var ar = $(article);
 		ar.addClass("folded");
-//		if ($(".messages li", ar).length == 1)
-//			ar.removeClass("folded");
+		// TODO implement that in the template
+		if ($("article > div:first-child", ar).length == 0 && $(".messages", ar).length == 0)
+			ar.removeClass("folded").addClass("empty");
 	});
 	$("#report article > :first-child").click(
 		function (e){

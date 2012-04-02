@@ -73,17 +73,20 @@ object Jobs extends Controller {
   import org.w3.vs.view._
   private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]): List[ReportSection] = {
     
-    // (url, assertor, title, severity, context, line, column)    
+    // (url, assertor, title, severity, context, line, column)
     type Data = List[(String, String, String, String, String, Option[Int], Option[Int])]
     
+    val includeValidResult = req.queryString.get("valid").flatten.headOption match {case Some("on") => true; case _ => false}
+    
     val flat: Data = (for {
-      ass <- ar
+        ass <- ar
+        if (includeValidResult || !ass.isValid)
         raw <- ass.assertions
-        context <- raw.contexts
+        context <- {if (raw.contexts.isEmpty) Seq(Context("", "", None, None)) else raw.contexts}
       } yield {
         (ass.url.toString, ass.assertorId.toString, raw.title, raw.severity, context.content, context.line, context.column)
       }).toList
-    
+      
     val filtered: Data = {
       val assertorsParams = req.queryString.get("assertor").flatten
       val typeParams = req.queryString.get("type").flatten
@@ -97,7 +100,7 @@ object Jobs extends Controller {
     
     def groupByMessage(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
       Right(for {
-        g <- data.groupBy(t => (t._2, t._3, t._4)).toList.sortBy(_._1._3) //.sortBy(_._2.size).reverse
+        g <- data.groupBy(t => (t._2, t._3, t._4)).toList.sortBy(_._1._2).reverse.sortBy(_._1._3) //.sortBy(_._2.size).reverse
       } yield {
         val ((assertor, title, severity), iterable) = g
         ReportSection(MessageHeader(title, severity, assertor), f(iterable))
@@ -106,6 +109,7 @@ object Jobs extends Controller {
     def groupByContext(f: => Data => Either[List[ReportValue], List[ReportSection]])(data: Data): Right[List[ReportValue], List[ReportSection]] = {
       Right(for {
         g <- data.groupBy(t => (t._5)).toList.sortBy(_._1.length).reverse //.sortBy(_._2.size).reverse
+        if (g._1 != "" || g._2.size != 0)
       } yield {
         val ((context), iterable) = g
         ReportSection(ContextHeader(context), f(iterable))
@@ -173,17 +177,18 @@ object Jobs extends Controller {
     }
     
     val sortParam = req.queryString.get("sort").flatten.headOption
-    sortParam match {
+    val sorted = sortParam match {
       case Some("url") => sortOnUrl(sortOnOccurences(flatten)) 
       case _ => sortOnOccurences(flatten)
     }
     
+    sorted.take(20)
   }
   private def sort(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
     ar
   }
   private def filter(ar: Iterable[AssertorResult])(implicit req: Request[AnyContent]): Iterable[Assertions] = {
-    ar.collect{case a: Assertions => a}.view
+    ar.collect{case a: Assertions => a}
   }
   
   // TODO: This should also stop the job and kill the actor
