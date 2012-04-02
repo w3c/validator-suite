@@ -73,8 +73,6 @@ case class RunData(
     toBeExplored: List[URL] = List.empty,
     pending: Set[URL] = Set.empty,
     fetched: Set[URL] = Set.empty,
-    // the set of actors subscribed to events
-    subscribers: Set[ActorRef] = Set.empty,
     // keep track the assertions
     oks: Int = 0,
     errors: Int = 0,

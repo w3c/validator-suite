@@ -19,6 +19,7 @@ import org.w3.vs.exception._
 import org.w3.util._
 import org.w3.util.Pimps._
 import message._
+import org.w3.util.akkaext._
 
 object Job {
   
@@ -102,10 +103,10 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
     }))
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
-        onStart = () => organizationsRef.tell(Message(organizationId, jobId, message.Subscribe), subscriber),
-        onComplete = () => organizationsRef.tell(Message(organizationId, jobId, message.Unsubscribe), subscriber),
-        onError = (_,_) => () => organizationsRef.tell(Message(organizationId, jobId, message.Unsubscribe), subscriber)
+        onComplete = () => organizationsRef.tell(Message(organizationId, jobId, Deafen(subscriber)), subscriber),
+        onError = (_,_) => () => organizationsRef.tell(Message(organizationId, jobId, Deafen(subscriber)), subscriber)
       )
+    organizationsRef.tell(Message(organizationId, jobId, Listen(subscriber)), subscriber)
     enumerator
   }
   

@@ -11,9 +11,6 @@ case object BeLazy
 case object GetJobData
 case object TellTheWorldYouAreAlive
 
-case object Subscribe
-case object Unsubscribe
-
 import org.w3.vs.model.{ OrganizationId, JobId }
 
 case class Message(organizationId: OrganizationId, jobId: JobId, msg: Any)

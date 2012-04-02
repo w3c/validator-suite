@@ -22,6 +22,7 @@ import message.GetJobData
 import scalaz._
 import Scalaz._
 import org.joda.time.DateTime
+import org.w3.util.akkaext._
 
 sealed trait JobActorState
 case object Unique extends JobActorState
@@ -29,7 +30,7 @@ case object Unique extends JobActorState
 // TODO extract all pure function in a companion object
 class JobActor(job: JobConfiguration)(
   implicit val configuration: VSConfiguration)
-    extends Actor with FSM[JobActorState, RunData] {
+    extends Actor with FSM[JobActorState, RunData] with Listeners {
 
   import configuration._
 
@@ -84,14 +85,14 @@ class JobActor(job: JobConfiguration)(
       // tell the subscribers about the current data for this run
       // TODO: do it only if necessary
       val jobData = JobData(data)
-      broadcast(message.UpdateData(jobData), data)
+      tellListeners(message.UpdateData(jobData))
       //logger.info("%s: current data - %s" format (shortId, jobData.toString))
       stay()
     }
     // TODO makes runId part of the AssertorResult and change logic accordingly
     case Event(result: AssertorResult, data) => {
       logger.debug("%s: %s observed by %s" format (shortId, result.url, result.assertorId))
-      broadcast(message.NewAssertorResult(result), data)
+      tellListeners(message.NewAssertorResult(result))
       store.putAssertorResult(result)
       val dataWithAssertorResult = data.withAssertorResult(result)
       stay() using dataWithAssertorResult
@@ -100,22 +101,14 @@ class JobActor(job: JobConfiguration)(
     case Event(fetchResponse: FetchResponse, data) => {
       val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
       store.putResourceInfo(resourceInfo)
-      broadcast(message.NewResourceInfo(resourceInfo), data2)
+      tellListeners(message.NewResourceInfo(resourceInfo))
       val data3 = scheduleNextURLsToFetch(data2)
       val data4 = scheduleAssertion(resourceInfo, data3)
       stay() using data4
     }
-    case Event(message.Subscribe, data) => {
-      val subscriber = sender
-      val dataWithSubscriber = data.subscribers + subscriber
-      logger.debug("%s: (subscribe) known broadcasters %s" format (shortId, dataWithSubscriber.mkString("{", ",", "}")))
-      stay() using data.copy(subscribers = dataWithSubscriber)
-    }
-    case Event(message.Unsubscribe, data) => {
-      val subscriber = sender
-      val dataWithoutSubscriber = data.subscribers - subscriber
-      logger.debug("%s: (unsubscribe) known broadcasters %s" format (shortId, dataWithoutSubscriber.mkString("{", ",", "}")))
-      stay() using data.copy(subscribers = dataWithoutSubscriber)
+    case Event(msg: ListenerMessage, _) => {
+      listenerHandler(msg)
+      stay()
     }
     case Event(message.BeProactive, data) => stay() using data.copy(explorationMode = ProActive)
     case Event(message.BeLazy, data) => stay() using data.copy(explorationMode = Lazy)
@@ -127,7 +120,7 @@ class JobActor(job: JobConfiguration)(
     // detect when the status as changed
     case (_, _) if RunData.somethingImportantHappened(stateData, nextStateData) => {
       val jobData = JobData(nextStateData)
-      broadcast(message.UpdateData(jobData), nextStateData)
+      tellListeners(message.UpdateData(jobData))
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
       }
@@ -260,14 +253,6 @@ class JobActor(job: JobConfiguration)(
     }
 
     data.copy(sentAssertorResults = data.sentAssertorResults + assertors.size)
-  }
-
-  /**
-   * To broadcast messages to subscribers.
-   * TODO should we encapsulate the messaging/notification thing in a specialized actor? I'm not sure yet
-   */
-  private final def broadcast(msg: message.RunUpdate, data: RunData): Unit = {
-    data.subscribers foreach (s => s ! msg)
   }
 
 }
