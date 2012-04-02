@@ -34,6 +34,8 @@ class JobActor(job: JobConfiguration)(
 
   import configuration._
 
+  val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
+
   // TODO is it really what we want? I don't think so
   import TypedActor.dispatcher
 
@@ -111,13 +113,15 @@ class JobActor(job: JobConfiguration)(
       context.actorFor("../..") ! msg
       tellListeners(msg)
       val data3 = scheduleNextURLsToFetch(data2)
-      val data4 = scheduleAssertion(resourceInfo, data3)
+      val data4 = data3.copy(pendingAssertions = true)
+      assertionsActorRef ! resourceInfo
       stay() using data4
     }
     case Event(msg: ListenerMessage, _) => {
       listenerHandler(msg)
       stay()
     }
+    case Event(message.NoMorePendingAssertion, data) => stay() using data.copy(pendingAssertions = false)
     case Event(message.BeProactive, data) => stay() using data.copy(explorationMode = ProActive)
     case Event(message.BeLazy, data) => stay() using data.copy(explorationMode = Lazy)
     case Event(message.Refresh, data) => stay() using scheduleNextURLsToFetch(initialData)
@@ -133,9 +137,9 @@ class JobActor(job: JobConfiguration)(
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
       }
-      if (nextStateData.assertionPhaseIsFinished) {
-        logger.info("%s: no pending assertions" format shortId)
-      }
+      // if (nextStateData.assertionPhaseIsFinished) {
+      //   logger.info("%s: no pending assertions" format shortId)
+      // }
     }
   }
 
@@ -226,42 +230,6 @@ class JobActor(job: JobConfiguration)(
         (ri, data)
       }
     }
-  }
-
-  // has side-effects
-  // TODO pass the runId here too
-  // TODO use an actor to get a finer control over the process of the assertions
-  private final def scheduleAssertion(resourceInfo: ResourceInfo, data: RunData): RunData = {
-    val assertors = strategy.assertorsFor(resourceInfo)
-    val url = resourceInfo.url
-
-    assertors foreach { assertor =>
-      val f = Future {
-        assertor.assert(url) fold (
-          throwable => AssertorFail(
-            url = url,
-            assertorId = assertor.id,
-            jobId = job.id,
-            why = throwable.getMessage),
-          assertions => Assertions(
-            url = url,
-            assertorId = assertor.id,
-            jobId = job.id,
-            assertions = assertions))
-      }(assertorExecutionContext) recoverWith {
-        case throwable: Throwable =>
-          Future {
-            AssertorFail(
-              url = url,
-              assertorId = assertor.id,
-              jobId = job.id,
-              why = throwable.getMessage)
-          }
-      }
-      f pipeTo self
-    }
-
-    data.copy(sentAssertorResults = data.sentAssertorResults + assertors.size)
   }
 
 }
