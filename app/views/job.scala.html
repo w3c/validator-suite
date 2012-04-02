@@ -97,7 +97,7 @@
 	<ul>
 	@for(i <- 1 to pageNav.totalPages) {
 		@if(i != pageNav.currentPage) {
-		<li><a href="?p=@i">@i</a></li>
+		<li><a href="?p=@i&@req.rawQueryString">@i</a></li>
 		} else {
 		<li><b>@i</b></li>
 		}
@@ -118,7 +118,7 @@
 	<ul>
 	@for(i <- 1 to pageNav.totalPages) {
 		@if(i != pageNav.currentPage) {
-		<li><a href="?p=@i">@i</a></li>
+		<li><a href="?p=@i&@req.rawQueryString">@i</a></li>
 		} else {
 		<li><b>@i</b></li>
 		}
