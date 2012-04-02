@@ -65,7 +65,8 @@ object Jobs extends Controller {
           data <- job.jobData.lift failMap {t => toResult(Some(user))(Unexpected(t))}
           ars <- Job.getAssertorResults(jobConf.id) failMap toResult(Some(user))
         } yield {
-          Ok(views.html.job(jobConf, data, group(sort(filter(ars))), user, messages))
+          val p = paginate(group(ars.collect{case a: Assertions => a}))
+          Ok(views.html.job(jobConf, data, p._1, p._2, user, messages))
         }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise()
     }
@@ -182,11 +183,19 @@ object Jobs extends Controller {
       case _ => sortOnOccurences(flatten)
     }
     
-    sorted.take(20)
+    sorted
   }
-  private def sort(ar: Iterable[Assertions])(implicit req: Request[AnyContent]) = {
-    ar
+  
+  private def paginate(sections: List[ReportSection])(implicit req: Request[_]): (List[ReportSection], PageNav) = {
+    val sectionsPerPage = 20
+    val totalSections = sections.size
+    val currentPage = req.queryString.get("p").flatten.headOption.getOrElse("1").toInt
+    val totalPages = scala.math.ceil(totalSections.toFloat / sectionsPerPage.toFloat).toInt
+    val paged = try {sections.slice((currentPage - 1) * sectionsPerPage, currentPage * sectionsPerPage)} catch {case e => sections.take(sectionsPerPage)}
+    val nav = PageNav(currentPage, totalPages, totalSections)
+    (paged, nav)
   }
+  
   private def filter(ar: Iterable[AssertorResult])(implicit req: Request[AnyContent]): Iterable[Assertions] = {
     ar.collect{case a: Assertions => a}
   }
@@ -248,13 +257,10 @@ object Jobs extends Controller {
      .toPromiseT[(Enumerator[JsValue])]
     
     val iteratee = Iteratee.ignore[JsValue]
-
     val enumerator =  Enumerator.flatten(promiseEnumerator)
 
     (iteratee, enumerator)
-
   }
-
 
   /*
    * Private methods

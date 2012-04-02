@@ -62,11 +62,19 @@ body {
 #main > nav,
 #main > section {
 	padding: @spacing;
-	border-bottom: 1px solid @borderColor;
+	padding-bottom:0;
 }
 #main > :last-child {
 	border-bottom: none;
+	padding-bottom: @spacing;
 }
+// something's refactorable here. there 2 types of sections, with inside padded div or not
+#main > #crumbs,
+#main > #messages {
+	border-bottom:1px solid @borderColor;
+	padding-bottom: @spacing;
+}
+
 
 #main > .list {
 	padding: @spacing / 2;

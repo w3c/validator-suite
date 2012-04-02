@@ -21,6 +21,8 @@ sealed trait ReportValue
 case class PositionValue(line: Option[Int], column: Option[Int]) extends ReportValue
 case class ContextValue(code: String, line: Option[Int], column: Option[Int]) extends ReportValue
 
+case class PageNav(currentPage: Int, totalPages: Int, totalMessages: Int)
+
 object Helper {
   
   def generateSections(sections: List[ReportSection]): String = {

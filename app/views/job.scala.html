@@ -1,6 +1,7 @@
 @(jobConf: JobConfiguration, 
     data: JobData,
     report: List[org.w3.vs.view.ReportSection],
+    pageNav: org.w3.vs.view.PageNav,
     user: User,
     errors: List[(String, String)] = List.empty)(implicit flash: Flash)
 
@@ -90,11 +91,33 @@
 		</form>
 	</div></section>
 	
+	<nav class="report"><div>
+	<span class="showing">Showing: @report.size / @pageNav.totalMessages</span>
+	@if(pageNav.totalPages > 1) {
+	<ul>
+	@for(i <- 1 to pageNav.totalPages) {
+		<li><a href="?p=@i">@i</a></li>
+	}
+	</ul>
+	}
+	</div></nav>
+	
 	<section id="report" class="nested">
 
 	@Html(generateSections(report))
 
 	</section>
+	
+	<nav class="report"><div>
+	<span class="showing">Showing: @report.size / @pageNav.totalMessages</span>
+	@if(pageNav.totalPages > 1) {
+	<ul>
+	@for(i <- 1 to pageNav.totalPages) {
+		<li><a href="?p=@i">@i</a></li>
+	}
+	</ul>
+	}
+	</div></nav>
 	
 }{ @***** Footer *****@
 
