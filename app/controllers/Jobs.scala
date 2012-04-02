@@ -234,39 +234,28 @@ object Jobs extends Controller {
   }
   
   def dashboardSocket() = WebSocket.using[JsValue] { implicit req =>
-    val seed = new UpdateData(null)
 
-    val promiseIterateeEnumerator = (for {
-      user <- getAuthenticatedUser
-      jobConfs <- Job.getAll(user.organization)
-    } yield {
-      val enumerators: Iterable[PushEnumerator[message.RunUpdate]] = jobConfs map { jobConf => Job(jobConf).subscribeToUpdates() }
-      val in = Iteratee.ignore[JsValue].mapDone[Unit]{_ => 
-      	enumerators map { _.close } // This doesn't work: PushEnumerator:close() does not call the enumerator's onComplete method, possibly a bug.
+    val promiseEnumerator: Promise[Enumerator[JsValue]] = (
+      for {
+        user <- getAuthenticatedUser
+      } yield {
+        val organization = Organization(user.organization)
+        val enumerator = organization.subscribeToUpdates()
+        enumerator &> Enumeratee.map(_.toJS)
       }
-      val out = {
-        enumerators.map {(enum: Enumerator[RunUpdate]) =>
-          // Filter the enumerator, taking only the UpdateData messages
-          enum &> Enumeratee.collect[RunUpdate] { case e: UpdateData => e } &>
-            // Transform to a tuple (updateData, sameAsPrevious)
-            Enumeratee.scanLeft[UpdateData]((seed, false)) {
-              case ((prev, _), to) if to != prev => (to, false)
-              case (_, to) => (to, true)
-            }
-          // Interleave the resulting enumerators and collect messages that are marked as changed
-        }.reduce((e1, e2) => e1 >- e2) &>  Enumeratee.collect { case (a, false) => a.toJS }
-      }
-      (in, out)
-    }).failMap(_ => (Iteratee.ignore[JsValue], Enumerator.eof[JsValue]))
-      .expiresWith((Iteratee.ignore[JsValue], Enumerator.eof[JsValue]), 3, SECONDS)
-      .toPromiseT[(Iteratee[JsValue, _], Enumerator[JsValue])]
+    ).failMap(_ => Enumerator.eof[JsValue])
+     .expiresWith(Enumerator.eof[JsValue], 3, SECONDS)
+     .toPromiseT[(Enumerator[JsValue])]
     
-    val enumerator: Enumerator[JsValue] = Enumerator.flatten(promiseIterateeEnumerator.map(_._2))
-    val iteratee: Iteratee[JsValue, _] = Iteratee.flatten(promiseIterateeEnumerator.map(_._1))
-    
+    val iteratee = Iteratee.ignore[JsValue]
+
+    val enumerator =  Enumerator.flatten(promiseEnumerator)
+
     (iteratee, enumerator)
+
   }
-  
+
+
   /*
    * Private methods
    */

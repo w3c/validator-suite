@@ -84,15 +84,18 @@ class JobActor(job: JobConfiguration)(
       store.putSnapshot(snapshot)
       // tell the subscribers about the current data for this run
       // TODO: do it only if necessary
-      val jobData = JobData(data)
-      tellListeners(message.UpdateData(jobData))
+      val msg = message.UpdateData(JobData(data))
+      context.actorFor("../..") ! msg
+      tellListeners(msg)
       //logger.info("%s: current data - %s" format (shortId, jobData.toString))
       stay()
     }
     // TODO makes runId part of the AssertorResult and change logic accordingly
     case Event(result: AssertorResult, data) => {
       logger.debug("%s: %s observed by %s" format (shortId, result.url, result.assertorId))
-      tellListeners(message.NewAssertorResult(result))
+      val msg = message.NewAssertorResult(result)
+      context.actorFor("../..") ! msg
+      tellListeners(msg)
       store.putAssertorResult(result)
       val dataWithAssertorResult = data.withAssertorResult(result)
       stay() using dataWithAssertorResult
@@ -101,7 +104,9 @@ class JobActor(job: JobConfiguration)(
     case Event(fetchResponse: FetchResponse, data) => {
       val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
       store.putResourceInfo(resourceInfo)
-      tellListeners(message.NewResourceInfo(resourceInfo))
+      val msg = message.NewResourceInfo(resourceInfo)
+      context.actorFor("../..") ! msg
+      tellListeners(msg)
       val data3 = scheduleNextURLsToFetch(data2)
       val data4 = scheduleAssertion(resourceInfo, data3)
       stay() using data4
@@ -119,8 +124,9 @@ class JobActor(job: JobConfiguration)(
   onTransition {
     // detect when the status as changed
     case (_, _) if RunData.somethingImportantHappened(stateData, nextStateData) => {
-      val jobData = JobData(nextStateData)
-      tellListeners(message.UpdateData(jobData))
+      val msg = message.UpdateData(JobData(nextStateData))
+      context.actorFor("../..") ! msg
+      tellListeners(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
       }

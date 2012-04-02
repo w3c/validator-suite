@@ -22,15 +22,17 @@ import message.GetJobData
 import scalaz._
 import Scalaz._
 import org.joda.time.DateTime
-import message._
+import org.w3.vs.actor.message._
+import org.w3.util.akkaext._
 
 class OrganizationActor(organizationData: OrganizationData)(implicit val configuration: VSConfiguration)
-extends Actor {
+extends Actor with Listeners {
 
   val jobsRef: ActorRef = context.actorOf(Props(new JobsActor()), name = "jobs")
 
-  def receive = {
+  def receive: Actor.Receive = listenerHandler orElse {
     case m: Message => jobsRef.forward(m)
+    case m: RunUpdate => tellListeners(m)
   }
 
 }

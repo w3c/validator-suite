@@ -18,7 +18,7 @@ import org.joda.time.DateTime
 import org.w3.vs.exception._
 import org.w3.util._
 import org.w3.util.Pimps._
-import message._
+import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 
 object Job {
