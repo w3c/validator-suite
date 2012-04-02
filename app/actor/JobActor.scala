@@ -60,7 +60,7 @@ class JobActor(job: JobConfiguration)(
   /**
    * tries to get the latest snapshot, then replays the events that happened on it
    */
-  private final def initialConditions: RunData = store.latestSnapshotFor(job.id).waitResult match {
+  private final val initialConditions: RunData = store.latestSnapshotFor(job.id).waitResult match {
     case None => RunData(jobId = job.id, strategy = strategy)
     case Some(snapshot) => replayEventsOn(RunData(strategy, snapshot), Some(snapshot.createdAt))
   }
@@ -68,6 +68,8 @@ class JobActor(job: JobConfiguration)(
   // at instanciation of this actor
 
   configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, message.TellTheWorldYouAreAlive)
+
+  var lastRunData = initialConditions
 
   startWith(Unique, initialConditions)
 
@@ -78,16 +80,17 @@ class JobActor(job: JobConfiguration)(
       stay()
     }
     case Event(message.TellTheWorldYouAreAlive, data) => {
-      // send to the store a fresher version of this run
-      // TODO: do it only if necessary
-      val snapshot = RunSnapshot(data)
-      store.putSnapshot(snapshot)
-      // tell the subscribers about the current data for this run
-      // TODO: do it only if necessary
-      val msg = message.UpdateData(JobData(data))
-      context.actorFor("../..") ! msg
-      tellListeners(msg)
-      //logger.info("%s: current data - %s" format (shortId, jobData.toString))
+      // do it only if necessary (ie. something has changed since last time)
+      if (data ne lastRunData) {
+        // send to the store a fresher version of this run
+        val snapshot = RunSnapshot(data)
+        store.putSnapshot(snapshot)
+        // tell the subscribers about the current data for this run
+        val msg = message.UpdateData(JobData(data))
+        context.actorFor("../..") ! msg
+        tellListeners(msg)
+        lastRunData = data
+      }
       stay()
     }
     // TODO makes runId part of the AssertorResult and change logic accordingly
