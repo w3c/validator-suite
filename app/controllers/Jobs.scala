@@ -191,7 +191,7 @@ object Jobs extends Controller {
     val totalSections = sections.size
     val currentPage = req.queryString.get("p").flatten.headOption.getOrElse("1").toInt
     val totalPages = scala.math.ceil(totalSections.toFloat / sectionsPerPage.toFloat).toInt
-    val paged = try {sections.slice((currentPage - 1) * sectionsPerPage, currentPage * sectionsPerPage)} catch {case e => sections.take(sectionsPerPage)}
+    val paged = sections.slice((currentPage - 1) * sectionsPerPage, currentPage * sectionsPerPage)
     val nav = PageNav(currentPage, totalPages, totalSections)
     (paged, nav)
   }
