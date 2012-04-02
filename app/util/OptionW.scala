@@ -3,7 +3,7 @@ package org.w3.util
 import akka.dispatch._
 import scalaz._
 import Scalaz._
-import Pimps._
+import org.w3.util.Pimps._
 
 class OptionW[S](opt: Option[S]) {
 

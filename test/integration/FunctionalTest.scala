@@ -24,7 +24,6 @@ class FunctionalTest extends WordSpec with MustMatchers {
         click("#submit-login")
         url must be === ("http://localhost:9001/dashboard")
 
-        //println($("#admin").first().getText())
         $("#admin").first().getText() must include ("Alexandre Bertails")       
         
         // and log out

@@ -28,7 +28,7 @@ object Main {
 
 //    val am = configuration.http.authorityManagerFor(URL("http://www.w3.org/")).sleepTime = 0
 //    val run = configuration.runCreator.runOf(RunId(), job)
-//    val urls = Await.result(run.URLs(), Duration(10, SECONDS))
+//    val urls = Await.result(run.URLs(), Duration(3, SECONDS))
 //    println("^^^^^^ "+urls.size)
 
     

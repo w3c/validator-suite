@@ -17,5 +17,7 @@ package object util {
   import org.joda.time.DateTime
 
   implicit val DateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan((x: DateTime, y: DateTime) => x isBefore y)
+
+  type FutureValidationNoTimeOut[F, S] = FutureValidation[F, S, Nothing, NOTSET]
   
 }

@@ -32,3 +32,5 @@ class FutureW[S](future: Future[S]) {
     FutureValidation(lifted)
   }
 }
+
+

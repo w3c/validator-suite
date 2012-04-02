@@ -3,16 +3,39 @@ package org.w3.vs.store
 import org.w3.vs.model._
 import org.w3.vs.actor._
 import org.w3.util._
+import org.w3.util.FutureValidation._
+import org.w3.util.Pimps._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap
 import scalaz._
 import Scalaz._
-import Validation._
+//import Validation._
 import org.joda.time.DateTime
 import org.w3.util.DateTimeOrdering
+import org.w3.vs.exception._
+import org.w3.vs.VSConfiguration
 
-class MemoryStore extends Store {
+object MemoryStore {
+
+  def fromTryCatch[T](body: => T)(implicit context: akka.dispatch.ExecutionContext): FutureValidationNoTimeOut[SuiteException, T] =
+    fromTryCatchV(Success(body))
+
+  def fromTryCatchV[T](body: => Validation[SuiteException, T])(implicit context: akka.dispatch.ExecutionContext): FutureValidationNoTimeOut[SuiteException, T] = immediateValidation {
+    try {
+      body
+    } catch { case t =>
+      Failure(StoreException(t))
+    }
+  }
+
+}
+
+import MemoryStore._
+
+class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
+
+  implicit val context = configuration.storeExecutionContext
 
   val results: ConcurrentMap[AssertorResult#Id, AssertorResult] = new ConcurrentHashMap[AssertorResult#Id, AssertorResult]().asScala
 
@@ -26,86 +49,85 @@ class MemoryStore extends Store {
 
   val snapshots: ConcurrentMap[JobId, RunSnapshot] = new ConcurrentHashMap[JobId, RunSnapshot]().asScala
 
-  def init(): Validation[Throwable, Unit] = Success()
+  def init(): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch { }
 
-  def putAssertorResult(result: AssertorResult): Validation[Throwable, Unit] = fromTryCatch {
+  def putAssertorResult(result: AssertorResult): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     results += result.id -> result
   }
 
-  def putResourceInfo(resourceInfo: ResourceInfo): Validation[Throwable, Unit] = fromTryCatch {
+  def putResourceInfo(resourceInfo: ResourceInfo): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     resourceInfos += resourceInfo.id -> resourceInfo
   }
 
-  def putJob(job: JobConfiguration): Validation[Throwable, Unit] = fromTryCatch {
+  def putJob(job: JobConfiguration): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     jobs += job.id -> job
   }
 
-  def removeJob(jobId: JobId): Validation[Throwable, Unit] = fromTryCatch {
+  def removeJob(jobId: JobId): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     jobs -= jobId
   }
 
-  def getJobById(id: JobId) = fromTryCatch {
-    jobs.get(id)
+  def getJobById(id: JobId): FutureValidationNoTimeOut[SuiteException, JobConfiguration] = fromTryCatchV {
+    jobs.get(id) toSuccess (UnknownJob)
   }
 
-  def listJobs(organizationId: OrganizationId): Validation[Throwable, Iterable[JobConfiguration]] = fromTryCatch {
+  def listJobs(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Iterable[JobConfiguration]] = fromTryCatch {
     jobs collect { case (_, job) if organizationId === job.organization => job }
   }
 
   /* organizations */
 
-  def putOrganization(organizationData: OrganizationData): Validation[Throwable, Unit] = fromTryCatch {
+  def putOrganization(organizationData: OrganizationData): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     organizations += organizationData.id -> organizationData
   }
   
-  def removeOrganization(organizationId: OrganizationId): Validation[Throwable, Unit] = fromTryCatch {
+  def removeOrganization(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     organizations -= organizationId
   }
 
-  def getOrganizationDataById(id: OrganizationId): Validation[Throwable, Option[OrganizationData]] = fromTryCatch {
-    organizations.get(id)
+  def getOrganizationDataById(id: OrganizationId): FutureValidationNoTimeOut[SuiteException, OrganizationData] = fromTryCatchV {
+    organizations.get(id) toSuccess (Unknown)
   }
 
-  def getResourceInfo(url: URL, jobId: JobId): Validation[Throwable, ResourceInfo] = {
-    val riOpt = resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.jobId == jobId => ri }
-    riOpt toSuccess (new Throwable("job %s: couldn't find %s" format (jobId.toString, url.toString)))
+  def getResourceInfo(url: URL, jobId: JobId): FutureValidationNoTimeOut[SuiteException, ResourceInfo] = delayedValidation {
+    resourceInfos collectFirst { case (_, ri) if ri.url == url && ri.jobId == jobId => ri } toSuccess (UnknownJob)
   }
 
-  def distance(url: URL, jobId: JobId): Validation[Throwable, Int] = {
+  def distance(url: URL, jobId: JobId): FutureValidationNoTimeOut[SuiteException, Int] = {
     getResourceInfo(url, jobId) map { _.distancefromSeed }
   }
 
-  def listResourceInfos(jobId: JobId, after: Option[DateTime] = None): Validation[Throwable, Iterable[ResourceInfo]] = fromTryCatch {
+  def listResourceInfos(jobId: JobId, after: Option[DateTime] = None): FutureValidationNoTimeOut[SuiteException, Iterable[ResourceInfo]] = fromTryCatch {
     after match {
       case None => resourceInfos.values filter { _.jobId == jobId }
       case Some(date) => resourceInfos.values.filter { ri => ri.jobId == jobId && ri.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
     }
   }
 
-  def listAssertorResults(jobId: JobId, after: Option[DateTime] = None): Validation[Throwable, Iterable[AssertorResult]] = fromTryCatch {
+  def listAssertorResults(jobId: JobId, after: Option[DateTime] = None): FutureValidationNoTimeOut[SuiteException, Iterable[AssertorResult]] = fromTryCatch {
     after match {
       case None => results.values filter { _.jobId == jobId }
       case Some(date) => results.values.filter { r => r.jobId == jobId && r.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
     }
   }
 
-  def saveUser(user: User): Validation[Throwable, Unit] = fromTryCatch {
+  def saveUser(user: User): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     users += user.id -> user
   }
 
-  def getUserByEmail(email: String): Validation[Throwable, Option[User]] = fromTryCatch {
-    users collectFirst { case (_, user) if user.email == email => user }
+  def getUserByEmail(email: String): FutureValidationNoTimeOut[SuiteException, User] = fromTryCatchV {
+    users collectFirst { case (_, user) if user.email === email => user } toSuccess (UnknownUser)
   }
 
-  def authenticate(email: String, password: String): Validation[Throwable, Option[User]] = fromTryCatch {
-    users collectFirst { case (_, user) if user.email == email && user.password == password => user }
+  def authenticate(email: String, password: String): FutureValidationNoTimeOut[SuiteException, User] = fromTryCatchV {
+    users collectFirst { case (_, user) if user.email === email && user.password === password => user } toSuccess (UnknownUser)
   }
 
-  def putSnapshot(snapshot: RunSnapshot): Validation[Throwable, Unit] = fromTryCatch {
+  def putSnapshot(snapshot: RunSnapshot): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     snapshots += snapshot.jobId -> snapshot
   }
 
-  def latestSnapshotFor(jobId: JobId): Validation[Throwable, Option[RunSnapshot]] = fromTryCatch {
+  def latestSnapshotFor(jobId: JobId): FutureValidationNoTimeOut[SuiteException, Option[RunSnapshot]] = fromTryCatch {
     def latest = snapshots.filterKeys { _ == jobId }.values.maxBy(_.createdAt)(DateTimeOrdering)
     try Some(latest) catch { case t => None }
   }
