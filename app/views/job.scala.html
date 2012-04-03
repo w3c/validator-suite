@@ -23,7 +23,7 @@
 	<form method="get">
 		<fieldset>
 			<legend>Assertors</legend>
-			<label><input name=assertor value=ValidatorNu type=checkbox @if(req.queryString.get("assertor").flatten.isEmpty || req.queryString.get("assertor").flatten.exists(_ == "ValidatorNu")){checked}>Validator.nu</label><br>
+			<label><input name=assertor value=ValidatorNu type=checkbox @if(req.queryString.get("assertor").flatten.exists(_ == "ValidatorNu")){checked}>Validator.nu</label><br>
 			<label><input name=assertor value=HTMLValidator type=checkbox @if(req.queryString.get("assertor").flatten.isEmpty || req.queryString.get("assertor").flatten.exists(_ == "HTMLValidator")){checked}>Markup validator</label><br>
 			<label><input name=assertor value=CSSValidator type=checkbox @if(req.queryString.get("assertor").flatten.isEmpty || req.queryString.get("assertor").flatten.exists(_ == "CSSValidator")){checked}>CSS validator</label><br>
 			<label><input name=assertor value=I18n-Checker type=checkbox @if(req.queryString.get("assertor").flatten.isEmpty || req.queryString.get("assertor").flatten.exists(_ == "I18n-Checker")){checked}>I18n Checker</label><br>
@@ -51,7 +51,7 @@
 		<button>Submit</button>
 	</form>
 	
-	<a href="">Default</a><br>
+	<a href="?">Default</a><br>
 	<a href="#" class="compact">Compact</a><br>
 	
 	</div>

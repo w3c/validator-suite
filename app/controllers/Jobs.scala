@@ -93,9 +93,9 @@ object Jobs extends Controller {
       val typeParams = req.queryString.get("type").flatten
       (assertorsParams, typeParams) match {
         case (a, t) if (!a.isEmpty && !t.isEmpty) => flat.filter{a => assertorsParams.exists(_ === a._2) && typeParams.exists(_ === a._4)}
-        case (a, _) if (!a.isEmpty) => flat.filter{a => assertorsParams.exists(_ === a._2)}
-        case (_, t) if (!t.isEmpty) => flat.filter{a => typeParams.exists(_ === a._4)}
-        case _ => flat.filter{a => List("error", "warning").exists(_ === a._4)}
+        case (a, _) if (!a.isEmpty) => flat.filter{a => assertorsParams.exists(_ === a._2) && List("error", "warning").exists(_ === a._4)}
+        case (_, t) if (!t.isEmpty) => flat.filter{a => List("CSSValidator", "HTMLValidator", "I18n-Checker").exists(_ === a._2) && typeParams.exists(_ === a._4)}
+        case _ => flat.filter{a => List("CSSValidator", "HTMLValidator", "I18n-Checker").exists(_ === a._2) && List("error", "warning").exists(_ === a._4)}
       }
     }
     
