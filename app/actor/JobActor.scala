@@ -125,7 +125,10 @@ class JobActor(job: JobConfiguration)(
     case Event(message.BeProactive, data) => stay() using data.copy(explorationMode = ProActive)
     case Event(message.BeLazy, data) => stay() using data.copy(explorationMode = Lazy)
     case Event(message.Refresh, data) => stay() using scheduleNextURLsToFetch(initialData)
-    case Event(message.Stop, data) => stay() using data.copy(explorationMode = Lazy, toBeExplored = List.empty)
+    case Event(message.Stop, data) => {
+      assertionsActorRef ! message.Stop
+      stay() using data.copy(explorationMode = Lazy, toBeExplored = List.empty)
+    }
   }
 
   onTransition {

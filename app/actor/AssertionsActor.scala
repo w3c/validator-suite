@@ -24,6 +24,7 @@ import Scalaz._
 import org.joda.time.DateTime
 import org.w3.util.akkaext._
 import scala.collection.mutable.Queue
+import org.w3.vs.actor.message.Stop
 
 object AssertionsActor {
 
@@ -43,7 +44,7 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
 
   val strategy = jobConfiguration.strategy
 
-  def scheduleAssertion(resourceInfo: ResourceInfo): Unit = {
+  private final def scheduleAssertion(resourceInfo: ResourceInfo): Unit = {
     val assertors = strategy.assertorsFor(resourceInfo)
     val url = resourceInfo.url
 
@@ -80,7 +81,13 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
     pendingAssertions += assertors.size
   }
 
+
+
   def receive = {
+
+    case Stop => {
+      queue.dequeueAll(_ => true)
+    }
 
     case result: AssertorResult => {
       pendingAssertions -= 1
