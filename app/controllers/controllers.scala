@@ -45,6 +45,7 @@ package object controllers {
     )
   )
   
+  // TODO make the form understand maxNumberOfResources
   def jobForm = Form(
     mapping (
       "name" -> text,
@@ -61,6 +62,7 @@ package object controllers {
           entrypoint=url,
           distance=distance,
           linkCheck=linkCheck,
+          maxNumberOfResources = 1000,
           filter=Filter(include=Everything, exclude=Nothing)))
     })
     ((job: JobConfiguration) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))

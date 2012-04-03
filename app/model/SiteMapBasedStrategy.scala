@@ -18,6 +18,7 @@ case class SiteMapBasedStrategy(
     uuid: UUID,
     name: String,
     delay: Long,
+    maxNumberOfResources: Int,
     sitemap: SiteMap)
 extends Strategy {
   

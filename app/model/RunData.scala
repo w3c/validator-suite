@@ -82,7 +82,7 @@ case class RunData(
 
   type Explore = (URL, Int)
 
-  final def numberOfKnownUrls: Int = distance.size
+  final def numberOfKnownUrls: Int = distance.keySet.count { _.authority == mainAuthority }
 
   // assert(
   //   distance.keySet == fetched ++ pending ++ toBeExplored,
@@ -102,28 +102,23 @@ case class RunData(
 
   final def isBusy = !isIdle
 
+  final def toLimit: Int = strategy.maxNumberOfResources - numberOfKnownUrls
+
   final def activity: RunActivity = if (isBusy) Busy else Idle
 
-  /**
-   * An Explore should be ignored if
-   * <ul>
-   * <li>the strategy says it's not to be fetched</li>
-   * <li>it has already been fetched</li>
-   * <li>it is already pending</li>
-   * <li>it's already scheduled to be fetched</li>
-   * </ul>
-   */
   private final def shouldIgnore(url: URL, atDistance: Int): Boolean = {
     def notToBeFetched = FetchNothing == strategy.fetch(url, atDistance)
     def alreadyKnown = distance isDefinedAt url
     notToBeFetched || alreadyKnown
   }
 
+  def numberOfRemainingAllowedFetches = strategy.maxNumberOfResources - numberOfKnownUrls
+
   /**
    * Returns an Observation with the new urls to be explored
    */
   def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (RunData, List[URL]) = {
-    val filteredUrls = urls.filterNot { url => shouldIgnore(url, atDistance) }.distinct
+    val filteredUrls = urls.filterNot{ url => shouldIgnore(url, atDistance) }.distinct.take(numberOfRemainingAllowedFetches)
     val newDistance = distance ++ filteredUrls.map { url => url -> atDistance }
     val newData = this.copy(
       toBeExplored = toBeExplored ++ filteredUrls,
@@ -140,7 +135,7 @@ case class RunData(
 
     val map: ListMap[URL, Int] = ListMap.empty
     map ++= urlsWithDistance.filterNot { case (url, distance) => shouldIgnore(url, distance) }
-    val newUrls = map.keys.toList
+    val newUrls = map.keys.toList.take(numberOfRemainingAllowedFetches)
     val newData = this.copy(
       toBeExplored = toBeExplored ++ newUrls,
       distance = distance ++ map)

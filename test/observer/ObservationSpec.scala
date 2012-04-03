@@ -21,6 +21,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
       entrypoint=URL("http://www.w3.org"),
       distance=11,
       linkCheck=true,
+      maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
   val w3_home = URL("http://www.w3.org")

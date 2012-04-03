@@ -33,6 +33,7 @@ object Global extends GlobalSettings {
         entrypoint=URL("http://www.w3.org/"),
         distance=1,
         linkCheck=false,
+        maxNumberOfResources = 100,
         filter=Filter(include=Everything, exclude=Nothing)))
     
     var a = List[JobConfiguration]()

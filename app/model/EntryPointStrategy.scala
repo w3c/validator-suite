@@ -19,6 +19,7 @@ case class EntryPointStrategy(
     entrypoint: URL,
     distance: Int,
     linkCheck: Boolean,
+    maxNumberOfResources: Int,
     filter: Filter)
 extends Strategy {
   

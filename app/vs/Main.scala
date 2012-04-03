@@ -18,6 +18,7 @@ object Main {
       entrypoint=URL("http://www.bertails.org/"),
       distance=0,
       linkCheck=true,
+      maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
   val job = JobConfiguration.fake(strategy = strategy)

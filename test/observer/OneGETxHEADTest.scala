@@ -27,6 +27,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
       entrypoint=URL("http://localhost:9001/"),
       distance=1,
       linkCheck=true,
+      maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
   val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")

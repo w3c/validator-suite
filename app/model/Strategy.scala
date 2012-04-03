@@ -17,7 +17,11 @@ trait Strategy {
   val name: String
   
   def seedURLs: Iterable[URL]
+
   def mainAuthority: Authority
+
+  def maxNumberOfResources: Int
+
   // TODO maybe this should move somewhere else
   def assertorsFor(resourceInfo: ResourceInfo): Iterable[FromURLAssertor] = {
     resourceInfo match {
