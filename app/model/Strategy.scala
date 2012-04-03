@@ -25,7 +25,7 @@ trait Strategy {
   // TODO maybe this should move somewhere else
   def assertorsFor(resourceInfo: ResourceInfo): Iterable[FromURLAssertor] = {
     resourceInfo match {
-      case ResourceInfo(id, url, runId, action, timestamp, distanceFromSeed, Fetch(status, headers, _)) if fetch(url, distanceFromSeed) == GET =>
+      case ResourceInfo(id, url, runId, action, timestamp, distanceFromSeed, FetchResult(status, headers, _)) if fetch(url, distanceFromSeed) == GET =>
         headers.mimetype match {
           case Some("text/html") | Some("application/xhtml+xml") => List(ValidatorNu, HTMLValidator, I18nChecker)
           case Some("text/css") => List(CSSValidator)

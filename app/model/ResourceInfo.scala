@@ -24,7 +24,7 @@ sealed trait ResourceInfoResult
 
 case class ResourceInfoError(why: String) extends ResourceInfoResult
 
-case class Fetch(
+case class FetchResult(
     status: Int,
     headers: Headers,
     extractedLinks: List[URL]) extends ResourceInfoResult

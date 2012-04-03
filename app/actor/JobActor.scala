@@ -206,7 +206,7 @@ class JobActor(job: JobConfiguration)(
           jobId = job.id,
           action = GET,
           distancefromSeed = distance,
-          result = Fetch(status, headers, extractedURLs))
+          result = FetchResult(status, headers, extractedURLs))
         (ri, _newData)
       }
       // HEAD
@@ -218,7 +218,7 @@ class JobActor(job: JobConfiguration)(
           jobId = job.id,
           action = GET,
           distancefromSeed = distance,
-          result = Fetch(status, headers, List.empty))
+          result = FetchResult(status, headers, List.empty))
         (ri, data)
       }
       case KoResponse(url, action, why, runId) => {

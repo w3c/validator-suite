@@ -44,7 +44,7 @@ case class NewResourceInfo(resourceInfo: ResourceInfo) extends RunUpdate {
           JsString(why),
           JsString(resourceInfo.url.toString)
         ))
-      case Fetch(status, headers, extractedLinks) => resourceInfo.action match {
+      case FetchResult(status, headers, extractedLinks) => resourceInfo.action match {
         case GET => 
           JsArray(List(
             JsString("GET"),
