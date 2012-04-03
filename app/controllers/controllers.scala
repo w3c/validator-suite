@@ -51,8 +51,9 @@ package object controllers {
       "name" -> text,
       "url" -> of[URL],
       "distance" -> of[Int],
-      "linkCheck" -> of[Boolean](booleanFormatter)
-    )((name, url, distance, linkCheck) => {
+      "linkCheck" -> of[Boolean](booleanFormatter),
+      "maxNumberOfResources" -> of[Int]
+    )((name, url, distance, linkCheck, maxNumberOfResources) => {
       JobConfiguration(
         name = name,
         organization = null,
@@ -62,10 +63,10 @@ package object controllers {
           entrypoint=url,
           distance=distance,
           linkCheck=linkCheck,
-          maxNumberOfResources = 1000,
+          maxNumberOfResources=maxNumberOfResources,
           filter=Filter(include=Everything, exclude=Nothing)))
     })
-    ((job: JobConfiguration) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck))
+    ((job: JobConfiguration) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck, job.strategy.maxNumberOfResources))
   )
 
   class FormW[T](form: Form[T]) {
