@@ -1,6 +1,5 @@
 package org.w3.vs.http
 
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{Executors, TimeUnit}
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import com.ning.http.client._

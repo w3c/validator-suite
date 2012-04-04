@@ -11,6 +11,8 @@ case class Website(links:Iterable[Link]) {
   
   /** compiles this website to an Unfiltered plan */
   def toPlanify = unfiltered.filter.Planify {
+    case Path(path) if path startsWith "/404" =>
+      NotFound
     case Path(path) => {
       val outLinks = links flatMap { _.outlinksFor(path) }
       val webpage = Webpage(path, outLinks)
