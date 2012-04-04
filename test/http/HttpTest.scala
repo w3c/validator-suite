@@ -11,18 +11,7 @@ import org.w3.util._
 import akka.util.Duration
 import akka.util.duration._
 
-
-// class HttpTest
-// extends TestKit(new DefaultProdConfiguration { }.system)
-// with ImplicitSender with WordSpec with MustMatchers {
-
-//   "" in {
-//   }
-
-// }
-
-
-class HttpTest extends RunTestHelper(new DefaultProdConfiguration { }) with Inside {
+class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with Inside {
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
