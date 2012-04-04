@@ -41,7 +41,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
     store.putOrganization(organizationTest)
     store.putJob(jobConf)
     Thread.sleep(200)
-    http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
+    //http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
     val job = Job(jobConf)
     job.refresh()
     def ris = store.listResourceInfos(jobConf.id).waitResult

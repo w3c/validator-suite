@@ -11,50 +11,42 @@ import java.lang.System.currentTimeMillis
 import play.Logger
 import org.w3.vs.model.{Response => _, _}
 import org.w3.vs.VSConfiguration
+import scala.collection.mutable.Queue
 
-trait AuthorityManager {
-  def fetch(url: URL, action: HttpVerb, runId: RunId, jobActorRef: ActorRef): Unit
-  def sleepTime: Long
-  def sleepTime_= (value: Long): Unit
-}
+case class SleepTime(value: Long)
 
-object AuthorityManager {
-  // This field is just used for debug/logging/testing
-  val httpInFlight = new java.util.concurrent.atomic.AtomicInteger(0)
-}
-
-class AuthorityManagerImpl private[http] (authority: Authority)(implicit configuration: VSConfiguration)
-extends AuthorityManager with TypedActor.PostStop {
+class AuthorityManager(authority: Authority)(implicit configuration: VSConfiguration) extends Actor {
   
-  import configuration.httpClient
-  import AuthorityManager.httpInFlight
-  
+  val httpClient = configuration.httpClient
+
   val logger = Logger.of(classOf[AuthorityManager])
   
-  var _sleepTime: Long = 1000L
+  var sleepTime: Long = 1000L
   
   var lastFetchTimestamp = 0L
+
+  val queue = Queue[Fetch]()
   
-  def sleepTime = _sleepTime
+  // def sleepIfNeeded(body: => Unit): Unit = {
+  //   val current = currentTimeMillis()
+  //   val needToSleep = _sleepTime - (current - lastFetchTimestamp)
+  //   if (needToSleep > 0)
+  //     Thread.sleep(needToSleep)
+  //   body
+  //   lastFetchTimestamp = current
+  // }
   
-  def sleepTime_= (value: Long): Unit = {
-    _sleepTime = value
-  }
-  
-  def sleepIfNeeded(body: => Unit): Unit = {
-    val current = currentTimeMillis()
-    val needToSleep = _sleepTime - (current - lastFetchTimestamp)
-    if (needToSleep > 0)
-      Thread.sleep(needToSleep)
-    body
-    lastFetchTimestamp = current
-  }
-  
-  def fetch(url: URL, action: HttpVerb, runId: RunId, jobActorRef: ActorRef): Unit = {
-    
+  def receive = {
+
+    case SleepTime(value) => {
+      this.sleepTime = value
+    }
+
+    case fetch @ Fetch(url: URL, action: HttpVerb, runId: RunId) => {
+
+      val to = sender
+
       val httpHandler: AsyncHandler[Unit] = new AsyncHandler[Unit]() {
-        
-        httpInFlight.incrementAndGet()
         
         val builder = new Response.ResponseBuilder()
         
@@ -69,12 +61,11 @@ extends AuthorityManager with TypedActor.PostStop {
               body
             } catch {
               case t: Throwable => {
-                jobActorRef ! KoResponse(url, action, t, runId)
+                to ! KoResponse(url, action, t, runId)
                 throw t // rethrow for benefit of AsyncHttpClient
               }
             } finally {
               finished = true
-              httpInFlight.decrementAndGet()
             }
           }
         }
@@ -112,7 +103,7 @@ extends AuthorityManager with TypedActor.PostStop {
               (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
             val body = response.getResponseBody()
             val fetchResponse = OkResponse(url, action, status, headers, body, runId)
-            jobActorRef ! fetchResponse
+            to ! fetchResponse
           }
         }
       }
@@ -121,10 +112,14 @@ extends AuthorityManager with TypedActor.PostStop {
         case GET => httpClient.prepareGet(url.toExternalForm()).execute(httpHandler)
         case HEAD => httpClient.prepareHead(url.toExternalForm()).execute(httpHandler)
       }
+
+    }
       
   }
   
-  override def postStop = {
+
+
+  override def postStop() = {
     logger.debug("%s: stopping manager" format authority)
   }
   

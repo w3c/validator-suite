@@ -1,7 +1,7 @@
 package org.w3.vs
 
 import akka.actor._
-import org.w3.vs.http.{Http, HttpImpl}
+import org.w3.vs.http._
 import org.w3.vs.actor._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
@@ -35,19 +35,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
     val executor: ExecutorService = Executors.newFixedThreadPool(2)
     ExecutionContext.fromExecutorService(executor)
   }
-  
-  val system: ActorSystem = {
-    val vs = ActorSystem("vs")
-    vs.actorOf(Props(new OrganizationsActor()(this)), "organizations")
-    vs
-  }
-  
-  val http: Http =
-    TypedActor(system).typedActorOf(
-      TypedProps(
-        classOf[Http],
-        new HttpImpl()(this)),
-      "http")
     
   /**
    * note: an AsyncHttpClient is a heavy object with a thread
@@ -68,12 +55,19 @@ trait DefaultProdConfiguration extends VSConfiguration {
       .build
     new AsyncHttpClient(config)
   }
+
+  val system: ActorSystem = {
+    val vs = ActorSystem("vs")
+    vs.actorOf(Props(new OrganizationsActor()(this)), "organizations")
+    vs.actorOf(Props(new Http()(this)), "http")
+    vs
+  }
   
   val store = new MemoryStore()(this)
 
   val timeout: Timeout = 10.seconds
   
   // ouch :-)
-  http.authorityManagerFor("w3.org").sleepTime = 0
+//  http.authorityManagerFor("w3.org").sleepTime = 0
   
 }

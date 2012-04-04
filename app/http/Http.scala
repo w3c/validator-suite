@@ -13,45 +13,40 @@ import play.Logger
 import org.w3.vs.actor._
 import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
+import scalaz.Scalaz._
 
-trait Http {
-  def fetch(url: URL, action: HttpVerb, runId: RunId, jobActorRef: ActorRef): Unit
-  def authorityManagerFor(url: URL): AuthorityManager
-  def authorityManagerFor(authority: Authority): AuthorityManager
-}
+case class Fetch(url: URL, action: HttpVerb, runId: RunId)
 
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
  */
-class HttpImpl()(implicit configuration: VSConfiguration) extends Http with TypedActor.PostStop {
+class Http()(implicit configuration: VSConfiguration) extends Actor {
 
-  import configuration.httpClient
+  val httpClient = configuration.httpClient
+
   // TODO really???
   import TypedActor.dispatcher
   
   val logger = Logger.of(classOf[Http])
-  
-  var registry = Map[Authority, AuthorityManager]()
-  
-  def authorityManagerFor(url: URL): AuthorityManager =
-    authorityManagerFor(url.authority)
-  
-  def authorityManagerFor(authority: Authority): AuthorityManager = {
-    registry.get(authority).getOrElse {
-      val authorityManager = TypedActor(TypedActor.context).typedActorOf(
-        TypedProps(
-          classOf[AuthorityManager],
-          new AuthorityManagerImpl(authority)),
-        authority)
-      registry += (authority -> authorityManager)
-      authorityManager
+
+  def getAuthorityManagerRefOrCreate(authority: Authority): ActorRef = {
+    try {
+      context.actorOf(Props(new AuthorityManager(authority)), name = authority)
+    } catch {
+      case iane: InvalidActorNameException => context.actorFor(self.path / authority)
+    }
+  }
+
+  def receive = {
+    case fetch @ Fetch(url, _, _) => {
+      val authority = url.authority
+      val authorityManagerRef =
+        context.children.find(_.path.name === authority) getOrElse getAuthorityManagerRefOrCreate(authority)
+      authorityManagerRef forward fetch
     }
   }
   
-  def fetch(url: URL, action: HttpVerb, runId: RunId, jobActorRef: ActorRef): Unit =
-    authorityManagerFor(url).fetch(url, action, runId, jobActorRef)
-  
-  override def postStop = {
+  override def postStop() = {
     logger.debug("closing asyncHttpClient")
     httpClient.close()
   }

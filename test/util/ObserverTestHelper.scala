@@ -23,7 +23,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   
   implicit val implicitConfiguration = configuration
 
-  val http = configuration.http
+  val http = system.actorFor("/http")
   val store = configuration.store
 
   val organizationTest = OrganizationData(name = "test orga")

@@ -12,8 +12,6 @@ trait VSConfiguration {
   
   val system: ActorSystem
   
-  val http: Http
-
   val MAX_URL_TO_FETCH: Int
   
   val assertorExecutionContext: ExecutionContext

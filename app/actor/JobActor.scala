@@ -41,6 +41,8 @@ class JobActor(job: JobConfiguration)(
 
   val logger = Logger.of(classOf[JobActor])
 
+  val http = system.actorFor(system / "http")
+
   /**
    * A shorten id for logs readability
    */
@@ -173,11 +175,11 @@ class JobActor(job: JobConfiguration)(
     action match {
       case GET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        http.fetch(url, GET, runId, self)
+        http ! Fetch(url, GET, runId)
       }
       case HEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
-        http.fetch(url, HEAD, runId, self)
+        http ! Fetch(url, HEAD, runId)
       }
       case FetchNothing => {
         logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))
