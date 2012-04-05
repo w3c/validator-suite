@@ -11,6 +11,8 @@ import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import org.w3.vs.DefaultProdConfiguration
 import org.w3.vs.actor._
+import org.w3.util.akkaext._
+import org.w3.vs.http._
 
 /**
   * Server 1 -> Server 2
@@ -39,9 +41,9 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
 
   "test OneGETxHEAD" in {
     store.putOrganization(organizationTest)
-    store.putJob(jobConf)
-    Thread.sleep(200)
-    //http.authorityManagerFor(URL("http://localhost:9002/")).sleepTime = 0
+    store.putJob(jobConf).waitResult()
+    PathAware(http, http.path / "localhost:9001") ! SetSleepTime(0)
+    PathAware(http, http.path / "localhost:9002") ! SetSleepTime(0)
     val job = Job(jobConf)
     job.refresh()
     def ris = store.listResourceInfos(jobConf.id).waitResult

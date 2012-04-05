@@ -13,13 +13,14 @@ import org.w3.vs.actor._
 import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
 import scalaz.Scalaz._
+import org.w3.util.akkaext._
 
 case class Fetch(url: URL, action: HttpVerb, runId: RunId)
 
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
  */
-class Http()(implicit configuration: VSConfiguration) extends Actor {
+class Http()(implicit configuration: VSConfiguration) extends Actor with PathAwareActor {
 
   val httpClient = configuration.httpClient
 
@@ -30,17 +31,22 @@ class Http()(implicit configuration: VSConfiguration) extends Actor {
 
   def getAuthorityManagerRefOrCreate(authority: Authority): ActorRef = {
     try {
-      context.actorOf(Props(new AuthorityManager(authority)), name = authority)
+      context.children.find(_.path.name === authority) getOrElse {
+        context.actorOf(Props(new AuthorityManager(authority)), name = authority)
+      }
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / authority)
     }
   }
 
   def receive = {
+    case Tell(Child(name), msg) => {
+      val authorityManagerRef = getAuthorityManagerRefOrCreate(name)
+      authorityManagerRef forward msg
+    }
     case fetch @ Fetch(url, _, _) => {
       val authority = url.authority
-      val authorityManagerRef =
-        context.children.find(_.path.name === authority) getOrElse getAuthorityManagerRefOrCreate(authority)
+      val authorityManagerRef = getAuthorityManagerRefOrCreate(authority)
       authorityManagerRef forward fetch
     }
   }

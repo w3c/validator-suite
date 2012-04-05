@@ -10,11 +10,14 @@ import org.w3.vs.model._
 import org.w3.util._
 import akka.util.Duration
 import akka.util.duration._
+import org.w3.util.akkaext._
 
 class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with Inside {
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
+  PathAware(http, http.path / "localhost:9001") ! SetSleepTime(0)
+
   "testing HEAD on existing URL" in {
 
     val newRunId = RunId.newId()
@@ -88,6 +91,10 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
     }
 
   }
+
+
+
+
 
 
 }

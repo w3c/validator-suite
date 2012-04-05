@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit.SECONDS
 import akka.testkit.TestKit
 import org.w3.vs.DefaultProdConfiguration
 import org.w3.vs.actor._
+import org.w3.util.akkaext._
+import org.w3.vs.http._
 
 class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) {
   
@@ -32,9 +34,8 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
   
   "test cyclic(10)" in {
     store.putOrganization(organizationTest)
-    store.putJob(jobConf)
-    Thread.sleep(200)
-    //http.authorityManagerFor(URL("http://localhost:9001/")).sleepTime = 0
+    store.putJob(jobConf).waitResult()
+    PathAware(http, http.path / "localhost:9001") ! SetSleepTime(0)
     val job = Job(jobConf)
     job.refresh()
     def cond = store.listResourceInfos(jobConf.id).waitResult.size == 11
