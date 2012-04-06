@@ -13,8 +13,6 @@ import org.w3.vs.model.{Response => _, _}
 import org.w3.vs.VSConfiguration
 import scala.collection.mutable.Queue
 
-case class SetSleepTime(value: Long)
-
 final class AuthorityManager(authority: Authority)(implicit configuration: VSConfiguration) extends Actor {
   
   val httpClient = configuration.httpClient
@@ -23,7 +21,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
   
   var sleepTime: Long = 1000L
   
-  val queue = Queue[Fetch]()
+  val queue = Queue[(ActorRef, Fetch)]()
 
   var lastFetchTimestamp: Long = 0L
 
@@ -46,23 +44,24 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
   def receive: Actor.Receive = {
 
     case SetSleepTime(value) => {
-      logger.debug(authority + ": setting sleep time to " + value + " milliseconds")
+      // logger.debug(authority + " setting sleep time to " + value + " milliseconds")
       sleepTime = value
+      lastFetchTimestamp = 0L
     }
 
     case fetch: Fetch if queue.nonEmpty => {
-      logger.debug("non empty")
+      queue.enqueue((sender, fetch))
       if (! pendingTick) logger.error("the queue is not empty but there is no pending Tick")
     }
 
     case fetch: Fetch if needToSleep() => {
-      logger.debug(authority+" need to sleep")
-      queue.enqueue(fetch)
+      // logger.debug(authority+" need to sleep")
+      queue.enqueue((sender, fetch))
       scheduleTick()
     }
 
-    case Fetch(url, action, runId) => {
-      doFetch(url, action, runId)
+    case fetch @ Fetch(url, action, runId) => {
+      doFetch(sender, url, action, runId)
     }
 
     case 'Tick if queue.isEmpty => {
@@ -70,21 +69,23 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
     }
 
     case 'Tick => {
-      val Fetch(url, action, runId) = queue.dequeue()
-      doFetch(url, action, runId)
+      val (thesender, Fetch(url, action, runId)) = queue.dequeue()
+      doFetch(thesender, url, action, runId)
       if (queue.nonEmpty)
         scheduleTick()
       else
         pendingTick = false
     }
 
+    case HowManyPendingRequests => {
+      sender ! queue.size
+    }
+
   }
 
 
-  final def doFetch(url: URL, action: HttpVerb, runId: RunId): Unit = {
+  final def doFetch(to: ActorRef, url: URL, action: HttpVerb, runId: RunId): Unit = {
     
-    val to = sender
-
     lastFetchTimestamp = current()
     
     val httpHandler: AsyncHandler[Unit] = new AsyncHandler[Unit]() {

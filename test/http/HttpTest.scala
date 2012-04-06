@@ -10,6 +10,7 @@ import org.w3.vs.model._
 import org.w3.util._
 import akka.util.Duration
 import akka.util.duration._
+import akka.dispatch._
 import org.w3.util.akkaext._
 
 class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with Inside {
@@ -92,9 +93,35 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
   }
 
+  "testing delays" in {
+
+    PathAware(http, http.path / "localhost:9001") ! SetSleepTime(1000)
+
+    val newRunId = RunId.newId()
+
+    for(i <- 1 to 100) {
+      http ! Fetch(URL("http://localhost:9001/"+i), HEAD, newRunId)
+    }
+
+    val fetchResponse = expectMsgType[FetchResponse](1.second)
+    
+    implicit val timeout: akka.util.Timeout = 1.second
+
+    def pendingFetches(): Int =
+      Await.result(
+        (PathAware(http, http.path / "localhost:9001") ? HowManyPendingRequests).mapTo[Int],
+        1.second)
+
+    pendingFetches() must be === (99)
+
+    val secondResponse =  expectMsgType[FetchResponse](1.second)
+
+    pendingFetches() must be === (98)
 
 
 
+  }
 
 
 }
+

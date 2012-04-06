@@ -16,6 +16,8 @@ import scalaz.Scalaz._
 import org.w3.util.akkaext._
 
 case class Fetch(url: URL, action: HttpVerb, runId: RunId)
+case class SetSleepTime(value: Long)
+case object HowManyPendingRequests
 
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
