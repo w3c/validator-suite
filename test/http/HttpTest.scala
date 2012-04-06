@@ -95,7 +95,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
   "testing delays" in {
 
-    PathAware(http, http.path / "localhost:9001") ! SetSleepTime(1000)
+    PathAware(http, http.path / "localhost:9001") ! SetSleepTime(200)
 
     val newRunId = RunId.newId()
 
