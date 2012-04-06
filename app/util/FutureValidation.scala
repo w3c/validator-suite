@@ -51,6 +51,16 @@ class FutureValidation[+F, +S, TO, TimeOut] private (
   def asFuture: Future[Validation[F, S]] = futureValidation
 
   /**
+   * can be really useful for debugging purposes
+   */
+  def onTimeout(handler: () => Unit): this.type = {
+    futureValidation onFailure {
+      case e: java.util.concurrent.TimeoutException => handler()
+    }
+    this
+  }
+
+  /**
    * combines the computations in the future while respecting the semantics of the Validation
    */
   def flatMap[FF >: F, T](f: S => FutureValidation[FF, T, TO, TimeOut])(implicit executor: ExecutionContext): FutureValidation[FF, T, TO, TimeOut] = {

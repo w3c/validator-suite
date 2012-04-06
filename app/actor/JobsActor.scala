@@ -13,10 +13,11 @@ import akka.util.Timeout
 import akka.util.duration._
 import message._
 import scalaz._
+import org.w3.util.akkaext._
 
-case class CreateJobAndForward(jobConfiguration: JobConfiguration, msg: Message)
+case class CreateJobAndForward(jobConfiguration: JobConfiguration, msg: Any)
 
-class JobsActor()(implicit configuration: VSConfiguration) extends Actor {
+class JobsActor()(implicit configuration: VSConfiguration) extends Actor with PathAwareActor {
 
   val logger = play.Logger.of(classOf[JobsActor])
 
@@ -32,26 +33,26 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor {
 
   def receive = {
 
-    case m @ Message(_, jobId, msg) => {
-      val name = jobId.toString
+    case Tell(Child(name), msg) => {
       val from = sender
       val to = self
       context.children.find(_.path.name === name) match {
         case Some(jobRef) => jobRef forward msg
         case None => {
+          val jobId = JobId.fromString(name)
           configuration.store.getJobById(jobId).asFuture onSuccess {
             case Success(jobConfiguration) => {
-              to.tell(CreateJobAndForward(jobConfiguration, m), from)
+              to.tell(CreateJobAndForward(jobConfiguration, msg), from)
             }
             case Failure(storeException) => {
-              sys.error(storeException.toString)
+              logger.error(storeException.toString)
             }
           }
         }
       }
     }
 
-    case CreateJobAndForward(jobConfiguration, Message(_, _, msg)) => {
+    case CreateJobAndForward(jobConfiguration, msg) => {
       val jobRef = getJobRefOrCreate(jobConfiguration)
       jobRef forward msg
     }

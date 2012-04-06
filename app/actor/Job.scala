@@ -76,17 +76,19 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
   implicit def timeout = conf.timeout
 
   val organizationsRef = system.actorFor(system / "organizations")
-  
-  def refresh(): Unit = organizationsRef ! Message(organizationId, jobId, message.Refresh)
-  
-  def stop(): Unit = organizationsRef ! Message(organizationId, jobId, message.Stop)
 
-  def on(): Unit = organizationsRef ! Message(organizationId, jobId, message.BeProactive)
+  val path = system / "organizations" / organizationId.toString / "jobs" / jobId.toString
 
-  def off(): Unit = organizationsRef ! Message(organizationId, jobId, message.BeLazy)
+  def refresh(): Unit = PathAware(organizationsRef, path) ! message.Refresh
+  
+  def stop(): Unit = PathAware(organizationsRef, path) ! message.Stop
+
+  def on(): Unit = PathAware(organizationsRef, path) ! message.BeProactive
+
+  def off(): Unit = PathAware(organizationsRef, path) ! message.BeLazy
 
   def jobData(): Future[JobData] =
-    (organizationsRef ? Message(organizationId, jobId, message.GetJobData)).mapTo[JobData]
+    (PathAware(organizationsRef, path) ? message.GetJobData).mapTo[JobData]
 
   def subscribeToUpdates(): PushEnumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
@@ -103,10 +105,10 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
     }))
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
-        onComplete = () => organizationsRef.tell(Message(organizationId, jobId, Deafen(subscriber)), subscriber),
-        onError = (_,_) => () => organizationsRef.tell(Message(organizationId, jobId, Deafen(subscriber)), subscriber)
+        onComplete = () => PathAware(organizationsRef, path).tell(Deafen(subscriber), subscriber),
+        onError = (_,_) => () => PathAware(organizationsRef, path).tell(Deafen(subscriber), subscriber)
       )
-    organizationsRef.tell(Message(organizationId, jobId, Listen(subscriber)), subscriber)
+    PathAware(organizationsRef, path).tell(Listen(subscriber), subscriber)
     enumerator
   }
   

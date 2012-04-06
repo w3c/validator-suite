@@ -12,6 +12,6 @@ case object GetJobData
 case object TellTheWorldYouAreAlive
 case object NoMorePendingAssertion
 
-import org.w3.vs.model.{ OrganizationId, JobId }
+//import org.w3.vs.model.{ OrganizationId, JobId }
 
-case class Message(organizationId: OrganizationId, jobId: JobId, msg: Any)
+//case class Message(organizationId: OrganizationId, jobId: JobId, msg: Any)

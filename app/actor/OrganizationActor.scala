@@ -28,10 +28,12 @@ import org.w3.util.akkaext._
 class OrganizationActor(organizationData: OrganizationData)(implicit val configuration: VSConfiguration)
 extends Actor with Listeners {
 
+  val logger = play.Logger.of(classOf[OrganizationActor])
+
   val jobsRef: ActorRef = context.actorOf(Props(new JobsActor()), name = "jobs")
 
   def receive: Actor.Receive = listenerHandler orElse {
-    case m: Message => jobsRef.forward(m)
+    case m: Tell => jobsRef.forward(m)
     case m: RunUpdate => tellListeners(m)
   }
 

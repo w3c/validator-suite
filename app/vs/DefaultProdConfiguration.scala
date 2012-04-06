@@ -60,6 +60,12 @@ trait DefaultProdConfiguration extends VSConfiguration {
     val vs = ActorSystem("vs")
     vs.actorOf(Props(new OrganizationsActor()(this)), "organizations")
     vs.actorOf(Props(new Http()(this)), "http")
+    val listener = vs.actorOf(Props(new Actor {
+      def receive = {
+        case d: DeadLetter ⇒ println("DeadLetter: "+d)
+      }
+    }))
+    vs.eventStream.subscribe(listener, classOf[DeadLetter])
     vs
   }
   

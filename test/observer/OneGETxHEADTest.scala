@@ -46,7 +46,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
     PathAware(http, http.path / "localhost:9002") ! SetSleepTime(0)
     val job = Job(jobConf)
     job.refresh()
-    def ris = store.listResourceInfos(jobConf.id).waitResult
+    def ris = store.listResourceInfos(jobConf.id).waitResult()
     def cond = ris.size == 11
     awaitCond(cond, 3 seconds, 50 milliseconds)
     val urls8081 = ris filter { _.url.authority == "localhost:9002" }

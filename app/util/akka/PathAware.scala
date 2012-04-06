@@ -1,6 +1,7 @@
 package org.w3.util.akkaext
 
 import akka.actor._
+import akka.dispatch._
 import java.nio.file._
 
 object PathAware {
@@ -16,6 +17,13 @@ class PathAware(root: ActorRef, path: ActorPath) {
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     root ! Tell(jpath, message)
 
+  def tell(message: Any, sender: ActorRef): Unit =
+    root.tell(Tell(jpath, message), sender)
+
   import akka.pattern.ask
+
+  def ?(message: Any)(implicit timeout: akka.util.Timeout): Future[Any] =
+    root ? Tell(jpath, message)
+  
 
 }

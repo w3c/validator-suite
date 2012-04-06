@@ -13,10 +13,11 @@ import akka.util.Timeout
 import akka.util.duration._
 import org.w3.vs.exception.Unknown
 import message._
+import org.w3.util.akkaext._
 
-case class CreateOrganizationAndForward(organizationData: OrganizationData, msg: Message)
+case class CreateOrganizationAndForward(organizationData: OrganizationData, tell: Tell)
 
-class OrganizationsActor()(implicit configuration: VSConfiguration) extends Actor {
+class OrganizationsActor()(implicit configuration: VSConfiguration) extends Actor with PathAwareActor {
 
   val logger = play.Logger.of(classOf[OrganizationsActor])
 
@@ -32,25 +33,24 @@ class OrganizationsActor()(implicit configuration: VSConfiguration) extends Acto
 
   def receive = {
 
-    case msg: Message => {
-      val id = msg.organizationId
-      val name = id.toString
+    case tell @ Tell(Child(name), msg) => {
       val from = sender
       val to = self
       context.children.find(_.path.name === name) match {
-        case Some(organizationRef) => organizationRef forward msg
+        case Some(organizationRef) => organizationRef forward tell
         case None => {
+          val id = OrganizationId.fromString(name)
           configuration.store.getOrganizationDataById(id).asFuture onSuccess {
-            case Success(organizationData) => to.tell(CreateOrganizationAndForward(organizationData, msg), from)
-            case Failure(storeException) => sys.error(storeException.toString)
+            case Success(organizationData) => to.tell(CreateOrganizationAndForward(organizationData, tell), from)
+            case Failure(storeException) => logger.error(storeException.toString)
           }
         }
       }
     }
 
-    case CreateOrganizationAndForward(organizationData, msg) => {
+    case CreateOrganizationAndForward(organizationData, tell) => {
       val organizationRef = getOrganizationRefOrCreate(organizationData)
-      organizationRef forward msg
+      organizationRef forward tell
     }
 
   }
