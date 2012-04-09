@@ -4,7 +4,7 @@ import scalaz._
 
 object RunActivity {
 
-  implicit val equalOrganizationId: Equal[RunActivity] = new Equal[RunActivity] {
+  implicit val equalRunActivity: Equal[RunActivity] = new Equal[RunActivity] {
     def equal(left: RunActivity, right: RunActivity): Boolean = left == right
   }
 
@@ -16,7 +16,7 @@ case object Idle extends RunActivity
 
 object ExplorationMode {
 
-  implicit val equalOrganizationId: Equal[ExplorationMode] = new Equal[ExplorationMode] {
+  implicit val equalExplorationMode: Equal[ExplorationMode] = new Equal[ExplorationMode] {
     def equal(left: ExplorationMode, right: ExplorationMode): Boolean = left == right
   }
 

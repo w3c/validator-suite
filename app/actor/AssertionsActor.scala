@@ -26,6 +26,8 @@ import org.w3.util.akkaext._
 import scala.collection.mutable.Queue
 import org.w3.vs.actor.message.Stop
 
+case class AssertorCall(assertorId: AssertorId, resourceInfo: ResourceInfo)
+
 object AssertionsActor {
 
   val MAX_PENDING_ASSERTION = 2
@@ -40,49 +42,43 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
 
   var pendingAssertions: Int = 0
 
-  val queue = Queue[ResourceInfo]()
+  val queue = Queue[AssertorCall]()
 
-  val strategy = jobConfiguration.strategy
+  private final def scheduleAssertion(assertorId: AssertorId, resourceInfo: ResourceInfo): Unit = {
 
-  private final def scheduleAssertion(resourceInfo: ResourceInfo): Int = {
-    val assertors = strategy.assertorsFor(resourceInfo)
+    val assertor = FromURLAssertor(assertorId)
+
     val url = resourceInfo.url
 
-    assertors foreach { assertor =>
-      val futureAssertionResult = Future {
-        assertor.assert(url) fold (
-          throwable => AssertorFail(
-            url = url,
-            assertorId = assertor.id,
-            jobId = jobConfiguration.id,
-            why = throwable.getMessage),
-          assertions => Assertions(
-            url = url,
-            assertorId = assertor.id,
-            jobId = jobConfiguration.id,
-            assertions = assertions))
-      }(assertorExecutionContext)
+    val futureAssertionResult = Future {
+      assertor.assert(url) fold (
+        throwable => AssertorFail(
+          url = url,
+          assertorId = assertor.id,
+          jobId = jobConfiguration.id,
+          why = throwable.getMessage),
+        assertions => Assertions(
+          url = url,
+          assertorId = assertor.id,
+          jobId = jobConfiguration.id,
+          assertions = assertions))
+    }(assertorExecutionContext)
       
-      // register callback on the completion of the future
-      futureAssertionResult onComplete {
-        case Left(throwable) => {
-          val fail = AssertorFail(
-            url = url,
-            assertorId = assertor.id,
-            jobId = jobConfiguration.id,
-            why = throwable.getMessage)
-          self ! fail
-        }
-        case Right(assertionResult) =>
-         self ! assertionResult
+    // register callback on the completion of the future
+    futureAssertionResult onComplete {
+      case Left(throwable) => {
+        val fail = AssertorFail(
+          url = url,
+          assertorId = assertor.id,
+          jobId = jobConfiguration.id,
+          why = throwable.getMessage)
+        self ! fail
       }
+      case Right(assertionResult) =>
+        self ! assertionResult
     }
     
-    val assertorCalls = assertors.size
-
-    pendingAssertions += assertorCalls
-
-    assertorCalls
+    pendingAssertions += 1
     
   }
 
@@ -97,25 +93,17 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
     case result: AssertorResult => {
       pendingAssertions -= 1
       context.parent ! result
-      if (queue.isEmpty) {
-        context.parent ! message.NoMorePendingAssertion
-      } else {
-        while ((! queue.isEmpty) && pendingAssertions <= MAX_PENDING_ASSERTION) {
-          val nextRI = queue.dequeue()
-          scheduleAssertion(nextRI)
-        }
+      while (queue.nonEmpty && pendingAssertions <= MAX_PENDING_ASSERTION) {
+        val AssertorCall(assertorId, nextRI) = queue.dequeue()
+        scheduleAssertion(assertorId, nextRI)
       }
     }
 
-    case resourceInfo: ResourceInfo => {
+    case call @ AssertorCall(assertorId, resourceInfo) => {
       if (pendingAssertions > MAX_PENDING_ASSERTION) {
-        queue.enqueue(resourceInfo)
+        queue.enqueue(call)
       } else {
-        scheduleAssertion(resourceInfo)
-        // it's possible that no assertor calls is planned
-        if (queue.isEmpty) {
-          context.parent ! message.NoMorePendingAssertion
-        }
+        scheduleAssertion(assertorId, resourceInfo)
       }
     }
 

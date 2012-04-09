@@ -38,10 +38,10 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
 
   "test simpleInterWebsite" in {
     store.putOrganization(organizationTest)
-    store.putJob(jobConf)
-    Thread.sleep(200)
+    store.putJob(jobConf).waitResult()
     val job = Job(jobConf)
     job.refresh()
+    job.listen(testActor)
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
         def ris = store.listResourceInfos(jobConf.id).waitResult()

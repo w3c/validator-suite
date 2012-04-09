@@ -20,17 +20,14 @@ import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
 import message.GetJobData
 import scalaz._
-import Scalaz._
+import scalaz.Scalaz._
 import org.joda.time.DateTime
 import org.w3.util.akkaext._
-
-sealed trait JobActorState
-case object Unique extends JobActorState
 
 // TODO extract all pure function in a companion object
 class JobActor(job: JobConfiguration)(
   implicit val configuration: VSConfiguration)
-    extends Actor with FSM[JobActorState, RunData] with Listeners {
+    extends Actor with FSM[(RunActivity, ExplorationMode), RunData] with Listeners {
 
   import configuration._
 
@@ -76,9 +73,21 @@ class JobActor(job: JobConfiguration)(
 
   var lastRunData = initialConditions
 
-  startWith(Unique, initialConditions)
+  startWith(initialConditions.state, initialConditions)
 
-  when(Unique) {
+  def stateOf(data: RunData): State = {
+    val currentState = stateName
+    val newState = data.state
+    val stayOrGoto = if (currentState === newState) stay() else goto(newState)
+    stayOrGoto using data
+  }
+
+  when((Idle, ProActive))(stateFunction)
+  when((Idle, Lazy))(stateFunction)
+  when((Busy, ProActive))(stateFunction)
+  when((Busy, Lazy))(stateFunction)
+
+  def stateFunction: StateFunction = {
     case Event(message.GetJobData, data) => {
       val jobData = JobData(data)
       sender ! jobData
@@ -104,7 +113,7 @@ class JobActor(job: JobConfiguration)(
       tellEverybody(msg)
       store.putAssertorResult(result)
       val dataWithAssertorResult = data.withAssertorResult(result)
-      stay() using dataWithAssertorResult
+      stateOf(dataWithAssertorResult)
     }
     // TODO makes runId part of the FetchResponse and change logic accordingly
     case Event(fetchResponse: FetchResponse, data) => {
@@ -113,21 +122,27 @@ class JobActor(job: JobConfiguration)(
       val msg = message.NewResourceInfo(resourceInfo)
       tellEverybody(msg)
       val data3 = scheduleNextURLsToFetch(data2)
-      val data4 = data3.copy(pendingAssertions = true)
-      assertionsActorRef ! resourceInfo
-      stay() using data4
+      val data4 = {
+        val assertors = strategy.assertorsFor(resourceInfo)
+        if (assertors.nonEmpty) {
+          assertors foreach { assertorId => assertionsActorRef ! AssertorCall(assertorId, resourceInfo) }
+          data3.copy(pendingAssertions = data3.pendingAssertions + assertors.size)
+        } else {
+          data3
+        }
+      }
+      stateOf(data4)
     }
     case Event(msg: ListenerMessage, _) => {
       listenerHandler(msg)
       stay()
     }
-    case Event(message.NoMorePendingAssertion, data) => stay() using data.copy(pendingAssertions = false)
-    case Event(message.BeProactive, data) => stay() using data.copy(explorationMode = ProActive)
-    case Event(message.BeLazy, data) => stay() using data.copy(explorationMode = Lazy)
-    case Event(message.Refresh, data) => stay() using scheduleNextURLsToFetch(initialData)
+    case Event(message.BeProactive, data) => stateOf(data.copy(explorationMode = ProActive))
+    case Event(message.BeLazy, data) => stateOf(data.copy(explorationMode = Lazy))
+    case Event(message.Refresh, data) => stateOf(scheduleNextURLsToFetch(initialData))
     case Event(message.Stop, data) => {
       assertionsActorRef ! message.Stop
-      stay() using data.copy(explorationMode = Lazy, toBeExplored = List.empty)
+      stateOf(data.copy(explorationMode = Lazy, toBeExplored = List.empty))
     }
   }
 
@@ -139,8 +154,8 @@ class JobActor(job: JobConfiguration)(
   }
 
   onTransition {
-    // detect when the status as changed
-    case (_, _) if RunData.somethingImportantHappened(stateData, nextStateData) => {
+    // detect when the state as changed
+    case _ -> _ => {
       val msg = message.UpdateData(JobData(nextStateData))
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
