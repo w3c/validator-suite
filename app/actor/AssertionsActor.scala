@@ -113,7 +113,9 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
       } else {
         scheduleAssertion(resourceInfo)
         // it's possible that no assertor calls is planned
-        if (queue.isEmpty) context.parent ! message.NoMorePendingAssertion
+        if (queue.isEmpty) {
+          context.parent ! message.NoMorePendingAssertion
+        }
       }
     }
 

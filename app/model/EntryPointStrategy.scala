@@ -40,4 +40,6 @@ extends Strategy {
       FetchNothing
   }
 
+  def noAssertor(): EntryPointStrategy = this.copy(assertorsFor = AssertorSelector.noAssertor)
+
 }

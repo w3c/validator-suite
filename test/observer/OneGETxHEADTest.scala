@@ -11,6 +11,7 @@ import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import org.w3.vs.DefaultProdConfiguration
 import org.w3.vs.actor._
+import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 
@@ -18,7 +19,7 @@ import org.w3.vs.http._
   * Server 1 -> Server 2
   * 1 GET       10 HEAD
   */
-class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
+class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
   
   val j = 10
   
@@ -30,7 +31,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
       distance=1,
       linkCheck=true,
       maxNumberOfResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing))
+      filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
   val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
   
@@ -46,19 +47,16 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) {
     PathAware(http, http.path / "localhost:9002") ! SetSleepTime(0)
     val job = Job(jobConf)
     job.refresh()
-    def ris = store.listResourceInfos(jobConf.id).waitResult()
-    def cond = ris.size == 11
-    awaitCond(cond, 3 seconds, 50 milliseconds)
-    val urls8081 = ris filter { _.url.authority == "localhost:9002" }
-    urls8081 must have size(j)
+    job.listen(testActor)
+    fishForMessagePF(3.seconds) {
+      case UpdateData(jobData) if jobData.activity == Idle => {
+        def ris = store.listResourceInfos(jobConf.id).waitResult()
+        ris must have size 11
+        val urls8081 = ris filter { _.url.authority == "localhost:9002" }
+        urls8081 must have size(j)
+      }
+    }
   }
-
-      // should test for the GET and HEAD of course
-//    val (links, timestamps) = (responseDAO.getLinksAndTimestamps(actionId) filter { case (url, _) => url.authority == "localhost:8081" }).unzip
-//    val a = Response.averageDelay(timestamps)
-//    println(a)
-//    assert(a >= Crawler.defaultDelay)
-//    assert(a < Crawler.defaultDelay + j*15)
 
 }
 

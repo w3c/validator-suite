@@ -6,6 +6,17 @@ import scalaz._
 import Validation._
 import scala.io.Source
 
+object FromURLAssertor {
+
+  def apply(id: AssertorId): FromURLAssertor = id match {
+    case HTMLValidator.id => HTMLValidator
+    case ValidatorNu.id => ValidatorNu
+    case CSSValidator.id => CSSValidator
+    case I18nChecker.id => I18nChecker
+  }
+
+}
+
 /** 
  * An assertor that returns assertions about a document pointed by a URL
  */

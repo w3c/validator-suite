@@ -17,7 +17,7 @@ import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 
-class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) {
+class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
 
   val strategy =
     EntryPointStrategy(
@@ -27,18 +27,12 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
       distance=11,
       linkCheck=true,
       maxNumberOfResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing)).copy(assertorsFor = AssertorSelector.noAssertor)
+      filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
   val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
-  def fishForMessagePF[T](max: Duration = Duration.Undefined, hint: String = "")(f: PartialFunction[Any, T]): T = {
-    def pf: PartialFunction[Any, Boolean] = { case x => f.isDefinedAt(x) }
-    val result = fishForMessage(max, hint)(pf)
-    f(result)
-  }
-
   "test cyclic(10)" in {
     store.putOrganization(organizationTest)
     store.putJob(jobConf).waitResult()
@@ -52,13 +46,6 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
         resources must have size 11
       }
     }
-
-    // def cond = store.listResourceInfos(jobConf.id).waitResult.size == 11
-    // awaitCond(cond, 3 seconds, 50 milliseconds)
   }
-  
-//    val (links, timestamps) = responseDAO.getLinksAndTimestamps(actionId) .unzip
-//    val a = Response.averageDelay(timestamps)
-//    assert(a >= 200 && a < 250)
   
 }

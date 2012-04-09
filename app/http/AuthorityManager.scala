@@ -85,7 +85,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
 
 
   final def doFetch(to: ActorRef, url: URL, action: HttpVerb, runId: RunId): Unit = {
-    
+
     lastFetchTimestamp = current()
     
     val httpHandler: AsyncHandler[Unit] = new AsyncHandler[Unit]() {

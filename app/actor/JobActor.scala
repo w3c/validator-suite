@@ -71,7 +71,8 @@ class JobActor(job: JobConfiguration)(
 
   // at instanciation of this actor
 
-  configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, message.TellTheWorldYouAreAlive)
+  // TODO
+  configuration.system.scheduler.schedule(10 seconds, 2 seconds, self, 'Tick)
 
   var lastRunData = initialConditions
 
@@ -83,7 +84,7 @@ class JobActor(job: JobConfiguration)(
       sender ! jobData
       stay()
     }
-    case Event(message.TellTheWorldYouAreAlive, data) => {
+    case Event('Tick, data) => {
       // do it only if necessary (ie. something has changed since last time)
       if (data ne lastRunData) {
         // send to the store a fresher version of this run
@@ -91,8 +92,7 @@ class JobActor(job: JobConfiguration)(
         store.putSnapshot(snapshot)
         // tell the subscribers about the current data for this run
         val msg = message.UpdateData(JobData(data))
-        context.actorFor("../..") ! msg
-        tellListeners(msg)
+        tellEverybody(msg)
         lastRunData = data
       }
       stay()
@@ -101,8 +101,7 @@ class JobActor(job: JobConfiguration)(
     case Event(result: AssertorResult, data) => {
       logger.debug("%s: %s observed by %s" format (shortId, result.url, result.assertorId))
       val msg = message.NewAssertorResult(result)
-      context.actorFor("../..") ! msg
-      tellListeners(msg)
+      tellEverybody(msg)
       store.putAssertorResult(result)
       val dataWithAssertorResult = data.withAssertorResult(result)
       stay() using dataWithAssertorResult
@@ -112,8 +111,7 @@ class JobActor(job: JobConfiguration)(
       val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
       store.putResourceInfo(resourceInfo)
       val msg = message.NewResourceInfo(resourceInfo)
-      context.actorFor("../..") ! msg
-      tellListeners(msg)
+      tellEverybody(msg)
       val data3 = scheduleNextURLsToFetch(data2)
       val data4 = data3.copy(pendingAssertions = true)
       assertionsActorRef ! resourceInfo
@@ -133,12 +131,18 @@ class JobActor(job: JobConfiguration)(
     }
   }
 
+  private final def tellEverybody(msg: Any): Unit = {
+    // tell the organization
+    context.actorFor("../..") ! msg
+    // tell all the listeners
+    tellListeners(msg)
+  }
+
   onTransition {
     // detect when the status as changed
     case (_, _) if RunData.somethingImportantHappened(stateData, nextStateData) => {
       val msg = message.UpdateData(JobData(nextStateData))
-      context.actorFor("../..") ! msg
-      tellListeners(msg)
+      tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
       }
@@ -218,7 +222,7 @@ class JobActor(job: JobConfiguration)(
         val ri = ResourceInfo(
           url = url,
           jobId = job.id,
-          action = GET,
+          action = HEAD,
           distancefromSeed = distance,
           result = FetchResult(status, headers, List.empty))
         (ri, data)
@@ -229,7 +233,7 @@ class JobActor(job: JobConfiguration)(
         val ri = ResourceInfo(
           url = url,
           jobId = job.id,
-          action = GET,
+          action = action,
           distancefromSeed = distance,
           result = ResourceInfoError(why.getMessage))
         (ri, data)

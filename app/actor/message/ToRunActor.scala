@@ -9,5 +9,4 @@ case object BeProactive
 case object BeLazy
 
 case object GetJobData
-case object TellTheWorldYouAreAlive
 case object NoMorePendingAssertion

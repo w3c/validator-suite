@@ -11,12 +11,13 @@ import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import org.w3.vs.DefaultProdConfiguration
 import org.w3.vs.actor._
+import org.w3.vs.actor.message._
 
 /**
   * Server 1 -> Server 2
   * 1 GET       1 HEAD
   */
-class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration { }) {
+class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
 
   val strategy =
     EntryPointStrategy(
@@ -26,7 +27,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       distance=1,
       linkCheck=true,
       maxNumberOfResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing))
+      filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
   val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
   
@@ -41,13 +42,12 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
     Thread.sleep(200)
     val job = Job(jobConf)
     job.refresh()
-    def ris = store.listResourceInfos(jobConf.id).waitResult
-    def cond = ris.size == 2
-    awaitCond(cond, 3 seconds, 50 milliseconds)
+    fishForMessagePF(3.seconds) {
+      case UpdateData(jobData) if jobData.activity == Idle => {
+        def ris = store.listResourceInfos(jobConf.id).waitResult()
+        ris must have size 2
+      }
+    }
   }
-
-//    val (links, timestamps) = responseDAO.getLinksAndTimestamps(actionId) .unzip
-//    val a = Response.averageDelay(timestamps)
-//    assert(a < 20)
   
 }
