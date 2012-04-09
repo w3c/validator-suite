@@ -25,5 +25,5 @@ trait VSConfiguration {
   val store: Store
 
   val timeout: Timeout
-  
+
 }

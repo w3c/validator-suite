@@ -13,11 +13,12 @@ import java.util.concurrent.TimeUnit.SECONDS
 import akka.testkit.TestKit
 import org.w3.vs.DefaultProdConfiguration
 import org.w3.vs.actor._
+import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 
 class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) {
-  
+
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
@@ -26,20 +27,34 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
       distance=11,
       linkCheck=true,
       maxNumberOfResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing))
+      filter=Filter(include=Everything, exclude=Nothing)).copy(assertorsFor = AssertorSelector.noAssertor)
   
   val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
+  def fishForMessagePF[T](max: Duration = Duration.Undefined, hint: String = "")(f: PartialFunction[Any, T]): T = {
+    def pf: PartialFunction[Any, Boolean] = { case x => f.isDefinedAt(x) }
+    val result = fishForMessage(max, hint)(pf)
+    f(result)
+  }
+
   "test cyclic(10)" in {
     store.putOrganization(organizationTest)
     store.putJob(jobConf).waitResult()
     PathAware(http, http.path / "localhost:9001") ! SetSleepTime(0)
     val job = Job(jobConf)
     job.refresh()
-    def cond = store.listResourceInfos(jobConf.id).waitResult.size == 11
-    awaitCond(cond, 3 seconds, 50 milliseconds)
+    job.listen(testActor)
+    fishForMessagePF(3.seconds) {
+      case UpdateData(jobData) if jobData.activity == Idle => {
+        val resources = store.listResourceInfos(jobConf.id).waitResult
+        resources must have size 11
+      }
+    }
+
+    // def cond = store.listResourceInfos(jobConf.id).waitResult.size == 11
+    // awaitCond(cond, 3 seconds, 50 milliseconds)
   }
   
 //    val (links, timestamps) = responseDAO.getLinksAndTimestamps(actionId) .unzip

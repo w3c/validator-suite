@@ -44,7 +44,7 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
 
   val strategy = jobConfiguration.strategy
 
-  private final def scheduleAssertion(resourceInfo: ResourceInfo): Unit = {
+  private final def scheduleAssertion(resourceInfo: ResourceInfo): Int = {
     val assertors = strategy.assertorsFor(resourceInfo)
     val url = resourceInfo.url
 
@@ -77,8 +77,13 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
          self ! assertionResult
       }
     }
+    
+    val assertorCalls = assertors.size
 
-    pendingAssertions += assertors.size
+    pendingAssertions += assertorCalls
+
+    assertorCalls
+    
   }
 
 
@@ -107,6 +112,8 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
         queue.enqueue(resourceInfo)
       } else {
         scheduleAssertion(resourceInfo)
+        // it's possible that no assertor calls is planned
+        if (queue.isEmpty) context.parent ! message.NoMorePendingAssertion
       }
     }
 

@@ -20,7 +20,8 @@ case class EntryPointStrategy(
     distance: Int,
     linkCheck: Boolean,
     maxNumberOfResources: Int,
-    filter: Filter)
+    filter: Filter,
+    assertorsFor: AssertorSelector = AssertorSelector.simple)
 extends Strategy {
   
   def seedURLs: Iterable[URL] = Seq(entrypoint)
@@ -38,4 +39,5 @@ extends Strategy {
     else
       FetchNothing
   }
+
 }

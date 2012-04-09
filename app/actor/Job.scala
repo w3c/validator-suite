@@ -79,6 +79,15 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
 
   val path = system / "organizations" / organizationId.toString / "jobs" / jobId.toString
 
+  def !(message: Any)(implicit sender: ActorRef = null): Unit =
+    PathAware(organizationsRef, path) ! message
+
+  def listen(implicit listener: ActorRef): Unit =
+    PathAware(organizationsRef, path).tell(Listen(listener), listener)
+
+  def deafen(implicit listener: ActorRef): Unit =
+    PathAware(organizationsRef, path).tell(Deafen(listener), listener)
+
   def refresh(): Unit = PathAware(organizationsRef, path) ! message.Refresh
   
   def stop(): Unit = PathAware(organizationsRef, path) ! message.Stop
@@ -105,10 +114,10 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
     }))
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
-        onComplete = () => PathAware(organizationsRef, path).tell(Deafen(subscriber), subscriber),
-        onError = (_,_) => () => PathAware(organizationsRef, path).tell(Deafen(subscriber), subscriber)
+        onComplete = () => deafen(subscriber),
+        onError = (_,_) => () => deafen(subscriber)
       )
-    PathAware(organizationsRef, path).tell(Listen(subscriber), subscriber)
+    listen(subscriber)
     enumerator
   }
   

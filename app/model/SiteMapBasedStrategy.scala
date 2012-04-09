@@ -37,6 +37,8 @@ extends Strategy {
       GET
     else
       HEAD
+  
+  val assertorsFor = AssertorSelector.simple
 
 }
 

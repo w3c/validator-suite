@@ -5,6 +5,7 @@ import java.util.UUID
 import org.w3.vs.assertor._
 import org.w3.util._
 import org.w3.util.Headers._
+import scalaz.Scalaz._
 
 /** An strategy to be used by the Run
   * 
@@ -22,20 +23,9 @@ trait Strategy {
 
   def maxNumberOfResources: Int
 
-  // TODO maybe this should move somewhere else
-  def assertorsFor(resourceInfo: ResourceInfo): Iterable[FromURLAssertor] = {
-    resourceInfo match {
-      case ResourceInfo(id, url, runId, action, timestamp, distanceFromSeed, FetchResult(status, headers, _)) if fetch(url, distanceFromSeed) == GET =>
-        headers.mimetype match {
-          case Some("text/html") | Some("application/xhtml+xml") => List(ValidatorNu, HTMLValidator, I18nChecker)
-          case Some("text/css") => List(CSSValidator)
-          case _ => List.empty
-        }
-      case _ => List.empty
-    }
-  }
-    
   def fetch(url: URL, distance: Int): HttpAction
+
+  def assertorsFor: AssertorSelector
   
 }
 
