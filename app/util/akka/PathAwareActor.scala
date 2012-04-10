@@ -2,10 +2,11 @@ package org.w3.util.akkaext
 
 import akka.actor.Actor
 import java.nio.file.{ Path, Paths }
+import java.net.URI
 
-trait PathAwareActor { self: Actor =>
+trait PathAwareActor { this: Actor =>
 
-  def selfPath: Path = Paths.get(self.self.path.toString)
+  def selfPath: Path = Paths.get(new URI(self.path.toString).getPath)
 
   object Child {
     def unapply(path: Path): Option[String] = {
@@ -13,7 +14,5 @@ trait PathAwareActor { self: Actor =>
       if (name.isEmpty) None else Some(name)
     }
   }
-
-
 
 }

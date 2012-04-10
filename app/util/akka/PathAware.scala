@@ -3,6 +3,7 @@ package org.w3.util.akkaext
 import akka.actor._
 import akka.dispatch._
 import java.nio.file._
+import java.net.URI
 
 object PathAware {
 
@@ -12,7 +13,7 @@ object PathAware {
 
 class PathAware(root: ActorRef, path: ActorPath) {
 
-  val jpath = Paths.get(path.toString)
+  val jpath = Paths.get(new URI(path.toString).getPath)
 
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     root ! Tell(jpath, message)
