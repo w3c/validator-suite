@@ -22,6 +22,9 @@ object RunData {
     d1 ++ d2
   }
 
+  def makeFresh(jobId: JobId, strategy: Strategy): RunData =
+    RunData(jobId = jobId, strategy = strategy)
+
   def apply(strategy: Strategy, snapshot: RunSnapshot): RunData = {
     import snapshot._
     RunData(
@@ -37,10 +40,10 @@ object RunData {
       warnings = warnings)
   }
 
-  def somethingImportantHappened(before: RunData, after: RunData): Boolean = {
-    before.explorationMode != after.explorationMode ||
-      before.activity != after.activity
-  }
+  // def somethingImportantHappened(before: RunData, after: RunData): Boolean = {
+  //   before.explorationMode != after.explorationMode ||
+  //     before.activity != after.activity
+  // }
 
 }
 

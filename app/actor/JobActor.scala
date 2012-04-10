@@ -52,7 +52,7 @@ class JobActor(job: JobConfiguration)(
   // TODO
   configuration.system.scheduler.schedule(10 seconds, 2 seconds, self, 'Tick)
 
-  var lastRunData = initialConditions()
+  var lastRunData = RunData.makeFresh(jobId = job.id, strategy = strategy)
 
   startWith(lastRunData.state, lastRunData)
 
@@ -120,7 +120,12 @@ class JobActor(job: JobConfiguration)(
     }
     case Event(message.BeProactive, data) => stateOf(data.copy(explorationMode = ProActive))
     case Event(message.BeLazy, data) => stateOf(data.copy(explorationMode = Lazy))
-    case Event(message.Refresh, data) => stateOf(scheduleNextURLsToFetch(initialData))
+    case Event(message.Refresh, data) => {
+      val firstURLs = strategy.seedURLs.toList
+      val freshRunData = RunData.makeFresh(job.id, strategy)
+      val (runData, _) = freshRunData.withNewUrlsToBeExplored(firstURLs, 0)
+      stateOf(scheduleNextURLsToFetch(runData))
+    }
     case Event(message.Stop, data) => {
       assertionsActorRef ! message.Stop
       stateOf(data.copy(explorationMode = Lazy, toBeExplored = List.empty))
@@ -147,28 +152,19 @@ class JobActor(job: JobConfiguration)(
   /**
    * tries to get the latest snapshot, then replays the events that happened on it
    */
-  private final def initialConditions(): RunData = store.latestSnapshotFor(job.id).waitResult match {
-    case None => RunData(jobId = job.id, strategy = strategy)
+  private final def initialConditions(): RunData = store.latestSnapshotFor(job.id).waitResult() match {
+    case None => RunData.makeFresh(jobId = job.id, strategy = strategy)
     case Some(snapshot) => replayEventsOn(RunData(strategy, snapshot), Some(snapshot.createdAt))
   }
 
   final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
     var data = _data
-    store.listResourceInfos(job.id, after = afterOpt).waitResult foreach { resourceInfo =>
+    store.listResourceInfos(job.id, after = afterOpt).waitResult() foreach { resourceInfo =>
       data = data.withCompletedFetch(resourceInfo.url)
     }
-    store.listAssertorResults(job.id, after = afterOpt).waitResult foreach { assertorResult =>
+    store.listAssertorResults(job.id, after = afterOpt).waitResult() foreach { assertorResult =>
       data = data.withAssertorResult(assertorResult)
     }
-    data
-  }
-
-  private final def initialData: RunData = {
-    // ask the strategy for the first urls to considerer
-    val firstURLs = strategy.seedURLs.toList
-    // update the observation state
-    val (data, _) = RunData(jobId = job.id, strategy = strategy).withNewUrlsToBeExplored(firstURLs, 0)
-    logger.info("%s: Starting exploration phase with %d url(s)" format (shortId, firstURLs.size))
     data
   }
 
