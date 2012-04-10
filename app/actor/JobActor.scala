@@ -59,7 +59,13 @@ class JobActor(job: JobConfiguration)(
   def stateOf(data: RunData): State = {
     val currentState = stateName
     val newState = data.state
-    val stayOrGoto = if (currentState === newState) stay() else goto(newState)
+    val stayOrGoto =
+      if (currentState === newState) {
+        stay()
+      } else {
+        logger.debug("%s: transition to new state %s" format (shortId, newState.toString))
+        goto(newState)
+      }
     stayOrGoto using data
   }
 
@@ -96,8 +102,15 @@ class JobActor(job: JobConfiguration)(
       val dataWithAssertorResult = data.withAssertorResult(result)
       stateOf(dataWithAssertorResult)
     }
+    case Event(fetchResponse: FetchResponse, data) if data.explorationMode === Lazy => {
+      val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
+      store.putResourceInfo(resourceInfo)
+      val msg = message.NewResourceInfo(resourceInfo)
+      tellEverybody(msg)
+      stateOf(data2)
+    }
     // TODO makes runId part of the FetchResponse and change logic accordingly
-    case Event(fetchResponse: FetchResponse, data) => {
+    case Event(fetchResponse: FetchResponse, data) if data.explorationMode === ProActive => {
       val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
       store.putResourceInfo(resourceInfo)
       val msg = message.NewResourceInfo(resourceInfo)
@@ -128,7 +141,7 @@ class JobActor(job: JobConfiguration)(
     }
     case Event(message.Stop, data) => {
       assertionsActorRef ! message.Stop
-      stateOf(data.copy(explorationMode = Lazy, toBeExplored = List.empty))
+      stateOf(data.stopMe())
     }
   }
 
@@ -203,7 +216,7 @@ class JobActor(job: JobConfiguration)(
   private final def receiveResponse(fetchResponse: FetchResponse, _data: RunData): (ResourceInfo, RunData) = {
     val data = _data.withCompletedFetch(fetchResponse.url)
     fetchResponse match {
-      case OkResponse(url, GET, status, headers, body, runId) => {
+      case OkResponse(url, GET, status, headers, body, runId) if data.explorationMode === ProActive => {
         logger.debug("%s: GET <<< %s" format (shortId, url))
         val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
         val (extractedURLs, newDistance) = headers.mimetype collect {
@@ -222,9 +235,9 @@ class JobActor(job: JobConfiguration)(
           result = FetchResult(status, headers, extractedURLs))
         (ri, _newData)
       }
-      // HEAD
-      case OkResponse(url, HEAD, status, headers, _, runId) => {
-        logger.debug("%s: HEAD <<< %s" format (shortId, url))
+      // HEAD or GET in Lazy Mode
+      case OkResponse(url, action, status, headers, _, runId) => {
+        logger.debug("%s: %s <<< %s" format (shortId, action.toString, url))
         val distance = data.distance.get(url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format url)
         val ri = ResourceInfo(
           url = url,

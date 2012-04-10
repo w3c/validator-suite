@@ -40,11 +40,6 @@ object RunData {
       warnings = warnings)
   }
 
-  // def somethingImportantHappened(before: RunData, after: RunData): Boolean = {
-  //   before.explorationMode != after.explorationMode ||
-  //     before.activity != after.activity
-  // }
-
 }
 
 case class Run(id: Run#Id) {
@@ -225,6 +220,9 @@ case class RunData(
       pendingAssertions = pendingAssertions - 1)
     case fail: AssertorFail => this.copy(pendingAssertions = pendingAssertions - 1) // TODO? should do something about that
   }
+
+  def stopMe(): RunData =
+    this.copy(explorationMode = Lazy, toBeExplored = List.empty)
 
 }
 
