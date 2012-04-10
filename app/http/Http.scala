@@ -14,6 +14,7 @@ import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
 import scalaz.Scalaz._
 import org.w3.util.akkaext._
+import AuthorityManager.encode
 
 case class Fetch(url: URL, action: HttpVerb, runId: RunId)
 case class SetSleepTime(value: Long)
@@ -32,12 +33,13 @@ class Http()(implicit configuration: VSConfiguration) extends Actor with PathAwa
   val logger = Logger.of(classOf[Http])
 
   def getAuthorityManagerRefOrCreate(authority: Authority): ActorRef = {
+    val encoded = encode(authority)
     try {
-      context.children.find(_.path.name === authority) getOrElse {
-        context.actorOf(Props(new AuthorityManager(authority)), name = authority)
+      context.children.find(_.path.name === encoded) getOrElse {
+        context.actorOf(Props(new AuthorityManager(authority)), name = encoded)
       }
     } catch {
-      case iane: InvalidActorNameException => context.actorFor(self.path / authority)
+      case iane: InvalidActorNameException => context.actorFor(self.path / encoded)
     }
   }
 

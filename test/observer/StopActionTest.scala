@@ -19,7 +19,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
-      name="localhost:9001",
+      name="localhost_9001",
       entrypoint=URL("http://localhost:9001/"),
       distance=1000,
       linkCheck=true,
@@ -33,7 +33,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
   "test stop" in {
     store.putOrganization(organizationTest)
     store.putJob(jobConf).waitResult()
-    PathAware(http, http.path / "localhost:9001") ! SetSleepTime(50)
+    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
     val job = Job(jobConf)
     job.refresh()
     job.listen(testActor)

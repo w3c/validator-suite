@@ -26,7 +26,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
-      name="localhost:9001",
+      name="localhost_9001",
       entrypoint=URL("http://localhost:9001/"),
       distance=1,
       linkCheck=true,
@@ -43,8 +43,8 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
   "test OneGETxHEAD" in {
     store.putOrganization(organizationTest)
     store.putJob(jobConf).waitResult()
-    PathAware(http, http.path / "localhost:9001") ! SetSleepTime(0)
-    PathAware(http, http.path / "localhost:9002") ! SetSleepTime(0)
+    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
+    PathAware(http, http.path / "localhost_9002") ! SetSleepTime(0)
     val job = Job(jobConf)
     job.refresh()
     job.listen(testActor)

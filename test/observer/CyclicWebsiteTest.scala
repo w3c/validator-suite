@@ -22,7 +22,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
   val strategy =
     EntryPointStrategy(
       uuid=java.util.UUID.randomUUID(), 
-      name="localhost:9001",
+      name="localhost_9001",
       entrypoint=URL("http://localhost:9001/"),
       distance=11,
       linkCheck=true,
@@ -36,7 +36,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
   "test cyclic(10)" in {
     store.putOrganization(organizationTest)
     store.putJob(jobConf).waitResult()
-    PathAware(http, http.path / "localhost:9001") ! SetSleepTime(0)
+    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     val job = Job(jobConf)
     job.refresh()
     job.listen(testActor)

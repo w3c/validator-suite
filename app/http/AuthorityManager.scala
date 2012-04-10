@@ -12,6 +12,14 @@ import play.Logger
 import org.w3.vs.model.{Response => _, _}
 import org.w3.vs.VSConfiguration
 import scala.collection.mutable.Queue
+import org.w3.util.akkaext._
+
+object AuthorityManager {
+
+  def encode(authority: Authority): String =
+    authority.replaceAll(":", "_")
+
+}
 
 final class AuthorityManager(authority: Authority)(implicit configuration: VSConfiguration) extends Actor {
   
