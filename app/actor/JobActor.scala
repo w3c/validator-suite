@@ -47,33 +47,14 @@ class JobActor(job: JobConfiguration)(
 
   implicit def strategy = job.strategy
 
-  final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
-    var data = _data
-    store.listResourceInfos(job.id, after = afterOpt).waitResult foreach { resourceInfo =>
-      data = data.withCompletedFetch(resourceInfo.url)
-    }
-    store.listAssertorResults(job.id, after = afterOpt).waitResult foreach { assertorResult =>
-      data = data.withAssertorResult(assertorResult)
-    }
-    data
-  }
-
-  /**
-   * tries to get the latest snapshot, then replays the events that happened on it
-   */
-  private final val initialConditions: RunData = store.latestSnapshotFor(job.id).waitResult match {
-    case None => RunData(jobId = job.id, strategy = strategy)
-    case Some(snapshot) => replayEventsOn(RunData(strategy, snapshot), Some(snapshot.createdAt))
-  }
-
   // at instanciation of this actor
 
   // TODO
   configuration.system.scheduler.schedule(10 seconds, 2 seconds, self, 'Tick)
 
-  var lastRunData = initialConditions
+  var lastRunData = initialConditions()
 
-  startWith(initialConditions.state, initialConditions)
+  startWith(lastRunData.state, lastRunData)
 
   def stateOf(data: RunData): State = {
     val currentState = stateName
@@ -146,6 +127,16 @@ class JobActor(job: JobConfiguration)(
     }
   }
 
+  onTransition {
+    case _ -> _ => {
+      val msg = message.UpdateData(JobData(nextStateData))
+      tellEverybody(msg)
+      if (nextStateData.noMoreUrlToExplore) {
+        logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
+      }
+    }
+  }
+
   private final def tellEverybody(msg: Any): Unit = {
     // tell the organization
     context.actorFor("../..") ! msg
@@ -153,18 +144,23 @@ class JobActor(job: JobConfiguration)(
     tellListeners(msg)
   }
 
-  onTransition {
-    // detect when the state as changed
-    case _ -> _ => {
-      val msg = message.UpdateData(JobData(nextStateData))
-      tellEverybody(msg)
-      if (nextStateData.noMoreUrlToExplore) {
-        logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
-      }
-      // if (nextStateData.assertionPhaseIsFinished) {
-      //   logger.info("%s: no pending assertions" format shortId)
-      // }
+  /**
+   * tries to get the latest snapshot, then replays the events that happened on it
+   */
+  private final def initialConditions(): RunData = store.latestSnapshotFor(job.id).waitResult match {
+    case None => RunData(jobId = job.id, strategy = strategy)
+    case Some(snapshot) => replayEventsOn(RunData(strategy, snapshot), Some(snapshot.createdAt))
+  }
+
+  final private def replayEventsOn(_data: RunData, afterOpt: Option[DateTime]): RunData = {
+    var data = _data
+    store.listResourceInfos(job.id, after = afterOpt).waitResult foreach { resourceInfo =>
+      data = data.withCompletedFetch(resourceInfo.url)
     }
+    store.listAssertorResults(job.id, after = afterOpt).waitResult foreach { assertorResult =>
+      data = data.withAssertorResult(assertorResult)
+    }
+    data
   }
 
   private final def initialData: RunData = {
