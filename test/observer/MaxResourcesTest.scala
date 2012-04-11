@@ -14,7 +14,7 @@ import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 
-class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
+class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
 
   val strategy =
     EntryPointStrategy(
@@ -30,21 +30,17 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(1000).toPlanify))
 
-  "test stop" in {
+  "shoudldn't access more that 100 resources" in {
     store.putOrganization(organizationTest)
     store.putJob(jobConf).waitResult()
-    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
+    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     val job = Job(jobConf)
     job.refresh()
     job.listen(testActor)
     fishForMessagePF(3.seconds) {
-      case NewResourceInfo(ri) => ri.url must be === (URL("http://localhost:9001/"))
-    }
-    job.stop()
-    fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
-        val resources = store.listResourceInfos(jobConf.id).waitResult
-        resources.size must be < (100)
+        val resources = store.listResourceInfos(jobConf.id).waitResult()
+        resources must have size (100)
       }
     }
   }

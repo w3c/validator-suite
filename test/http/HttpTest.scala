@@ -121,8 +121,6 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
     pendingFetches() must be === (98)
 
-
-
   }
 
 
