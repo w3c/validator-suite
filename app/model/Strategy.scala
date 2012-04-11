@@ -32,15 +32,18 @@ case class Strategy(
   
   val authorityToObserve: Authority = mainAuthority
   
-  def fetch(url: URL, distance: Int): HttpAction = {
-    if ((url.getAuthority == entrypoint.getAuthority) &&
-        (distance <= this.distance))
-      GET
-    else if (linkCheck)
-      HEAD
-    else
+  def fetch(url: URL, distance: Int): HttpAction =
+    if (filter.passThrough(url)) {
+      if ((url.getAuthority == entrypoint.getAuthority) &&
+          (distance <= this.distance))
+        GET
+      else if (linkCheck)
+        HEAD
+      else
+        FetchNothing
+    } else {
       FetchNothing
-  }
+    }
 
   def noAssertor(): Strategy = this.copy(assertorsFor = AssertorSelector.noAssertor)
 
