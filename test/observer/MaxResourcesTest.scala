@@ -28,7 +28,7 @@ class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) w
   
   val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
   
-  val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(1000).toPlanify))
+  val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.tree(4).toPlanify))
 
   "shoudldn't access more that 100 resources" in {
     store.putOrganization(organizationTest)
