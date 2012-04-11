@@ -6,7 +6,7 @@ import scala.util.matching.Regex
 
 object Filter {
 
-  def prefixRegex(prefix: String): Regex = new Regex("^" + prefix + "*")
+  def prefixRegex(prefix: String): Regex = new Regex("^" + prefix + ".*$")
 
   def includePrefix(prefix: String): Filter = includePrefixes(prefix)
 
