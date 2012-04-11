@@ -24,7 +24,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
   val j = 10
   
   val strategy =
-    EntryPointStrategy(
+    Strategy(
       uuid=java.util.UUID.randomUUID(), 
       name="localhost_9001",
       entrypoint=URL("http://localhost:9001/"),

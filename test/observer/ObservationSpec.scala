@@ -15,7 +15,7 @@ import org.scalatest.matchers.MustMatchers
 class ObservationSpec extends WordSpec with MustMatchers {
 
   val strategy =
-    EntryPointStrategy(
+    Strategy(
       uuid=java.util.UUID.randomUUID(), 
       name="localhost_9001",
       entrypoint=URL("http://www.w3.org"),

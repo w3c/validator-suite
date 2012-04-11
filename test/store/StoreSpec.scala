@@ -11,7 +11,7 @@ import java.nio.file.Paths
 abstract class StoreSpec extends WordSpec with MustMatchers with EitherValues {
   
 //  val strategy =
-//    EntryPointStrategy(
+//    Strategy(
 //      uuid=java.util.UUID.randomUUID(),
 //      name="w3.org",
 //      entrypoint=URL("http://www.w3.org/"),

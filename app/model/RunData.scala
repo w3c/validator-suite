@@ -91,8 +91,6 @@ case class RunData(
 
   final def isBusy = !isIdle
 
-  final def toLimit: Int = strategy.maxNumberOfResources - numberOfKnownUrls
-
   final def activity: RunActivity = if (isBusy) Busy else Idle
 
   final def state: (RunActivity, ExplorationMode) = (activity, explorationMode)

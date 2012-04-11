@@ -28,7 +28,7 @@ object Global extends GlobalSettings {
       name = "W3C",
       creator = bertails.id,
       organization = w3c.id,
-      strategy = new EntryPointStrategy(
+      strategy = new Strategy(
         name="irrelevantForV1",
         entrypoint=URL("http://www.w3.org/"),
         distance=1,

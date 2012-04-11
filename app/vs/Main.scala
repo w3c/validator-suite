@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 object Main {
   
   val strategy =
-    EntryPointStrategy(
+    Strategy(
       uuid=java.util.UUID.randomUUID(), 
       name="w3.org",
       entrypoint=URL("http://www.bertails.org/"),

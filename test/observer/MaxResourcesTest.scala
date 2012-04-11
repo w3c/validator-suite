@@ -17,7 +17,7 @@ import org.w3.vs.http._
 class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
 
   val strategy =
-    EntryPointStrategy(
+    Strategy(
       uuid=java.util.UUID.randomUUID(), 
       name="localhost:9001",
       entrypoint=URL("http://localhost:9001/"),

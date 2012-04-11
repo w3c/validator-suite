@@ -19,7 +19,7 @@ class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
   val servers = Seq.empty
 
   val strategy =
-    EntryPointStrategy(
+    Strategy(
       uuid=java.util.UUID.randomUUID(), 
       name="localhost_9001",
       entrypoint=URL("http://localhost:9001/"),

@@ -8,7 +8,7 @@ import org.w3.vs.VSConfiguration
 
 object JobConfiguration {
 
-  def fake(strategy: EntryPointStrategy): JobConfiguration = {
+  def fake(strategy: Strategy): JobConfiguration = {
     val fakeUser = User.fake
     JobConfiguration(name = "fake job", creator = fakeUser.id, organization = fakeUser.organization, strategy = strategy)
   }
@@ -18,7 +18,7 @@ object JobConfiguration {
 
 case class JobConfiguration(
     id: JobId = JobId.newId(),
-    strategy: EntryPointStrategy,
+    strategy: Strategy,
     createdOn: DateTime = new DateTime,
     creator: UserId,
     organization: OrganizationId,

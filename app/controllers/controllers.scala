@@ -58,7 +58,7 @@ package object controllers {
         name = name,
         organization = null,
         creator = null,
-        strategy = new EntryPointStrategy(
+        strategy = new Strategy(
           name="irrelevantForV1",
           entrypoint=url,
           distance=distance,

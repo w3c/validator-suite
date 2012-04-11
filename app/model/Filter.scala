@@ -4,7 +4,7 @@ import org.w3.vs._
 
 import scala.util.matching.Regex
 
-/** A filter for URLs, to be applied to a [[org.w3.vs.model.EntryPointStrategy]]
+/** A filter for URLs, to be applied to a [[org.w3.vs.model.Strategy]]
   * 
   * The semantics of filter is to considerer the `include` first, then the `exclude`
   *
