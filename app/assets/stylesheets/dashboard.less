@@ -6,19 +6,9 @@
 
 .structureMedia;
 
-/* Smooth UI. That's a bit severe 
-body * {
-	-webkit-transition: all 0.2s linear;
-	-moz-transition: all 0.2s linear;
-	-o-transition: all 0.2s linear;
-	transition: all 0.2s linear;
+body > footer {
+	background: @headerBgColor;
 }
-body {
-	-webkit-transition: padding 0.2s linear;
-	-moz-transition:  padding 0.2s linear;
-	-o-transition:  padding 0.2s linear;
-	transition:  padding 0.2s linear;
-}*/
 
 #crumbs li {display:inline;}
 #crumbs li:after {content: " | "}
@@ -27,14 +17,7 @@ body {
 	display:none;
 }
 
-#toolbar {
-	background: @headerBgColor;
-}
-body > footer {
-	background: @headerBgColor;
-}
-
-.job button {
+#jobs article button {
 	border:none;
 	background:none;
 	cursor:pointer;
@@ -44,39 +27,43 @@ body > footer {
 	color:blue;
 	line-height: 1em;
 }
-.job {overflow: auto;}
-.job > div {
-	font-size:0;	
+/* .job form {line-height:1.2em} */
+/* .job form button {display:block; float:right; clear:right;} */
+
+
+#jobs {
+	display:table;
+	border-collapse: collapse;
+	table-layout: auto;
+	width: 100%;
 }
-.job > div > * {
-	font-size:13px;
-	display:inline-block;
-	vertical-align:top;
-	line-height:1.2em
+#jobs article,
+#jobs header {
+	display: table-row;
 }
-.job > div > *:first-child {width:50%;}
-.job > div > *:nth-child(2) {width:33%;}
-.job > div > *:last-child {width:17%;}
-.job form {line-height:1.2em}
-.job form button {display:block; float:right; clear:right;}
-.job a {float:right; clear:right;}
-.job .report {}
-.job .filters h1 {
-	display:inline;
-	font-size:1.1em;
-	border:solid #e5e5e5;
-	border-width: 1px 1px 0 1px;
-	padding:5px;
-	margin-right:10px
+#jobs header {
+	border-bottom:1px solid @borderColor;
 }
-#main > section.job {
-	padding-bottom:0;
-	border-bottom:0;	
-}
-section.job > div {
+#jobs article > div,
+#jobs header > div {
+	display: table-cell;
 	padding:10px;
-	border: 1px solid #e5e5e5;
 }
+#jobs .resources,
+#jobs .errors,
+#jobs .warnings {
+	text-align: right;
+}
+
+/* .job .filters h1 { */
+/* 	display:inline; */
+/* 	font-size:1.1em; */
+/* 	border:solid #e5e5e5; */
+/* 	border-width: 1px 1px 0 1px; */
+/* 	padding:5px; */
+/* 	margin-right:10px */
+/* } */
+
 nav.report > div {
 	padding:10px;
 	border: 1px solid #e5e5e5;
@@ -336,27 +323,27 @@ nav.report li:first-child:before {
 /* 	padding: 5px 5px 2px 5px; */
 /* 	line-height: 1.6em; */
 /* } */
-#toolbar {
-	line-height: 1.5em;
-}
-#toolbar fieldset {
-	display: inline-block;
-	vertical-align: top;
-	min-width: 160px;
-}
-#toolbar legend {
-	font-weight: bold;
-	line-height: 2em;
-}
-#toolbar input {
-	vertical-align:top;
-}
-@media screen and (min-width: 980px) {
-#toolbar .report {
-	//position: fixed;
-	width:160px;
-}
-}
+/* #toolbar { */
+/* 	line-height: 1.5em; */
+/* } */
+/* #toolbar fieldset { */
+/* 	display: inline-block; */
+/* 	vertical-align: top; */
+/* 	min-width: 160px; */
+/* } */
+/* #toolbar legend { */
+/* 	font-weight: bold; */
+/* 	line-height: 2em; */
+/* } */
+/* #toolbar input { */
+/* 	vertical-align:top; */
+/* } */
+/* @media screen and (min-width: 980px) { */
+/* #toolbar .report { */
+/* 	//position: fixed; */
+/* 	width:160px; */
+/* } */
+/* } */
 
 /*.messages .description,
 .messages .contexts {

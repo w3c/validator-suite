@@ -47,91 +47,42 @@ body {
 
 .bodyLayout(@headerH, @footerH);
 
-#toolbar {
-	padding: @spacing;
-	background: @headerBgColor;
-	border: solid @borderColor;
-	border-width: 0 0 @borderSize 0;
-}	
-
 #main {
-	width: 100%;
-	.border-sizing;
+/* 	width: 100%; */
+/* 	.border-sizing; */
 }
 
 #main > nav,
 #main > section {
 	padding: @spacing;
-	padding-bottom:0;
+	border-bottom:1px solid @borderColor;
 }
 #main > :last-child {
 	border-bottom: none;
-	padding-bottom: @spacing;
 }
-// something's refactorable here. there 2 types of sections, with inside padded div or not
-#main > #crumbs,
-#main > #messages {
-	border-bottom:1px solid @borderColor;
-	padding-bottom: @spacing;
-}
-
 
 #main > .list {
-	padding: @spacing / 2;
-	font-size: 0rem;
-	line-height: 0rem;
+	padding: 0;
 }
-.list > article {
-	font-size:@baseFontSize;
-	line-height:@baseFontSize;
-	padding: @spacing / 2;
-	display: inline-block;
-	vertical-align:top;
-	width: 100%;
-	.border-sizing;
-}
-.list > article > div {
-	padding: @spacing;
-	border: 1px solid @borderColor;
-	position: relative; /* become a ref for children positionning */
-	overflow: auto;
-}
+/* .list > article { */
+/* 	//font-size:@baseFontSize; */
+/* 	//line-height:@baseFontSize; */
+/* 	//padding: @spacing / 2; */
+/* 	//display: inline-block; */
+/* 	//vertical-align:top; */
+/* 	//width: 100%; */
+/* 	//.border-sizing; */
+/* } */
+/* .list > article > div { */
+/* 	//padding: @spacing; */
+/* 	// border: 1px solid @borderColor; */
+/* 	//position: relative; become a ref for children positionning */
+/* 	//overflow: auto; */
+/* } */
 
 .structureMedia () {
-	@media screen and (min-width: 450px) {
-		//.bodyLayout(80px, @footerH);
-		//.header(80px, 8px);
-
-		//.toolBarLayout(180px);
-	}
 	@media screen and (min-width: 580px) {
-
-		
-	}
-	@media screen and (min-width: 980px) {
 		.header(100px, 10px);
 		.bodyLayout(100px, @footerH);
-		#toolbar {
-			height: auto;
-			position: absolute;
-			left: 0;
-			bottom: 0;
-			top: 0;
-			border-width: 0 @borderSize 0 0;
-		}
-		.toolBarLayout(180px);
-		.list > article {
-			width:50%;
-		}
-	}
-	@media screen and (min-width: 1380px) {
-		.list > article {
-			width:33.33%;
-		}
-	}
-	@media screen and (min-width: 1780px) {
-		.list > article {
-			width:25%;
-		}
 	}
 }
