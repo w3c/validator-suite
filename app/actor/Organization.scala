@@ -11,6 +11,7 @@ import akka.pattern.ask
 import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import java.nio.channels.ClosedChannelException
 import org.w3.util.akkaext._
+import play.api.libs.iteratee.Enumeratee
 
 object Organization {
 
@@ -31,7 +32,7 @@ class Organization(organizationId: OrganizationId)(implicit conf: VSConfiguratio
   val organizationPath = system / "organizations" / organizationId.toString
   val organizationRef = system.actorFor(organizationPath)
 
-  def subscribeToUpdates(): PushEnumerator[message.RunUpdate] = {
+  def subscribeToUpdates(): Enumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
         case msg: message.RunUpdate =>
@@ -50,7 +51,7 @@ class Organization(organizationId: OrganizationId)(implicit conf: VSConfiguratio
         onError = (_,_) => () => organizationRef ! Deafen(subscriber)
       )
     organizationRef ! Listen(subscriber)
-    enumerator
+    enumerator &> Enumeratee.onIterateeDone(() => {organizationRef ! Deafen(subscriber); logger.info("onIterateeDone")})
   }
 
 

@@ -20,6 +20,7 @@ import org.w3.util._
 import org.w3.util.Pimps._
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
+import play.api.libs.iteratee.Enumeratee
 
 object Job {
   
@@ -71,8 +72,8 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
 
   import conf.system
 
-  val logger = play.Logger.of(classOf[Job])
-
+  val logger = Logger.of(classOf[Job])
+  
   implicit def timeout = conf.timeout
 
   val organizationsRef = system.actorFor(system / "organizations")
@@ -99,7 +100,7 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
   def jobData(): Future[JobData] =
     (PathAware(organizationsRef, path) ? message.GetJobData).mapTo[JobData]
 
-  def subscribeToUpdates(): PushEnumerator[message.RunUpdate] = {
+  def subscribeToUpdates(): Enumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
         case msg: message.RunUpdate =>
@@ -118,7 +119,7 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
         onError = (_,_) => () => deafen(subscriber)
       )
     listen(subscriber)
-    enumerator
+    enumerator &> Enumeratee.onIterateeDone(() => {deafen(subscriber); logger.info("onIterateeDone")})
   }
   
 }
