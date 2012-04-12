@@ -52,24 +52,6 @@
 					}}
 				</form>
 			</div>
-			<!-- <form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
-				<button type="submit" class="show" formmethod="get">Show</button>
-				@defining(data.explorationMode) { mode =>
-				@defining(data.activity) { activity =>
-				  @activity match {
-				    case Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
-				    case Idle => {
-				      @mode match {
-				        case ProActive => {<button type="submit" name="action" value="off" class="off">Off</button>}
-				        case      Lazy => {<button type="submit" name="action" value="on" class="on">On</button>}
-				      }
-				    }
-				  }
-				}}
-				<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
-				<button type="submit" class="edit" formmethod="get" formaction="routes.Jobs.edit(jobConf.id)">Edit</button>
-				<button type="submit" name="action" value="delete" class="delete">Delete</button>
-			</form> -->
 		</article>
 		}
 	</section>

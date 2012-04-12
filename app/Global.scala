@@ -24,7 +24,7 @@ object Global extends GlobalSettings {
     store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id))
     store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id))
     
-    val job = JobConfiguration(
+    val w3 = JobConfiguration(
       name = "W3C",
       creator = bertails.id,
       organization = w3c.id,
@@ -35,11 +35,40 @@ object Global extends GlobalSettings {
         linkCheck=false,
         maxNumberOfResources = 100,
         filter=Filter(include=Everything, exclude=Nothing)))
+        
+    val ibm = JobConfiguration(
+      name = "IBM",
+      creator = bertails.id,
+      organization = w3c.id,
+      strategy = new Strategy(
+        name="irrelevantForV1",
+        entrypoint=URL("http://www.ibm.com"),
+        distance=1,
+        linkCheck=false,
+        maxNumberOfResources = 100,
+        filter=Filter(include=Everything, exclude=Nothing)))
     
-    var a = List[JobConfiguration]()
-    for (i <- 0 until 8)
-      a = a :+ job.copy(JobId(), strategy = job.strategy.copy(distance = i), createdOn = DateTime.now.plus(i)) 
-    a.map(store.putJob)
+    val lemonde = JobConfiguration(
+      name = "Le Monde",
+      creator = bertails.id,
+      organization = w3c.id,
+      strategy = new Strategy(
+        name="irrelevantForV1",
+        entrypoint=URL("http://www.lemonde.fr"),
+        distance=1,
+        linkCheck=false,
+        maxNumberOfResources = 100,
+        filter=Filter(include=Everything, exclude=Nothing)))
+    
+        
+    store.putJob(w3)
+    store.putJob(ibm)
+    store.putJob(lemonde)
+    
+//    var a = List[JobConfiguration]()
+//    for (i <- 0 until 8)
+//      a = a :+ job.copy(JobId(), strategy = job.strategy.copy(distance = i), createdOn = DateTime.now.plus(i)) 
+//    a.map(store.putJob)
 
   }
   
