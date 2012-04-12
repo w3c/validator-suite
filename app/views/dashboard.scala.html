@@ -4,7 +4,7 @@
 
 @libs.main("Validator Suite", 
   stylesheets = List("dashboard.css"),
-      scripts = List("model.js", "vs.js")){
+      scripts = List("model.js", "vs.js", "dashboard.js")){
    
    @***** Header ******@
    
@@ -84,7 +84,15 @@
 			<div class="errors"><%= data.get('errors') %></div>
 			<div class="warnings"><%= data.get('warnings') %></div>
 			<div class="health">Health</div>
-			<div class="status"><%= data.get('activity') %></div>
+			<div>
+				<span class="status"><%= data.get('activity') %></span>
+				<% switch(data.get('activity')) { 
+				case "Busy": %>
+					<a class="stop" href="">Cancel</a>
+				<% break; case "Idle": %>
+					<a class="refresh" href="">Run Now</a>
+				<% } %>
+			</div>
 	</script>
 
 	@libs.footer()

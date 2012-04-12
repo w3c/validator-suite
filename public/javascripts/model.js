@@ -127,14 +127,14 @@ window.Job.fromHTML = function(elem) {
 	return new Job({
 		id: $(elem).attr("data-id"),
 		name: $(".name", elem).text(),
-		seedUri: $(".uri", elem).text(),
-		distance: parseInt($(".distance", elem).text()),
+		seedUri: $(".url", elem).text(),
+		//distance: parseInt($(".distance", elem).text()),
 		data: new JobData({
 			jobId: $(elem).attr("data-id"),
-			activity: $(".activity", elem).text(),
-			mode: $(".mode", elem).text(),
+			activity: $(".status", elem).text(),
+			//mode: $(".mode", elem).text(),
 			resources: parseInt($(".resources", elem).text()),
-			oks: parseInt($(".oks", elem).text()),
+			//oks: parseInt($(".oks", elem).text()),
 			errors: parseInt($(".errors", elem).text()),
 			warnings: parseInt($(".warnings", elem).text())				
 		})

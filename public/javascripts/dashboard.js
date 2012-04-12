@@ -72,7 +72,7 @@ window.DashboardView = Backbone.View.extend({
 		var onmessage = _.bind(this._messageCallback, this);
 		this.jobs.on('sync', function () {VS.Socket.reset().onmessage = onmessage;}, VS.Socket);
 		// Parse the HTML to get initial data as an array of (model, view)
-		_.each($("#jobs .job").toArray(), function(jobElem) { 
+		_.each($("#jobs article").toArray(), function(jobElem) { 
 			this.jobs.add(Job.fromHTML(jobElem));
 			$(jobElem).remove();
 		}, this);
