@@ -25,43 +25,60 @@ object Global extends GlobalSettings {
     store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id))
     
     val w3 = JobConfiguration(
+      createdOn = DateTime.now,
       name = "W3C",
       creator = bertails.id,
       organization = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
         entrypoint=URL("http://www.w3.org/"),
-        distance=1,
+        distance=2,
         linkCheck=false,
         maxNumberOfResources = 100,
         filter=Filter(include=Everything, exclude=Nothing)))
         
+    val tr = JobConfiguration(
+      createdOn = DateTime.now.plus(1000),
+      name = "TR",
+      creator = bertails.id,
+      organization = w3c.id,
+      strategy = new Strategy(
+        name="irrelevantForV1",
+        entrypoint=URL("http://www.w3.org/TR"),
+        distance=2,
+        linkCheck=false,
+        maxNumberOfResources = 100,
+        filter=Filter.includePrefixes("http://www.w3.org/TR")))
+        
     val ibm = JobConfiguration(
+      createdOn = DateTime.now.plus(2000),
       name = "IBM",
       creator = bertails.id,
       organization = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
         entrypoint=URL("http://www.ibm.com"),
-        distance=1,
+        distance=2,
         linkCheck=false,
         maxNumberOfResources = 100,
         filter=Filter(include=Everything, exclude=Nothing)))
     
     val lemonde = JobConfiguration(
+      createdOn = DateTime.now.plus(3000),
       name = "Le Monde",
       creator = bertails.id,
       organization = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
         entrypoint=URL("http://www.lemonde.fr"),
-        distance=1,
+        distance=2,
         linkCheck=false,
         maxNumberOfResources = 100,
         filter=Filter(include=Everything, exclude=Nothing)))
     
         
     store.putJob(w3)
+    store.putJob(tr)
     store.putJob(ibm)
     store.putJob(lemonde)
     

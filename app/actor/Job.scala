@@ -115,8 +115,8 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
     }))
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
-        onComplete = () => deafen(subscriber),
-        onError = (_,_) => () => deafen(subscriber)
+        onComplete = () => {deafen(subscriber); logger.info("onComplete")},
+        onError = (_,_) => () => {deafen(subscriber); logger.info("onError")}
       )
     listen(subscriber)
     enumerator &> Enumeratee.onIterateeDone(() => {deafen(subscriber); logger.info("onIterateeDone")})

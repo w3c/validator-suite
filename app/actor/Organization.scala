@@ -12,6 +12,7 @@ import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import java.nio.channels.ClosedChannelException
 import org.w3.util.akkaext._
 import play.api.libs.iteratee.Enumeratee
+import message.UpdateData
 
 object Organization {
 
@@ -35,23 +36,23 @@ class Organization(organizationId: OrganizationId)(implicit conf: VSConfiguratio
   def subscribeToUpdates(): Enumerator[message.RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
-        case msg: message.RunUpdate =>
+        case msg: message.UpdateData =>
           try {
             enumerator.push(msg)
           } catch {
             case e: ClosedChannelException => enumerator.close; logger.error("ClosedChannel exception: ", e)
             case e => enumerator.close; logger.error("Enumerator exception: ", e)
           }
-        case msg => logger.debug("subscriber got "+msg)
+        case _ => ()
       }
     }))
     lazy val enumerator: PushEnumerator[message.RunUpdate] =
       Enumerator.imperative[message.RunUpdate](
-        onComplete = () => organizationRef ! Deafen(subscriber),
-        onError = (_,_) => () => organizationRef ! Deafen(subscriber)
+        onComplete = () => {organizationRef ! Deafen(subscriber); logger.info("onComplete")},
+        onError = (_,_) => () => {organizationRef ! Deafen(subscriber); logger.info("onError")}
       )
     organizationRef ! Listen(subscriber)
-    enumerator &> Enumeratee.onIterateeDone(() => {organizationRef ! Deafen(subscriber); logger.info("onIterateeDone")})
+    enumerator &> Enumeratee.onIterateeDone(() => {organizationRef ! Deafen(subscriber); logger.info("onIterateeDone")}) 
   }
 
 
