@@ -24,9 +24,8 @@ case class JobConfiguration(
     organization: OrganizationId,
     name: String) {
 
-  def shortId: String = id.toString.substring(0, 6)
-
   def assignTo(user: User): JobConfiguration = {
     copy(creator = user.id, organization = user.organization)
   }
+
 }

@@ -15,7 +15,7 @@ object AssertorSelector {
   def fromMimeType(pf: PartialFunction[String, Iterable[AssertorId]]) = new AssertorSelector {
     def apply(resourceInfo: ResourceInfo): Iterable[AssertorId] = {
       resourceInfo match {
-        case ResourceInfo(id, url, runId, action, timestamp, distanceFromSeed, FetchResult(status, headers, _)) if action === GET => headers.mimetype.collect(pf).flatten
+        case ResourceInfo(id, url, jobId, runId, action, timestamp, FetchResult(status, headers, _)) if action === GET => headers.mimetype.collect(pf).flatten
         case _ => Seq.empty
       }
     }

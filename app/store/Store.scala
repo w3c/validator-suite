@@ -29,9 +29,11 @@ trait Store {
   
   def getResourceInfo(url: URL, jobId: JobId): FutureValidationNoTimeOut[SuiteException, ResourceInfo]
   
-  def distance(url: URL, jobId: JobId): FutureValidationNoTimeOut[SuiteException, Int]
+//  def distance(url: URL, jobId: JobId): FutureValidationNoTimeOut[SuiteException, Int]
   
   def listResourceInfos(jobId: JobId, after: Option[DateTime] = None): FutureValidationNoTimeOut[SuiteException, Iterable[ResourceInfo]]
+
+  def listResourceInfosByRunId(runId: RunId, after: Option[DateTime] = None): FutureValidationNoTimeOut[SuiteException, Iterable[ResourceInfo]]
   
   // this is not really safe (goes through the entire collection)
   // def listAllResourceInfos(): FutureValidationNoTimeOut[SuiteException, Iterable[ResourceInfo]]

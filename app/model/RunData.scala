@@ -13,6 +13,7 @@ import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.ListMap
 import java.util.UUID
+import scalaz.Scalaz._
 
 object RunData {
 
@@ -71,7 +72,7 @@ case class RunData(
 
   type Explore = (URL, Int)
 
-  final def numberOfKnownUrls: Int = distance.keySet.count { _.authority == mainAuthority }
+  final def numberOfKnownUrls: Int = distance.keySet.count { _.authority === mainAuthority }
 
   // assert(
   //   distance.keySet == fetched ++ pending ++ toBeExplored,

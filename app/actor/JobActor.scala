@@ -43,7 +43,7 @@ class JobActor(job: JobConfiguration)(
   /**
    * A shorten id for logs readability
    */
-  val shortId = job.shortId
+  def shortId: String = job.id.shortId + "/" + stateData.runId.shortId
 
   implicit def strategy = job.strategy
 
@@ -101,6 +101,12 @@ class JobActor(job: JobConfiguration)(
       store.putAssertorResult(result)
       val dataWithAssertorResult = data.withAssertorResult(result)
       stateOf(dataWithAssertorResult)
+    }
+    case Event(fetchResponse: FetchResponse, data) if fetchResponse.runId /== data.runId => {
+      val resourceInfo = ResourceInfo.fromFetchResponse(fetchResponse, job.id)
+      //println("@@@ "+resourceInfo.toTinyString)
+      store.putResourceInfo(resourceInfo)
+      stay()
     }
     case Event(fetchResponse: FetchResponse, data) if data.explorationMode === Lazy => {
       val (resourceInfo, data2) = receiveResponse(fetchResponse, data)
@@ -230,8 +236,9 @@ class JobActor(job: JobConfiguration)(
         val ri = ResourceInfo(
           url = url,
           jobId = job.id,
+          runId = runId,
           action = GET,
-          distancefromSeed = distance,
+//          distancefromSeed = distance,
           result = FetchResult(status, headers, extractedURLs))
         (ri, _newData)
       }
@@ -242,8 +249,9 @@ class JobActor(job: JobConfiguration)(
         val ri = ResourceInfo(
           url = url,
           jobId = job.id,
+          runId = runId,
           action = HEAD,
-          distancefromSeed = distance,
+//          distancefromSeed = distance,
           result = FetchResult(status, headers, List.empty))
         (ri, data)
       }
@@ -253,8 +261,9 @@ class JobActor(job: JobConfiguration)(
         val ri = ResourceInfo(
           url = url,
           jobId = job.id,
+          runId = runId,
           action = action,
-          distancefromSeed = distance,
+//          distancefromSeed = distance,
           result = ResourceInfoError(why.getMessage))
         (ri, data)
       }

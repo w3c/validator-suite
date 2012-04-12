@@ -94,15 +94,24 @@ class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
   }
 
   def distance(url: URL, jobId: JobId): FutureValidationNoTimeOut[SuiteException, Int] = {
-    getResourceInfo(url, jobId) map { _.distancefromSeed }
+    //getResourceInfo(url, jobId) map { _.distancefromSeed }
+    sys.error("don't think this is actually needed for v1")
   }
 
   def listResourceInfos(jobId: JobId, after: Option[DateTime] = None): FutureValidationNoTimeOut[SuiteException, Iterable[ResourceInfo]] = fromTryCatch {
     after match {
-      case None => resourceInfos.values filter { _.jobId == jobId }
-      case Some(date) => resourceInfos.values.filter { ri => ri.jobId == jobId && ri.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
+      case None => resourceInfos.values filter { _.jobId === jobId }
+      case Some(date) => resourceInfos.values.filter { ri => ri.jobId === jobId && ri.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
     }
   }
+
+  def listResourceInfosByRunId(runId: RunId, after: Option[DateTime] = None): FutureValidationNoTimeOut[SuiteException, Iterable[ResourceInfo]] = fromTryCatch {
+    after match {
+      case None => resourceInfos.values filter { _.runId === runId }
+      case Some(date) => resourceInfos.values.filter { ri => ri.runId === runId && ri.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
+    }
+  }
+
 
   def listAssertorResults(jobId: JobId, after: Option[DateTime] = None): FutureValidationNoTimeOut[SuiteException, Iterable[AssertorResult]] = fromTryCatch {
     after match {
