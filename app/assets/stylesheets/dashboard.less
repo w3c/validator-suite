@@ -162,23 +162,20 @@ form.group input {
 	display:none;	
 }
 form.group label {
-	display:inline-block;
+	display:block;
 	padding:4px;
-	width:100%;
-	box-sizing:border-box;
-	-moz-box-sizing:border-box;
 	color:#777;
 }
 form.group label:hover {
 	background:@headerBgColor;
 }
-form.group input:checked ~ label {
+form.group input:checked + label {
 	color:#444;
 }
 form.group:hover {
 	position:absolute;
 }
-form.group fieldset:not(:hover) input:not(:checked) ~ label {
+form.group fieldset:not(:hover) input:not(:checked) + label {
 	display:none;	
 }
 form.group fieldset:not(:hover) {
