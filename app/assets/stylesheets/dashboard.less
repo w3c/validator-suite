@@ -10,26 +10,10 @@ body > footer {
 	background: @headerBgColor;
 }
 
-#crumbs li {display:inline;}
-#crumbs li:after {content: " | "}
-#crumbs li:last-child:after {
-	content:"";
-	display:none;
-}
 
-#jobs article button {
-	border:none;
-	background:none;
-	cursor:pointer;
-	margin:0;
-	padding:0;
-	text-decoration:underline;
-	color:blue;
-	line-height: 1em;
-}
-/* .job form {line-height:1.2em} */
-/* .job form button {display:block; float:right; clear:right;} */
 
+
+/* Dashboard */
 
 #jobs {
 	display:table;
@@ -50,23 +34,92 @@ body > footer {
 #jobs article > div,
 #jobs header > div {
 	display: table-cell;
-	padding:10px;
 	vertical-align: middle;
+	padding:10px 5px;
+}
+#jobs article > div:first-child,
+#jobs header > div:first-child {
+	padding-left:10px;
+}
+#jobs article > div:last-child,
+#jobs header > div:last-child {
+	padding-right:10px;
 }
 #jobs .resources,
 #jobs .errors,
 #jobs .warnings {
 	text-align: right;
 }
+#jobs .refresh,
+#jobs .stop {
+	display:block;
+	font-size:0.85em;
+}
+#jobs article button,
+.job button {
+	border:none;
+	background:none;
+	cursor:pointer;
+	margin:0;
+	padding:0;
+	text-decoration:underline;
+	color:blue;
+	line-height:1em;
+	font-size:0.85em;
+}
 
-/* .job .filters h1 { */
-/* 	display:inline; */
-/* 	font-size:1.1em; */
-/* 	border:solid #e5e5e5; */
-/* 	border-width: 1px 1px 0 1px; */
-/* 	padding:5px; */
-/* 	margin-right:10px */
-/* } */
+/* job meta on report page */
+
+.job {
+	//padding:10px 5px !important;
+}
+.job ul {
+	display:table;
+	width:100%;
+	border-collapse:collapse;
+}
+.job li {
+	display:table-cell;
+	padding:0 5px;
+}
+.job li:first-child {
+	padding-left:0;	
+}
+.job li:last-child {
+	padding-right:0;	
+}
+.job h2 {
+	color:grey;
+	font-size:0.85em;
+	margin-bottom: 5px;
+}
+.job span {
+	font-size:1.1em;
+}
+.job .errorsC,
+.job .warningsC,
+.job .resourcesC {
+	text-align: center;
+}
+.job form {
+	display:inline;
+}
+
+/* Crumb nav */
+#crumbs {
+	padding-bottom:0;
+	border-bottom: none;
+}
+
+#crumbs li {
+	display:inline;
+	font-size:0.85em;
+}
+#crumbs li:not(:last-child):after {content: " > "}
+
+
+
+/* Report nav */
 
 nav.report > div {
 	padding:10px;

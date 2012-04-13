@@ -18,7 +18,7 @@
 	
 }{ @***** Toolbar *****@
 
-	<div class="report">
+	@** <div class="report">
 
 	<form method="get">
 		<fieldset>
@@ -54,26 +54,48 @@
 	<a href="?">Default</a><br>
 	<a href="#" class="compact">Compact</a><br>
 	
-	</div>
+	</div> **@
 
 }{ @***** Content *****@ 
 	
 	@libs.navigation(List((jobConf.name ,"")))
 	@libs.messages(errors)
 	
-	<section class="job" data-id="@jobConf.id"><div>
+	<section class="job" data-id="@jobConf.id">
 		<ul>
-			<li>Name: <span class="name">@jobConf.name</span></li>
-			<li>Uri: <span class="uri">@jobConf.strategy.seedURLs.head</span></li>
-			<li>Distance: <span class="distance">@jobConf.strategy.distance</span></li>
-			<li>Activity: <span class="activity">@data.activity</span></li>
+			<li>
+				<h2>Job Name</h2>
+				<span class="name">@jobConf.name</span>
+			<li>
+				<h2>URL</h2>
+				<span class="uri">@jobConf.strategy.seedURLs.head</span>
+			<li>
+				<h2>Distance</h2>
+				<span class="distance">@jobConf.strategy.distance</span>
+			<li>
+				<h2>Status</h2>
+				<span class="activity">@data.activity</span>
+				<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
+					@defining(data.activity) { activity =>
+					@activity match {
+					  case Busy => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
+					  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run</button>}
+					}}
+				</form>
+			<li>
+				<h2>Last Run Completed</h2>
+				<span class="completed">03/12/12 at 2:55pm</span>
+			<li class="errorsC">
+				<h2>Errors</h2>
+				<span class="errors">@data.errors</span>
+			<li class="warningsC">
+				<h2>Warnings</h2>
+				<span class="warnings">@data.warnings</span>
+			<li class="resourcesC">
+				<h2>Resources</h2>
+				<span class="resources">@data.resources</span>
 		</ul>
-		<ul>
-			<li>Resources: <span class="resources">@data.resources</span></li>
-			<li>Errors: <span class="errors">@data.errors</span></li>
-			<li>Warnings: <span class="warnings">@data.warnings</span></li>
-		</ul>
-		<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
+<!-- 		<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
 			@defining(data.explorationMode) { mode =>
 			@defining(data.activity) { activity =>
 			  @activity match {
@@ -88,8 +110,8 @@
 			}}
 			<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
 			<button type="submit" name="action" value="delete" class="delete">Delete</button>
-		</form>
-	</div></section>
+		</form> -->
+	</section>
 	
 	<nav class="report"><div>
 	<span class="showing">Showing: @report.size / @pageNav.totalMessages</span>

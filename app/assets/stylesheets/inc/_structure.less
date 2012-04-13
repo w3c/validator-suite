@@ -12,22 +12,12 @@
 		}
 	}
 }
-.toolBarLayout(@e) {
-	#toolbar {
-		width: @e - (2 * @spacing);
-		padding: @spacing;
-	}
-	#main {
-		padding-left: @e;
-	}
-}
 
 body {
 	width: 100%;
 	height: 100%;
 	position: absolute;
-	//min-height: @bodyH;
-	min-width: @bodyH;
+	min-width: @bodyW;
 	.border-sizing;
 	> header {
 		position: absolute;
@@ -47,41 +37,19 @@ body {
 
 .bodyLayout(@headerH, @footerH);
 
-#main {
-/* 	width: 100%; */
-/* 	.border-sizing; */
-}
-
-#main > nav,
-#main > section {
+#main > * {
 	padding: @spacing;
 	border-bottom:1px solid @borderColor;
 }
 #main > :last-child {
 	border-bottom: none;
 }
-
 #main > .list {
 	padding: 0;
 }
-/* .list > article { */
-/* 	//font-size:@baseFontSize; */
-/* 	//line-height:@baseFontSize; */
-/* 	//padding: @spacing / 2; */
-/* 	//display: inline-block; */
-/* 	//vertical-align:top; */
-/* 	//width: 100%; */
-/* 	//.border-sizing; */
-/* } */
-/* .list > article > div { */
-/* 	//padding: @spacing; */
-/* 	// border: 1px solid @borderColor; */
-/* 	//position: relative; become a ref for children positionning */
-/* 	//overflow: auto; */
-/* } */
 
 .structureMedia () {
-	@media screen and (min-width: 580px) {
+	@media screen and (min-width: 650px) {
 		.header(100px, 10px);
 		.bodyLayout(100px, @footerH);
 	}
