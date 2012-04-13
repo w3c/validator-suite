@@ -184,6 +184,9 @@ form.group fieldset:not(:hover) input:not(:checked) ~ label {
 form.group fieldset:not(:hover) {
 	padding-right: 15px;
 }
+form.group fieldset:hover {
+	min-width: 202px; // XXX: hmmm...
+}
 form.group fieldset:not(:hover):after {
 	content:"";
 	display:block;
