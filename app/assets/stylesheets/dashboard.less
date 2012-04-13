@@ -130,7 +130,6 @@ body > footer {
 	background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
 	border: 1px solid #AAA;
 	border-radius: 2px;
-	//box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
 	color: #444;
 	padding: 3px 12px;
 	margin:0;
@@ -140,46 +139,57 @@ body > footer {
 	margin:0;
 }
 
+
+
 /* Group and search form */
 form.group {
 	float:left;
 }
 form.group fieldset {
 	border:1px solid #AAA;
-	border-radius: 2px;
+	border-radius:2px;
 	background:white;
-	padding:5px 7px;
+	padding:1px;
 	display:inline;
-	margin-right:3px;
+	margin-right:2px;
+	line-height:13px;
+	position:relative;
 }
 form.group button {
 	vertical-align:top;
 }
+form.group input {
+	display:none;	
+}
+form.group label {
+	display:inline-block;
+	padding:4px;
+	width:100%;
+	box-sizing:border-box;
+	-moz-box-sizing:border-box;
+	color:#777;
+}
+form.group label:hover {
+	background:@headerBgColor;
+}
+form.group input:checked ~ label {
+	color:#444;
+}
 form.group:hover {
-	position:absolute;	
+	position:absolute;
 }
-form.group input:not(:checked) {
+form.group fieldset:not(:hover) input:not(:checked) ~ label {
 	display:none;	
 }
-form.group input:not(:checked) ~ label {
-	display:none;	
-}
-form.group fieldset:hover input:not(:checked) {
-	display:inline;	
-}
-form.group fieldset:hover input:not(:checked) ~ label {
-	display:inline;	
-}
-form.group fieldset:not(:hover) input {
-	display:none;
-}
-form.group fieldset:not(:hover) > div {
-	display:inline;
+form.group fieldset:not(:hover) {
+	padding-right: 15px;
 }
 form.group fieldset:not(:hover):after {
 	content:"";
-	display:inline-block;
-	vertical-align:middle;
+	display:block;
+	position:absolute;
+	right:5px;
+	top:10px;
 	width:0px;
 	height:0px;
 	border-right: 4px solid transparent;
@@ -194,7 +204,7 @@ form.search {
 }
 form.search input {
 	padding: 3px 5px;
-	margin-right: 3px;
+	margin-right:2px;
 	border:1px solid #AAA;
 	border-radius: 2px;
 }
