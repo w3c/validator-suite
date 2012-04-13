@@ -31,6 +31,7 @@
 			<div class="warnings">Warnings</div>
 			@**<div class="health">Health</div>**@
 			<div class="status">Status</div>
+			<div class="delete"></div>
 		</header>
 		
 		@for((jobConf, data) <- jobs) {
@@ -52,6 +53,9 @@
 					}}
 				</form>
 			</div>
+			<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
+				<button type="submit" name="action" value="delete" class="delete">delete</button>
+			</form>
 		</article>
 		}
 	</section>
@@ -74,6 +78,9 @@
 				<% break; case "Idle": %>
 					<a class="refresh" href="<%= url + '/refresh' %>">Run Now</a>
 				<% } %>
+			</div>
+			<div>
+				<a class="delete" href="<%= url + '/delete' %>">delete</a>
 			</div>
 	</script>
 

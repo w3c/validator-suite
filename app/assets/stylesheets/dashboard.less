@@ -31,19 +31,20 @@ body > footer {
 #jobs article:nth-child(2n) {
 	background: @headerBgColor;	
 }
-#jobs article > div,
-#jobs header > div {
+#jobs article > *,
+#jobs header > * {
 	display: table-cell;
 	vertical-align: middle;
 	padding:10px 5px;
 }
-#jobs article > div:first-child,
-#jobs header > div:first-child {
+#jobs article > :first-child,
+#jobs header > :first-child {
 	padding-left:10px;
 }
-#jobs article > div:last-child,
-#jobs header > div:last-child {
+#jobs article > :last-child,
+#jobs header > :last-child {
 	padding-right:10px;
+	width:1%;
 }
 #jobs .resources,
 #jobs .errors,
@@ -51,7 +52,8 @@ body > footer {
 	text-align: right;
 }
 #jobs .refresh,
-#jobs .stop {
+#jobs .stop,
+#jobs .delete {
 	display:block;
 	font-size:0.85em;
 }
@@ -68,11 +70,20 @@ body > footer {
 	font-size:0.85em;
 }
 
-/* job meta on report page */
 
-.job {
-	//padding:10px 5px !important;
+
+/* Crumb nav */
+#crumbs {}
+#crumbs li {
+	display:inline;
+	font-size:0.85em;
 }
+#crumbs li:not(:last-child):after {content: " > "}
+
+
+
+/* job meta on report page */
+.job {}
 .job ul {
 	display:table;
 	width:100%;
@@ -105,22 +116,86 @@ body > footer {
 	display:inline;
 }
 
-/* Crumb nav */
-#crumbs {
-	padding-bottom:0;
-	border-bottom: none;
+.controls {
+	background:@headerBgColor;
+}
+.controls button {
+	background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background: -o-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+	border: 1px solid #AAA;
+	border-radius: 2px;
+	//box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	color: #444;
+	padding: 3px 12px;
+	margin:0;
+	vertical-align: middle;
+}
+.controls input {
+	margin:0;
 }
 
-#crumbs li {
+/* Group and search form */
+form.group {
+	float:left;
+	
+}
+form.group fieldset {
+	border:1px solid #AAA;
+	background:white;
+	padding:5px 7px;
 	display:inline;
-	font-size:0.85em;
+	margin-right:3px;
 }
-#crumbs li:not(:last-child):after {content: " > "}
+form.group button {
+	vertical-align:top;
+}
+form.group:hover {
+	position:absolute;	
+}
+form.group input:not(:checked) {
+	display:none;	
+}
+form.group input:not(:checked) ~ label {
+	display:none;	
+}
+form.group fieldset:hover input:not(:checked) {
+	display:inline;	
+}
+form.group fieldset:hover input:not(:checked) ~ label {
+	display:inline;	
+}
+form.group fieldset:not(:hover) input {
+	display:none;
+}
+form.group fieldset:not(:hover) > div {
+	display:inline;
+}
+form.group fieldset:not(:hover):after {
+	content:"";
+	display:inline-block;
+	vertical-align:middle;
+	width:0px;
+	height:0px;
+	border-right: 4px solid transparent;
+	border-left: 4px solid transparent;
+	border-top: 4px solid #444444;
+	margin-bottom: 3px;
+	margin-left: 3px;
+}
 
+form.search {
+	float:right;
+}
+form.search input {
+	padding: 2px 5px;
+	margin-right: 3px;
+}
 
+/**********************************/
 
 /* Report nav */
-
 nav.report > div {
 	padding:10px;
 	border: 1px solid #e5e5e5;
@@ -135,8 +210,9 @@ nav.report li:first-child:before {
 	content: " | ";
 }
 
-/* nested list */
 
+
+/* nested list */
 .nested article {
   	font-size: 13px;
 	line-height: 1em;
@@ -172,6 +248,8 @@ nav.report li:first-child:before {
 .nested article:hover:not(.empty) > div:first-child {
 	background: #f5f5f5;
 }
+
+
 
 /* Folding first level */
 .no-js .nested > article:not(:target):not(:focus) > div:last-child:not(:first-child),
@@ -296,6 +374,8 @@ nav.report li:first-child:before {
 	border-left: 5px solid red;
 }
 
+
+
 /*Aside*/
 #report aside {
 	float: right;
@@ -323,6 +403,8 @@ nav.report li:first-child:before {
 	content:" | ";
 	color:#444;
 }
+
+
 
 /* Messages */
 .messages {
