@@ -44,10 +44,14 @@ body > footer {
 #jobs header {
 	border-bottom:1px solid @borderColor;
 }
+#jobs article:nth-child(2n) {
+	background: @headerBgColor;	
+}
 #jobs article > div,
 #jobs header > div {
 	display: table-cell;
 	padding:10px;
+	vertical-align: middle;
 }
 #jobs .resources,
 #jobs .errors,

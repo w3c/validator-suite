@@ -35,7 +35,7 @@
 		
 		@for((jobConf, data) <- jobs) {
 		<article data-id="@jobConf.id">
-			<div class="name">@jobConf.name</div>
+			<div class="name"><a href="@routes.Jobs.dispatcher(jobConf.id)">@jobConf.name</a></div>
 			<div class="url">@jobConf.strategy.seedURLs.head</div>
 			<div class="date"><time datetime="">-</time></div>
 			<div class="resources">@data.resources</div>
@@ -59,7 +59,7 @@
 }{ @***** Footer *****@
 
 	<script type="text/template" id="job-template">
-			<div class="name"><%= name %></div>
+			<div class="name"><a href=<%= url %>><%= name %></a></div>
 			<div class="url"><%= seedUri %></div>
 			<div class="date"><time datetime="">-</time></div>
 			<div class="resources"><%= data.get('resources') %></div>
@@ -70,9 +70,9 @@
 				<span class="status"><%= data.get('activity') %></span>
 				<% switch(data.get('activity')) { 
 				case "Busy": %>
-					<a class="stop" href="">Cancel</a>
+					<a class="stop" href="<%= url + '/cancel' %>">Cancel</a>
 				<% break; case "Idle": %>
-					<a class="refresh" href="">Run Now</a>
+					<a class="refresh" href="<%= url + '/runnow' %>">Run Now</a>
 				<% } %>
 			</div>
 	</script>
