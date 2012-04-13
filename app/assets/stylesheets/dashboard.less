@@ -10,54 +10,60 @@ body > footer {
 	background: @headerBgColor;
 }
 
-
+#admin > * {
+	margin-left:10px;
+}
 
 
 /* Dashboard */
 
-#jobs {
+.list {
 	display:table;
 	border-collapse: collapse;
 	table-layout: auto;
 	width: 100%;
 }
-#jobs article,
-#jobs header {
+.list article,
+.list header {
 	display: table-row;
 }
-#jobs header {
+.list header {
 	border-bottom:1px solid @borderColor;
 }
-#jobs article:nth-child(2n) {
+.list article:nth-child(2n) {
 	background: @headerBgColor;	
 }
-#jobs article > *,
-#jobs header > * {
+.list article > *,
+.list header > * {
 	display: table-cell;
 	vertical-align: middle;
 	padding:10px 5px;
 }
-#jobs article > :first-child,
-#jobs header > :first-child {
+.list article > :first-child,
+.list header > :first-child {
 	padding-left:10px;
+}
+.list article > :last-child,
+.list header > :last-child {
+	padding-right:10px;
 }
 #jobs article > :last-child,
 #jobs header > :last-child {
-	padding-right:10px;
 	width:1%;
 }
 #jobs .resources,
 #jobs .errors,
 #jobs .warnings {
 	text-align: right;
+	width:60px;
 }
-#jobs .refresh,
-#jobs .stop,
-#jobs .delete {
+.list .refresh,
+.list .stop,
+.list .delete {
 	display:block;
 	font-size:0.85em;
 }
-#jobs article button,
+.list article button,
 .job button {
 	border:none;
 	background:none;
@@ -73,11 +79,8 @@ body > footer {
 
 
 /* Crumb nav */
-#crumbs {}
-#crumbs li {
-	display:inline;
-	font-size:0.85em;
-}
+#crumbs {font-size:0.85em;}
+#crumbs li {display:inline;}
 #crumbs li:not(:last-child):after {content: " > "}
 
 
@@ -118,6 +121,7 @@ body > footer {
 
 .controls {
 	background:@headerBgColor;
+	min-height:26px;
 }
 .controls button {
 	background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
@@ -139,10 +143,10 @@ body > footer {
 /* Group and search form */
 form.group {
 	float:left;
-	
 }
 form.group fieldset {
 	border:1px solid #AAA;
+	border-radius: 2px;
 	background:white;
 	padding:5px 7px;
 	display:inline;
@@ -189,8 +193,10 @@ form.search {
 	float:right;
 }
 form.search input {
-	padding: 2px 5px;
+	padding: 3px 5px;
 	margin-right: 3px;
+	border:1px solid #AAA;
+	border-radius: 2px;
 }
 
 /**********************************/
@@ -344,10 +350,10 @@ nav.report li:first-child:before {
 #report .context strong {
 	color:red;
 }
-#report .url {
-	font-weight: bold;
-	color:#02579e !important;
-}
+/* #report .url { */
+/* 	font-weight: bold; */
+/* 	color:#02579e !important; */
+/* } */
 #report .assertor,
 #report .url,
 #report .message,

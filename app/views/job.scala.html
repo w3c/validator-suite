@@ -85,32 +85,16 @@
 			<li>
 				<h2>Last Run Completed</h2>
 				<span class="completed">03/12/12 at 2:55pm</span>
-			<li class="errorsC">
-				<h2>Errors</h2>
-				<span class="errors">@data.errors</span>
 			<li class="warningsC">
 				<h2>Warnings</h2>
 				<span class="warnings">@data.warnings</span>
+			<li class="errorsC">
+				<h2>Errors</h2>
+				<span class="errors">@data.errors</span>
 			<li class="resourcesC">
 				<h2>Resources</h2>
 				<span class="resources">@data.resources</span>
 		</ul>
-<!-- 		<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
-			@defining(data.explorationMode) { mode =>
-			@defining(data.activity) { activity =>
-			  @activity match {
-			    case Busy => {<button type="submit" name="action" value="stop" class="stop">Stop</button>}
-			    case Idle => {
-			      @mode match {
-			        case ProActive => {}
-			        case      Lazy => {}
-			      }
-			    }
-			  }
-			}}
-			<button type="submit" name="action" value="refresh" class="refresh">Refresh</button>
-			<button type="submit" name="action" value="delete" class="delete">Delete</button>
-		</form> -->
 	</section>
 	
 	<section class="controls">
@@ -128,10 +112,10 @@
 					<input name=group type=radio value="message.context" id="message.context" @if(req.queryString.get("group").flatten.exists(_ == "message.context")){checked}>
 					<label for="message.context">Group by message and context</label>
 				</div>
-				<div>
+				@**<div>
 					<input name=flat id=flat type=checkbox @if(req.queryString.get("flat").flatten.exists(_ == "on")){checked}>
 					<label for="flat">flat</label>
-				</div>
+				</div>**@
 			</fieldset>
 			<button type=submit>Go</button>
 		</form>
@@ -141,20 +125,14 @@
 		</form>
 	</section>
 	
-	<nav class="report"><div>
-	<span class="showing">Showing: @report.size / @pageNav.totalMessages</span>
-	@if(pageNav.totalPages > 1) {
-	<ul>
-	@for(i <- 1 to pageNav.totalPages) {
-		@if(i != pageNav.currentPage) {
-		<li><a href="?p=@i&@req.rawQueryString">@i</a></li>
-		} else {
-		<li><b>@i</b></li>
-		}
-	}
-	</ul>
-	}
-	</div></nav>
+	<section id="report" class="list">
+		<header>
+			<div class="url">URL</div>
+			<div class="last">Last Validated</div>
+			<div class="warnings">Warnings</div>
+			<div class="errors">Errors</div>
+		</header>
+	</section>
 	
 	<section id="report" class="nested">
 
@@ -162,7 +140,7 @@
 
 	</section>
 	
-	<nav class="report"><div>
+	@**<nav class="report"><div>
 	<span class="showing">Showing: @report.size / @pageNav.totalMessages</span>
 	@if(pageNav.totalPages > 1) {
 	<ul>
@@ -175,7 +153,7 @@
 	}
 	</ul>
 	}
-	</div></nav>
+	</div></nav>**@
 	
 }{ @***** Footer *****@
 

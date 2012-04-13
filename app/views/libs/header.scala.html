@@ -84,7 +84,7 @@
 		<div id="admin">
 		@userO match {
 		  case None => {<a href="@routes.Application.login">Login</a>}
-		  case Some(user) => {<a href="mailto:">Email Support</a> | <span>@user.name</span> | <a href="@routes.Application.logout">Logout</a>}
+		  case Some(user) => {<a href="mailto:">Email Support</a> <span>@user.name</span> <a href="@routes.Application.logout">Logout</a>}
 		}
 		</div>
 	</header>

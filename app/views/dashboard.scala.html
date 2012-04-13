@@ -25,12 +25,12 @@
 		<header>
 			<div class="name">Name</div>
 			<div class="url">URL</div>
-			<div class="date">Date</div>
-			<div class="resources">Resources</div>
-			<div class="errors">Errors</div>
-			<div class="warnings">Warnings</div>
-			@**<div class="health">Health</div>**@
+			<div class="date">Last Run Completed</div>
 			<div class="status">Status</div>
+			<div class="warnings">Warnings</div>
+			<div class="errors">Errors</div>
+			<div class="resources">Resources</div>
+			@**<div class="health">Health</div>**@
 			<div class="delete"></div>
 		</header>
 		
@@ -39,10 +39,6 @@
 			<div class="name"><a href="@routes.Jobs.dispatcher(jobConf.id)">@jobConf.name</a></div>
 			<div class="url">@jobConf.strategy.seedURLs.head</div>
 			<div class="date"><time datetime="">03/12/12 at 2:55pm</time></div>
-			<div class="resources">@data.resources</div>
-			<div class="errors">@data.errors</div>
-			<div class="warnings">@data.warnings</div>
-			@**<div class="health"></div>**@
 			<div>
 				<span class="status">@data.activity</span>
 				<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
@@ -53,6 +49,10 @@
 					}}
 				</form>
 			</div>
+			<div class="warnings">@data.warnings</div>
+			<div class="errors">@data.errors</div>
+			<div class="resources">@data.resources</div>
+			@**<div class="health"></div>**@
 			<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
 				<button type="submit" name="action" value="delete" class="delete">delete</button>
 			</form>
@@ -66,10 +66,6 @@
 			<div class="name"><a href=<%= url %>><%= name %></a></div>
 			<div class="url"><%= seedUri %></div>
 			<div class="date"><time datetime="">03/12/12 at 2:55pm</time></div>
-			<div class="resources"><%= data.get('resources') %></div>
-			<div class="errors"><%= data.get('errors') %></div>
-			<div class="warnings"><%= data.get('warnings') %></div>
-			@**<div class="health"></div>**@
 			<div>
 				<span class="status"><%= data.get('activity') %></span>
 				<% switch(data.get('activity')) { 
@@ -79,6 +75,10 @@
 					<a class="refresh" href="<%= url + '/refresh' %>">Run Now</a>
 				<% } %>
 			</div>
+			<div class="warnings"><%= data.get('warnings') %></div>
+			<div class="errors"><%= data.get('errors') %></div>
+			<div class="resources"><%= data.get('resources') %></div>
+			@**<div class="health"></div>**@
 			<div>
 				<a class="delete" href="<%= url + '/delete' %>">delete</a>
 			</div>
