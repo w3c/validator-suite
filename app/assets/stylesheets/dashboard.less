@@ -10,12 +10,32 @@ body > footer {
 	background: @headerBgColor;
 }
 
+#admin {
+	position: absolute;
+	right: 0;
+	top: -70px;
+	z-index: 2;
+	height: 50px;
+	border-bottom: none;
+}
 #admin > * {
 	margin-left:10px;
 }
 
+#jobs > h1,
+nav > h1,
+#admin > h1 {
+	display: none;	
+}
 
 /* Dashboard */
+.list hr,
+.list aside dd,
+.list aside h2,
+.list article dt,
+.list article h2 {
+	display:none;
+}
 
 .list {
 	display:table;
@@ -23,46 +43,39 @@ body > footer {
 	table-layout: auto;
 	width: 100%;
 }
-.list article,
-.list header {
-	display: table-row;
+.list aside,
+.list article {
+	display: table-row-group;
 }
-.list header {
+.list aside {
 	border-bottom:1px solid @borderColor;
 }
-.list article:nth-child(2n) {
+.list article:nth-of-type(2n) {
 	background: @headerBgColor;	
 }
-.list article > *,
+.list dl {
+	display: table-row;
+}
+.list dd,
+.list dt,
 .list header > * {
 	display: table-cell;
 	vertical-align: middle;
 	padding:10px 5px;
 }
-.list article > :first-child,
-.list header > :first-child {
+.list aside dt:first-of-type,
+.list article dd:first-of-type {
 	padding-left:10px;
 }
-.list article > :last-child,
-.list header > :last-child {
+.list aside dt:last-of-type,
+.list article dd:last-of-type {
 	padding-right:10px;
 }
-#jobs article > :last-child,
-#jobs header > :last-child {
-	width:1%;
-}
-#jobs .resources,
-#jobs .errors,
-#jobs .warnings {
-	text-align: right;
-	width:60px;
-}
-.list .refresh,
-.list .stop,
-.list .delete {
-	display:block;
-	font-size:0.85em;
-}
+/* .list .refresh, */
+/* .list .stop, */
+/* .list .delete { */
+/* 	//font-size:0.85em; */
+/* } */
 .list article button,
 .job button {
 	border:none;
@@ -74,6 +87,20 @@ body > footer {
 	color:blue;
 	line-height:1em;
 	font-size:0.85em;
+}
+
+#jobs aside dt:last-of-type,
+#jobs article dd:last-of-type {
+	text-align:right;
+}
+#jobs .resources,
+#jobs .errors,
+#jobs .warnings {
+	text-align: right;
+	width:60px;
+}
+#jobs .health {
+	text-align: center;
 }
 
 

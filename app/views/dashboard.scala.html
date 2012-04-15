@@ -4,58 +4,101 @@
 
 @libs.main("Validator Suite", 
   stylesheets = List("dashboard.css"),
-      scripts = List("model.js", "vs.js", "dashboard.js")){
+      scripts = List("model.js", "vs.js", "dashboard.jss")){
    
    @***** Header ******@
    
-	@libs.header(Some(user))
+	@libs.header()
 	
 }{ @***** Toolbar *****@
 	
 }{ @***** Content *****@ 
 	
+	<section id="admin">
+		<h1>Admin</h1>
+		<a href="mailto:">Email Support</a> <span>@user.name</span> <a href="@routes.Application.logout">Logout</a>
+	</section>
+	
 	<nav>
+		<h1>Navigation</h1>
 		<a href="@routes.Jobs.new1">New job</a>
 	</nav>
 	
 	@libs.messages()
 	
 	<section id="jobs" class="list">
+	
+		<h1>Jobs</h1>
 		
-		<header>
-			<div class="name">Name</div>
-			<div class="url">URL</div>
-			<div class="status">Status</div>
-			<div class="date">Last Run Completed</div>
-			<div class="warnings">Warnings</div>
-			<div class="errors">Errors</div>
-			<div class="resources">Resources</div>
-			@**<div class="health">Health</div>**@
-			<div class="delete"></div>
-		</header>
+		<aside>
+			<h2>Definitions</h2>
+			<dl>
+				<dt class="name"><dfn>Name</dfn></dt>
+				<dd>The name of the job</dd>
+				<dt class="url"><dfn>URL</dfn></dt>
+				<dd>The seed URL for this job, the entry point of the crawler</dd>
+				<dt class="status"><dfn>Status</dfn></dt>
+				<dd>The current status of the job, either Idle or Running.</dd>
+				<dt class="date"><dfn>Last Run Completed</dfn></dt>
+				<dd>The date the job was last completed</dd>
+				<dt class="warnings"><dfn>Warnings</dfn></dt>
+				<dd>The total number or warnings reported by the job's assertors</dd>
+				<dt class="errors"><dfn>Errors</dfn></dt>
+				<dd>The total number of errors reported by the job's assertors</dd>
+				<dt class="resources"><dfn>Resources</dfn></dt>
+				<dd>The total number of resources that have been considered by the crawler</dd>
+				<dt class="health"><dfn>Health</dfn></dt>
+				<dd>An indicator of the job's resources quality (def?)</dd>
+				<dt class="actions"><dfn>Actions</dfn></dt>
+				<dd>Actions to perform on the job</dd>
+			</dl>
+		</aside>
 		
 		@for((jobConf, data) <- jobs) {
+		<hr>
 		<article data-id="@jobConf.id">
-			<div class="name"><a href="@routes.Jobs.dispatcher(jobConf.id)">@jobConf.name</a></div>
-			<div class="url">@jobConf.strategy.seedURLs.head</div>
-			<div>
-				<span class="status">@data.activity</span>
-				<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
-					@defining(data.activity) { activity =>
-					@activity match {
-					  case Busy => {<button type="submit" name="action" value="stop" class="stop">Cancel</button>}
-					  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">Run Now</button>}
-					}}
-				</form>
-			</div>
-			<div class="date"><time datetime="">03/12/12 at 2:55pm</time></div>
-			<div class="warnings">@data.warnings</div>
-			<div class="errors">@data.errors</div>
-			<div class="resources">@data.resources</div>
-			@**<div class="health"></div>**@
-			<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
-				<button type="submit" name="action" value="delete" class="delete">delete</button>
-			</form>
+			<h2>@jobConf.name</h2>
+			<dl>
+				<dt>Name</dt>
+				<dd class="name"><a href="@routes.Jobs.dispatcher(jobConf.id)">@jobConf.name</a></dd>
+				
+				<dt>URL</dt>
+				<dd class="url">@jobConf.strategy.seedURLs.head</dd>
+				
+				<dt>Status</dt>
+				<dd class="status">
+					<span>@data.activity</span>
+					<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
+						@defining(data.activity) { activity =>
+						@activity match {
+						  case Busy => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
+						  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
+						}}
+					</form>
+				</dd>
+
+				<dt>Last Run Completed</dt>
+				<dd class="date"><time datetime="">03/12/12 at 2:55pm</time></dd>
+				
+				<dt>Warnings</dt>
+				<dd class="warnings">@data.warnings</dd>
+				
+				<dt>Errors</dt>
+				<dd class="errors">@data.errors</dd>
+				
+				<dt>Resources</dt>
+				<dd class="resources">@data.resources</dd>
+				
+				<dt>Health</dt>
+				<dd class="health">50%</dd>
+				
+				<dt>Actions</dt>
+				<dd>
+					<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
+						<button type="submit" name="action" value="delete" class="delete">delete</button>
+					</form>
+				</dd>
+			</dl>
 		</article>
 		}
 	</section>

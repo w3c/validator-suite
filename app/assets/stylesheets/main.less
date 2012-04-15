@@ -13,20 +13,20 @@ body {
 body > header {
 	
 	background: @headerBgColor;
-	height: @headerHeight;
+	height: @headerH;
 	text-align: right;
 	border-bottom: @borderSize solid @borderColor;
 	
 	svg {
-		width: @headerHeight - @spacing;
-		height: @headerHeight - @spacing;
+		width: @headerH - @spacing;
+		height: @headerH - @spacing;
 		float: left;
-		margin: (@headerHeight / 10) 0 0 @spacing;
+		margin: (@headerH / 10) 0 0 @spacing;
 	}
 	
 	h1 {
-		font-size: round((@headerHeight - @spacing) / 3.5px * 10) / 10;
-		margin-top: round((@headerHeight - @spacing) / 3.5px * 10) / 10 + 3px;
+		font-size: round((@headerH - @spacing) / 3.5px * 10) / 10;
+		margin-top: round((@headerH - @spacing) / 3.5px * 10) / 10 + 3px;
 		float: left;
 		text-align: left;
 		
@@ -50,14 +50,14 @@ body > header {
 			font-style: italic;
 			font-size: 0.95em;
 			position: relative;
-			left: round((-@headerHeight / 15) * 10) / 10px;
-			top: round((-@headerHeight / 50) * 10) / 10px;
+			left: round((-@headerH / 15) * 10) / 10px;
+			top: round((-@headerH / 50) * 10) / 10px;
 		}
 	}
 	
 	#admin {
 		padding-right: @spacing;
-		padding-top: @headerHeight - @spacing - @baseFontSize;
+		padding-top: @headerH - @spacing - @baseFontSize;
 	}
 }
 

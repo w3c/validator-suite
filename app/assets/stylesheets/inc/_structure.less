@@ -26,10 +26,6 @@ body {
 		z-index: 1;
 		border-bottom: @borderSize solid @borderColor;
 	}
-	> div {
-		min-height: 100%;
-		position: relative;
-	}
 	> footer {
 		border-top:1px solid @borderColor;
 	}
@@ -37,6 +33,10 @@ body {
 
 .bodyLayout(@headerH, @footerH);
 
+#main {
+	min-height: 100%;
+	position: relative;
+}
 #main > * {
 	padding: @spacing;
 	border-bottom:1px solid @borderColor;
@@ -50,8 +50,8 @@ body {
 }
 
 .structureMedia () {
-	@media screen and (min-width: @bodyW) {
-		.header(100px, 10px);
-		.bodyLayout(100px, @footerH);
-	}
+/* 	@media screen and (min-width: @bodyW) { */
+/* 		.header(100px, 10px); */
+/* 		.bodyLayout(100px, @footerH); */
+/* 	} */
 }

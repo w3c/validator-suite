@@ -11,20 +11,21 @@ body {
 body > header {
 	
 	background: @headerBgColor;
-	text-align: right;
 	
 	svg {
 		float: left;
-		margin: (@headerHeight / 10) 0 0 @spacing;
+		margin: @spacing;
 	}
 	
 	h1 {
-		float: left;
-		text-align: left;
+		display:inline-block;
+		margin:5px;
 		
 		a {
 			text-decoration: none;
 			color: inherit;
+			display: block;
+			font-size:0;
 			
 			&:active {
 				outline: none;
@@ -34,41 +35,55 @@ body > header {
 			}
 		}
 		
-		span:first-child {
-			font-weight: bold;
-			text-transform: uppercase;
+		img, span {
+			display:inline-block;
+			vertical-align: middle;
+			font-size:18px;
 		}
 		
 		span:nth-child(2) {
-			font-family: serif;
-			display: block;
-			font-style: italic;
-			font-size: 0.95em;
-			position: relative;
+			font-weight: bold;
+			text-transform: uppercase;
+			position:relative;
+			top:-8px;
 		}
+		
+		span:nth-child(3) {
+			font-family: serif;
+			font-style: italic;
+			position: absolute;
+			left:65px;
+			top:36px;
+		}
+	}
+	#admin {
+		position:absolute;
+		bottom:10px;
+		right:10px;
 	}
 }
 
-.header(@headerH, 4px);
+.header(@headerH, @spacing);
 
 .header (@height, @spacing) {
-	body > header {
-		svg {
-			width: @height - @spacing;
-			height: @height - @spacing;
-			margin: (@height / 10) 0 0 @spacing;		
-		}
-		h1 {
-			font-size: round((@height - @spacing) / 3.5px * 10) / 10;
-			margin-top: round((@height - @spacing) / 3.5px * 10) / 10 + @spacing/4;
-		}
-		span:nth-child(2) {
-			left: round((-@height / 15) * 10) / 10px;
-			top: round((-@height / 50) * 10) / 10px;
-		}
-		#admin {
-			padding-right: @spacing;
-			padding-top: @height - @spacing - @baseFontSize;
-		}
-	}
+/* 	body > header { */
+/* 		svg { */
+/* 			width: round((@height - 2 * @spacing) * 1.05); */
+/* 			height: @height - 2 * @spacing; 1.05 because of width/height ratio of the svg: 388 / 370 */
+/* 			margin: @spacing; */
+/* 		} */
+/* 		h1 { */
+/* 			//font-size: round((@height - @spacing) / 3.5px * 10) / 10; */
+/* 			//margin-top: round((@height - @spacing) / 3.5px * 10) / 10 + @spacing/4; */
+/* 			margin:5px; */
+/* 		} */
+/* 		span:nth-child(2) { */
+/* 			//left: round((-@height / 15) * 10) / 10px; */
+/* 			//top: round((-@height / 50) * 10) / 10px; */
+/* 		} */
+/* 		#admin { */
+/* 			//padding-right: @spacing; */
+/* 			//padding-top: @height - @spacing - @baseFontSize; */
+/* 		} */
+/* 	} */
 }
