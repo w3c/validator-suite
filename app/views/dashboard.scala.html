@@ -4,7 +4,7 @@
 
 @libs.main("Validator Suite", 
   stylesheets = List("dashboard.css"),
-      scripts = List("model.js", "vs.js", "dashboard.jss")){
+      scripts = List("model.js", "vs.js", "dashboard.js")){
    
    @***** Header ******@
    
@@ -15,14 +15,27 @@
 }{ @***** Content *****@ 
 	
 	<section id="admin">
-		<h1>Admin</h1>
-		<a href="mailto:">Email Support</a> <span>@user.name</span> <a href="@routes.Application.logout">Logout</a>
+		<h1>Administration</h1>
+		<dl>
+			<dt>User name:</dt>
+			<dd class="name">@user.name</dd>
+			<dt>Account type:</dt>
+			<dd class="type">admin</dd>
+		</dl>
+		<a class="support" href="mailto:">Contact Support</a>
+		<a class="logout" href="@routes.Application.logout">Logout</a>
 	</section>
+
+	<hr>
 	
-	<nav>
+	<nav id="nav">
 		<h1>Navigation</h1>
+		<a href="">Dashboard</a>
+		<a href="#">New Domain</a>
 		<a href="@routes.Jobs.new1">New job</a>
 	</nav>
+	
+	<hr>
 	
 	@libs.messages()
 	
@@ -54,8 +67,10 @@
 			</dl>
 		</aside>
 		
-		@for((jobConf, data) <- jobs) {
 		<hr>
+		
+		@for((jobConf, data) <- jobs) {
+		
 		<article data-id="@jobConf.id">
 			<h2>@jobConf.name</h2>
 			<dl>
@@ -69,8 +84,7 @@
 				<dd class="status">
 					<span>@data.activity</span>
 					<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
-						@defining(data.activity) { activity =>
-						@activity match {
+						@defining(data.activity) { activity => @activity match {
 						  case Busy => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 						  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
 						}}
@@ -99,6 +113,7 @@
 					</form>
 				</dd>
 			</dl>
+			<hr>
 		</article>
 		}
 	</section>
@@ -106,25 +121,45 @@
 }{ @***** Footer *****@
 
 	<script type="text/template" id="job-template">
-			<div class="name"><a href=<%= url %>><%= name %></a></div>
-			<div class="url"><%= seedUri %></div>
-			<div>
-				<span class="status"><%= data.get('activity') %></span>
-				<% switch(data.get('activity')) { 
-				case "Busy": %>
-					<a class="stop" href="<%= url + '/stop' %>">Cancel</a>
-				<% break; case "Idle": %>
-					<a class="refresh" href="<%= url + '/refresh' %>">Run Now</a>
-				<% } %>
-			</div>
-			<div class="date"><time datetime="">03/12/12 at 2:55pm</time></div>
-			<div class="warnings"><%= data.get('warnings') %></div>
-			<div class="errors"><%= data.get('errors') %></div>
-			<div class="resources"><%= data.get('resources') %></div>
-			@**<div class="health"></div>**@
-			<div>
-				<a class="delete" href="<%= url + '/delete' %>">delete</a>
-			</div>
+			<h2><%= name %></h2>
+			<dl>
+				<dt>Name</dt>
+				<dd class="name"><a href=<%= url %>><%= name %></a></dd>
+				
+				<dt>URL</dt>
+				<dd class="url"><%= seedUri %></dd>
+				
+				<dt>Status</dt>
+				<dd class="status">
+					<span><%= data.get('activity') %></span>
+					<% switch(data.get('activity')) { case "Busy": %>
+						<a class="stop" href="<%= url + '/stop' %>">cancel</a>
+					<% break; case "Idle": %>
+						<a class="refresh" href="<%= url + '/refresh' %>">run now</a>
+					<% } %>
+				</dd>
+
+				<dt>Last Run Completed</dt>
+				<dd class="date"><time datetime="">03/12/12 at 2:55pm</time></dd>
+				
+				<dt>Warnings</dt>
+				<dd class="warnings"><%= data.get('warnings') %></dd>
+				
+				<dt>Errors</dt>
+				<dd class="errors"><%= data.get('errors') %></dd>
+				
+				<dt>Resources</dt>
+				<dd class="resources"><%= data.get('resources') %></dd>
+				
+				<dt>Health</dt>
+				<dd class="health">50%</dd>
+				
+				<dt>Actions</dt>
+				<dd>
+					<a class="delete" href="<%= url + '/delete' %>">delete</a>
+				</dd>
+			</dl>
+			<hr>
 	</script>
 
 	@libs.footer()

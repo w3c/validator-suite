@@ -126,12 +126,12 @@ window.Job = Backbone.Model.extend({
 window.Job.fromHTML = function(elem) {
 	return new Job({
 		id: $(elem).attr("data-id"),
-		name: $(".name", elem).text(),
+		name: $(".name a", elem).text(),
 		seedUri: $(".url", elem).text(),
 		//distance: parseInt($(".distance", elem).text()),
 		data: new JobData({
-			jobId: $(elem).attr("data-id"),
-			activity: $(".status", elem).text(),
+			//jobId: $(elem).attr("data-id"),
+			activity: $(".status span", elem).text(),
 			//mode: $(".mode", elem).text(),
 			resources: parseInt($(".resources", elem).text()),
 			//oks: parseInt($(".oks", elem).text()),
