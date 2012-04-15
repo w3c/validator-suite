@@ -1,0 +1,14 @@
+@(user: User)
+	<section id="admin">
+		<h1>Administration</h1>
+		<dl>
+			<dt>User name:</dt>
+			<dd class="name">@user.name</dd>
+			<dt>Account type:</dt>
+			<dd class="type">admin</dd>
+		</dl>
+		<a class="support" href="mailto:">Contact Support</a>
+		<a class="logout" href="@routes.Application.logout">Logout</a>
+	</section>
+
+	<hr>
