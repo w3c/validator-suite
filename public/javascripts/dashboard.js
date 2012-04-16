@@ -5,7 +5,7 @@ window.JobView = Backbone.View.extend({
 	template: _.template($('#job-template').html()), // check presence first
 	
 	attributes: {
-		"class": "job",
+		//"class": "job",
 		"data-id": "0"
 	},
 	
@@ -20,6 +20,7 @@ window.JobView = Backbone.View.extend({
 	
 	initialize: function () {
 		if(this.model !== undefined) {
+			this.attributes["data-id"] = this.model.id;
 			this.model.on('change', this.render, this);
 			this.model.on('destroy', this.remove, this);
 			//this.model.on('run', function () {alert("run");}, this);

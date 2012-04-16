@@ -50,6 +50,8 @@ window.Job = Backbone.Model.extend({
 		name: "",
 		seedUri: "",
 		distance: 0,
+		maxResources: 0,
+		health: 0,
 		data: new JobData(), // A collection of JobDatas containing a timestamp is what we need to build a graph
 		createdAt: "",
 		lastRun: "",
@@ -128,16 +130,16 @@ window.Job.fromHTML = function(elem) {
 		id: $(elem).attr("data-id"),
 		name: $(".name a", elem).text(),
 		seedUri: $(".url", elem).text(),
-		//distance: parseInt($(".distance", elem).text()),
+		distance: parseInt($(".distance", elem).text()),
 		data: new JobData({
-			//jobId: $(elem).attr("data-id"),
 			activity: $(".status span", elem).text(),
 			//mode: $(".mode", elem).text(),
-			resources: parseInt($(".resources", elem).text()),
-			//oks: parseInt($(".oks", elem).text()),
 			errors: parseInt($(".errors", elem).text()),
-			warnings: parseInt($(".warnings", elem).text())				
-		})
+			warnings: parseInt($(".warnings", elem).text()),			
+			resources: parseInt($(".resources", elem).text())
+		}),
+		maxResources: parseInt($(".maxResources", elem).text()),
+		health: parseInt($(".health", elem).text())
 	});
 };
 
