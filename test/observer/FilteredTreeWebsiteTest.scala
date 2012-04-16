@@ -23,7 +23,6 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
   
   val strategy =
     Strategy(
-      uuid=java.util.UUID.randomUUID(), 
       name="localhost_9001",
       entrypoint=URL("http://localhost:9001/1/"),
       distance=4,

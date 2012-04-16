@@ -18,7 +18,6 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
 
   val strategy =
     Strategy(
-      uuid=java.util.UUID.randomUUID(), 
       name="localhost:9001",
       entrypoint=URL("http://localhost:9001/"),
       distance=1000,

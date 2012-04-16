@@ -27,7 +27,7 @@ object User {
 }
 
 case class User(
-    id: UserId = UserId.newId(),
+    id: UserId = UserId(),
     organization: OrganizationId,
     email: String,
     name: String,

@@ -20,8 +20,7 @@ import org.w3.vs.http._
 class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
 
   val strategy =
-    Strategy(
-      uuid=java.util.UUID.randomUUID(), 
+    Strategy( 
       name="localhost_9001",
       entrypoint=URL("http://localhost:9001/"),
       distance=11,

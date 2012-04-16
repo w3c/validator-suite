@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
 import java.util.UUID
-import scalaz._
+import scalaz.Equal
 
 case class RunId(private val uuid: UUID) {
 

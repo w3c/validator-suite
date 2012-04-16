@@ -20,7 +20,6 @@ class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
 
   val strategy =
     Strategy(
-      uuid=java.util.UUID.randomUUID(), 
       name="localhost_9001",
       entrypoint=URL("http://localhost:9001/"),
       distance=11,

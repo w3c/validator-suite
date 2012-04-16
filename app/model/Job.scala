@@ -68,7 +68,7 @@ object Job {
 }
 
 case class Job(
-    id: JobId = JobId.newId(),
+    id: JobId = JobId(),
     name: String,
     creatorId: UserId,
     organizationId: OrganizationId,

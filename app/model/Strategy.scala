@@ -17,7 +17,7 @@ import scalaz.Scalaz._
   * @param filter a filter to be applied to the URLs being discovered
   */
 case class Strategy(
-    uuid: UUID = UUID.randomUUID,
+    id: StrategyId = StrategyId(),
     name: String,
     entrypoint: URL,
     distance: Int,

@@ -13,7 +13,6 @@ object Main {
   
   val strategy =
     Strategy(
-      uuid=java.util.UUID.randomUUID(), 
       name="w3.org",
       entrypoint=URL("http://www.bertails.org/"),
       distance=0,

@@ -1,25 +1,17 @@
 package org.w3.vs.model
 
 import java.util.UUID
-import scalaz._
+import scalaz.Equal
 
-case class JobId(private val uuid: UUID = UUID.randomUUID()) {
-  
-  def shortId: String = toString.substring(0, 6)
-
-  override def toString = uuid.toString
-  
-}
+case class JobId(private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 
 object JobId {
   
   def fromString(s: String): JobId = JobId(UUID.fromString(s))
   
-  def newId(): JobId = JobId(UUID.randomUUID())
-
   implicit val equalJobId: Equal[JobId] = new Equal[JobId] {
     def equal(left: JobId, right: JobId): Boolean =
       left.uuid == right.uuid
-  }
+  }  
   
 }

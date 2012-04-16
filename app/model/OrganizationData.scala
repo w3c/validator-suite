@@ -8,5 +8,5 @@ object OrganizationData {
 }
 
 case class OrganizationData(
-    id: OrganizationId = OrganizationId.newId(),
+    id: OrganizationId = OrganizationId(),
     name: String)
