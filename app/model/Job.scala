@@ -1,45 +1,41 @@
-package org.w3.vs.actor
+package org.w3.vs.model
 
-import org.w3.vs._
-import org.w3.vs.model._
-import org.w3.util._
-import org.w3.vs.assertor._
-import akka.actor._
-import akka.dispatch._
-import akka.pattern.ask
-import akka.util.Duration
-import akka.util.Timeout
-import akka.util.duration._
-import scalaz.Validation
-import play.Logger
-import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import java.nio.channels.ClosedChannelException
+
 import org.joda.time.DateTime
-import org.w3.vs.exception._
-import org.w3.util._
-import org.w3.util.Pimps._
-import org.w3.vs.actor.message._
-import org.w3.util.akkaext._
+import org.w3.util.akkaext.Deafen
+import org.w3.util.akkaext.Listen
+import org.w3.util.akkaext.PathAware
+import org.w3.util.FutureValidation
+import org.w3.util.NOTSET
+import org.w3.vs.actor.message
+import org.w3.vs.exception.SuiteException
+import org.w3.vs.VSConfiguration
+
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.Props
+import akka.dispatch.Future
 import play.api.libs.iteratee.Enumeratee
+import play.api.libs.iteratee.Enumerator
+import play.api.libs.iteratee.PushEnumerator
+import play.Logger
 
 object Job {
   
-  def apply(organizationId: OrganizationId, jobId: JobId)(implicit configuration: VSConfiguration): Job =
-    new Job(organizationId, jobId)
-
-  def apply(jobConfiguration: JobConfiguration)(implicit configuration: VSConfiguration): Job =
-    Job(jobConfiguration.organization, jobConfiguration.id)
-
-  // I think that the store should use typed exceptions (StoreException) instead of Throwables 
-  // agree,   + FutureValidation and actor-based
+  // Shouldn't be here. We need sets of initial data for dev and test modes
+  def fake(strategy: Strategy)(implicit configuration: VSConfiguration): Job = {
+    val fakeUser = User.fake
+    Job(name = "fake job", creator = fakeUser.id, organizationId = fakeUser.organization, strategy = strategy)
+  }
   
-  def get(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, JobConfiguration, Nothing, NOTSET] = {
+  def get(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Job, Nothing, NOTSET] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
     store.getJobById(id)
   }
   
-  def getAll(id: OrganizationId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[JobConfiguration], Nothing, NOTSET] = {
+  def getAll(id: OrganizationId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[Job], Nothing, NOTSET] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
     store.listJobs(id)
@@ -51,7 +47,7 @@ object Job {
     store.removeJob(id)
   }
   
-  def save(job: JobConfiguration)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit, Nothing, NOTSET] = {
+  def save(job: Job)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit, Nothing, NOTSET] = {
     import configuration.store
     implicit def context = configuration.webExecutionContext
     store.putJob(job)
@@ -68,27 +64,20 @@ object Job {
   
 }
 
-class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration) {
+case class Job(
+    id: JobId = JobId.newId(),
+    strategy: Strategy,
+    createdOn: DateTime = new DateTime,
+    creator: UserId,
+    organizationId: OrganizationId,
+    name: String)(implicit conf: VSConfiguration) {
 
   import conf.system
-
-  val logger = Logger.of(classOf[Job])
   
   implicit def timeout = conf.timeout
-
-  val organizationsRef = system.actorFor(system / "organizations")
-
-  val path = system / "organizations" / organizationId.toString / "jobs" / jobId.toString
-
-  def !(message: Any)(implicit sender: ActorRef = null): Unit =
-    PathAware(organizationsRef, path) ! message
-
-  def listen(implicit listener: ActorRef): Unit =
-    PathAware(organizationsRef, path).tell(Listen(listener), listener)
-
-  def deafen(implicit listener: ActorRef): Unit =
-    PathAware(organizationsRef, path).tell(Deafen(listener), listener)
-
+  
+  private val logger = Logger.of(classOf[Job])
+  
   def refresh(): Unit = PathAware(organizationsRef, path) ! message.Refresh
   
   def stop(): Unit = PathAware(organizationsRef, path) ! message.Stop
@@ -122,4 +111,21 @@ class Job(organizationId: OrganizationId, jobId: JobId)(implicit conf: VSConfigu
     enumerator &> Enumeratee.onIterateeDone(() => {deafen(subscriber); logger.info("onIterateeDone")})
   }
   
+  
+  // Following might be moved to a trait, e.g. ActorInterface?
+  
+  private val organizationsRef = system.actorFor(system / "organizations")
+
+  private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString
+
+  private def !(message: Any)(implicit sender: ActorRef = null): Unit =
+    PathAware(organizationsRef, path) ! message
+
+  // A test needs this method to be public
+  def listen(implicit listener: ActorRef): Unit =
+    PathAware(organizationsRef, path).tell(Listen(listener), listener)
+
+  private def deafen(implicit listener: ActorRef): Unit =
+    PathAware(organizationsRef, path).tell(Deafen(listener), listener)
+    
 }

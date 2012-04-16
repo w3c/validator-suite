@@ -1,26 +1,20 @@
 package org.w3.vs
 
-import play.api._
-import play.api.mvc._
-import play.api.mvc.Results._
-import play.api.libs.iteratee._
-import play.api.libs.json.JsValue
-import play.api.libs.concurrent.Promise
-import play.api.data._
-import play.api.data.Forms._
-import play.api.data.format.Formats._
-import play.api.data.FormError
-import play.api.data.format.Formatter
 import org.w3.util._
 import org.w3.vs.Prod.configuration
 import org.w3.vs.model._
-import org.w3.vs.exception._
+import play.api.data.Forms._
+import play.api.data.format.Formats._
+import play.api.data.format.Formatter
+import play.api.data._
+import play.api.data.FormError
+import play.api.libs.iteratee._
+import play.api.libs.json.JsValue
+import play.api.mvc.Results._
+import play.api.mvc._
 import play.api.mvc.PathBindable
-import play.api.mvc.JavascriptLitteral
-import java.util.UUID
-import scalaz.Validation
-import scalaz.Success
-import scalaz.Failure
+import play.api._
+import scalaz._
 
 package object controllers {
   
@@ -54,9 +48,9 @@ package object controllers {
       "linkCheck" -> of[Boolean](booleanFormatter),
       "maxNumberOfResources" -> of[Int]
     )((name, url, distance, linkCheck, maxNumberOfResources) => {
-      JobConfiguration(
+      Job(
         name = name,
-        organization = null,
+        organizationId = null,
         creator = null,
         strategy = new Strategy(
           name="irrelevantForV1",
@@ -66,7 +60,7 @@ package object controllers {
           maxNumberOfResources=maxNumberOfResources,
           filter=Filter(include=Everything, exclude=Nothing)))
     })
-    ((job: JobConfiguration) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck, job.strategy.maxNumberOfResources))
+    ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck, job.strategy.maxNumberOfResources))
   )
 
   class FormW[T](form: Form[T]) {

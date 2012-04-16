@@ -28,7 +28,7 @@ class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
       maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val jobConf = JobConfiguration.fake(strategy = strategy)
+  val job = Job.fake(strategy = strategy)
 
   
   "create and asking for jobs" in {
@@ -36,13 +36,13 @@ class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
     // val testF =
     //   for {
     //     // first time: job is created
-    //     createdJob <- JobsActor.getJobOrCreate(jobConf)
+    //     createdJob <- JobsActor.getJobOrCreate(job)
     //     createdJobData <- createdJob.jobData()
-    //     retrievedJob <- JobsActor.getJobOrCreate(jobConf)
+    //     retrievedJob <- JobsActor.getJobOrCreate(job)
     //     //_ <- job.refresh()
     //   } yield {
-    //     createdJobData.jobId must be === (jobConf.id)
-    //     retrievedJob.configuration.id must be === (jobConf.id)
+    //     createdJobData.jobId must be === (job.id)
+    //     retrievedJob.configuration.id must be === (job.id)
     //   }
 
     // Await.result(testF, 5.seconds)

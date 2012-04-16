@@ -13,13 +13,13 @@ trait Store {
   
   def putResourceInfo(resourceInfo: ResourceInfo): FutureValidationNoTimeOut[SuiteException, Unit]
   
-  def putJob(job: JobConfiguration): FutureValidationNoTimeOut[SuiteException, Unit]
+  def putJob(job: Job): FutureValidationNoTimeOut[SuiteException, Unit]
   
   def removeJob(jobId: JobId): FutureValidationNoTimeOut[SuiteException, Unit]
 
-  def getJobById(id: JobId): FutureValidationNoTimeOut[SuiteException, JobConfiguration]
+  def getJobById(id: JobId): FutureValidationNoTimeOut[SuiteException, Job]
   
-  def listJobs(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Iterable[JobConfiguration]]
+  def listJobs(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Iterable[Job]]
   
   def putOrganization(organizationData: OrganizationData): FutureValidationNoTimeOut[SuiteException, Unit]
   

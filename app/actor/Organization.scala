@@ -1,18 +1,20 @@
 package org.w3.vs.actor
 
-import java.util.UUID
-import org.w3.vs.model._
-import org.w3.vs._
-import akka.dispatch._
-import akka.actor._
-import akka.util.Timeout
-import akka.util.duration._
-import akka.pattern.ask
-import play.api.libs.iteratee.{Enumerator, PushEnumerator}
 import java.nio.channels.ClosedChannelException
-import org.w3.util.akkaext._
+
+import org.w3.util.akkaext.Deafen
+import org.w3.util.akkaext.Listen
+import org.w3.vs.model.OrganizationData
+import org.w3.vs.model.OrganizationId
+import org.w3.vs.VSConfiguration
+
+import akka.actor.actorRef2Scala
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.Props
 import play.api.libs.iteratee.Enumeratee
-import message.UpdateData
+import play.api.libs.iteratee.Enumerator
+import play.api.libs.iteratee.PushEnumerator
 
 object Organization {
 

@@ -26,15 +26,14 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
       maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
+  val job = Job(strategy = strategy, creator = userTest.id, organizationId = organizationTest.id, name = "@@")
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(1000).toPlanify))
 
   "test stop" in {
     store.putOrganization(organizationTest)
-    store.putJob(jobConf).waitResult()
+    store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
-    val job = Job(jobConf)
     job.refresh()
     job.listen(testActor)
     fishForMessagePF(3.seconds) {
@@ -43,7 +42,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
     job.stop()
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
-        val resources = store.listResourceInfos(jobConf.id).waitResult
+        val resources = store.listResourceInfos(job.id).waitResult
         resources.size must be < (100)
       }
     }

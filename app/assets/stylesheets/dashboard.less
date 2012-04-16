@@ -9,6 +9,10 @@
 a:link,
 a:visited {
 	color:#0066CC;
+	text-decoration:none;
+}
+a:link:hover {
+	text-decoration:underline;
 }
 	
 body > footer {
@@ -39,11 +43,18 @@ body > footer {
 #admin dd {
 	display:inline;
 }
-#admin .logout,
 #admin .type {
 	margin-left:10px;
 }
 
+#admin li,
+#nav li {
+	display:inline;
+}
+#admin li:not(:first-child),
+#nav li:not(:first-child) {
+	margin-left:10px;
+}
 
 #nav {
 	position: absolute;
@@ -52,9 +63,7 @@ body > footer {
 	z-index: 2;
 	border-bottom: none;
 }
-#nav > a:not(:first-of-type) {
-	margin-left:10px;
-}
+
 
 #jobs > h1,
 #nav > h1,

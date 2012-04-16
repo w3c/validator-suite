@@ -15,17 +15,17 @@ import message._
 import scalaz._
 import org.w3.util.akkaext._
 
-case class CreateJobAndForward(jobConfiguration: JobConfiguration, msg: Any)
+case class CreateJobAndForward(job: Job, msg: Any)
 
 class JobsActor()(implicit configuration: VSConfiguration) extends Actor with PathAwareActor {
 
   val logger = play.Logger.of(classOf[JobsActor])
 
-  def getJobRefOrCreate(jobConfiguration: JobConfiguration): ActorRef = {
-    val id = jobConfiguration.id
+  def getJobRefOrCreate(job: Job): ActorRef = {
+    val id = job.id
     val name = id.toString
     try {
-      context.actorOf(Props(new JobActor(jobConfiguration)), name = name)
+      context.actorOf(Props(new JobActor(job)), name = name)
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / name)
     }
@@ -41,8 +41,8 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
         case None => {
           val jobId = JobId.fromString(name)
           configuration.store.getJobById(jobId).asFuture onSuccess {
-            case Success(jobConfiguration) => {
-              to.tell(CreateJobAndForward(jobConfiguration, msg), from)
+            case Success(job) => {
+              to.tell(CreateJobAndForward(job, msg), from)
             }
             case Failure(storeException) => {
               logger.error(storeException.toString)
@@ -52,8 +52,8 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
       }
     }
 
-    case CreateJobAndForward(jobConfiguration, msg) => {
-      val jobRef = getJobRefOrCreate(jobConfiguration)
+    case CreateJobAndForward(job, msg) => {
+      val jobRef = getJobRefOrCreate(job)
       jobRef forward msg
     }
 

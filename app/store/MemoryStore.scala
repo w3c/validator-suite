@@ -1,20 +1,37 @@
 package org.w3.vs.store
 
-import org.w3.vs.model._
-import org.w3.vs.actor._
-import org.w3.util._
-import org.w3.util.FutureValidation._
-import org.w3.util.Pimps._
-import scala.collection.JavaConverters._
-import scala.collection.mutable.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap
-import scalaz._
-import Scalaz._
-//import Validation._
+
+import scala.collection.JavaConverters.asScalaConcurrentMapConverter
+import scala.collection.mutable.ConcurrentMap
+
 import org.joda.time.DateTime
+import org.w3.util.FutureValidation.delayedValidation
+import org.w3.util.FutureValidation.immediateValidation
 import org.w3.util.DateTimeOrdering
-import org.w3.vs.exception._
+import org.w3.util.FutureValidationNoTimeOut
+import org.w3.util.URL
+import org.w3.vs.exception.StoreException
+import org.w3.vs.exception.SuiteException
+import org.w3.vs.exception.Unknown
+import org.w3.vs.exception.UnknownJob
+import org.w3.vs.exception.UnknownUser
+import org.w3.vs.model.AssertorResult
+import org.w3.vs.model.Job
+import org.w3.vs.model.JobId
+import org.w3.vs.model.OrganizationData
+import org.w3.vs.model.OrganizationId
+import org.w3.vs.model.ResourceInfo
+import org.w3.vs.model.RunId
+import org.w3.vs.model.RunSnapshot
+import org.w3.vs.model.User
+import org.w3.vs.model.UserId
 import org.w3.vs.VSConfiguration
+
+import MemoryStore.fromTryCatch
+import MemoryStore.fromTryCatchV
+import scalaz.Scalaz._
+import scalaz._
 
 object MemoryStore {
 
@@ -31,8 +48,6 @@ object MemoryStore {
 
 }
 
-import MemoryStore._
-
 class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
 
   implicit val context = configuration.storeExecutionContext
@@ -43,7 +58,7 @@ class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
 
   val users: ConcurrentMap[UserId, User] = new ConcurrentHashMap[UserId, User]().asScala
 
-  val jobs: ConcurrentMap[JobId, JobConfiguration] = new ConcurrentHashMap[JobId, JobConfiguration]().asScala
+  val jobs: ConcurrentMap[JobId, Job] = new ConcurrentHashMap[JobId, Job]().asScala
 
   val organizations: ConcurrentMap[OrganizationId, OrganizationData] = new ConcurrentHashMap[OrganizationId, OrganizationData]().asScala
 
@@ -59,7 +74,7 @@ class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
     resourceInfos += resourceInfo.id -> resourceInfo
   }
 
-  def putJob(job: JobConfiguration): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
+  def putJob(job: Job): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     jobs += job.id -> job
   }
 
@@ -67,12 +82,12 @@ class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
     jobs -= jobId
   }
 
-  def getJobById(id: JobId): FutureValidationNoTimeOut[SuiteException, JobConfiguration] = fromTryCatchV {
+  def getJobById(id: JobId): FutureValidationNoTimeOut[SuiteException, Job] = fromTryCatchV {
     jobs.get(id) toSuccess (UnknownJob)
   }
 
-  def listJobs(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Iterable[JobConfiguration]] = fromTryCatch {
-    jobs collect { case (_, job) if organizationId === job.organization => job }
+  def listJobs(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Iterable[Job]] = fromTryCatch {
+    jobs collect { case (_, job) if organizationId === job.organizationId => job }
   }
 
   /* organizations */

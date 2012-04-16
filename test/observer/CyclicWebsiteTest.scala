@@ -29,20 +29,19 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
       maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
+  val job = Job(strategy = strategy, creator = userTest.id, organizationId = organizationTest.id, name = "@@")
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
   "test cyclic(10)" in {
     store.putOrganization(organizationTest)
-    store.putJob(jobConf).waitResult()
+    store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
-    val job = Job(jobConf)
     job.refresh()
     job.listen(testActor)
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
-        val resources = store.listResourceInfos(jobConf.id).waitResult
+        val resources = store.listResourceInfos(job.id).waitResult
         resources must have size 11
       }
     }

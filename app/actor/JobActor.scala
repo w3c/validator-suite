@@ -25,7 +25,7 @@ import org.joda.time.DateTime
 import org.w3.util.akkaext._
 
 // TODO extract all pure function in a companion object
-class JobActor(job: JobConfiguration)(
+class JobActor(job: Job)(
   implicit val configuration: VSConfiguration)
     extends Actor with FSM[(RunActivity, ExplorationMode), RunData] with Listeners {
 

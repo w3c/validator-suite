@@ -36,7 +36,7 @@ object AssertionsActor {
 
 import AssertionsActor._
 
-class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configuration: VSConfiguration) extends Actor {
+class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) extends Actor {
 
   import configuration.assertorExecutionContext
 
@@ -55,12 +55,12 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
         throwable => AssertorFail(
           url = url,
           assertorId = assertor.id,
-          jobId = jobConfiguration.id,
+          jobId = job.id,
           why = throwable.getMessage),
         assertions => Assertions(
           url = url,
           assertorId = assertor.id,
-          jobId = jobConfiguration.id,
+          jobId = job.id,
           assertions = assertions))
     }(assertorExecutionContext)
       
@@ -70,7 +70,7 @@ class AssertionsActor(jobConfiguration: JobConfiguration)(implicit val configura
         val fail = AssertorFail(
           url = url,
           assertorId = assertor.id,
-          jobId = jobConfiguration.id,
+          jobId = job.id,
           why = throwable.getMessage)
         self ! fail
       }

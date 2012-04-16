@@ -21,7 +21,9 @@ object Main {
       maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = JobConfiguration.fake(strategy = strategy)
+//  implicit def configuration = org.w3.vs.Prod.configuration
+//      
+//  val job = Job.fake(strategy = strategy)
   
   def main(args: Array[String]): Unit = {
     

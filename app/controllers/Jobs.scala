@@ -1,29 +1,60 @@
 package controllers
 
-import play.api._
-import play.api.mvc._
-import play.api.i18n._
-import play.api.data.Form
-import play.api.libs.json._
-import play.api.libs.iteratee._
-import play.api.libs.concurrent._
-import org.w3.util._
-import org.w3.util.Pimps._
-import org.w3.vs.controllers._
-import org.w3.vs.exception._
-import org.w3.vs.model._
-import org.w3.vs.actor._
-import org.w3.vs.actor.message._
-import scalaz._
-import Scalaz._
-import Validation._
-import akka.dispatch.Await
+import java.util.concurrent.TimeUnit.SECONDS
+
+import scala.Option.option2Iterable
+
+import org.w3.util.Pimps.wrapFuture
+import org.w3.util.Pimps.wrapOption
+import org.w3.util.Pimps.wrapValidation
+import org.w3.util.DateTimeOrdering
+import org.w3.util.FutureValidationNoTimeOut
+import org.w3.vs.actor.Organization
+import org.w3.vs.controllers.ec
+import org.w3.vs.controllers.isAjax
+import org.w3.vs.controllers.isValidForm
+import org.w3.vs.controllers.jobForm
+import org.w3.vs.exception.StoreException
+import org.w3.vs.exception.SuiteException
+import org.w3.vs.exception.UnauthorizedJob
+import org.w3.vs.exception.Unexpected
+import org.w3.vs.model.Assertions
+import org.w3.vs.model.AssertorResult
+import org.w3.vs.model.Context
+import org.w3.vs.model.Job
+import org.w3.vs.model.JobData
+import org.w3.vs.model.JobId
+import org.w3.vs.model.User
+import org.w3.vs.view.AssertorHeader
+import org.w3.vs.view.ContextHeader
+import org.w3.vs.view.ContextValue
+import org.w3.vs.view.Helper
+import org.w3.vs.view.MessageHeader
+import org.w3.vs.view.PageNav
+import org.w3.vs.view.PositionValue
+import org.w3.vs.view.ReportSection
+import org.w3.vs.view.ReportValue
+import org.w3.vs.view.UrlHeader
+
+import Application.FutureTimeoutError
+import Application.getAuthenticatedUser
+import Application.getAuthenticatedUserOrResult
+import Application.toResult
 import akka.dispatch.Future
-import akka.util.Duration
-import akka.util.duration._
-import java.util.concurrent.TimeUnit._
-import org.w3.util.Pimps._
-import org.w3.vs.assertor.AssertorId
+import play.api.i18n.Messages
+import play.api.libs.concurrent.Promise
+import play.api.libs.iteratee.Enumeratee
+import play.api.libs.iteratee.Enumerator
+import play.api.libs.iteratee.Iteratee
+import play.api.libs.json.JsValue
+import play.api.mvc.Request
+import play.api.mvc.Action
+import play.api.mvc.AnyContent
+import play.api.mvc.AsyncResult
+import play.api.mvc.Controller
+import play.api.mvc.WebSocket
+import scalaz.Scalaz._
+import scalaz._
 
 object Jobs extends Controller {
   
@@ -39,16 +70,15 @@ object Jobs extends Controller {
     AsyncResult {
       val futureResult = for {
         user <- getAuthenticatedUserOrResult
-        jobConfs <- configuration.store.listJobs(user.organization).failMap(toResult(Some(user)))
+        jobs <- configuration.store.listJobs(user.organization).failMap(toResult(Some(user)))
         jobDatas <- {
-          val jobs: Iterable[Job] = jobConfs map { jobConf => Job(jobConf.organization, jobConf.id) }
           val futureJobDatas: Future[Iterable[JobData]] = Future.sequence(jobs map { _.jobData() })
           futureJobDatas.lift
         }.failMap(t => toResult(Some(user))(StoreException(t)))
       } yield {
-        val sortedJobsConf = jobConfs.toSeq.sortBy(_.createdOn)
+        val sortedJobs = jobs.toSeq.sortBy(_.createdOn)
         val map: Map[JobId, JobData] = jobDatas.map{ jobData => (jobData.jobId, jobData) }.toMap
-        val viewInputs = sortedJobsConf map { jobConf => (jobConf, map(jobConf.id)) }
+        val viewInputs = sortedJobs map { job => (job, map(job.id)) }
         Ok(views.html.dashboard(viewInputs, user))
       }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
@@ -60,13 +90,12 @@ object Jobs extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUserOrResult
-          jobConf <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
-          job = Job(jobConf)
+          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
           data <- job.jobData.lift failMap {t => toResult(Some(user))(Unexpected(t))}
-          ars <- Job.getAssertorResults(jobConf.id) failMap toResult(Some(user))
+          ars <- Job.getAssertorResults(job.id) failMap toResult(Some(user))
         } yield {
           val p = paginate(group(ars.collect{case a: Assertions => a}))
-          Ok(views.html.job(jobConf, data, p._1, p._2, user, messages))
+          Ok(views.html.job(job, data, p._1, p._2, user, messages))
         }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise()
     }
@@ -206,11 +235,11 @@ object Jobs extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUserOrResult
-          jobConf <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
+          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
           _ <- Job.delete(id) failMap toResult(Some(user))
         } yield {
-          Job(jobConf).stop
-          if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", jobConf.name)))
+          job.stop
+          if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.name)))
         }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
@@ -271,7 +300,7 @@ object Jobs extends Controller {
         for {
           user <- getAuthenticatedUserOrResult
           id <- idOpt.toImmediateSuccess(ifNone = Ok(views.html.jobForm(jobForm, user )))
-          jobC <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
+          jobC <- getJobIfAllowed(user, id) failMap toResult(Some(user))
         } yield {
           Ok(views.html.jobForm(jobForm.fill(jobC), user, idOpt))
         }
@@ -290,14 +319,14 @@ object Jobs extends Controller {
           result <- idOpt match {
             case None =>
               for {
-                _ <- Job.save(jobF.assignTo(user)) failMap toResult(Some(user))
+                _ <- Job.save(jobF.copy(creator = user.id, organizationId = user.organization)) failMap toResult(Some(user))
               } yield {
                 if (isAjax) Created(views.html.libs.messages(List(("info" -> Messages("jobs.created", jobF.name))))) 
                 else        SeeOther(routes.Jobs.show(jobF.id).toString).flashing(("info" -> Messages("jobs.created", jobF.name)))
               }
             case Some(id) =>
               for {
-                jobC <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
+                jobC <- getJobIfAllowed(user, id) failMap toResult(Some(user))
                  _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap toResult(Some(user))
               } yield {
                 if (isAjax) Created(views.html.libs.messages(List(("info" -> Messages("jobs.updated", jobC.name))))) 
@@ -316,25 +345,24 @@ object Jobs extends Controller {
       val futureResult =
         for {
           user <- getAuthenticatedUserOrResult
-          jobConf <- getJobConfIfAllowed(user, id) failMap toResult(Some(user))
+          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
         } yield {
-          val job = Job(jobConf)
           action(user)(job)
-          if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, jobConf.name))))) 
-          else        SeeOther(routes.Jobs.show(jobConf.id).toString).flashing(("info" -> Messages(msg, jobConf.name)))
+          if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
+          else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
         }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
   }
   
-  private def getJobConfIfAllowed(user: User, id: JobId): FutureValidationNoTimeOut[SuiteException, JobConfiguration] = {
+  private def getJobIfAllowed(user: User, id: JobId): FutureValidationNoTimeOut[SuiteException, Job] = {
     for {
-      jobConf <- Job.get(id)
-      jobConfAllowed <- {
-        val validation = if (jobConf.organization === user.organization) Success(jobConf) else Failure(UnauthorizedJob)
+      job <- Job.get(id)
+      jobAllowed <- {
+        val validation = if (job.organizationId === user.organization) Success(job) else Failure(UnauthorizedJob)
         validation.toImmediateValidation
       }
-    } yield jobConfAllowed
+    } yield jobAllowed
   }
   
 }

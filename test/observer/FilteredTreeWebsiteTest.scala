@@ -31,20 +31,19 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
       maxNumberOfResources = 50,
       filter=Filter.includePrefixes("http://localhost:9001/1", "http://localhost:9001/3")).noAssertor()
   
-  val jobConf = JobConfiguration(strategy = strategy, creator = userTest.id, organization = organizationTest.id, name = "@@")
+  val job = Job(strategy = strategy, creator = userTest.id, organizationId = organizationTest.id, name = "@@")
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.tree(4).toPlanify))
 
   "test FilteredTreeWebsiteTest" in {
     store.putOrganization(organizationTest)
-    store.putJob(jobConf).waitResult()
+    store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
-    val job = Job(jobConf)
     job.refresh()
     job.listen(testActor)
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
-        def ris = store.listResourceInfos(jobConf.id).waitResult()
+        def ris = store.listResourceInfos(job.id).waitResult()
         ris must have size (50)
         ris foreach { ri =>
           ri.url.toString must startWith regex ("http://localhost:9001/[13]")

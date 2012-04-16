@@ -1,5 +1,6 @@
 import play.api._
 import org.w3.vs.model._
+import org.w3.vs.actor._
 import org.w3.util._
 import org.joda.time.DateTime
 
@@ -24,11 +25,13 @@ object Global extends GlobalSettings {
     store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id))
     store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id))
     
-    val w3 = JobConfiguration(
+    implicit def configuration = org.w3.vs.Prod.configuration
+    
+    val w3 = Job(
       createdOn = DateTime.now,
       name = "W3C",
       creator = bertails.id,
-      organization = w3c.id,
+      organizationId = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
         entrypoint=URL("http://www.w3.org/"),
@@ -37,11 +40,11 @@ object Global extends GlobalSettings {
         maxNumberOfResources = 100,
         filter=Filter(include=Everything, exclude=Nothing)))
         
-    val tr = JobConfiguration(
+    val tr = Job(
       createdOn = DateTime.now.plus(1000),
       name = "TR",
       creator = bertails.id,
-      organization = w3c.id,
+      organizationId = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
         entrypoint=URL("http://www.w3.org/TR"),
@@ -50,11 +53,11 @@ object Global extends GlobalSettings {
         maxNumberOfResources = 100,
         filter=Filter.includePrefixes("http://www.w3.org/TR")))
         
-    val ibm = JobConfiguration(
+    val ibm = Job(
       createdOn = DateTime.now.plus(2000),
       name = "IBM",
       creator = bertails.id,
-      organization = w3c.id,
+      organizationId = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
         entrypoint=URL("http://www.ibm.com"),
@@ -63,11 +66,11 @@ object Global extends GlobalSettings {
         maxNumberOfResources = 100,
         filter=Filter(include=Everything, exclude=Nothing)))
     
-    val lemonde = JobConfiguration(
+    val lemonde = Job(
       createdOn = DateTime.now.plus(3000),
       name = "Le Monde",
       creator = bertails.id,
-      organization = w3c.id,
+      organizationId = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
         entrypoint=URL("http://www.lemonde.fr"),
@@ -82,7 +85,7 @@ object Global extends GlobalSettings {
     store.putJob(ibm)
     store.putJob(lemonde)
     
-//    var a = List[JobConfiguration]()
+//    var a = List[Job]()
 //    for (i <- 0 until 8)
 //      a = a :+ job.copy(JobId(), strategy = job.strategy.copy(distance = i), createdOn = DateTime.now.plus(i)) 
 //    a.map(store.putJob)

@@ -1,4 +1,4 @@
-@(jobs: Iterable[(JobConfiguration, JobData)] = None, user: User)(implicit flash: Flash)
+@(jobs: Iterable[(Job, JobData)] = None, user: User)(implicit flash: Flash)
 
 @import org.w3.vs.actor._
 
@@ -18,9 +18,11 @@
 	
 	<nav id="nav">
 		<h1>Navigation</h1>
-		<a href="">Dashboard</a>
-		<a href="#">New Domain</a>
-		<a href="@routes.Jobs.new1">New job</a>
+		<ul>
+			<li><a href="">Dashboard</a></li>
+			<li><a href="#">New Domain</a></li>
+			<li><a href="@routes.Jobs.new1">New job</a></li>
+		</ul>
 	</nav>
 	
 	<hr>
@@ -40,7 +42,7 @@
 				<dd>The seed URL for this job, the entry point of the crawler</dd>
 				<dt class="status"><dfn>Status</dfn></dt>
 				<dd>The current status of the job, either Idle or Running.</dd>
-				<dt class="date"><dfn>Last Run Completed</dfn></dt>
+				<dt class="date"><dfn>Last Completed</dfn></dt>
 				<dd>The date the job was last completed</dd>
 				<dt class="warnings"><dfn>Warnings</dfn></dt>
 				<dd>The total number or warnings reported by the job's assertors</dd>
@@ -49,7 +51,7 @@
 				<dt class="resources"><dfn>Resources</dfn></dt>
 				<dd>The total number of resources that have been considered by the crawler</dd>
 				<dt class="health"><dfn>Health</dfn></dt>
-				<dd>An indicator of the job's resources quality (def?)</dd>
+				<dd>An indicator of the overall quality of a job's resources</dd>
 				<dt class="actions"><dfn>Actions</dfn></dt>
 				<dd>Actions to perform on the job</dd>
 			</dl>
@@ -57,21 +59,21 @@
 		
 		<hr>
 		
-		@for((jobConf, data) <- jobs) {
+		@for((job, data) <- jobs) {
 		
-		<article data-id="@jobConf.id">
-			<h2>@jobConf.name</h2>
+		<article data-id="@job.id">
+			<h2>@job.name</h2>
 			<dl>
 				<dt>Name</dt>
-				<dd class="name"><a href="@routes.Jobs.dispatcher(jobConf.id)">@jobConf.name</a></dd>
+				<dd class="name"><a href="@routes.Jobs.dispatcher(job.id)">@job.name</a></dd>
 				
 				<dt>URL</dt>
-				<dd class="url">@jobConf.strategy.seedURLs.head</dd>
+				<dd class="url">@job.strategy.seedURLs.head</dd>
 				
 				<dt>Status</dt>
 				<dd class="status">
 					<span>@data.activity</span>
-					<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
+					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
 						@defining(data.activity) { activity => @activity match {
 						  case Busy => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 						  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
@@ -96,7 +98,7 @@
 				
 				<dt>Actions</dt>
 				<dd>
-					<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
+					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
 						<button type="submit" name="action" value="delete" class="delete">delete</button>
 					</form>
 				</dd>

@@ -1,4 +1,4 @@
-@(jobConf: JobConfiguration, 
+@(job: Job, 
     data: JobData,
     report: List[org.w3.vs.view.ReportSection],
     pageNav: org.w3.vs.view.PageNav,
@@ -58,24 +58,24 @@
 
 }{ @***** Content *****@ 
 	@libs.admin(user)
-	@libs.navigation(List((jobConf.name ,"")))
+	@libs.navigation(List((job.name ,"")))
 	@libs.messages(errors)
 	
-	<section class="job" data-id="@jobConf.id">
+	<section class="job" data-id="@job.id">
 		<ul>
 			<li>
 				<h2>Job Name</h2>
-				<span class="name">@jobConf.name</span>
+				<span class="name">@job.name</span>
 			<li>
 				<h2>URL</h2>
-				<span class="uri">@jobConf.strategy.seedURLs.head</span>
+				<span class="uri">@job.strategy.seedURLs.head</span>
 			<li>
 				<h2>Distance</h2>
-				<span class="distance">@jobConf.strategy.distance</span>
+				<span class="distance">@job.strategy.distance</span>
 			<li>
 				<h2>Status</h2>
 				<span class="activity">@data.activity</span>
-				<form action="@routes.Jobs.dispatcher(jobConf.id)" method="post">
+				<form action="@routes.Jobs.dispatcher(job.id)" method="post">
 					@defining(data.activity) { activity =>
 					@activity match {
 					  case Busy => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
