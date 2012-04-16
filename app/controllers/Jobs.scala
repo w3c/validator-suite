@@ -71,15 +71,11 @@ object Jobs extends Controller {
       val futureResult = for {
         user <- getAuthenticatedUserOrResult
         jobs <- configuration.store.listJobs(user.organization).failMap(toResult(Some(user)))
-        jobDatas <- {
-          val futureJobDatas: Future[Iterable[JobData]] = Future.sequence(jobs map { _.jobData() })
-          futureJobDatas.lift
-        }.failMap(t => toResult(Some(user))(StoreException(t)))
+        jobsWithData <- {
+            Future.sequence(jobs.toSeq.sortBy(_.name) map { Job.withLastData(_) }).lift // sorted by name should be the store default?
+          }.failMap(t => toResult(Some(user))(StoreException(t)))
       } yield {
-        val sortedJobs = jobs.toSeq.sortBy(_.createdOn)
-        val map: Map[JobId, JobData] = jobDatas.map{ jobData => (jobData.jobId, jobData) }.toMap
-        val viewInputs = sortedJobs map { job => (job, map(job.id)) }
-        Ok(views.html.dashboard(viewInputs, user))
+        Ok(views.html.dashboard(jobsWithData, user))
       }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }

@@ -1,7 +1,6 @@
 package org.w3.vs.model
 
 import java.nio.channels.ClosedChannelException
-
 import org.joda.time.DateTime
 import org.w3.util.akkaext.Deafen
 import org.w3.util.akkaext.Listen
@@ -11,7 +10,6 @@ import org.w3.util.NOTSET
 import org.w3.vs.actor.message._
 import org.w3.vs.exception.SuiteException
 import org.w3.vs.VSConfiguration
-
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
@@ -20,6 +18,7 @@ import play.api.libs.iteratee.Enumeratee
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.PushEnumerator
 import play.Logger
+import org.w3.util.URL
 
 object Job {
   
@@ -62,6 +61,10 @@ object Job {
       store.listAssertorResults(id, after)
     }
   
+  def withLastData(job: Job): Future[Job] = {
+    job.jobData().map(jobData => job.copy(lastData = Some(jobData)))
+  }
+  
 }
 
 case class Job(
@@ -70,9 +73,10 @@ case class Job(
     creatorId: UserId,
     organizationId: OrganizationId,
     strategy: Strategy,
+    lastData: Option[JobData] = None,
+    lastCompleted: Option[DateTime] = None,
     history: Map[DateTime, JobData] = Map.empty,
-    createdOn: DateTime = DateTime.now,
-    lastCompleted: Option[DateTime] = None)(implicit conf: VSConfiguration) {
+    createdOn: DateTime = DateTime.now)(implicit conf: VSConfiguration) {
 
   import conf.system
   
@@ -89,6 +93,8 @@ case class Job(
   def off(): Unit = PathAware(organizationsRef, path) ! BeLazy
 
   def health(): Int = 50
+  
+  def url(): URL = strategy.seedURLs.head
   
   def jobData(): Future[JobData] =
     (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]

@@ -1,4 +1,4 @@
-@(jobs: Iterable[(Job, JobData)] = None, user: User)(implicit flash: Flash)
+@(jobs: Iterable[Job] = None, user: User)(implicit flash: Flash)
 
 @import org.w3.vs.actor._
 
@@ -59,8 +59,9 @@
 		
 		<hr>
 		
-		@for((job, data) <- jobs) {
-		
+		@for(job <- jobs) {
+		@if(job.lastData.isDefined) { @** What if it isn't defined? **@
+		@defining(job.lastData.get) { data =>
 		<article data-id="@job.id">
 			<h2>@job.name</h2>
 			<dl>
@@ -68,13 +69,13 @@
 				<dd class="name"><a href="@routes.Jobs.dispatcher(job.id)">@job.name</a></dd>
 				
 				<dt>URL</dt>
-				<dd class="url">@job.strategy.seedURLs.head</dd>
+				<dd class="url">@job.url</dd>
 				
 				<dt>Status</dt>
 				<dd class="status">
 					<span>@data.activity</span>
 					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
-						@defining(data.activity) { activity => @activity match {
+						@{data.activity match {
 						  case Busy => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 						  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
 						}}
@@ -82,7 +83,12 @@
 				</dd>
 
 				<dt>Last Completed</dt>
-				<dd class="date"><time datetime="">03/12/12 at 2:55pm</time></dd>
+				<dd class="date">
+					@{job.lastCompleted match{ 
+					  case Some(date) => {<time datetime="">03/12/12 at 2:55pm</time>}
+					  case _ => {"Never"}
+					}}
+				</dd>
 				
 				<dt>Warnings</dt>
 				<dd class="warnings">@data.warnings</dd>
@@ -94,7 +100,7 @@
 				<dd class="resources">@data.resources</dd>
 				
 				<dt>Health</dt>
-				<dd class="health">50%</dd>
+				<dd class="health">@job.health()</dd>
 				
 				<dt>Actions</dt>
 				<dd>
@@ -105,7 +111,7 @@
 			</dl>
 			<hr>
 		</article>
-		}
+		}}}
 	</section>
 	
 }{ @***** Footer *****@
