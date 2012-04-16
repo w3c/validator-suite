@@ -30,7 +30,7 @@ object Global extends GlobalSettings {
     val w3 = Job(
       createdOn = DateTime.now,
       name = "W3C",
-      creator = bertails.id,
+      creatorId = bertails.id,
       organizationId = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
@@ -43,7 +43,7 @@ object Global extends GlobalSettings {
     val tr = Job(
       createdOn = DateTime.now.plus(1000),
       name = "TR",
-      creator = bertails.id,
+      creatorId = bertails.id,
       organizationId = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
@@ -56,7 +56,7 @@ object Global extends GlobalSettings {
     val ibm = Job(
       createdOn = DateTime.now.plus(2000),
       name = "IBM",
-      creator = bertails.id,
+      creatorId = bertails.id,
       organizationId = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",
@@ -69,7 +69,7 @@ object Global extends GlobalSettings {
     val lemonde = Job(
       createdOn = DateTime.now.plus(3000),
       name = "Le Monde",
-      creator = bertails.id,
+      creatorId = bertails.id,
       organizationId = w3c.id,
       strategy = new Strategy(
         name="irrelevantForV1",

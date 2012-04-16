@@ -8,7 +8,7 @@ import org.w3.util.akkaext.Listen
 import org.w3.util.akkaext.PathAware
 import org.w3.util.FutureValidation
 import org.w3.util.NOTSET
-import org.w3.vs.actor.message
+import org.w3.vs.actor.message._
 import org.w3.vs.exception.SuiteException
 import org.w3.vs.VSConfiguration
 
@@ -26,7 +26,7 @@ object Job {
   // Shouldn't be here. We need sets of initial data for dev and test modes
   def fake(strategy: Strategy)(implicit configuration: VSConfiguration): Job = {
     val fakeUser = User.fake
-    Job(name = "fake job", creator = fakeUser.id, organizationId = fakeUser.organization, strategy = strategy)
+    Job(name = "fake job", creatorId = fakeUser.id, organizationId = fakeUser.organization, strategy = strategy)
   }
   
   def get(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Job, Nothing, NOTSET] = {
@@ -66,11 +66,13 @@ object Job {
 
 case class Job(
     id: JobId = JobId.newId(),
-    strategy: Strategy,
-    createdOn: DateTime = new DateTime,
-    creator: UserId,
+    name: String,
+    creatorId: UserId,
     organizationId: OrganizationId,
-    name: String)(implicit conf: VSConfiguration) {
+    strategy: Strategy,
+    history: Map[DateTime, JobData] = Map.empty,
+    createdOn: DateTime = DateTime.now,
+    lastCompleted: Option[DateTime] = None)(implicit conf: VSConfiguration) {
 
   import conf.system
   
@@ -78,21 +80,23 @@ case class Job(
   
   private val logger = Logger.of(classOf[Job])
   
-  def refresh(): Unit = PathAware(organizationsRef, path) ! message.Refresh
+  def run(): Unit = PathAware(organizationsRef, path) ! Refresh
   
-  def stop(): Unit = PathAware(organizationsRef, path) ! message.Stop
+  def cancel(): Unit = PathAware(organizationsRef, path) ! Stop
 
-  def on(): Unit = PathAware(organizationsRef, path) ! message.BeProactive
+  def on(): Unit = PathAware(organizationsRef, path) ! BeProactive
 
-  def off(): Unit = PathAware(organizationsRef, path) ! message.BeLazy
+  def off(): Unit = PathAware(organizationsRef, path) ! BeLazy
 
+  def health(): Int = 50
+  
   def jobData(): Future[JobData] =
-    (PathAware(organizationsRef, path) ? message.GetJobData).mapTo[JobData]
+    (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]
 
-  def subscribeToUpdates(): Enumerator[message.RunUpdate] = {
+  def subscribeToUpdates(): Enumerator[RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
-        case msg: message.RunUpdate =>
+        case msg: RunUpdate =>
           try { 
             enumerator.push(msg)
           } catch { 
@@ -102,8 +106,8 @@ case class Job(
         case msg => logger.debug("subscriber got "+msg)
       }
     }))
-    lazy val enumerator: PushEnumerator[message.RunUpdate] =
-      Enumerator.imperative[message.RunUpdate](
+    lazy val enumerator: PushEnumerator[RunUpdate] =
+      Enumerator.imperative[RunUpdate](
         onComplete = () => {deafen(subscriber); logger.info("onComplete")},
         onError = (_,_) => () => {deafen(subscriber); logger.info("onError")}
       )

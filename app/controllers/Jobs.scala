@@ -238,7 +238,7 @@ object Jobs extends Controller {
           job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
           _ <- Job.delete(id) failMap toResult(Some(user))
         } yield {
-          job.stop
+          job.cancel
           if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.name)))
         }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
@@ -252,8 +252,8 @@ object Jobs extends Controller {
   
   def on(id: JobId) = simpleJobAction(id)(user => job => job.on())("jobs.on")
   def off(id: JobId) = simpleJobAction(id)(user => job => job.off())("jobs.off")
-  def refresh(id: JobId) = simpleJobAction(id)(user => job => job.refresh())("jobs.refreshed")
-  def stop(id: JobId) = simpleJobAction(id)(user => job => job.stop())("jobs.stopped")
+  def refresh(id: JobId) = simpleJobAction(id)(user => job => job.run())("jobs.refreshed")
+  def stop(id: JobId) = simpleJobAction(id)(user => job => job.cancel())("jobs.stopped")
   
   def dispatcher(implicit id: JobId) = Action { implicit req =>
     (for {
@@ -319,7 +319,7 @@ object Jobs extends Controller {
           result <- idOpt match {
             case None =>
               for {
-                _ <- Job.save(jobF.copy(creator = user.id, organizationId = user.organization)) failMap toResult(Some(user))
+                _ <- Job.save(jobF.copy(creatorId = user.id, organizationId = user.organization)) failMap toResult(Some(user))
               } yield {
                 if (isAjax) Created(views.html.libs.messages(List(("info" -> Messages("jobs.created", jobF.name))))) 
                 else        SeeOther(routes.Jobs.show(jobF.id).toString).flashing(("info" -> Messages("jobs.created", jobF.name)))
