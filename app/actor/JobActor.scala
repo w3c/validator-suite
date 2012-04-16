@@ -140,7 +140,7 @@ class JobActor(job: Job)(
     case Event(message.BeProactive, data) => stateOf(data.copy(explorationMode = ProActive))
     case Event(message.BeLazy, data) => stateOf(data.copy(explorationMode = Lazy))
     case Event(message.Refresh, data) => {
-      val firstURLs = strategy.seedURLs.toList
+      val firstURLs = List(strategy.entrypoint)
       val freshRunData = RunData.makeFresh(job.id, strategy)
       val (runData, _) = freshRunData.withNewUrlsToBeExplored(firstURLs, 0)
       stateOf(scheduleNextURLsToFetch(runData))

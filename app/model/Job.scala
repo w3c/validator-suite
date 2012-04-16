@@ -94,8 +94,6 @@ case class Job(
 
   def health(): Int = 50
   
-  def url(): URL = strategy.seedURLs.head
-  
   def jobData(): Future[JobData] =
     (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]
 

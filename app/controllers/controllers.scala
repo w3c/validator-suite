@@ -60,7 +60,7 @@ package object controllers {
           maxNumberOfResources=maxNumberOfResources,
           filter=Filter(include=Everything, exclude=Nothing)))
     })
-    ((job: Job) => Some(job.name, job.strategy.seedURLs.head, job.strategy.distance, job.strategy.linkCheck, job.strategy.maxNumberOfResources))
+    ((job: Job) => Some(job.name, job.strategy.entrypoint, job.strategy.distance, job.strategy.linkCheck, job.strategy.maxNumberOfResources))
   )
 
   class FormW[T](form: Form[T]) {

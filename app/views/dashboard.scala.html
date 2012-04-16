@@ -39,7 +39,7 @@
 				<dt class="name"><dfn>Name</dfn></dt>
 				<dd>The name of the job</dd>
 				<dt class="url"><dfn>URL</dfn></dt>
-				<dd>The seed URL for this job, the entry point of the crawler</dd>
+				<dd>The seed URL for this job, entry point of the crawler</dd>
 				<dt class="status"><dfn>Status</dfn></dt>
 				<dd>The current status of the job, either Idle or Running.</dd>
 				<dt class="date"><dfn>Last Completed</dfn></dt>
@@ -69,7 +69,7 @@
 				<dd class="name"><a href="@routes.Jobs.dispatcher(job.id)">@job.name</a></dd>
 				
 				<dt>URL</dt>
-				<dd class="url">@job.url</dd>
+				<dd class="url">@job.strategy.entrypoint</dd>
 				
 				<dt>Status</dt>
 				<dd class="status">
@@ -100,7 +100,7 @@
 				<dd class="resources">@data.resources</dd>
 				
 				<dt>Health</dt>
-				<dd class="health">@job.health()</dd>
+				<dd class="health">@job.health</dd>
 				
 				<dt>Actions</dt>
 				<dd>
