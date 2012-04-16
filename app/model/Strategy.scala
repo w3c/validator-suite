@@ -26,7 +26,7 @@ case class Strategy(
     filter: Filter,
     assertorsFor: AssertorSelector = AssertorSelector.simple) {
   
-  def mainAuthority: Authority = entrypoint.getAuthority
+  val mainAuthority: Authority = entrypoint.getAuthority
   
   val authorityToObserve: Authority = mainAuthority
   

@@ -40,9 +40,11 @@
 				<dd>The name of the job</dd>
 				<dt class="url"><dfn>URL</dfn></dt>
 				<dd>The seed URL for this job, entry point of the crawler</dd>
+				<dt class="distance"><dfn>Distance</dfn></dt>
+				<dd>The maximum path length of the crawler</dd>
 				<dt class="status"><dfn>Status</dfn></dt>
 				<dd>The current status of the job, either Idle or Running.</dd>
-				<dt class="date"><dfn>Last Completed</dfn></dt>
+				<dt class="date"><dfn>Last completed</dfn></dt>
 				<dd>The date the job was last completed</dd>
 				<dt class="warnings"><dfn>Warnings</dfn></dt>
 				<dd>The total number or warnings reported by the job's assertors</dd>
@@ -50,6 +52,8 @@
 				<dd>The total number of errors reported by the job's assertors</dd>
 				<dt class="resources"><dfn>Resources</dfn></dt>
 				<dd>The total number of resources that have been considered by the crawler</dd>
+				<dt class="maxResources"><dfn>Max resources</dfn></dt>
+				<dd>The maximum number of resources to crawl</dd>
 				<dt class="health"><dfn>Health</dfn></dt>
 				<dd>An indicator of the overall quality of a job's resources</dd>
 				<dt class="actions"><dfn>Actions</dfn></dt>
@@ -70,6 +74,9 @@
 				
 				<dt>URL</dt>
 				<dd class="url">@job.strategy.entrypoint</dd>
+				
+				<dt>Distance</dt>
+				<dd class="distance">@job.strategy.distance</dd>
 				
 				<dt>Status</dt>
 				<dd class="status">
@@ -98,6 +105,9 @@
 				
 				<dt>Resources</dt>
 				<dd class="resources">@data.resources</dd>
+				
+				<dt>Max resources</dt>
+				<dd class="maxResources">@job.strategy.maxNumberOfResources</dd>
 				
 				<dt>Health</dt>
 				<dd class="health">@job.health</dd>
