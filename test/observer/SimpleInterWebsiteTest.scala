@@ -28,7 +28,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val job = Job(strategy = strategy, creator = userTest.id, organizationId = organizationTest.id, name = "@@")
+  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
   
   val servers = Seq(
       unfiltered.jetty.Http(9001).filter(Website(Seq("/" --> "http://localhost:9002/")).toPlanify),
@@ -38,7 +38,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
   "test simpleInterWebsite" in {
     store.putOrganization(organizationTest)
     store.putJob(job).waitResult()
-    job.refresh()
+    job.run()
     job.listen(testActor)
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {

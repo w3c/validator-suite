@@ -51,7 +51,7 @@ package object controllers {
       Job(
         name = name,
         organizationId = null,
-        creator = null,
+        creatorId = null,
         strategy = new Strategy(
           name="irrelevantForV1",
           entrypoint=url,

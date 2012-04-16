@@ -31,7 +31,7 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
       maxNumberOfResources = 50,
       filter=Filter.includePrefixes("http://localhost:9001/1", "http://localhost:9001/3")).noAssertor()
   
-  val job = Job(strategy = strategy, creator = userTest.id, organizationId = organizationTest.id, name = "@@")
+  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.tree(4).toPlanify))
 
@@ -39,7 +39,7 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
     store.putOrganization(organizationTest)
     store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
-    job.refresh()
+    job.run()
     job.listen(testActor)
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
