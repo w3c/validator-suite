@@ -90,9 +90,9 @@ case class RunData(
 
   final def isIdle = noMoreUrlToExplore && pendingAssertions == 0
 
-  final def isBusy = !isIdle
+  final def isRunning = !isIdle
 
-  final def activity: RunActivity = if (isBusy) Busy else Idle
+  final def activity: RunActivity = if (isRunning) Running else Idle
 
   final def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
 

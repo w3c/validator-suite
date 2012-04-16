@@ -11,7 +11,7 @@ object RunActivity {
 }
 
 sealed trait RunActivity
-case object Busy extends RunActivity
+case object Running extends RunActivity
 case object Idle extends RunActivity
 
 object ExplorationMode {

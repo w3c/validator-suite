@@ -71,8 +71,8 @@ class JobActor(job: Job)(
 
   when((Idle, ProActive))(stateFunction)
   when((Idle, Lazy))(stateFunction)
-  when((Busy, ProActive))(stateFunction)
-  when((Busy, Lazy))(stateFunction)
+  when((Running, ProActive))(stateFunction)
+  when((Running, Lazy))(stateFunction)
 
   def stateFunction: StateFunction = {
     case Event(message.GetJobData, data) => {

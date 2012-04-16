@@ -83,7 +83,7 @@
 					<span>@data.activity</span>
 					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
 						@{data.activity match {
-						  case Busy => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
+						  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 						  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
 						}}
 					</form>
@@ -135,13 +135,16 @@
 				<dt>URL</dt>
 				<dd class="url"><%= seedUri %></dd>
 				
+				<dt>Distance</dt>
+				<dd class="distance"><%= distance %></dd>
+
 				<dt>Status</dt>
 				<dd class="status">
 					<span><%= data.get('activity') %></span>
-					<% switch(data.get('activity')) { case "Busy": %>
-						<a class="stop" href="<%= url + '/stop' %>">cancel</a>
+					<% switch(data.get('activity')) { case "Running": %>
+						<a class="stop" href="<%= url + '/cancel' %>">cancel</a>
 					<% break; case "Idle": %>
-						<a class="refresh" href="<%= url + '/refresh' %>">run now</a>
+						<a class="refresh" href="<%= url + '/run' %>">run now</a>
 					<% } %>
 				</dd>
 
@@ -157,6 +160,9 @@
 				<dt>Resources</dt>
 				<dd class="resources"><%= data.get('resources') %></dd>
 				
+				<dt>Max resources</dt>
+				<dd class="maxResources"><%= maxResources %></dd>
+
 				<dt>Health</dt>
 				<dd class="health">50%</dd>
 				

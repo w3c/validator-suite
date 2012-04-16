@@ -77,7 +77,7 @@
 				<span class="activity">@data.activity</span>
 				<form action="@routes.Jobs.dispatcher(job.id)" method="post">
 					@{data.activity match {
-					  case Busy => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
+					  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 					  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
 					}}
 				</form>
