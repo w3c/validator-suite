@@ -156,7 +156,36 @@ hr,
 #jobs .distance {
 	text-align: center;
 }
-
+#jobs {
+	/* http://www.useragentman.com/blog/2012/01/03/cross-browser-html5-progress-bars-in-depth/ */
+	progress{
+		appearance: none;
+		-moz-appearance: none;
+		-webkit-appearance: none;
+		width: 100px;
+		height: 11px;
+		border:none;
+		color: #3bbc00; // IE10? TODO Remove styles for IE9-
+		background: #bb1e17;
+		margin-bottom: 1px;
+		
+		&::-webkit-progress-bar {
+			background: #bb1e17;
+		}
+		&[value="0"] {
+			background: #d2d2d2;
+		}
+		&[value="0"]::-webkit-progress-bar {
+			background: #d2d2d2;
+		}
+		&::-moz-progress-bar {
+			background: #3bbc00;
+		}
+		&::-webkit-progress-value {
+			background: #3bbc00;
+		}
+	}
+}
 
 
 /* Crumb nav */

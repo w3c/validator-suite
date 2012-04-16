@@ -110,7 +110,11 @@
 				<dd class="maxResources">@job.strategy.maxNumberOfResources</dd>
 				
 				<dt>Health</dt>
-				<dd class="health">@job.health</dd>
+				<dd class="health">
+					<progress max=100 value=@job.health title="@job.health%">
+						@job.health%
+					</progress>
+				</dd>
 				
 				<dt>Actions</dt>
 				<dd>
@@ -164,7 +168,11 @@
 				<dd class="maxResources"><%= maxResources %></dd>
 
 				<dt>Health</dt>
-				<dd class="health"><%= health %></dd>
+				<dd class="health">
+					<progress max=100 value=<%= health %> title="<%= health %>%">
+						<%= health %>%
+					</progress>
+				</dd>
 				
 				<dt>Actions</dt>
 				<dd>

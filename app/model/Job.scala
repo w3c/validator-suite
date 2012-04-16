@@ -92,7 +92,15 @@ case class Job(
 
   def off(): Unit = PathAware(organizationsRef, path) ! BeLazy
 
-  def health(): Int = 50
+  def health(): Int = {
+    lastData match {
+      case Some(data) => {
+        val errorAverage = data.errors.toDouble / data.resources.toDouble
+        (scala.math.exp(scala.math.log(0.5) / 10 * errorAverage) * 100).toInt
+      }
+      case _ => 0
+    }
+  }
   
   def jobData(): Future[JobData] =
     (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]
