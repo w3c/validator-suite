@@ -104,6 +104,10 @@ class FutureValidation[+F, +S, TO, TimeOut] private (
     unit: TimeUnit): FutureValidation[F, S, T, SET] =
       new FutureValidation(futureValidation, Some((result, duration, unit)))
 
+  def failsWith[E](f: Throwable => E): FutureValidation[F, S, TO, SET] = {
+    new FutureValidation(futureValidation onFailure { case e: Throwable => f(e) }, timeout)
+  }
+  
   def toFuture[T](
     implicit evF: F <:< T,
     evS: S <:< T): Future[T] = futureValidation.map{ _.fold(evF, evS) }

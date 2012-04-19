@@ -10,7 +10,7 @@ class FutureW[S](future: Future[S]) {
    * lift a Future[S] to a FutureValidation[Throwable, S] where the potential exception is caught
    * and mapped to a Failure inside the Future
    */
-  def lift[F]: FutureValidation[Throwable, S, Nothing, NOTSET] = {
+  def lift: FutureValidation[Throwable, S, Nothing, NOTSET] = {
     val lifted = future.map[Validation[Throwable, S]] { value =>
       Success(value)
     } recover { case t: Throwable =>
