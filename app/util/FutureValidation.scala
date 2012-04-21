@@ -8,7 +8,6 @@ import Scalaz._
 import java.util.concurrent.TimeUnit
 import play.api.mvc.Result
 import play.api.libs.concurrent.{Promise => PlayPromise, _}
-import annotation.implicitNotFound
 
 abstract class SET
 abstract class NOTSET
