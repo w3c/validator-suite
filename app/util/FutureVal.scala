@@ -35,6 +35,17 @@ object FutureVal {
       onTimeout: TimeoutException => F): FutureVal[F, S] = {
     new FutureVal(Promise.successful(validation))
   }
+
+  def fromValidation[F, S](body: => Validation[F, S], onThrowable: Throwable => F)(implicit context: ExecutionContext,
+      onTimeout: TimeoutException => F): FutureVal[F, S] = {
+    new FutureVal(Promise.successful(
+      try {
+        body
+      } catch {
+        case t => Failure(onThrowable(t))
+      }
+    ))
+  }
   
   def applyTo[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
     new FutureVal(future.map[Validation[Throwable, S]] { value =>
@@ -60,27 +71,44 @@ class FutureVal[+F, +S] private (
   def isCompleted: Boolean = future.isCompleted
   
   def map[R](success: S => R): FutureVal[F, R] = 
-    pureFold(f => f, success)
+    fold(f => f, success)
   
   def mapFail[T](failure: F => T): FutureVal[T, S] = 
-    pureFold(failure, s => s)
+    fold(failure, s => s)
   
   def failMap[T](failure: F => T): FutureVal[T, S] = mapFail(failure)
   
   def failWith[T](failure: T)(implicit onTimeout: TimeoutException => T): FutureVal[T, S] = {
+    pureFold (
+      _ => Failure(failure),
+      s => Success(s)
+    )
+  }
+  
+  def fold[T, R](failure: F => T, success: S => R): FutureVal[T, R] = {
+    pureFold (
+      f => Failure(failure(f)),
+      s => Success(success(s))
+    )(t => failure(timeout(t)))
+  }
+  
+  def pureFold[T, R](failure: F => Validation[T, R], success: S => Validation[T, R])(
+      implicit onTimeout: TimeoutException => T): FutureVal[T, R] = {
     new FutureVal(future.map {
-      case Failure(_) => Failure(failure)
-      case Success(success) => Success(success)
+      case Failure(f) => failure(f)
+      case Success(s) => success(s)
     })
   }
   
-  def pureFold[T, R](f1: F => T, f2: S => R): FutureVal[T, R] = {
-    new FutureVal(future.map {
-      case Failure(failure) => Failure(f1(failure))
-      case Success(success) => Success(f2(success))
-    })(t => f1(timeout(t)), context)
+  def flatFold[T, R](failure: F => FutureVal[T, R], success: S => FutureVal[T, R])(
+      implicit onTimeout: TimeoutException => T): FutureVal[T, R] = {
+    new FutureVal(future.flatMap {
+      case Failure(failure_) => failure(failure_).asFuture
+      case Success(success_) => success(success_).asFuture
+    })
   }
   
+  // can't do a flatMap[A, A]: "[A, A] do not conform to method parameter bounds"
   def flatMap[T >: F, R](success: S => FutureVal[T, R]): FutureVal[T, R] = {
     new FutureVal(future.flatMap {
       case Failure(failure_) => Promise.successful(Failure(failure_))
@@ -88,12 +116,10 @@ class FutureVal[+F, +S] private (
     })
   }
   
-  // TODO
-  def flatFold[T, R](failure: F => FutureVal[T, R], success: S => FutureVal[T, R])(
-      implicit onTimeout: TimeoutException => T): FutureVal[T, R] = {
-    new FutureVal(future.flatMap {
-      case Failure(failure_) => failure(failure_).asFuture
-      case Success(success_) => success(success_).asFuture
+  def recover[SS >: S](pf: PartialFunction[F, SS]): FutureVal[F, SS] = {
+    new FutureVal(future.map {
+      case Failure(failure) if pf.isDefinedAt(failure)=> Success(pf(failure))
+      case v => v 
     })
   }
   
@@ -139,7 +165,16 @@ class FutureVal[+F, +S] private (
     }
   }
   
-  def waitAnd(atMost: Duration, f: Function1[FutureVal[F, S], _] = {_: FutureVal[F, S] => ()}): FutureVal[F, S] = {
+  def waitFor(atMost: Duration): FutureVal[F, S] = {
+    try {
+      Await.result(future, atMost)
+      this
+    } catch {
+      case e => this 
+    }
+  }
+  
+  def waitAnd(atMost: Duration)(f: FutureVal[F, S] => Unit): FutureVal[F, S] = {
     try {
       Await.result(future, atMost)
       f(this)

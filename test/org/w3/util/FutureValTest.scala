@@ -33,13 +33,13 @@ class FutureValTest extends WordSpec with MustMatchers {
       future.value must be (Some(Success("result")))
       future.await(1 millisecond) must be (Some(Success("result")))
       future.result(1 millisecond) must be (Success("result"))
-      future.waitAnd(1 millisecond).value must be (Some(Success("result")))
+      future.waitFor(1 millisecond).value must be (Some(Success("result")))
       future.readyIn(1 millisecond).value must be (Some(Success("result")))
       
       f1.value must be (Some(Success("result")))
       f1.await(1 millisecond) must be (Some(Success("result")))
       f1.result(1 millisecond) must be (Success("result"))
-      f1.waitAnd(1 millisecond).value must be (Some(Success("result")))
+      f1.waitFor(1 millisecond).value must be (Some(Success("result")))
       f1.readyIn(1 millisecond).value must be (Some(Success("result")))
     }
     
@@ -56,14 +56,14 @@ class FutureValTest extends WordSpec with MustMatchers {
       f1.value must be (None)
       f1.await(1 millisecond) must be (None)
       f1.result(1 millisecond) must be (Failure("timeout"))
-      f1.waitAnd(1 millisecond).value must be (None)
+      f1.waitFor(1 millisecond).value must be (None)
       f1.readyIn(1 millisecond).value must be (Some(Failure("timeout")))
       
       future.isCompleted must be (false)
       future.value must be (None)
       future.await(1 millisecond) must be (None)
       future.result(1 millisecond) must be (Failure("timeout"))
-      future.waitAnd(1 millisecond).value must be (None)
+      future.waitFor(1 millisecond).value must be (None)
       future.readyIn(1 millisecond).value must be (Some(Failure("timeout")))
       
     }
@@ -78,8 +78,8 @@ class FutureValTest extends WordSpec with MustMatchers {
       
       future.await(10 second) must be (Some(Success("result")))
       future.result(10 second) must be (Success("result"))
-      future.waitAnd(10 second).isCompleted must be (true)
-      future.waitAnd(10 second).value must be (Some(Success("result")))
+      future.waitFor(10 second).isCompleted must be (true)
+      future.waitFor(10 second).value must be (Some(Success("result")))
       future.readyIn(10 second).isCompleted must be (true)
       future.readyIn(10 second).value must be (Some(Success("result")))
     }
@@ -93,15 +93,15 @@ class FutureValTest extends WordSpec with MustMatchers {
     
     "be completed eventually" in {
 
-      future.waitAnd(10 millisecond).isCompleted must be (true)
+      future.waitFor(10 millisecond).isCompleted must be (true)
     }
     
     "have a failure value" in {
       
       future.await(10 second) must be (Some(Failure(ex)))
       future.result(10 second) must be (Failure(ex))
-      future.waitAnd(10 second).isCompleted must be (true)
-      future.waitAnd(10 second).value must be (Some(Failure(ex)))
+      future.waitFor(10 second).isCompleted must be (true)
+      future.waitFor(10 second).value must be (Some(Failure(ex)))
       future.readyIn(10 second).isCompleted must be (true)
       future.readyIn(10 second).value must be (Some(Failure(ex)))
     }
@@ -111,20 +111,20 @@ class FutureValTest extends WordSpec with MustMatchers {
     
 //    def future: FutureVal[Throwable, String] = FutureVal{Thread.sleep(5000); "result"}
 //    future
-//        .waitAnd(1 second, println("1"))
-//        .waitAnd(1 second, println("2"))
-//        .waitAnd(1 second, println("3"))
-//        .waitAnd(1 second, println("4"))
-//        .waitAnd(1 second, println("5"))
+//        .waitFor(1 second, println("1"))
+//        .waitFor(1 second, println("2"))
+//        .waitFor(1 second, println("3"))
+//        .waitFor(1 second, println("4"))
+//        .waitFor(1 second, println("5"))
 //        .isCompleted must be (true)
 //    
 //    future
-//        .waitAnd(1 second, println("1 -"))
+//        .waitFor(1 second, println("1 -"))
 //        .readyIn(1 second)
-//        .waitAnd(1 second, println("2")) // must not block
-//        .waitAnd(1 second, println("3"))
-//        .waitAnd(1 second, println("4"))
-//        .waitAnd(1 second, println("5"))
+//        .waitFor(1 second, println("2")) // must not block
+//        .waitFor(1 second, println("3"))
+//        .waitFor(1 second, println("4"))
+//        .waitFor(1 second, println("5"))
 //        .isCompleted must be (true)
     
   }
