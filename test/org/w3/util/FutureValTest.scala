@@ -11,23 +11,6 @@ import play.api.libs.concurrent.{Promise => PlayPromise, _}
 import org.junit.runner.RunWith
 import scalaz._
 
-/* Re: output warning, cf https://github.com/playframework/Play20/wiki/AkkaCore */
-
-//trait CustomMatchers {
-//
-//  class OddMatcher extends BeMatcher[Int] {
-//    def apply(left: Validation[TimeoutException, String]) =
-//      MatchResult(
-//        left % 2 == 1,
-//        left.toString + " was even",
-//        left.toString + " was odd"
-//      )
-//  }
-//  
-//  val timeoutFailure = new OddMatcher
-//  
-//}
-
 @RunWith(classOf[JUnitRunner])
 class FutureValTest extends WordSpec with MustMatchers {
  
@@ -36,8 +19,7 @@ class FutureValTest extends WordSpec with MustMatchers {
   
   "a successful FutureVal" should {
     
-    implicit def timeout(t: Throwable): String = "timeout"
-    def future: FutureVal[String, String] = FutureVal.successful{Thread.sleep(20); "result"}
+    def future = FutureVal.successful{Thread.sleep(20); "result"}
     val f1 = future
     
     "be completed immediatly" in {
@@ -67,8 +49,7 @@ class FutureValTest extends WordSpec with MustMatchers {
     
     "not be completed initially or completed with a timeout" in {
       
-      implicit def timeout(t: Throwable): String = "timeout"
-      def future: FutureVal[String, String] = FutureVal{Thread.sleep(500); "result"}
+      def future: FutureVal[String, String] = FutureVal{Thread.sleep(500); "result"}.failMap(_ => "timeout")
       val f1 = future
       
       f1.isCompleted must be (false)
@@ -89,8 +70,7 @@ class FutureValTest extends WordSpec with MustMatchers {
     
     "complete with a success value eventually" in {
       
-      implicit def timeout(t: Throwable): String = "timeout"
-      def future: FutureVal[String, String] = FutureVal{Thread.sleep(50); "result"}
+      def future: FutureVal[String, String] = FutureVal{Thread.sleep(50); "result"}.failMap(_ => "timeout")
       val f1 = future
       
       Thread.sleep(80)
@@ -153,29 +133,29 @@ class FutureValTest extends WordSpec with MustMatchers {
     
     "be usable in a for loop" in {
       
-      val future = for {
-        a <- FutureVal.successful[Throwable, String]("res")
+      def future = for {
+        a <- FutureVal.successful("res")
         b <- FutureVal.failed(new Exception(a + "ult"))
-      } yield b
+        c <- FutureVal.successful("a")
+      } yield c
       
-      future.await(10 millisecond)
-      
-      future.value.get.fold(
+      future.result(10 millisecond).fold(
         f => f.getMessage == "result",
         s => false
       ) must be (true)
+      
     }
     
     "allow to map on the success value" in {
       
-      val future = FutureVal.successful[Throwable, String]("res")
+      val future = FutureVal.successful("res")
       future.map(r => r + "ult").result(10 millisecond) must be (Success("result"))
     }
     
     "allow to map on the failure value" in {
       
-      implicit def onThrowable(t: Throwable): String = ""
-      val future = FutureVal.failed[String, String]("fail")
+      implicit def onTo(t: TimeoutException): String = ""
+      val future = FutureVal.failed("fail")
       future.failMap(r => r + "0").result(10 millisecond) must be (Failure("fail0"))
     }
   }
