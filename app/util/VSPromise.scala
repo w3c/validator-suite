@@ -8,11 +8,9 @@ import Scalaz._
 import Validation._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import play.api.mvc.Result
 import play.api.libs.concurrent._
 import scala.concurrent.stm._
 import org.joda.time.DateTime
-import org.w3.util.Pimps._
 
 object VSPromise {
   
@@ -35,11 +33,11 @@ object VSPromise {
     new VSPromise[A](FutureVal.failed(failure)).redeem(Failure(failure))
   }
   
-  def fromValidation[A](validation: Validation[A, A])(implicit context: ExecutionContext,
+  def validated[A](validation: Validation[A, A])(implicit context: ExecutionContext, 
       onTimeout: TimeoutException => A): VSPromise[A] = {
-    new VSPromise[A](FutureVal.fromValidation(validation)).redeem(validation)
+    new VSPromise[A](FutureVal.validated(validation)).redeem(validation)
   }
-    
+  
   def applyTo[A](future: FutureVal[A, A]): VSPromise[A] = {
     val promise: VSPromise[A] = new VSPromise[A](future)
     future.onComplete{case r => {promise.redeem(r)}}
@@ -79,7 +77,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   
   // @deprecated(message = "Use pureFold", since = "")
   override def extend1[B](k: Function1[NotWaiting[A], B]): Promise[B] = {
-    extend[B](p => k(p.value))//.await(1, TimeUnit.HOURS))) 
+    extend[B](p => k(p.value)) 
     /* as Play uses it:
     p.extend1 {
       case Redeemed(v) => handle(v)
@@ -140,15 +138,6 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
       f => Failure(failure(f)),
       s => Success(success(s))
     )
-  }
-  
-  private def forwardTimeout(promise: VSPromise[_]) = {
-    timeout map {
-      case (duration, started) => started.toInstant.getMillis + duration.toMillis - DateTime.now().toInstant.getMillis
-    } map {
-      case time if (time > 0) => promise.timeoutIn(Duration(time, TimeUnit.MILLISECONDS))
-      case _ =>
-    }
   }
   
   def pureFold[B](failure: A => Validation[B, B], success: A => Validation[B, B]): VSPromise[B] = {
@@ -292,6 +281,15 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
       }
     }
     this
+  }
+  
+  private def forwardTimeout(promise: VSPromise[_]) = {
+    timeout map {
+      case (duration, started) => started.toInstant.getMillis + duration.toMillis - DateTime.now().toInstant.getMillis
+    } map {
+      case time if (time > 0) => promise.timeoutIn(Duration(time, TimeUnit.MILLISECONDS))
+      case _ =>
+    }
   }
   
 }

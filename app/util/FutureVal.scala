@@ -9,7 +9,6 @@ import akka.util.Duration
 import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
-import org.w3.util.Pimps._
 
 object FutureVal {
   
@@ -19,6 +18,26 @@ object FutureVal {
   
   def pure[S](body: => S)(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
     new FutureVal(Promise.successful(fromTryCatch(body)))
+  }
+  
+  def applyWith[F, S](body: => S)(onThrowable: Throwable => F)(implicit context: ExecutionContext,
+      onTimeout: TimeoutException => F): FutureVal[F, S]  = {
+    new FutureVal(Future(fromTryCatch(body).fail.map(t => onThrowable(t)).validation))
+  }
+  
+  def pureWith[F, S](body: => S)(onThrowable: Throwable => F)(implicit context: ExecutionContext,
+      onTimeout: TimeoutException => F): FutureVal[F, S]  = {
+    new FutureVal(Promise.successful(fromTryCatch(body).fail.map(t => onThrowable(t)).validation))
+  }
+  
+  def applyVal[F, S](body: => Validation[F, S])(onThrowable: Throwable => F)(implicit context: ExecutionContext,
+      onTimeout: TimeoutException => F): FutureVal[F, S]  = {
+    new FutureVal(Future(fromTryCatch(body).fold(t => Failure(onThrowable(t)), s => s)))
+  }
+  
+  def pureVal[F, S](body: => Validation[F, S])(onThrowable: Throwable => F)(implicit context: ExecutionContext,
+      onTimeout: TimeoutException => F): FutureVal[F, S] = {
+    new FutureVal(Promise.successful(fromTryCatch(body).fold(t => Failure(onThrowable(t)), s => s)))
   }
   
   def successful[F, S](success: S)(implicit context: ExecutionContext, 
@@ -31,20 +50,9 @@ object FutureVal {
     new FutureVal(Promise.successful(Failure(failure)))
   }
   
-  def fromValidation[F, S](validation: Validation[F, S])(implicit context: ExecutionContext,
+  def validated[F, S](validation: Validation[F, S])(implicit context: ExecutionContext,
       onTimeout: TimeoutException => F): FutureVal[F, S] = {
     new FutureVal(Promise.successful(validation))
-  }
-
-  def fromValidation[F, S](body: => Validation[F, S], onThrowable: Throwable => F)(implicit context: ExecutionContext,
-      onTimeout: TimeoutException => F): FutureVal[F, S] = {
-    new FutureVal(Promise.successful(
-      try {
-        body
-      } catch {
-        case t => Failure(onThrowable(t))
-      }
-    ))
   }
   
   def applyTo[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
@@ -62,7 +70,7 @@ object FutureVal {
   
 }
 
-class FutureVal[+F, +S] private (
+class FutureVal[+F, +S] protected (
     private val future: Future[Validation[F, S]])(
     implicit val timeout: Function1[TimeoutException, F], context: ExecutionContext) {
   
@@ -116,7 +124,7 @@ class FutureVal[+F, +S] private (
     })
   }
   
-  def recover[SS >: S](pf: PartialFunction[F, SS]): FutureVal[F, SS] = {
+  def recover[R >: S](pf: PartialFunction[F, R]): FutureVal[F, R] = {
     new FutureVal(future.map {
       case Failure(failure) if pf.isDefinedAt(failure)=> Success(pf(failure))
       case v => v 
@@ -185,7 +193,7 @@ class FutureVal[+F, +S] private (
   }
   
   def readyIn(atMost: Duration): FutureVal[F, S] = {
-    FutureVal.fromValidation(
+    FutureVal.validated(
       try {
         Await.result(future, atMost)
       } catch {
