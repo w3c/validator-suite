@@ -25,6 +25,10 @@
 		<polygon id="E10"  points="  0, 0      224, -688   1052, -688   1256, -62    809, 263   724, 0    "/>
 		<polygon id="M10a" points=" 32, -100   191, -588    980, -588   1138, -100                        "/>
 		<polygon id="M10b" points="                                     1138, -100   777, 163   691, -100 "/>
+		
+		<polygon id="E12"  points="  0, 0      224, -688   1073, -688   1273, -74    809, 263   724, 0    "/>
+		<polygon id="M12a" points=" 39, -120   185, -568    986, -568   1132, -120                        "/>
+		<polygon id="M12b" points="                                     1132, -120   740, 143   685, -120 "/>
 	</defs>
 	
 	<g class="logo m10">
@@ -46,6 +50,28 @@
 			<use xlink:href="#M10a" transform="rotate(216)"/>
 			<use xlink:href="#M10b" transform="rotate(288)"/>
 			<use xlink:href="#M10a" transform="rotate(288)"/>
+		</g>
+	</g>
+	
+	<g class="logo m12">
+		<g class="border">
+			<use xlink:href="#E12" transform="rotate(0)"/>
+			<use xlink:href="#E12" transform="rotate(72)"/>
+			<use xlink:href="#E12" transform="rotate(144)"/>
+			<use xlink:href="#E12" transform="rotate(216)"/>
+			<use xlink:href="#E12" transform="rotate(288)"/>
+		</g>
+		<g class="color">
+			<use xlink:href="#M12b" transform="rotate(0)"/>
+			<use xlink:href="#M12a" transform="rotate(0)"/>
+			<use xlink:href="#M12b" transform="rotate(72)"/>
+			<use xlink:href="#M12a" transform="rotate(72)"/>
+			<use xlink:href="#M12b" transform="rotate(144)"/>
+			<use xlink:href="#M12a" transform="rotate(144)"/>
+			<use xlink:href="#M12b" transform="rotate(216)"/>
+			<use xlink:href="#M12a" transform="rotate(216)"/>
+			<use xlink:href="#M12b" transform="rotate(288)"/>
+			<use xlink:href="#M12a" transform="rotate(288)"/>
 		</g>
 	</g>
 	
