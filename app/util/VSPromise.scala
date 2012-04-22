@@ -27,17 +27,17 @@ object VSPromise {
   
   def successful[A](success: A)(implicit context: ExecutionContext, 
       onTimeout: TimeoutException => A): VSPromise[A] = {
-    applyTo(FutureVal.successful(success))
+    new VSPromise[A](FutureVal.successful(success)).redeem(Success(success))
   }
   
   def failed[A](failure: A)(implicit context: ExecutionContext,
       onTimeout: TimeoutException => A): VSPromise[A] = {
-    applyTo(FutureVal.failed(failure))
+    new VSPromise[A](FutureVal.failed(failure)).redeem(Failure(failure))
   }
   
   def fromValidation[A](validation: Validation[A, A])(implicit context: ExecutionContext,
       onTimeout: TimeoutException => A): VSPromise[A] = {
-    applyTo(FutureVal.fromValidation(validation))
+    new VSPromise[A](FutureVal.fromValidation(validation)).redeem(validation)
   }
     
   def applyTo[A](future: FutureVal[A, A]): VSPromise[A] = {
@@ -95,7 +95,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   
   // I kept the semantic of await by returning a Thrown but timeouts are already dealt with by the inner FuturVal.  
   // FuturVals do not throw any exceptions, these are part of their failure value. Use await(d: akka.util.Duration).
-  // @deprecated(message="Use await1", since="")
+  // @deprecated(message="Use await(d: akka.util.Duration)", since="")
   override def await(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): NotWaiting[A] = {
     val duration = akka.util.Duration(timeout, unit)
     atomic { implicit txn =>
@@ -280,7 +280,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
     this
   }
     
-  def redeem(body: => Validation[A, A]): Unit = {
+  def redeem(body: => Validation[A, A]): VSPromise[A] = {
     atomic { implicit txn =>
       if (!redeemed().isDefined) {
         try {
@@ -291,6 +291,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
         }
       }
     }
+    this
   }
   
 }
