@@ -21,7 +21,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
   "testing HEAD on existing URL" in {
 
-    val newRunId = RunId.newId()
+    val newRunId = RunId()
 
     http ! Fetch(URL("http://localhost:9001/"), HEAD, newRunId)
 
@@ -41,7 +41,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
   "testing GET on existing URL" in {
 
-    val newRunId = RunId.newId()
+    val newRunId = RunId()
 
     http ! Fetch(URL("http://localhost:9001/"), GET, newRunId)
 
@@ -60,7 +60,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
   "testing HEAD on non-existing URL (404)" in {
 
-    val newRunId = RunId.newId()
+    val newRunId = RunId()
 
     http ! Fetch(URL("http://localhost:9001/404/foo"), HEAD, newRunId)
 
@@ -80,7 +80,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
     "testing HEAD on non-existing domain (foo.localhost)" in {
       
-      val newRunId = RunId.newId()
+      val newRunId = RunId()
       
       http ! Fetch(URL("http://foo.localhost/bar"), HEAD, newRunId)
       
@@ -100,7 +100,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(200)
 
-    val newRunId = RunId.newId()
+    val newRunId = RunId()
 
     for(i <- 1 to 100) {
       http ! Fetch(URL("http://localhost:9001/"+i), HEAD, newRunId)

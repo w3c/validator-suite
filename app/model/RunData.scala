@@ -55,7 +55,7 @@ case class RunData(
     // will never change for a Run, but it's very usefull to have it here
     strategy: Strategy,
     jobId: JobId,
-    runId: RunId = RunId.newId(),
+    runId: RunId = RunId(),
     explorationMode: ExplorationMode = ProActive,
     // the distance from the seed for every known URLs
     distance: Map[URL, Int] = Map.empty,
