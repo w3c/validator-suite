@@ -19,6 +19,7 @@
 			.color > :nth-child(9) {fill: #c27400; stroke: #c27400; stroke-width: 6; stroke-linejoin:bevel;} /* Yellow */
 			.color > :nth-child(10){fill: #f4d538; stroke: #f4d538; stroke-width: 6; stroke-linejoin:bevel;}
 			.border > * {fill: white; stroke: white; stroke-width: 8;}
+			.m10 {display: none}
 	</style>
 	
 	<defs>
@@ -28,7 +29,7 @@
 		
 		<polygon id="E12"  points="  0, 0      224, -688   1073, -688   1273, -74    809, 263   724, 0    "/>
 		<polygon id="M12a" points=" 39, -120   185, -568    986, -568   1132, -120                        "/>
-		<polygon id="M12b" points="                                     1132, -120   740, 143   685, -120 "/>
+		<polygon id="M12b" points="                                     1132, -120   770, 143   685, -120 "/>
 	</defs>
 	
 	<g class="logo m10">
