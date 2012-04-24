@@ -50,7 +50,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   
   implicit val context = play.core.Invoker.promiseDispatcher
   
-  private val redeemed: Ref[Option[Validation[A, A]]] = Ref(None.asInstanceOf[Option[Validation[A, A]]])
+  private val redeemed: Ref[Option[Validation[A, A]]] = Ref(none[Validation[A, A]])
   
   private val callbacks: Ref[List[PartialFunction[Validation[A, A], _]]] = Ref[List[PartialFunction[Validation[A, A], _]]](List())
   
@@ -62,7 +62,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   }
   
   // @deprecated(message = "Not implemented", since = "")
-  override def recover[AA >: A](pf: PartialFunction[Throwable, AA]): Promise[AA] = {this}
+  override def recover[AA >: A](pf: PartialFunction[Throwable, AA]): Promise[AA] = {throw new RuntimeException("VSPromise.recover not implemented")}
   
   // @deprecated(message = "Extend does not make sense for a VSPromise. Implemented because of Play. Use pureFold.", since = "")
   override def extend[B](k: Function1[Promise[A], B]): Promise[B] = {
@@ -169,7 +169,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   override def flatMap[B](success: A => Promise[B]): Promise[B] = {
     sys.error("VSPromise.flatMap not implemented")
 //    atomic { implicit txn =>
-//      val p = new VSPromise[B](future = future.flatMap(f => VSPromise.failed[B](f)(context, future.timeout).future, s => success(s).future)(future.timeout))
+//      val p = new VSPromise[B](future = future.mapFail(t => null.asInstanceOf[B]).flatMap[B, B](f => VSPromise.failed[B](f)(context, future.timeout).future))
 //      redeemed.single() match {
 //        case Some(Failure(f)) => p.redeem(Failure(failure(f).result(1 hour))) // p.redeem is non blocking
 //        case Some(Success(s)) => p.redeem(Success(success(s).result(1 hour)))
