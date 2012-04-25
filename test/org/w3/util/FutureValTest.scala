@@ -19,7 +19,7 @@ class FutureValTest extends WordSpec with MustMatchers {
   
   "a successful FutureVal" should {
     
-    def future = FutureVal.successful{Thread.sleep(20); "result"}
+    def future = FutureVal.successful{Thread.sleep(200); "result"}
     val f1 = future
     
     "be completed immediatly" in {
@@ -70,10 +70,10 @@ class FutureValTest extends WordSpec with MustMatchers {
     
     "complete with a success value eventually" in {
       
-      def future: FutureVal[String, String] = FutureVal{Thread.sleep(50); "result"}.failMap(_ => "timeout")
+      def future: FutureVal[String, String] = FutureVal{Thread.sleep(100); "result"}.failMap(_ => "timeout")
       val f1 = future
       
-      Thread.sleep(80)
+      Thread.sleep(300)
       f1.value must be (Some(Success("result")))
       
       future.await(10 second) must be (Some(Success("result")))
