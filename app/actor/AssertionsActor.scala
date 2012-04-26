@@ -50,6 +50,7 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
 
     val url = resourceInfo.url
 
+    // TODO be more aggressive on timeout?
     val futureAssertionResult = Future {
       assertor.assert(url) fold (
         throwable => AssertorFail(

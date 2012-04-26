@@ -216,7 +216,7 @@ case class RunData(
       oks = oks + (if (assertions.isValid) 1 else 0),
       errors = errors + assertions.numberOfErrors,
       warnings = warnings + assertions.numberOfWarnings,
-      pendingAssertions = pendingAssertions - 1)
+      pendingAssertions = pendingAssertions - 1) // lower bound is 0
     case fail: AssertorFail => this.copy(pendingAssertions = pendingAssertions - 1) // TODO? should do something about that
   }
 

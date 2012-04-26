@@ -134,7 +134,7 @@ case class Job(
 
   private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString
 
-  private def !(message: Any)(implicit sender: ActorRef = null): Unit =
+  def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
 
   // A test needs this method to be public
