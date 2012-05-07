@@ -26,9 +26,12 @@ object ApplicationBuild extends Build {
 
   val assertorApi = Project("assertor-api", file("assertor-api"))
 
+//  val bananaRdf = ProjectRef(uri("git://github.com/w3c/banana-rdf.git"), "jena")
 
+  val bananaRdf = ProjectRef(uri("file:///home/monkey/projects/banana-rdf"), "jena")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
+//    scalaVersion := "2.9.1",
     testOptions in Test := Nil,
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
@@ -37,14 +40,14 @@ object ApplicationBuild extends Build {
     templatesImport += "scalaz.{Validation, Failure, Success}",
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
-    ensimeConfig := sexp(
-      key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),
-      key(":formatting-prefs"), sexp(
-        key(":rewriteArrowSymbols"), false,
-        key(":doubleIndentClassDeclaration"), true
-      )
-    )
-  ) // dependsOn (assertorApi)
+    resolvers += "repo.codahale.com" at "http://repo.codahale.com"//,
+    // ensimeConfig := sexp(
+    //   key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),
+    //   key(":formatting-prefs"), sexp(
+    //     key(":rewriteArrowSymbols"), false,
+    //     key(":doubleIndentClassDeclaration"), true
+    //   )
+    // )
+  ) dependsOn (bananaRdf)
   
 }
