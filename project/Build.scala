@@ -26,9 +26,9 @@ object ApplicationBuild extends Build {
 
   val assertorApi = Project("assertor-api", file("assertor-api"))
 
-//  val bananaRdf = ProjectRef(uri("git://github.com/w3c/banana-rdf.git"), "jena")
+  val bananaRdf = ProjectRef(uri("git://github.com/w3c/banana-rdf.git"), "jena")
 
-  val bananaRdf = ProjectRef(uri("file:///home/monkey/projects/banana-rdf"), "jena")
+  // val bananaRdf = ProjectRef(uri("file:///home/monkey/projects/banana-rdf"), "jena")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
 //    scalaVersion := "2.9.1",
