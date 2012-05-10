@@ -40,7 +40,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
   )
 
   "test OneGETxHEAD" in {
-    store.putOrganization(organizationTest)
+    stores.OrganizationStore.put(organizationTest)
     store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     PathAware(http, http.path / "localhost_9002") ! SetSleepTime(0)

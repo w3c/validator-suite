@@ -30,7 +30,7 @@ class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) w
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.tree(4).toPlanify))
 
   "shoudldn't access more that 100 resources" in {
-    store.putOrganization(organizationTest)
+    stores.OrganizationStore.put(organizationTest)
     store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     job.run()

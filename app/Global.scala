@@ -10,6 +10,7 @@ object Global extends GlobalSettings {
 
   def store = vsconf.store
   def system = vsconf.system
+  def OrganizationStore = vsconf.stores.OrganizationStore
   
   val logger = play.Logger.of("Global")
   
@@ -17,7 +18,7 @@ object Global extends GlobalSettings {
     
     val w3c = OrganizationData(name="World Wide Web Consortium")
 
-    store.putOrganization(w3c)
+    OrganizationStore.put(w3c)
     
     val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id)
     val bertails = User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id)

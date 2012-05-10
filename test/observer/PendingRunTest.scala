@@ -50,7 +50,7 @@ class PendingRunTest extends RunTestHelper(
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.tree(20).toPlanify))
 
   "test FilteredTreeWebsiteTest" in {
-    store.putOrganization(organizationTest)
+    stores.OrganizationStore.put(organizationTest)
     store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     job.run()

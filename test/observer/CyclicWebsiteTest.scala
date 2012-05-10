@@ -33,7 +33,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
   
   "test cyclic(10)" in {
-    store.putOrganization(organizationTest)
+    stores.OrganizationStore.put(organizationTest)
     store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     job.run()

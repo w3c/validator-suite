@@ -30,7 +30,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(1000).toPlanify))
 
   "test stop" in {
-    store.putOrganization(organizationTest)
+    stores.OrganizationStore.put(organizationTest)
     store.putJob(job).waitResult()
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
     job.run()

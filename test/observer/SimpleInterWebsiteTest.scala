@@ -35,7 +35,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
   )
 
   "test simpleInterWebsite" in {
-    store.putOrganization(organizationTest)
+    stores.OrganizationStore.put(organizationTest)
     store.putJob(job).waitResult()
     job.run()
     job.listen(testActor)

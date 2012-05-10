@@ -7,6 +7,27 @@ import org.w3.util.Pimps._
 import org.joda.time.DateTime
 import org.w3.vs.exception._
 
+import scalaz._
+import scalaz.Scalaz._
+import org.w3.util.FutureValidation.{ delayedValidation, immediateValidation }
+
+object Store {
+
+  def fromTryCatch[T](body: => T)(implicit context: akka.dispatch.ExecutionContext): FutureValidationNoTimeOut[SuiteException, T] =
+    fromTryCatchV(Success(body))
+
+  def fromTryCatchV[T](body: => Validation[SuiteException, T])(implicit context: akka.dispatch.ExecutionContext): FutureValidationNoTimeOut[SuiteException, T] = immediateValidation {
+    try {
+      body
+    } catch {
+      case t =>
+        Failure(StoreException(t))
+    }
+  }
+
+}
+
+
 trait Store {
   
   def putAssertorResult(result: AssertorResult): FutureValidationNoTimeOut[SuiteException, Unit]
@@ -20,12 +41,6 @@ trait Store {
   def getJobById(id: JobId): FutureValidationNoTimeOut[SuiteException, Job]
   
   def listJobs(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Iterable[Job]]
-  
-  def putOrganization(organizationData: OrganizationData): FutureValidationNoTimeOut[SuiteException, Unit]
-  
-  def removeOrganization(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Unit]
-
-  def getOrganizationDataById(id: OrganizationId): FutureValidationNoTimeOut[SuiteException, OrganizationData]
   
   def getResourceInfo(url: URL, jobId: JobId): FutureValidationNoTimeOut[SuiteException, ResourceInfo]
   

@@ -7,7 +7,7 @@ import org.w3.banana.diesel._
 /**
  * creates [EntityGraphBinder]s for the VS entities
  */
-class Binders[Rdf <: RDF](
+case class Binders[Rdf <: RDF](
   ops: RDFOperations[Rdf],
   union: GraphUnion[Rdf],
   graphTraversal: RDFGraphTraversal[Rdf]) {
@@ -21,13 +21,13 @@ class Binders[Rdf <: RDF](
     val Organization = apply("Organization")
   }
 
-  val OrganizationDataBinder = new EntityGraphBinder[Rdf, OrganizationData] {
+  val organizationUri = Prefix("", "https://validator.w3.org/suite/organization/", ops)
 
-    val base = Prefix("", "https://validator.w3.org/suite/organization/", ops)
+  val OrganizationDataBinder = new EntityGraphBinder[Rdf, OrganizationData] {
 
     def fromGraph(uri: Rdf#IRI, graph: Rdf#Graph): OrganizationData = {
       val ng = GraphNode(uri, graph)
-      val base(id) = uri
+      val organizationUri(id) = uri
       val name = (ng / organization.name).asString getOrElse sys.error("")
       OrganizationData(OrganizationId.fromString(id), name)
     }
@@ -37,12 +37,18 @@ class Binders[Rdf <: RDF](
         -- organization.name ->- t.name
     ).graph
 
-    def toUri(t: OrganizationData): Rdf#IRI = base(t.id.toString)
+    def toUri(t: OrganizationData): Rdf#IRI = organizationUri(t.id.toString)
 
   }
 
+}
 
-  
+case class Stores[Rdf <: RDF](
+  store: RDFStore[Rdf],
+  binders: Binders[Rdf]) {
 
+  import binders._
+
+  val OrganizationStore = EntityStore(store, OrganizationDataBinder)
 
 }

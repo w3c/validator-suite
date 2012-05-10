@@ -13,6 +13,8 @@ import java.util.concurrent.Executors
 import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
 import org.w3.vs.store._
 import org.w3.vs._
+import org.w3.banana._
+import org.w3.banana.jena._
 
 trait DefaultProdConfiguration extends VSConfiguration {
   
@@ -70,6 +72,14 @@ trait DefaultProdConfiguration extends VSConfiguration {
   }
   
   val store = new MemoryStore()(this)
+
+  val rdfStore: RDFStore[Jena] =
+    JenaStore(com.hp.hpl.jena.sparql.core.DatasetGraphFactory.createMem())
+
+  val binders: Binders[Jena] =
+    Binders(JenaOperations, JenaGraphUnion, JenaGraphTraversal)
+
+  val stores: Stores[Jena] = Stores(rdfStore, binders)
 
   val timeout: Timeout = 10.seconds
   

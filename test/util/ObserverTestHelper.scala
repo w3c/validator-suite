@@ -25,6 +25,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val http = system.actorFor(system / "http")
   val store = configuration.store
+  val stores = configuration.stores
 
   val organizationTest = OrganizationData(name = "test orga")
 

@@ -39,8 +39,14 @@ class OrganizationsActor()(implicit configuration: VSConfiguration) extends Acto
       context.children.find(_.path.name === name) match {
         case Some(organizationRef) => organizationRef forward tell
         case None => {
-          val id = OrganizationId.fromString(name)
-          configuration.store.getOrganizationDataById(id).asFuture onSuccess {
+//          val id = OrganizationId.fromString(name)
+          val uri = configuration.binders.organizationUri(name)
+          val orga = {
+            import org.w3.vs.store.Store.fromTryCatch
+            fromTryCatch(configuration.stores.OrganizationStore.get(uri))(configuration.storeExecutionContext)
+          }
+
+          orga.asFuture onSuccess {
             case Success(organizationData) => to.tell(CreateOrganizationAndForward(organizationData, tell), from)
             case Failure(storeException) => logger.error(storeException.toString)
           }
