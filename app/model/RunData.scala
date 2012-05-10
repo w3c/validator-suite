@@ -137,7 +137,7 @@ case class RunData(
   /**
    * A consolidated view of all the authorities for the pending urls
    */
-  lazy val pendingAuthorities: Set[Authority] = pending map { _.getAuthority }
+  lazy val pendingAuthorities: Set[Authority] = pending map { _.authority }
 
   /**
    * Returns a couple Observation/Explore.
@@ -165,7 +165,7 @@ case class RunData(
    */
   private def takeFromOtherAuthorities: Option[(RunData, URL)] = {
     val pendingToConsiderer =
-      toBeExplored.view filterNot { url => url.authority == mainAuthority || (pendingAuthorities contains url.getAuthority) }
+      toBeExplored.view filterNot { url => url.authority == mainAuthority || (pendingAuthorities contains url.authority) }
     pendingToConsiderer.headOption map { url =>
       (this.copy(
         pending = pending + url,

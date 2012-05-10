@@ -1,37 +1,18 @@
 package org.w3.vs.store
 
+import MemoryStore.{ fromTryCatch, fromTryCatchV }
 import java.util.concurrent.ConcurrentHashMap
-
+import org.joda.time.DateTime
+import org.w3.util.{ FutureValidationNoTimeOut, URL }
+import org.w3.util.DateTimeOrdering
+import org.w3.util.FutureValidation.{ delayedValidation, immediateValidation }
+import org.w3.vs.VSConfiguration
+import org.w3.vs.exception._
+import org.w3.vs.model._
 import scala.collection.JavaConverters.asScalaConcurrentMapConverter
 import scala.collection.mutable.ConcurrentMap
-
-import org.joda.time.DateTime
-import org.w3.util.FutureValidation.delayedValidation
-import org.w3.util.FutureValidation.immediateValidation
-import org.w3.util.DateTimeOrdering
-import org.w3.util.FutureValidationNoTimeOut
-import org.w3.util.URL
-import org.w3.vs.exception.StoreException
-import org.w3.vs.exception.SuiteException
-import org.w3.vs.exception.Unknown
-import org.w3.vs.exception.UnknownJob
-import org.w3.vs.exception.UnknownUser
-import org.w3.vs.model.AssertorResult
-import org.w3.vs.model.Job
-import org.w3.vs.model.JobId
-import org.w3.vs.model.OrganizationData
-import org.w3.vs.model.OrganizationId
-import org.w3.vs.model.ResourceInfo
-import org.w3.vs.model.RunId
-import org.w3.vs.model.RunSnapshot
-import org.w3.vs.model.User
-import org.w3.vs.model.UserId
-import org.w3.vs.VSConfiguration
-
-import MemoryStore.fromTryCatch
-import MemoryStore.fromTryCatchV
-import scalaz.Scalaz._
 import scalaz._
+import scalaz.Scalaz._
 
 object MemoryStore {
 
@@ -41,8 +22,9 @@ object MemoryStore {
   def fromTryCatchV[T](body: => Validation[SuiteException, T])(implicit context: akka.dispatch.ExecutionContext): FutureValidationNoTimeOut[SuiteException, T] = immediateValidation {
     try {
       body
-    } catch { case t =>
-      Failure(StoreException(t))
+    } catch {
+      case t =>
+        Failure(StoreException(t))
     }
   }
 
@@ -64,7 +46,7 @@ class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
 
   val snapshots: ConcurrentMap[JobId, RunSnapshot] = new ConcurrentHashMap[JobId, RunSnapshot]().asScala
 
-  def init(): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch { }
+  def init(): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {}
 
   def putAssertorResult(result: AssertorResult): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     results += result.id -> result
@@ -95,7 +77,7 @@ class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
   def putOrganization(organizationData: OrganizationData): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     organizations += organizationData.id -> organizationData
   }
-  
+
   def removeOrganization(organizationId: OrganizationId): FutureValidationNoTimeOut[SuiteException, Unit] = fromTryCatch {
     organizations -= organizationId
   }
@@ -126,7 +108,6 @@ class MemoryStore()(implicit configuration: VSConfiguration) extends Store {
       case Some(date) => resourceInfos.values.filter { ri => ri.runId === runId && ri.timestamp.isAfter(date) }.toSeq.sortBy(_.timestamp)
     }
   }
-
 
   def listAssertorResults(jobId: JobId, after: Option[DateTime] = None): FutureValidationNoTimeOut[SuiteException, Iterable[AssertorResult]] = fromTryCatch {
     after match {

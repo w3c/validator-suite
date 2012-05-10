@@ -159,8 +159,8 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
     }
       
     action match {
-      case GET => httpClient.prepareGet(url.toExternalForm()).execute(httpHandler)
-      case HEAD => httpClient.prepareHead(url.toExternalForm()).execute(httpHandler)
+      case GET => httpClient.prepareGet(url.externalForm).execute(httpHandler)
+      case HEAD => httpClient.prepareHead(url.externalForm).execute(httpHandler)
     }
 
   }

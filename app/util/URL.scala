@@ -29,6 +29,10 @@ case class URL(url: String) {
     } catch {
       case e => None
     }
+
+  def externalForm = underlying.toExternalForm
+
+  def openConnection() = underlying.openConnection()
     
 }
 

@@ -26,13 +26,13 @@ case class Strategy(
     filter: Filter,
     assertorsFor: AssertorSelector = AssertorSelector.simple) {
   
-  val mainAuthority: Authority = entrypoint.getAuthority
+  val mainAuthority: Authority = entrypoint.authority
   
   val authorityToObserve: Authority = mainAuthority
   
   def fetch(url: URL, distance: Int): HttpAction =
     if (filter.passThrough(url)) {
-      if ((url.getAuthority == entrypoint.getAuthority) &&
+      if ((url.authority == entrypoint.authority) &&
           (distance <= this.distance))
         GET
       else if (linkCheck)
