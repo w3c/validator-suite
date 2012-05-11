@@ -12,6 +12,8 @@ class FunctionalTest extends WordSpec with MustMatchers {
   "an Application should let a valid user log in" in {
   
     running(TestServer(9001), HTMLUNIT) { browser =>
+
+      Thread.sleep(1000)
         
       import browser._
         
