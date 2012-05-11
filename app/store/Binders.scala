@@ -41,6 +41,34 @@ case class Binders[Rdf <: RDF](
 
   }
 
+
+
+  object job extends PrefixBuilder("job", "https://validator.w3.org/suite/job#", ops) {
+    val Job = apply("Job")
+    val name = apply("name")
+    val creator = apply("creator")
+    val organization = apply("organization")
+    val strategy = apply("strategy")
+    val createdOn = apply("created-on")
+  }
+
+  val jobUri = Prefix("", "https://validator.w3.org/suite/job/", ops)
+
+  val JobBinder = new EntityGraphBinder[Rdf, Job] {
+
+    def fromGraph(uri: Rdf#IRI, graph: Rdf#Graph): Job = {
+      val ng = GraphNode(uri, graph)
+      null
+    }
+
+    def toGraph(t: Job): Rdf#Graph = null.asInstanceOf[Rdf#Graph]
+
+    def toUri(t: Job): Rdf#IRI = jobUri(t.id.toString)
+
+  }
+
+
+
 }
 
 case class Stores[Rdf <: RDF](

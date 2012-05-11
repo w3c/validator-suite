@@ -61,18 +61,16 @@ object Job {
       store.listAssertorResults(id, after)
     }
   
-  def withLastData(job: Job): Future[(Job, JobData)] =
-    job.jobData().map(jobData => (job, jobData))
-  
+  def withLastData(job: Job)(implicit conf: VSConfiguration): Future[(Job, JobData)] =
+    new JobW(job).jobData().map(jobData => (job, jobData))
+
+  implicit def wrapJob(job: Job)(implicit conf: VSConfiguration): JobW = new JobW(job)
+
 }
 
-case class Job(
-    id: JobId = JobId(),
-    name: String,
-    creatorId: UserId,
-    organizationId: OrganizationId,
-    strategy: Strategy,
-    createdOn: DateTime = DateTime.now)(implicit conf: VSConfiguration) {
+class JobW(job: Job)(implicit conf: VSConfiguration) {
+
+  import job._
 
   import conf.system
   
@@ -129,5 +127,13 @@ case class Job(
 
   private def deafen(implicit listener: ActorRef): Unit =
     PathAware(organizationsRef, path).tell(Deafen(listener), listener)
-    
+
 }
+
+case class Job(
+    id: JobId = JobId(),
+    name: String,
+    creatorId: UserId,
+    organizationId: OrganizationId,
+    strategy: Strategy,
+    createdOn: DateTime = DateTime.now)
