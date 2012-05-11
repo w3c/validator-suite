@@ -14,6 +14,14 @@ object JobData {
     errors = data.errors,
     warnings = data.warnings)
 
+  def health(jobDataOpt: Option[JobData]): Int = jobDataOpt match {
+    case Some(data) => {
+      val errorAverage = data.errors.toDouble / data.resources.toDouble
+      (scala.math.exp(scala.math.log(0.5) / 10 * errorAverage) * 100).toInt
+    }
+    case _ => 0
+  }
+
 }
 
 case class JobData(
@@ -25,4 +33,6 @@ case class JobData(
     oks: Int,
     errors: Int,
     warnings: Int
-)
+) {
+  def health: Int = JobData.health(Some(this))
+}

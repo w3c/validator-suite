@@ -1,4 +1,4 @@
-@(jobs: Iterable[Job] = None, user: User)(implicit flash: Flash)
+@(jobs: Iterable[(Job, JobData)] = None, user: User)(implicit flash: Flash)
 
 @import org.w3.vs.actor._
 
@@ -63,9 +63,7 @@
 		
 		<hr>
 		
-		@for(job <- jobs) {
-		@if(job.lastData.isDefined) { @** What if it isn't defined? **@
-		@defining(job.lastData.get) { data =>
+		@for((job, lastData) <- jobs) {
 		<article data-id="@job.id">
 			<h2>@job.name</h2>
 			<dl>
@@ -80,9 +78,9 @@
 				
 				<dt>Status</dt>
 				<dd class="status">
-					<span>@data.activity</span>
+					<span>@lastData.activity</span>
 					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
-						@{data.activity match {
+						@{lastData.activity match {
 						  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 						  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
 						}}
@@ -90,29 +88,29 @@
 				</dd>
 
 				<dt>Last Completed</dt>
-				<dd class="date">
-					@{job.lastCompleted match{ 
+				<dd class="date">"Never"
+					@*{job.lastCompleted match{ 
 					  case Some(date) => {<time datetime="">03/12/12 at 2:55pm</time>}
 					  case _ => {"Never"}
-					}}
+					}}*@
 				</dd>
 				
 				<dt>Warnings</dt>
-				<dd class="warnings">@data.warnings</dd>
+				<dd class="warnings">@lastData.warnings</dd>
 				
 				<dt>Errors</dt>
-				<dd class="errors">@data.errors</dd>
+				<dd class="errors">@lastData.errors</dd>
 				
 				<dt>Resources</dt>
-				<dd class="resources">@data.resources</dd>
+				<dd class="resources">@lastData.resources</dd>
 				
 				<dt>Max resources</dt>
 				<dd class="maxResources">@job.strategy.maxNumberOfResources</dd>
 				
 				<dt>Health</dt>
 				<dd class="health">
-					<progress max=100 value=@job.health title="@job.health%">
-						@job.health%
+					<progress max=100 value=@lastData.health title="@lastData.health%">
+						@lastData.health%
 					</progress>
 				</dd>
 				
@@ -125,7 +123,7 @@
 			</dl>
 			<hr>
 		</article>
-		}}}
+		}
 	</section>
 	
 }{ @***** Footer *****@
