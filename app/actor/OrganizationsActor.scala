@@ -39,8 +39,7 @@ class OrganizationsActor()(implicit configuration: VSConfiguration) extends Acto
       context.children.find(_.path.name === name) match {
         case Some(organizationRef) => organizationRef forward tell
         case None => {
-//          val id = OrganizationId.fromString(name)
-          val uri = configuration.binders.organizationUri(name)
+          val uri = configuration.binders.OrganizationUri(name)
           val orga = {
             import org.w3.vs.store.Store.fromTryCatch
             fromTryCatch(configuration.stores.OrganizationStore.get(uri))(configuration.storeExecutionContext)

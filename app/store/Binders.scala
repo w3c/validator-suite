@@ -16,32 +16,26 @@ case class Binders[Rdf <: RDF](
   val diesel = Diesel(ops, union, graphTraversal)
   import diesel._
 
+  /* uri builders for entities */
+
+  object OrganizationUri extends PrefixBuilder("", "https://validator.w3.org/suite/organization/", ops) {
+    def apply(id: OrganizationId): Rdf#IRI = apply(id.toString)
+  }
+
+  object JobUri extends PrefixBuilder("", "https://validator.w3.org/suite/job/", ops) {
+    def apply(id: JobId): Rdf#IRI = apply(id.toString)
+  }
+
+  object UserUri extends PrefixBuilder("", "https://validator.w3.org/suite/user/", ops) {
+    def apply(id: UserId): Rdf#IRI = apply(id.toString)
+  }
+
+  /* ontologies for entities */
+
   object organization extends PrefixBuilder("organization", "https://validator.w3.org/suite/organization#", ops) {
     val name = apply("name")
     val Organization = apply("Organization")
   }
-
-  val organizationUri = Prefix("", "https://validator.w3.org/suite/organization/", ops)
-
-  val OrganizationDataBinder = new EntityGraphBinder[Rdf, OrganizationData] {
-
-    def fromGraph(uri: Rdf#IRI, graph: Rdf#Graph): OrganizationData = {
-      val ng = GraphNode(uri, graph)
-      val organizationUri(id) = uri
-      val name = (ng / organization.name).asString getOrElse sys.error("")
-      OrganizationData(OrganizationId.fromString(id), name)
-    }
-
-    def toGraph(t: OrganizationData): Rdf#Graph = (
-      toUri(t).a(organization.Organization)
-        -- organization.name ->- t.name
-    ).graph
-
-    def toUri(t: OrganizationData): Rdf#IRI = organizationUri(t.id.toString)
-
-  }
-
-
 
   object job extends PrefixBuilder("job", "https://validator.w3.org/suite/job#", ops) {
     val Job = apply("Job")
@@ -52,7 +46,26 @@ case class Binders[Rdf <: RDF](
     val createdOn = apply("created-on")
   }
 
-  val jobUri = Prefix("", "https://validator.w3.org/suite/job/", ops)
+  /* binders for entities */
+
+  val OrganizationDataBinder = new EntityGraphBinder[Rdf, OrganizationData] {
+
+    def fromGraph(uri: Rdf#IRI, graph: Rdf#Graph): OrganizationData = {
+      val ng = GraphNode(uri, graph)
+      val OrganizationUri(id) = uri
+      val name = (ng / organization.name).asString getOrElse sys.error("")
+      OrganizationData(OrganizationId.fromString(id), name)
+    }
+
+    def toGraph(t: OrganizationData): Rdf#Graph = (
+      toUri(t).a(organization.Organization)
+        -- organization.name ->- t.name
+    ).graph
+
+    def toUri(t: OrganizationData): Rdf#IRI = OrganizationUri(t.id)
+
+  }
+
 
   val JobBinder = new EntityGraphBinder[Rdf, Job] {
 
@@ -61,9 +74,13 @@ case class Binders[Rdf <: RDF](
       null
     }
 
-    def toGraph(t: Job): Rdf#Graph = null.asInstanceOf[Rdf#Graph]
+    def toGraph(t: Job): Rdf#Graph = (
+      toUri(t).a(job.Job)
+        -- job.name ->- t.name
+//        -- job.creator ->- userUri()
+    ).graph
 
-    def toUri(t: Job): Rdf#IRI = jobUri(t.id.toString)
+    def toUri(t: Job): Rdf#IRI = JobUri(t.id)
 
   }
 
