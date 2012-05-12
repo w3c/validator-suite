@@ -69,7 +69,7 @@ case class NewResourceInfo(resourceInfo: ResourceInfo) extends RunUpdate {
 case class NewAssertorResult(result: AssertorResult) extends RunUpdate {
   
   def toJS: JsValue = result match {
-    case assertions: Assertions =>
+    case assertions: AssertorResult =>
       JsArray(List(
         JsString("OBS"),
         JsString(assertions.url.toString),

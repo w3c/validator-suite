@@ -9,7 +9,7 @@ import scala.io.Source
  */
 trait FromUnicornFormatAssertor extends FromSourceAssertor {
   
-  def assert(source: Source): Iterable[RawAssertion] = {
+  def assert(source: Source): Iterable[Assertion] = {
     val response:Elem = XML.fromSource(source)
     val obversationRef = response.attrs get "ref" getOrElse sys.error("malformed xml")
     val obversationLang = response.attrs get QName(Some("xml"), "lang") getOrElse sys.error("malformed xml")
@@ -40,7 +40,7 @@ trait FromUnicornFormatAssertor extends FromSourceAssertor {
         val descriptionOpt = (message \ "description").headOption map { description =>
           description.children.map(removeScope).mkString("").trim
         }
-        RawAssertion(typ, id, eventLang, contexts, title.trim, descriptionOpt)
+        Assertion(typ, id, eventLang, contexts, title.trim, descriptionOpt)
       }
     events
   }

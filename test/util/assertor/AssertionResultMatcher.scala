@@ -7,7 +7,7 @@ import org.w3.vs.model._
 
 trait AssertionResultMatcher extends Specification {
 
-  def haveErrors[Result <: AssertorResult] = new Matcher[Result] {
+  def haveErrors[Result <: AssertorResponse] = new Matcher[Result] {
     def apply[R <: Result](r: Expectable[R]) = {
       val bool = r.value match {
         case assertions: Assertions => assertions.hasError
@@ -19,7 +19,7 @@ trait AssertionResultMatcher extends Specification {
     }
   }
   
-  def haveErrorz[Result <: Iterable[RawAssertion]] = new Matcher[Result] {
+  def haveErrorz[Result <: Iterable[Assertion]] = new Matcher[Result] {
     def apply[R <: Result](r: Expectable[R]) = {
       val bool = r.value exists { _.isError }
       result(bool,

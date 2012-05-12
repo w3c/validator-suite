@@ -45,7 +45,7 @@ trait FromURLAssertor extends Assertor {
    *  @param url a pointer to the document
    *  @return the assertion
    */
-  def assert(url: URL): Validation[Throwable, Iterable[RawAssertion]]
+  def assert(url: URL): Validation[Throwable, Iterable[Assertion]]
   
 }
 

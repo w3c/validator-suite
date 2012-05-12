@@ -53,12 +53,12 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
     // TODO be more aggressive on timeout?
     val futureAssertionResult = Future {
       assertor.assert(url) fold (
-        throwable => AssertorFail(
+        throwable => AssertorFailure(
           url = url,
           assertorId = assertor.id,
           jobId = job.id,
           why = throwable.getMessage),
-        assertions => Assertions(
+        assertions => AssertorResult(
           url = url,
           assertorId = assertor.id,
           jobId = job.id,
@@ -68,7 +68,7 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
     // register callback on the completion of the future
     futureAssertionResult onComplete {
       case Left(throwable) => {
-        val fail = AssertorFail(
+        val fail = AssertorFailure(
           url = url,
           assertorId = assertor.id,
           jobId = job.id,
@@ -91,7 +91,7 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
       queue.dequeueAll(_ => true)
     }
 
-    case result: AssertorResult => {
+    case result: AssertorResponse => {
       pendingAssertions -= 1
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions <= MAX_PENDING_ASSERTION) {

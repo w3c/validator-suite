@@ -31,7 +31,7 @@ object ValidatorNu extends FromURLAssertor {
     validatorURL
   }
 
-  def assert(url: URL): Validation[Throwable, Iterable[RawAssertion]] = fromTryCatch {	
+  def assert(url: URL): Validation[Throwable, Iterable[Assertion]] = fromTryCatch {	
 	val urlCon = validatorURLForMachine(url).openConnection()
 	urlCon.setConnectTimeout(2000)
 	//urlCon.setReadTimeout(10000)
@@ -54,7 +54,7 @@ object ValidatorNu extends FromURLAssertor {
 	    case Some(code) => Seq(Context(code.trim, url.toString, lastLine, lastCol)) // The model needs to accept a range of lines/column
 	    case _ => Seq()
 	  }
-	  RawAssertion(typ, "no freakin id", "en", context, message.trim, None)
+	  Assertion(typ, "no freakin id", "en", context, message.trim, None)
 	}
   }
   
