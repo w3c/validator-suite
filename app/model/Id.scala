@@ -12,6 +12,7 @@ case class JobId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class RunId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class UserId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class ContextId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class AssertorId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class StrategyId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class SnapshotId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class AssertionId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
@@ -46,6 +47,14 @@ object ContextId {
   def fromString(s: String): ContextId = ContextId(UUID.fromString(s))
   implicit val equal: Equal[ContextId] = new Equal[ContextId] {
     def equal(left: ContextId, right: ContextId): Boolean =
+      left.uuid == right.uuid
+  }
+}
+
+object AssertorId {
+  def fromString(s: String): AssertorId = AssertorId(UUID.fromString(s))
+  implicit val equal: Equal[AssertorId] = new Equal[AssertorId] {
+    def equal(left: AssertorId, right: AssertorId): Boolean =
       left.uuid == right.uuid
   }
 }
