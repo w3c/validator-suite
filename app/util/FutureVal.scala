@@ -124,12 +124,28 @@ class FutureVal[+F, +S] protected (
     })
   }
   
+  def flatMapFail[T, R >: S](failure: F => FutureVal[T, R])(
+      implicit onTimeout: TimeoutException => T): FutureVal[T, R] = {
+    new FutureVal(future.flatMap {
+      case Failure(failure_) => failure(failure_).asFuture
+      case Success(success_) => Promise.successful(Success(success_))
+    })
+  }
+  
   def recover[R >: S](pf: PartialFunction[F, R]): FutureVal[F, R] = {
     new FutureVal(future.map {
       case Failure(failure) if pf.isDefinedAt(failure)=> Success(pf(failure))
       case v => v 
     })
   }
+  
+//  def transfer[T >: F, R >: S](pf: PartialFunction[Validation[F, S], Validation[T, R]])(
+//      implicit onTimeout: TimeoutException => T): FutureVal[T, R] = {
+//    new FutureVal(future.map {
+//      case v if pf.isDefinedAt(v)=> pf(v)
+//      case v => v
+//    })
+//  }
   
   def foreach(f: S => Unit): Unit = future foreach { _ foreach f }
   
