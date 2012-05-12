@@ -2,7 +2,6 @@ package org.w3.vs.model
 
 import org.w3.util.URL
 import org.joda.time._
-import java.util.UUID
 import org.w3.vs.assertor._
 import scalaz.Validation
 
@@ -10,7 +9,7 @@ sealed trait AssertorResponse {
   val id: AssertorResponseId
   val jobId: JobId
   val assertorId: AssertorId
-  val url: URL
+  val sourceUrl: URL
   val timestamp: DateTime
 }
 
@@ -18,17 +17,17 @@ case class AssertorResult(
     id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
     assertorId: AssertorId,
-    url: URL,
+    sourceUrl: URL,
     timestamp: DateTime = DateTime.now,
     assertions: Iterable[Assertion]) extends AssertorResponse {
   
-  def isValid = if (hasError) false else true
+  def isValid = ! hasError
   
-  def hasError: Boolean = assertions exists { _.isError }
-  def hasWarnings: Boolean = assertions exists { _.isWarning }
+  def hasError: Boolean = assertions exists {_.severity == Error}
+  def hasWarnings: Boolean = assertions exists {_.severity == Warning}
   
-  def numberOfErrors = assertions.view.filter(_.isError).size
-  def numberOfWarnings = assertions.view.filter(_.isWarning).size
+  def numberOfErrors = assertions.view.filter(_.severity == Error).size
+  def numberOfWarnings = assertions.view.filter(_.severity == Warning).size
   
 }
 
@@ -36,7 +35,7 @@ case class AssertorFailure(
     id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
     assertorId: AssertorId,
-    url: URL,
+    sourceUrl: URL,
     timestamp: DateTime = new DateTime,
     why: String) extends AssertorResponse
 
@@ -48,11 +47,20 @@ case class AssertorFailure(
  *  @param lang XML lang code
  *  @param contexts a sequence of [[org.w3.vs.validator.Context]]s
  */
-case class Assertion(severity: String, assertId: String, lang: String, contexts: Seq[Context], title: String, description: Option[String]) {
-  def isError = severity == "error"
-  def isWarning = severity == "warning"
-  def isInfo = severity == "info"
-}
+case class Assertion(
+    id: AssertionId = AssertionId(),
+    assertorResponseId: AssertorResponseId, 
+    url: URL,
+    lang: String,
+    title: String,
+    severity: AssertionSeverity,
+    contexts: Seq[Context],
+    description: Option[String])
+
+sealed trait AssertionSeverity
+case object Error extends AssertionSeverity
+case object Warning extends AssertionSeverity
+case object Info extends AssertionSeverity
 
 /** A context for an [[org.w3.vs.validator.Event]]
  *
@@ -60,6 +68,11 @@ case class Assertion(severity: String, assertId: String, lang: String, contexts:
  *  @param line an optional line in the source
  *  @param column an optional column in the source
  */
-case class Context(content:String, line:Option[Int], column:Option[Int]) // TODO remove ref
+case class Context(
+    id: ContextId = ContextId(),
+    assertionId: AssertionId,
+    content: String, 
+    line: Option[Int], 
+    column: Option[Int]) // TODO remove ref
 
 
