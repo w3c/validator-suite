@@ -6,44 +6,60 @@ import java.util.UUID
 import org.w3.vs.assertor._
 import scalaz.Validation
 
-sealed trait AssertorResult {
-  type Id = UUID
-  
-  val id: Id
-  // the urls that were needed to generate this assertion
-  val url: URL
-  // the id of the assertor that generated this assertion
-  val assertorId: AssertorId
-  // an assertion was produced in the context of a run
+sealed trait AssertorResponse {
+  val id: AssertorResponseId
   val jobId: JobId
-  // when this assertion was produced
+  val assertorId: AssertorId
+  val url: URL
   val timestamp: DateTime
 }
 
-
-case class Assertions(
-    id: AssertorResult#Id = UUID.randomUUID(),
-    url: URL,
-    assertorId: AssertorId,
+case class AssertorResult(
+    id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
-    timestamp: DateTime = new DateTime,
-    assertions: Iterable[RawAssertion]) extends AssertorResult {
+    assertorId: AssertorId,
+    url: URL,
+    timestamp: DateTime = DateTime.now,
+    assertions: Iterable[Assertion]) extends AssertorResponse {
   
   def isValid = if (hasError) false else true
   
   def hasError: Boolean = assertions exists { _.isError }
   def hasWarnings: Boolean = assertions exists { _.isWarning }
   
-  def numberOfErrors = assertions.view.filter(_.isError).size  
+  def numberOfErrors = assertions.view.filter(_.isError).size
   def numberOfWarnings = assertions.view.filter(_.isWarning).size
   
 }
 
-case class AssertorFail(
-    id: AssertorResult#Id = UUID.randomUUID(),
-    url: URL,
-    assertorId: AssertorId,
+case class AssertorFailure(
+    id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
+    assertorId: AssertorId,
+    url: URL,
     timestamp: DateTime = new DateTime,
-    why: String) extends AssertorResult
+    why: String) extends AssertorResponse
+
+
+/** An event coming from an observation
+ * 
+ *  @param severity a severity (either: error, warning, info)
+ *  @param id identifier that defines uniquely this kind of event
+ *  @param lang XML lang code
+ *  @param contexts a sequence of [[org.w3.vs.validator.Context]]s
+ */
+case class Assertion(severity: String, assertId: String, lang: String, contexts: Seq[Context], title: String, description: Option[String]) {
+  def isError = severity == "error"
+  def isWarning = severity == "warning"
+  def isInfo = severity == "info"
+}
+
+/** A context for an [[org.w3.vs.validator.Event]]
+ *
+ *  @param content a code snippet from the source
+ *  @param line an optional line in the source
+ *  @param column an optional column in the source
+ */
+case class Context(content:String, line:Option[Int], column:Option[Int]) // TODO remove ref
+
 
