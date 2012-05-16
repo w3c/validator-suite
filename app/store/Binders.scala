@@ -51,7 +51,7 @@ case class Binders[Rdf <: RDF](
   val OrganizationDataBinder = new EntityGraphBinder[Rdf, OrganizationData] {
 
     def fromGraph(uri: Rdf#IRI, graph: Rdf#Graph): OrganizationData = {
-      val ng = GraphNode(uri, graph)
+      val ng = PointedGraph(uri, graph)
       val OrganizationUri(id) = uri
       val name = (ng / organization.name).asString getOrElse sys.error("")
       OrganizationData(OrganizationId.fromString(id), name)
@@ -70,7 +70,7 @@ case class Binders[Rdf <: RDF](
   val JobBinder = new EntityGraphBinder[Rdf, Job] {
 
     def fromGraph(uri: Rdf#IRI, graph: Rdf#Graph): Job = {
-      val ng = GraphNode(uri, graph)
+      val ng = PointedGraph(uri, graph)
       null
     }
 
