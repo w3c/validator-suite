@@ -43,13 +43,15 @@ case class OrganizationVO(
 
 case class Organization(valueObject: OrganizationVO) {
   
+  val logger = play.Logger.of(classOf[Organization])
+  
   def id: OrganizationId = valueObject.id
   def name: String = valueObject.name
   
   def getAdmin: FutureVal[Exception, User] = User.get(valueObject.admin)
-
-  val logger = play.Logger.of(classOf[Organization])
-
+  
+  def save(): FutureVal[Exception, Organization] = Organization.save(this)
+  
   def subscribeToUpdates()(implicit conf: VSConfiguration): Enumerator[RunUpdate] = {
     import conf.system
     val organizationPath = system / "organizations" / id.toString

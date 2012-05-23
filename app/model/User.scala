@@ -45,6 +45,8 @@ object User {
     )*/
     sys.error("")
   }
+  
+  def save(user: User): FutureVal[Exception, User] = sys.error("")
 
 }
 
@@ -61,5 +63,7 @@ case class User(valueObject: UserVO) {
   def email: String = valueObject.email
   def password: String = valueObject.password
   
-  def getOrganization: FutureVal[Exception, Organization] = sys.error("") 
+  def getOrganization: FutureVal[Exception, Organization] = sys.error("")
+  
+  def save(): FutureVal[Exception, User] = User.save(this)
 }

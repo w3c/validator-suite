@@ -40,10 +40,12 @@ case class Job(
   def createdOn: DateTime = valueObject.createdOn
   def lastCompleted: Option[DateTime] = valueObject.lastCompleted
   
-  def getCreator = User.get(valueObject.creatorId)
-  def getOrganization = Organization.get(valueObject.organizationId)
-  def getStrategy = Strategy.get(valueObject.strategyId)
-  def getHistory = JobData.getForJob(valueObject.id)
+  def getCreator: FutureVal[Exception, User] = User.get(valueObject.creatorId)
+  def getOrganization: FutureVal[Exception, Organization] = Organization.get(valueObject.organizationId)
+  def getStrategy: FutureVal[Exception, Strategy] = Strategy.get(valueObject.strategyId)
+  def getHistory: FutureVal[Exception, Iterable[JobData]] = JobData.getForJob(valueObject.id)
+  
+  def save(): FutureVal[Exception, Job] = Job.save(this)
   
   def run(): Unit = PathAware(organizationsRef, path) ! Refresh
   
