@@ -9,7 +9,7 @@ import akka.util.Duration
 import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
-import org.w3.vs.model.{Response => _, _}
+import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
 import scala.collection.mutable.Queue
 import org.w3.util.akkaext._
@@ -68,8 +68,8 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
       scheduleTick()
     }
 
-    case fetch @ Fetch(url, action, runId) => {
-      doFetch(sender, url, action, runId)
+    case fetch @ Fetch(url, action, runId, jobId) => {
+      doFetch(sender, url, action, runId, jobId)
     }
 
     case 'Tick if queue.isEmpty => {
@@ -77,8 +77,8 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
     }
 
     case 'Tick => {
-      val (thesender, Fetch(url, action, runId)) = queue.dequeue()
-      doFetch(thesender, url, action, runId)
+      val (thesender, Fetch(url, action, runId, jobId)) = queue.dequeue()
+      doFetch(thesender, url, action, runId, jobId)
       if (queue.nonEmpty)
         scheduleTick()
       else
@@ -92,7 +92,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
   }
 
 
-  final def doFetch(to: ActorRef, url: URL, action: HttpVerb, runId: RunId): Unit = {
+  final def doFetch(to: ActorRef, url: URL, action: HttpAction, runId: RunId, jobId: JobId): Unit = {
 
     lastFetchTimestamp = current()
     
@@ -111,7 +111,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
             body
           } catch {
             case t: Throwable => {
-              to ! KoResponse(url, action, t, runId)
+              to ! ErrorResponse(jobId = jobId, runId = runId, url = url, action = action, why = t.getMessage)
               throw t // rethrow for benefit of AsyncHttpClient
             }
           } finally {
@@ -152,7 +152,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
           val headers: Headers =
             (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
           val body = response.getResponseBody()
-          val fetchResponse = OkResponse(url, action, status, headers, body, runId)
+          val fetchResponse = HttpResponse(jobId = jobId, runId = runId, url = url, action = action, status = status, headers = headers, body = body)
           to ! fetchResponse
         }
       }
@@ -161,6 +161,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
     action match {
       case GET => httpClient.prepareGet(url.externalForm).execute(httpHandler)
       case HEAD => httpClient.prepareHead(url.externalForm).execute(httpHandler)
+      case IGNORE => ()
     }
 
   }
