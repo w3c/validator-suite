@@ -10,9 +10,9 @@ import Validation._
  *
  *  It speaks with the instance deployed at [[http://qa-dev.w3.org/wmvs/HEAD http://qa-dev.w3.org/wmvs/HEAD]]
  */
-object I18nChecker extends FromURLAssertor with FromUnicornFormatAssertor with URLToSourceAssertor {
+object I18nChecker extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  val id = AssertorId("I18n-Checker")
+  //val id = AssertorId("I18n-Checker")
   
   def validatorURL(encodedURL: String) =
     "http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encodedURL + "&format=xml"

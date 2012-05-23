@@ -10,9 +10,9 @@ import Validation._
  *
  *  It speaks with the instance deployed at [[http://qa-dev.w3.org/wmvs/HEAD http://qa-dev.w3.org/wmvs/HEAD]]
  */
-object HTMLValidator extends FromURLAssertor with FromUnicornFormatAssertor with URLToSourceAssertor {
+object HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  val id = AssertorId("HTMLValidator")
+  //val id = AssertorId("HTMLValidator")
   
   def validatorURL(encodedURL: String) =
     "http://qa-dev.w3.org/wmvs/HEAD/check?uri=" + encodedURL + "&charset=%28detect+automatically%29&doctype=Inline&group=0&user-agent=W3C_Validator%2F1.2&output=ucn"

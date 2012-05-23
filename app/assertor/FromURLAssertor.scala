@@ -5,22 +5,12 @@ import org.w3.vs.model._
 import scalaz._
 import Validation._
 import scala.io.Source
-
-object FromURLAssertor {
-
-  def apply(id: AssertorId): FromURLAssertor = id match {
-    case HTMLValidator.id => HTMLValidator
-    case ValidatorNu.id => ValidatorNu
-    case CSSValidator.id => CSSValidator
-    case I18nChecker.id => I18nChecker
-  }
-
-}
+import akka.dispatch.ExecutionContext
 
 /** 
  * An assertor that returns assertions about a document pointed by a URL
  */
-trait FromURLAssertor extends Assertor {
+trait FromURLAssertor extends FromSourceAssertor {
 
   /**
    * utility method to encode a URL
@@ -45,18 +35,26 @@ trait FromURLAssertor extends Assertor {
    *  @param url a pointer to the document
    *  @return the assertion
    */
-  def assert(url: URL): Validation[Throwable, Iterable[Assertion]]
-  
-}
-
-// This is weird. Coupling UnicornFormatAssertor and from FromURLAssertor was not a good idea,
-// as it doesn't apply to validator.nu. I think there must be a better way to organize traits here.
-trait URLToSourceAssertor extends FromURLAssertor with FromSourceAssertor {
-  
-  def assert(url: URL) = fromTryCatch {
-    val source = Source.fromURL(validatorURLForMachine(url))
-    val events = this.assert(source)
-    events
+  def assert(url: URL): FutureVal[Throwable, Iterable[AssertionClosed]] = FutureVal {
+    Source.fromURL(validatorURLForMachine(url))
+  } flatMap { source => 
+    assert(source)
   }
   
 }
+
+/*trait URLToSourceAssertor extends FromURLAssertor with FromSourceAssertor {
+  
+  // TODO
+  import org.w3.vs.Prod.configuration
+  implicit def ec = configuration.webExecutionContext
+  
+  override def assert(url: URL): FutureVal[Throwable, Iterable[AssertionClosed]] = FutureVal {
+    Source.fromURL(validatorURLForMachine(url))
+  } flatMap { source => 
+    assert(source)
+  }
+  
+}*/
+
+

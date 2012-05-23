@@ -15,9 +15,9 @@ import Json._
  * 
  *  http://wiki.whatwg.org/wiki/Validator.nu_Web_Service_Interface
  */
-object ValidatorNu extends FromURLAssertor {
+object ValidatorNu extends FromHttpResponseAssertor {
 
-  val id = AssertorId("ValidatorNu")
+  //val id = AssertorId("ValidatorNu")
   
   def validatorURL(encodedURL: String) =
     "http://validator.w3.org/nu/?doc=" + encodedURL + "&out=json"
@@ -31,30 +31,32 @@ object ValidatorNu extends FromURLAssertor {
     validatorURL
   }
 
-  def assert(url: URL): Validation[Throwable, Iterable[Assertion]] = fromTryCatch {	
+  /*def assert(url: URL)(implicit context: ExecutionContext): FutureVal[Throwable, Iterable[Assertion]] = FutureVal {
 	val urlCon = validatorURLForMachine(url).openConnection()
 	urlCon.setConnectTimeout(2000)
 	//urlCon.setReadTimeout(10000)
-	val content = Source.fromInputStream(urlCon.getInputStream).getLines.mkString("\n")
-    val json = Json.parse(content)
-    val responseUrl = URL((json \ "url").asInstanceOf[JsString].value)
+	val content = Source.fromInputStream(urlCon.getInputStream).getLines.mkString("\n")*/
+  def assert(source: Source): FutureVal[Throwable, Iterable[AssertionClosed]] = FutureVal {
+	val json = Json.parse(source.getLines.mkString("\n"))
+    val url = URL((json \ "url").asInstanceOf[JsString].value)
     val messages = json \ "messages"
     messages.asInstanceOf[JsArray].value.map {obj =>
-      // really doesn't look like a good habit to use these sys.error calls but you learn by example, you know
-	  val typ = (obj \ "type") match {
-	    case JsString("non-document-error") => sys.error("validator.nu failed");
+	  val assertionId = AssertionId();
+      val severity = AssertionSeverity((obj \ "type") match {
+	    case JsString("non-document-error") => throw new Exception("validator.nu failed");
 	    case JsString(s) => s; 
-	    case _ => sys.error("malformed json")
-	  }
-      val message = (obj \ "message") match {case JsString(s) => HtmlFormat.escape(s).text; case _ => sys.error("malformed json")}
+	    case _ => throw new Exception("malformed json") // TODO
+	  })
+      val title = (obj \ "message") match {case JsString(s) => HtmlFormat.escape(s).text; case _ => throw new Exception("malformed json")}
 	  val lastLine = (obj \ "lastLine") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
 	  val lastCol = (obj \ "lastColumn") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
 	  val extract = (obj \ "extract") match {case JsString(s) => Some(HtmlFormat.escape(s).text); case _ => None}
-	  val context = extract match {
-	    case Some(code) => Seq(Context(code.trim, url.toString, lastLine, lastCol)) // The model needs to accept a range of lines/column
+	  val contexts = extract match {
+	    case Some(code) => Seq(Context(code.trim, lastLine, lastCol, assertionId)) // The model needs to accept a range of lines/column
 	    case _ => Seq()
 	  }
-	  Assertion(typ, "no freakin id", "en", context, message.trim, None)
+	  val assertion = Assertion(assertionId, url, "en", title, severity, None, AssertorResponseId()) // T: not great to generate random assertorResponse id. Comes from the fact that the model only really support FromURLAssertors, otherwise AssertorResponse could be constructed and returned here
+      AssertionClosed(assertion, contexts)
 	}
   }
   

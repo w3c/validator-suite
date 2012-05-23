@@ -1,17 +1,16 @@
 package org.w3.vs.assertor
 
+import org.w3.util._
 import org.w3.vs.model._
-import org.w3.vs.actor._
 import scala.io.Source
 
-/** An assertor that can read an [[org.w3.vs.validator.Assertion]] from a file
- * it's useful only for testing as nothing is really asserted here
- */
-object FromFileAssertor extends FromUnicornFormatAssertor {
-
-  val id = AssertorId("FromFileAssertor")
+trait FromFileAssertor extends FromSourceAssertor {
   
-  def observe(file: java.io.File): Iterable[Assertion] =
-    this.assert(Source.fromFile(file))
+  def assert(file: java.io.File): FutureVal[Throwable, Iterable[AssertionClosed]] = 
+    FutureVal {
+      Source.fromFile(file)
+    } flatMap { source =>
+      assert(source)
+    }
 
 }

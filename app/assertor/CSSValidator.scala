@@ -10,9 +10,9 @@ import Validation._
  *
  *  It speaks with the instance deployed at [[http://qa-dev.w3.org:8001/css-validator/ http://qa-dev.w3.org:8001/css-validator/]]
  */
-object CSSValidator extends FromURLAssertor with FromUnicornFormatAssertor with URLToSourceAssertor {
+object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  val id = AssertorId("CSSValidator")
+  //val id = AssertorId("CSSValidator")
   
   def validatorURL(encodedURL: String) =
     "http://qa-dev.w3.org:8001/css-validator/validator?uri=" + encodedURL + "&output=ucn&vextwarning=true&profile=css3"

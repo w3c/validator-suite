@@ -1,8 +1,8 @@
-package org.w3.vs.assertor
+/*package org.w3.vs.assertor
 
 import org.w3.util._
 import org.w3.vs.model._
-import scalaz.Success
+import scalaz._
 
 /**
  * An Assertor that builds dummy assertions
@@ -10,20 +10,22 @@ import scalaz.Success
  */
 object DummyAssertor extends FromURLAssertor {
 
-  val id = AssertorId("DummyAssertor")
+  //val id = AssertorId("DummyAssertor")
   
   // really dumb
   def validatorURLForMachine(url: URL) = url
   
-  override def assert(url: URL) = {
-    val event = RawAssertion(
-        severity="info",
-        assertId="dummy",
-        lang="en",
-        title="Dummy title",
-        contexts=Seq(Context("Dummy context", url.toString, None, None)),
+  override def assert(url: URL)(implicit context: ExecutionContext): FutureVal[Throwable, Iterable[Assertion]] = 
+    FutureVal.successful{
+      val event = Assertion(
+        severity = Info,
+        assertId = "dummy",
+        lang = "en",
+        title = "Dummy title",
+        contexts = Seq(Context("Dummy context", None, None)),
         description = Some("Dummy message"))
-    Success(Seq(event))
+      Seq(event)
   }
   
 }
+*/
