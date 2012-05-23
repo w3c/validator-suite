@@ -18,23 +18,35 @@ import org.w3.util._
 
 object Organization {
 
-//  def apply(organizationId: OrganizationId)(implicit conf: VSConfiguration): Organization =
-//    new Organization(organizationId)
+  def apply(
+      id: OrganizationId = OrganizationId(),
+      name: String,
+      admin: User): Organization =
+    Organization(OrganizationVO(id, name, admin.id))
   
-  def apply(name: String): Organization =
-    new Organization(OrganizationId(), name)
-  
-  def fake() = Organization(OrganizationId(), name = "@@ fake organization @@")
-
-  def get(id: OrganizationId)(implicit configuration: VSConfiguration, context: ExecutionContext): FutureVal[Exception, Organization] = {
-    import configuration.store
+  def get(id: OrganizationId)/*(implicit configuration: VSConfiguration, context: ExecutionContext)*/: FutureVal[Exception, Organization] = {
+    //import configuration.store
     //store.getOrganizations(id = id).map(t=>t.headOption)
-    FutureVal.failed(new Exception("not implemented"))
+    //FutureVal.failed(new Exception("not implemented"))
+    sys.error("ni")
   }
+  def getForAdmin(admin: UserId): FutureVal[Exception, Iterable[Organization]] = sys.error("ni")
+  
+  def save(organization: Organization): FutureVal[Exception, Organization] = sys.error("")
   
 }
 
-case class Organization(id: OrganizationId, name: String) {
+case class OrganizationVO(
+    id: OrganizationId = OrganizationId(),
+    name: String,
+    admin: UserId)
+
+case class Organization(valueObject: OrganizationVO) {
+  
+  def id: OrganizationId = valueObject.id
+  def name: String = valueObject.name
+  
+  def getAdmin: FutureVal[Exception, User] = User.get(valueObject.admin)
 
   val logger = play.Logger.of(classOf[Organization])
 
