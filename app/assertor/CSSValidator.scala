@@ -12,7 +12,7 @@ import Validation._
  */
 object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  //val id = AssertorId("CSSValidator")
+  val name = "CSS Validator"
   
   def validatorURL(encodedURL: String) =
     "http://qa-dev.w3.org:8001/css-validator/validator?uri=" + encodedURL + "&output=ucn&vextwarning=true&profile=css3"

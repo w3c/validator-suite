@@ -7,12 +7,12 @@ import org.joda.time._
 import scalaz.Equal
 
 sealed trait ResourceResponseVO {
-  val id: ResourceResponseId = ResourceResponseId()
+  val id: ResourceResponseId
   val jobId: JobId
   val runId: RunId
   val url: URL
   val action: HttpAction
-  val timestamp: DateTime = DateTime.now
+  val timestamp: DateTime
 }
 
 case class ErrorResponseVO(

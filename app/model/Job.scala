@@ -29,7 +29,7 @@ case class JobVO(
 case class Job(
     valueObject: JobVO,
     strategy: Strategy,
-    lastData: Option[JobData] = None)(implicit conf: VSConfiguration) {
+    lastData: Option[JobData])(implicit conf: VSConfiguration) {
 
   import conf.system
   implicit def timeout = conf.timeout

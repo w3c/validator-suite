@@ -9,10 +9,6 @@ import scala.io.Source
  */
 trait UnicornFormatAssertor extends FromSourceAssertor {
   
-  // TODO moved to a parent class
-  import org.w3.vs.Prod.configuration
-  implicit def ec = configuration.webExecutionContext
-  
   def assert(source: Source): FutureVal[Throwable, Iterable[AssertionClosed]] = FutureVal {
     val response: Elem = XML.fromSource(source)
     val obversationRef: String = response.attrs get "ref" get

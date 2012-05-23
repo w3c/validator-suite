@@ -43,7 +43,7 @@ case class StrategyVO(
 
 case class Strategy(
     valueObject: StrategyVO,
-    assertorsFor: AssertorSelector = AssertorSelector.simple) {
+    assertorsFor: AssertorSelector) {
   
   def id: StrategyId = valueObject.id
   def entrypoint: URL = valueObject.entrypoint

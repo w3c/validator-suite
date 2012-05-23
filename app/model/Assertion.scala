@@ -31,8 +31,8 @@ case class Assertion(valueObject: AssertionVO) {
   def severity: AssertionSeverity = valueObject.severity
   def description: Option[String] = valueObject.description
   
-  def getAssertorResponse: FutureVal[Exception, AssertorResponse]
-  def getContexts: FutureVal[Exception, Seq[Context]] 
+  //def getAssertorResponse: FutureVal[Exception, AssertorResponse] = AssertorResonse.getResponseWith()
+  def getContexts: FutureVal[Exception, Iterable[Context]] = Context.getForAssertion(id) 
   
 }
 
@@ -109,6 +109,6 @@ object Context {
    Context(ContextVO(content = content, line = line, column = column, assertionId = assertionId))
   
   def get(id: ContextId): FutureVal[Exception, Context] = sys.error("ni")
-  def getForAssertion(id: AssertionId): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
+  def getForAssertion(id: AssertionId): FutureVal[Exception, Iterable[Context]] = sys.error("ni")
 
 }

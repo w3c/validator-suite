@@ -67,9 +67,9 @@ case class RunVO(
 case class Run(
     valueObject: RunVO,
     job: Job,
-    pending: Set[URL] = Set.empty,
-    invalidated: Int = 0,
-    pendingAssertions: Int = 0,
+    pending: Set[URL],
+    invalidated: Int,
+    pendingAssertions: Int,
     data: JobData) {
 
   def id = valueObject.id

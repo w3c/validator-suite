@@ -12,7 +12,7 @@ import Validation._
  */
 object I18nChecker extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  //val id = AssertorId("I18n-Checker")
+  val name = "I18n-Checker"
   
   def validatorURL(encodedURL: String) =
     "http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encodedURL + "&format=xml"

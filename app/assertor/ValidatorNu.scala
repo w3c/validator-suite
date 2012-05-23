@@ -17,7 +17,7 @@ import Json._
  */
 object ValidatorNu extends FromHttpResponseAssertor {
 
-  //val id = AssertorId("ValidatorNu")
+  val name = "Validator.nu"
   
   def validatorURL(encodedURL: String) =
     "http://validator.w3.org/nu/?doc=" + encodedURL + "&out=json"

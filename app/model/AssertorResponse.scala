@@ -6,7 +6,7 @@ import org.w3.vs.assertor._
 import scalaz.Validation
 
 sealed trait AssertorResponse {
-  val id: AssertorResponseId
+  //val id: AssertorResponseId
   val jobId: JobId
   val runId: RunId
   val assertorId: AssertorId
@@ -16,7 +16,7 @@ sealed trait AssertorResponse {
 
 // not a persisted object for now
 case class AssertorFailure(
-    id: AssertorResponseId = AssertorResponseId(),
+    //id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
     runId: RunId,
     assertorId: AssertorId,
@@ -41,9 +41,12 @@ case class AssertorResult(
     errors: Int,
     warnings: Int) extends AssertorResponse {
   
-  def id = valueObject.id
-  def sourceUrl = valueObject.sourceUrl
-  def timestamp = valueObject.timestamp
+  val id = valueObject.id
+  val jobId: JobId = valueObject.jobId
+  val runId: RunId = valueObject.runId
+  val assertorId: AssertorId = valueObject.assertorId
+  val sourceUrl = valueObject.sourceUrl
+  val timestamp = valueObject.timestamp
   
   //def isValid = ! hasError
   //def hasError: Boolean = assertions exists {_.severity == Error}
