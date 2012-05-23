@@ -2,87 +2,48 @@ package org.w3.vs.model
 
 import java.nio.channels.ClosedChannelException
 import org.joda.time.DateTime
-import org.w3.util.akkaext.Deafen
-import org.w3.util.akkaext.Listen
-import org.w3.util.akkaext.PathAware
-import org.w3.util.FutureValidation
-import org.w3.util.NOTSET
+import org.w3.util.akkaext._
 import org.w3.vs.actor.message._
+import org.w3.vs.exception._
 import org.w3.vs.exception.SuiteException
 import org.w3.vs.VSConfiguration
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.actor.Props
-import akka.dispatch.Future
-import play.api.libs.iteratee.Enumeratee
-import play.api.libs.iteratee.Enumerator
-import play.api.libs.iteratee.PushEnumerator
+import akka.actor._
+import akka.dispatch._
+import play.api.libs.iteratee._
 import play.Logger
-import org.w3.util.URL
+import org.w3.util._
+import scalaz.Validation._
+import scalaz.Scalaz._
+import scalaz._
 
-object Job {
-  
-  // Shouldn't be here. We need sets of initial data for dev and test modes
-  def fake(strategy: Strategy)(implicit configuration: VSConfiguration): Job = {
-    val fakeUser = User.fake
-    Job(name = "fake job", creatorId = fakeUser.id, organizationId = fakeUser.organization, strategy = strategy)
-  }
-  
-  def get(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Job, Nothing, NOTSET] = {
-    import configuration.store
-    implicit def context = configuration.webExecutionContext
-    store.getJobById(id)
-  }
-  
-  def getAll(id: OrganizationId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[Job], Nothing, NOTSET] = {
-    import configuration.store
-    implicit def context = configuration.webExecutionContext
-    store.listJobs(id)
-  }
-  
-  def delete(id: JobId)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit, Nothing, NOTSET] = {
-    import configuration.store
-    implicit def context = configuration.webExecutionContext
-    store.removeJob(id)
-  }
-  
-  def save(job: Job)(implicit configuration: VSConfiguration): FutureValidation[SuiteException, Unit, Nothing, NOTSET] = {
-    import configuration.store
-    implicit def context = configuration.webExecutionContext
-    store.putJob(job)
-  }
-  
-  def getAssertorResults(
-    id: JobId,
-    after: Option[DateTime] = None)(
-    implicit configuration: VSConfiguration): FutureValidation[SuiteException, Iterable[AssertorResult], Nothing, NOTSET] = {
-      import configuration.store
-      implicit def context = configuration.webExecutionContext
-      store.listAssertorResults(id, after)
-    }
-  
-  def withLastData(job: Job): Future[Job] = {
-    job.jobData().map(jobData => job.copy(lastData = Some(jobData)))
-  }
-  
-}
-
-case class Job(
+case class JobVO(
     id: JobId = JobId(),
     name: String,
+    createdOn: DateTime = DateTime.now,
+    lastCompleted: Option[DateTime] = None,
     creatorId: UserId,
     organizationId: OrganizationId,
+    strategyId: StrategyId)
+
+// closed with its strategy and lastData
+case class Job(
+    valueObject: JobVO,
     strategy: Strategy,
-    lastData: Option[JobData] = None,
-    lastCompleted: Option[DateTime] = None,
-    history: Map[DateTime, JobData] = Map.empty,
-    createdOn: DateTime = DateTime.now)(implicit conf: VSConfiguration) {
+    lastData: Option[JobData] = None)(implicit conf: VSConfiguration) {
 
   import conf.system
-  
   implicit def timeout = conf.timeout
-  
   private val logger = Logger.of(classOf[Job])
+  
+  def id: JobId = valueObject.id
+  def name: String = valueObject.name
+  def createdOn: DateTime = valueObject.createdOn
+  def lastCompleted: Option[DateTime] = valueObject.lastCompleted
+  
+  def getCreator = User.get(valueObject.creatorId)
+  def getOrganization = Organization.get(valueObject.organizationId)
+  def getStrategy = Strategy.get(valueObject.strategyId)
+  def getHistory = JobData.getForJob(valueObject.id)
   
   def run(): Unit = PathAware(organizationsRef, path) ! Refresh
   
@@ -102,8 +63,8 @@ case class Job(
     }
   }
   
-  def jobData(): Future[JobData] =
-    (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]
+  /*def jobData(): Future[JobData] =
+    (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]*/
 
   def subscribeToUpdates(): Enumerator[RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
@@ -132,7 +93,7 @@ case class Job(
   
   private val organizationsRef = system.actorFor(system / "organizations")
 
-  private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString
+  private val path = system / "organizations" / valueObject.organizationId.toString / "jobs" / id.toString
 
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
@@ -145,3 +106,85 @@ case class Job(
     PathAware(organizationsRef, path).tell(Deafen(listener), listener)
     
 }
+    
+object Job {
+  
+  def apply(
+      id: JobId = JobId(),
+      name: String,
+      createdOn: DateTime = DateTime.now,
+      lastCompleted: Option[DateTime] = None,
+      creatorId: UserId,
+      organizationId: OrganizationId,
+      strategy: Strategy,
+      lastData: Option[JobData] = None)(implicit conf: VSConfiguration): Job = 
+    Job(JobVO(id, name, createdOn, lastCompleted, creatorId, organizationId, strategy.id), strategy, lastData)
+  
+  // Shouldn't be here. We need sets of initial data for dev and test modes
+//  def fake(strategy: Strategy)(implicit configuration: VSConfiguration): Job = {
+//    val fakeUser = User.fake
+//    Job(name = "fake job", creatorId = fakeUser.id, organizationId = fakeUser.organizationId, strategy = strategy)
+//  }
+  
+  def get(id: JobId): FutureVal[Exception, Job] = {
+    /*import configuration.store
+    //implicit def context = configuration.webExecutionContext
+    store.getJobs(id = Some(id)).map(jobs => jobs.headOption).pureFold(
+      f => Failure(f),
+      {
+        case Some(s) => Success(s)
+        case _ => Failure(UnknownJob)
+      }
+    )*/
+    sys.error("")
+  }
+  
+  def getFor(user: User): FutureVal[Exception, Iterable[Job]] = sys.error("")
+  
+//  def getAll(id: OrganizationId)(implicit configuration: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
+//    import configuration.store
+//    //implicit def context = configuration.webExecutionContext
+//    store.listJobs(id)
+//  }
+  
+  def delete(id: JobId)/*(implicit configuration: VSConfiguration)*/: FutureVal[Exception, Unit] = {
+    //import configuration.store
+    //implicit def context = configuration.webExecutionContext
+    //store.deleteJob(id = Some(id))
+    sys.error("")
+  }
+  
+  def save(job: Job)/*(implicit configuration: VSConfiguration)*/: FutureVal[Exception, Job] = {
+//    import configuration.store
+//    //implicit def context = configuration.webExecutionContext
+//    store.createJob(
+//      id = job.id,
+//      name = job.name,
+//      creatorId = job.creatorId,
+//      organizationId = job.organizationId,
+//      strategyId = job.strategy.id,
+//      lastCompleted = None)
+    sys.error("")
+  }
+  
+//  def getAssertorResponses(
+//    id: JobId,
+//    after: Option[DateTime] = None)(
+//    implicit configuration: VSConfiguration): FutureVal[Exception, Iterable[AssertorResponse]] = {
+//      import configuration.store
+//      //implicit def context = configuration.webExecutionContext
+//      store.listAssertorResponses(id, after)
+//    }
+  
+//  def withLastData(job: Job): Future[Job] = {
+//    job.jobData().map(jobData => job.copy(lastData = Some(jobData)))
+//  }
+  
+  def getForCreator(creator: UserId): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
+  def getForOrganization(organization: OrganizationId): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
+  def getForStrategy(strategy: StrategyId): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
+}
+
+
+
+
