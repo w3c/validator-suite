@@ -7,8 +7,8 @@ import com.ning.http.client.AsyncHttpClient
 import org.w3.vs.store._
 import org.w3.vs.actor.JobsActor
 import akka.util.Timeout
-import org.w3.banana._
-import org.w3.banana.jena._
+//import org.w3.banana._
+//import org.w3.banana.jena._
 
 trait VSConfiguration {
   
@@ -24,13 +24,13 @@ trait VSConfiguration {
   
   val httpClient: AsyncHttpClient
   
-  val store: Store
+  /*val store: Store2
 
   val rdfStore: RDFStore[Jena]
 
   val binders: Binders[Jena]
 
-  val stores: Stores[Jena]
+  val stores: Stores[Jena]*/
 
   val timeout: Timeout
 

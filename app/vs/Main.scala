@@ -13,12 +13,11 @@ object Main {
   
   val strategy =
     Strategy(
-      name="w3.org",
-      entrypoint=URL("http://www.bertails.org/"),
-      distance=0,
-      linkCheck=true,
+      entrypoint = URL("http://www.bertails.org/"),
+      distance = 0,
+      linkCheck = true,
       maxNumberOfResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing))
+      filter = Filter(include = Everything, exclude = Nothing))
   
 //  implicit def configuration = org.w3.vs.Prod.configuration
 //      

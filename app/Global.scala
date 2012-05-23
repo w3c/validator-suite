@@ -8,49 +8,43 @@ object Global extends GlobalSettings {
   
   def vsconf = org.w3.vs.Prod.configuration
 
-  def store = vsconf.store
+  //def store = vsconf.store
+  //def OrganizationStore = vsconf.stores.OrganizationStore
   def system = vsconf.system
-  def OrganizationStore = vsconf.stores.OrganizationStore
+  implicit def context = vsconf.storeExecutionContext
   
   val logger = play.Logger.of("Global")
   
   override def onStart(app: Application): Unit = {
     
-    val w3c = OrganizationData(name="World Wide Web Consortium")
-
-    OrganizationStore.put(w3c)
-    
-    val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id)
-    val bertails = User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id)
-
-    store.saveUser(User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organization = w3c.id))
-    store.saveUser(User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organization = w3c.id))
-    
     implicit def configuration = org.w3.vs.Prod.configuration
+
+    val orgId = OrganizationId()
+    val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organizationId = orgId)
+    val bertails = User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organizationId = orgId)
+    val w3c = Organization(id = orgId, name = "World Wide Web Consortium", admin = tgambet)
     
     val w3 = Job(
       createdOn = DateTime.now,
       name = "W3C",
       creatorId = bertails.id,
       organizationId = w3c.id,
-      strategy = new Strategy(
-        name="irrelevantForV1",
-        entrypoint=URL("http://www.w3.org/"),
-        distance=2,
-        linkCheck=false,
+      strategy = Strategy(
+        entrypoint = URL("http://www.w3.org/"),
+        distance = 2,
+        linkCheck = false,
         maxNumberOfResources = 100,
-        filter=Filter(include=Everything, exclude=Nothing)))
+        filter = Filter(include = Everything, exclude = Nothing)))
         
     val tr = Job(
       createdOn = DateTime.now.plus(1000),
       name = "TR",
       creatorId = bertails.id,
       organizationId = w3c.id,
-      strategy = new Strategy(
-        name="irrelevantForV1",
-        entrypoint=URL("http://www.w3.org/TR"),
-        distance=2,
-        linkCheck=false,
+      strategy = Strategy(
+        entrypoint = URL("http://www.w3.org/TR"),
+        distance = 2,
+        linkCheck = false,
         maxNumberOfResources = 100,
         filter=Filter.includePrefixes("http://www.w3.org/TR")))
         
@@ -59,37 +53,33 @@ object Global extends GlobalSettings {
       name = "IBM",
       creatorId = bertails.id,
       organizationId = w3c.id,
-      strategy = new Strategy(
-        name="irrelevantForV1",
-        entrypoint=URL("http://www.ibm.com"),
-        distance=2,
-        linkCheck=false,
+      strategy = Strategy(
+        entrypoint = URL("http://www.ibm.com"),
+        distance = 2,
+        linkCheck = false,
         maxNumberOfResources = 100,
-        filter=Filter(include=Everything, exclude=Nothing)))
+        filter = Filter(include=Everything, exclude=Nothing)))
     
     val lemonde = Job(
       createdOn = DateTime.now.plus(3000),
       name = "Le Monde",
       creatorId = bertails.id,
       organizationId = w3c.id,
-      strategy = new Strategy(
-        name="irrelevantForV1",
-        entrypoint=URL("http://www.lemonde.fr"),
-        distance=2,
-        linkCheck=false,
+      strategy = Strategy(
+        entrypoint = URL("http://www.lemonde.fr"),
+        distance = 2,
+        linkCheck = false,
         maxNumberOfResources = 100,
-        filter=Filter(include=Everything, exclude=Nothing)))
+        filter = Filter(include = Everything, exclude = Nothing)))
     
-        
-    store.putJob(w3)
-    store.putJob(tr)
-    store.putJob(ibm)
-    store.putJob(lemonde)
-    
-//    var a = List[Job]()
-//    for (i <- 0 until 8)
-//      a = a :+ job.copy(JobId(), strategy = job.strategy.copy(distance = i), createdOn = DateTime.now.plus(i)) 
-//    a.map(store.putJob)
+    // TODO a Saveable trait might be handy
+    tgambet.save()
+    bertails.save()
+    w3c.save()
+    w3.save()
+    tr.save()
+    ibm.save()
+    lemonde.save()
 
   }
   
@@ -98,7 +88,3 @@ object Global extends GlobalSettings {
   }
   
 }
-
-
-
-
