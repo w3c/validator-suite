@@ -52,8 +52,7 @@ package object controllers {
         name = name,
         organizationId = null,
         creatorId = null,
-        strategy = new Strategy(
-          name="irrelevantForV1",
+        strategy = Strategy(
           entrypoint=url,
           distance=distance,
           linkCheck=linkCheck,
@@ -100,7 +99,7 @@ package object controllers {
   implicit val bindableJobId = new PathBindable[JobId] {
     def bind (key: String, value: String): Either[String, JobId] = {
       try {
-        Right(JobId.fromString(value))
+        Right(JobId(value))
       } catch { case e: Exception =>
         Left("invalid id: " + value)
       }

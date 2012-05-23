@@ -28,9 +28,11 @@ import play.api.cache.Cache
 
 object Application extends Controller {
   
+  type ActionA = Action[AnyContent]
+  
   implicit def configuration = org.w3.vs.Prod.configuration
   
-  def login = Action { implicit req =>
+  def login: ActionA = sys.error("") /*Action { implicit req =>
     AsyncResult {
       val futureResult =
         for {
@@ -43,13 +45,13 @@ object Application extends Controller {
         }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
-  }
+  }*/
 
-  def logout = Action {
+  def logout: ActionA = sys.error("")/*Action {
     Redirect(routes.Application.login).withNewSession.flashing("success" -> Messages("application.loggedOut"))
-  }
+  }*/
 
-  def authenticate = Action { implicit req =>
+  def authenticate: ActionA = sys.error("")/*Action { implicit req =>
     AsyncResult {
       val futureResult =
         for {
@@ -69,14 +71,34 @@ object Application extends Controller {
         }
       futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
     }
-  }
+  }*/
   
-  import org.w3.util.FutureValidation._
+  //import org.w3.util.FutureValidation._
 
-  def getAuthenticatedUser()(implicit session: Session): FutureValidationNoTimeOut[SuiteException, User] = {
-    for {
-      email <- immediateValidation { session.get("email").toSuccess(Unauthenticated) }
-      user <- Cache.getAs[User](email) match {
+//  def getAuthenticatedUser()(implicit session: Session): FutureValidationNoTimeOut[SuiteException, User] = {
+//    for {
+//      email <- immediateValidation { session.get("email").toSuccess(Unauthenticated) }
+//      user <- Cache.getAs[User](email) match {
+//        case Some(user) => Success(user).toImmediateValidation
+//        case _ => for {
+//          user <- User getByEmail (email)
+//        } yield {
+//          Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
+//          user
+//        }
+//      }
+//    } yield user
+//  }
+//  
+//  def getAuthenticatedUserOrResult()(implicit req: Request[_]): FutureValidationNoTimeOut[Result, User] = {
+//    getAuthenticatedUser failMap toResult(None)
+//  }
+  
+  def getUser()(implicit session: Session): FutureVal[Throwable, User] = {
+     for {
+      email <- FutureVal.pure(session.get("email").get) //.toSuccess(Unauthenticated) }
+      user <- FutureVal.pure(Cache.getAs[User](email).get).flatMapFail{case _ => User.getByEmail(email)}
+      /*Cache.getAs[User](email) match {
         case Some(user) => Success(user).toImmediateValidation
         case _ => for {
           user <- User getByEmail (email)
@@ -84,25 +106,21 @@ object Application extends Controller {
           Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
           user
         }
-      }
+      }*/
     } yield user
-  }
+  } 
   
-  def getAuthenticatedUserOrResult()(implicit req: Request[_]): FutureValidationNoTimeOut[Result, User] = {
-    getAuthenticatedUser failMap toResult(None)
-  }
-  
-  def FutureTimeoutError(implicit req: Request[_]) = {
-    InternalServerError(views.html.error(List(("error", Messages("error.timeout")))))
-  }
-
-  def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
-    e match {
-      case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> Messages("jobs.notfound"))))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("jobs.notfound")))
-      case _@ (UnknownUser | Unauthenticated) => Unauthorized(views.html.login(loginForm, List(("error" -> Messages("application.unauthorized"))))).withNewSession
-      case                  StoreException(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.store", t.getMessage))), authenticatedUserOpt))
-      case                      Unexpected(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage))), authenticatedUserOpt))
-    }
-  }
+//  def FutureTimeoutError(implicit req: Request[_]) = {
+//    InternalServerError(views.html.error(List(("error", Messages("error.timeout")))))
+//  }
+//
+//  def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
+//    e match {
+//      case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> Messages("jobs.notfound"))))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("jobs.notfound")))
+//      case _@ (UnknownUser | Unauthenticated) => Unauthorized(views.html.login(loginForm, List(("error" -> Messages("application.unauthorized"))))).withNewSession
+//      case                  StoreException(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.store", t.getMessage))), authenticatedUserOpt))
+//      case                      Unexpected(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage))), authenticatedUserOpt))
+//    }
+//  }
   
 }
