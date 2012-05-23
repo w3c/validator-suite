@@ -26,7 +26,7 @@ import org.w3.util.akkaext._
 import scala.collection.mutable.Queue
 import org.w3.vs.actor.message.Stop
 
-case class AssertorCall(assertorId: AssertorId, resourceInfo: ResourceInfo)
+case class AssertorCall(assertor: FromHttpResponseAssertor, response: HttpResponse)
 
 object AssertionsActor {
 
@@ -44,54 +44,31 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
 
   val queue = Queue[AssertorCall]()
 
-  private final def scheduleAssertion(assertorId: AssertorId, resourceInfo: ResourceInfo): Unit = {
-
-    val assertor = FromURLAssertor(assertorId)
-
-    val url = resourceInfo.url
-
-    // TODO be more aggressive on timeout?
-    val futureAssertionResult = Future {
-      assertor.assert(url) fold (
-        throwable => AssertorFailure(
-          url = url,
-          assertorId = assertor.id,
-          jobId = job.id,
-          why = throwable.getMessage),
-        assertions => AssertorResult(
-          url = url,
-          assertorId = assertor.id,
-          jobId = job.id,
-          assertions = assertions))
-    }(assertorExecutionContext)
-      
-    // register callback on the completion of the future
-    futureAssertionResult onComplete {
-      case Left(throwable) => {
-        val fail = AssertorFailure(
-          url = url,
-          assertorId = assertor.id,
-          jobId = job.id,
-          why = throwable.getMessage)
-        self ! fail
-      }
-      case Right(assertionResult) =>
-        self ! assertionResult
+  private final def scheduleAssertion(assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
+    
+    assertor.assert(response) onComplete {
+      case Failure(f) => self ! f
+      case Success(s) => self ! s
     }
     
     pendingAssertions += 1
     
   }
 
-
-
   def receive = {
 
     case Stop => {
       queue.dequeueAll(_ => true)
     }
-
-    case result: AssertorResponse => {
+    case result: AssertorResultClosed => {
+      pendingAssertions -= 1
+      context.parent ! result
+      while (queue.nonEmpty && pendingAssertions <= MAX_PENDING_ASSERTION) {
+        val AssertorCall(assertorId, nextRI) = queue.dequeue()
+        scheduleAssertion(assertorId, nextRI)
+      }
+    }
+    case result: AssertorFailure => {
       pendingAssertions -= 1
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions <= MAX_PENDING_ASSERTION) {
@@ -100,11 +77,11 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
       }
     }
 
-    case call @ AssertorCall(assertorId, resourceInfo) => {
+    case call @ AssertorCall(assertorId, response) => {
       if (pendingAssertions > MAX_PENDING_ASSERTION) {
         queue.enqueue(call)
       } else {
-        scheduleAssertion(assertorId, resourceInfo)
+        scheduleAssertion(assertorId, response)
       }
     }
 

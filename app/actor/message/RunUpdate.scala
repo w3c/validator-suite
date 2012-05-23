@@ -1,7 +1,7 @@
 package org.w3.vs.actor.message
 
 import org.w3.util.URL
-import org.w3.vs.assertor.AssertorId
+import org.w3.vs.assertor._
 import org.w3.vs.model._
 import org.w3.vs.actor._
 import play.api.libs.json._
@@ -19,70 +19,73 @@ sealed trait RunUpdate {
 }
 
 case class UpdateData(data: JobData) extends RunUpdate {
-  def toJS: JsValue = 
-    JsArray(List(
+  def toJS: JsValue = JsArray() 
+    /*JsArray(List(
       JsString("JobStatus"),
-      JsString(data.jobId.toString),
+      JsString(data.valueObject.jobId.toString),
       JsString(data.activity.toString),
       JsString(data.explorationMode.toString),
       JsNumber(data.resources),
       JsNumber(data.oks),
       JsNumber(data.errors),
       JsNumber(data.warnings)
-    ))
+    ))*/
 }
 
 /**
  * A new Response was received during the exploration
  */
-case class NewResourceInfo(resourceInfo: ResourceInfo) extends RunUpdate {
+case class NewResource(resource: ResourceResponse) extends RunUpdate {
   def toJS: JsValue = {
-    resourceInfo.result match {
-      case ResourceInfoError(why) => 
+    JsArray()
+    /*resource match {
+      case ErrorResponse(why) => 
         JsArray(List(
           JsString("ERR"),
           JsString(why),
-          JsString(resourceInfo.url.toString)
+          JsString(resource.url.toString)
         ))
-      case FetchResult(status, headers, extractedLinks) => resourceInfo.action match {
+      case HttpResponse(status, headers, extractedLinks) => resource.action match {
         case GET => 
           JsArray(List(
             JsString("GET"),
             JsNumber(status),
-            JsString(resourceInfo.url.toString)
+            JsString(resource.url.toString)
           ))
         case HEAD => 
           JsArray(List(
             JsString("HEAD"),
             JsNumber(status),
-            JsString(resourceInfo.url.toString)
+            JsString(resource.url.toString)
           ))
         case _ => sys.error("TODO you should change the type :-)")
       }
-    }
+    }*/
   }
 }
 
 /**
  * A new Assertion was received
  */
-case class NewAssertorResult(result: AssertorResult) extends RunUpdate {
+case class NewAssertorResponse(response: AssertorResponse) extends RunUpdate {
   
-  def toJS: JsValue = result match {
-    case assertions: AssertorResult =>
+  def toJS: JsValue = JsArray() 
+    /*response match {
+    
+    case result: AssertorResult =>
       JsArray(List(
         JsString("OBS"),
-        JsString(assertions.url.toString),
-        JsString(assertions.assertorId.toString),
-        JsNumber(assertions.numberOfErrors),
-        JsNumber(assertions.numberOfWarnings)
+        JsString(result.url.toString),
+        JsString(result.assertorId.toString),
+        JsNumber(result.numberOfErrors),
+        JsNumber(result.numberOfWarnings)
       ))
-    case fail: AssertorFail =>
+    case failure: AssertorFailure =>
       JsArray(List(
         JsString("OBS_ERR"),
-        JsString(fail.url.toString)
+        JsString(failure.url.toString)
       ))
-  }
+  }*/
   
 }
 

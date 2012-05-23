@@ -25,7 +25,7 @@ import org.joda.time.DateTime
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 
-class OrganizationActor(organizationData: OrganizationData)(implicit val configuration: VSConfiguration)
+class OrganizationActor(organization: Organization)(implicit val configuration: VSConfiguration)
 extends Actor with Listeners {
 
   val logger = play.Logger.of(classOf[OrganizationActor])

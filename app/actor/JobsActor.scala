@@ -22,31 +22,25 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
   val logger = play.Logger.of(classOf[JobsActor])
 
   def getJobRefOrCreate(job: Job): ActorRef = {
-    val id = job.id
-    val name = id.toString
+    val id = job.id.toString
     try {
-      context.actorOf(Props(new JobActor(job)), name = name)
+      context.actorOf(Props(new JobActor(job)), name = id)
     } catch {
-      case iane: InvalidActorNameException => context.actorFor(self.path / name)
+      case iane: InvalidActorNameException => context.actorFor(self.path / id)
     }
   }
 
   def receive = {
 
-    case Tell(Child(name), msg) => {
+    case Tell(Child(id), msg) => {
       val from = sender
       val to = self
-      context.children.find(_.path.name === name) match {
+      context.children.find(_.path.name === id) match {
         case Some(jobRef) => jobRef forward msg
         case None => {
-          val jobId = JobId.fromString(name)
-          configuration.store.getJobById(jobId).asFuture onSuccess {
-            case Success(job) => {
-              to.tell(CreateJobAndForward(job, msg), from)
-            }
-            case Failure(storeException) => {
-              logger.error(storeException.toString)
-            }
+          Job.get(JobId(id)).onComplete {
+            case Success(job) => to.tell(CreateJobAndForward(job, msg), from)
+            case Failure(exception) => logger.error("OrganizationActor error", exception)
           }
         }
       }
