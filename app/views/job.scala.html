@@ -74,12 +74,12 @@
 				<span class="distance">@job.strategy.distance</span>
 			<li>
 				<h2>Status</h2>
-				<span class="activity">@data.activity</span>
+				<span class="activity">@**data.activity**@</span>
 				<form action="@routes.Jobs.dispatcher(job.id)" method="post">
-					@{data.activity match {
+					@**{data.activity match {
 					  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 					  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
-					}}
+					}}**@
 				</form>
 			<li>
 				<h2>Last Run Completed</h2>
