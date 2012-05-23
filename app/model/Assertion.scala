@@ -5,10 +5,10 @@ import org.joda.time._
 import org.w3.vs.assertor._
 import scalaz.Validation
 
-
 sealed trait AssertorResponse {
   val id: AssertorResponseId
   val jobId: JobId
+  val runId: RunId
   val assertorId: AssertorId
   val sourceUrl: URL
   val timestamp: DateTime
@@ -18,6 +18,7 @@ sealed trait AssertorResponse {
 case class AssertorFailure(
     id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
+    runId: RunId,
     assertorId: AssertorId,
     sourceUrl: URL,
     timestamp: DateTime = new DateTime,
@@ -28,19 +29,21 @@ case class AssertorFailure(
  */
 case class AssertorResultVO(
     id: AssertorResponseId = AssertorResponseId(),
-    sourceUrl: URL,
-    timestamp: DateTime = DateTime.now,
     jobId: JobId,
-    assertorId: AssertorId) {}
+    runId: RunId,
+    assertorId: AssertorId,
+    sourceUrl: URL,
+    timestamp: DateTime = DateTime.now)
 
-case class AssertorResult(valueObject: AssertorResultVO) extends AssertorResponse {
+// closed with number of errors and warnings
+case class AssertorResult(
+    valueObject: AssertorResultVO,
+    errors: Int,
+    warnings: Int) extends AssertorResponse {
   
   def id = valueObject.id
   def sourceUrl = valueObject.sourceUrl
   def timestamp = valueObject.timestamp
-  
-  def getJob: FutureVal[Exception, Job]
-  def getAssertor: FutureVal[Exception, Assertor]
   
   //def isValid = ! hasError
   //def hasError: Boolean = assertions exists {_.severity == Error}
@@ -48,18 +51,29 @@ case class AssertorResult(valueObject: AssertorResultVO) extends AssertorRespons
   //def numberOfErrors = assertions.filter(_.severity == Error).size
   //def numberOfWarnings = assertions.filter(_.severity == Warning).size
   
-  def getAssertions: FutureVal[Exception, Iterable[Assertion]] = {
-    Assertion.get(AssertorResponseId)
-  }
-  
+  def getJob: FutureVal[Exception, Job] = sys.error("ni")
+  def getRun: FutureVal[Exception, Run] = sys.error("ni")
+  def getAssertor: FutureVal[Exception, Assertor] = sys.error("ni")
+  def getAssertions: FutureVal[Exception, Iterable[Assertion]] = Assertion.getForResponse(id)
+  def save(): FutureVal[Exception, AssertorResult] = AssertorResult.save(this)
 }
 
 object AssertorResult {
   
-  def get(id: AssertorResponseId): AssertorResult = sys.error("ni")
-  def getForJob(id: JobId, after: Option[DateTime] = None): Iterable[AssertorResult] = sys.error("ni")
-  def getForURL(url: URL): Iterable[AssertorResult] = sys.error("ni")
+  def apply(
+    id: AssertorResponseId = AssertorResponseId(),
+    jobId: JobId,
+    runId: RunId,
+    assertorId: AssertorId,
+    sourceUrl: URL,
+    timestamp: DateTime = DateTime.now,
+    errors: Int,
+    warnings: Int) = new AssertorResult(AssertorResultVO(id, jobId, runId, assertorId, sourceUrl, timestamp), errors, warnings)
   
+  def get(id: AssertorResponseId): FutureVal[Exception, AssertorResult] = sys.error("ni")
+  def getForJob(id: JobId, after: Option[DateTime] = None): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
+  def getForURL(url: URL): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
+  def save(result: AssertorResult): FutureVal[Exception, AssertorResult] = sys.error("ni")
 }
 
 /** 
@@ -95,9 +109,19 @@ case class Assertion(valueObject: AssertionVO) {
 
 object Assertion {
   
-  def get(id: AssertionId): Assertion = sys.error("ni")
-  def getForJob(id: JobId): Iterable[Assertion] = sys.error("ni")
-  def getForResponse(id: AssertorResponseId): Iterable[Assertion] = sys.error("ni")
+  def apply(
+      id: AssertionId = AssertionId(),
+      url: URL,
+      lang: String,
+      title: String,
+      severity: AssertionSeverity,
+      description: Option[String],
+      assertorResponseId: AssertorResponseId): Assertion =
+    Assertion(AssertionVO(id, url, lang, title, severity, description, assertorResponseId))
+  
+  def get(id: AssertionId): FutureVal[Exception, Assertion] = sys.error("ni")
+  def getForJob(id: JobId): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
+  def getForResponse(id: AssertorResponseId): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
   
 }
 
@@ -105,6 +129,19 @@ sealed trait AssertionSeverity
 case object Error extends AssertionSeverity
 case object Warning extends AssertionSeverity
 case object Info extends AssertionSeverity
+
+object AssertionSeverity {
+  
+  def apply(severity: String): AssertionSeverity = {
+    severity.toLowerCase.trim match {
+      case "error" => Error
+      case "warning" => Warning
+      case "info" => Info
+      case _ => Info // TODO log
+    }
+  }
+  
+}
 
 /** 
  *  Context
@@ -115,7 +152,7 @@ case object Info extends AssertionSeverity
  */
 case class ContextVO(
     id: ContextId = ContextId(),
-    content: String, 
+    content: String,
     line: Option[Int], 
     column: Option[Int],
     assertionId: AssertionId)
@@ -127,11 +164,18 @@ case class Context(valueObject: ContextVO) {
   def line: Option[Int] = valueObject.line
   def column: Option[Int] = valueObject.column
   
-  def getAssertion: FutureVal[Exception, Assertion]
+  def getAssertion: FutureVal[Exception, Assertion] = sys.error("ni")
   
 } 
 
 object Context {
+  
+  def apply(
+      content: String,
+      line: Option[Int], 
+      column: Option[Int],
+      assertionId: AssertionId): Context = 
+   Context(ContextVO(content = content, line = line, column = column, assertionId = assertionId))
   
   def get(id: ContextId): FutureVal[Exception, Context] = sys.error("ni")
   def getForAssertion(id: AssertionId): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
