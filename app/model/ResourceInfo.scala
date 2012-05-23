@@ -6,42 +6,8 @@ import org.w3.vs.http._
 import org.joda.time._
 import scalaz.Equal
 
-object Response {
-
-  // TODO: make jobId part of fetchResponse
-//  def fromResponse(fetchResponse: Response, jobId: JobId): ResourceInfo = {
-//    fetchResponse match {
-//      case HttpResponse(url, action, status, headers, body, runId) => {
-//        val extractedURLs = headers.mimetype collect {
-//          case "text/html" | "application/xhtml+xml" => URLExtractor.fromHtml(url, body).distinct
-//          case "text/css" => URLExtractor.fromCSS(url, body).distinct
-//        } getOrElse List.empty
-//        val ri = FetchResult(FetchResultVO(
-//          jobId = jobId,
-//          runId = runId,
-//          url = url,
-//          action = action,
-//          status = status,
-//          headers = headers,
-//          extractedURLs = extractedURLs))
-//        ri
-//      }
-//      case ErrorResponse(url, action, why, runId) => {
-//        val ri = ResourceError(ResourceErrorVO(
-//          jobId = jobId,
-//          runId = runId,
-//          url = url,
-//          action = action,
-//          why = why.getMessage))
-//        ri
-//      }
-//    }
-//  }
-
-}
-
-sealed trait ResponseVO {
-  val id: ResponseId = ResponseId()
+sealed trait ResourceResponseVO {
+  val id: ResourceResponseId = ResourceResponseId()
   val jobId: JobId
   val runId: RunId
   val url: URL
@@ -50,16 +16,16 @@ sealed trait ResponseVO {
 }
 
 case class ErrorResponseVO(
-    id: ResponseId = ResponseId(),
+    id: ResourceResponseId = ResourceResponseId(),
     jobId: JobId,
     runId: RunId,
     url: URL,
     action: HttpAction,
     timestamp: DateTime = DateTime.now,
-    why: String) extends ResponseVO
+    why: String) extends ResourceResponseVO
     
 case class HttpResponseVO(
-    id: ResponseId = ResponseId(),
+    id: ResourceResponseId = ResourceResponseId(),
     jobId: JobId,
     runId: RunId,
     url: URL,
@@ -67,13 +33,21 @@ case class HttpResponseVO(
     timestamp: DateTime = DateTime.now,
     status: Int,
     headers: Headers,
-    extractedLinks: List[URL]) extends ResponseVO
+    extractedURLs: List[URL]) extends ResourceResponseVO
 
+object ResourceResponse {
+  def get(id: ResourceResponseId): FutureVal[Exception, ResourceResponse] = sys.error("")
+  def getForJob(id: JobId): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
+  def getForRun(id: RunId): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
+  def save(resource: ResourceResponse): FutureVal[Exception, ResourceResponse] = sys.error("")
+}
 
-sealed trait Response {
-  val valueObject: ResponseVO
+sealed trait ResourceResponse {
+  val valueObject: ResourceResponseVO
   
-  def id: ResponseId = valueObject.id
+  def id: ResourceResponseId = valueObject.id
+  def jobId: JobId = valueObject.jobId
+  def runId: RunId = valueObject.runId
   def url: URL = valueObject.url
   def action: HttpAction = valueObject.action
   def timestamp: DateTime = valueObject.timestamp
@@ -81,19 +55,56 @@ sealed trait Response {
   def getJob: FutureVal[Exception, Job] = Job.get(valueObject.jobId)
   def getRun: FutureVal[Exception, Run] = Run.get(valueObject.runId)
   
+  def save(): FutureVal[Exception, ResourceResponse] = ResourceResponse.save(this)
+  
   def toTinyString: String = "[%s/%s\t%s\t%s\t%s" format (valueObject.jobId.shortId, valueObject.runId.shortId, action.toString, url.toString, timestamp.toString())
 }
 
-case class ErrorResponse(valueObject: ErrorResponseVO) extends Response {
+case class ErrorResponse(valueObject: ErrorResponseVO) extends ResourceResponse {
   def why: String = valueObject.why
 }
 
-case class HttpResponse(valueObject: HttpResponseVO) extends Response {
+object ErrorResponse {
+  
+  def apply(
+      id: ResourceResponseId = ResourceResponseId(),
+      jobId: JobId,
+      runId: RunId,
+      url: URL,
+      action: HttpAction,
+      timestamp: DateTime = DateTime.now,
+      why: String): ErrorResponse = 
+   ErrorResponse(ErrorResponseVO(id, jobId, runId, url, action, timestamp, why))
+  
+}
+
+case class HttpResponse(valueObject: HttpResponseVO) extends ResourceResponse {
   def status: Int = valueObject.status
   def headers: Headers = valueObject.headers 
-  def extractedLinks: List[URL] = valueObject.extractedLinks 
-} 
+  def extractedURLs: List[URL] = valueObject.extractedURLs 
+}
 
+object HttpResponse {
+    
+    def apply(
+      jobId: JobId,
+      runId: RunId,
+      url: URL,
+      action: HttpAction,
+      status: Int,
+      headers: Headers,
+      body: String): HttpResponse = {
+    
+    val extractedURLs = headers.mimetype collect {
+      case "text/html" | "application/xhtml+xml" => URLExtractor.fromHtml(url, body).distinct
+      case "text/css" => URLExtractor.fromCSS(url, body).distinct
+    } getOrElse List.empty
+    
+    HttpResponse(HttpResponseVO(jobId = jobId, runId = runId, url = url, action = action, status = status, headers = headers, extractedURLs = extractedURLs))
+    
+  }
+    
+}
 
 sealed trait HttpAction
 case object IGNORE extends HttpAction
