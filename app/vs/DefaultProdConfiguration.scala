@@ -11,7 +11,7 @@ import akka.util.Duration
 import akka.dispatch.ExecutionContext
 import java.util.concurrent.Executors
 import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
-import org.w3.vs.store._
+//import org.w3.vs.store._
 import org.w3.vs._
 //import org.w3.banana._
 //import org.w3.banana.jena._

@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import org.w3.vs.http.Http
 import akka.dispatch.ExecutionContext
 import com.ning.http.client.AsyncHttpClient
-import org.w3.vs.store._
+//import org.w3.vs.store._
 import org.w3.vs.actor.JobsActor
 import akka.util.Timeout
 //import org.w3.banana._

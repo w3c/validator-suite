@@ -13,7 +13,7 @@ trait Store2 {
   
   // Organization
   def getOrganizations(
-      id: Option[JobId] = None,
+      id: Option[OrganizationId] = None,
       url: Option[String] = None,
       name: Option[String] = None,
       address: Option[String] = None,
@@ -22,16 +22,16 @@ trait Store2 {
       createdOn: Option[DateTime] = None): FutureVal[Exception, Iterable[Organization]]
   
   def createOrganization(
-      id: JobId,
+      id: OrganizationId,
       url: String,
       name: String,
       address: String,
       domainNames: Iterable[Authority],
       admin: UserId,
-      createdOn: DateTime): FutureVal[Exception, Organization]
+      createdOn: DateTime = DateTime.now): FutureVal[Exception, Organization]
   
   def updateOrganization(
-      id: Option[JobId] = None,
+      id: Option[OrganizationId] = None,
       url: Option[String] = None,
       name: Option[String] = None,
       address: Option[String] = None,
@@ -40,7 +40,7 @@ trait Store2 {
       createdOn: Option[DateTime] = None): FutureVal[Exception, Organization]
   
   def deleteOrganization(
-      id: Option[JobId] = None,
+      id: Option[OrganizationId] = None,
       url: Option[String] = None,
       name: Option[String] = None,
       address: Option[String] = None,
@@ -52,31 +52,35 @@ trait Store2 {
   
   // User
   def getUsers(
-      id: Option[JobId] = None,
-      organizationId: Option[OrganizationId],
+      id: Option[UserId] = None,
+      organizationId: Option[OrganizationId] = None,
+      name: Option[String] = None,
       email: Option[String] = None,
       password: Option[String] = None,
       createdOn: Option[DateTime] = None): FutureVal[Exception, Iterable[User]]
   
   def createUser(
-      id: JobId,
+      id: UserId = UserId(),
       organizationId: OrganizationId,
+      name: String,
       email: String, 
       password: String,
-      createdOn: DateTime): FutureVal[Exception, User]
+      createdOn: DateTime = DateTime.now): FutureVal[Exception, User]
   
   // failure: NotFoundUserException
   def updateUser(
-      id: Option[JobId] = None,
-      organizationId: Option[OrganizationId],
+      id: Option[UserId] = None,
+      organizationId: Option[OrganizationId] = None,
+      name: Option[String] = None,
       email: Option[String] = None, 
       password: Option[String] = None,
       createdOn: Option[DateTime] = None): FutureVal[Exception, User]
   
   // failure: NotFoundUserException
   def deleteUser(
-      id: Option[JobId] = None,
-      organizationId: Option[OrganizationId],
+      id: Option[UserId] = None,
+      organizationId: Option[OrganizationId] = None,
+      name: Option[String] = None,
       email: Option[String] = None, 
       password: Option[String] = None,
       createdOn: Option[DateTime] = None): FutureVal[Exception, Unit]
@@ -98,16 +102,16 @@ trait Store2 {
     name: String,
     creatorId: UserId,
     organizationId: OrganizationId,
-    strategy: Strategy,
+    strategyId: StrategyId,
     lastCompleted: Option[DateTime],
-    createdOn: DateTime): FutureVal[Exception, Job]
+    createdOn: DateTime = DateTime.now): FutureVal[Exception, Job]
   
   def updateJob(
     id: Option[JobId] = None,
     name: Option[String] = None,
     creatorId: Option[UserId] = None,
     organizationId: Option[OrganizationId] = None,
-    strategy: Option[Strategy] = None,
+    strategyId: Option[StrategyId] = None,
     lastCompleted: Option[Option[DateTime]] = None,
     createdOn: Option[DateTime] = None): FutureVal[Exception, Job]
   
@@ -116,7 +120,7 @@ trait Store2 {
     name: Option[String] = None,
     creatorId: Option[UserId] = None,
     organizationId: Option[OrganizationId] = None,
-    strategy: Option[Strategy] = None,
+    strategyId: Option[StrategyId] = None,
     lastCompleted: Option[Option[DateTime]] = None,
     createdOn: Option[DateTime] = None): FutureVal[Exception, Unit]
   
@@ -137,7 +141,7 @@ trait Store2 {
     resources: Int,
     errors: Int,
     warnings: Int,
-    date: DateTime): FutureVal[Exception, JobData]
+    date: DateTime = DateTime.now): FutureVal[Exception, JobData]
   
   def updateJobData(
     jobId: Option[JobId] = None,
@@ -192,59 +196,91 @@ trait Store2 {
   
   
   // Resources
-  
+//  def getStrategies(
+//    id: Option[StrategyId] = None,
+//    entrypoint: Option[URL] = None,
+//    distance: Option[Int] = None,
+//    linkCheck: Option[Boolean] = None,
+//    maxNumberOfResources: Option[Int] = None, 
+//    filter: Iterable[(String, String)] = Iterable.empty): FutureVal[Exception, Iterable[Strategy]]
+//  
+//  def createStrategy(
+//    id: StrategyId,
+//    entrypoint: URL,
+//    distance: Int,
+//    linkCheck: Boolean,
+//    maxNumberOfResources: Int, 
+//    filter: Iterable[(String, String)]): FutureVal[Exception, Strategy]
+//  
+//  def updateStrategy(
+//    id: Option[StrategyId] = None,
+//    entrypoint: Option[URL] = None,
+//    distance: Option[Int] = None,
+//    linkCheck: Option[Boolean] = None,
+//    maxNumberOfResources: Option[Int] = None, 
+//    filter: Iterable[(String, String)] = Iterable.empty): FutureVal[Exception, Strategy]
+//  
+//  def deleteStrategy(
+//    id: Option[StrategyId] = None,
+//    entrypoint: Option[URL] = None,
+//    distance: Option[Int] = None,
+//    linkCheck: Option[Boolean] = None,
+//    maxNumberOfResources: Option[Int] = None, 
+//    filter: Iterable[(String, String)] = Iterable.empty): FutureVal[Exception, Unit]
+//  
+//  
   // Assertions
   
   // 
   
-  def putAssertorResult(result: AssertorResult): FutureVal[SuiteException, Unit]
-  
-  def putResourceInfo(resourceInfo: ResourceInfo): FutureVal[SuiteException, Unit]
-  
-  def putJob(job: Job): FutureVal[SuiteException, Unit]
-  
-  def putJob2(job: Job): FutureVal[SuiteException, Unit]
-  
-  def removeJob(jobId: JobId): FutureVal[SuiteException, Unit]
-
-  def getJobById(id: JobId): FutureVal[SuiteException, Job]
-  
-  def getJobById2(id: JobId): FutureVal[SuiteException, Job]
-  
-  def listJobs(organizationId: OrganizationId): FutureVal[SuiteException, Iterable[Job]]
-  
-  def listJobs2(organizationId: OrganizationId): FutureVal[SuiteException, Iterable[Job]]
-  
-  def putOrganization(organizationData: OrganizationData): FutureVal[SuiteException, Unit]
-  
-  def removeOrganization(organizationId: OrganizationId): FutureVal[SuiteException, Unit]
-
-  def getOrganizationDataById(id: OrganizationId): FutureVal[SuiteException, OrganizationData]
-  
-  def getResourceInfo(url: URL, jobId: JobId): FutureVal[SuiteException, ResourceInfo]
-  
-//  def distance(url: URL, jobId: JobId): FutureVal[SuiteException, Int]
-  
-  def listResourceInfos(jobId: JobId, after: Option[DateTime] = None): FutureVal[SuiteException, Iterable[ResourceInfo]]
-
-  def listResourceInfosByRunId(runId: RunId, after: Option[DateTime] = None): FutureVal[SuiteException, Iterable[ResourceInfo]]
-  
-  // this is not really safe (goes through the entire collection)
-  // def listAllResourceInfos(): FutureVal[SuiteException, Iterable[ResourceInfo]]
-  
-  def listAssertorResults(jobId: JobId, after: Option[DateTime] = None): FutureVal[SuiteException, Iterable[AssertorResult]]
-  
-  def saveUser(user: User): FutureVal[SuiteException, Unit]
-  
-  def getUserByEmail(email: String): FutureVal[SuiteException, User]
-  
-  def getUserByEmail2(email: String): FutureVal[SuiteException, User]
-  
-  def authenticate(email: String, password: String): FutureVal[SuiteException, User]
-  
-  def putSnapshot(snapshot: RunSnapshot): FutureVal[SuiteException, Unit]
-  
-  def latestSnapshotFor(jobId: JobId): FutureVal[SuiteException, Option[RunSnapshot]]
+//  def putAssertorResult(result: AssertorResult): FutureVal[SuiteException, Unit]
+//  
+//  def putResourceInfo(resourceInfo: ResourceInfo): FutureVal[SuiteException, Unit]
+//  
+//  def putJob(job: Job): FutureVal[SuiteException, Unit]
+//  
+//  def putJob2(job: Job): FutureVal[SuiteException, Unit]
+//  
+//  def removeJob(jobId: JobId): FutureVal[SuiteException, Unit]
+//
+//  def getJobById(id: JobId): FutureVal[SuiteException, Job]
+//  
+//  def getJobById2(id: JobId): FutureVal[SuiteException, Job]
+//  
+//  def listJobs(organizationId: OrganizationId): FutureVal[SuiteException, Iterable[Job]]
+//  
+//  def listJobs2(organizationId: OrganizationId): FutureVal[SuiteException, Iterable[Job]]
+//  
+//  def putOrganization(organizationData: OrganizationData): FutureVal[SuiteException, Unit]
+//  
+//  def removeOrganization(organizationId: OrganizationId): FutureVal[SuiteException, Unit]
+//
+//  def getOrganizationDataById(id: OrganizationId): FutureVal[SuiteException, OrganizationData]
+//  
+//  def getResourceInfo(url: URL, jobId: JobId): FutureVal[SuiteException, ResourceInfo]
+//  
+////  def distance(url: URL, jobId: JobId): FutureVal[SuiteException, Int]
+//  
+//  def listResourceInfos(jobId: JobId, after: Option[DateTime] = None): FutureVal[SuiteException, Iterable[ResourceInfo]]
+//
+//  def listResourceInfosByRunId(runId: RunId, after: Option[DateTime] = None): FutureVal[SuiteException, Iterable[ResourceInfo]]
+//  
+//  // this is not really safe (goes through the entire collection)
+//  // def listAllResourceInfos(): FutureVal[SuiteException, Iterable[ResourceInfo]]
+//  
+//  def listAssertorResults(jobId: JobId, after: Option[DateTime] = None): FutureVal[SuiteException, Iterable[AssertorResult]]
+//  
+//  def saveUser(user: User): FutureVal[SuiteException, Unit]
+//  
+//  def getUserByEmail(email: String): FutureVal[SuiteException, User]
+//  
+//  def getUserByEmail2(email: String): FutureVal[SuiteException, User]
+//  
+//  def authenticate(email: String, password: String): FutureVal[SuiteException, User]
+//  
+//  def putSnapshot(snapshot: RunSnapshot): FutureVal[SuiteException, Unit]
+//  
+//  def latestSnapshotFor(jobId: JobId): FutureVal[SuiteException, Option[RunSnapshot]]
   
 }
 
