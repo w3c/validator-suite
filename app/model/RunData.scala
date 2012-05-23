@@ -14,8 +14,9 @@ import akka.util.Duration
 import scala.collection.mutable.ListMap
 import java.util.UUID
 import scalaz.Scalaz._
+import org.joda.time.DateTime
 
-object RunData {
+object Run {
 
   def diff(l: Set[URL], r: Set[URL]): Set[URL] = {
     val d1 = l -- r
@@ -23,65 +24,76 @@ object RunData {
     d1 ++ d2
   }
 
-  def makeFresh(jobId: JobId, strategy: Strategy): RunData =
-    RunData(jobId = jobId, strategy = strategy)
-
-  def apply(strategy: Strategy, snapshot: RunSnapshot): RunData = {
-    import snapshot._
-    RunData(
-      strategy = strategy,
-      jobId = jobId,
-      runId = runId,
-      explorationMode = explorationMode,
-      distance = distance,
-      toBeExplored = toBeExplored,
-      fetched = fetched,
-      oks = oks,
-      errors = errors,
-      warnings = warnings)
+  def apply(job: Job): Run = apply(job = job)
+  
+  def apply(
+      id: RunId = RunId(),
+      job: Job,
+      explorationMode: ExplorationMode = ProActive,
+      distance: Map[URL, Int] = Map.empty,
+      toBeExplored: List[URL] = List.empty,
+      fetched: Set[URL] = Set.empty,
+      createdAt: DateTime = DateTime.now,
+      //jobData: JobData/* = JobData(jobId = job.id, runId = id)*/,
+      pending: Set[URL] = Set.empty,
+      invalidated: Int = 0,
+      pendingAssertions: Int = 0): Run = {
+    
+    val jobData = JobData(jobId = job.id, runId = id)
+    Run(RunVO(id, explorationMode, distance, toBeExplored, fetched, createdAt, job.id, jobData.id), job, pending, invalidated, pendingAssertions, jobData)
   }
-
+  
+  def get(id: RunId): FutureVal[Exception, Run] = sys.error("")
+  def save(run: Run): FutureVal[Exception, Run] = sys.error("")
+  
 }
 
-case class Run(id: Run#Id) {
-  type Id = UUID
-}
+// Previously RunSnapshot
+case class RunVO(
+    id: RunId = RunId(),
+    explorationMode: ExplorationMode = ProActive,
+    distance: Map[URL, Int] = Map.empty,
+    toBeExplored: List[URL] = List.empty,
+    fetched: Set[URL] = Set.empty,
+    createdAt: DateTime = DateTime.now,
+    jobId: JobId,
+    jobDataId: JobDataId = JobDataId())
 
 /**
- * RunData represents a coherent state of for an Run, modelized as an FSM
+ * Run represents a coherent state of for an Run, modelized as an FSM
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
-case class RunData(
-    // will never change for a Run, but it's very usefull to have it here
-    strategy: Strategy,
-    jobId: JobId,
-    runId: RunId = RunId(),
-    explorationMode: ExplorationMode = ProActive,
-    // the distance from the seed for every known URLs
-    distance: Map[URL, Int] = Map.empty,
-    // state of each URL
-    toBeExplored: List[URL] = List.empty,
+// closed with job and jobData 
+case class Run(
+    valueObject: RunVO,
+    job: Job,
     pending: Set[URL] = Set.empty,
-    fetched: Set[URL] = Set.empty,
-    // keep track the assertions
-    oks: Int = 0,
-    errors: Int = 0,
-    warnings: Int = 0,
     invalidated: Int = 0,
-    pendingAssertions: Int = 0) {
+    pendingAssertions: Int = 0,
+    data: JobData) {
 
+  def id = valueObject.id
+  def explorationMode = valueObject.explorationMode
+  def distance = valueObject.distance
+  def toBeExplored = valueObject.toBeExplored
+  def fetched = valueObject.fetched
+  def createdAt = valueObject.createdAt
+  def strategy = job.strategy
+  
+  def save(): FutureVal[Exception, Run] = Run.save(this)
+  
   type Explore = (URL, Int)
 
   final def numberOfKnownUrls: Int = distance.keySet.count { _.authority === mainAuthority }
 
   // assert(
   //   distance.keySet == fetched ++ pending ++ toBeExplored,
-  //   RunData.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
+  //   Run.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
   // assert(toBeExplored.toSet.intersect(pending) == Set.empty)
   // assert(pending.intersect(fetched) == Set.empty)
   // assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
 
-  final val logger = play.Logger.of(classOf[RunData])
+  final val logger = play.Logger.of(classOf[Run])
 
   /**
    * An exploration is over when there are no more urls to explore and no pending url
@@ -97,7 +109,7 @@ case class RunData(
   final def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
 
   private final def shouldIgnore(url: URL, atDistance: Int): Boolean = {
-    def notToBeFetched = FetchNothing == strategy.fetch(url, atDistance)
+    def notToBeFetched = IGNORE == strategy.fetch(url, atDistance)
     def alreadyKnown = distance isDefinedAt url
     notToBeFetched || alreadyKnown
   }
@@ -107,28 +119,28 @@ case class RunData(
   /**
    * Returns an Observation with the new urls to be explored
    */
-  def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (RunData, List[URL]) = {
+  def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (Run, List[URL]) = {
     val filteredUrls = urls.filterNot{ url => shouldIgnore(url, atDistance) }.distinct.take(numberOfRemainingAllowedFetches)
     val newDistance = distance ++ filteredUrls.map { url => url -> atDistance }
-    val newData = this.copy(
+    val newData = this.copy(valueObject = valueObject.copy(
       toBeExplored = toBeExplored ++ filteredUrls,
-      distance = newDistance)
+      distance = newDistance))
     (newData, filteredUrls)
   }
 
   /**
    * Returns an Observation with the new urls to be explored
    */
-  def withNewUrlsToBeExplored(urlsWithDistance: List[(URL, Int)]): (RunData, List[URL]) = {
+  def withNewUrlsToBeExplored(urlsWithDistance: List[(URL, Int)]): (Run, List[URL]) = {
     // as it's a map, there is no duplicated url :-)
     // also, the ListMap preserves the order of insertion
 
     val map: ListMap[URL, Int] = ListMap.empty
     map ++= urlsWithDistance.filterNot { case (url, distance) => shouldIgnore(url, distance) }
     val newUrls = map.keys.toList.take(numberOfRemainingAllowedFetches)
-    val newData = this.copy(
+    val newData = this.copy(valueObject = valueObject.copy(
       toBeExplored = toBeExplored ++ newUrls,
-      distance = distance ++ map)
+      distance = distance ++ map))
     (newData, newUrls)
   }
 
@@ -146,12 +158,12 @@ case class RunData(
    *
    * The returned Observation has set this Explore to be pending.
    */
-  private def takeFromMainAuthority: Option[(RunData, URL)] = {
+  private def takeFromMainAuthority: Option[(Run, URL)] = {
     val optUrl = toBeExplored find { _.authority == mainAuthority }
     optUrl map { url =>
       (this.copy(
         pending = pending + url,
-        toBeExplored = toBeExplored filterNot { _ == url }),
+        valueObject = valueObject.copy(toBeExplored = toBeExplored filterNot { _ == url })),
         url)
     }
   }
@@ -163,13 +175,13 @@ case class RunData(
    *
    * The returned Observation has set this Explore to be pending.
    */
-  private def takeFromOtherAuthorities: Option[(RunData, URL)] = {
+  private def takeFromOtherAuthorities: Option[(Run, URL)] = {
     val pendingToConsiderer =
       toBeExplored.view filterNot { url => url.authority == mainAuthority || (pendingAuthorities contains url.authority) }
     pendingToConsiderer.headOption map { url =>
       (this.copy(
         pending = pending + url,
-        toBeExplored = toBeExplored filterNot { _ == url }),
+        valueObject = valueObject.copy(toBeExplored = toBeExplored filterNot { _ == url })),
         url)
     }
   }
@@ -180,8 +192,7 @@ case class RunData(
    * Returns (if possible, hence the Option) the first Explore that could
    * be fetched, giving priority to the main authority.
    */
-  def take: Option[(RunData, URL)] = {
-    //logger.debug(this.toString)
+  def take: Option[(Run, URL)] = {
     if (mainAuthorityIsBeingFetched) {
       takeFromOtherAuthorities
     } else {
@@ -194,8 +205,8 @@ case class RunData(
    *
    * The returned Observation has all the Explores marked as being pending.
    */
-  def takeAtMost(n: Int): (RunData, List[Explore]) = {
-    var current: RunData = this
+  def takeAtMost(n: Int): (Run, List[Explore]) = {
+    var current: Run = this
     var urls: List[URL] = List.empty
     for {
       i <- 1 to (n - pending.size)
@@ -207,21 +218,23 @@ case class RunData(
     (current, urls.reverse map { url => url -> distance(url) })
   }
 
-  def withCompletedFetch(url: URL): RunData = this.copy(
+  def withCompletedFetch(url: URL): Run = this.copy(
     pending = pending - url,
-    fetched = fetched + url)
+    valueObject = valueObject.copy(fetched = fetched + url))
 
-  def withAssertorResult(result: AssertorResult): RunData = result match {
-    case assertions: Assertions => this.copy(
-      oks = oks + (if (assertions.isValid) 1 else 0),
-      errors = errors + assertions.numberOfErrors,
-      warnings = warnings + assertions.numberOfWarnings,
+  def withAssertorResponse(response: AssertorResponse): Run = response match {
+    case result: AssertorResult => this.copy(data = data.withData(
+      //oks = oks + (if (assertions.isValid) 1 else 0), // T: undefined
+      errors = data.errors + result.errors,
+      warnings = data.warnings + result.warnings),
       pendingAssertions = pendingAssertions - 1) // lower bound is 0
-    case fail: AssertorFail => this.copy(pendingAssertions = pendingAssertions - 1) // TODO? should do something about that
+    case fail: AssertorFailure => this.copy(pendingAssertions = pendingAssertions - 1) // TODO? should do something about that
   }
 
-  def stopMe(): RunData =
-    this.copy(explorationMode = Lazy, toBeExplored = List.empty)
+  def stopMe(): Run =
+    this.copy(valueObject = valueObject.copy(explorationMode = Lazy, toBeExplored = List.empty))
 
+  def withMode(mode: ExplorationMode) = this.copy(valueObject = valueObject.copy(explorationMode = mode))
+    
 }
 
