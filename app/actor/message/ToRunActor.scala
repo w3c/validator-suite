@@ -10,4 +10,5 @@ case object BeProactive
 case object BeLazy
 
 case object GetJobData
+case object GetActivity
 case object NoMorePendingAssertion

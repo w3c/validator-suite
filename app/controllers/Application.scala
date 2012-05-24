@@ -10,7 +10,6 @@ import play.api.libs.concurrent._
 import play.api.Play.current
 import akka.dispatch.Future
 import org.w3.util._
-import org.w3.util.Pimps._
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._

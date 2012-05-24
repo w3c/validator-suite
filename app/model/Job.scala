@@ -44,6 +44,10 @@ case class Job(
   def getOrganization: FutureVal[Exception, Organization] = Organization.get(valueObject.organizationId)
   def getStrategy: FutureVal[Exception, Strategy] = Strategy.get(valueObject.strategyId)
   def getHistory: FutureVal[Exception, Iterable[JobData]] = JobData.getForJob(valueObject.id)
+  def getActivity(implicit context: ExecutionContext): FutureVal[Throwable, RunActivity] = (PathAware(organizationsRef, path).?[RunActivity](GetActivity))
+  
+    /*def jobData(): Future[JobData] =
+    (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]*/
   
   def save(): FutureVal[Exception, Job] = Job.save(this)
   
@@ -64,9 +68,6 @@ case class Job(
       case _ => 0
     }
   }
-  
-  /*def jobData(): Future[JobData] =
-    (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]*/
 
   def subscribeToUpdates(): Enumerator[RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
