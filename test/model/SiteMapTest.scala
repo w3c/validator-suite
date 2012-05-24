@@ -1,4 +1,4 @@
-package org.w3.vs.model
+/*package org.w3.vs.model
 
 import org.w3.util._
 import org.specs2.mutable._
@@ -27,4 +27,4 @@ object SiteMapTest extends Specification {
   }
 
 
-}
+}*/

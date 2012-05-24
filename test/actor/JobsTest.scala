@@ -20,14 +20,17 @@ class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
 
   val strategy =
     Strategy(
-      name="localhost_9001",
       entrypoint=URL("http://localhost:9001/"),
       distance=11,
       linkCheck=true,
       maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
-  val job = Job.fake(strategy = strategy)
+  val job = Job(
+      name = "test",
+      creatorId = UserId(),
+      organizationId = OrganizationId(),
+      strategy = strategy)
 
   
   "create and asking for jobs" in {

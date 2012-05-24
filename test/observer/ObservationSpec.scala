@@ -11,18 +11,29 @@ import akka.util.Duration
 import java.util.concurrent.TimeUnit.SECONDS
 import org.scalatest.{Filter => _, _}
 import org.scalatest.matchers.MustMatchers
+import org.joda.time.DateTime
 
 class ObservationSpec extends WordSpec with MustMatchers {
 
+  implicit def configuration = org.w3.vs.Prod.configuration
+  
+  println("11111")
+  
   val strategy =
     Strategy(
-      name="localhost_9001",
       entrypoint=URL("http://www.w3.org"),
       distance=11,
       linkCheck=true,
       maxNumberOfResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
+  val w3 = Job(
+      createdOn = DateTime.now,
+      name = "W3C",
+      creatorId = UserId(),
+      organizationId = OrganizationId(),
+      strategy = strategy)
+      
   val w3_home = URL("http://www.w3.org")
   val w3_standards = URL("http://www.w3.org/standards")
   val w3_participate = URL("http://www.w3.org/participate")
@@ -34,7 +45,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
   val googlebar = URL("http://www.google.com/bar")
       
   "an observation with some urls to be explored" should {
-    val (data, _) = RunData(jobId = JobId(), strategy = strategy).withNewUrlsToBeExplored(List(w3_home -> 0, w3_standards -> 1))
+    val (data, _) = Run(w3).withNewUrlsToBeExplored(List(w3_home -> 0, w3_standards -> 1))
     "expose a distance for the known urls" in {
       data.distance.get(w3_home) must equal (Some(0))
       data.distance.get(w3_standards) must equal (Some(1))
@@ -45,7 +56,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
   }
   
   "an observation" should {
-    val (initialData, _) = RunData(jobId = JobId(), strategy = strategy).withNewUrlsToBeExplored(List(w3_home -> 0, w3_standards -> 1))
+    val (initialData, _) = Run(w3).withNewUrlsToBeExplored(List(w3_home -> 0, w3_standards -> 1))
     "should be able to filter URLs to be added" in {
       val (data, newUrls) = initialData.withNewUrlsToBeExplored(List(w3_home, w3_standards, w3_participate), 2)
       newUrls must equal (List(w3_participate))
@@ -61,7 +72,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
         w3_membership -> 1,
         w3_consortium -> 1)
 
-    val (initialData, _) = RunData(jobId = JobId(), strategy = strategy).withNewUrlsToBeExplored(urls)
+    val (initialData, _) = Run(w3).withNewUrlsToBeExplored(urls)
     
     "take a URL" in {
       val (data, url) = initialData.take.get
@@ -87,7 +98,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
         w3_consortium -> 1,
         google -> 1)
 
-    val (initialData, _) = RunData(jobId = JobId(), strategy = strategy).withNewUrlsToBeExplored(urls)
+    val (initialData, _) = Run(w3).withNewUrlsToBeExplored(urls)
     
     "take a URL from the main authority in priority regardless of the order in the url list" in {
       val (data, nextUrl) = initialData.take.get
@@ -121,8 +132,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
         google -> 1)
 
     val (initialData, _) =
-      RunData(jobId = JobId(), strategy = strategy)
-      .copy(distance = Map(w3_home -> 0), pending = Set(w3_home))
+      Run(job = w3, distance = Map(w3_home -> 0), pending = Set(w3_home))
       .withNewUrlsToBeExplored(urls)
     
     "take urls that are not from the main authority" in {
@@ -146,8 +156,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
         w3_consortium -> 1)
     
     val (initialData, _) =
-      RunData(jobId = JobId(), strategy = strategy)
-      .copy(distance = Map(google -> 1), pending = Set(google))
+      Run(job = w3, distance = Map(google -> 1), pending = Set(google))
       .withNewUrlsToBeExplored(urls)
     
     "take url from the main authority in priority, then urls from other authorities, still ignoring the one with pending authority" in {
@@ -162,8 +171,7 @@ class ObservationSpec extends WordSpec with MustMatchers {
   "an observation with pending fetches" should {
 
     val initialData =
-      RunData(jobId = JobId(), strategy = strategy).copy(
-        distance = Map(w3_home -> 0, google -> 1, mobilevoice -> 2),
+      Run(job = w3, distance = Map(w3_home -> 0, google -> 1, mobilevoice -> 2),
         pending = Set(w3_home, google, mobilevoice))
     
     "unset the pending state of a url when the response is received" in {

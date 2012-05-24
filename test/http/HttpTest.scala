@@ -22,17 +22,18 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
   "testing HEAD on existing URL" in {
 
     val newRunId = RunId()
+    val newJobId = JobId()
 
-    http ! Fetch(URL("http://localhost:9001/"), HEAD, newRunId)
+    http ! Fetch(URL("http://localhost:9001/"), HEAD, newRunId, newJobId)
 
-    val fetchResponse = expectMsgType[FetchResponse](1.second)
+    val fetchResponse = expectMsgType[ResourceResponse](1.second)
 
-    inside (fetchResponse) { case OkResponse(url, action, status, headers, body, runId) =>
-      url must be === (URL("http://localhost:9001/"))
-      action must be === (HEAD)
-      status must be === 200
-      body must be === ""
-      runId must be === newRunId
+    inside (fetchResponse) { case response: HttpResponse => //OkResponse(url, action, status, headers, body, runId) =>
+      response.url must be === (URL("http://localhost:9001/"))
+      response.action must be === (HEAD)
+      response.status must be === 200
+      //body must be === ""
+      response.runId must be === newRunId
     }
 
   }
@@ -42,17 +43,18 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
   "testing GET on existing URL" in {
 
     val newRunId = RunId()
+    val newJobId = JobId()
+    
+    http ! Fetch(URL("http://localhost:9001/"), GET, newRunId, newJobId)
 
-    http ! Fetch(URL("http://localhost:9001/"), GET, newRunId)
+    val fetchResponse = expectMsgType[ResourceResponse](1.second)
 
-    val fetchResponse = expectMsgType[FetchResponse](1.second)
-
-    inside (fetchResponse) { case OkResponse(url, action, status, headers, body, runId) =>
-      url must be === (URL("http://localhost:9001/"))
-      action must be === (GET)
-      status must be === 200
-      body must not be ('empty)
-      runId must be === newRunId
+    inside (fetchResponse) { case response: HttpResponse => //OkResponse(url, action, status, headers, body, runId) =>
+      response.url must be === (URL("http://localhost:9001/"))
+      response.action must be === (GET)
+      response.status must be === 200
+      //body must not be ('empty)
+      response.runId must be === newRunId
     }
 
   }
@@ -61,16 +63,17 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
   "testing HEAD on non-existing URL (404)" in {
 
     val newRunId = RunId()
+    val newJobId = JobId()
 
-    http ! Fetch(URL("http://localhost:9001/404/foo"), HEAD, newRunId)
+    http ! Fetch(URL("http://localhost:9001/404/foo"), HEAD, newRunId, newJobId)
 
-    val fetchResponse = expectMsgType[FetchResponse](1.second)
+    val fetchResponse = expectMsgType[ResourceResponse](1.second)
 
-    inside (fetchResponse) { case OkResponse(url, action, status, headers, body, runId) =>
-      url must be === (URL("http://localhost:9001/404/foo"))
-      action must be === (HEAD)
-      status must be === 404
-      runId must be === newRunId
+    inside (fetchResponse) { case response: HttpResponse => //OkResponse(url, action, status, headers, body, runId) =>
+      response.url must be === (URL("http://localhost:9001/404/foo"))
+      response.action must be === (HEAD)
+      response.status must be === 404
+      response.runId must be === newRunId
     }
 
   }
@@ -81,16 +84,17 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
     "testing HEAD on non-existing domain (foo.localhost)" in {
       
       val newRunId = RunId()
+      val newJobId = JobId()
       
-      http ! Fetch(URL("http://foo.localhost/bar"), HEAD, newRunId)
+      http ! Fetch(URL("http://foo.localhost/bar"), HEAD, newRunId, newJobId)
       
-      val fetchResponse = expectMsgType[FetchResponse](1.second)
+      val fetchResponse = expectMsgType[ResourceResponse](1.second)
       
-      inside (fetchResponse) { case KoResponse(url, action, why, runId) =>
-        url must be === (URL("http://foo.localhost/bar"))
-        action must be === (HEAD)
-        why.getClass.getName must be === ("java.net.ConnectException")
-        runId must be === newRunId
+      inside (fetchResponse) { case response: ErrorResponse =>
+        response.url must be === (URL("http://foo.localhost/bar"))
+        response.action must be === (HEAD)
+        response.why.getClass.getName must be === ("java.net.ConnectException")
+        response.runId must be === newRunId
       }
 
     }
@@ -101,23 +105,23 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(200)
 
     val newRunId = RunId()
+    val newJobId = JobId()
 
     for(i <- 1 to 100) {
-      http ! Fetch(URL("http://localhost:9001/"+i), HEAD, newRunId)
+      http ! Fetch(URL("http://localhost:9001/"+i), HEAD, newRunId, newJobId)
     }
 
-    val fetchResponse = expectMsgType[FetchResponse](1.second)
+    val fetchResponse = expectMsgType[ResourceResponse](1.second)
     
     implicit val timeout: akka.util.Timeout = 1.second
 
     def pendingFetches(): Int =
-      Await.result(
-        (PathAware(http, http.path / "localhost_9001") ? HowManyPendingRequests).mapTo[Int],
-        1.second)
+      //Await.result(
+        (PathAware(http, http.path / "localhost_9001").?[Int](HowManyPendingRequests)).result(1.second).fold(f => throw f, s => s)
 
     pendingFetches() must be === (99)
 
-    val secondResponse =  expectMsgType[FetchResponse](1.second)
+    val secondResponse =  expectMsgType[ResourceResponse](1.second)
 
     pendingFetches() must be === (98)
 

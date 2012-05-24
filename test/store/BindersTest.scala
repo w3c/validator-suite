@@ -1,4 +1,4 @@
-package org.w3.vs.store
+/*package org.w3.vs.store
 
 import org.scalatest.{Filter => _, _}
 import org.scalatest.matchers.MustMatchers
@@ -36,3 +36,4 @@ import org.w3.banana.jena._
 object JenaBinders extends Binders(JenaOperations, JenaGraphUnion, JenaGraphTraversal)
 
 class JenaBindersSpec() extends BindersSpec(JenaBinders)
+*/

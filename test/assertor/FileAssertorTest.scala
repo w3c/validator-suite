@@ -1,4 +1,4 @@
-package org.w3.vs.assertor
+/*package org.w3.vs.assertor
 
 import org.w3.util._
 import org.specs2.mutable._
@@ -13,4 +13,4 @@ object FileRunTest extends Specification {
   }
 
 
-}
+}*/

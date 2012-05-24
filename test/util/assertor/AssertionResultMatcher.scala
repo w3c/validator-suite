@@ -10,7 +10,7 @@ trait AssertionResultMatcher extends Specification {
   def haveErrors[Result <: AssertorResponse] = new Matcher[Result] {
     def apply[R <: Result](r: Expectable[R]) = {
       val bool = r.value match {
-        case assertions: Assertions => assertions.hasError
+        case result: AssertorResult => result.errors > 0
         case _ => false
       }
       result(bool,
@@ -19,9 +19,9 @@ trait AssertionResultMatcher extends Specification {
     }
   }
   
-  def haveErrorz[Result <: Iterable[Assertion]] = new Matcher[Result] {
+  def haveErrorz[Result <: Iterable[AssertionClosed]] = new Matcher[Result] {
     def apply[R <: Result](r: Expectable[R]) = {
-      val bool = r.value exists { _.isError }
+      val bool = r.value exists { _.assertion.severity == Error }
       result(bool,
              r.description + " has errors",
              r.description + " has no error", r)
