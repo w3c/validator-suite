@@ -13,7 +13,7 @@ import org.scalatest.{Filter => _, _}
 import org.scalatest.matchers.MustMatchers
 import org.joda.time.DateTime
 
-class ObservationSpec extends WordSpec with MustMatchers {
+abstract class ObservationSpec extends WordSpec with MustMatchers {
 
   implicit def configuration = org.w3.vs.Prod.configuration
   
