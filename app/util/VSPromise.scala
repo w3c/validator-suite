@@ -48,7 +48,7 @@ object VSPromise {
 
 class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise[A] {
   
-  implicit val context = play.core.Invoker.promiseDispatcher
+  implicit val context = org.w3.vs.Prod.configuration.webExecutionContext
   
   private val redeemed: Ref[Option[Validation[A, A]]] = Ref(none[Validation[A, A]])
   
@@ -108,7 +108,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   
   // TODOS?
   override def or[B](other: Promise[B]): Promise[Either[A, B]] = {sys.error("VSPromise.or not implemented")}
-  override def orTimeout[B](message: B, duration: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): Promise[Either[A, B]] = {sys.error("VSPromise.orTimeout not implemented")}
+
   override def filter(p: A => Boolean): VSPromise[A] = {sys.error("VSPromise.filter not implemented")}
   
   
