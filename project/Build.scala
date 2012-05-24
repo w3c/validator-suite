@@ -17,7 +17,7 @@ object ApplicationBuild extends Build {
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    "org.w3" %% "banana-rdf" % "0.1-SNAPSHOT",
+//    "org.w3" %% "banana-rdf" % "0.1-SNAPSHOT",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0.1" % "test",
     "net.databinder" %% "unfiltered-filter" % "0.5.3" % "test",
@@ -26,6 +26,8 @@ object ApplicationBuild extends Build {
   )
 
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
+
+  val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-jena")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
 //    scalaVersion := "2.9.1",
@@ -46,6 +48,6 @@ object ApplicationBuild extends Build {
     //     key(":doubleIndentClassDeclaration"), true
     //   )
     // )
-  )
+  ) dependsOn (bananaRdf)
   
 }
