@@ -15,6 +15,7 @@ import play.api.mvc._
 import play.api.mvc.PathBindable
 import play.api._
 import scalaz._
+import play.api.i18n.Messages
 
 package object controllers {
   
@@ -39,7 +40,6 @@ package object controllers {
     )
   )
   
-  // TODO make the form understand maxNumberOfResources
   def jobForm = Form(
     mapping (
       "name" -> text,
@@ -53,23 +53,19 @@ package object controllers {
         organizationId = null,
         creatorId = null,
         strategy = Strategy(
-          entrypoint=url,
-          distance=distance,
-          linkCheck=linkCheck,
-          maxNumberOfResources=maxNumberOfResources,
-          filter=Filter(include=Everything, exclude=Nothing)))
+          entrypoint = url,
+          distance = distance,
+          linkCheck = linkCheck,
+          maxNumberOfResources = maxNumberOfResources,
+          filter = Filter(include = Everything, exclude = Nothing)))
     })
     ((job: Job) => Some(job.name, job.strategy.entrypoint, job.strategy.distance, job.strategy.linkCheck, job.strategy.maxNumberOfResources))
   )
-
-  class FormW[T](form: Form[T]) {
-    def toValidation: Validation[Form[T], T] =
-      form.fold(f => Failure(f), s => Success(s))
-  }
-
-  implicit def toFormW[T](form: Form[T]): FormW[T] = new FormW(form)
   
-  def isValidForm[E](form: Form[E])(implicit req: Request[_]) = form.bindFromRequest.toValidation
+  def validateForm[E](form: Form[E])(implicit req: Request[_]): FutureVal[Form[E], E] = {
+    implicit def onTo(to: java.util.concurrent.TimeoutException): Form[E] = form.withError("key", Messages("error.timeout")) 
+    FutureVal.validated(form.bindFromRequest.fold(f => Failure(f), s => Success(s)))
+  }
   
   /*
    *  Formatters

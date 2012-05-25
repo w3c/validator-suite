@@ -68,6 +68,14 @@ object FutureVal {
     FutureVal.applyTo(Future.sequence(iterable))
   }
   
+  // TODO sequence with FutureVals
+  
+  implicit def toFutureValException[A](f: FutureVal[Throwable, A]): FutureVal[Exception, A] =
+    f failMap {
+      case e: Exception => e
+      case error => throw error
+    }
+  
 }
 
 class FutureVal[+F, +S] protected (
@@ -81,12 +89,10 @@ class FutureVal[+F, +S] protected (
   def map[R](success: S => R): FutureVal[F, R] = 
     fold(f => f, success)
   
-  def mapFail[T](failure: F => T): FutureVal[T, S] = 
+  def failMap[T](failure: F => T): FutureVal[T, S] = 
     fold(failure, s => s)
   
-  def failMap[T](failure: F => T): FutureVal[T, S] = mapFail(failure)
-  
-  def failWith[T](failure: T)(implicit onTimeout: TimeoutException => T): FutureVal[T, S] = {
+  def failWith[T >: F](failure: T): FutureVal[T, S] = {
     pureFold (
       _ => Failure(failure),
       s => Success(s)
@@ -237,7 +243,7 @@ class FutureVal[+F, +S] protected (
     VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]])
   
   def toVSPromise[R](onTimeout: TimeoutException => R)(implicit evF: F <:< R, evS: S <:< R): VSPromise[R] =
-    VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]].onTimeout(onTimeout))
+    VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]].onTimeout(onTimeout)) // TODO default timeout?
   
 }
 

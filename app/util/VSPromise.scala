@@ -128,10 +128,8 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   def mapSuccess(success: A => A): VSPromise[A] =
     fold(f => f, success)
   
-  def mapFail(failure: A => A): VSPromise[A] =
+  def failMap(failure: A => A): VSPromise[A] = 
     fold(failure, s => s)
-  
-  def failMap(failure: A => A): VSPromise[A] = mapFail(failure)
   
   def fold[B](failure: A => B, success: A => B): VSPromise[B] = {
     pureFold (
