@@ -10,14 +10,6 @@ import org.w3.vs.exception._
 
 object User {
   
-  def apply(
-      id: UserId = UserId(),
-      name: String,
-      email: String,
-      password: String,
-      organizationId: OrganizationId): User =
-    User(UserVO(id, name, email, password, organizationId))
-  
   def get(id: UserId): FutureVal[Exception, User] = sys.error("")
   def getForOrganization(id: OrganizationId): FutureVal[Exception, Iterable[User]] = sys.error("") 
   
@@ -32,7 +24,7 @@ object User {
       }
     )*/
     implicit def ec = configuration.webExecutionContext
-    FutureVal.failed(new Exception("bs"))
+    FutureVal.failed(new Exception("Need a store!"))
   }
   
   def getByEmail(email: String)(implicit configuration: VSConfiguration): FutureVal[Exception, User] = {
@@ -53,13 +45,14 @@ object User {
 
 
 
-case class User(valueObject: UserVO) {
-  def id: UserId = valueObject.id
-  def name: String = valueObject.name
-  def email: String = valueObject.email
-  def password: String = valueObject.password
+case class User (
+    id: UserId = UserId(),
+    name: String,
+    email: String,
+    password: String,
+    organizationId: OrganizationId) {
   
-  def getOrganization: FutureVal[Exception, Organization] = Organization.get(valueObject.organizationId)
+  def getOrganization: FutureVal[Exception, Organization] = Organization.get(organizationId)
   
   def getJobs: FutureVal[Exception, Iterable[Job]] = Job.getFor(this)
   
@@ -73,4 +66,5 @@ case class User(valueObject: UserVO) {
   }
   
   def save(): FutureVal[Exception, User] = User.save(this)
+  def toValueObject: UserVO = UserVO(id, name, email, password, organizationId)
 }

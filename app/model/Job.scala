@@ -16,7 +16,7 @@ import scalaz.Scalaz._
 import scalaz._
 
 // closed with its strategy and lastData
-case class Job(
+case class Job (
     id: JobId = JobId(),
     name: String,
     createdOn: DateTime = DateTime.now,

@@ -73,14 +73,14 @@ class ValidJobForm private [view] (
   
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
     Job(
-      name = name.toString,
-      organizationId = user.valueObject.organizationId,
+      name = name,
+      organizationId = user.organizationId,
       creatorId = user.id,
       strategy = Strategy(
-        entrypoint = URL(url.toString),
-        distance = distance.toString.toInt,
-        linkCheck = linkCheck.toString.toBoolean,
-        maxNumberOfResources = maxNumberOfResources.toString.toInt,
+        entrypoint = url,
+        distance = distance,
+        linkCheck = linkCheck,
+        maxNumberOfResources = maxNumberOfResources,
         filter = Filter(include = Everything, exclude = Nothing)))
   }
   
