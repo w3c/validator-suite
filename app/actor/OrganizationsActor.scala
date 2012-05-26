@@ -12,7 +12,6 @@ import scalaz._
 import Scalaz._
 import akka.util.Timeout
 import akka.util.duration._
-import org.w3.vs.exception.Unknown
 import message._
 import org.w3.util.akkaext._
 

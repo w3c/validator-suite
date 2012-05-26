@@ -4,6 +4,7 @@ import org.w3.vs.VSConfiguration
 import org.w3.util._
 import org.w3.vs.actor._
 import scalaz._
+import Scalaz._
 import akka.dispatch._
 import org.w3.vs.exception._
 
@@ -30,7 +31,8 @@ object User {
         case _ => Failure(UnknownUser)
       }
     )*/
-    sys.error("")
+    implicit def ec = configuration.webExecutionContext
+    FutureVal.failed(new Exception("bs"))
   }
   
   def getByEmail(email: String)(implicit configuration: VSConfiguration): FutureVal[Exception, User] = {
@@ -62,7 +64,18 @@ case class User(valueObject: UserVO) {
   def email: String = valueObject.email
   def password: String = valueObject.password
   
-  def getOrganization: FutureVal[Exception, Organization] = sys.error("")
+  def getOrganization: FutureVal[Exception, Organization] = Organization.get(valueObject.organizationId)
+  
+  def getJobs: FutureVal[Exception, Iterable[Job]] = Job.getFor(this)
+  
+  // getJob with id only if owned by user. should probably be a db request directly.
+  def getJob(id: JobId): FutureVal[Exception, Job] = {
+    getJobs map {
+      jobs => jobs.filter(_.id === id).headOption
+    } discard {
+      case None => UnknownJob
+    } map { _.get }
+  }
   
   def save(): FutureVal[Exception, User] = User.save(this)
 }

@@ -16,6 +16,7 @@ import org.w3.vs.exception._
 import org.w3.vs.model._
 import org.w3.vs.actor._
 import org.w3.vs.actor.message._
+import org.w3.vs.view._
 import scalaz._
 import Scalaz._
 import Validation._
@@ -32,35 +33,35 @@ object Application extends Controller {
   
   implicit def configuration = org.w3.vs.Prod.configuration
   
-  def toError(t: Throwable)(implicit req: Request[_]): Result = {
-    val error = t match {
+  implicit def toError(t: Throwable)(implicit req: Request[_]): Result = {
+    t match {
       // TODO timeout, store exception, etc...
-      case t: Throwable => Messages("exceptions.unexpected", t.getMessage)
+      case _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.unauthorized"))))).withNewSession
+      case t: Throwable => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage)))))
     }
-    InternalServerError(views.html.error(List(("error", error))))
   }
   
   def login: ActionA = Action { implicit req =>
     AsyncResult {
-      (getUser map {
+      getUser map {
         _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
       } failMap {
-        case _@ (UnknownUser | Unauthenticated) => Ok(views.html.login(loginForm)).withNewSession
+        case _: UnauthorizedException => Ok(views.html.login(LoginForm.blank)).withNewSession
         case t => toError(t)
-      }).toVSPromise
+      } toVSPromise 
     }
   }
-
+  
   def logout: ActionA = Action {
     Redirect(routes.Application.login).withNewSession.flashing("success" -> Messages("application.loggedOut"))
   }
-
+  
   def authenticate: ActionA = Action { implicit req =>
     AsyncResult {
       (for {
-        userF <- validateForm(loginForm) failMap { form => BadRequest(views.html.login(form)) }
-        user <- User.authenticate(userF._1, userF._2) failMap {
-          case _@ (UnknownUser | Unauthenticated) => Unauthorized(views.html.login(loginForm, List(("error", Messages("application.invalidCredentials"))))).withNewSession
+        form <- LoginForm.bind() failMap (form => BadRequest(views.html.login(form)))
+        user <- User.authenticate(form.email, form.password) failMap {
+          case _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession
           case t => toError(t)
         }
       } yield {
@@ -72,26 +73,21 @@ object Application extends Controller {
           uri => SeeOther(uri).withSession("email" -> user.email), // Redirect to "uri" param if specified
           SeeOther(routes.Jobs.index.toString).withSession("email" -> user.email)
         )
-      }).toVSPromise
+      }) toVSPromise
     }
   }
   
   def getUser()(implicit session: Session): FutureVal[Exception, User] = {
-     for {
-      email <- FutureVal
-          .pure(session.get("email").get)
-          .failWith(Unauthenticated)
-      user <- FutureVal
-          .pure(Cache.getAs[User](email).get)
-          .flatMapFail {case _ => User.getByEmail(email)}
-          .failWith(UnknownUser)
+    for {
+      email <- FutureVal.pure(session.get("email").get).failWith(Unauthenticated)
+      user <- FutureVal.pure(Cache.getAs[User](email).get)
+          .flatMapFail(_ => User.getByEmail(email)).failWith(UnknownUser) // TODO remove fail with when implemented in getByEmail
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
       user
     }
   } 
 
-//
 //  def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
 //    e match {
 //      case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> Messages("jobs.notfound"))))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("jobs.notfound")))

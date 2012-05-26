@@ -2,8 +2,6 @@ package controllers
 
 import java.util.concurrent.TimeUnit.SECONDS
 
-import scala.Option.option2Iterable
-
 import org.w3.util._
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
@@ -29,41 +27,37 @@ object Jobs extends Controller {
   val logger = play.Logger.of("Controller.Jobs")
   // TODO: make the implicit explicit!!!
   implicit def configuration = org.w3.vs.Prod.configuration
+  //implicit def ec: ExecutionContext = configuration.webExecutionContext
   
   import Application._
   
   def redirect: ActionA = Action { implicit req => Redirect(routes.Jobs.index) }
   
-  def index: ActionA = sys.error("") /*Action { implicit req =>
+  def index: ActionA = Action { implicit req =>
     AsyncResult {
-      val futureResult = for {
-        user <- getUser // getUser
-        jobs <- Job.getFor(user) //configuration.store.listJobs(user.organization).failMap(toResult(Some(user))) // Job.getFor()
-        //jobsWithData <- {
-        //    Future.sequence(jobs.toSeq.sortBy(_.name) map { Job.withLastData(_) }).lift // sorted by name should be the store default?
-        //  }.failMap(t => toResult(Some(user))(StoreException(t)))
+      (for {
+        user <- getUser
+        jobs <- user.getJobs
       } yield {
         Ok(views.html.dashboard(jobs, user))
-      }
-      futureResult.failMap(t => toResult(None)(StoreException(t))).toVSPromise
-    }
-  }*/
-  
-  def show(id: JobId, messages: List[(String, String)] = List.empty): ActionA = sys.error("")/*Action { implicit req =>
-    AsyncResult {
-      val futureResult =
-        for {
-          user <- getAuthenticatedUserOrResult
-          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
-          data <- job.jobData.lift failMap {t => toResult(Some(user))(Unexpected(t))}
-          ars <- Job.getAssertorResults(job.id) failMap toResult(Some(user))
-        } yield {
-          val p = paginate(group(ars.collect{case a: Assertions => a}))
-          Ok(views.html.job(job, data, p._1, p._2, user, messages))
-        }
-      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise()
+      }) failMap toError toVSPromise
     }
   }
+  
+  def show(id: JobId, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
+    AsyncResult {
+      (for {
+        user <- getUser
+        job <- user.getJob(id)
+        ars <- job.getLastRunAssertions
+      } yield {
+        //val p = paginate(group(ars.collect{case a: Assertions => a}))
+        //Ok(views.html.job(job, data, p._1, p._2, user, messages))
+        Ok(views.html.job(job, ars, user, messages))
+      }) failMap toError toVSPromise
+    }
+  }
+  /*
   import org.w3.vs.view._
   private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]): List[ReportSection] = {
     
@@ -194,22 +188,18 @@ object Jobs extends Controller {
   }
   */
     
-  // TODO: This should also stop the job and kill the actor
-  def delete(id: JobId): ActionA = sys.error("")/*Action { implicit req =>
+  def delete(id: JobId): ActionA = Action { implicit req =>
     AsyncResult {
-      val futureResult =
-        for {
-          user <- getAuthenticatedUserOrResult
-          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
-          _ <- Job.delete(id) failMap toResult(Some(user))
-        } yield {
-          job.cancel
-          if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.name)))
-        }
-      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
+      (for {
+        user <- getUser
+        job <- user.getJob(id)
+      } yield {
+        job.delete()
+        if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.name)))
+      }) failMap toError toVSPromise
     }
-  }*/
-  
+  } 
+    
   def new1: ActionA = newOrEditJob(None)
   def edit(id: JobId): ActionA = newOrEditJob(Some(id))
   def create: ActionA = createOrUpdateJob(None)
@@ -236,91 +226,72 @@ object Jobs extends Controller {
     }).getOrElse(BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
   }
   
-  def dashboardSocket(): WebSocket[JsValue] = sys.error("") /*WebSocket.using[JsValue] { implicit req =>
-
+  def dashboardSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
     val promiseEnumerator: Promise[Enumerator[JsValue]] = (
       for {
         user <- getUser
-        organization <- Organization.get(user.organizationId)
+        organization <- user.getOrganization
       } yield {
-        //val organization = Organization(user.organization)
-        val enumerator = organization.subscribeToUpdates()
-        enumerator &> Enumeratee.map(_.toJS)
+        organization.subscribeToUpdates() &> Enumeratee.map(_.toJS)
       }
-    ).failMap(_ => Enumerator.eof[JsValue])
-     //.expiresWith(Enumerator.eof[JsValue], 3, SECONDS)
-     //.toPromiseT[(Enumerator[JsValue])]
-     .toVSPromise
+    ) failMap (_ => Enumerator.eof[JsValue]) toVSPromise
     
     val iteratee = Iteratee.ignore[JsValue]
     val enumerator =  Enumerator.flatten(promiseEnumerator)
 
     (iteratee, enumerator)
-  }*/
+  }
 
   /*
    * Private methods
    */
-  private def newOrEditJob(implicit idOpt: Option[JobId]): ActionA = sys.error("") /*Action { implicit req =>
+  private def newOrEditJob(implicit idOpt: Option[JobId]): ActionA = Action { implicit req =>
     AsyncResult {
-      val futureResult =
-        for {
-          user <- getAuthenticatedUserOrResult
-          id <- idOpt.toImmediateSuccess(ifNone = Ok(views.html.jobForm(jobForm, user )))
-          jobC <- getJobIfAllowed(user, id) failMap toResult(Some(user))
-        } yield {
-          Ok(views.html.jobForm(jobForm.fill(jobC), user, idOpt))
-        }
-      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
+      (for {
+        user <- getUser
+        form <- idOpt fold (
+            id => user.getJob(id) map JobForm.fill _,
+            FutureVal.successful(JobForm.blank)
+          )
+      } yield {
+        Ok(views.html.jobForm(form, user, idOpt))
+      }) failMap toError toVSPromise
     }
-  }*/
+  }
   
-  private def createOrUpdateJob(implicit idOpt: Option[JobId]): ActionA = sys.error("") /*Action { implicit req =>
+  private def createOrUpdateJob(implicit idOpt: Option[JobId]): ActionA = Action { implicit req =>
     AsyncResult {
-      val futureResult =
-        for {
-          user <- getAuthenticatedUserOrResult
-          jobF <- isValidForm(jobForm).toImmediateValidation failMap { formWithErrors =>
-            BadRequest(views.html.jobForm(formWithErrors, user))
-          }
-          result <- idOpt match {
-            case None =>
-              for {
-                _ <- Job.save(jobF.copy(creatorId = user.id, organizationId = user.organizationId)) failMap toResult(Some(user))
-              } yield {
-                if (isAjax) Created(views.html.libs.messages(List(("info" -> Messages("jobs.created", jobF.name))))) 
-                else        SeeOther(routes.Jobs.show(jobF.id).toString).flashing(("info" -> Messages("jobs.created", jobF.name)))
-              }
-            case Some(id) =>
-              for {
-                jobC <- getJobIfAllowed(user, id) failMap toResult(Some(user))
-                 _ <- Job.save(jobC.copy(strategy = jobF.strategy, name = jobF.name)) failMap toResult(Some(user))
-              } yield {
-                if (isAjax) Created(views.html.libs.messages(List(("info" -> Messages("jobs.updated", jobC.name))))) 
-                else        SeeOther(routes.Jobs.show(jobC.id).toString).flashing(("info" -> Messages("jobs.updated", jobC.name)))
-              }
-          }
-        } yield {
-          result
-        }
-      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
+      (for {
+        user <- getUser
+        form <- JobForm.bind(user, idOpt) failMap (form => InvalidJobFormException(form, user, idOpt))
+        job <- idOpt.fold(
+            id => user.getJob(id).flatMap[Exception, Job](j => form.update(j).save()),
+            form.createJob(user).save()
+          )
+      } yield {
+        if (isAjax) 
+          Created(views.html.libs.messages(List(("info" -> Messages("jobs.updated", job.name))))) 
+        else
+          SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages("jobs.updated", job.name)))
+      }) failMap {
+        case InvalidJobFormException(form, user, idOpt) => BadRequest(views.html.jobForm(form, user, idOpt))
+        case t => toError(t)
+      } toVSPromise
     }
-  }*/
+  }
   
-  private def simpleJobAction(id: JobId)(action: User => Job => Any)(msg: String): ActionA = sys.error("") /*Action { implicit req =>
+  private def simpleJobAction(id: JobId)(action: User => Job => Any)(msg: String): ActionA = Action { implicit req =>
     AsyncResult {
-      val futureResult =
-        for {
-          user <- getAuthenticatedUserOrResult
-          job <- getJobIfAllowed(user, id) failMap toResult(Some(user))
-        } yield {
-          action(user)(job)
-          if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
-          else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
-        }
-      futureResult.expiresWith(FutureTimeoutError, 3, SECONDS).toPromise
+      (for {
+        user <- getUser
+        job <- user.getJob(id)
+      } yield {
+        action(user)(job)
+        if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
+        else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
+      }) failMap toError toVSPromise
     }
-  }*/
+  }
   
 //  private def getJobIfAllowed(user: User, id: JobId): FutureValidationNoTimeOut[SuiteException, Job] = {
 //    for {

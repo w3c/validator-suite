@@ -73,13 +73,13 @@ object Global extends GlobalSettings {
         filter = Filter(include = Everything, exclude = Nothing)))
     
     // TODO a Saveable trait might be handy
-    tgambet.save()
-    bertails.save()
-    w3c.save()
-    w3.save()
-    tr.save()
-    ibm.save()
-    lemonde.save()
+//    tgambet.save()
+//    bertails.save()
+//    w3c.save()
+//    w3.save()
+//    tr.save()
+//    ibm.save()
+//    lemonde.save()
 
   }
   

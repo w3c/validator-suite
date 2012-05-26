@@ -5,7 +5,6 @@ import org.joda.time.DateTime
 import org.w3.util.akkaext._
 import org.w3.vs.actor.message._
 import org.w3.vs.exception._
-import org.w3.vs.exception.SuiteException
 import org.w3.vs.VSConfiguration
 import akka.actor._
 import akka.dispatch._
@@ -46,10 +45,16 @@ case class Job(
   def getHistory: FutureVal[Exception, Iterable[JobData]] = JobData.getForJob(valueObject.id)
   def getActivity(implicit context: ExecutionContext): FutureVal[Throwable, RunActivity] = (PathAware(organizationsRef, path).?[RunActivity](GetActivity))
   
+  def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = sys.error("")
+  
     /*def jobData(): Future[JobData] =
     (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]*/
   
   def save(): FutureVal[Exception, Job] = Job.save(this)
+  def delete(): FutureVal[Exception, Unit] = {
+    cancel()
+    Job.delete(id)
+  }
   
   def run(): Unit = PathAware(organizationsRef, path) ! Refresh
   

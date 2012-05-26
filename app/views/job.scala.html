@@ -1,7 +1,5 @@
 @(job: Job, 
-    data: JobData,
-    report: List[org.w3.vs.view.ReportSection],
-    pageNav: org.w3.vs.view.PageNav,
+    assertions: Iterable[Assertion],
     user: User,
     errors: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
@@ -86,13 +84,13 @@
 				<span class="completed">03/12/12 at 2:55pm</span>
 			<li class="warningsC">
 				<h2>Warnings</h2>
-				<span class="warnings">@data.warnings</span>
+				<span class="warnings">data.warnings</span>
 			<li class="errorsC">
 				<h2>Errors</h2>
-				<span class="errors">@data.errors</span>
+				<span class="errors">data.errors</span>
 			<li class="resourcesC">
 				<h2>Resources</h2>
-				<span class="resources">@data.resources</span>
+				<span class="resources">data.resources</span>
 		</ul>
 	</section>
 	
@@ -127,7 +125,7 @@
 	
 	<section id="report" class="nested">
 
-	@Html(generateSections(report))
+	Html(generateSections(report))
 
 	</section>
 	

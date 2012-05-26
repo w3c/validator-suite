@@ -3,6 +3,7 @@ package org.w3.vs
 import org.w3.util._
 import org.w3.vs.Prod.configuration
 import org.w3.vs.model._
+import org.w3.vs.exception._
 import play.api.data.Forms._
 import play.api.data.format.Formats._
 import play.api.data.format.Formatter
@@ -28,43 +29,6 @@ package object controllers {
       case Some("XMLHttpRequest") => true
       case _ => false
     }
-  }
-  
-  /*
-   *  Forms
-   */
-  def loginForm = Form(
-    tuple(
-      "email" -> email,
-      "password" -> text
-    )
-  )
-  
-  def jobForm = Form(
-    mapping (
-      "name" -> text,
-      "url" -> of[URL],
-      "distance" -> of[Int],
-      "linkCheck" -> of[Boolean](booleanFormatter),
-      "maxNumberOfResources" -> of[Int]
-    )((name, url, distance, linkCheck, maxNumberOfResources) => {
-      Job(
-        name = name,
-        organizationId = null,
-        creatorId = null,
-        strategy = Strategy(
-          entrypoint = url,
-          distance = distance,
-          linkCheck = linkCheck,
-          maxNumberOfResources = maxNumberOfResources,
-          filter = Filter(include = Everything, exclude = Nothing)))
-    })
-    ((job: Job) => Some(job.name, job.strategy.entrypoint, job.strategy.distance, job.strategy.linkCheck, job.strategy.maxNumberOfResources))
-  )
-  
-  def validateForm[E](form: Form[E])(implicit req: Request[_]): FutureVal[Form[E], E] = {
-    implicit def onTo(to: java.util.concurrent.TimeoutException): Form[E] = form.withError("key", Messages("error.timeout")) 
-    FutureVal.validated(form.bindFromRequest.fold(f => Failure(f), s => Success(s)))
   }
   
   /*

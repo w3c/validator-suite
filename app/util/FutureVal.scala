@@ -55,6 +55,13 @@ object FutureVal {
     new FutureVal(Promise.successful(validation))
   }
   
+  def fromOption[S](option: Option[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
+    option fold (
+      s => FutureVal.successful(s),
+      FutureVal.failed[Throwable, S](new NoSuchElementException)
+    )
+  }
+  
   def applyTo[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
     new FutureVal(future.map[Validation[Throwable, S]] { value =>
         Success(value)
@@ -141,6 +148,13 @@ class FutureVal[+F, +S] protected (
   def recover[R >: S](pf: PartialFunction[F, R]): FutureVal[F, R] = {
     new FutureVal(future.map {
       case Failure(failure) if pf.isDefinedAt(failure)=> Success(pf(failure))
+      case v => v 
+    })
+  }
+  
+  def discard[T >: F](pf: PartialFunction[S, T]): FutureVal[T, S] = {
+    new FutureVal(future.map {
+      case Success(success) if pf.isDefinedAt(success)=> Failure(pf(success))
       case v => v 
     })
   }

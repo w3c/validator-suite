@@ -32,6 +32,7 @@ object ApplicationBuild extends Build {
     testOptions in Test := Nil,
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
+    templatesImport += "org.w3.vs.view._",
     templatesImport += "org.w3.vs.model._",
     templatesImport += "org.w3.vs.exception._",
     templatesImport += "scalaz.{Validation, Failure, Success}",
