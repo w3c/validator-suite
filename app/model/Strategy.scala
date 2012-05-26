@@ -9,16 +9,6 @@ import akka.dispatch._
 
 object Strategy {
   
-  def apply(
-      id: StrategyId = StrategyId(),
-      entrypoint: URL,
-      distance: Int,
-      linkCheck: Boolean,
-      maxNumberOfResources: Int,
-      filter: Filter,
-      assertorsFor: AssertorSelector = AssertorSelector.simple): Strategy = 
-    Strategy(StrategyVO(id, entrypoint, distance, linkCheck, maxNumberOfResources, filter), assertorsFor)
-  
   def get(id: StrategyId): FutureVal[Exception, Strategy] = sys.error("")
   def save(strategy: Strategy)(implicit context: ExecutionContext): FutureVal[Exception, Strategy] = sys.error("")
   
@@ -42,15 +32,13 @@ case class StrategyVO(
     filter: Filter)
 
 case class Strategy(
-    valueObject: StrategyVO,
-    assertorsFor: AssertorSelector) {
-  
-  def id: StrategyId = valueObject.id
-  def entrypoint: URL = valueObject.entrypoint
-  def distance: Int = valueObject.distance
-  def linkCheck: Boolean = valueObject.linkCheck
-  def maxNumberOfResources: Int = valueObject.maxNumberOfResources
-  def filter: Filter = valueObject.filter
+    id: StrategyId = StrategyId(),
+    entrypoint: URL,
+    distance: Int,
+    linkCheck: Boolean,
+    maxNumberOfResources: Int,
+    filter: Filter,
+    assertorsFor: AssertorSelector = AssertorSelector.simple) {
   
   val mainAuthority: Authority = entrypoint.authority
   
@@ -70,5 +58,7 @@ case class Strategy(
     }
 
   def noAssertor(): Strategy = this.copy(assertorsFor = AssertorSelector.noAssertor)
-
+  
+  def toValueObject: StrategyVO = StrategyVO(id, entrypoint, distance, linkCheck, maxNumberOfResources, filter)
+  
 }

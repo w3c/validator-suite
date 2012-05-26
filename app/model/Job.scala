@@ -16,40 +16,37 @@ import scalaz.Scalaz._
 import scalaz._
 
 case class JobVO(
-    id: JobId = JobId(),
+    id: JobId,
     name: String,
-    createdOn: DateTime = DateTime.now,
-    lastCompleted: Option[DateTime] = None,
+    createdOn: DateTime,
     creatorId: UserId,
     organizationId: OrganizationId,
     strategyId: StrategyId)
 
 // closed with its strategy and lastData
 case class Job(
-    valueObject: JobVO,
+    id: JobId = JobId(),
+    name: String,
+    createdOn: DateTime = DateTime.now,
+    creatorId: UserId,
+    organizationId: OrganizationId,
     strategy: Strategy,
-    lastData: Option[JobData])(implicit conf: VSConfiguration) {
+    lastData: Option[JobData] = None)(implicit conf: VSConfiguration) {
 
   import conf.system
   implicit def timeout = conf.timeout
   private val logger = Logger.of(classOf[Job])
   
-  def id: JobId = valueObject.id
-  def name: String = valueObject.name
-  def createdOn: DateTime = valueObject.createdOn
-  def lastCompleted: Option[DateTime] = valueObject.lastCompleted
+  def toValueObject: JobVO = JobVO(id, name, createdOn, creatorId, organizationId, strategy.id)
   
-  def getCreator: FutureVal[Exception, User] = User.get(valueObject.creatorId)
-  def getOrganization: FutureVal[Exception, Organization] = Organization.get(valueObject.organizationId)
-  def getStrategy: FutureVal[Exception, Strategy] = Strategy.get(valueObject.strategyId)
-  def getHistory: FutureVal[Exception, Iterable[JobData]] = JobData.getForJob(valueObject.id)
+  def getCreator: FutureVal[Exception, User] = User.get(creatorId)
+  def getOrganization: FutureVal[Exception, Organization] = Organization.get(organizationId)
+  def getHistory: FutureVal[Exception, Iterable[JobData]] = JobData.getForJob(id)
   def getActivity(implicit context: ExecutionContext): FutureVal[Throwable, RunActivity] = (PathAware(organizationsRef, path).?[RunActivity](GetActivity))
   
   def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = sys.error("")
   
-    /*def jobData(): Future[JobData] =
-    (PathAware(organizationsRef, path) ? GetJobData).mapTo[JobData]*/
-  
+  // save jobdata too
   def save(): FutureVal[Exception, Job] = Job.save(this)
   def delete(): FutureVal[Exception, Unit] = {
     cancel()
@@ -101,7 +98,7 @@ case class Job(
   
   private val organizationsRef = system.actorFor(system / "organizations")
 
-  private val path = system / "organizations" / valueObject.organizationId.toString / "jobs" / id.toString
+  private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString
 
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
@@ -116,23 +113,6 @@ case class Job(
 }
     
 object Job {
-  
-  def apply(
-      id: JobId = JobId(),
-      name: String,
-      createdOn: DateTime = DateTime.now,
-      lastCompleted: Option[DateTime] = None,
-      creatorId: UserId,
-      organizationId: OrganizationId,
-      strategy: Strategy,
-      lastData: Option[JobData] = None)(implicit conf: VSConfiguration): Job = 
-    Job(JobVO(id, name, createdOn, lastCompleted, creatorId, organizationId, strategy.id), strategy, lastData)
-  
-  // Shouldn't be here. We need sets of initial data for dev and test modes
-//  def fake(strategy: Strategy)(implicit configuration: VSConfiguration): Job = {
-//    val fakeUser = User.fake
-//    Job(name = "fake job", creatorId = fakeUser.id, organizationId = fakeUser.organizationId, strategy = strategy)
-//  }
   
   def get(id: JobId): FutureVal[Exception, Job] = {
     /*import configuration.store

@@ -85,7 +85,15 @@ class ValidJobForm private [view] (
   }
   
   def update(job: Job)(implicit conf: VSConfiguration): Job = {
-    Job(job.valueObject.copy(name = name), job.strategy.copy(valueObject = job.strategy.valueObject.copy(entrypoint = url, distance = distance, linkCheck = linkCheck, maxNumberOfResources = maxNumberOfResources)), job.lastData)
+    job.copy(
+        name = name,
+        strategy = job.strategy.copy(
+            entrypoint = url, 
+            distance = distance, 
+            linkCheck = linkCheck, 
+            maxNumberOfResources = maxNumberOfResources
+        )
+    )
   }
   
 }

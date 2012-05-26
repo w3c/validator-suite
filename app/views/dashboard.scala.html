@@ -91,10 +91,10 @@
 
 				<dt>Last Completed</dt>
 				<dd class="date">
-					@{job.lastCompleted match{ 
+					@**{job.lastCompleted match{ 
 					  case Some(date) => {<time datetime="">03/12/12 at 2:55pm</time>}
 					  case _ => {"Never"}
-					}}
+					}}**@
 				</dd>
 				
 				<dt>Warnings</dt>
