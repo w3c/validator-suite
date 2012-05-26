@@ -6,7 +6,7 @@ import org.w3.vs.assertor._
 import scalaz.Validation
 
 sealed trait AssertorResponse {
-  //val id: AssertorResponseId
+  val id: AssertorResponseId
   val jobId: JobId
   val runId: RunId
   val assertorId: AssertorId
@@ -16,7 +16,7 @@ sealed trait AssertorResponse {
 
 // not a persisted object for now
 case class AssertorFailure(
-    //id: AssertorResponseId = AssertorResponseId(),
+    id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
     runId: RunId,
     assertorId: AssertorId,
@@ -27,26 +27,16 @@ case class AssertorFailure(
 /** 
  *  AssertorResult 
  */
-case class AssertorResultVO(
+// closed with number of errors and warnings
+case class AssertorResult(
     id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
     runId: RunId,
     assertorId: AssertorId,
     sourceUrl: URL,
-    timestamp: DateTime = DateTime.now)
-
-// closed with number of errors and warnings
-case class AssertorResult(
-    valueObject: AssertorResultVO,
+    timestamp: DateTime = DateTime.now,
     errors: Int,
     warnings: Int) extends AssertorResponse {
-  
-  val id = valueObject.id
-  val jobId: JobId = valueObject.jobId
-  val runId: RunId = valueObject.runId
-  val assertorId: AssertorId = valueObject.assertorId
-  val sourceUrl = valueObject.sourceUrl
-  val timestamp = valueObject.timestamp
   
   //def isValid = ! hasError
   //def hasError: Boolean = assertions exists {_.severity == Error}
@@ -64,16 +54,6 @@ case class AssertorResult(
 case class AssertorResultClosed(assertorResult: AssertorResult, assertionsClosed: Iterable[AssertionClosed])
 
 object AssertorResult {
-  
-  def apply(
-    id: AssertorResponseId = AssertorResponseId(),
-    jobId: JobId,
-    runId: RunId,
-    assertorId: AssertorId,
-    sourceUrl: URL,
-    timestamp: DateTime = DateTime.now,
-    errors: Int,
-    warnings: Int) = new AssertorResult(AssertorResultVO(id, jobId, runId, assertorId, sourceUrl, timestamp), errors, warnings)
   
   def get(id: AssertorResponseId): FutureVal[Exception, AssertorResult] = sys.error("ni")
   def getForJob(id: JobId, after: Option[DateTime] = None): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")

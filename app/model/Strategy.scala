@@ -23,13 +23,7 @@ object Strategy {
   * @param distance the maximum distance the crawler should move away from `entrypoint`
   * @param filter a filter to be applied to the URLs being discovered
   */
-case class StrategyVO(
-    id: StrategyId = StrategyId(),
-    entrypoint: URL,
-    distance: Int,
-    linkCheck: Boolean,
-    maxNumberOfResources: Int,
-    filter: Filter)
+
 
 case class Strategy(
     id: StrategyId = StrategyId(),

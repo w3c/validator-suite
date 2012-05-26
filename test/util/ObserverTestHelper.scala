@@ -27,7 +27,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   //val store = configuration.store
   //val stores = configuration.stores
 
-  val organizationTest = Organization(OrganizationVO(OrganizationId(), "test orga", UserId()))
+  val organizationTest = Organization(OrganizationId(), "test orga", UserId())
 
   val userTest = User(organizationId = organizationTest.id, email = "", name = "", password = "")
   

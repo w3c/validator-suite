@@ -36,7 +36,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
             //val contextRef = context.attrs get "ref" getOrElse eventRef
             val line = context.attrs get "line" map { s => s.toInt }
             val column = context.attrs get "column" map { s => s.toInt }
-            Context(content, line, column, assertionId)
+            Context(ContextId(), content, line, column, assertionId)
           }
         val descriptionOpt = (message \ "description").headOption map { description =>
           description.children.map(removeScope).mkString("").trim

@@ -26,38 +26,10 @@ object Run {
 
   def apply(job: Job): Run = apply(job = job)
   
-  def apply(
-      id: RunId = RunId(),
-      job: Job,
-      explorationMode: ExplorationMode = ProActive,
-      distance: Map[URL, Int] = Map.empty,
-      toBeExplored: List[URL] = List.empty,
-      fetched: Set[URL] = Set.empty,
-      createdAt: DateTime = DateTime.now,
-      //jobData: JobData/* = JobData(jobId = job.id, runId = id)*/,
-      pending: Set[URL] = Set.empty,
-      invalidated: Int = 0,
-      pendingAssertions: Int = 0): Run = {
-    
-    val jobData = JobData(jobId = job.id, runId = id)
-    Run(RunVO(id, explorationMode, distance, toBeExplored, fetched, createdAt, job.id, jobData.id), job, pending, invalidated, pendingAssertions, jobData)
-  }
-  
   def get(id: RunId): FutureVal[Exception, Run] = sys.error("")
   def save(run: Run): FutureVal[Exception, Run] = sys.error("")
   
 }
-
-// Previously RunSnapshot
-case class RunVO(
-    id: RunId = RunId(),
-    explorationMode: ExplorationMode = ProActive,
-    distance: Map[URL, Int] = Map.empty,
-    toBeExplored: List[URL] = List.empty,
-    fetched: Set[URL] = Set.empty,
-    createdAt: DateTime = DateTime.now,
-    jobId: JobId,
-    jobDataId: JobDataId = JobDataId())
 
 /**
  * Run represents a coherent state of for an Run, modelized as an FSM
@@ -65,22 +37,23 @@ case class RunVO(
  */
 // closed with job and jobData 
 case class Run(
-    valueObject: RunVO,
+    id: RunId = RunId(),
+    explorationMode: ExplorationMode = ProActive,
+    distance: Map[URL, Int] = Map.empty,
+    toBeExplored: List[URL] = List.empty,
+    fetched: Set[URL] = Set.empty,
+    createdAt: DateTime = DateTime.now,
     job: Job,
-    pending: Set[URL],
-    invalidated: Int,
-    pendingAssertions: Int,
-    data: JobData) {
+    data: JobData,
+    pending: Set[URL] = Set.empty,
+    invalidated: Int = 0,
+    pendingAssertions: Int = 0) {
 
-  def id = valueObject.id
-  def explorationMode = valueObject.explorationMode
-  def distance = valueObject.distance
-  def toBeExplored = valueObject.toBeExplored
-  def fetched = valueObject.fetched
-  def createdAt = valueObject.createdAt
   def strategy = job.strategy
   
   def save(): FutureVal[Exception, Run] = Run.save(this)
+  
+  def toValueObject: RunVO = RunVO(id, explorationMode, distance, toBeExplored, fetched, createdAt, job, data)
   
   type Explore = (URL, Int)
 
@@ -122,9 +95,9 @@ case class Run(
   def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (Run, List[URL]) = {
     val filteredUrls = urls.filterNot{ url => shouldIgnore(url, atDistance) }.distinct.take(numberOfRemainingAllowedFetches)
     val newDistance = distance ++ filteredUrls.map { url => url -> atDistance }
-    val newData = this.copy(valueObject = valueObject.copy(
+    val newData = this.copy(
       toBeExplored = toBeExplored ++ filteredUrls,
-      distance = newDistance))
+      distance = newDistance)
     (newData, filteredUrls)
   }
 
@@ -138,9 +111,9 @@ case class Run(
     val map: ListMap[URL, Int] = ListMap.empty
     map ++= urlsWithDistance.filterNot { case (url, distance) => shouldIgnore(url, distance) }
     val newUrls = map.keys.toList.take(numberOfRemainingAllowedFetches)
-    val newData = this.copy(valueObject = valueObject.copy(
+    val newData = this.copy(
       toBeExplored = toBeExplored ++ newUrls,
-      distance = distance ++ map))
+      distance = distance ++ map)
     (newData, newUrls)
   }
 
@@ -163,7 +136,7 @@ case class Run(
     optUrl map { url =>
       (this.copy(
         pending = pending + url,
-        valueObject = valueObject.copy(toBeExplored = toBeExplored filterNot { _ == url })),
+        toBeExplored = toBeExplored filterNot { _ == url }),
         url)
     }
   }
@@ -181,7 +154,7 @@ case class Run(
     pendingToConsiderer.headOption map { url =>
       (this.copy(
         pending = pending + url,
-        valueObject = valueObject.copy(toBeExplored = toBeExplored filterNot { _ == url })),
+        toBeExplored = toBeExplored filterNot { _ == url }),
         url)
     }
   }
@@ -220,21 +193,21 @@ case class Run(
 
   def withCompletedFetch(url: URL): Run = this.copy(
     pending = pending - url,
-    valueObject = valueObject.copy(fetched = fetched + url))
+    fetched = fetched + url)
 
   def withAssertorResponse(response: AssertorResponse): Run = response match {
-    case result: AssertorResult => this.copy(data = data.withData(
-      //oks = oks + (if (assertions.isValid) 1 else 0), // T: undefined
-      errors = data.errors + result.errors,
-      warnings = data.warnings + result.warnings),
+    case result: AssertorResult => this.copy(
+      data = data.copy(
+        errors = data.errors + result.errors,
+        warnings = data.warnings + result.warnings),
       pendingAssertions = pendingAssertions - 1) // lower bound is 0
     case fail: AssertorFailure => this.copy(pendingAssertions = pendingAssertions - 1) // TODO? should do something about that
   }
 
   def stopMe(): Run =
-    this.copy(valueObject = valueObject.copy(explorationMode = Lazy, toBeExplored = List.empty))
+    this.copy(explorationMode = Lazy, toBeExplored = List.empty)
 
-  def withMode(mode: ExplorationMode) = this.copy(valueObject = valueObject.copy(explorationMode = mode))
+  def withMode(mode: ExplorationMode) = this.copy(explorationMode = mode)
     
 }
 

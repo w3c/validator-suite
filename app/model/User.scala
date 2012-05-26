@@ -51,12 +51,7 @@ object User {
 
 }
 
-case class UserVO(
-    id: UserId = UserId(),
-    name: String,
-    email: String,
-    password: String,
-    organizationId: OrganizationId)
+
 
 case class User(valueObject: UserVO) {
   def id: UserId = valueObject.id

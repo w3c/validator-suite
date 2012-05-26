@@ -52,7 +52,7 @@ object ValidatorNu extends FromHttpResponseAssertor {
 	  val lastCol = (obj \ "lastColumn") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
 	  val extract = (obj \ "extract") match {case JsString(s) => Some(HtmlFormat.escape(s).text); case _ => None}
 	  val contexts = extract match {
-	    case Some(code) => Seq(Context(code.trim, lastLine, lastCol, assertionId)) // The model needs to accept a range of lines/column
+	    case Some(code) => Seq(Context(ContextId(), code.trim, lastLine, lastCol, assertionId)) // The model needs to accept a range of lines/column
 	    case _ => Seq()
 	  }
 	  val assertion = Assertion(assertionId, url, "en", title, severity, None, AssertorResponseId()) // T: not great to generate random assertorResponse id. Comes from the fact that the model only really support FromURLAssertors, otherwise AssertorResponse could be constructed and returned here

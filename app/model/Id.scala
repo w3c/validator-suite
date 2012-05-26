@@ -3,6 +3,22 @@ package org.w3.vs.model
 import scalaz.Equal
 import java.util.UUID
 
+object Id {
+  
+  implicit def toId(e: Job): JobId = e.id
+  implicit def toId(e: Run): RunId = e.id
+  implicit def toId(e: User): UserId = e.id
+  implicit def toId(e: JobData): JobDataId = e.id
+  implicit def toId(e: Context): ContextId = e.id
+  //implicit def toId(e: Assertor): AssertorId = e.id
+  implicit def toId(e: Strategy): StrategyId = e.id
+  implicit def toId(e: Assertion): AssertionId = e.id
+  implicit def toId(e: Organization): OrganizationId = e.id
+  implicit def toId(e: ResourceResponse): ResourceResponseId = e.id
+  implicit def toId(e: AssertorResponse): AssertorResponseId = e.id
+  
+}
+
 class Id(private val uuid: UUID = UUID.randomUUID()) {
   def shortId: String = toString.substring(0, 6)
   override def toString = uuid.toString

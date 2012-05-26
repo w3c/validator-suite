@@ -16,39 +16,14 @@ import org.w3.vs.actor.message._
 import org.w3.vs.model._
 import org.w3.util._
 
-object Organization {
-
-  def apply(
-      id: OrganizationId = OrganizationId(),
-      name: String,
-      admin: User): Organization =
-    Organization(OrganizationVO(id, name, admin.id))
-  
-  def get(id: OrganizationId)/*(implicit configuration: VSConfiguration, context: ExecutionContext)*/: FutureVal[Exception, Organization] = {
-    //import configuration.store
-    //store.getOrganizations(id = id).map(t=>t.headOption)
-    //FutureVal.failed(new Exception("not implemented"))
-    sys.error("ni")
-  }
-  def getForAdmin(admin: UserId): FutureVal[Exception, Iterable[Organization]] = sys.error("ni")
-  
-  def save(organization: Organization): FutureVal[Exception, Organization] = sys.error("")
-  
-}
-
-case class OrganizationVO(
+case class Organization(
     id: OrganizationId = OrganizationId(),
     name: String,
-    admin: UserId)
-
-case class Organization(valueObject: OrganizationVO) {
+    adminId: UserId) {
   
   val logger = play.Logger.of(classOf[Organization])
   
-  def id: OrganizationId = valueObject.id
-  def name: String = valueObject.name
-  
-  def getAdmin: FutureVal[Exception, User] = User.get(valueObject.admin)
+  def getAdmin: FutureVal[Exception, User] = User.get(adminId)
   
   def save(): FutureVal[Exception, Organization] = Organization.save(this)
   
@@ -76,5 +51,15 @@ case class Organization(valueObject: OrganizationVO) {
     organizationRef ! Listen(subscriber)
     enumerator &> Enumeratee.onIterateeDone(() => {organizationRef ! Deafen(subscriber); logger.info("onIterateeDone")}) 
   }
+  
+  def toValueObject: OrganizationVO = OrganizationVO(id, name, adminId)
 
+}
+
+object Organization {
+  
+  def get(id: OrganizationId)/*(implicit configuration: VSConfiguration, context: ExecutionContext)*/: FutureVal[Exception, Organization] = sys.error("ni")
+  def getForAdmin(admin: UserId): FutureVal[Exception, Iterable[Organization]] = sys.error("ni")
+  def save(organization: Organization): FutureVal[Exception, Organization] = sys.error("")
+  
 }
