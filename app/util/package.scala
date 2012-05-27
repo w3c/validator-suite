@@ -18,4 +18,10 @@ package object util {
 
   implicit val DateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan((x: DateTime, y: DateTime) => x isBefore y)
 
+  import scalaz.Equal
+
+  implicit val equalDateTime: Equal[DateTime] = new Equal[DateTime] {
+    def equal(a1: DateTime, a2: DateTime) = DateTimeOrdering.compare(a1, a2) == 0
+  }
+
 }
