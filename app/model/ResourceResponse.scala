@@ -1,5 +1,6 @@
 package org.w3.vs.model
 
+import org.w3.vs._
 import org.w3.util._
 import org.w3.util.Headers.wrapHeaders
 import org.w3.vs.http._
@@ -7,6 +8,8 @@ import org.joda.time._
 import scalaz.Equal
 
 sealed trait ResourceResponse {
+  
+  implicit val conf: VSConfiguration
   
   val id: ResourceResponseId
   val jobId: JobId
@@ -26,11 +29,11 @@ sealed trait ResourceResponse {
 
 object ResourceResponse {
   
-  def get(id: ResourceResponseId): FutureVal[Exception, ResourceResponse] = sys.error("")
-  def getForJob(id: JobId): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
-  def getForRun(id: RunId): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
-  def save(resource: ResourceResponse): FutureVal[Exception, ResourceResponse] = sys.error("")
-  def delete(resource: ResourceResponse): FutureVal[Exception, Unit] = sys.error("")
+  def get(id: ResourceResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] = sys.error("")
+  def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
+  def getForRun(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
+  def save(resource: ResourceResponse)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] = sys.error("")
+  def delete(resource: ResourceResponse)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = sys.error("")
 }
 
 case class ErrorResponse(
@@ -40,7 +43,7 @@ case class ErrorResponse(
     url: URL,
     action: HttpAction,
     timestamp: DateTime = DateTime.now,
-    why: String) extends ResourceResponse {
+    why: String)(implicit val conf: VSConfiguration) extends ResourceResponse {
   
   def toValueObject: ErrorResponseVO = ErrorResponseVO(id, jobId, runId, url, action, timestamp, why)
   
@@ -55,7 +58,7 @@ case class HttpResponse(
     timestamp: DateTime = DateTime.now,
     status: Int,
     headers: Headers,
-    extractedURLs: List[URL]) extends ResourceResponse {
+    extractedURLs: List[URL])(implicit val conf: VSConfiguration) extends ResourceResponse {
   
   def toValueObject: HttpResponseVO = HttpResponseVO(id, jobId, runId, url, action, timestamp, status, headers, extractedURLs)
 }
@@ -69,7 +72,7 @@ object HttpResponse {
       action: HttpAction,
       status: Int,
       headers: Headers,
-      body: String): HttpResponse = {
+      body: String)(implicit conf: VSConfiguration): HttpResponse = {
     
     val extractedURLs = headers.mimetype collect {
       case "text/html" | "application/xhtml+xml" => URLExtractor.fromHtml(url, body).distinct

@@ -36,7 +36,7 @@ object ValidatorNu extends FromHttpResponseAssertor {
 	urlCon.setConnectTimeout(2000)
 	//urlCon.setReadTimeout(10000)
 	val content = Source.fromInputStream(urlCon.getInputStream).getLines.mkString("\n")*/
-  def assert(source: Source): FutureVal[Throwable, Iterable[AssertionClosed]] = FutureVal {
+  def assert(source: Source): FutureVal[Exception, Iterable[AssertionClosed]] = FutureVal {
 	val json = Json.parse(source.getLines.mkString("\n"))
     val url = URL((json \ "url").asInstanceOf[JsString].value)
     val messages = json \ "messages"

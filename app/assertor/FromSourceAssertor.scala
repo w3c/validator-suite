@@ -8,15 +8,6 @@ import scala.io.Source
  */
 trait FromSourceAssertor extends Assertor {
 
-  /** returns an Assertion from the given source
-   *
-   *  @param source where to read 
-   *  @return the assertion
-   */
-    // TODO
-  import org.w3.vs.Prod.configuration
-  implicit def ec = configuration.webExecutionContext
-  
-  def assert(source: Source): FutureVal[Throwable, Iterable[AssertionClosed]] // TODO type exceptions
+  def assert(source: Source): FutureVal[Exception, Iterable[AssertionClosed]] // TODO type exceptions
 
 }

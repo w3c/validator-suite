@@ -11,13 +11,13 @@ import java.util.concurrent.TimeUnit.SECONDS
 
 object Main {
   
-  val strategy =
-    Strategy(
-      entrypoint = URL("http://www.bertails.org/"),
-      distance = 0,
-      linkCheck = true,
-      maxNumberOfResources = 100,
-      filter = Filter(include = Everything, exclude = Nothing))
+//  val strategy =
+//    Strategy(
+//      entrypoint = URL("http://www.bertails.org/"),
+//      distance = 0,
+//      linkCheck = true,
+//      maxNumberOfResources = 100,
+//      filter = Filter(include = Everything, exclude = Nothing))
   
 //  implicit def configuration = org.w3.vs.Prod.configuration
 //      

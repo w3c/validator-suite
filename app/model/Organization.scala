@@ -1,5 +1,6 @@
 package org.w3.vs.model
 
+import org.w3.vs._
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
@@ -19,7 +20,7 @@ import org.w3.util._
 case class Organization(
     id: OrganizationId = OrganizationId(),
     name: String,
-    adminId: UserId) {
+    adminId: UserId)(implicit conf: VSConfiguration) {
   
   val logger = play.Logger.of(classOf[Organization])
   
@@ -58,8 +59,8 @@ case class Organization(
 
 object Organization {
   
-  def get(id: OrganizationId)/*(implicit configuration: VSConfiguration, context: ExecutionContext)*/: FutureVal[Exception, Organization] = sys.error("ni")
-  def getForAdmin(admin: UserId): FutureVal[Exception, Iterable[Organization]] = sys.error("ni")
-  def save(organization: Organization): FutureVal[Exception, Organization] = sys.error("")
+  def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = sys.error("ni")
+  def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = sys.error("ni")
+  def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = sys.error("")
   
 }

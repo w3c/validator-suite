@@ -26,8 +26,8 @@ object Run {
 
   def apply(job: Job): Run = apply(job = job)
   
-  def get(id: RunId): FutureVal[Exception, Run] = sys.error("")
-  def save(run: Run): FutureVal[Exception, Run] = sys.error("")
+  def get(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = sys.error("")
+  def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = sys.error("")
   
 }
 
@@ -47,7 +47,7 @@ case class Run(
     data: JobData,
     pending: Set[URL] = Set.empty,
     invalidated: Int = 0,
-    pendingAssertions: Int = 0) {
+    pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
 
   def strategy = job.strategy
   

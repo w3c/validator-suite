@@ -106,13 +106,13 @@ case class Job (
 
 object Job {
 
-  def get(id: JobId): FutureVal[Exception, Job] = sys.error("")
-  def getFor(user: UserId): FutureVal[Exception, Iterable[Job]] = sys.error("")
-  def getFor(organization: OrganizationId): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
-  def getFor(strategy: StrategyId): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
-  def getCreatedBy(creator: UserId): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
-  def save(job: Job): FutureVal[Exception, Job] = sys.error("")
-  def delete(id: JobId)/*(implicit configuration: VSConfiguration)*/: FutureVal[Exception, Unit] = sys.error("")
+  def get(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = sys.error("")
+  def getFor(user: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("")
+  def getFor(organization: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
+  def getFor(strategy: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
+  def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
+  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = sys.error("")
+  def delete(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = sys.error("")
 
 }
 

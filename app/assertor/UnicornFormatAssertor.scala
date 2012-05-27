@@ -9,7 +9,7 @@ import scala.io.Source
  */
 trait UnicornFormatAssertor extends FromSourceAssertor {
   
-  def assert(source: Source): FutureVal[Throwable, Iterable[AssertionClosed]] = FutureVal {
+  def assert(source: Source): FutureVal[Exception, Iterable[AssertionClosed]] = FutureVal {
     val response: Elem = XML.fromSource(source)
     val obversationRef: String = response.attrs get "ref" get
     val obversationLang = response.attrs get QName(Some("xml"), "lang") get

@@ -1,6 +1,6 @@
 package org.w3.vs.model
 
-import org.w3.vs.VSConfiguration
+import org.w3.vs._
 import org.w3.util._
 import org.w3.vs.actor._
 import scalaz._
@@ -10,8 +10,8 @@ import org.w3.vs.exception._
 
 object User {
   
-  def get(id: UserId): FutureVal[Exception, User] = sys.error("")
-  def getForOrganization(id: OrganizationId): FutureVal[Exception, Iterable[User]] = sys.error("") 
+  def get(id: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, User] = sys.error("")
+  def getForOrganization(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[User]] = sys.error("") 
   
   // TODO: For now these only fail with StoreExceptions but should also fail with a Unauthorized exception 
   def authenticate(email: String, password: String)(implicit configuration: VSConfiguration): FutureVal[Exception, User] = {
@@ -39,7 +39,7 @@ object User {
     sys.error("")
   }
   
-  def save(user: User): FutureVal[Exception, User] = sys.error("")
+  def save(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, User] = sys.error("")
 
 }
 
@@ -50,7 +50,7 @@ case class User (
     name: String,
     email: String,
     password: String,
-    organizationId: OrganizationId) {
+    organizationId: OrganizationId)(implicit conf: VSConfiguration) {
   
   def getOrganization: FutureVal[Exception, Organization] = Organization.get(organizationId)
   

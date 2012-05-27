@@ -1,5 +1,6 @@
 package org.w3.vs.model
 
+import org.w3.vs._
 import org.w3.util._
 import org.joda.time._
 import org.w3.vs.assertor._
@@ -12,7 +13,7 @@ case class Assertion(
     title: String,
     severity: AssertionSeverity,
     description: Option[String],
-    assertorResponseId: AssertorResponseId) {
+    assertorResponseId: AssertorResponseId)(implicit conf: VSConfiguration) {
   
   //def getAssertorResponse: FutureVal[Exception, AssertorResponse] = AssertorResonse.getResponseWith()
   def getContexts: FutureVal[Exception, Iterable[Context]] = Context.getForAssertion(id) 
@@ -20,9 +21,9 @@ case class Assertion(
 }
 
 object Assertion {
-  def get(id: AssertionId): FutureVal[Exception, Assertion] = sys.error("ni")
-  def getForJob(id: JobId): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
-  def getForResponse(id: AssertorResponseId): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
+  def get(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Assertion] = sys.error("ni")
+  def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
+  def getForResponse(id: AssertorResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
 }
 
 case class AssertionClosed(assertion: Assertion, contexts: Iterable[Context])
@@ -50,13 +51,21 @@ case class Context(
     content: String,
     line: Option[Int], 
     column: Option[Int],
-    assertionId: AssertionId) {
+    assertionId: AssertionId)(implicit conf: VSConfiguration) {
   
   def getAssertion: FutureVal[Exception, Assertion] = sys.error("ni")
   def toValueObject: ContextVO = ContextVO(id, content, line, column, assertionId)
 } 
 
 object Context {
-  def get(id: ContextId): FutureVal[Exception, Context] = sys.error("ni")
-  def getForAssertion(id: AssertionId): FutureVal[Exception, Iterable[Context]] = sys.error("ni")
+  
+  def apply(
+      content: String, 
+      line: Option[Int], 
+      column: Option[Int], 
+      assertionId: AssertionId)(implicit conf: VSConfiguration): Context =
+    Context(ContextId(), content, line, column, assertionId)
+  
+  def get(id: ContextId)(implicit conf: VSConfiguration): FutureVal[Exception, Context] = sys.error("ni")
+  def getForAssertion(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Context]] = sys.error("ni")
 }

@@ -1,5 +1,6 @@
 package org.w3.vs.model
 
+import org.w3.vs._
 import org.w3.util._
 import org.joda.time._
 import org.w3.vs.assertor._
@@ -36,7 +37,7 @@ case class AssertorResult(
     sourceUrl: URL,
     timestamp: DateTime = DateTime.now,
     errors: Int,
-    warnings: Int) extends AssertorResponse {
+    warnings: Int)(implicit conf: VSConfiguration) extends AssertorResponse {
   
   //def isValid = ! hasError
   //def hasError: Boolean = assertions exists {_.severity == Error}
@@ -55,8 +56,8 @@ case class AssertorResultClosed(assertorResult: AssertorResult, assertionsClosed
 
 object AssertorResult {
   
-  def get(id: AssertorResponseId): FutureVal[Exception, AssertorResult] = sys.error("ni")
-  def getForJob(id: JobId, after: Option[DateTime] = None): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
-  def getForURL(url: URL): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
-  def save(result: AssertorResult): FutureVal[Exception, AssertorResult] = sys.error("ni")
+  def get(id: AssertorResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, AssertorResult] = sys.error("ni")
+  def getForJob(id: JobId, after: Option[DateTime] = None)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
+  def getForURL(url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
+  def save(result: AssertorResult)(implicit conf: VSConfiguration): FutureVal[Exception, AssertorResult] = sys.error("ni")
 }
