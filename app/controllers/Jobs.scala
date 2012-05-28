@@ -39,8 +39,9 @@ object Jobs extends Controller {
         user <- getUser
         jobs <- user.getJobs
       } yield {
+        logger.error(jobs.toString)
         Ok(views.html.dashboard(jobs, user))
-      }) failMap toError toVSPromise
+      }) failMap toError toPromise
     }
   }
   
@@ -54,7 +55,7 @@ object Jobs extends Controller {
         //val p = paginate(group(ars.collect{case a: Assertions => a}))
         //Ok(views.html.job(job, data, p._1, p._2, user, messages))
         Ok(views.html.job(job, ars, user, messages))
-      }) failMap toError toVSPromise
+      }) failMap toError toPromise
     }
   }
   /*
@@ -196,7 +197,7 @@ object Jobs extends Controller {
       } yield {
         job.delete()
         if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.name)))
-      }) failMap toError toVSPromise
+      }) failMap toError toPromise
     }
   } 
     
@@ -234,7 +235,7 @@ object Jobs extends Controller {
       } yield {
         organization.subscribeToUpdates() &> Enumeratee.map(_.toJS)
       }
-    ) failMap (_ => Enumerator.eof[JsValue]) toVSPromise
+    ) failMap (_ => Enumerator.eof[JsValue]) toPromise
     
     val iteratee = Iteratee.ignore[JsValue]
     val enumerator =  Enumerator.flatten(promiseEnumerator)
@@ -255,7 +256,7 @@ object Jobs extends Controller {
           )
       } yield {
         Ok(views.html.jobForm(form, user, idOpt))
-      }) failMap toError toVSPromise
+      }) failMap toError toPromise
     }
   }
   
@@ -263,7 +264,7 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        form <- JobForm.bind(user, idOpt) failMap (form => InvalidJobFormException(form, user, idOpt))
+        form <- JobForm.bind failMap (form => InvalidJobFormException(form, user, idOpt))
         job <- idOpt.fold(
             id => user.getJob(id).flatMap[Exception, Job](j => form.update(j).save()),
             form.createJob(user).save()
@@ -276,7 +277,7 @@ object Jobs extends Controller {
       }) failMap {
         case InvalidJobFormException(form, user, idOpt) => BadRequest(views.html.jobForm(form, user, idOpt))
         case t => toError(t)
-      } toVSPromise
+      } toPromise
     }
   }
   
@@ -289,7 +290,7 @@ object Jobs extends Controller {
         action(user)(job)
         if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
         else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
-      }) failMap toError toVSPromise
+      }) failMap toError toPromise
     }
   }
   

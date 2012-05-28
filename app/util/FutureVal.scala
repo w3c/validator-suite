@@ -253,10 +253,10 @@ class FutureVal[+F, +S] protected (
     this
   }
   
-  def toVSPromise[R](implicit evF: F <:< R, evS: S <:< R): VSPromise[R] =
+  def toPromise[R](implicit evF: F <:< R, evS: S <:< R): VSPromise[R] =
     VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]])
   
-  def toVSPromise[R](onTimeout: TimeoutException => R)(implicit evF: F <:< R, evS: S <:< R): VSPromise[R] =
+  def toPromise[R](onTimeout: TimeoutException => R)(implicit evF: F <:< R, evS: S <:< R): VSPromise[R] =
     VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]].onTimeout(onTimeout)) // TODO default timeout?
   
 }

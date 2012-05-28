@@ -48,7 +48,7 @@ object Application extends Controller {
       } failMap {
         case _: UnauthorizedException => Ok(views.html.login(LoginForm.blank)).withNewSession
         case t => toError(t)
-      } toVSPromise 
+      } toPromise 
     }
   }
   
@@ -73,7 +73,7 @@ object Application extends Controller {
           uri => SeeOther(uri).withSession("email" -> user.email), // Redirect to "uri" param if specified
           SeeOther(routes.Jobs.index.toString).withSession("email" -> user.email)
         )
-      }) toVSPromise
+      }) toPromise
     }
   }
   

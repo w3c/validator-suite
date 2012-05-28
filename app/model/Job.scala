@@ -107,7 +107,21 @@ case class Job (
 object Job {
 
   def get(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = sys.error("")
-  def getFor(user: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("")
+  def getFor(user: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
+    val w3 = Job(
+      createdOn = DateTime.now,
+      name = "W3C",
+      creatorId = UserId(),
+      organizationId = OrganizationId(),
+      strategy = Strategy(
+        entrypoint = URL("http://www.w3.org/"),
+        distance = 2,
+        linkCheck = false,
+        maxNumberOfResources = 100,
+        filter = Filter(include = Everything, exclude = Nothing)))
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(Iterable(w3))
+  }
   def getFor(organization: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
   def getFor(strategy: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
   def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")

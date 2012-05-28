@@ -71,7 +71,8 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
       case _ => sys.error("Using extend breaks the Promise if the passed function throws an Exception. Use pureFold on the promise instead.")
     }
     VSPromise (
-      k(VSPromise.successful(await(1 hour).get)(context, future.timeout))
+      k(this)
+      //k(VSPromise.successful(await(1 hour).get)(context, future.timeout))
     )(fail)
   }
   
@@ -108,17 +109,12 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   
   // TODOS?
   override def or[B](other: Promise[B]): Promise[Either[A, B]] = {sys.error("VSPromise.or not implemented")}
-
   override def filter(p: A => Boolean): VSPromise[A] = {sys.error("VSPromise.filter not implemented")}
-  
-  
-  
-  
   
   
   // Based on the FutureVal API
   
-  def asFutureVal = future
+  def asFutureVal: FutureVal[A, A] = future
   
   def isCompleted: Boolean = redeemed.single().isDefined
   
@@ -140,7 +136,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   
   def pureFold[B](failure: A => Validation[B, B], success: A => Validation[B, B]): VSPromise[B] = {
     atomic { implicit txn =>
-      val p = new VSPromise[B](future = future.pureFold(failure, success)(t => failure(future.timeout(t)).fold(f => f, s => s)))
+      val p = VSPromise.applyTo[B](future = future.pureFold(failure, success)(t => failure(future.timeout(t)).fold(f => f, s => s)))
       redeemed.single() match {
         case Some(Failure(s)) => p.redeem(failure(s))
         case Some(Success(s)) => p.redeem(success(s))
@@ -153,7 +149,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   
   def flatFold[B](failure: A => VSPromise[B], success: A => VSPromise[B])(implicit onTimeout: TimeoutException => B): VSPromise[B] = {
     atomic { implicit txn =>
-      val p = new VSPromise[B](future = future.flatFold(f => failure(f).future, s => success(s).future))
+      val p = VSPromise.applyTo[B](future = future.flatFold(f => failure(f).future, s => success(s).future))
       redeemed.single() match {
         case Some(Failure(f)) => Future { p.redeem(Failure(failure(f).result(1 hour))) }
         case Some(Success(s)) => Future { p.redeem(Success(success(s).result(1 hour))) }
@@ -164,10 +160,38 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
     }
   }
   
-  override def flatMap[B](success: A => Promise[B]): Promise[B] = {
-    sys.error("VSPromise.flatMap not implemented")
+  override def flatMap[B](result: A => Promise[B]): Promise[B] = {
+    val pr = Promise[A]()
+    redeemed.single() match {
+      case Some(v) => {
+        pr.redeem(v.fold(f => f, s => s))
+      }
+      case None => {
+        future.onComplete{
+          case v => pr.redeem(v.fold(f => f, s => s))
+        }
+      } 
+    }
+    timeout map {
+      case (duration, started) => started.toInstant.getMillis + duration.toMillis - DateTime.now().toInstant.getMillis
+    } map {
+      case time if (time > 0) => {
+        play.core.Invoker.system.scheduler.scheduleOnce(Duration(time, TimeUnit.MILLISECONDS)) {
+          pr.redeem(future.timeout(new TimeoutException("Timed out the promise")))
+        }
+      }
+      case _ =>
+    }
+    pr.flatMap(result)
+  }
+  
+//  def flatMapVS[B](result: A => VSPromise[B])(implicit onTimeout: TimeoutException => B): VSPromise[B] = {
+//    flatFold(result, result)
 //    atomic { implicit txn =>
-//      val p = new VSPromise[B](future = future.mapFail(t => null.asInstanceOf[B]).flatMap[B, B](f => VSPromise.failed[B](f)(context, future.timeout).future))
+//      val p = VSPromise.applyTo[B](future = future.flatFold(
+//          f => result(f).future,
+//          s => result(s).future
+//      ))
 //      redeemed.single() match {
 //        case Some(Failure(f)) => p.redeem(Failure(failure(f).result(1 hour))) // p.redeem is non blocking
 //        case Some(Success(s)) => p.redeem(Success(success(s).result(1 hour)))
@@ -176,7 +200,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
 //      forwardTimeout(p)
 //      p
 //    }
-  }
+//  }
   
   def foreach(f: A => Unit): Unit = future foreach f
   
@@ -246,7 +270,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   }
   
   def onTimeout[B >: A](result: B): VSPromise[B] = { 
-    new VSPromise[B](future.onTimeout(_ => result))
+    VSPromise.applyTo[B](future.onTimeout(_ => result))
   }
   
   def onSuccess(callback: PartialFunction[A, _]): VSPromise[A] =

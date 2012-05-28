@@ -15,7 +15,7 @@ case class Assertion(
     description: Option[String],
     assertorResponseId: AssertorResponseId)(implicit conf: VSConfiguration) {
   
-  //def getAssertorResponse: FutureVal[Exception, AssertorResponse] = AssertorResonse.getResponseWith()
+  def getAssertorResult: FutureVal[Exception, AssertorResult] = AssertorResult.get(assertorResponseId)
   def getContexts: FutureVal[Exception, Iterable[Context]] = Context.getForAssertion(id) 
   def toValueObject: AssertionVO = AssertionVO(id, url, lang, title, severity, description, assertorResponseId)
 }
@@ -53,7 +53,7 @@ case class Context(
     column: Option[Int],
     assertionId: AssertionId)(implicit conf: VSConfiguration) {
   
-  def getAssertion: FutureVal[Exception, Assertion] = sys.error("ni")
+  def getAssertion: FutureVal[Exception, Assertion] = Assertion.get(assertionId)
   def toValueObject: ContextVO = ContextVO(id, content, line, column, assertionId)
 } 
 

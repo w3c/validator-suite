@@ -100,7 +100,7 @@ class ValidJobForm private [view] (
 
 object JobForm {
   
-  def bind(user: User, idOpt: Option[JobId])(implicit req: Request[_], context: ExecutionContext): FutureVal[JobForm, ValidJobForm] = {
+  def bind()(implicit req: Request[_], context: ExecutionContext): FutureVal[JobForm, ValidJobForm] = {
 	val form = playForm.bindFromRequest
     implicit def onTo(to: TimeoutException): JobForm = new JobForm(form.withError("key", Messages("error.timeout")))
     FutureVal.validated[JobForm, ValidJobForm](

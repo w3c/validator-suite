@@ -24,7 +24,7 @@ sealed trait ResourceResponse {
   def save(): FutureVal[Exception, ResourceResponse] = ResourceResponse.save(this)
   def delete(): FutureVal[Exception, Unit] = ResourceResponse.delete(this)
   
-  //def toTinyString: String = "[%s/%s\t%s\t%s\t%s" format (valueObject.jobId.shortId, valueObject.runId.shortId, action.toString, url.toString, timestamp.toString())
+  //def toTinyString: String = "[%s/%s\t%s\t%s\t%s" format (jobId.shortId, runId.shortId, action.toString, url.toString, timestamp.toString())
 }
 
 object ResourceResponse {
@@ -46,7 +46,6 @@ case class ErrorResponse(
     why: String)(implicit val conf: VSConfiguration) extends ResourceResponse {
   
   def toValueObject: ErrorResponseVO = ErrorResponseVO(id, jobId, runId, url, action, timestamp, why)
-  
 }
 
 case class HttpResponse(
@@ -80,7 +79,6 @@ object HttpResponse {
     } getOrElse List.empty
     
     HttpResponse(jobId = jobId, runId = runId, url = url, action = action, status = status, headers = headers, extractedURLs = extractedURLs)
-    
   }
     
 }

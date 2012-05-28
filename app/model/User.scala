@@ -14,29 +14,16 @@ object User {
   def getForOrganization(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[User]] = sys.error("") 
   
   // TODO: For now these only fail with StoreExceptions but should also fail with a Unauthorized exception 
-  def authenticate(email: String, password: String)(implicit configuration: VSConfiguration): FutureVal[Exception, User] = {
-    /*import configuration.store
-    store.getUsers(email = Some(email), password = Some(password)).map(jobs => jobs.headOption).pureFold(
-      f => Failure(f),
-      {
-        case Some(s) => Success(s)
-        case _ => Failure(UnknownUser)
-      }
-    )*/
-    implicit def ec = configuration.webExecutionContext
-    FutureVal.failed(new Exception("Need a store!"))
+  def authenticate(email: String, password: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
+    val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organizationId = OrganizationId())
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(tgambet)
   }
   
-  def getByEmail(email: String)(implicit configuration: VSConfiguration): FutureVal[Exception, User] = {
-    /*import configuration.store
-    store.getUsers(email = Some(email)).map(jobs => jobs.headOption).pureFold(
-      f => Failure(f),
-      {
-        case Some(s) => Success(s)
-        case _ => Failure(UnknownUser)
-      }
-    )*/
-    sys.error("")
+  def getByEmail(email: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
+    val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organizationId = OrganizationId())
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(tgambet)
   }
   
   def save(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, User] = sys.error("")

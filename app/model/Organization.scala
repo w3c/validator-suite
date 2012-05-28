@@ -59,7 +59,11 @@ case class Organization(
 
 object Organization {
   
-  def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = sys.error("ni")
+  def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
+    implicit def ec = conf.webExecutionContext
+    val w3c = Organization(name = "World Wide Web Consortium", adminId = UserId())
+    FutureVal.successful(w3c)
+  }
   def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = sys.error("ni")
   def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = sys.error("")
   
