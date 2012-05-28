@@ -92,15 +92,14 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   // @deprecated(message = "This is a blocking call (5 sec) in Play's Promise! Use current() instead for a non-blocking probe of the current promise value.", since = "")
   override def value: NotWaiting[A] = super.value
   
-  // I kept the semantic of await by returning a Thrown but timeouts are already dealt with by the inner FuturVal.  
-  // FuturVals do not throw any exceptions, these are part of their failure value. Use await(d: akka.util.Duration).
   // @deprecated(message="Use await(d: akka.util.Duration)", since="")
   override def await(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): NotWaiting[A] = {
     val duration = akka.util.Duration(timeout, unit)
     atomic { implicit txn =>
       if (!redeemed().isDefined) {
         retryFor(duration.toNanos, scala.actors.threadpool.TimeUnit.NANOSECONDS)
-        Thrown(new TimeoutException("No result computed after " + duration))
+        //Thrown(new TimeoutException("No result computed after " + duration))
+        Redeemed(future.timeout(new TimeoutException("No result computed after " + duration)))
       } else {
         Redeemed(redeemed().get.fold(f => f, s => s))
       }
