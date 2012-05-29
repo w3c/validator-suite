@@ -106,6 +106,35 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
+  val AssertorResultVOBinder = new PointedGraphBinder[Rdf, AssertorResultVO] {
+
+    def toPointedGraph(t: AssertorResultVO): PointedGraph[Rdf] = (
+      AssertorResponseUri(t.id).a(assertorResult.AssertorResult)
+        -- assertorResult.jobId ->- JobUri(t.jobId)
+        -- assertorResult.runId ->- RunUri(t.runId)
+        -- assertorResult.assertorId ->- AssertorUri(t.assertorId)
+        -- assertorResult.sourceUrl ->- t.sourceUrl
+        -- assertorResult.timestamp ->- t.timestamp
+    )
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertorResultVO] = {
+      for {
+        id <- pointed.node.asURI flatMap AssertorResponseUri.getId
+        jobId <- (pointed / assertorResult.jobId).exactlyOne.flatMap(_.asURI).flatMap(JobUri.getId)
+        runId <- (pointed / assertorResult.runId).exactlyOne.flatMap(_.asURI).flatMap(RunUri.getId)
+        assertorId <- (pointed / assertorResult.assertorId).exactlyOne.flatMap(_.asURI).flatMap(AssertorUri.getId)
+        sourceUrl <- (pointed / assertorResult.sourceUrl).exactlyOne.flatMap(_.as[URL])
+        timestamp <- (pointed / assertorResult.timestamp).exactlyOne.flatMap(_.as[DateTime])
+      } yield {
+        AssertorResultVO(id, jobId, runId, assertorId, sourceUrl, timestamp)
+      }
+    }
+
+  }
+
+
+
+
   val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
 
     def toPointedGraph(t: OrganizationVO): PointedGraph[Rdf] = (

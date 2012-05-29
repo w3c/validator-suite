@@ -69,4 +69,9 @@ trait UriBuilders[Rdf <: RDF] {
     def getId(uri: Rdf#URI): Validation[BananaException, AssertorResponseId] = getLocalName(uri) map AssertorResponseId.apply
   }
 
+  object AssertorUri extends PrefixBuilder("", "https://validator.w3.org/suite/assertor/", ops) {
+    def apply(id: AssertorId): Rdf#URI = apply(id.toString)
+    def getId(uri: Rdf#URI): Validation[BananaException, AssertorId] = getLocalName(uri) map AssertorId.apply
+  }
+
 }

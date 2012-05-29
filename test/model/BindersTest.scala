@@ -69,4 +69,16 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
+  "AssertorResultVO" in {
+    testSerializeDeserialize(AssertorResultVOBinder) {
+      AssertorResultVO(
+        jobId = JobId(),
+        runId = RunId(),
+        assertorId = AssertorId(),
+        sourceUrl = URL("http://example.com/foo"),
+        timestamp = DateTime.now(DateTimeZone.UTC))
+
+    }
+  }
+
 }

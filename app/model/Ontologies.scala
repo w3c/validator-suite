@@ -35,6 +35,11 @@ self: LiteralBinders[Rdf] =>
 
   object assertorResult extends PrefixBuilder("assertorResult", "https://validator.w3.org/suite/assertorResult#", ops) {
     val AssertorResult = apply("AssertorResult")
+    val jobId = apply("jobId")
+    val runId = apply("runId")
+    val assertorId = apply("assertorId")
+    val sourceUrl = apply("sourceUrl")
+    val timestamp = apply("timestamp")
   }
 
   object job extends PrefixBuilder("job", "https://validator.w3.org/suite/job#", ops) {
