@@ -59,4 +59,14 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
+  "ContextVO" in {
+    testSerializeDeserialize(ContextVOBinder) {
+      ContextVO(
+        content = "foo",
+        line = Some(42),
+        column = None,
+        assertionId = AssertionId())
+    }
+  }
+
 }

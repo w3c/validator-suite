@@ -69,6 +69,43 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   }
 
+
+  val ContextVOBinder = new PointedGraphBinder[Rdf, ContextVO] {
+
+    def toPointedGraph(t: ContextVO): PointedGraph[Rdf] = {
+      val pointed = (
+        ContextUri(t.id).a(context.Context)
+          -- context.content ->- t.content
+          -- context.assertionId ->- AssertionUri(t.assertionId)
+      )
+      pointed
+        .ifDefined(t.line){ (p, l) => p -- context.line ->- l }
+        .ifDefined(t.column){ (p, c) => p -- context.column ->- c }
+
+    }
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ContextVO] = {
+      for {
+        id <- pointed.node.asURI flatMap ContextUri.getId
+        content <- (pointed / context.content).exactlyOne.flatMap(_.as[String])
+        line <- (pointed / context.line).headOption match {
+          case None => Success(None)
+          case Some(pg) => pg.node.as[Int] map (Some(_))
+        }
+        column <- (pointed / context.column).headOption match {
+          case None => Success(None)
+          case Some(pg) => pg.node.as[Int] map (Some(_))
+        }
+        assertionId <- (pointed / context.assertionId).exactlyOne.flatMap(_.asURI).flatMap(AssertionUri.getId)
+      } yield {
+        ContextVO(id, content, line, column, assertionId)
+      }
+    }
+
+  }
+
+
+
   val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
 
     def toPointedGraph(t: OrganizationVO): PointedGraph[Rdf] = (

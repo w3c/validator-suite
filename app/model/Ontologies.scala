@@ -27,6 +27,10 @@ self: LiteralBinders[Rdf] =>
 
   object context extends PrefixBuilder("context", "https://validator.w3.org/suite/context#", ops) {
     val Context = apply("Context")
+    val content = apply("content")
+    val line = apply("line")
+    val column = apply("column")
+    val assertionId = apply("assertionId")
   }
 
   object assertorResult extends PrefixBuilder("assertorResult", "https://validator.w3.org/suite/assertorResult#", ops) {

@@ -17,7 +17,7 @@ case class AssertionVO (
 case class ContextVO (
     id: ContextId = ContextId(),
     content: String,
-    line: Option[Int], 
+    line: Option[Int],
     column: Option[Int],
     assertionId: AssertionId) extends ValueObject
 
