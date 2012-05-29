@@ -6,6 +6,7 @@ import scalaz._
 import scalaz.Scalaz._
 import scalaz.Validation._
 import org.joda.time.DateTime
+import org.w3.util.URL
 
 /**
  * creates [EntityGraphBinder]s for the VS entities
@@ -14,7 +15,7 @@ case class Binders[Rdf <: RDF](
   ops: RDFOperations[Rdf],
   union: GraphUnion[Rdf],
   graphTraversal: RDFGraphTraversal[Rdf])
-extends UriBuilders[Rdf] with Ontologies[Rdf] {
+extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   val diesel: Diesel[Rdf] = Diesel(ops, union, graphTraversal)
   
@@ -33,6 +34,40 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] {
   implicit def addIfDefinedMethod[S](s: S): IfDefined[S] = new IfDefined[S](s)
 
   /* binders for entities */
+
+  val AssertionVOBinder = new PointedGraphBinder[Rdf, AssertionVO] {
+
+    def toPointedGraph(t: AssertionVO): PointedGraph[Rdf] = {
+      val pointed = (
+        AssertionUri(t.id).a(assertion.Assertion)
+          -- assertion.url ->- t.url
+          -- assertion.lang ->- t.lang
+          -- assertion.title ->- t.title
+          -- assertion.severity ->- t.severity
+          -- assertion.assertorResponseId ->- AssertorResponseUri(t.assertorResponseId)
+      )
+      pointed.ifDefined(t.description){ (p, desc) => p -- assertion.description ->- desc }
+
+    }
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertionVO] = {
+      for {
+        id <- pointed.node.asURI flatMap AssertionUri.getId
+        url <- (pointed / assertion.url).exactlyOne.flatMap(_.as[URL])
+        lang <- (pointed / assertion.lang).exactlyOne.flatMap(_.as[String])
+        title <- (pointed / assertion.title).exactlyOne.flatMap(_.as[String])
+        severity <- (pointed / assertion.severity).exactlyOne.flatMap(_.as[AssertionSeverity])
+        description <- (pointed / assertion.description).headOption match {
+          case None => Success(None)
+          case Some(pg) => pg.node.as[String] map (Some(_))
+        }
+        assertorResponseId <- (pointed / assertion.assertorResponseId).exactlyOne.flatMap(_.asURI).flatMap(AssertorResponseUri.getId)
+      } yield {
+        AssertionVO(id, url, lang, title, severity, description, assertorResponseId)
+      }
+    }
+
+  }
 
   val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
 

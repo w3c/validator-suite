@@ -6,6 +6,7 @@ import scalaz._
 import org.w3.banana._
 import org.w3.banana.jena._
 import org.joda.time.{ DateTime, DateTimeZone }
+import org.w3.util.URL
 
 class BindersTest extends WordSpec with MustMatchers {
 
@@ -31,6 +32,30 @@ class BindersTest extends WordSpec with MustMatchers {
         creatorId = UserId(),
         organizationId = OrganizationId(),
         strategyId = StrategyId())
+    }
+  }
+
+  "AssertionVO no description" in {
+    testSerializeDeserialize(AssertionVOBinder) {
+      AssertionVO(
+        url = URL("http://example.com/foo"),
+        lang = "fr",
+        title = "bar",
+        severity = Warning,
+        description = None,
+        assertorResponseId = AssertorResponseId())
+    }
+  }
+
+  "AssertionVO with description" in {
+    testSerializeDeserialize(AssertionVOBinder) {
+      AssertionVO(
+        url = URL("http://example.com/foo"),
+        lang = "fr",
+        title = "bar",
+        severity = Warning,
+        description = Some("some desc"),
+        assertorResponseId = AssertorResponseId())
     }
   }
 

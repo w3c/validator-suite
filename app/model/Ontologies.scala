@@ -7,6 +7,7 @@ import scalaz.Scalaz._
 import scalaz.Validation._
 
 trait Ontologies[Rdf <: RDF] {
+self: LiteralBinders[Rdf] =>
 
   val ops: RDFOperations[Rdf]
   val diesel: Diesel[Rdf]
@@ -14,10 +15,14 @@ trait Ontologies[Rdf <: RDF] {
   import ops._
   import diesel._
 
-  /* ontologies for entities */
-
   object assertion extends PrefixBuilder("assertion", "https://validator.w3.org/suite/assertion#", ops) {
     val Assertion = apply("Assertion")
+    val url = apply("url")
+    val lang = apply("lang")
+    val title = apply("title")
+    val severity = apply("severity")
+    val description = apply("description")
+    val assertorResponseId = apply("assertorResponseId")
   }
 
   object context extends PrefixBuilder("context", "https://validator.w3.org/suite/context#", ops) {
