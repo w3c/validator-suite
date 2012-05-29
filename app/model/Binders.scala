@@ -14,7 +14,7 @@ case class Binders[Rdf <: RDF](
   ops: RDFOperations[Rdf],
   union: GraphUnion[Rdf],
   graphTraversal: RDFGraphTraversal[Rdf])
-extends UriBuilders[Rdf] {
+extends UriBuilders[Rdf] with Ontologies[Rdf] {
 
   val diesel: Diesel[Rdf] = Diesel(ops, union, graphTraversal)
   
@@ -31,24 +31,6 @@ extends UriBuilders[Rdf] {
   }
 
   implicit def addIfDefinedMethod[S](s: S): IfDefined[S] = new IfDefined[S](s)
-
-
-  /* ontologies for entities */
-
-  object organization extends PrefixBuilder("organization", "https://validator.w3.org/suite/organization#", ops) {
-    val Organization = apply("Organization")
-    val name = apply("name")
-    val admin = apply("admin")
-  }
-
-  object job extends PrefixBuilder("job", "https://validator.w3.org/suite/job#", ops) {
-    val Job = apply("Job")
-    val name = apply("name")
-    val creator = apply("creator")
-    val organization = apply("organization")
-    val strategy = apply("strategy")
-    val createdOn = apply("created-on")
-  }
 
   /* binders for entities */
 
