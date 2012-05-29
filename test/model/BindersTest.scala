@@ -23,22 +23,11 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
-  "JobVO v1" in {
+  "JobVO" in {
     testSerializeDeserialize(JobVOBinder) {
       JobVO(
         name = "foo",
-        lastCompleted = None,
-        creatorId = UserId(),
-        organizationId = OrganizationId(),
-        strategyId = StrategyId())
-    }
-  }
-
-  "JobVO with lastCompleted" in {
-    testSerializeDeserialize(JobVOBinder) {
-      JobVO(
-        name = "foo",
-        lastCompleted = Some(DateTime.now(DateTimeZone.UTC)),
+        createdOn = DateTime.now(DateTimeZone.UTC),
         creatorId = UserId(),
         organizationId = OrganizationId(),
         strategyId = StrategyId())

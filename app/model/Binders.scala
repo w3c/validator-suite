@@ -69,7 +69,6 @@ case class Binders[Rdf <: RDF](
     val organization = apply("organization")
     val strategy = apply("strategy")
     val createdOn = apply("created-on")
-    val lastCompleted = apply("last-completed")
   }
 
   /* binders for entities */
@@ -96,32 +95,25 @@ case class Binders[Rdf <: RDF](
 
   val JobVOBinder = new PointedGraphBinder[Rdf, JobVO] {
 
-    def toPointedGraph(t: JobVO): PointedGraph[Rdf] = {
-      val pointed = (
-        JobUri(t.id).a(job.Job)
-          -- job.name ->- t.name
-          -- job.createdOn ->- t.createdOn
-          -- job.creator ->- UserUri(t.creatorId)
-          -- job.organization ->- OrganizationUri(t.organizationId)
-          -- job.strategy ->- StrategyUri(t.strategyId)
-      )
-      pointed.ifDefined(t.lastCompleted){ (p, last) => p -- job.lastCompleted ->- last }
-    }
+    def toPointedGraph(t: JobVO): PointedGraph[Rdf] = (
+      JobUri(t.id).a(job.Job)
+        -- job.name ->- t.name
+        -- job.createdOn ->- t.createdOn
+        -- job.creator ->- UserUri(t.creatorId)
+        -- job.organization ->- OrganizationUri(t.organizationId)
+        -- job.strategy ->- StrategyUri(t.strategyId)
+    )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, JobVO] = {
       for {
         id <- pointed.node.asURI flatMap JobUri.getId
         name <- (pointed / job.name).exactlyOne.flatMap(_.as[String])
         createdOn <- (pointed / job.createdOn).exactlyOne.flatMap(_.as[DateTime])
-        lastCompleted <- (pointed / job.lastCompleted).headOption match { // TODO see if there is a better style
-          case None => Success(None)
-          case Some(pg) => pg.node.as[DateTime] map (Some(_))
-        }
         creator <- (pointed / job.creator).exactlyOne.flatMap(_.asURI) flatMap UserUri.getId
         organization <- (pointed / job.organization).exactlyOne.flatMap(_.asURI) flatMap OrganizationUri.getId
         strategy <- (pointed / job.strategy).exactlyOne.flatMap(_.asURI) flatMap StrategyUri.getId
       } yield {
-        JobVO(id, name, createdOn, lastCompleted, creator, organization, strategy)
+        JobVO(id, name, createdOn, creator, organization, strategy)
       }
     }
 

@@ -30,7 +30,7 @@ case class AssertorResultVO (
     timestamp: DateTime)
 
 case class JobVO (
-    id: JobId,
+    id: JobId = JobId(),
     name: String,
     createdOn: DateTime,
     creatorId: UserId,
