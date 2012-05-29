@@ -134,27 +134,6 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-
-  val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
-
-    def toPointedGraph(t: OrganizationVO): PointedGraph[Rdf] = (
-      OrganizationUri(t.id).a(organization.Organization)
-        -- organization.name ->- t.name
-        -- organization.admin ->- UserUri(t.admin)
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, OrganizationVO] = {
-      for {
-        id <- pointed.node.asURI flatMap OrganizationUri.getId
-        name <- (pointed / organization.name).exactlyOne.flatMap(_.as[String])
-        adminId <- (pointed / organization.admin).exactlyOne.flatMap(_.asURI).flatMap(UserUri.getId)
-      } yield {
-        OrganizationVO(id, name, adminId)
-      }
-    }
-
-  }
-
   val JobVOBinder = new PointedGraphBinder[Rdf, JobVO] {
 
     def toPointedGraph(t: JobVO): PointedGraph[Rdf] = (
@@ -179,9 +158,62 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
       }
     }
 
+  }
 
+
+
+
+  val JobDataVOBinder = new PointedGraphBinder[Rdf, JobDataVO] {
+
+    def toPointedGraph(t: JobDataVO): PointedGraph[Rdf] = (
+      JobDataUri(t.id).a(jobData.JobData)
+        -- jobData.jobId ->- JobUri(t.jobId)
+        -- jobData.runId ->- RunUri(t.runId)
+        -- jobData.resources ->- t.resources
+        -- jobData.errors ->- t.errors
+        -- jobData.warnings ->- t.warnings
+        -- jobData.timestamp ->- t.timestamp
+    )
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, JobDataVO] = {
+      for {
+        id <- pointed.node.asURI flatMap JobDataUri.getId
+        jobId <- (pointed / jobData.jobId).exactlyOne.flatMap(_.asURI).flatMap(JobUri.getId)
+        runId <- (pointed / jobData.runId).exactlyOne.flatMap(_.asURI).flatMap(RunUri.getId)
+        resources <- (pointed / jobData.resources).exactlyOne.flatMap(_.as[Int])
+        errors <- (pointed / jobData.errors).exactlyOne.flatMap(_.as[Int])
+        warnings <- (pointed / jobData.warnings).exactlyOne.flatMap(_.as[Int])
+        timestamp <- (pointed / jobData.timestamp).exactlyOne.flatMap(_.as[DateTime])
+      } yield {
+        JobDataVO(id, jobId, runId, resources, errors, warnings, timestamp)
+      }
+    }
 
   }
+
+
+
+
+  val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
+
+    def toPointedGraph(t: OrganizationVO): PointedGraph[Rdf] = (
+      OrganizationUri(t.id).a(organization.Organization)
+        -- organization.name ->- t.name
+        -- organization.admin ->- UserUri(t.admin)
+    )
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, OrganizationVO] = {
+      for {
+        id <- pointed.node.asURI flatMap OrganizationUri.getId
+        name <- (pointed / organization.name).exactlyOne.flatMap(_.as[String])
+        adminId <- (pointed / organization.admin).exactlyOne.flatMap(_.asURI).flatMap(UserUri.getId)
+      } yield {
+        OrganizationVO(id, name, adminId)
+      }
+    }
+
+  }
+
 
 
 

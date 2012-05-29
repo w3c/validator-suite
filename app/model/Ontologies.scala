@@ -53,6 +53,12 @@ self: LiteralBinders[Rdf] =>
 
   object jobData extends PrefixBuilder("jobData", "https://validator.w3.org/suite/jobData#", ops) {
     val JobData = apply("JobData")
+    val jobId = apply("jobId")
+    val runId = apply("runId")
+    val resources = apply("resources")
+    val errors = apply("errors")
+    val warnings = apply("warnings")
+    val timestamp = apply("timestamp")
   }
 
   object organization extends PrefixBuilder("organization", "https://validator.w3.org/suite/organization#", ops) {
