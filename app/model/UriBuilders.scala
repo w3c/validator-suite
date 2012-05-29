@@ -14,8 +14,6 @@ trait UriBuilders[Rdf <: RDF] {
   import ops._
   import diesel._
 
-  /* uri builders for entities */
-
   object AssertionUri extends PrefixBuilder("", "https://validator.w3.org/suite/assertion/", ops) {
     def apply(id: AssertionId): Rdf#URI = apply(id.toString)
     def getId(uri: Rdf#URI): Validation[BananaException, AssertionId] = getLocalName(uri) map AssertionId.apply
@@ -26,7 +24,7 @@ trait UriBuilders[Rdf <: RDF] {
     def getId(uri: Rdf#URI): Validation[BananaException, ContextId] = getLocalName(uri) map ContextId.apply
   }
 
-  object AssertorResultUri extends PrefixBuilder("", "https://validator.w3.org/suite/assertor-result/", ops) {
+  object AssertorResultUri extends PrefixBuilder("", "https://validator.w3.org/suite/assertorResult/", ops) {
     def apply(id: AssertorResponseId): Rdf#URI = apply(id.toString)
     def getId(uri: Rdf#URI): Validation[BananaException, AssertorResponseId] = getLocalName(uri) map AssertorResponseId.apply
   }
@@ -36,7 +34,7 @@ trait UriBuilders[Rdf <: RDF] {
     def getId(uri: Rdf#URI): Validation[BananaException, JobId] = getLocalName(uri) map JobId.apply
   }
 
-  object JobDataUri extends PrefixBuilder("", "https://validator.w3.org/suite/job-data/", ops) {
+  object JobDataUri extends PrefixBuilder("", "https://validator.w3.org/suite/jobData/", ops) {
     def apply(id: JobDataId): Rdf#URI = apply(id.toString)
     def getId(uri: Rdf#URI): Validation[BananaException, JobDataId] = getLocalName(uri) map JobDataId.apply
   }
@@ -46,7 +44,7 @@ trait UriBuilders[Rdf <: RDF] {
     def getId(uri: Rdf#URI): Validation[BananaException, OrganizationId] = getLocalName(uri) map OrganizationId.apply
   }
 
-  object ResourceResponseUri extends PrefixBuilder("", "https://validator.w3.org/suite/resource-response/", ops) {
+  object ResourceResponseUri extends PrefixBuilder("", "https://validator.w3.org/suite/resourceResponse/", ops) {
     def apply(id: ResourceResponseId): Rdf#URI = apply(id.toString)
     def getId(uri: Rdf#URI): Validation[BananaException, ResourceResponseId] = getLocalName(uri) map ResourceResponseId.apply
   }
