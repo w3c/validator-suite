@@ -21,9 +21,8 @@ class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
   val strategy =
     Strategy(
       entrypoint=URL("http://localhost:9001/"),
-      distance=11,
       linkCheck=true,
-      maxNumberOfResources = 100,
+      maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
   val job = Job(

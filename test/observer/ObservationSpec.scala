@@ -22,9 +22,8 @@ abstract class ObservationSpec extends WordSpec with MustMatchers {
   val strategy =
     Strategy(
       entrypoint=URL("http://www.w3.org"),
-      distance=11,
       linkCheck=true,
-      maxNumberOfResources = 100,
+      maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
   val w3 = Job(

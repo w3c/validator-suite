@@ -24,9 +24,8 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
   val strategy =
     Strategy(
       entrypoint=URL("http://localhost:9001/1/"),
-      distance=4,
       linkCheck=true,
-      maxNumberOfResources = 50,
+      maxResources = 50,
       filter=Filter.includePrefixes("http://localhost:9001/1", "http://localhost:9001/3")).noAssertor()
   
   val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")

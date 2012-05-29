@@ -17,11 +17,12 @@ object Strategy {
 case class Strategy (
     id: StrategyId = StrategyId(),
     entrypoint: URL,
-    distance: Int,
     linkCheck: Boolean,
-    maxNumberOfResources: Int,
-    filter: Filter,
+    maxResources: Int,
+    filter: Filter = Filter.includeEverything,
     assertorsFor: AssertorSelector = AssertorSelector.simple)(implicit conf: VSConfiguration) {
+  
+  val distance: Int = 50
   
   val mainAuthority: Authority = entrypoint.authority
   
@@ -42,6 +43,6 @@ case class Strategy (
 
   def noAssertor(): Strategy = this.copy(assertorsFor = AssertorSelector.noAssertor)
   
-  def toValueObject: StrategyVO = StrategyVO(id, entrypoint, distance, linkCheck, maxNumberOfResources, filter)
+  def toValueObject: StrategyVO = StrategyVO(id, entrypoint, distance, linkCheck, maxResources, filter)
   
 }

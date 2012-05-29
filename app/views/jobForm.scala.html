@@ -32,12 +32,10 @@
 		<input id="name" name="name" type="text" value="@form("name").value" required></input><br>
 		<label for="url">URL: </label>
 		<input id="url" name="url" type="url" value="@form("url").value" required></input><br>
-		<label for="distance">Distance: </label>
-		<input id="distance" name="distance" type="range" value="@form("distance").value.getOrElse(10)" max=20 onchange="showValue(this.value)"/><span id="dist">@form("distance").value.getOrElse(10)</span><br>
-		<label for="maxNumberOfResources">Number of resources: </label>
-		<input id="maxNumberOfResources" name="maxNumberOfResources" type="text" value="@form("maxNumberOfResources").value.getOrElse(100)"</input><br>
-		<label for="linkCheck">Check external links: </label>
-		<input type=checkbox id=linkCheck name=linkCheck @if(form("linkCheck").value == Some("on")) {checked}/><br>
+		<label for="maxResources">Number of resources: </label>
+		<input id="maxResources" name="maxResources" type="text" value="@form("maxResources").value.getOrElse(100)"</input><br>
+		<!-- <label for="linkCheck">Check external links: </label>
+		<input type=checkbox id=linkCheck name=linkCheck @**if(form("linkCheck").value == Some("on")) {checked}**@ checked/><br> -->
 		@if(idOpt.isDefined) {
 		<input type=submit name=action value=Update formaction="@routes.Jobs.dispatcher(idOpt.get)">
 		} else {

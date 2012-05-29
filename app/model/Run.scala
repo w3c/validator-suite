@@ -87,7 +87,7 @@ case class Run(
     notToBeFetched || alreadyKnown
   }
 
-  def numberOfRemainingAllowedFetches = strategy.maxNumberOfResources - numberOfKnownUrls
+  def numberOfRemainingAllowedFetches = strategy.maxResources - numberOfKnownUrls
 
   /**
    * Returns an Observation with the new urls to be explored

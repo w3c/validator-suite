@@ -19,9 +19,8 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
   val strategy =
     Strategy(
       entrypoint=URL("http://localhost:9001/"),
-      distance=1000,
       linkCheck=true,
-      maxNumberOfResources = 100,
+      maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
   val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")

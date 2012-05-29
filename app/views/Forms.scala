@@ -59,17 +59,16 @@ object LoginForm {
 }
 
 class JobForm private [view] (
-    form: Form[(String, URL, Int, Boolean, Int)]) extends VSForm {
+    form: Form[(String, URL, Boolean, Int)]) extends VSForm {
   def apply(s: String) = form(s)
+  def globalError = form.globalError
 }
 
 class ValidJobForm private [view] (
-    form: Form[(String, URL, Int, Boolean, Int)],
-    bind: (String, URL, Int, Boolean, Int)) extends JobForm(form) with VSForm {
+    form: Form[(String, URL, Boolean, Int)],
+    bind: (String, URL, Boolean, Int)) extends JobForm(form) with VSForm {
   
-  def globalError = form.globalError
-  
-  val (name, url, distance, linkCheck, maxNumberOfResources) = bind
+  val (name, url, linkCheck, maxResources) = bind
   
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
     Job(
@@ -78,10 +77,8 @@ class ValidJobForm private [view] (
       creatorId = user.id,
       strategy = Strategy(
         entrypoint = url,
-        distance = distance,
         linkCheck = linkCheck,
-        maxNumberOfResources = maxNumberOfResources,
-        filter = Filter(include = Everything, exclude = Nothing)))
+        maxResources = maxResources))
   }
   
   def update(job: Job)(implicit conf: VSConfiguration): Job = {
@@ -89,9 +86,8 @@ class ValidJobForm private [view] (
         name = name,
         strategy = job.strategy.copy(
             entrypoint = url, 
-            distance = distance, 
             linkCheck = linkCheck, 
-            maxNumberOfResources = maxNumberOfResources
+            maxResources = maxResources
         )
     )
   }
@@ -117,25 +113,22 @@ object JobForm {
       playForm fill (
           job.name, 
           job.strategy.entrypoint, 
-          job.strategy.distance, 
           job.strategy.linkCheck, 
-          job.strategy.maxNumberOfResources
+          job.strategy.maxResources
       ),(
           job.name, 
           job.strategy.entrypoint, 
-          job.strategy.distance, 
           job.strategy.linkCheck, 
-          job.strategy.maxNumberOfResources
+          job.strategy.maxResources
       )
     )
   
-  private def playForm: Form[(String, URL, Int, Boolean, Int)] = Form(
+  private def playForm: Form[(String, URL, Boolean, Int)] = Form(
     tuple (
       "name" -> text,
       "url" -> of[URL],
-      "distance" -> of[Int],
       "linkCheck" -> of[Boolean](booleanFormatter),
-      "maxNumberOfResources" -> of[Int]
+      "maxResources" -> of[Int]
     )
   )
   

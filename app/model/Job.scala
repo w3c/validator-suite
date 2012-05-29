@@ -115,9 +115,8 @@ object Job {
       organizationId = OrganizationId(),
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/"),
-        distance = 2,
         linkCheck = false,
-        maxNumberOfResources = 100,
+        maxResources = 100,
         filter = Filter(include = Everything, exclude = Nothing)))
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(Iterable(w3))
@@ -125,7 +124,11 @@ object Job {
   def getFor(organization: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
   def getFor(strategy: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
   def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
-  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = sys.error("")
+  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.failed(new Exception("Not implemented yet"))
+  }
+  
   def delete(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = sys.error("")
 
 }

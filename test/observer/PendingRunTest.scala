@@ -35,9 +35,8 @@ class PendingRunTest extends RunTestHelper(
     Strategy(
       id=StrategyId(), 
       entrypoint=URL("http://localhost:9001/1/"),
-      distance=4,
       linkCheck=true,
-      maxNumberOfResources = 10,
+      maxResources = 10,
       filter=Filter.includeEverything).noAssertor()
   
   val job = Job(

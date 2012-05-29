@@ -31,9 +31,8 @@ object Global extends GlobalSettings {
       organizationId = w3c.id,
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/"),
-        distance = 2,
         linkCheck = false,
-        maxNumberOfResources = 100,
+        maxResources = 100,
         filter = Filter(include = Everything, exclude = Nothing)))
         
     val tr = Job(
@@ -43,9 +42,8 @@ object Global extends GlobalSettings {
       organizationId = w3c.id,
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/TR"),
-        distance = 2,
         linkCheck = false,
-        maxNumberOfResources = 100,
+        maxResources = 100,
         filter=Filter.includePrefixes("http://www.w3.org/TR")))
         
     val ibm = Job(
@@ -55,9 +53,8 @@ object Global extends GlobalSettings {
       organizationId = w3c.id,
       strategy = Strategy(
         entrypoint = URL("http://www.ibm.com"),
-        distance = 2,
         linkCheck = false,
-        maxNumberOfResources = 100,
+        maxResources = 100,
         filter = Filter(include=Everything, exclude=Nothing)))
     
     val lemonde = Job(
@@ -67,9 +64,8 @@ object Global extends GlobalSettings {
       organizationId = w3c.id,
       strategy = Strategy(
         entrypoint = URL("http://www.lemonde.fr"),
-        distance = 2,
         linkCheck = false,
-        maxNumberOfResources = 100,
+        maxResources = 100,
         filter = Filter(include = Everything, exclude = Nothing)))
     
     // TODO a Saveable trait might be handy

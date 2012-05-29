@@ -95,7 +95,7 @@ case class StrategyVO (
     entrypoint: URL,
     distance: Int,
     linkCheck: Boolean,
-    maxNumberOfResources: Int,
+    maxResources: Int,
     filter: Filter) extends ValueObject
     
 case class UserVO (
