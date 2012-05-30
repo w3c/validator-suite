@@ -159,4 +159,32 @@ class FutureValTest extends WordSpec with MustMatchers {
       future.failMap(r => r + "0").result(10 millisecond) must be (Failure("fail0"))
     }
   }
+  
+  "FutureVal.sequence" should {
+    
+    "1" in {
+      
+      def f1 = FutureVal.successful("s1")
+      def f2 = FutureVal.successful("s2")
+      def seq = FutureVal.sequence(Iterable(f1, f2))
+      
+      seq.waitFor(1 second).isCompleted must be (true)
+      seq.waitFor(1 second).result must be (Success(Seq("s2", "s1"))) // order?
+      
+    }
+    
+    "2" in {
+      
+      implicit def to(t: TimeoutException): String = t.getMessage
+      
+      def f1 = FutureVal.failed("s1")
+      def f2 = FutureVal.successful[String, String]("s2")
+      def seq = FutureVal.sequence(Iterable(f1, f2))
+      
+      seq.waitFor(1 second).isCompleted must be (true)
+      seq.waitFor(1 second).result must be (Failure("s1"))
+      
+    }
+    
+  }
 }

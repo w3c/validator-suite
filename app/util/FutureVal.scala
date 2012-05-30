@@ -6,6 +6,7 @@ import akka.dispatch.ExecutionContext
 import akka.dispatch.Future
 import akka.dispatch.Promise
 import akka.util.Duration
+import akka.util.duration._
 import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
@@ -55,6 +56,7 @@ object FutureVal {
     new FutureVal(Promise.successful(validation))
   }
   
+  // I actually prefer to do Future.pure(option.get) which is equivalent so this method is not really useful.
   def fromOption[S](option: Option[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
     option fold (
       s => FutureVal.successful(s),
@@ -70,18 +72,32 @@ object FutureVal {
       })
   }
   
-  def sequence[S](iterable: Iterable[Future[S]])(
-      implicit context: ExecutionContext): FutureVal[Throwable, Iterable[S]] = {
+  def sequence[S](iterable: Iterable[Future[S]])(implicit context: ExecutionContext): FutureVal[Throwable, Iterable[S]] = {
     FutureVal.applyTo(Future.sequence(iterable))
   }
   
-  // TODO sequence with FutureVals
+  // not optimal
+  def sequence[F, S](iterable: Iterable[FutureVal[F, S]])(implicit context: ExecutionContext, onTimeout: TimeoutException => F): FutureVal[F, Iterable[S]] = {
+    iterable.foldLeft(FutureVal.successful[F, Seq[S]](Seq.empty[S]))(
+      (f1, f2) => f1.flatFold(
+          failure => f1,
+          seq => f2.fold(
+              failure => failure,
+              s => s +: seq
+          )
+      )
+    )
+  }
   
+  // An implicit conversion from FutureVal[Throwable, A] to FutureVal[Exception, A]. We don't try to catch Error typed exceptions.
   implicit def toFutureValException[A](f: FutureVal[Throwable, A]): FutureVal[Exception, A] =
     f failMap {
       case e: Exception => e
-      case error => throw error
+      case error => throw error // TODO add logging
     }
+  
+  implicit def toFutureValExceptionS[A](iterable: Iterable[FutureVal[Throwable, A]]): Iterable[FutureVal[Exception, A]] =
+    iterable.map(a => toFutureValException(a))
   
 }
 
