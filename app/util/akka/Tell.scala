@@ -1,5 +1,5 @@
 package org.w3.util.akkaext
 
-import java.nio.file.Path
+import java.net.URI
 
-case class Tell(path: Path, message: Any)
+case class Tell(path: URI, message: Any)

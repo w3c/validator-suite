@@ -14,7 +14,8 @@ object PathAware {
 
 class PathAware(root: ActorRef, path: ActorPath) {
 
-  val jpath = Paths.get(new URI(path.toString).getPath)
+  //val jpath = Paths.get(new URI(path.toString).getPath).toString
+  val jpath = new URI(path.toString)
 
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     root ! Tell(jpath, message)
@@ -24,8 +25,9 @@ class PathAware(root: ActorRef, path: ActorPath) {
 
   import akka.pattern.ask
 
-  def ?[A](message: Any)(implicit timeout: akka.util.Timeout, context: ExecutionContext, m: Manifest[A]): FutureVal[Throwable, A] =
+  def ?[A](message: Any)(implicit timeout: akka.util.Timeout, context: ExecutionContext, m: Manifest[A]): FutureVal[Throwable, A] = {
     FutureVal.applyTo((root ? Tell(jpath, message)).mapTo[A])
+  }
   
 
 }
