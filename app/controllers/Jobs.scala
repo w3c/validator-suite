@@ -3,6 +3,7 @@ package controllers
 import java.util.concurrent.TimeUnit.SECONDS
 
 import org.w3.util._
+//import org.w3.util.FutureVal._
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
@@ -10,6 +11,7 @@ import org.w3.vs.view._
 
 import Application._
 import akka.dispatch.Future
+import akka.util.duration._
 import play.api.i18n.Messages
 import play.api.libs.concurrent.Promise
 import play.api.libs.iteratee.Enumeratee
@@ -38,9 +40,20 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         jobs <- user.getJobs
+        triples <- {
+          
+          //jobs.map(_.run)
+          
+          FutureVal.sequence(
+          jobs.map(job => 
+            for {
+              run <- job.getRun
+           	  //data <- job.getData
+              //activity <- job.getRun.map(_.activity)
+            } yield (job, run.activity, run.data)
+          ))}
       } yield {
-        logger.error(jobs.toString)
-        Ok(views.html.dashboard(jobs, user))
+        Ok(views.html.dashboard(triples, user))
       }) failMap toError toPromise
     }
   }

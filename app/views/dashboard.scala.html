@@ -1,4 +1,4 @@
-@(jobs: Iterable[Job] = None, user: User)(implicit flash: Flash)
+@(triples: Iterable[(Job, RunActivity, JobData)] = None, user: User)(implicit flash: Flash)
 
 @import org.w3.vs.actor._
 
@@ -61,9 +61,11 @@
 		
 		<hr>
 		
-		@for(job <- jobs) {
+		@**for(job <- jobs) {**@
 		@**if(job.lastData.isDefined) { @ What if it isn't defined? **@
 		@**defining(job.lastData.get) { data => **@
+		
+		@triples.map { case (job, activity, data) =>
 		<article data-id="@job.id">
 			<h2>@job.name</h2>
 			<dl>
@@ -75,12 +77,12 @@
 				
 				<dt>Status</dt>
 				<dd class="status">
-					<span>@**data.activity**@</span>
+					<span>@activity.toString</span>
 					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
-						@**{data.activity match {
+						@activity match {
 						  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 						  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
-						}}**@
+						}
 					</form>
 				</dd>
 
@@ -93,21 +95,21 @@
 				</dd>
 				
 				<dt>Warnings</dt>
-				<dd class="warnings">data.warnings</dd>
+				<dd class="warnings">@data.warnings</dd>
 				
 				<dt>Errors</dt>
-				<dd class="errors">data.errors</dd>
+				<dd class="errors">@data.errors</dd>
 				
 				<dt>Resources</dt>
-				<dd class="resources">data.resources</dd>
+				<dd class="resources">@data.resources</dd>
 				
 				<dt>Max resources</dt>
 				<dd class="maxResources">@job.strategy.maxResources</dd>
 				
 				<dt>Health</dt>
 				<dd class="health">
-					<progress max=100 value=@job.health title="@job.health%">
-						@job.health%
+					<progress max=100 value=job.health title="job.health%">
+						job.health%
 					</progress>
 				</dd>
 				

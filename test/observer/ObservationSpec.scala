@@ -131,7 +131,7 @@ abstract class ObservationSpec extends WordSpec with MustMatchers {
         google -> 1)
 
     val (initialData, _) =
-      Run(job = w3, distance = Map(w3_home -> 0), pending = Set(w3_home), data = JobData(jobId = w3.id, runId =  RunId()))
+      Run(job = w3, distance = Map(w3_home -> 0), pending = Set(w3_home), data = JobData(jobId = w3.id))
       .withNewUrlsToBeExplored(urls)
     
     "take urls that are not from the main authority" in {
@@ -155,7 +155,7 @@ abstract class ObservationSpec extends WordSpec with MustMatchers {
         w3_consortium -> 1)
     
     val (initialData, _) =
-      Run(job = w3, distance = Map(google -> 1), pending = Set(google), data = JobData(jobId = w3.id, runId =  RunId()))
+      Run(job = w3, distance = Map(google -> 1), pending = Set(google), data = JobData(jobId = w3.id))
       .withNewUrlsToBeExplored(urls)
     
     "take url from the main authority in priority, then urls from other authorities, still ignoring the one with pending authority" in {
@@ -171,7 +171,7 @@ abstract class ObservationSpec extends WordSpec with MustMatchers {
 
     val initialData =
       Run(job = w3, distance = Map(w3_home -> 0, google -> 1, mobilevoice -> 2),
-        pending = Set(w3_home, google, mobilevoice), data = JobData(jobId = w3.id, runId =  RunId()))
+        pending = Set(w3_home, google, mobilevoice), data = JobData(jobId = w3.id))
     
     "unset the pending state of a url when the response is received" in {
       val data = initialData.withCompletedFetch(w3_home)

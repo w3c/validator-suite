@@ -9,6 +9,5 @@ case object Stop
 case object BeProactive
 case object BeLazy
 
-case object GetJobData
-case object GetActivity
+case object GetRun
 case object NoMorePendingAssertion

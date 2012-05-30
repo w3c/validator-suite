@@ -40,7 +40,7 @@ case class JobVO (
 case class JobDataVO (
     id: JobDataId = JobDataId(),
     jobId: JobId,
-    runId: RunId,
+    //runId: RunId,
     resources: Int,
     errors: Int,
     warnings: Int,

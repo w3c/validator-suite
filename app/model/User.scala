@@ -15,15 +15,13 @@ object User {
   
   // TODO: For now these only fail with StoreExceptions but should also fail with a Unauthorized exception 
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
-    val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organizationId = OrganizationId())
     implicit def ec = conf.webExecutionContext
-    FutureVal.successful(tgambet)
+    FutureVal.successful(play.api.Global.tgambet)
   }
   
   def getByEmail(email: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
-    val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organizationId = OrganizationId())
     implicit def ec = conf.webExecutionContext
-    FutureVal.successful(tgambet)
+    FutureVal.successful(play.api.Global.tgambet)
   }
   
   def save(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, User] = sys.error("")

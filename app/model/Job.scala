@@ -15,15 +15,14 @@ import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
 
-// closed with its strategy and lastData
-case class Job (
+// closed with its strategy
+case class Job(
     id: JobId = JobId(),
     name: String,
     createdOn: DateTime = DateTime.now,
     creatorId: UserId,
     organizationId: OrganizationId,
-    strategy: Strategy,
-    lastData: Option[JobData] = None)(implicit conf: VSConfiguration) {
+    strategy: Strategy)(implicit conf: VSConfiguration) {
 
   import conf.system
   implicit def timeout = conf.timeout
@@ -34,11 +33,22 @@ case class Job (
   def getCreator: FutureVal[Exception, User] = User.get(creatorId)
   def getOrganization: FutureVal[Exception, Organization] = Organization.get(organizationId)
   def getHistory: FutureVal[Exception, Iterable[JobData]] = JobData.getForJob(id)
-  def getActivity(implicit context: ExecutionContext): FutureVal[Throwable, RunActivity] = (PathAware(organizationsRef, path).?[RunActivity](GetActivity))
-  
+//  def getData: FutureVal[Exception, JobData] = {
+//    // If the job is running then jobData is the Run's current data
+//    // Otherwise in the db
+//    // default is JobData(jobId = id)
+//    implicit def e = conf.webExecutionContext
+//    FutureVal.successful(JobData(jobId = id))
+//  }
+  def getRun(implicit context: ExecutionContext): FutureVal[Throwable, Run] = {
+    logger.error("getRun")
+    (PathAware(organizationsRef, path).?[Run](GetRun))
+    //FutureVal.applyTo((organizationsRef ? Tell(path, message)).mapTo[RunActivity])
+    
+  }
   def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = sys.error("")
+  //def getRun: FutureVal[Exception, Run] = sys.error("")
   
-  // save jobdata too
   def save(): FutureVal[Exception, Job] = Job.save(this)
   def delete(): FutureVal[Exception, Unit] = {
     cancel()
@@ -53,15 +63,15 @@ case class Job (
 
   def off(): Unit = PathAware(organizationsRef, path) ! BeLazy
 
-  def health(): Int = {
-    lastData match {
-      case Some(data) => {
-        val errorAverage = data.errors.toDouble / data.resources.toDouble
-        (scala.math.exp(scala.math.log(0.5) / 10 * errorAverage) * 100).toInt
-      }
-      case _ => 0
-    }
-  }
+//  def health(): Int = {
+//    lastData match {
+//      case Some(data) => {
+//        val errorAverage = data.errors.toDouble / data.resources.toDouble
+//        (scala.math.exp(scala.math.log(0.5) / 10 * errorAverage) * 100).toInt
+//      }
+//      case _ => 0
+//    }
+//  }
 
   def subscribeToUpdates(): Enumerator[RunUpdate] = {
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
@@ -106,20 +116,13 @@ case class Job (
 
 object Job {
 
-  def get(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = sys.error("")
-  def getFor(user: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
-    val w3 = Job(
-      createdOn = DateTime.now,
-      name = "W3C",
-      creatorId = UserId(),
-      organizationId = OrganizationId(),
-      strategy = Strategy(
-        entrypoint = URL("http://www.w3.org/"),
-        linkCheck = false,
-        maxResources = 100,
-        filter = Filter(include = Everything, exclude = Nothing)))
+  def get(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {
     implicit def ec = conf.webExecutionContext
-    FutureVal.successful(Iterable(w3))
+    FutureVal.successful(play.api.Global.w3)
+  }
+  def getFor(user: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(Iterable(play.api.Global.w3))
   }
   def getFor(organization: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")
   def getFor(strategy: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = sys.error("ni")

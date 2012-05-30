@@ -52,7 +52,7 @@ class JobActor(job: Job)(
   // TODO
   configuration.system.scheduler.schedule(10 seconds, 2 seconds, self, 'Tick)
 
-  var lastRun = Run(job)
+  var lastRun = Run(job) // TODO get last run data from the db?
 
   startWith(lastRun.state, lastRun)
 
@@ -74,13 +74,16 @@ class JobActor(job: Job)(
   when((Running, ProActive))(stateFunction)
   when((Running, Lazy))(stateFunction)
 
-
   
-  def stateFunction: StateFunction = {
-    case Event(GetJobData, run) => {
-      sender ! run.data
+  def stateFunction(): StateFunction = {
+    case Event(GetRun, run) => {
+      sender ! run
       stay()
     }
+//    case Event(GetJobData, run) => {
+//      sender ! run.data
+//      stay()
+//    }
     case Event('Tick, run) => {
       // do it only if necessary (ie. something has changed since last time)
       if (run ne lastRun) {
@@ -151,6 +154,10 @@ class JobActor(job: Job)(
     case Event(Stop, run) => {
       assertionsActorRef ! Stop
       stateOf(run.stopMe())
+    }
+    case Event(a, run) => {
+      logger.error("uncatched event: " + a)
+      stay()
     }
   }
 
