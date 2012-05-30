@@ -168,7 +168,6 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
     def toPointedGraph(t: JobDataVO): PointedGraph[Rdf] = (
       JobDataUri(t.id).a(ont.JobData)
         -- ont.jobId ->- JobUri(t.jobId)
-        -- ont.runId ->- RunUri(t.runId)
         -- ont.resources ->- t.resources
         -- ont.errors ->- t.errors
         -- ont.warnings ->- t.warnings
@@ -179,13 +178,12 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
       for {
         id <- pointed.node.asURI flatMap JobDataUri.getId
         jobId <- (pointed / ont.jobId).exactlyOne.flatMap(_.asURI).flatMap(JobUri.getId)
-        runId <- (pointed / ont.runId).exactlyOne.flatMap(_.asURI).flatMap(RunUri.getId)
         resources <- (pointed / ont.resources).exactlyOne.flatMap(_.as[Int])
         errors <- (pointed / ont.errors).exactlyOne.flatMap(_.as[Int])
         warnings <- (pointed / ont.warnings).exactlyOne.flatMap(_.as[Int])
         timestamp <- (pointed / ont.timestamp).exactlyOne.flatMap(_.as[DateTime])
       } yield {
-        JobDataVO(id, jobId, runId, resources, errors, warnings, timestamp)
+        JobDataVO(id, jobId, resources, errors, warnings, timestamp)
       }
     }
 

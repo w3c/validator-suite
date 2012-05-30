@@ -85,7 +85,6 @@ class BindersTest extends WordSpec with MustMatchers {
     testSerializeDeserialize(JobDataVOBinder) {
       JobDataVO(
         jobId = JobId(),
-        runId = RunId(),
         resources = 42,
         errors = 43,
         warnings = 44,
