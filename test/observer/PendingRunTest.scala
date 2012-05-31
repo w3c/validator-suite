@@ -31,28 +31,29 @@ class PendingRunTest extends RunTestHelper(
     }
   }) with TestKitHelper {
   
-  val strategy =
-    Strategy(
-      id=StrategyId(), 
-      entrypoint=URL("http://localhost:9001/1/"),
-      linkCheck=true,
-      maxResources = 10,
-      filter=Filter.includeEverything).noAssertor()
+//  val strategy =
+//    Strategy(
+//      id=StrategyId(), 
+//      entrypoint=URL("http://localhost:9001/1/"),
+//      linkCheck=true,
+//      maxResources = 10,
+//      filter=Filter.includeEverything).noAssertor()
+//  
+//  val job = Job(
+//    strategy = strategy,
+//    creatorId = play.api.Global.tgambet.id,
+//    organizationId = play.api.Global.w3c.id,
+//    name = "@@")
   
-  val job = Job(
-    strategy = strategy,
-    creatorId = userTest.id,
-    organizationId = organizationTest.id,
-    name = "@@")
+  val job = play.api.Global.w3
+  val org = play.api.Global.w3c
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.tree(20).toPlanify))
 
   "test FilteredTreeWebsiteTest" in {
-    //stores.OrganizationStore.put(organizationTest)
-    //store.putJob(job).waitResult()
     (for {
-      a <- Organization.save(organizationTest)
-      b <- Job.save(job)
+      _ <- Organization.save(org)
+      _ <- Job.save(job)
     } yield ()).await(5 seconds)
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     job.run()

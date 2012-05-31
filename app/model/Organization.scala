@@ -64,6 +64,9 @@ object Organization {
     FutureVal.successful(play.api.Global.w3c)
   }
   def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = sys.error("ni")
-  def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = sys.error("")
+  def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(organization)
+  }
   
 }
