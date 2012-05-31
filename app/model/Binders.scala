@@ -37,31 +37,25 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   val AssertionVOBinder = new PointedGraphBinder[Rdf, AssertionVO] {
 
-    def toPointedGraph(t: AssertionVO): PointedGraph[Rdf] = {
-      val pointed = (
-        AssertionUri(t.id).a(ont.Assertion)
-          -- ont.url ->- t.url
-          -- ont.lang ->- t.lang
-          -- ont.title ->- t.title
-          -- ont.severity ->- t.severity
-          -- ont.assertorResponseId ->- AssertorResponseUri(t.assertorResponseId)
-      )
-      pointed.ifDefined(t.description){ (p, desc) => p -- ont.description ->- desc }
-
-    }
+    def toPointedGraph(t: AssertionVO): PointedGraph[Rdf] = (
+      AssertionUri(t.id).a(ont.Assertion)
+        -- ont.url ->- t.url
+        -- ont.lang ->- t.lang
+        -- ont.title ->- t.title
+        -- ont.severity ->- t.severity
+        -- ont.description ->- t.description
+        -- ont.assertorResponseId ->- AssertorResponseUri(t.assertorResponseId)
+    )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertionVO] = {
       for {
-        id <- pointed.node.asURI flatMap AssertionUri.getId
-        url <- (pointed / ont.url).exactlyOne.flatMap(_.as[URL])
-        lang <- (pointed / ont.lang).exactlyOne.flatMap(_.as[String])
-        title <- (pointed / ont.title).exactlyOne.flatMap(_.as[String])
-        severity <- (pointed / ont.severity).exactlyOne.flatMap(_.as[AssertionSeverity])
-        description <- (pointed / ont.description).headOption match {
-          case None => Success(None)
-          case Some(pg) => pg.node.as[String] map (Some(_))
-        }
-        assertorResponseId <- (pointed / ont.assertorResponseId).exactlyOne.flatMap(_.asURI).flatMap(AssertorResponseUri.getId)
+        id <- pointed.node.asUri flatMap AssertionUri.getId
+        url <- (pointed / ont.url).exactlyOne[URL]
+        lang <- (pointed / ont.lang).exactlyOne[String]
+        title <- (pointed / ont.title).exactlyOne[String]
+        severity <- (pointed / ont.severity).exactlyOne[AssertionSeverity]
+        description <- (pointed / ont.description).asOption[String]
+        assertorResponseId <- (pointed / ont.assertorResponseId).exactlyOneUri.flatMap(AssertorResponseUri.getId)
       } yield {
         AssertionVO(id, url, lang, title, severity, description, assertorResponseId)
       }
@@ -72,31 +66,21 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   val ContextVOBinder = new PointedGraphBinder[Rdf, ContextVO] {
 
-    def toPointedGraph(t: ContextVO): PointedGraph[Rdf] = {
-      val pointed = (
-        ContextUri(t.id).a(ont.Context)
-          -- ont.content ->- t.content
-          -- ont.assertionId ->- AssertionUri(t.assertionId)
-      )
-      pointed
-        .ifDefined(t.line){ (p, l) => p -- ont.line ->- l }
-        .ifDefined(t.column){ (p, c) => p -- ont.column ->- c }
-
-    }
+    def toPointedGraph(t: ContextVO): PointedGraph[Rdf] = (
+      ContextUri(t.id).a(ont.Context)
+        -- ont.content ->- t.content
+        -- ont.line ->- t.line
+        -- ont.column ->- t.column
+        -- ont.assertionId ->- AssertionUri(t.assertionId)
+    )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ContextVO] = {
       for {
-        id <- pointed.node.asURI flatMap ContextUri.getId
-        content <- (pointed / ont.content).exactlyOne.flatMap(_.as[String])
-        line <- (pointed / ont.line).headOption match {
-          case None => Success(None)
-          case Some(pg) => pg.node.as[Int] map (Some(_))
-        }
-        column <- (pointed / ont.column).headOption match {
-          case None => Success(None)
-          case Some(pg) => pg.node.as[Int] map (Some(_))
-        }
-        assertionId <- (pointed / ont.assertionId).exactlyOne.flatMap(_.asURI).flatMap(AssertionUri.getId)
+        id <- pointed.node.asUri flatMap ContextUri.getId
+        content <- (pointed / ont.content).exactlyOne[String]
+        line <- (pointed / ont.line).asOption[Int]
+        column <- (pointed / ont.column).asOption[Int]
+        assertionId <- (pointed / ont.assertionId).exactlyOneUri.flatMap(AssertionUri.getId)
       } yield {
         ContextVO(id, content, line, column, assertionId)
       }
@@ -119,12 +103,12 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertorResultVO] = {
       for {
-        id <- pointed.node.asURI flatMap AssertorResponseUri.getId
-        jobId <- (pointed / ont.jobId).exactlyOne.flatMap(_.asURI).flatMap(JobUri.getId)
-        runId <- (pointed / ont.runId).exactlyOne.flatMap(_.asURI).flatMap(RunUri.getId)
-        assertorId <- (pointed / ont.assertorId).exactlyOne.flatMap(_.asURI).flatMap(AssertorUri.getId)
-        sourceUrl <- (pointed / ont.sourceUrl).exactlyOne.flatMap(_.as[URL])
-        timestamp <- (pointed / ont.timestamp).exactlyOne.flatMap(_.as[DateTime])
+        id <- pointed.node.asUri flatMap AssertorResponseUri.getId
+        jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
+        runId <- (pointed / ont.runId).exactlyOneUri.flatMap(RunUri.getId)
+        assertorId <- (pointed / ont.assertorId).exactlyOneUri.flatMap(AssertorUri.getId)
+        sourceUrl <- (pointed / ont.sourceUrl).exactlyOne[URL]
+        timestamp <- (pointed / ont.timestamp).exactlyOne[DateTime]
       } yield {
         AssertorResultVO(id, jobId, runId, assertorId, sourceUrl, timestamp)
       }
@@ -147,12 +131,12 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, JobVO] = {
       for {
-        id <- pointed.node.asURI flatMap JobUri.getId
-        name <- (pointed / ont.name).exactlyOne.flatMap(_.as[String])
-        createdOn <- (pointed / ont.createdOn).exactlyOne.flatMap(_.as[DateTime])
-        creator <- (pointed / ont.creator).exactlyOne.flatMap(_.asURI) flatMap UserUri.getId
-        organization <- (pointed / ont.organization).exactlyOne.flatMap(_.asURI) flatMap OrganizationUri.getId
-        strategy <- (pointed / ont.strategy).exactlyOne.flatMap(_.asURI) flatMap StrategyUri.getId
+        id <- pointed.node.asUri flatMap JobUri.getId
+        name <- (pointed / ont.name).exactlyOne[String]
+        createdOn <- (pointed / ont.createdOn).exactlyOne[DateTime]
+        creator <- (pointed / ont.creator).exactlyOneUri flatMap UserUri.getId
+        organization <- (pointed / ont.organization).exactlyOneUri flatMap OrganizationUri.getId
+        strategy <- (pointed / ont.strategy).exactlyOneUri flatMap StrategyUri.getId
       } yield {
         JobVO(id, name, createdOn, creator, organization, strategy)
       }
@@ -176,12 +160,12 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, JobDataVO] = {
       for {
-        id <- pointed.node.asURI flatMap JobDataUri.getId
-        jobId <- (pointed / ont.jobId).exactlyOne.flatMap(_.asURI).flatMap(JobUri.getId)
-        resources <- (pointed / ont.resources).exactlyOne.flatMap(_.as[Int])
-        errors <- (pointed / ont.errors).exactlyOne.flatMap(_.as[Int])
-        warnings <- (pointed / ont.warnings).exactlyOne.flatMap(_.as[Int])
-        timestamp <- (pointed / ont.timestamp).exactlyOne.flatMap(_.as[DateTime])
+        id <- pointed.node.asUri flatMap JobDataUri.getId
+        jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
+        resources <- (pointed / ont.resources).exactlyOne[Int]
+        errors <- (pointed / ont.errors).exactlyOne[Int]
+        warnings <- (pointed / ont.warnings).exactlyOne[Int]
+        timestamp <- (pointed / ont.timestamp).exactlyOne[DateTime]
       } yield {
         JobDataVO(id, jobId, resources, errors, warnings, timestamp)
       }
@@ -202,9 +186,9 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, OrganizationVO] = {
       for {
-        id <- pointed.node.asURI flatMap OrganizationUri.getId
-        name <- (pointed / ont.name).exactlyOne.flatMap(_.as[String])
-        adminId <- (pointed / ont.admin).exactlyOne.flatMap(_.asURI).flatMap(UserUri.getId)
+        id <- pointed.node.asUri flatMap OrganizationUri.getId
+        name <- (pointed / ont.name).exactlyOne[String]
+        adminId <- (pointed / ont.admin).exactlyOneUri.flatMap(UserUri.getId)
       } yield {
         OrganizationVO(id, name, adminId)
       }
@@ -214,25 +198,28 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-  // val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
+  val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
 
-  //   def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] = (
-  //     OrganizationUri(t.id).a(organization.Organization)
-  //       -- organization.name ->- t.name
-  //       -- organization.admin ->- UserUri(t.admin)
-  //   )
+    def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] =
+      null
+ // (
+ //      OrganizationUri(t.id).a(organization.Organization)
+ //        -- organization.name ->- t.name
+ //        -- organization.admin ->- UserUri(t.admin)
+ //    )
 
-  //   def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponseVO] = {
-  //     for {
-  //       id <- pointed.node.asURI flatMap OrganizationUri.getId
-  //       name <- (pointed / organization.name).exactlyOne.flatMap(_.as[String])
-  //       adminId <- (pointed / organization.admin).exactlyOne.flatMap(_.asURI).flatMap(UserUri.getId)
-  //     } yield {
-  //       OrganizationVO(id, name, adminId)
-  //     }
-  //   }
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponseVO] = {
+      // for {
+      //   id <- pointed.node.asURI flatMap OrganizationUri.getId
+      //   name <- (pointed / organization.name).exactlyOne[String])
+      //   adminId <- (pointed / organization.admin).exactlyOne.flatMap(_.asURI).flatMap(UserUri.getId)
+      // } yield {
+      //   OrganizationVO(id, name, adminId)
+      // }
+      null
+    }
 
-  // }
+  }
 
 
 

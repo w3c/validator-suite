@@ -16,8 +16,8 @@ object ApplicationBuild extends Build {
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    "org.w3" %% "banana-rdf" % "0.1-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "0.1-SNAPSHOT",
+    "org.w3" %% "banana-rdf" % "0.2-SNAPSHOT",
+    "org.w3" %% "banana-jena" % "0.2-SNAPSHOT",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0.1" % "test",
     "net.databinder" %% "unfiltered-filter" % "0.5.3" % "test",
@@ -40,9 +40,7 @@ object ApplicationBuild extends Build {
     templatesImport += "scalaz.{Validation, Failure, Success}",
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
-    libraryDependencies += "org.w3" %% "banana-rdf" % "0.1-SNAPSHOT",
-    libraryDependencies += "org.w3" %% "banana-jena" % "0.1-SNAPSHOT"
+    resolvers += "repo.codahale.com" at "http://repo.codahale.com"
 
     // ensimeConfig := sexp(
     //   key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),
