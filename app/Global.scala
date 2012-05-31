@@ -21,7 +21,7 @@ object Global extends GlobalSettings {
   
   val orgId = OrganizationId()
   
-  println("organizationIf: " + orgId)
+  println("global organizationId: " + orgId)
   
   val tgambet = User(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", organizationId = orgId)
   val bertails = User(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", organizationId = orgId)

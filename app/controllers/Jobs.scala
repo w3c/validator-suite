@@ -40,12 +40,15 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         jobs <- user.getJobs
-        tuples <- FutureVal.sequence(
+        /*tuples <- FutureVal.sequence(
             jobs.map(job => 
               for {run <- job.getRun}
               yield (job, run)
-            ))
+            ))*/
+        
       } yield {
+        
+        val tuples = Iterable((play.api.Global.w3, Run(play.api.Global.w3)))
         Ok(views.html.dashboard(tuples, user))
       }) failMap toError toPromise
     }

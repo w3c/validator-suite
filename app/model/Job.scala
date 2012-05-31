@@ -41,10 +41,9 @@ case class Job(
 //    FutureVal.successful(JobData(jobId = id))
 //  }
   def getRun(implicit context: ExecutionContext): FutureVal[Throwable, Run] = {
-    logger.error("getRun")
-    (PathAware(organizationsRef, path).?[Run](GetRun))
-    //FutureVal.applyTo((organizationsRef ? Tell(path, message)).mapTo[RunActivity])
-    
+    //logger.error("getRun")
+    //(PathAware(organizationsRef, path).?[Run](GetRun))
+    FutureVal.successful(Run(play.api.Global.w3))
   }
   def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = sys.error("")
   //def getRun: FutureVal[Exception, Run] = sys.error("")

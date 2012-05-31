@@ -24,7 +24,7 @@ object Run {
     d1 ++ d2
   }
 
-  def apply(job: Job): Run = apply(job = job)
+  def apply(job: Job)(implicit conf: VSConfiguration): Run = apply(job = job, data = JobData(jobId = job.id))
   
   def get(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = sys.error("")
   def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = sys.error("")

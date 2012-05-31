@@ -61,10 +61,6 @@
 		
 		<hr>
 		
-		@**for(job <- jobs) {**@
-		@**if(job.lastData.isDefined) { @ What if it isn't defined? **@
-		@**defining(job.lastData.get) { data => **@
-		
 		@tuples.map { case (job, run) =>
 		<article data-id="@job.id">
 			<h2>@job.name</h2>
@@ -122,7 +118,7 @@
 			</dl>
 			<hr>
 		</article>
-		}@**}}**@
+		}
 	</section>
 	
 }{ @***** Footer *****@
