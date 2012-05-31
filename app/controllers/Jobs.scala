@@ -40,20 +40,13 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         jobs <- user.getJobs
-        triples <- {
-          
-          //jobs.map(_.run)
-          
-          FutureVal.sequence(
-          jobs.map(job => 
-            for {
-              run <- job.getRun
-           	  //data <- job.getData
-              //activity <- job.getRun.map(_.activity)
-            } yield (job, run.activity, run.data)
-          ))}
+        tuples <- FutureVal.sequence(
+            jobs.map(job => 
+              for {run <- job.getRun}
+              yield (job, run)
+            ))
       } yield {
-        Ok(views.html.dashboard(triples, user))
+        Ok(views.html.dashboard(tuples, user))
       }) failMap toError toPromise
     }
   }
