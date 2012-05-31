@@ -92,7 +92,10 @@ case object GET extends HttpAction
 case object HEAD extends HttpAction
 
 object HttpAction {
-  implicit val equalHttpAction: Equal[HttpAction] = new Equal[HttpAction] {
-    def equal(left: HttpAction, right: HttpAction): Boolean = left == right
+  implicit val equalHttpAction: Equal[HttpAction] = Equal.equalA[HttpAction]
+  def apply(s: String): HttpAction = s match {
+    case "IGNORE" => IGNORE
+    case "GET" => GET
+    case "HEAD" => HEAD
   }
 }

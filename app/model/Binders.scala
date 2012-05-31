@@ -175,7 +175,6 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-
   val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
 
     def toPointedGraph(t: OrganizationVO): PointedGraph[Rdf] = (
@@ -197,11 +196,44 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
 
+  val ErrorResponseVOBinder = new PointedGraphBinder[Rdf, ErrorResponseVO] {
+
+    def toPointedGraph(t: ErrorResponseVO): PointedGraph[Rdf] = (
+      ResourceResponseUri(t.id).a(ont.ErrorResponse)
+        -- ont.jobId ->- JobUri(t.jobId)
+        -- ont.runId ->- RunUri(t.runId)
+        -- ont.url ->- t.url
+        -- ont.action ->- t.action
+        -- ont.timestamp ->- t.timestamp
+        -- ont.why ->- t.why
+    )
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ErrorResponseVO] = {
+      for {
+        id <- pointed.node.asUri flatMap ResourceResponseUri.getId
+        jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
+        runId <- (pointed / ont.runId).exactlyOneUri.flatMap(RunUri.getId)
+        url <- (pointed / ont.url).exactlyOne[URL]
+        action <- (pointed / ont.action).exactlyOne[HttpAction]
+        timestamp <- (pointed / ont.timestamp).exactlyOne[DateTime]
+        why <- (pointed / ont.why).exactlyOne[String]
+      } yield {
+        ErrorResponseVO(id, jobId, runId, url, action, timestamp, why)
+      }
+    }
+
+  }
+
+
+
+
+
+
+
 
   val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
 
-    def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] =
-      null
+    def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] = null
  // (
  //      OrganizationUri(t.id).a(organization.Organization)
  //        -- organization.name ->- t.name
@@ -220,6 +252,22 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
     }
 
   }
+
+
+
+
+
+//  val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
+//
+//    def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] = null
+//
+//    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponseVO] = {
+//      null
+//    }
+//
+//  }
+//
+
 
 
 

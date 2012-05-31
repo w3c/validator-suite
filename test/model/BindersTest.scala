@@ -92,4 +92,16 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
+  "ErrorResponseVO" in {
+    testSerializeDeserialize(ErrorResponseVOBinder) {
+      ErrorResponseVO(
+        jobId = JobId(),
+        runId = RunId(),
+        url = URL("http://example.com/foo"),
+        action = GET,
+        timestamp = DateTime.now(DateTimeZone.UTC),
+        why = "just because")
+    }
+  }
+
 }

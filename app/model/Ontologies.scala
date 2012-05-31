@@ -50,6 +50,13 @@ self: LiteralBinders[Rdf] =>
     val admin = apply("admin")
 
     val ResourceResponse = apply("ResourceResponse")
+    val ErrorResponse = apply("ErrorResponse")
+    val HttpResponse = apply("HttpResponse")
+    val action = apply("action")
+    val why = apply("why")
+    // val  = apply("")
+    // val  = apply("")
+    // val  = apply("")
 
     val Run = apply("run")
 

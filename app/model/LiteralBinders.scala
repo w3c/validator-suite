@@ -68,4 +68,28 @@ trait LiteralBinders[Rdf <: RDF] {
   }
 
 
+  implicit val httpActionBinder = new LiteralBinder[Rdf, HttpAction] {
+
+    def fromLiteral(literal: Rdf#Literal): Validation[BananaException, HttpAction] = {
+      Literal.fold(literal)(
+        {
+          case TypedLiteral(lexicalForm, datatype) =>
+            if (datatype == xsd.string)
+              try {
+                Success(HttpAction(lexicalForm))
+              } catch {
+                case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made a HttpAction: " + lexicalForm))
+              }
+            else
+              Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
+        },
+        langLiteral => Failure(FailedConversion(langLiteral + " is a langLiteral, you want to access its lexical form"))
+      )
+    }
+
+    def toLiteral(t: HttpAction): Rdf#Literal = t.toString
+
+  }
+
+
 }
