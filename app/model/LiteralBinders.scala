@@ -92,4 +92,41 @@ trait LiteralBinders[Rdf <: RDF] {
   }
 
 
+
+  implicit val headersBinder = new LiteralBinder[Rdf, Headers] {
+
+    import java.util.{Map => jMap, List => jList, HashMap => jHashMap, LinkedList}
+    import scala.collection.JavaConverters._
+    val regex = """^([^:]+):\s*(.*)$""".r
+
+    def fromLiteral(literal: Rdf#Literal): Validation[BananaException, Headers] = {
+      Literal.fold(literal)(
+        {
+          case TypedLiteral(lexicalForm, datatype) =>
+            if (datatype == xsd.string)
+              try {
+                Success {
+                  val lines = lexicalForm.split("\n").toIterator
+                  val map: Map[String, List[String]] = lines.map {
+                    case regex("null", statusline) => (null, List(statusline))
+                    case regex(key, values) => (key, values.split(",").toList)
+                  }.toMap
+                  map
+                }
+              } catch {
+                case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made Headers: " + lexicalForm))
+              }
+            else
+              Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
+        },
+        langLiteral => Failure(FailedConversion(langLiteral + " is a langLiteral, you want to access its lexical form"))
+      )
+    }
+
+    def toLiteral(t: Headers): Rdf#Literal =
+      t map { case (k, v) => "%s: %s" format (k, v.mkString(",")) } mkString "\n"
+
+  }
+
+
 }

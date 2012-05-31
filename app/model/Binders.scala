@@ -6,7 +6,7 @@ import scalaz._
 import scalaz.Scalaz._
 import scalaz.Validation._
 import org.joda.time.DateTime
-import org.w3.util.URL
+import org.w3.util._
 
 /**
  * creates [EntityGraphBinder]s for the VS entities
@@ -238,23 +238,24 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
         -- ont.action ->- t.action
         -- ont.timestamp ->- t.timestamp
         -- ont.status ->- t.status
-        -- ont.headers -> t.headers
-        -- ont.extractedURL ->- t.extractedURLs
+        -- ont.headers ->- t.headers
+        -- ont.extractedURLs ->- t.extractedURLs
     )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, HttpResponseVO] = {
-      // for {
-      //   id <- pointed.node.asUri flatMap ResourceResponseUri.getId
-      //   jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
-      //   runId <- (pointed / ont.runId).exactlyOneUri.flatMap(RunUri.getId)
-      //   url <- (pointed / ont.url).exactlyOne[URL]
-      //   action <- (pointed / ont.action).exactlyOne[HttpAction]
-      //   timestamp <- (pointed / ont.timestamp).exactlyOne[DateTime]
-      //   why <- (pointed / ont.why).exactlyOne[String]
-      // } yield {
-      //   HttpResponseVO(id, jobId, runId, url, action, timestamp, why)
-      // }
-      null
+      for {
+        id <- pointed.node.asUri flatMap ResourceResponseUri.getId
+        jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
+        runId <- (pointed / ont.runId).exactlyOneUri.flatMap(RunUri.getId)
+        url <- (pointed / ont.url).exactlyOne[URL]
+        action <- (pointed / ont.action).exactlyOne[HttpAction]
+        timestamp <- (pointed / ont.timestamp).exactlyOne[DateTime]
+        status <- (pointed / ont.status).exactlyOne[Int]
+        headers <- (pointed / ont.headers).exactlyOne[Headers]
+        urls <- (pointed / ont.extractedURLs).asList[URL]
+      } yield {
+        HttpResponseVO(id, jobId, runId, url, action, timestamp, status, headers, urls)
+      }
     }
 
   }

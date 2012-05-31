@@ -54,9 +54,9 @@ self: LiteralBinders[Rdf] =>
     val HttpResponse = apply("HttpResponse")
     val action = apply("action")
     val why = apply("why")
-    // val  = apply("")
-    // val  = apply("")
-    // val  = apply("")
+    val status = apply("status")
+    val headers = apply("headers")
+    val extractedURLs = apply("extractedURLs")
 
     val Run = apply("run")
 

@@ -104,4 +104,18 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
+  "HttpResponseVO" in {
+    testSerializeDeserialize(HttpResponseVOBinder) {
+      HttpResponseVO(
+        jobId = JobId(),
+        runId = RunId(),
+        url = URL("http://example.com/foo"),
+        action = GET,
+        timestamp = DateTime.now(DateTimeZone.UTC),
+        status = 200,
+        headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
+        extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))
+    }
+  }
+
 }

@@ -16,8 +16,8 @@ object ApplicationBuild extends Build {
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    "org.w3" %% "banana-rdf" % "0.2-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "0.2-SNAPSHOT",
+//    "org.w3" %% "banana-jena" % "0.2-SNAPSHOT" changing(),
+    "org.w3" %% "banana-jena" % "x01-SNAPSHOT" changing(),
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0.1" % "test",
     "net.databinder" %% "unfiltered-filter" % "0.5.3" % "test",
