@@ -14,7 +14,7 @@ window.JobView = Backbone.View.extend({
 		"click .on"		 : "putOn",
 		"click .off"	 : "putOff",
 		"click .stop"	 : "stop",
-		"click .refresh" : "refresh",
+		"click .run"     : "run",
 		"click .delete"	 : "_delete"
 	},
 	
@@ -48,8 +48,8 @@ window.JobView = Backbone.View.extend({
 		this.model.stop({wait:true});
 		return false;
 	},
-	refresh: function () {
-		this.model.refresh({wait:true});
+	run: function () {
+		this.model.run({wait:true});
 		return false;
 	},
 	_delete: function () {

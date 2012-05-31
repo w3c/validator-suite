@@ -62,7 +62,7 @@ window.Job = Backbone.Model.extend({
 		    'on':'POST',
 		   'off':'POST',
 		  'stop':'POST',
-	   'refresh':'POST',
+	       'run':'POST',
 		'create':'POST',
 		  'read':'GET',
 		'update':'POST',
@@ -75,7 +75,7 @@ window.Job = Backbone.Model.extend({
 	
 	stop: function(options) {this._serverEvent('stop', options);},
 	
-	refresh: function(options) {this._serverEvent('refresh', options);},
+	run: function(options) {this._serverEvent('run', options);},
 		
 	_serverEvent: function(event, options) {
 		options = options ? _.clone(options) : {};

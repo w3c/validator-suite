@@ -77,7 +77,7 @@
 					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
 						@{run.activity match {
 						  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
-						  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
+						  case Idle => {<button type="submit" name="action" value="run" class="run">run now</button>}
 						}}
 					</form>
 				</dd>
@@ -138,7 +138,7 @@
 					<% switch(data.get('activity')) { case "Running": %>
 						<a class="stop" href="<%= url + '/cancel' %>">cancel</a>
 					<% break; case "Idle": %>
-						<a class="refresh" href="<%= url + '/run' %>">run now</a>
+						<a class="run" href="<%= url + '/run' %>">run now</a>
 					<% } %>
 				</dd>
 

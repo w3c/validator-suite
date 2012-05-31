@@ -40,15 +40,13 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         jobs <- user.getJobs
-        /*tuples <- FutureVal.sequence(
+        tuples <- FutureVal.sequence(
             jobs.map(job => 
               for {run <- job.getRun}
               yield (job, run)
-            ))*/
-        
+            ))
       } yield {
-        
-        val tuples = Iterable((play.api.Global.w3, Run(play.api.Global.w3)))
+        //val tuples = Iterable((play.api.Global.w3, Run(play.api.Global.w3)))
         Ok(views.html.dashboard(tuples, user))
       }) failMap toError toPromise
     }
@@ -217,8 +215,8 @@ object Jobs extends Controller {
   
   def on(id: JobId): ActionA = simpleJobAction(id)(user => job => job.on())("jobs.on")
   def off(id: JobId): ActionA = simpleJobAction(id)(user => job => job.off())("jobs.off")
-  def refresh(id: JobId): ActionA = simpleJobAction(id)(user => job => job.run())("jobs.refreshed")
-  def stop(id: JobId): ActionA = simpleJobAction(id)(user => job => job.cancel())("jobs.stopped")
+  def run(id: JobId): ActionA = simpleJobAction(id)(user => job => job.run())("jobs.run")
+  def stop(id: JobId): ActionA = simpleJobAction(id)(user => job => job.cancel())("jobs.stop")
   
   def dispatcher(implicit id: JobId): ActionA = Action { implicit req =>
     (for {
@@ -231,7 +229,7 @@ object Jobs extends Controller {
       case "on" => on(id)(req)
       case "off" => off(id)(req)
       case "stop" => stop(id)(req)
-      case "refresh" => refresh(id)(req)
+      case "run" => run(id)(req)
       case a => BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "unknown action " + a))))) // TODO Logging
     }).getOrElse(BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
   }
@@ -298,7 +296,8 @@ object Jobs extends Controller {
       } yield {
         action(user)(job)
         if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
-        else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
+        else        SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages(msg, job.name)))
+        //SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
       }) failMap toError toPromise
     }
   }

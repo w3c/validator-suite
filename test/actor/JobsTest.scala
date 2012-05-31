@@ -40,7 +40,7 @@ class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
     //     createdJob <- JobsActor.getJobOrCreate(job)
     //     createdJobData <- createdJob.jobData()
     //     retrievedJob <- JobsActor.getJobOrCreate(job)
-    //     //_ <- job.refresh()
+    //     //_ <- job.run()
     //   } yield {
     //     createdJobData.jobId must be === (job.id)
     //     retrievedJob.configuration.id must be === (job.id)

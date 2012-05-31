@@ -76,7 +76,7 @@
 				<form action="@routes.Jobs.dispatcher(job.id)" method="post">
 					@**{data.activity match {
 					  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
-					  case Idle => {<button type="submit" name="action" value="refresh" class="refresh">run now</button>}
+					  case Idle => {<button type="submit" name="action" value="run" class="run">run now</button>}
 					}}**@
 				</form>
 			<li>
