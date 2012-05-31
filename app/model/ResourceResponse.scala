@@ -32,7 +32,10 @@ object ResourceResponse {
   def get(id: ResourceResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] = sys.error("")
   def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
   def getForRun(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
-  def save(resource: ResourceResponse)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] = sys.error("")
+  def save(resource: ResourceResponse)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(resource)
+  }
   def delete(resource: ResourceResponse)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = sys.error("")
 }
 

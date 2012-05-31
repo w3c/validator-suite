@@ -27,7 +27,10 @@ object Run {
   def apply(job: Job)(implicit conf: VSConfiguration): Run = apply(job = job, data = JobData(jobId = job.id))
   
   def get(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = sys.error("")
-  def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = sys.error("")
+  def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(run)
+  }
   
 }
 

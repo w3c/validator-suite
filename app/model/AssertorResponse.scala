@@ -59,5 +59,8 @@ object AssertorResult {
   def get(id: AssertorResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, AssertorResult] = sys.error("ni")
   def getForJob(id: JobId, after: Option[DateTime] = None)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
   def getForURL(url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
-  def save(result: AssertorResult)(implicit conf: VSConfiguration): FutureVal[Exception, AssertorResult] = sys.error("ni")
+  def save(result: AssertorResult)(implicit conf: VSConfiguration): FutureVal[Exception, AssertorResult] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(result)
+  }
 }
