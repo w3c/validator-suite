@@ -196,6 +196,8 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
 
+
+
   val ErrorResponseVOBinder = new PointedGraphBinder[Rdf, ErrorResponseVO] {
 
     def toPointedGraph(t: ErrorResponseVO): PointedGraph[Rdf] = (
@@ -220,6 +222,39 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
       } yield {
         ErrorResponseVO(id, jobId, runId, url, action, timestamp, why)
       }
+    }
+
+  }
+
+
+
+  val HttpResponseVOBinder = new PointedGraphBinder[Rdf, HttpResponseVO] {
+
+    def toPointedGraph(t: HttpResponseVO): PointedGraph[Rdf] = (
+      ResourceResponseUri(t.id).a(ont.HttpResponse)
+        -- ont.jobId ->- JobUri(t.jobId)
+        -- ont.runId ->- RunUri(t.runId)
+        -- ont.url ->- t.url
+        -- ont.action ->- t.action
+        -- ont.timestamp ->- t.timestamp
+        -- ont.status ->- t.status
+        -- ont.headers -> t.headers
+        -- ont.extractedURL ->- t.extractedURLs
+    )
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, HttpResponseVO] = {
+      // for {
+      //   id <- pointed.node.asUri flatMap ResourceResponseUri.getId
+      //   jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
+      //   runId <- (pointed / ont.runId).exactlyOneUri.flatMap(RunUri.getId)
+      //   url <- (pointed / ont.url).exactlyOne[URL]
+      //   action <- (pointed / ont.action).exactlyOne[HttpAction]
+      //   timestamp <- (pointed / ont.timestamp).exactlyOne[DateTime]
+      //   why <- (pointed / ont.why).exactlyOne[String]
+      // } yield {
+      //   HttpResponseVO(id, jobId, runId, url, action, timestamp, why)
+      // }
+      null
     }
 
   }
