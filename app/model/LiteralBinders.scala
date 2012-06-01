@@ -129,4 +129,29 @@ trait LiteralBinders[Rdf <: RDF] {
   }
 
 
+
+  implicit val explorationModeBinder = new LiteralBinder[Rdf, ExplorationMode] {
+
+    def fromLiteral(literal: Rdf#Literal): Validation[BananaException, ExplorationMode] = {
+      Literal.fold(literal)(
+        {
+          case TypedLiteral(lexicalForm, datatype) =>
+            if (datatype == xsd.string)
+              try {
+                Success(ExplorationMode(lexicalForm))
+              } catch {
+                case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made a ExplorationMode: " + lexicalForm))
+              }
+            else
+              Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
+        },
+        langLiteral => Failure(FailedConversion(langLiteral + " is a langLiteral, you want to access its lexical form"))
+      )
+    }
+
+    def toLiteral(t: ExplorationMode): Rdf#Literal = t.toString
+
+  }
+
+
 }

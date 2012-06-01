@@ -290,6 +290,35 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   }
 
+  // does not map distance as this one will be soon removed
+  val RunVOBinder = new PointedGraphBinder[Rdf, RunVO] {
+
+    def toPointedGraph(t: RunVO): PointedGraph[Rdf] = (
+      RunUri(t.id).a(ont.Run)
+        -- ont.explorationMode ->- t.explorationMode
+        -- ont.toBeExplored ->- t.toBeExplored
+        -- ont.fetched ->- t.fetched.toList
+        -- ont.createdAt ->- t.createdAt
+        -- ont.jobId ->- JobUri(t.jobId)
+        -- ont.jobDataId ->- JobDataUri(t.jobDataId)
+    )
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, RunVO] = {
+      for {
+        id <- pointed.node.asUri flatMap RunUri.getId
+        explorationMode <- (pointed / ont.explorationMode).exactlyOne[ExplorationMode]
+        toBeExplored <- (pointed / ont.toBeExplored).asList[URL]
+        fetched <- (pointed / ont.fetched).asList[URL]
+        createdAt <- (pointed / ont.createdAt).exactlyOne[DateTime]
+        jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
+        jobDataId <- (pointed / ont.jobDataId).exactlyOneUri.flatMap(JobDataUri.getId)
+      } yield {
+        RunVO(id, explorationMode, Map.empty, toBeExplored, fetched.toSet, createdAt, jobId, jobDataId)
+      }
+    }
+  }
+
+
 
 //  val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
 //
