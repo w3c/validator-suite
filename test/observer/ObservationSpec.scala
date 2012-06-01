@@ -174,11 +174,25 @@ abstract class ObservationSpec extends WordSpec with MustMatchers {
         pending = Set(w3_home, google, mobilevoice), data = JobData(jobId = w3.id))
     
     "unset the pending state of a url when the response is received" in {
-      val data = initialData.withCompletedFetch(w3_home)
+      val data = initialData.withResourceResponse(new HttpResponse(
+          jobId = JobId(),
+          runId = RunId(),
+          url = w3_home,
+          action = GET,
+          status = 200,
+          headers = Map.empty,
+          extractedURLs = List.empty))
       data.pending must equal (Set(google, mobilevoice))
       data.fetched must equal (Set(w3_home))
       
-      val data2 = initialData.withCompletedFetch(google)
+      val data2 = initialData.withResourceResponse(new HttpResponse(
+          jobId = JobId(),
+          runId = RunId(),
+          url = google,
+          action = GET,
+          status = 200,
+          headers = Map.empty,
+          extractedURLs = List.empty))
       data2.pending must equal (Set(w3_home, mobilevoice))
       data2.fetched must equal (Set(google))
     }
