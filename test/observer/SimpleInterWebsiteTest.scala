@@ -40,7 +40,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       b <- Job.save(job)
     } yield ()).await(5 seconds)
     job.run()
-    job.listen(testActor)
+    //job.listen(testActor)
     /*fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
         def ris = store.listResourceInfos(job.id).waitResult()

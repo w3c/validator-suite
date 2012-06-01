@@ -15,7 +15,6 @@ import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
-import play.api.libs.iteratee.PushEnumerator
 import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
 import scalaz._
@@ -25,15 +24,15 @@ import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 
 class OrganizationActor(organization: Organization)(implicit val configuration: VSConfiguration)
-extends Actor with Listeners {
+extends Actor {
 
   val logger = play.Logger.of(classOf[OrganizationActor])
 
   val jobsRef: ActorRef = context.actorOf(Props(new JobsActor()), name = "jobs")
-
-  def receive: Actor.Receive = listenerHandler orElse {
+  
+  def receive: Actor.Receive = {
     case m: Tell => jobsRef.forward(m)
-    case m: RunUpdate => tellListeners(m)
+    case m: RunUpdate => organization.channel.push(m)
   }
 
 }

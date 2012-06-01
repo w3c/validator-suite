@@ -48,7 +48,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     PathAware(http, http.path / "localhost_9002") ! SetSleepTime(0)
     job.run()
-    job.listen(testActor)
+    //job.listen(testActor)
     /*fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
         def ris = store.listResourceInfos(job.id).waitResult()

@@ -240,7 +240,7 @@ object Jobs extends Controller {
         user <- getUser
         organization <- user.getOrganization
       } yield {
-        organization.subscribeToUpdates() &> Enumeratee.collect{case a: UpdateData => DashboardUpdate.json(a.data, a.activity)}
+        organization.enumerator &> Enumeratee.collect{case a: UpdateData => DashboardUpdate.json(a.data, a.activity)}
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise
     

@@ -36,7 +36,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
     } yield ()).await(5 seconds)
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
     job.run()
-    job.listen(testActor)
+    //job.listen(testActor)
     fishForMessagePF(3.seconds) {
       case NewResource(ri) => ri.url must be === (URL("http://localhost:9001/"))
     }

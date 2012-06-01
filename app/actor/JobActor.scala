@@ -27,7 +27,7 @@ import org.w3.util.akkaext._
 // TODO extract all pure function in a companion object
 class JobActor(job: Job)(
   implicit val configuration: VSConfiguration)
-    extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
+    extends Actor with FSM[(RunActivity, ExplorationMode), Run] {
 
   import configuration._
 
@@ -142,10 +142,6 @@ class JobActor(job: Job)(
         case _ => {logger.debug("wrong run id"); stay()}
       }
     }
-    case Event(msg: ListenerMessage, _) => {
-      listenerHandler(msg)
-      stay()
-    }
     case Event(BeProactive, run) => stateOf(run.withMode(ProActive))
     case Event(BeLazy, run) => stateOf(run.withMode(Lazy))
     case Event(Refresh, run) => {
@@ -178,7 +174,12 @@ class JobActor(job: Job)(
     // tell the organization
     context.actorFor("../..") ! msg
     // tell all the listeners
-    tellListeners(msg)
+    //tellListeners(msg)
+    msg match {
+      case msg: RunUpdate => job.channel.push(msg)
+      case _ => ()
+    }
+    
   }
 
   /**

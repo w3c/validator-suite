@@ -36,7 +36,7 @@ class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) w
     } yield ()).await(5 seconds)
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     job.run()
-    job.listen(testActor)
+    //job.listen(testActor)
     /*fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
         val resources = store.listResourceInfos(job.id).waitResult()

@@ -64,29 +64,8 @@ case class Job(
 
   def off(): Unit = 
     PathAware(organizationsRef, path) ! BeLazy
-
-  def subscribeToUpdates(): Enumerator[RunUpdate] = {
-    lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
-      def receive = {
-        case msg: RunUpdate =>
-          try { 
-            enumerator.push(msg)
-          } catch { 
-            case e: ClosedChannelException => enumerator.close; logger.error("ClosedChannel exception: ", e)
-            case e => enumerator.close; logger.error("Enumerator exception: ", e)
-          }
-        case msg => logger.debug("subscriber got "+msg)
-      }
-    }))
-    lazy val enumerator: PushEnumerator[RunUpdate] =
-      Enumerator.imperative[RunUpdate](
-        onComplete = () => {deafen(subscriber); logger.info("onComplete")},
-        onError = (_,_) => () => {deafen(subscriber); logger.info("onError")}
-      )
-    listen(subscriber)
-    enumerator &> Enumeratee.onIterateeDone(() => {deafen(subscriber); logger.info("onIterateeDone")})
-  }
   
+  lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
   
   // Following might be moved to a trait, e.g. ActorInterface?
   
@@ -96,13 +75,6 @@ case class Job(
 
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
-
-  // A test needs this method to be public
-  def listen(implicit listener: ActorRef): Unit =
-    PathAware(organizationsRef, path).tell(Listen(listener), listener)
-
-  private def deafen(implicit listener: ActorRef): Unit =
-    PathAware(organizationsRef, path).tell(Deafen(listener), listener)
     
 }
 

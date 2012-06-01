@@ -57,8 +57,12 @@ class PendingRunTest extends RunTestHelper(
     } yield ()).await(5 seconds)
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     job.run()
-    job.listen(testActor)
-
+    //job.listen(testActor)
+    
+    // there should be a NewResource message sent to the organization actor but no messages are sent to 
+    // subscriber actors anymore. I'm not sure how fishForMessage works but it might be irrelevant with
+    // the new architecture brought by Concurrent.broadcast. This test could be replaced by something 
+    // using job.enumerator
     val runId1 = fishForMessagePF(3.seconds) {
       case NewResource(ri) => ri.runId
     }
