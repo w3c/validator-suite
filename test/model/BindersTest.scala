@@ -92,30 +92,40 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
+  val errorResponseVO =
+    ErrorResponseVO(
+      jobId = JobId(),
+      runId = RunId(),
+      url = URL("http://example.com/foo"),
+      action = GET,
+      timestamp = DateTime.now(DateTimeZone.UTC),
+      why = "just because")
+
   "ErrorResponseVO" in {
-    testSerializeDeserialize(ErrorResponseVOBinder) {
-      ErrorResponseVO(
-        jobId = JobId(),
-        runId = RunId(),
-        url = URL("http://example.com/foo"),
-        action = GET,
-        timestamp = DateTime.now(DateTimeZone.UTC),
-        why = "just because")
-    }
+    testSerializeDeserialize(ErrorResponseVOBinder)(errorResponseVO)
   }
 
+  val httpResponseVO =
+    HttpResponseVO(
+      jobId = JobId(),
+      runId = RunId(),
+      url = URL("http://example.com/foo"),
+      action = GET,
+      timestamp = DateTime.now(DateTimeZone.UTC),
+      status = 200,
+      headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
+      extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))
+
   "HttpResponseVO" in {
-    testSerializeDeserialize(HttpResponseVOBinder) {
-      HttpResponseVO(
-        jobId = JobId(),
-        runId = RunId(),
-        url = URL("http://example.com/foo"),
-        action = GET,
-        timestamp = DateTime.now(DateTimeZone.UTC),
-        status = 200,
-        headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
-        extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))
-    }
+    testSerializeDeserialize(HttpResponseVOBinder)(httpResponseVO)
+  }
+
+  "ResourceResponseVO as ErrorResponseVO" in {
+    testSerializeDeserialize(ResourceResponseVOBinder)(errorResponseVO)
+  }
+
+  "ResourceResponseVO as HttpResponseVO" in {
+    testSerializeDeserialize(ResourceResponseVOBinder)(httpResponseVO)
   }
 
 }

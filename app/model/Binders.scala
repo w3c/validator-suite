@@ -269,28 +269,26 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
 
-    def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] = null
- // (
- //      OrganizationUri(t.id).a(organization.Organization)
- //        -- organization.name ->- t.name
- //        -- organization.admin ->- UserUri(t.admin)
- //    )
+    def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] = t match {
+      case e: ErrorResponseVO => ErrorResponseVOBinder.toPointedGraph(e)
+      case h: HttpResponseVO => HttpResponseVOBinder.toPointedGraph(h)
+    }
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponseVO] = {
-      // for {
-      //   id <- pointed.node.asURI flatMap OrganizationUri.getId
-      //   name <- (pointed / organization.name).exactlyOne[String])
-      //   adminId <- (pointed / organization.admin).exactlyOne.flatMap(_.asURI).flatMap(UserUri.getId)
-      // } yield {
-      //   OrganizationVO(id, name, adminId)
-      // }
-      null
+      // import org.w3.banana.jena._
+      // val mToJena = new RDFTransformer[Rdf, Jena](ops, JenaOperations)
+      // val graph = mToJena.transform(pointed.graph)
+      // println(JenaTurtleWriter.asString(graph, ""))
+      // println("****** " + (pointed / rdf("type")))
+      // println("&&&&&& " + (pointed / rdf("type")).headOption.toString)
+      // TODO improve banana rdf to avoid this horrible thing...
+      if ((pointed / rdf("type")).headOption.map(_.node) == Some(ont.ErrorResponse))
+        ErrorResponseVOBinder.fromPointedGraph(pointed)
+      else
+        HttpResponseVOBinder.fromPointedGraph(pointed)
     }
 
   }
-
-
-
 
 
 //  val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {

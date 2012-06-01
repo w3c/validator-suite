@@ -32,6 +32,7 @@ object ApplicationBuild extends Build {
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
 //    scalaVersion := "2.9.1",
     testOptions in Test := Nil,
+//  testOptions in Test += Tests.Argument("-oF")
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
     templatesImport += "org.w3.vs.view._",
