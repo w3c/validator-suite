@@ -319,6 +319,30 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
 
+  val UserVOBinder = new PointedGraphBinder[Rdf, UserVO] {
+
+    def toPointedGraph(t: UserVO): PointedGraph[Rdf] = (
+      UserUri(t.id).a(ont.User)
+        -- ont.name ->- t.name
+        -- ont.email ->- t.email
+        -- ont.password ->- t.password
+        -- ont.organizationId ->- OrganizationUri(t.organizationId)
+    )
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, UserVO] = {
+      for {
+        id <- pointed.node.asUri flatMap UserUri.getId
+        name <- (pointed / ont.name).exactlyOne[String]
+        email <- (pointed / ont.email).exactlyOne[String]
+        password <- (pointed / ont.password).exactlyOne[String]
+        organizationId <- (pointed / ont.organizationId).exactlyOneUri.flatMap(OrganizationUri.getId)
+      } yield {
+        UserVO(id, name, email, password, organizationId)
+      }
+    }
+  }
+
+
 
 //  val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
 //

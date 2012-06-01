@@ -140,4 +140,16 @@ class BindersTest extends WordSpec with MustMatchers {
   }
 
 
+
+  "UserVO" in {
+    testSerializeDeserialize(UserVOBinder) {
+      UserVO(
+        name = "foo bar",
+        email = "foo@example.com",
+        password = "secret",
+        organizationId = OrganizationId())
+    }
+  }
+
+
 }
