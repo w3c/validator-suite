@@ -169,11 +169,12 @@ case class Run(
    * be fetched, giving priority to the main authority.
    */
   def take: Option[(Run, URL)] = {
-    if (mainAuthorityIsBeingFetched) {
+    val take = if (mainAuthorityIsBeingFetched) {
       takeFromOtherAuthorities
     } else {
       takeFromMainAuthority orElse takeFromOtherAuthorities
     }
+    take
   }
 
   /**
@@ -194,9 +195,21 @@ case class Run(
     (current, urls.reverse map { url => url -> distance(url) })
   }
 
-  def withCompletedFetch(url: URL): Run = this.copy(
-    pending = pending - url,
-    fetched = fetched + url)
+//  def withCompletedFetch(url: URL): Run = this.copy(
+//    pending = pending - url,
+//    fetched = fetched + url,
+//    data = data.copy(resources = data.resources + 1))
+  
+  def withResourceResponse(response: ResourceResponse): Run = this.copy(
+    pending = pending - response.url,
+    fetched = fetched + response.url,
+    data = data.copy(
+      resources = response match {
+        case _: HttpResponse => data.resources + 1
+        case _ => data.resources
+      }
+    )
+  )
 
   def withAssertorResponse(response: AssertorResponse): Run = response match {
     case result: AssertorResult => this.copy(

@@ -72,15 +72,7 @@
 				<dd class="url">@job.strategy.entrypoint</dd>
 				
 				<dt>Status</dt>
-				<dd class="status">
-					<span>@run.activity.toString</span>
-					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
-						@{run.activity match {
-						  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
-						  case Idle => {<button type="submit" name="action" value="run" class="run">run now</button>}
-						}}
-					</form>
-				</dd>
+				<dd class="status">@run.activity.toString</dd>
 
 				<dt>Last Completed</dt>
 				<dd class="date">
@@ -112,6 +104,10 @@
 				<dt>Actions</dt>
 				<dd>
 					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
+						@{run.activity match {
+						  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
+						  case Idle => {<button type="submit" name="action" value="run" class="run">run now</button>}
+						}}
 						<button type="submit" name="action" value="delete" class="delete">delete</button>
 					</form>
 				</dd>
@@ -133,14 +129,7 @@
 				<dd class="url"><%= seedUri %></dd>
 
 				<dt>Status</dt>
-				<dd class="status">
-					<span><%= data.get('activity') %></span>
-					<% switch(data.get('activity')) { case "Running": %>
-						<a class="stop" href="<%= url + '/cancel' %>">cancel</a>
-					<% break; case "Idle": %>
-						<a class="run" href="<%= url + '/run' %>">run now</a>
-					<% } %>
-				</dd>
+				<dd class="status"><%= data.get('activity') %></dd>
 
 				<dt>Last Completed</dt>
 				<dd class="date"><time datetime="">03/12/12 at 2:55pm</time></dd>
@@ -159,13 +148,18 @@
 
 				<dt>Health</dt>
 				<dd class="health">
-					<progress max=100 value=<%= health %> title="<%= health %>%">
-						<%= health %>%
+					<progress max=100 value=<%= data.get('health') %> title="<%= data.get('health') %>%">
+						<%= data.get('health') %>%
 					</progress>
 				</dd>
 				
 				<dt>Actions</dt>
 				<dd>
+               <% switch(data.get('activity')) { case "Running": %>
+					<a class="stop" href="<%= url + '/cancel' %>">cancel</a>
+					<% break; case "Idle": %>
+					<a class="run" href="<%= url + '/run' %>">run now</a>
+					<% } %>
 					<a class="delete" href="<%= url + '/delete' %>">delete</a>
 				</dd>
 			</dl>

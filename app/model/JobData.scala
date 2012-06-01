@@ -18,8 +18,11 @@ case class JobData (
   def toValueObject: JobDataVO = JobDataVO(id, jobId, resources, errors, warnings, timestamp)
   
   def health(): Int = {
-    val errorAverage = errors.toDouble / resources.toDouble
-    (exp(log(0.5) / 10 * errorAverage) * 100).toInt
+    if (resources == 0) 0
+    else {
+      val errorAverage = errors.toDouble / resources.toDouble
+      (exp(log(0.5) / 10 * errorAverage) * 100).toInt
+    }
   }
 }
 

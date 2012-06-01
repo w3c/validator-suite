@@ -34,7 +34,7 @@ case class Organization(
     val organizationRef = system.actorFor(organizationPath)
     lazy val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
-        case msg: UpdateData =>
+        case msg: RunUpdate =>
           try {
             enumerator.push(msg)
           } catch {
@@ -63,7 +63,10 @@ object Organization {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(play.api.Global.w3c)
   }
-  def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = sys.error("ni")
+  
+  def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = 
+    sys.error("ni")
+  
   def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(organization)

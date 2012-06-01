@@ -15,28 +15,26 @@ window.MessageList = Backbone.Collection.extend({
 	model: Message
 });
 
-window.JobData = Backbone.Model.extend({
+window.DashboardUpdate = Backbone.Model.extend({
 	defaults: {
 		activity: "",
-		mode: "",
 		resources: 0,
-		oks: 0,
 		errors: 0,
-		warnings: 0
+		warnings: 0,
+		health: 0
 	}
 });
 
-window.JobData.fromJSON = function (data) {
+window.DashboardUpdate.fromJSON = function (data) {
 	try {
 		var json = $.parseJSON(data);
-		return new JobData({
+		return new DashboardUpdate({
 			jobId: json[1],
 			activity: json[2],
-			mode: json[3],
-			resources: json[4],
-			oks: json[5],
-			errors: json[6],
-			warnings: json[7]
+			resources: json[3],
+			errors: json[4],
+			warnings: json[5],
+			health: json[6]
 		});
 	} catch(ex) {
 		console.log(ex);
@@ -50,8 +48,7 @@ window.Job = Backbone.Model.extend({
 		name: "",
 		seedUri: "",
 		maxResources: 0,
-		health: 0,
-		data: new JobData(), // A collection of JobDatas containing a timestamp is what we need to build a graph
+		data: new DashboardUpdate(), // A collection of DashboardUpdates containing a timestamp is what we need to build a graph
 		createdAt: "",
 		lastRun: "",
 		lastUpdated: "",
@@ -115,10 +112,10 @@ window.Job = Backbone.Model.extend({
 	},
 	
 	syncData: function(jobData) {
-		if (!_.isEqual(jobData.attributes, this.get('data').attributes)) {
+		//if (!_.isEqual(jobData.attributes, this.get('data').attributes)) {
 			this.set({data: jobData});
 			console.log("dataUpdated");
-		}
+		//}
 	},
 	
 	log: function () {console.log(JSON.stringify(this.toJSON()));},
@@ -129,12 +126,12 @@ window.Job.fromHTML = function(elem) {
 		id: $(elem).attr("data-id"),
 		name: $(".name", elem).text(),
 		seedUri: $(".url", elem).text(),
-		data: new JobData({
-			activity: $(".status span", elem).text(),
-			//mode: $(".mode", elem).text(),
+		data: new DashboardUpdate({
+			activity: $(".status", elem).text(),
+			resources: parseInt($(".resources", elem).text()),
 			errors: parseInt($(".errors", elem).text()),
 			warnings: parseInt($(".warnings", elem).text()),			
-			resources: parseInt($(".resources", elem).text())
+			health: parseInt($(".health progress", elem).attr("value"))
 		}),
 		maxResources: parseInt($(".maxResources", elem).text()),
 		health: parseInt($(".health progress", elem).attr("value"))

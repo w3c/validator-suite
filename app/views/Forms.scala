@@ -30,6 +30,7 @@ class LoginForm private [view] (form: Form[(String, String)]) extends VSForm {
   def apply(s: String) = form(s)
   def globalError = form.globalError
 }
+
 class ValidLoginForm private [view] (form: Form[(String, String)], bind: (String, String)) extends LoginForm(form) with VSForm {
   val (email, password) = bind
 }

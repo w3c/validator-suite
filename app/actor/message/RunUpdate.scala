@@ -6,7 +6,6 @@ import org.w3.vs.model._
 import org.w3.vs.actor._
 import play.api.libs.json._
 import org.w3.vs.model._
-import play.api.libs.json.JsNumber
 import scalaz._
 
 /**
@@ -14,11 +13,11 @@ import scalaz._
  * 
  * Listening to updates lets you know everything about an Observation.
  */
-sealed trait RunUpdate {
+sealed trait RunUpdate /*{
   def toJS: JsValue
-}
+}*/
 
-case class UpdateData(data: JobData) extends RunUpdate {
+case class UpdateData(data: JobData, activity: RunActivity) extends RunUpdate {
   def toJS: JsValue = JsArray() 
     /*JsArray(List(
       JsString("JobStatus"),

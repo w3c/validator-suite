@@ -80,16 +80,12 @@ class JobActor(job: Job)(
       sender ! run
       stay()
     }
-//    case Event(GetJobData, run) => {
-//      sender ! run.data
-//      stay()
-//    }
     case Event('Tick, run) => {
       // do it only if necessary (ie. something has changed since last time)
       if (run ne lastRun) {
         run.save()
         // tell the subscribers about the current run for this run
-        val msg = UpdateData(run.data)
+        val msg = UpdateData(run.data, run.activity)
         tellEverybody(msg)
         lastRun = run
       }
@@ -102,41 +98,48 @@ class JobActor(job: Job)(
         case _ => ()
       }
       if (response.runId === _run.id) {
-        tellEverybody(NewAssertorResponse(response))
+        //tellEverybody(NewAssertorResponse(response))
         stateOf(_run.withAssertorResponse(response))
       } else {
         stay() // log maybe?
       }
     }
     case Event(response: ResourceResponse, _run) => {
-      //println("@@@ "+resourceInfo.toTinyString)
+      logger.debug("ResourceResponse: " + response.url)
       response.save()
       response match {
-        case resource: HttpResponse if response.runId === _run.id => {
+        case resource: ResourceResponse if response.runId === _run.id => {
           tellEverybody(NewResource(resource))
           _run.explorationMode match {
             case ProActive => {
               val distance = _run.distance.get(resource.url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format resource.url)
               // TODO do something with the newUrls
-              val (run, newUrls) = _run.withNewUrlsToBeExplored(resource.extractedURLs, distance + 1)
-              if (!newUrls.isEmpty) logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, run.numberOfKnownUrls))
-              val assertors = strategy.assertorsFor(resource)
-              stateOf( scheduleNextURLsToFetch {
-                if (assertors.nonEmpty) {
-                  assertors foreach { 
-                    case assertor: FromHttpResponseAssertor => assertionsActorRef ! AssertorCall(assertor, resource)
-                    case _ => logger.error("With the current model and logic jobActor only supports FromHttpResponseAssertor")
+              val run = resource match {
+                case httpResponse: HttpResponse => {
+                  val (run, newUrls) = _run.withResourceResponse(httpResponse).withNewUrlsToBeExplored(httpResponse.extractedURLs, distance + 1)
+                  if (!newUrls.isEmpty) logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, run.numberOfKnownUrls))
+                  val assertors = strategy.assertorsFor(resource)
+                  if (assertors.nonEmpty) {
+                    assertors foreach { 
+                      case assertor: FromHttpResponseAssertor => assertionsActorRef ! AssertorCall(assertor, httpResponse)
+                      case _ => logger.error("With the current model and logic jobActor only supports FromHttpResponseAssertor")
+                    }
+                    run.copy(pendingAssertions = run.pendingAssertions + assertors.size)
+                  } else {
+                    run
                   }
-                  run.copy(pendingAssertions = run.pendingAssertions + assertors.size)
-                } else {
-                  run
                 }
-              })
+                case failure: ErrorResponse => {
+                  _run.withResourceResponse(failure)
+                }
+              }
+              
+              stateOf(scheduleNextURLsToFetch(run))
             }
             case Lazy => stay()
           }
         }
-        case _ => stay()
+        case _ => {logger.debug("wrong run id"); stay()}
       }
     }
     case Event(msg: ListenerMessage, _) => {
@@ -163,7 +166,7 @@ class JobActor(job: Job)(
 
   onTransition {
     case _ -> _ => {
-      val msg = UpdateData(nextStateData.data)
+      val msg = UpdateData(nextStateData.data, nextStateData.activity)
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))

@@ -112,16 +112,21 @@ object Job {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(play.api.Global.w3)
   }
+  
   def getFor(user: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(Iterable(play.api.Global.w3))
   }
+  
   def getFor(organization: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
     sys.error("ni")
+  
   def getFor(strategy: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
     sys.error("ni")
+  
   def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
     sys.error("ni")
+  
   def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.failed(new Exception("Not implemented yet"))

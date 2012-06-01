@@ -3,11 +3,11 @@ package controllers
 import java.util.concurrent.TimeUnit.SECONDS
 
 import org.w3.util._
-//import org.w3.util.FutureVal._
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
 import org.w3.vs.view._
+import org.w3.vs.actor.message._
 
 import Application._
 import akka.dispatch.Future
@@ -240,7 +240,7 @@ object Jobs extends Controller {
         user <- getUser
         organization <- user.getOrganization
       } yield {
-        organization.subscribeToUpdates() &> Enumeratee.map(_.toJS)
+        organization.subscribeToUpdates() &> Enumeratee.collect{case a: UpdateData => DashboardUpdate.json(a.data, a.activity)}
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise
     
@@ -301,15 +301,5 @@ object Jobs extends Controller {
       }) failMap toError toPromise
     }
   }
-  
-//  private def getJobIfAllowed(user: User, id: JobId): FutureValidationNoTimeOut[SuiteException, Job] = {
-//    for {
-//      job <- Job.get(id)
-//      jobAllowed <- {
-//        val validation = if (job.organizationId === user.organizationId) Success(job) else Failure(UnauthorizedJob)
-//        validation.toImmediateValidation
-//      }
-//    } yield jobAllowed
-//  }
   
 }

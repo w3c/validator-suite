@@ -92,7 +92,7 @@ window.DashboardView = Backbone.View.extend({
 	},
 	_messageCallback: function (event) {
 		console.log(event.data);
-		var data = JobData.fromJSON(event.data);
+		var data = DashboardUpdate.fromJSON(event.data);
 		var job = this.jobs.get(data.get("jobId"));
 		if (!_.isUndefined(job))
 			job.syncData(data);
