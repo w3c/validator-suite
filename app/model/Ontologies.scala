@@ -67,6 +67,9 @@ self: LiteralBinders[Rdf] =>
     val jobDataId = apply("jobDataId")
 
     val Strategy = apply("Strategy")
+    val entrypoint = apply("entrypoint")
+    val linkCheck = apply("linkCheck")
+    val maxResources = apply("maxResources")
     
     val User = apply("User")
     val email = apply("email")

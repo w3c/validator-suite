@@ -139,6 +139,16 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
+  "StrategyVO" in {
+    testSerializeDeserialize(StrategyVOBinder) {
+      StrategyVO(
+        entrypoint = URL("http://example.com/foo"),
+        distance = 2,
+        linkCheck = true,
+        maxResources = 100,
+        filter = Filter.includeEverything)
+    }
+  }
 
 
   "UserVO" in {

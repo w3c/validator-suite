@@ -343,19 +343,29 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
 
+  // works only for Filter(include = Everything, exclude = Nothing) for the moment
+  val StrategyVOBinder = new PointedGraphBinder[Rdf, StrategyVO] {
 
-//  val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
-//
-//    def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] = null
-//
-//    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponseVO] = {
-//      null
-//    }
-//
-//  }
-//
+    def toPointedGraph(t: StrategyVO): PointedGraph[Rdf] = (
+      StrategyUri(t.id).a(ont.Strategy)
+        -- ont.entrypoint ->- t.entrypoint
+        -- ont.distance ->- t.distance
+        -- ont.linkCheck ->- t.linkCheck.toString
+        -- ont.maxResources ->- t.maxResources
+    )
 
-
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, StrategyVO] = {
+      for {
+        id <- pointed.node.asUri flatMap StrategyUri.getId
+        entrypoint <- (pointed / ont.entrypoint).exactlyOne[URL]
+        distance <- (pointed / ont.distance).exactlyOne[Int]
+        linkCheck <- (pointed / ont.linkCheck).exactlyOne[String].map(_.toBoolean)
+        maxResources <- (pointed / ont.maxResources).exactlyOne[Int]
+      } yield {
+        StrategyVO(id, entrypoint, distance, linkCheck, maxResources, Filter.includeEverything)
+      }
+    }
+  }
 
 
 
