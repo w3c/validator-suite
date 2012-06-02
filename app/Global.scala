@@ -72,6 +72,8 @@ object Global extends GlobalSettings {
       filter = Filter(include = Everything, exclude = Nothing)))
   
   override def onStart(app: Application): Unit = {
+
+    org.w3.vs.assertor.CSSValidator.start()
     
     // TODO a Saveable trait might be handy
 //    tgambet.save()
@@ -85,6 +87,7 @@ object Global extends GlobalSettings {
   }
   
   override def onStop(app: Application): Unit = {
+    org.w3.vs.assertor.CSSValidator.stop()
     system.shutdown()
   }
   
