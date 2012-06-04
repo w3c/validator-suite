@@ -28,8 +28,8 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
   val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")(implicitConfiguration)
   
   val servers = Seq(
-      unfiltered.jetty.Http(9001).filter(Website(Seq("/" --> "http://localhost:9002/")).toPlanify),
-      unfiltered.jetty.Http(9002).filter(Website(Seq()).toPlanify)
+      Webserver(9001, Website(Seq("/" --> "http://localhost:9002/")).toServlet),
+      Webserver(9002, Website(Seq()).toServlet)
   )
 
   "test simpleInterWebsite" in {

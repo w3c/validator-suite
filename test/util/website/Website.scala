@@ -1,25 +1,28 @@
 package org.w3.util.website
 
-import unfiltered.request._
-import unfiltered.response._
+import javax.servlet.http._
 
 /** A website made of a sequence of declarative [[org.w3.vs.website.Link]]s
   *
   * @param links
   */
-case class Website(links:Iterable[Link]) {
-  
-  /** compiles this website to an Unfiltered plan */
-  def toPlanify = unfiltered.filter.Planify {
-    case Path(path) if path startsWith "/404" =>
-      NotFound
-    case Path(path) => {
-      val outLinks = links flatMap { _.outlinksFor(path) }
-      val webpage = Webpage(path, outLinks)
-      Ok ~> ContentType("text/html") ~> ResponseString(webpage.toHtml)
+case class Website(links: Iterable[Link]) {
+
+  def toServlet: HttpServlet = new HttpServlet {
+    override def doGet(req: HttpServletRequest, resp: HttpServletResponse) = {
+      val path = req.getRequestURI
+      if (path startsWith "/404") {
+        resp.sendError(404)
+      } else {
+        val outLinks = links flatMap { _.outlinksFor(path) }
+        val webpage = Webpage(path, outLinks)
+        resp.setStatus(200)
+        resp.setContentType("text/html")
+        resp.getWriter.print(webpage.toHtml)
+      }
     }
   }
-  
+    
 }
 
 object Website {

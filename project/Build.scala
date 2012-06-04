@@ -16,16 +16,12 @@ object ApplicationBuild extends Build {
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "x01-SNAPSHOT" changing(),
+    "org.w3" %% "banana-jena" % "x01-SNAPSHOT",
     "org.w3" %% "css-validator-standalone" % "1.0-SNAPSHOT" intransitive(),
+    "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
+    "javax.servlet" % "servlet-api" % "2.5" % "provided",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0.1" % "test",
-    "net.databinder" %% "unfiltered-filter" % "0.6.2" % "test",
-    "net.databinder" %% "unfiltered-jetty" % "0.6.2" % "test",
-    // "net.databinder" %% "unfiltered-filter" % "0.6.2" % "test" intransitive(),
-    // "net.databinder" %% "unfiltered-jetty" % "0.6.2" % "test" intransitive(),
-    // "net.databinder" %% "unfiltered-util" % "0.6.2" % "test" intransitive(),
-    // "net.databinder" %% "unfiltered" % "0.6.2" % "test" intransitive(),
     "org.scalatest" %% "scalatest" % "1.7.1" % "test"
   )
 

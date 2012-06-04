@@ -15,7 +15,7 @@ import org.w3.util.akkaext._
 
 class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with Inside {
   
-  val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
+  val servers = Seq(Webserver(9001, Website.cyclic(10).toServlet))
   
   PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 

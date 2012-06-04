@@ -48,7 +48,7 @@ class PendingRunTest extends RunTestHelper(
   val job = play.api.Global.w3
   val org = play.api.Global.w3c
   
-  val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.tree(20).toPlanify))
+  val servers = Seq(Webserver(9001, Website.tree(20).toServlet))
 
   "test FilteredTreeWebsiteTest" in {
     (for {

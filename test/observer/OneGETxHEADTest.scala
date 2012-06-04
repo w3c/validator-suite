@@ -33,8 +33,8 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
   val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
   
   val servers = Seq(
-      unfiltered.jetty.Http(9001).filter(Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toPlanify),
-      unfiltered.jetty.Http(9002).filter(Website(Seq()).toPlanify)
+      Webserver(9001, (Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toServlet)),
+      Webserver(9002, Website(Seq()).toServlet)
   )
 
   "test OneGETxHEAD" in {

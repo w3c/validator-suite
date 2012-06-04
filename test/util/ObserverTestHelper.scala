@@ -10,6 +10,7 @@ import akka.actor.ActorSystem
 import org.w3.vs.VSConfiguration
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers
+import org.w3.util.website._
 
 /**
  * helper trait that can be used to test Runs
@@ -19,7 +20,7 @@ abstract class RunTestHelper(configuration: VSConfiguration)
 extends TestKit(configuration.system) with ImplicitSender
 with WordSpec with MustMatchers with BeforeAndAfterAll {
   
-  def servers: Seq[unfiltered.util.RunnableServer]
+  def servers: Seq[Webserver]
   
   implicit val implicitConfiguration: VSConfiguration = configuration
 

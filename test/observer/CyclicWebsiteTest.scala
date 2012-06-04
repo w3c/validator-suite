@@ -28,7 +28,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
   
   val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
   
-  val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(10).toPlanify))
+  val servers = Seq(Webserver(9001, Website.cyclic(10).toServlet))
   
   "test cyclic(10)" in {
     //stores.OrganizationStore.put(organizationTest)

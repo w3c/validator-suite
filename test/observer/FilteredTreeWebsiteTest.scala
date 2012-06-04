@@ -30,7 +30,7 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
   
   val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
   
-  val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.tree(4).toPlanify))
+  val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 
   "test FilteredTreeWebsiteTest" in {
     //stores.OrganizationStore.put(organizationTest)
