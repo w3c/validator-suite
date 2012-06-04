@@ -43,7 +43,10 @@ case class Job(
   def getRun(implicit context: ExecutionContext): FutureVal[Throwable, Run] = 
     (PathAware(organizationsRef, path).?[Run](GetRun))
 
-  def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = sys.error("")
+  def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(Iterable())
+  }
   
   def save(): FutureVal[Exception, Job] = 
     Job.save(this)

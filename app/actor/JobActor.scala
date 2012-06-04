@@ -50,7 +50,7 @@ class JobActor(job: Job)(
   // at instanciation of this actor
 
   // TODO
-  configuration.system.scheduler.schedule(10 seconds, 2 seconds, self, 'Tick)
+  configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
 
   var lastRun = Run(job) // TODO get last run data from the db?
 
@@ -105,7 +105,7 @@ class JobActor(job: Job)(
       }
     }
     case Event(response: ResourceResponse, _run) => {
-      logger.debug("ResourceResponse: " + response.url)
+      //logger.debug("ResourceResponse: " + response.url)
       response.save()
       response match {
         case resource: ResourceResponse if response.runId === _run.id => {

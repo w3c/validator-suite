@@ -7,15 +7,9 @@
    
 	@libs.header()
 	
-}{ @***** Toolbar *****@
-
-	<ul>
-		<li><a href="@routes.Jobs.index">Dashboard</a></li>
-	</ul>
-
 }{ @***** Content *****@ 
 
-	@libs.navigation(List((form("name").value.getOrElse("New Job"), "")))
+	@libs.navigation("Job", List((form("name").value.getOrElse("New Job"), "")))
 	@libs.messages()
 	
 	<section>

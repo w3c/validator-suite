@@ -24,30 +24,30 @@ window.ReportView = Backbone.View.extend({
 });
 
 $(function () {
-	window.Report = new ReportView();
-	var a = $("#report article");
-	$("body").removeClass("no-js").addClass("js");
-	a.each(function (i, article) {
-		var ar = $(article);
-		ar.addClass("folded");
-		// TODO implement that in the template
-		if ($("article > div:first-child", ar).length == 0 && $(".messages", ar).length == 0)
-			ar.removeClass("folded").addClass("empty");
-	});
-	$("#report article > :first-child").click(
-		function (e){
-			e.preventDefault(); 
-			$(this).parent().toggleClass("folded");
-			return false;
-		}
-	);
-	$(".compact").click(
-		function (e){
-			e.preventDefault(); 
-			a.toggleClass("compact");
-			return false;
-		}
-	);
+//	window.Report = new ReportView();
+//	var a = $("#report article");
+//	$("body").removeClass("no-js").addClass("js");
+//	a.each(function (i, article) {
+//		var ar = $(article);
+//		ar.addClass("folded");
+//		// TODO implement that in the template
+//		if ($("article > div:first-child", ar).length == 0 && $(".messages", ar).length == 0)
+//			ar.removeClass("folded").addClass("empty");
+//	});
+//	$("#report article > :first-child").click(
+//		function (e){
+//			e.preventDefault(); 
+//			$(this).parent().toggleClass("folded");
+//			return false;
+//		}
+//	);
+//	$(".compact").click(
+//		function (e){
+//			e.preventDefault(); 
+//			a.toggleClass("compact");
+//			return false;
+//		}
+//	);
 	
 //	var setHash = function(hash) {
 //		// Make sure that the hash is the first character, and extract from (presumably) full URL if not

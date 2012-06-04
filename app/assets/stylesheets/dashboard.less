@@ -77,7 +77,8 @@ hr,
 .list aside dd,
 .list aside h2,
 .list article dt,
-.list article h2 {
+.list article h2,
+#crumbs h1 {
 	display:none;
 }
 
@@ -156,7 +157,7 @@ hr,
 #jobs .distance {
 	text-align: center;
 }
-#jobs {
+/*#jobs {*/
 	/* http://www.useragentman.com/blog/2012/01/03/cross-browser-html5-progress-bars-in-depth/ */
 	progress{
 		appearance: none;
@@ -185,7 +186,7 @@ hr,
 			background: #3bbc00;
 		}
 	}
-}
+/*}*/
 
 
 /* Crumb nav */
@@ -197,27 +198,29 @@ hr,
 
 /* job meta on report page */
 .job {}
-.job ul {
+.job {
 	display:table;
 	width:100%;
-	border-collapse:collapse;
+	border-bottom:0 !important;
+	padding-bottom:0 !important;
+	/*border-collapse:collapse;*/
 }
-.job li {
+.job div {
 	display:table-cell;
 	padding:0 5px;
 }
-.job li:first-child {
+.job div:first-child {
 	padding-left:0;	
 }
-.job li:last-child {
+.job div:last-child {
 	padding-right:0;	
 }
 .job h2 {
 	color:grey;
-	font-size:0.85em;
+	font-size:0.90em;
 	margin-bottom: 5px;
 }
-.job li span {
+.job div span {
 	font-size:1.1em;
 }
 .job .errorsC,
@@ -230,7 +233,7 @@ hr,
 }
 
 .controls {
-	background:@headerBgColor;
+	//background:@headerBgColor;
 	min-height:26px;
 }
 .controls button {
@@ -244,9 +247,18 @@ hr,
 	padding: 3px 12px;
 	margin:0;
 	vertical-align: middle;
+	font-size: 0.9em;
 }
 .controls input {
 	margin:0;
+}
+.controls h2,
+.controls h3 {
+	display: none;
+}
+.controls form {
+	display: inline;
+	margin-right: 2px;
 }
 
 
@@ -310,7 +322,7 @@ form.group fieldset:not(:hover):after {
 }
 
 form.search {
-	float:right;
+	//float:right;
 }
 form.search input {
 	padding: 3px 5px;
@@ -322,7 +334,7 @@ form.search input {
 /**********************************/
 
 /* Report nav */
-nav.report > div {
+/*nav.report > div {
 	padding:10px;
 	border: 1px solid #e5e5e5;
 }
@@ -339,7 +351,7 @@ nav.report li:first-child:before {
 
 
 /* nested list */
-.nested article {
+/*.nested article {
   	font-size: 13px;
 	line-height: 1em;
 	border:solid #e5e5e5;
@@ -378,7 +390,7 @@ nav.report li:first-child:before {
 
 
 /* Folding first level */
-.no-js .nested > article:not(:target):not(:focus) > div:last-child:not(:first-child),
+/*.no-js .nested > article:not(:target):not(:focus) > div:last-child:not(:first-child),
 .js .nested article.folded > div:last-child:not(:first-child),
 .js .nested article.empty > div:last-child:not(:first-child) {
 	height: 0;
@@ -425,7 +437,7 @@ nav.report li:first-child:before {
 
 
 /* First level header link */
-#report > article > div:first-child a.group {
+/*#report > article > div:first-child a.group {
 	text-decoration:none;
 	color:inherit;
 }
@@ -456,7 +468,7 @@ nav.report li:first-child:before {
 
 
 /* Report */
-#report .assertor {
+/*#report .assertor {
 	font-weight: bold;
 }
 #report .context {
@@ -469,12 +481,12 @@ nav.report li:first-child:before {
 }
 #report .context strong {
 	color:red;
-}
+}*/
 /* #report .url { */
 /* 	font-weight: bold; */
 /* 	color:#02579e !important; */
 /* } */
-#report .assertor,
+/*#report .assertor,
 #report .url,
 #report .message,
 #report .context {
@@ -498,12 +510,12 @@ nav.report li:first-child:before {
 }
 #report .message.error {
 	border-left: 5px solid red;
-}
+}*/
 
 
 
 /*Aside*/
-#report aside {
+/*#report aside {
 	float: right;
 	font-style: italic;
 }
@@ -528,7 +540,7 @@ nav.report li:first-child:before {
 #report aside .count:not(:first-child):before {
 	content:" | ";
 	color:#444;
-}
+}*/
 
 
 

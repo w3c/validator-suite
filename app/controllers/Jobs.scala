@@ -41,7 +41,7 @@ object Jobs extends Controller {
         user <- getUser
         jobs <- user.getJobs
         tuples <- FutureVal.sequence(
-            jobs.map(job => 
+            jobs.toSeq.sortBy(_.name).map(job => 
               for {run <- job.getRun}
               yield (job, run)
             ))
@@ -57,11 +57,12 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
+        run <- job.getRun
         ars <- job.getLastRunAssertions
       } yield {
         //val p = paginate(group(ars.collect{case a: Assertions => a}))
         //Ok(views.html.job(job, data, p._1, p._2, user, messages))
-        Ok(views.html.job(job, ars, user, messages))
+        Ok(views.html.report(job, run, ars, user, messages))
       }) failMap toError toPromise
     }
   }
@@ -201,8 +202,8 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
+        _ <- job.delete()
       } yield {
-        job.delete()
         if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.name)))
       }) failMap toError toPromise
     }
@@ -278,7 +279,7 @@ object Jobs extends Controller {
           )
       } yield {
         if (isAjax) 
-          Created(views.html.libs.messages(List(("info" -> Messages("jobs.updated", job.name))))) 
+          Created(views.html.libs.messages(List(("info" -> Messages("jobs.created", job.name))))) 
         else
           SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages("jobs.updated", job.name)))
       }) failMap {
@@ -296,8 +297,8 @@ object Jobs extends Controller {
       } yield {
         action(user)(job)
         if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
-        else        SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages(msg, job.name)))
-        //SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
+        else        //SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages(msg, job.name)))
+          SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
       }) failMap toError toPromise
     }
   }

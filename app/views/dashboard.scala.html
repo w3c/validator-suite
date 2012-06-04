@@ -10,161 +10,19 @@
    
 	@libs.header()
 	
-}{ @***** Toolbar *****@
-	
 }{ @***** Content *****@ 
 	
 	@libs.admin(user)
-	
-	<nav id="nav">
-		<h1>Navigation</h1>
-		<ul>
-			<li><a href="">Dashboard</a></li>
-			<li><a href="#">New Domain</a></li>
-			<li><a href="@routes.Jobs.new1">New job</a></li>
-		</ul>
-	</nav>
+	@libs.navigation("Dashboard", List())
+	@libs.messages()
 	
 	<hr>
 	
-	@libs.messages()
-	
 	<section id="jobs" class="list">
-	
-		<h1>Jobs</h1>
-		
-		<aside>
-			<h2>Definitions</h2>
-			<dl>
-				<dt class="name"><dfn>Name</dfn></dt>
-				<dd>The name of the job</dd>
-				<dt class="url"><dfn>URL</dfn></dt>
-				<dd>The seed URL for this job, entry point of the crawler</dd>
-				<dt class="status"><dfn>Status</dfn></dt>
-				<dd>The current status of the job, either Idle or Running.</dd>
-				<dt class="date"><dfn>Last completed</dfn></dt>
-				<dd>The date the job was last completed</dd>
-				<dt class="warnings"><dfn>Warnings</dfn></dt>
-				<dd>The total number or warnings reported by the job's assertors</dd>
-				<dt class="errors"><dfn>Errors</dfn></dt>
-				<dd>The total number of errors reported by the job's assertors</dd>
-				<dt class="resources"><dfn>Resources</dfn></dt>
-				<dd>The total number of resources that have been considered by the crawler</dd>
-				<dt class="maxResources"><dfn>Max resources</dfn></dt>
-				<dd>The maximum number of resources to crawl</dd>
-				<dt class="health"><dfn>Health</dfn></dt>
-				<dd>An indicator of the overall quality of a job's resources</dd>
-				<dt class="actions"><dfn>Actions</dfn></dt>
-				<dd>Actions to perform on the job</dd>
-			</dl>
-		</aside>
-		
-		<hr>
-		
-		@tuples.map { case (job, run) =>
-		<article data-id="@job.id">
-			<h2>@job.name</h2>
-			<dl>
-				<dt>Name</dt>
-				<dd class="name"><a href="@routes.Jobs.dispatcher(job.id)">@job.name</a></dd>
-				
-				<dt>URL</dt>
-				<dd class="url">@job.strategy.entrypoint</dd>
-				
-				<dt>Status</dt>
-				<dd class="status">@run.activity.toString</dd>
-
-				<dt>Last Completed</dt>
-				<dd class="date">
-					@**{job.lastCompleted match{ 
-					  case Some(date) => {<time datetime="">03/12/12 at 2:55pm</time>}
-					  case _ => {"Never"}
-					}}**@
-				</dd>
-				
-				<dt>Warnings</dt>
-				<dd class="warnings">@run.data.warnings</dd>
-				
-				<dt>Errors</dt>
-				<dd class="errors">@run.data.errors</dd>
-				
-				<dt>Resources</dt>
-				<dd class="resources">@run.data.resources</dd>
-				
-				<dt>Max resources</dt>
-				<dd class="maxResources">@job.strategy.maxResources</dd>
-				
-				<dt>Health</dt>
-				<dd class="health">
-					<progress max=100 value=@run.data.health title="@run.data.health%">
-						@run.data.health%
-					</progress>
-				</dd>
-				
-				<dt>Actions</dt>
-				<dd>
-					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
-						@{run.activity match {
-						  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
-						  case Idle => {<button type="submit" name="action" value="run" class="run">run now</button>}
-						}}
-						<button type="submit" name="action" value="delete" class="delete">delete</button>
-					</form>
-				</dd>
-			</dl>
-			<hr>
-		</article>
-		}
+		@libs.jobs(tuples)
 	</section>
 	
 }{ @***** Footer *****@
-
-	<script type="text/template" id="job-template">
-			<h2><%= name %></h2>
-			<dl>
-				<dt>Name</dt>
-				<dd class="name"><a href=<%= url %>><%= name %></a></dd>
-				
-				<dt>URL</dt>
-				<dd class="url"><%= seedUri %></dd>
-
-				<dt>Status</dt>
-				<dd class="status"><%= data.get('activity') %></dd>
-
-				<dt>Last Completed</dt>
-				<dd class="date"><time datetime="">03/12/12 at 2:55pm</time></dd>
-				
-				<dt>Warnings</dt>
-				<dd class="warnings"><%= data.get('warnings') %></dd>
-				
-				<dt>Errors</dt>
-				<dd class="errors"><%= data.get('errors') %></dd>
-				
-				<dt>Resources</dt>
-				<dd class="resources"><%= data.get('resources') %></dd>
-				
-				<dt>Max resources</dt>
-				<dd class="maxResources"><%= maxResources %></dd>
-
-				<dt>Health</dt>
-				<dd class="health">
-					<progress max=100 value=<%= data.get('health') %> title="<%= data.get('health') %>%">
-						<%= data.get('health') %>%
-					</progress>
-				</dd>
-				
-				<dt>Actions</dt>
-				<dd>
-               <% switch(data.get('activity')) { case "Running": %>
-					<a class="stop" href="<%= url + '/cancel' %>">cancel</a>
-					<% break; case "Idle": %>
-					<a class="run" href="<%= url + '/run' %>">run now</a>
-					<% } %>
-					<a class="delete" href="<%= url + '/delete' %>">delete</a>
-				</dd>
-			</dl>
-			<hr>
-	</script>
 
 	@libs.footer()
 
