@@ -13,7 +13,6 @@ object Global extends GlobalSettings {
   //def store = vsconf.store
   //def OrganizationStore = vsconf.stores.OrganizationStore
   def system = vsconf.system
-  implicit def context = vsconf.storeExecutionContext
   
   val logger = play.Logger.of("Global")
   

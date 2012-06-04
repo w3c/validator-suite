@@ -38,17 +38,18 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
   )
 
   "test OneGETxHEAD" in {
-    //stores.OrganizationStore.put(organizationTest)
-    //store.putJob(job).waitResult()
     (for {
-      a <- Organization.save(organizationTest)
-      b <- Job.save(job)
+      _ <- Organization.save(organizationTest)
+      _ <- Job.save(job)
     } yield ()).await(5 seconds)
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     PathAware(http, http.path / "localhost_9002") ! SetSleepTime(0)
-    job.run()
-    //job.listen(testActor)
+    val enumerator = organizationTest.enumerator
+    import play.api.libs.iteratee._
+    enumerator |>> Iteratee.foreach[RunUpdate](ru => println(ru))
+    // pourquoi je ne recois rien ici???????
+//    job.listen(testActor)
     /*fishForMessagePF(3.seconds) {
       case UpdateData(jobData) if jobData.activity == Idle => {
         def ris = store.listResourceInfos(job.id).waitResult()

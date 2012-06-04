@@ -61,8 +61,7 @@ case class Job(
     })
   }
   
-  def save(): FutureVal[Exception, Job] = 
-    Job.save(this)
+  def save(): FutureVal[Exception, Job] = Job.save(this) map { _ => this }
   
   def delete(): FutureVal[Exception, Unit] = {
     cancel()
@@ -109,9 +108,12 @@ object Job {
   def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
     sys.error("ni")
   
-  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.failed(new Exception("Not implemented yet"))
+  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf.binders._
+    val vo = job.toValueObject
+    val graph = JobVOBinder.toPointedGraph(vo).graph
+    val result = conf.store.addNamedGraph(JobUri(vo.id), graph)
+    FutureVal.toFutureValException(FutureVal.applyTo(result)(conf.webExecutionContext))
   }
   
   def delete(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = sys.error("")

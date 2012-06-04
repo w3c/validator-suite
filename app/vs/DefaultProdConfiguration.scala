@@ -11,10 +11,10 @@ import akka.util.Duration
 import akka.dispatch.ExecutionContext
 import java.util.concurrent.Executors
 import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
-//import org.w3.vs.store._
 import org.w3.vs._
-//import org.w3.banana._
-//import org.w3.banana.jena._
+import org.w3.banana._
+import org.w3.banana.jena._
+import com.hp.hpl.jena.sparql.core._
 
 trait DefaultProdConfiguration extends VSConfiguration {
   
@@ -32,12 +32,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
     ExecutionContext.fromExecutorService(executor)
   }
 
-  val storeExecutionContext: ExecutionContext = {
-    import java.util.concurrent.{ExecutorService, Executors}
-    val executor: ExecutorService = Executors.newFixedThreadPool(2)
-    ExecutionContext.fromExecutorService(executor)
-  }
-    
   /**
    * note: an AsyncHttpClient is a heavy object with a thread
    * and connection pool associated with it, it's supposed to
@@ -71,17 +65,19 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs
   }
   
-  /*val store = new MemoryStore2()(this)
-
-  val rdfStore: RDFStore[Jena] =
-    JenaStore(com.hp.hpl.jena.sparql.core.DatasetGraphFactory.createMem())
-
-  val binders: Binders[Jena] =
-    Binders(JenaOperations, JenaGraphUnion, JenaGraphTraversal)
-
-  val stores: Stores[Jena] = Stores(rdfStore, binders)*/
+  type Rdf = Jena
+  type Sparql = JenaSPARQL
 
   val timeout: Timeout = 10.seconds
+
+  val store: AsyncRDFStore[Rdf, Sparql] = {
+    val blockingStore = JenaStore(DatasetGraphFactory.createMem())
+    val asyncStore = AsyncRDFStore(blockingStore, system)(timeout)
+    asyncStore
+  }
+
+  val binders: Binders[Rdf] =
+    Binders(JenaOperations, JenaGraphUnion, JenaGraphTraversal)
   
   // ouch :-)
 //  http.authorityManagerFor("w3.org").sleepTime = 0

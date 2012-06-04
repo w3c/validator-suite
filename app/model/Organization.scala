@@ -22,7 +22,7 @@ case class Organization(
   
   def getAdmin: FutureVal[Exception, User] = User.get(adminId)
   
-  def save(): FutureVal[Exception, Organization] = Organization.save(this)
+  def save(): FutureVal[Exception, Unit] = Organization.save(this)
   
   lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
   
@@ -40,9 +40,12 @@ object Organization {
   def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = 
     sys.error("ni")
   
-  def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(organization)
+  def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf.binders._
+    val vo = organization.toValueObject
+    val graph = OrganizationVOBinder.toPointedGraph(vo).graph
+    val result = conf.store.addNamedGraph(OrganizationUri(vo.id), graph)
+    FutureVal.toFutureValException(FutureVal.applyTo(result)(conf.webExecutionContext))
   }
   
 }
