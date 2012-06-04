@@ -7,12 +7,15 @@ sealed trait ValueObject
 
 case class AssertionVO (
     id: AssertionId = AssertionId(),
+    jobId: JobId,
+    runId: RunId,
+    assertorId: AssertorId,
     url: URL,
     lang: String,
     title: String,
     severity: AssertionSeverity,
     description: Option[String],
-    assertorResponseId: AssertorResponseId) extends ValueObject
+    timestamp: DateTime) extends ValueObject
 
 case class ContextVO (
     id: ContextId = ContextId(),
@@ -21,13 +24,13 @@ case class ContextVO (
     column: Option[Int],
     assertionId: AssertionId) extends ValueObject
 
-case class AssertorResultVO (
+/*case class AssertorResultVO (
     id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
     runId: RunId,
     assertorId: AssertorId,
     sourceUrl: URL,
-    timestamp: DateTime)
+    timestamp: DateTime)*/
 
 case class JobVO (
     id: JobId = JobId(),

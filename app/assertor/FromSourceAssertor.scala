@@ -8,6 +8,6 @@ import scala.io.Source
  */
 trait FromSourceAssertor extends Assertor {
 
-  def assert(source: Source): FutureVal[Exception, Iterable[AssertionClosed]] // TODO type exceptions
+  def assert(source: Source, jobId: JobId, runId: RunId): FutureVal[Exception, Iterable[AssertionClosed]] // TODO type exceptions
 
 }

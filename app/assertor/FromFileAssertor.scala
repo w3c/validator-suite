@@ -6,11 +6,11 @@ import scala.io.Source
 
 trait FromFileAssertor extends FromSourceAssertor {
   
-  def assert(file: java.io.File): FutureVal[Throwable, Iterable[AssertionClosed]] = 
+  def assert(file: java.io.File, jobId: JobId, runId: RunId): FutureVal[Throwable, Iterable[AssertionClosed]] = 
     FutureVal {
       Source.fromFile(file)
     } flatMap { source =>
-      assert(source)
+      assert(source, jobId, runId)
     }
 
 }

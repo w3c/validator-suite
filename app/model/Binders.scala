@@ -39,25 +39,31 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def toPointedGraph(t: AssertionVO): PointedGraph[Rdf] = (
       AssertionUri(t.id).a(ont.Assertion)
+        -- ont.jobId ->- JobUri(t.jobId)
+        -- ont.runId ->- RunUri(t.runId)
+        -- ont.assertorId ->- AssertorUri(t.assertorId)
         -- ont.url ->- t.url
         -- ont.lang ->- t.lang
         -- ont.title ->- t.title
         -- ont.severity ->- t.severity
         -- ont.description ->- t.description
-        -- ont.assertorResponseId ->- AssertorResponseUri(t.assertorResponseId)
+        -- ont.timestamp ->- t.timestamp
     )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertionVO] = {
       for {
         id <- pointed.node.asUri flatMap AssertionUri.getId
+        jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
+        runId <- (pointed / ont.runId).exactlyOneUri.flatMap(RunUri.getId)
+        assertorId <- (pointed / ont.assertorId).exactlyOneUri.flatMap(AssertorUri.getId)
         url <- (pointed / ont.url).exactlyOne[URL]
         lang <- (pointed / ont.lang).exactlyOne[String]
         title <- (pointed / ont.title).exactlyOne[String]
         severity <- (pointed / ont.severity).exactlyOne[AssertionSeverity]
         description <- (pointed / ont.description).asOption[String]
-        assertorResponseId <- (pointed / ont.assertorResponseId).exactlyOneUri.flatMap(AssertorResponseUri.getId)
+        timestamp <- (pointed / ont.timestamp).exactlyOne[DateTime]
       } yield {
-        AssertionVO(id, url, lang, title, severity, description, assertorResponseId)
+        AssertionVO(id, jobId, runId, assertorId, url, lang, title, severity, description, timestamp)
       }
     }
 
@@ -90,7 +96,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-  val AssertorResultVOBinder = new PointedGraphBinder[Rdf, AssertorResultVO] {
+  /*val AssertorResultVOBinder = new PointedGraphBinder[Rdf, AssertorResultVO] {
 
     def toPointedGraph(t: AssertorResultVO): PointedGraph[Rdf] = (
       AssertorResponseUri(t.id).a(ont.AssertorResult)
@@ -114,7 +120,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
       }
     }
 
-  }
+  }*/
 
 
 

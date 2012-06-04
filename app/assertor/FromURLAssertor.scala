@@ -35,10 +35,10 @@ trait FromURLAssertor extends FromSourceAssertor {
    *  @param url a pointer to the document
    *  @return the assertion
    */
-  def assert(url: URL): FutureVal[Throwable, Iterable[AssertionClosed]] = FutureVal {
+  def assert(url: URL, jobId: JobId, runId: RunId): FutureVal[Throwable, Iterable[AssertionClosed]] = FutureVal {
     Source.fromURL(validatorURLForMachine(url))
   } flatMap { source => 
-    assert(source)
+    assert(source, jobId, runId)
   }
   
 }

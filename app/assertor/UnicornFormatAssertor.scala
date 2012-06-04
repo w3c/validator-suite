@@ -9,7 +9,7 @@ import scala.io.Source
  */
 trait UnicornFormatAssertor extends FromSourceAssertor {
   
-  def assert(source: Source): FutureVal[Exception, Iterable[AssertionClosed]] = FutureVal {
+  def assert(source: Source, jobId: JobId, runId: RunId): FutureVal[Exception, Iterable[AssertionClosed]] = FutureVal {
     val response: Elem = XML.fromSource(source)
     val obversationRef: String = response.attrs get "ref" get
     val obversationLang = response.attrs get QName(Some("xml"), "lang") get
@@ -41,7 +41,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
         val descriptionOpt = (message \ "description").headOption map { description =>
           description.children.map(removeScope).mkString("").trim
         }
-        val assertion = Assertion(assertionId, url, lang, title, severity, descriptionOpt, AssertorResponseId()) // T: not great to generate random id. Comes from the fact that the model only really support FromURLAssertors
+        val assertion = Assertion(assertionId, jobId, runId, id, url, lang, title, severity, descriptionOpt) // T: not great to generate random id. Comes from the fact that the model only really support FromURLAssertors
         AssertionClosed(assertion, contexts)
       }
     events

@@ -36,7 +36,7 @@ object ValidatorNu extends FromHttpResponseAssertor {
 	urlCon.setConnectTimeout(2000)
 	//urlCon.setReadTimeout(10000)
 	val content = Source.fromInputStream(urlCon.getInputStream).getLines.mkString("\n")*/
-  def assert(source: Source): FutureVal[Exception, Iterable[AssertionClosed]] = FutureVal {
+  def assert(source: Source, jobId: JobId, runId: RunId): FutureVal[Exception, Iterable[AssertionClosed]] = FutureVal {
 	val json = Json.parse(source.getLines.mkString("\n"))
     val url = URL((json \ "url").asInstanceOf[JsString].value)
     val messages = json \ "messages"
@@ -55,7 +55,7 @@ object ValidatorNu extends FromHttpResponseAssertor {
 	    case Some(code) => Seq(Context(ContextId(), code.trim, lastLine, lastCol, assertionId)) // The model needs to accept a range of lines/column
 	    case _ => Seq()
 	  }
-	  val assertion = Assertion(assertionId, url, "en", title, severity, None, AssertorResponseId()) // T: not great to generate random assertorResponse id. Comes from the fact that the model only really support FromURLAssertors, otherwise AssertorResponse could be constructed and returned here
+	  val assertion = Assertion(assertionId, jobId, runId, id, url, "en", title, severity, None)
       AssertionClosed(assertion, contexts)
 	}
   }

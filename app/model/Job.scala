@@ -28,6 +28,8 @@ case class Job(
   implicit def timeout = conf.timeout
   private val logger = Logger.of(classOf[Job])
   
+  lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
+  
   def toValueObject: JobVO = 
     JobVO(id, name, createdOn, creatorId, organizationId, strategy.id)
   
@@ -46,6 +48,13 @@ case class Job(
   def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(Iterable())
+  }
+  
+  // resource url, time fetched, warnings, errors
+  def getURLArticles: FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
+    
+    //Assertion.getForJob(id).map(_.groupBy(_.url).m)
+    sys.error("")
   }
   
   def save(): FutureVal[Exception, Job] = 
@@ -68,17 +77,11 @@ case class Job(
   def off(): Unit = 
     PathAware(organizationsRef, path) ! BeLazy
   
-  lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
-  
-  // Following might be moved to a trait, e.g. ActorInterface?
   
   private val organizationsRef = system.actorFor(system / "organizations")
-
   private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString
-
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
-    
 }
 
 object Job {

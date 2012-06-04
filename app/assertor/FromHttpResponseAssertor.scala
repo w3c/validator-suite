@@ -10,7 +10,7 @@ import akka.dispatch.ExecutionContext
 trait FromHttpResponseAssertor extends FromURLAssertor {
   
   def assert(response: HttpResponse): FutureVal[AssertorFailure, AssertorResultClosed] = 
-    assert(response.url) fold (
+    assert(response.url, response.jobId, response.runId) fold (
       throwable => AssertorFailure(
           jobId = response.jobId,
           runId = response.runId,

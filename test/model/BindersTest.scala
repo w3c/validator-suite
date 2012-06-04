@@ -38,24 +38,30 @@ class BindersTest extends WordSpec with MustMatchers {
   "AssertionVO no description" in {
     testSerializeDeserialize(AssertionVOBinder) {
       AssertionVO(
+        jobId = JobId(),
+        runId = RunId(),
+        assertorId = AssertorId(),
         url = URL("http://example.com/foo"),
         lang = "fr",
         title = "bar",
         severity = Warning,
         description = None,
-        assertorResponseId = AssertorResponseId())
+        timestamp = DateTime.now(DateTimeZone.UTC))
     }
   }
 
   "AssertionVO with description" in {
     testSerializeDeserialize(AssertionVOBinder) {
       AssertionVO(
+        jobId = JobId(),
+        runId = RunId(),
+        assertorId = AssertorId(),
         url = URL("http://example.com/foo"),
         lang = "fr",
         title = "bar",
         severity = Warning,
         description = Some("some desc"),
-        assertorResponseId = AssertorResponseId())
+        timestamp = DateTime.now(DateTimeZone.UTC))
     }
   }
 
@@ -69,7 +75,7 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
-  "AssertorResultVO" in {
+  /*"AssertorResultVO" in {
     testSerializeDeserialize(AssertorResultVOBinder) {
       AssertorResultVO(
         jobId = JobId(),
@@ -79,7 +85,7 @@ class BindersTest extends WordSpec with MustMatchers {
         timestamp = DateTime.now(DateTimeZone.UTC))
 
     }
-  }
+  }*/
 
   "JobDataVO" in {
     testSerializeDeserialize(JobDataVOBinder) {

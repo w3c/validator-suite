@@ -62,7 +62,7 @@ object Jobs extends Controller {
       } yield {
         //val p = paginate(group(ars.collect{case a: Assertions => a}))
         //Ok(views.html.job(job, data, p._1, p._2, user, messages))
-        Ok(views.html.report(job, run, ars, user, messages))
+        Ok(views.html.report(job, run, Iterable(), user, messages))
       }) failMap toError toPromise
     }
   }

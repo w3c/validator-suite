@@ -8,16 +8,19 @@ import scalaz.Validation
 
 case class Assertion(
     id: AssertionId = AssertionId(),
+    jobId: JobId,
+    runId: RunId,
+    assertorId: AssertorId,
     url: URL,
     lang: String,
     title: String,
     severity: AssertionSeverity,
     description: Option[String],
-    assertorResponseId: AssertorResponseId)(implicit conf: VSConfiguration) {
+    timestamp: DateTime = DateTime.now)(implicit conf: VSConfiguration) {
   
-  def getAssertorResult: FutureVal[Exception, AssertorResult] = AssertorResult.get(assertorResponseId)
+  //def getAssertorResult: FutureVal[Exception, AssertorResult] = AssertorResult.get(assertorResponseId)
   def getContexts: FutureVal[Exception, Iterable[Context]] = Context.getForAssertion(id) 
-  def toValueObject: AssertionVO = AssertionVO(id, url, lang, title, severity, description, assertorResponseId)
+  def toValueObject: AssertionVO = AssertionVO(id, jobId, runId, assertorId, url, lang, title, severity, description, timestamp)
 }
 
 object Assertion {
