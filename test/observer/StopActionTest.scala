@@ -23,16 +23,19 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
+  //val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
   
   val servers = Seq(unfiltered.jetty.Http(9001).filter(Website.cyclic(1000).toPlanify))
 
   "test stop" in {
     //stores.OrganizationStore.put(organizationTest)
     //store.putJob(job).waitResult()
+    
+    val job = play.api.Global.w3.copy(strategy = strategy)
+    
     (for {
-      a <- Organization.save(organizationTest)
-      b <- Job.save(job)
+      a <- Organization.save(play.api.Global.w3c)
+      b <- Job.save(play.api.Global.w3.copy(strategy = strategy))
     } yield ()).await(5 seconds)
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
     job.run()
