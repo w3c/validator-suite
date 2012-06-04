@@ -58,11 +58,11 @@ object Jobs extends Controller {
         user <- getUser
         job <- user.getJob(id)
         run <- job.getRun
-        ars <- job.getLastRunAssertions
+        ars <- job.getURLArticles
       } yield {
         //val p = paginate(group(ars.collect{case a: Assertions => a}))
         //Ok(views.html.job(job, data, p._1, p._2, user, messages))
-        Ok(views.html.report(job, run, Iterable(), user, messages))
+        Ok(views.html.report(job, run, ars.map(URLReportArticle.apply _), user, messages))
       }) failMap toError toPromise
     }
   }

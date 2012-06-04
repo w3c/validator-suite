@@ -37,7 +37,7 @@
 				
 				<dt>Actions</dt>
 				<dd>
-               <% switch(data.get('activity')) { case "running": %>
+					<% switch(data.get('activity')) { case "running": %>
 					<a class="stop" href="<%= url + '/cancel' %>">cancel</a>
 					<% break; case "idle": %>
 					<a class="run" href="<%= url + '/run' %>">run now</a>

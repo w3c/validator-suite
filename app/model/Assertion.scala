@@ -25,8 +25,20 @@ case class Assertion(
 
 object Assertion {
   def get(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Assertion] = sys.error("ni")
-  def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
-  def getForResponse(id: AssertorResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
+  def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
+    
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(Iterable(
+      Assertion.apply(AssertionId(), JobId(), RunId(), AssertorId(), 
+          URL("http://www.w3.org"), "en", "T", Error, None),
+      Assertion.apply(AssertionId(), JobId(), RunId(), AssertorId(), 
+          URL("http://www.w3.org"), "en", "T", Warning, None),
+      Assertion.apply(AssertionId(), JobId(), RunId(), AssertorId(), 
+          URL("http://www.w3.org/TR"), "en", "T", Warning, None)
+    ))
+    
+  }
+  def getForRun(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
 }
 
 case class AssertionClosed(assertion: Assertion, contexts: Iterable[Context])

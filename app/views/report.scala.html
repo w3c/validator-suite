@@ -1,6 +1,6 @@
 @(job: Job, 
     run: Run,
-    assertions: Iterable[Assertion],
+    articles: Iterable[URLReportArticle],
     user: User,
     errors: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
@@ -72,18 +72,18 @@
 			</dl>
 		</aside>
 		
-		@assertions.map { case assertion =>
-		<article data-id="@assertion.id">
-			<h2>Job: @job.name</h2>
+		@articles.map { case article =>
+		<hr>
+		<article>
 			<dl>
 				<dt>URL</dt>
-				<dd class="url"><a href="@routes.Jobs.dispatcher(job.id)">@assertion.url</a></dd>
+				<dd class="url"><a href="@routes.Jobs.dispatcher(job.id)">@article.url</a></dd>
 				<dt>Last validated</dt>
-				<dd class="date">@**assertion.timestamp**@</dd>
+				<dd class="date">@article.lastValidated</dd>
 				<dt>Warnings</dt>
-				<dd class="warnings">@assertion</dd>
+				<dd class="warnings">@article.warnings</dd>
 				<dt>Errors</dt>
-				<dd class="errors">@assertion</dd>
+				<dd class="errors">@article.errors</dd>
 			</dl>
 		</article>
 		}

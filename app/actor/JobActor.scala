@@ -94,7 +94,7 @@ class JobActor(job: Job)(
     case Event(response: AssertorResponse, _run) => {
       //logger.debug("%s: %s observed by %s" format (shortId, result.sourceUrl, result.assertorId))
       response match {
-        case result: AssertorResult => result.save()
+        case result: AssertorResult => ()//result.save()
         case _ => ()
       }
       if (response.runId === _run.id) {

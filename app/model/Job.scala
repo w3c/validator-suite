@@ -52,9 +52,13 @@ case class Job(
   
   // resource url, time fetched, warnings, errors
   def getURLArticles: FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
-    
-    //Assertion.getForJob(id).map(_.groupBy(_.url).m)
-    sys.error("")
+    Assertion.getForJob(id).map(_.groupBy(_.url).map{case (url, it) => 
+      (url, 
+       it.map(_.timestamp).max,
+       it.count(_.severity == Warning),
+       it.count(_.severity == Error)
+      )
+    })
   }
   
   def save(): FutureVal[Exception, Job] = 
