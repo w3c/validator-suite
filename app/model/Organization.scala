@@ -12,6 +12,7 @@ import play.api.libs.iteratee._
 import org.w3.vs.actor.message._
 import org.w3.vs.model._
 import org.w3.util._
+import org.w3.banana._
 
 case class Organization(
     id: OrganizationId = OrganizationId(),
@@ -32,20 +33,34 @@ case class Organization(
 
 object Organization {
   
-  def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(play.api.Global.w3c)
+  def apply(vo: OrganizationVO)(implicit conf: VSConfiguration): Organization =
+    Organization(vo.id, vo.name, vo.admin)
+
+  def getOrganizationVO(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, OrganizationVO] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val uri = OrganizationUri(id)
+    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
+      val pointed = PointedGraph(uri, graph)
+      OrganizationVOBinder.fromPointedGraph(pointed)
+    }
   }
+
+  def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] =
+    getOrganizationVO(id) map { Organization(_) }
   
   def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = 
     sys.error("ni")
+
+  def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    saveOrganizationVO(organization.toValueObject)
   
-  def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+  def saveOrganizationVO(vo: OrganizationVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf.binders._
-    val vo = organization.toValueObject
+    implicit val context = conf.webExecutionContext
     val graph = OrganizationVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(OrganizationUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result)(conf.webExecutionContext))
+    FutureVal.toFutureValException(FutureVal.applyTo(result))
   }
-  
+
 }

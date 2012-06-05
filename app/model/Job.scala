@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
 import java.nio.channels.ClosedChannelException
-import org.joda.time.DateTime
+import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.akkaext._
 import org.w3.vs.actor.message._
 import org.w3.vs.exception._
@@ -20,7 +20,7 @@ import org.w3.banana._
 case class Job(
     id: JobId = JobId(),
     name: String,
-    createdOn: DateTime = DateTime.now,
+    createdOn: DateTime = DateTime.now(DateTimeZone.UTC),
     creatorId: UserId,
     organizationId: OrganizationId,
     strategy: Strategy)(implicit conf: VSConfiguration) {

@@ -27,15 +27,24 @@ class StoreTest extends WordSpec with MustMatchers {
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)) //.noAssertor()
   
-  val job = Job(strategy = strategy, creatorId = UserId(), organizationId = OrganizationId(), name = "@@")
+  val job = Job(
+    strategy = strategy,
+    creatorId = UserId(),
+    organizationId = OrganizationId(),
+    name = "@@")
+
+  val org = Organization(id = OrganizationId(), name = "World Wide Web Consortium", adminId = UserId())
   
   "save and retrieve Job" in {
-    //val job = play.api.Global.w3
     Job.save(job)
-    val retrieved = Job.get(job.id).result(1 second)
-    println(retrieved)
-    println(Success(job))
+    val retrieved = Job.get(job.id).result(1.second)
     retrieved must be === (Success(job))
+  }
+
+  "save and retrieve Organization" in {
+    Organization.save(org)
+    val retrieved = Organization.get(org.id).result(1.second)
+    retrieved must be === (Success(org))
   }
 
 //  "OrganizationVO" in {

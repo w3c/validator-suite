@@ -66,10 +66,10 @@ object FutureVal {
   
   def applyTo[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
     new FutureVal(future.map[Validation[Throwable, S]] { value =>
-        Success(value)
-      } recover { case t: Throwable =>
-        Failure(t)
-      })
+      Success(value)
+    } recover { case t: Throwable =>
+      Failure(t)
+    })
   }
   
   def sequence[S](iterable: Iterable[Future[S]])(implicit context: ExecutionContext): FutureVal[Throwable, Iterable[S]] = {
@@ -212,14 +212,7 @@ class FutureVal[+F, +S] protected (
       case timeout: TimeoutException => None
     }
   }
-  
-  def result: Validation[F, S] = {
-    value.fold(
-      s => s,
-      Failure(timeout(new TimeoutException()))
-    )
-  }
-  
+    
   def result(atMost: Duration): Validation[F, S] = {
     try {
       Await.result(future, atMost)
