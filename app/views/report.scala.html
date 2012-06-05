@@ -1,11 +1,8 @@
 @(job: Job, 
     run: Run,
-    articles: Iterable[URLReportArticle],
+    articles: Iterable[URLArticle],
     user: User,
-    errors: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
-
-@import org.w3.vs.view.Helper._
-@import org.w3.vs.view._
+    messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
@@ -19,7 +16,7 @@
 	
 	@libs.admin(user)
 	@libs.navigation("Report for job \"" + job.name +"\"", List((job.name ,"")))
-	@libs.messages(errors)
+	@libs.messages(messages)
 	
 	<hr>
 	
@@ -27,9 +24,15 @@
 		@libs.jobs(List((job, run)))
 	</section>
 	
-	<section class="controls">
+	<hr>
+	
+	<section id="urlArticles" class="list">
+		@libs.urlArticles(articles)
+	</section>
+	
+	@**<section class="controls">
 		<h2>Controls</h2>
-		@**<h3>Report type</h3>
+		<h3>Report type</h3>
 		<form class="group">
 			<fieldset>
 				<input name=group type=radio value="url.assertor" id="url.assertor" @if(req.queryString.get("group").flatten.isEmpty || req.queryString.get("group").flatten.exists(_ == "url.assertor")){checked}>
@@ -42,53 +45,19 @@
 				@**<label for="flat">flat</label>** @
 			</fieldset>
 			<button type=submit>Go</button>
-		</form>**@
+		</form>
 		<form method="post">
 		@**{run.activity match {
 		  case Running => {<button type="submit" name="action" value="stop" class="stop">Cancel</button>}
 		  case Idle => {<button type="submit" name="action" value="run" class="run">Run</button>}
-		}}**@
+		}}** @
 		</form>
 		<h3>Find a url</h3>
 		<form class="search">
 			<input name=url type=text placeholder="Search url" required>
 			<button type=submit>Go</button>
 		</form>
-	</section>
-	
-	<section id="report" class="list">
-		
-		<aside>
-			<h2>Definitions</h2>
-			<dl>
-				<dt class="url"><dfn>URL</dfn></dt>
-				<dd>def</dd>
-				<dt class="date"><dfn>Last validated</dfn></dt>
-				<dd>def</dd>
-				<dt class="warnings"><dfn>Warnings</dfn></dt>
-				<dd>def</dd>
-				<dt class="errors"><dfn>Errors</dfn></dt>
-				<dd>def</dd>
-			</dl>
-		</aside>
-		
-		@articles.map { case article =>
-		<hr>
-		<article>
-			<dl>
-				<dt>URL</dt>
-				<dd class="url"><a href="@routes.Jobs.dispatcher(job.id)">@article.url</a></dd>
-				<dt>Last validated</dt>
-				<dd class="date">@article.lastValidated</dd>
-				<dt>Warnings</dt>
-				<dd class="warnings">@article.warnings</dd>
-				<dt>Errors</dt>
-				<dd class="errors">@article.errors</dd>
-			</dl>
-		</article>
-		}
-		
-	</section>
+	</section>**@
 	
 	@**<nav class="report"><div>
 	<span class="showing">Showing: @report.size / @pageNav.totalMessages</span>

@@ -62,7 +62,22 @@ object Jobs extends Controller {
       } yield {
         //val p = paginate(group(ars.collect{case a: Assertions => a}))
         //Ok(views.html.job(job, data, p._1, p._2, user, messages))
-        Ok(views.html.report(job, run, ars.map(URLReportArticle.apply _), user, messages))
+        Ok(views.html.report(job, run, ars.map(URLArticle.apply _), user, messages))
+      }) failMap toError toPromise
+    }
+  }
+  
+  def report(id: JobId, url: URL, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
+    AsyncResult {
+      (for {
+        user <- getUser
+        job <- user.getJob(id)
+        run <- job.getRun
+        ars <- job.getURLArticles
+      } yield {
+        //val p = paginate(group(ars.collect{case a: Assertions => a}))
+        //Ok(views.html.job(job, data, p._1, p._2, user, messages))
+        Ok(views.html.report(job, run, ars.map(URLArticle.apply _), user, messages))
       }) failMap toError toPromise
     }
   }

@@ -16,7 +16,6 @@ import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.LinkedList
 import scala.collection.mutable.LinkedHashMap
-import play.api.libs.iteratee.PushEnumerator
 import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
 import scalaz._

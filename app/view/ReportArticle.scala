@@ -6,15 +6,15 @@ import org.w3.vs.model._
 import org.joda.time._
 
 sealed trait ReportArticle
-case class URLReportArticle(
+case class URLArticle(
     url: URL,
     lastValidated: DateTime,
     warnings: Int,
     errors: Int) extends ReportArticle
     
-object URLReportArticle {
+object URLArticle {
   
-  def apply(t: (URL, DateTime, Int, Int)): URLReportArticle =
-      URLReportArticle(t._1, t._2, t._3, t._4)
+  def apply(t: (URL, DateTime, Int, Int)): URLArticle =
+      URLArticle(t._1, t._2, t._3, t._4)
   
 }
