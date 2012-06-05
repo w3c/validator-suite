@@ -14,6 +14,7 @@ import org.w3.util._
 import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
+import org.w3.banana._
 
 // closed with its strategy
 case class Job(
@@ -33,8 +34,7 @@ case class Job(
   def toValueObject: JobVO = 
     JobVO(id, name, createdOn, creatorId, organizationId, strategy.id)
   
-  def getCreator: FutureVal[Exception, User] = 
-    User.get(creatorId)
+  def getCreator: FutureVal[Exception, User] = User.get(creatorId)
   
   def getOrganization: FutureVal[Exception, Organization] = 
     Organization.get(organizationId)
@@ -89,9 +89,35 @@ case class Job(
 
 object Job {
 
+//     val construct = """
+// CONSTRUCT {
+//   <jobUri> ?p1 ?o1 .
+//   ?strategy ?p2 ?o2
+// } WHERE {
+//   <jobUri> ?p1 ?o1 .
+//   <jobUri> ont:strategyId ?strategy .
+//   ?strategy ?p2 ?o2
+// }
+// """.replaceAll("jobUri", jobUri.toString)
+
+  def getJobVO(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, JobVO] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val uri = JobUri(id)
+    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
+      val pointed = PointedGraph(uri, graph)
+      JobVOBinder.fromPointedGraph(pointed)
+    }
+  }
+
+
   def get(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(play.api.Global.w3)
+    for {
+      vo <- getJobVO(id)
+      strategy <- Strategy.get(vo.strategyId)
+    } yield {
+      Job(id, vo.name, vo.createdOn, vo.creatorId, vo.organizationId, strategy)
+    }
   }
   
   def getFor(user: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
@@ -108,13 +134,19 @@ object Job {
   def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
     sys.error("ni")
   
-  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+  def saveJobVO(vo: JobVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf.binders._
-    val vo = job.toValueObject
+    implicit val context = conf.webExecutionContext
     val graph = JobVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(JobUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result)(conf.webExecutionContext))
+    FutureVal.toFutureValException(FutureVal.applyTo(result))
   }
+
+  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    for {
+      _ <- saveJobVO(job.toValueObject)
+      _ <- Strategy.save(job.strategy)
+    } yield ()
   
   def delete(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = sys.error("")
 

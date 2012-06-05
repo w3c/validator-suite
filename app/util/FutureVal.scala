@@ -160,6 +160,9 @@ class FutureVal[+F, +S] protected (
       case Success(success_) => Promise.successful(Success(success_))
     })
   }
+
+  def flatMapValidation[T >: F, R](f: S => Validation[T, R]): FutureVal[T, R] =
+    new FutureVal(future map { _.flatMap(f) })
   
   def recover[R >: S](pf: PartialFunction[F, R]): FutureVal[F, R] = {
     new FutureVal(future.map {

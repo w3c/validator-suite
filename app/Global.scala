@@ -4,7 +4,7 @@ package play.api
 import org.w3.vs.model._
 import org.w3.vs.actor._
 import org.w3.util._
-import org.joda.time.DateTime
+import org.joda.time.{ DateTime, DateTimeZone }
 
 object Global extends GlobalSettings {
   
@@ -27,7 +27,7 @@ object Global extends GlobalSettings {
   val w3c = Organization(id = orgId, name = "World Wide Web Consortium", adminId = tgambet.id)
     
   val w3 = Job(
-    createdOn = DateTime.now,
+    createdOn = DateTime.now(DateTimeZone.UTC),
     name = "W3C",
     creatorId = bertails.id,
     organizationId = w3c.id,
