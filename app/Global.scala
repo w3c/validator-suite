@@ -68,18 +68,17 @@ object Global extends GlobalSettings {
       maxResources = 100,
       filter = Filter(include = Everything, exclude = Nothing)))
   
+  tgambet.save()
+  bertails.save()
+  w3c.save()
+  w3.save()
+  tr.save()
+  ibm.save()
+  lemonde.save()
+      
   override def onStart(app: Application): Unit = {
 
     org.w3.vs.assertor.CSSValidator.start()
-    
-    // TODO a Saveable trait might be handy
-//    tgambet.save()
-//    bertails.save()
-//    w3c.save()
-//    w3.save()
-//    tr.save()
-//    ibm.save()
-//    lemonde.save()
 
   }
   
