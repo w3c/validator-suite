@@ -43,7 +43,7 @@ class OrganizationsActor()(implicit configuration: VSConfiguration) extends Acto
           // configuration.stores.OrganizationStore.get(uri)
           Organization.get(OrganizationId(id)) onComplete {
             case Success(organization) => to.tell(CreateOrganizationAndForward(organization, tell), from)
-            case Failure(exception) => logger.error("OrganizationActor error", exception)
+            case Failure(exception) => logger.error("Couldn't find organization with id: " + id, exception)
           }
         }
       }

@@ -42,8 +42,10 @@ case class Job(
   def getHistory: FutureVal[Exception, Iterable[JobData]] = 
     JobData.getForJob(id)
 
-  def getRun(implicit context: ExecutionContext): FutureVal[Throwable, Run] = 
+  def getRun: FutureVal[Throwable, Run] = {
+    implicit def ec = conf.webExecutionContext
     (PathAware(organizationsRef, path).?[Run](GetRun))
+  }
 
   def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = {
     implicit def ec = conf.webExecutionContext
@@ -113,9 +115,11 @@ object Job {
     import conf.binders._
     implicit val context = conf.webExecutionContext
     val uri = JobUri(id)
-    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
-      val pointed = PointedGraph(uri, graph)
-      JobVOBinder.fromPointedGraph(pointed)
+    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMap { graph => 
+      FutureVal.pureVal[Throwable, JobVO]{
+        val pointed = PointedGraph(uri, graph)
+        JobVOBinder.fromPointedGraph(pointed)
+      }(t => t)
     }
   }
 

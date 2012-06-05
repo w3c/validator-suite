@@ -27,16 +27,26 @@ class StoreTest extends WordSpec with MustMatchers {
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)) //.noAssertor()
   
+  val org = Organization(id = OrganizationId(), name = "World Wide Web Consortium", adminId = UserId())
+      
   val job = Job(
     strategy = strategy,
     creatorId = UserId(),
-    organizationId = OrganizationId(),
+    organizationId = org.id,
     name = "@@")
-
-  val org = Organization(id = OrganizationId(), name = "World Wide Web Consortium", adminId = UserId())
   
   val user = User(UserId(), "foo", "bar", "secret", org.id)
 
+  "retrieve unknown Job" in {
+    val retrieved = Job.get(JobId()).result(1.second)
+    retrieved must be ('Failure) // TODO test exception type (UnknownJob)
+  }
+  
+  "retrieve unknown Organization" in {
+    val retrieved = Organization.get(OrganizationId()).result(1.second)
+    retrieved must be ('Failure) // TODO test exception type (UnknownOrganization)
+  }
+  
   "save and retrieve Job" in {
     Job.save(job)
     val retrieved = Job.get(job.id).result(1.second)
@@ -47,6 +57,18 @@ class StoreTest extends WordSpec with MustMatchers {
     Organization.save(org)
     val retrieved = Organization.get(org.id).result(1.second)
     retrieved must be === (Success(org))
+  }
+  
+  "retrieve run" in {
+    // Doesn't really have to do anything in that file. Useful for current debug
+    val orgId = OrganizationId()
+    val job1 = job.copy(id = JobId(), organizationId = orgId)
+    val org1 = org.copy(id = orgId)
+    job1.getRun.result(1.second) must be ('Failure)
+    org1.save()
+    job1.getRun.result(1.second) must be ('Failure)
+    job1.save()
+    job1.getRun.result(1.second) must be ('Success)
   }
 
   "save and retrieve User" in {

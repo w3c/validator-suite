@@ -40,9 +40,11 @@ object Organization {
     import conf.binders._
     implicit val context = conf.webExecutionContext
     val uri = OrganizationUri(id)
-    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
-      val pointed = PointedGraph(uri, graph)
-      OrganizationVOBinder.fromPointedGraph(pointed)
+    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMap { graph => 
+      FutureVal.pureVal[Throwable, OrganizationVO]{
+        val pointed = PointedGraph(uri, graph)
+        OrganizationVOBinder.fromPointedGraph(pointed)
+      }(t => t)
     }
   }
 
