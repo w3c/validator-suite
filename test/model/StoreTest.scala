@@ -18,10 +18,21 @@ class StoreTest extends WordSpec with MustMatchers {
   //   fromPointedGraph(toPointedGraph(t)) must be === (Success(t))
   // }
 
+  import akka.util.duration._
+  
+  val strategy =
+    Strategy( 
+      entrypoint=URL("http://localhost:9001/"),
+      linkCheck=true,
+      maxResources = 100,
+      filter=Filter(include=Everything, exclude=Nothing)) //.noAssertor()
+  
+  val job = Job(strategy = strategy, creatorId = UserId(), organizationId = OrganizationId(), name = "@@")
+  
   "save and retrieve Job" in {
-    val job = play.api.Global.w3
+    //val job = play.api.Global.w3
     Job.save(job)
-    val retrieved = Job.get(job.id).result
+    val retrieved = Job.get(job.id).result(1 second)
     println(retrieved)
     println(Success(job))
     retrieved must be === (Success(job))
