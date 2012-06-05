@@ -61,6 +61,15 @@ case class Job(
     })
   }
   
+  def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
+    getURLArticles.map(it => logger.error(it.toString))
+    getURLArticles.map{it => it.find(_._1 == url)} discard {
+      case None => new Exception("Unknown URL") //TODO
+    } map {
+      case a => a.get
+    }
+  }
+  
   def save(): FutureVal[Exception, Job] = Job.save(this) map { _ => this }
   
   def delete(): FutureVal[Exception, Unit] = {

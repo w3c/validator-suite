@@ -1,0 +1,33 @@
+@(article: URLArticle,
+    user: User,
+    messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
+
+@libs.main("Validator Suite", 
+	stylesheets = List("dashboard.css"),
+   scripts = List("model.js", "vs.js", "report.js", "dashboard.js")){
+   
+   @***** Header ******@
+	
+	@libs.header()
+	
+}{ @***** Content *****@ 
+	
+	@libs.admin(user)
+	@libs.navigation("TODO", List())
+	@libs.messages(messages)
+	
+	<hr>
+	
+	<section id="urlArticles" class="list">
+		@libs.urlArticles(Iterable(article))
+	</section>
+	
+	<section id="assertionArticles" class="list">
+		
+	</section>
+	
+}{ @***** Footer *****@
+
+	@libs.footer()
+
+}

@@ -17,6 +17,8 @@ import play.api.mvc.PathBindable
 import play.api._
 import scalaz._
 import play.api.i18n.Messages
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 package object controllers {
   
@@ -66,6 +68,19 @@ package object controllers {
     }
     def unbind (key: String, value: JobId): String = {
       value.toString
+    }
+  }
+  
+  implicit val bindableURL = new PathBindable[URL] {
+    def bind (key: String, value: String): Either[String, URL] = {
+      try {
+        Right(URL(URLDecoder.decode(value, "UTF-8")))
+      } catch { case e: Exception =>
+        Left("invalid url: " + value)
+      }
+    }
+    def unbind (key: String, value: URL): String = {
+      URLEncoder.encode(value.toString, "UTF-8")
     }
   }
   
