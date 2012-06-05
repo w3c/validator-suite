@@ -7,10 +7,26 @@ import scalaz._
 import Scalaz._
 import akka.dispatch._
 import org.w3.vs.exception._
+import org.w3.banana._
 
 object User {
+
+  def apply(vo: UserVO)(implicit conf: VSConfiguration): User =
+    User(vo.id, vo.name, vo.email, vo.password, vo.organizationId)
+
+  def getUserVO(id: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, UserVO] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val uri = UserUri(id)
+    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
+      val pointed = PointedGraph(uri, graph)
+      UserVOBinder.fromPointedGraph(pointed)
+    }
+  }
   
-  def get(id: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, User] = sys.error("")
+  def get(id: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, User] =
+    getUserVO(id) map { User(_) }
+
   def getForOrganization(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[User]] = sys.error("") 
   
   // TODO: For now these only fail with StoreExceptions but should also fail with a Unauthorized exception 
@@ -23,8 +39,17 @@ object User {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(play.api.Global.tgambet)
   }
+
+  def saveUserVO(vo: UserVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val graph = UserVOBinder.toPointedGraph(vo).graph
+    val result = conf.store.addNamedGraph(UserUri(vo.id), graph)
+    FutureVal.toFutureValException(FutureVal.applyTo(result))
+  }
   
-  def save(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, User] = sys.error("")
+  def save(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    saveUserVO(user.toValueObject)
 
 }
 
@@ -50,6 +75,7 @@ case class User (
     } map { _.get }
   }
   
-  def save(): FutureVal[Exception, User] = User.save(this)
+  def save(): FutureVal[Exception, Unit] = User.save(this)
+
   def toValueObject: UserVO = UserVO(id, name, email, password, organizationId)
 }
