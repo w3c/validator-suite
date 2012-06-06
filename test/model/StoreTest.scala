@@ -23,10 +23,19 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
   val org = Organization(id = OrganizationId(), name = "World Wide Web Consortium", adminId = UserId())
 
   val user = User(UserId(), "foo", "foo@example.com", "secret", org.id)
+
+  val user2 = User(UserId(), "bar", "bar@example.com", "secret", org.id)
   
   val strategy =
     Strategy( 
       entrypoint=URL("http://localhost:9001/"),
+      linkCheck=true,
+      maxResources = 100,
+      filter=Filter(include=Everything, exclude=Nothing)) //.noAssertor()
+
+  val strategy2 =
+    Strategy( 
+      entrypoint=URL("http://localhost:9001/foo"),
       linkCheck=true,
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)) //.noAssertor()
@@ -49,12 +58,20 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     organizationId = org.id,
     name = "job3")
 
+  val job4 = Job(
+    strategy = strategy2,
+    creatorId = user2.id,
+    organizationId = org.id,
+    name = "job4")
+
   override def beforeAll(): Unit = {
     Organization.save(org)
-    User.save(user)    
+    User.save(user)
+    User.save(user2)
     Job.save(job1)
     Job.save(job2)
     Job.save(job3)
+    Job.save(job4)
   }
 
   "retrieve unknown Job" in {
@@ -102,7 +119,7 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   "get all Jobs given one creator" in {
-    val jobs = Job.getCreatedBy(user).result(1.second) getOrElse sys.error("")
+    val jobs = Job.getFor(strategy.id).result(1.second) getOrElse sys.error("")
     jobs must have size(3)
     jobs must contain (job1)
     jobs must contain (job2)
@@ -115,6 +132,15 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     jobs must contain (job1)
     jobs must contain (job2)
     jobs must contain (job3)
+  }
+
+  "get all Jobs that belong to the same organization" in {
+    val jobs = Job.getFor(org.id).result(1.second) getOrElse sys.error("")
+    jobs must have size(4)
+    jobs must contain (job1)
+    jobs must contain (job2)
+    jobs must contain (job3)
+    jobs must contain (job4)
   }
 
 //  "OrganizationVO" in {

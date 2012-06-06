@@ -128,8 +128,29 @@ object Job {
     FutureVal.successful(Iterable(play.api.Global.w3))
   }
   
-  def getFor(organization: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
-    sys.error("ni")
+  def getFor(organizationId: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?jobUri ?p ?o .
+  ?s2 ?p2 ?o2
+} WHERE {
+  graph ?g {
+    ?jobUri ont:organization <#organizationUri> .
+    ?jobUri ont:strategy ?strategyUri .
+    ?jobUri ?p ?o .
+  } .
+  graph ?strategyUri {
+    ?s2 ?p2 ?o2
+  }
+}
+""".replaceAll("#organizationUri", OrganizationUri(organizationId).toString)
+    val construct = SparqlOps.ConstructQuery(query, ont)
+    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
+  }
   
   def getFor(strategyId: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     implicit val context = conf.webExecutionContext
