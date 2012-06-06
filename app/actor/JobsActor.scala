@@ -40,7 +40,7 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
         case None => {
           Job.get(JobId(id)).onComplete {
             case Success(job) => to.tell(CreateJobAndForward(job, msg), from)
-            case Failure(exception) => logger.error("Couldn't find job with id: " + id, exception)
+            case Failure(exception) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)
           }
         }
       }

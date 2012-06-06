@@ -100,17 +100,6 @@ case class Job(
 
 object Job {
 
-//     val construct = """
-// CONSTRUCT {
-//   <jobUri> ?p1 ?o1 .
-//   ?strategy ?p2 ?o2
-// } WHERE {
-//   <jobUri> ?p1 ?o1 .
-//   <jobUri> ont:strategyId ?strategy .
-//   ?strategy ?p2 ?o2
-// }
-// """.replaceAll("jobUri", jobUri.toString)
-
   def getJobVO(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, JobVO] = {
     import conf.binders._
     implicit val context = conf.webExecutionContext
@@ -144,8 +133,45 @@ object Job {
   def getFor(strategy: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
     sys.error("ni")
   
-  def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
-    sys.error("ni")
+  def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.ops._
+    import conf.projections._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?jobUri ?p ?o .
+  ?s2 ?p2 ?o2
+} WHERE {
+  graph ?g {
+    ?jobUri ont:creator <#creatorUri> .
+    ?jobUri ?p ?o .
+    ?jobUri ont:strategy ?strategyUri .
+  } .
+  graph ?strategyUri {
+    ?s2 ?p2 ?o2
+  }
+}
+""".replaceAll("#creatorUri", UserUri(creator).toString)
+    val construct = SparqlOps.ConstructQuery(query, xsd, ont)
+    FutureVal.applyTo(store.executeConstruct(construct)) flatMapValidation { graph =>
+      val jobsVal: Iterable[Validation[BananaException, Job]] = graph.getAllInstancesOf(ont.Job) map { pointed =>
+        for {
+          vo <- JobVOBinder.fromPointedGraph(pointed)
+          strategyVO <- (pointed / ont.strategy).exactlyOnePointedGraph.flatMap(StrategyVOBinder.fromPointedGraph(_))
+        } yield {
+          val strategy = Strategy(strategyVO)
+          Job(vo.id, vo.name, vo.createdOn, vo.creatorId, vo.organizationId, strategy)
+        }
+      }
+      // the Monad for ({type l[X] = Validation[BananaException, X]})#l is provided by banana-rdf
+      // there is no instance for Traverse[Iterable] in scalaz, hence the .toList
+      jobsVal.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Job]
+    }
+  }
+
   
   def saveJobVO(vo: JobVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf.binders._

@@ -9,7 +9,7 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
 import org.w3.vs._
 
-class StoreTest extends WordSpec with MustMatchers {
+class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   implicit val conf: VSConfiguration = new DefaultProdConfiguration { }
 
@@ -19,6 +19,10 @@ class StoreTest extends WordSpec with MustMatchers {
   // }
 
   import akka.util.duration._
+
+  val org = Organization(id = OrganizationId(), name = "World Wide Web Consortium", adminId = UserId())
+
+  val user = User(UserId(), "foo", "foo@example.com", "secret", org.id)
   
   val strategy =
     Strategy( 
@@ -27,15 +31,31 @@ class StoreTest extends WordSpec with MustMatchers {
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)) //.noAssertor()
   
-  val org = Organization(id = OrganizationId(), name = "World Wide Web Consortium", adminId = UserId())
-      
-  val job = Job(
+  val job1 = Job(
     strategy = strategy,
-    creatorId = UserId(),
+    creatorId = user.id,
     organizationId = org.id,
-    name = "@@")
-  
-  val user = User(UserId(), "foo", "foo@example.com", "secret", org.id)
+    name = "job1")
+
+  val job2 = Job(
+    strategy = strategy,
+    creatorId = user.id,
+    organizationId = org.id,
+    name = "job2")
+
+  val job3 = Job(
+    strategy = strategy,
+    creatorId = user.id,
+    organizationId = org.id,
+    name = "job3")
+
+  override def beforeAll(): Unit = {
+    Organization.save(org)
+    User.save(user)    
+    Job.save(job1)
+    Job.save(job2)
+    Job.save(job3)
+  }
 
   "retrieve unknown Job" in {
     val retrieved = Job.get(JobId()).result(1.second)
@@ -47,40 +67,46 @@ class StoreTest extends WordSpec with MustMatchers {
     retrieved must be ('Failure) // TODO test exception type (UnknownOrganization)
   }
   
-  "save and retrieve Job" in {
-    Job.save(job)
-    val retrieved = Job.get(job.id).result(1.second)
-    retrieved must be === (Success(job))
+  "retrieve Job" in {
+    val retrieved = Job.get(job1.id).result(1.second)
+    retrieved must be === (Success(job1))
   }
 
-  "save and retrieve Organization" in {
-    Organization.save(org)
+  "retrieve Organization" in {
     val retrieved = Organization.get(org.id).result(1.second)
     retrieved must be === (Success(org))
   }
   
-  "retrieve run" in {
-    // Doesn't really have to do anything in that file. Useful for current debug
-    val orgId = OrganizationId()
-    val job1 = job.copy(id = JobId(), organizationId = orgId)
-    val org1 = org.copy(id = orgId)
-    job1.getRun.result(1.second) must be ('Failure)
-    org1.save()
-    job1.getRun.result(1.second) must be ('Failure)
-    job1.save()
-    job1.getRun.result(1.second) must be ('Success)
-  }
+  // why is that throwing exceptions in the logs?
+  // also it's very slow...
+  // "retrieve run" in {
+  //   // Doesn't really have to do anything in that file. Useful for current debug
+  //   val orgId = OrganizationId()
+  //   val job = job1.copy(id = JobId(), organizationId = orgId)
+  //   val org1 = org.copy(id = orgId)
+  //   job.getRun.result(1.second) must be ('Failure)
+  //   org1.save()
+  //   job.getRun.result(1.second) must be ('Failure)
+  //   job.save()
+  //   job.getRun.result(1.second) must be ('Success)
+  // }
 
   "save and retrieve User" in {
-    User.save(user)
     val retrieved = User.get(user.id).result(1.second)
     retrieved must be === (Success(user))
   }
 
   "retrieve User by email" in {
-    User.save(user)
-    val retrieved = User.getByEmail("foo@example.com").result(3.second)
+    val retrieved = User.getByEmail("foo@example.com").result(1.second)
     retrieved must be === (Success(user))
+  }
+
+  "get all Jobs given one creator" in {
+    val jobs = Job.getCreatedBy(user).result(1.second) getOrElse sys.error("")
+    jobs must have size(3)
+    jobs must contain (job1)
+    jobs must contain (job2)
+    jobs must contain (job3)
   }
 
 //  "OrganizationVO" in {

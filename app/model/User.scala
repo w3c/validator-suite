@@ -54,9 +54,7 @@ CONSTRUCT {
 """.replaceAll("#email", email)
     val construct = SparqlOps.ConstructQuery(query, xsd, ont)
     FutureVal.applyTo(store.executeConstruct(construct)) flatMapValidation { graph =>
-      // beurk, but this works in this particular case
-      val Triple(s, _, _) = Graph.toIterable(graph).head
-      s.asUri flatMap { uri =>
+      graph.getAllInstancesOf(ont.User).exactlyOneUri flatMap { uri =>
         val pointed = PointedGraph(uri, graph)
         UserVOBinder.fromPointedGraph(pointed)
       } map { User(_) }
