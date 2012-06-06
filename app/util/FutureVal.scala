@@ -64,6 +64,9 @@ object FutureVal {
     )
   }
   
+  // any reason for not making this one the default?
+  def apply[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = applyTo(future)
+
   def applyTo[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
     new FutureVal(future.map[Validation[Throwable, S]] { value =>
       Success(value)
@@ -163,7 +166,7 @@ class FutureVal[+F, +S] protected (
 
   def flatMapValidation[T >: F, R](f: S => Validation[T, R]): FutureVal[T, R] =
     new FutureVal(future map { _.flatMap(f) })
-  
+
   def recover[R >: S](pf: PartialFunction[F, R]): FutureVal[F, R] = {
     new FutureVal(future.map {
       case Failure(failure) if pf.isDefinedAt(failure)=> Success(pf(failure))

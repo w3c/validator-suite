@@ -26,6 +26,7 @@ trait VSConfiguration {
 
   type Rdf <: RDF
   type Sparql <: SPARQL
+  type PointedGraph = org.w3.banana.PointedGraph[Rdf]
 
   val ops: RDFOperations[Rdf]
 

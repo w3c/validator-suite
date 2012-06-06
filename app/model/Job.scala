@@ -15,6 +15,7 @@ import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
 import org.w3.banana._
+import org.w3.banana.diesel._
 
 // closed with its strategy
 case class Job(
@@ -133,11 +134,33 @@ object Job {
   def getFor(strategy: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
     sys.error("ni")
   
+  def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Job] = {
+    implicit val c = conf
+    import conf.ops._
+    import conf.diesel._
+    import conf.binders._
+    for {
+      vo <- JobVOBinder.fromPointedGraph(pointed)
+      strategyVO <- (pointed / ont.strategy).exactlyOnePointedGraph.flatMap(StrategyVOBinder.fromPointedGraph(_))
+    } yield {
+      val strategy = Strategy(strategyVO)
+      Job(vo.id, vo.name, vo.createdOn, vo.creatorId, vo.organizationId, strategy)
+    }
+  }
+
+  def fromGraph(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[Job]] = {
+    import conf.diesel._
+    import conf.binders._
+    val jobsVal: Iterable[Validation[BananaException, Job]] =
+      graph.getAllInstancesOf(ont.Job) map { pointed => fromPointedGraph(conf)(pointed) }
+    // the Monad for ({type l[X] = Validation[BananaException, X]})#l is provided by banana-rdf
+    // there is no instance for Traverse[Iterable] in scalaz, hence the .toList
+    jobsVal.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Job]
+  }
+
   def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.ops._
-    import conf.projections._
     import conf.binders.{ xsd => _, _ }
     import conf.diesel._
     val query = """
@@ -156,20 +179,7 @@ CONSTRUCT {
 }
 """.replaceAll("#creatorUri", UserUri(creator).toString)
     val construct = SparqlOps.ConstructQuery(query, xsd, ont)
-    FutureVal.applyTo(store.executeConstruct(construct)) flatMapValidation { graph =>
-      val jobsVal: Iterable[Validation[BananaException, Job]] = graph.getAllInstancesOf(ont.Job) map { pointed =>
-        for {
-          vo <- JobVOBinder.fromPointedGraph(pointed)
-          strategyVO <- (pointed / ont.strategy).exactlyOnePointedGraph.flatMap(StrategyVOBinder.fromPointedGraph(_))
-        } yield {
-          val strategy = Strategy(strategyVO)
-          Job(vo.id, vo.name, vo.createdOn, vo.creatorId, vo.organizationId, strategy)
-        }
-      }
-      // the Monad for ({type l[X] = Validation[BananaException, X]})#l is provided by banana-rdf
-      // there is no instance for Traverse[Iterable] in scalaz, hence the .toList
-      jobsVal.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Job]
-    }
+    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
   }
 
   
