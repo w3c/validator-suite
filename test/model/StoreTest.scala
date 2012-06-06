@@ -109,6 +109,14 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     jobs must contain (job3)
   }
 
+  "get all Jobs sharing the same strategy" in {
+    val jobs = Job.getFor(strategy.id).result(1.second) getOrElse sys.error("")
+    jobs must have size(3)
+    jobs must contain (job1)
+    jobs must contain (job2)
+    jobs must contain (job3)
+  }
+
 //  "OrganizationVO" in {
 //    testSerializeDeserialize(OrganizationVOBinder) {
 //      OrganizationVO(name = "foo", admin = UserId())

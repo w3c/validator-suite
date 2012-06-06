@@ -131,8 +131,28 @@ object Job {
   def getFor(organization: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
     sys.error("ni")
   
-  def getFor(strategy: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = 
-    sys.error("ni")
+  def getFor(strategyId: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?jobUri ?p ?o .
+  ?s2 ?p2 ?o2
+} WHERE {
+  graph ?g {
+    ?jobUri ont:strategy <#strategyUri> .
+    ?jobUri ?p ?o .
+  } .
+  graph <#strategyUri> {
+    ?s2 ?p2 ?o2
+  }
+}
+""".replaceAll("#strategyUri", StrategyUri(strategyId).toString)
+    val construct = SparqlOps.ConstructQuery(query, ont)
+    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
+  }
   
   def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Job] = {
     implicit val c = conf
