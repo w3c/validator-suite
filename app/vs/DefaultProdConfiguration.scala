@@ -13,6 +13,7 @@ import java.util.concurrent.Executors
 import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
 import org.w3.vs._
 import org.w3.banana._
+import org.w3.banana.diesel._
 import org.w3.banana.jena._
 import com.hp.hpl.jena.sparql.core._
 
@@ -58,17 +59,23 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs.actorOf(Props(new Http()(this)), "http")
     val listener = vs.actorOf(Props(new Actor {
       def receive = {
-        case d: DeadLetter ⇒ println("DeadLetter: "+d)
+        case d: DeadLetter ⇒ println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DeadLetter: "+d)
       }
     }))
     vs.eventStream.subscribe(listener, classOf[DeadLetter])
     vs
   }
   
+  val timeout: Timeout = 1.seconds
+
   type Rdf = Jena
   type Sparql = JenaSPARQL
 
-  val timeout: Timeout = 10.seconds
+  val ops: RDFOperations[Rdf] = JenaOperations
+
+  val projections: RDFNodeProjections[Rdf] = RDFNodeProjections(ops)
+
+  val diesel: Diesel[Rdf] = Diesel(JenaOperations, JenaGraphUnion, JenaGraphTraversal)
 
   val store: AsyncRDFStore[Rdf, Sparql] = {
     val blockingStore = JenaStore(DatasetGraphFactory.createMem())
@@ -78,6 +85,8 @@ trait DefaultProdConfiguration extends VSConfiguration {
 
   val binders: Binders[Rdf] =
     Binders(JenaOperations, JenaGraphUnion, JenaGraphTraversal)
+
+  val SparqlOps: SPARQLOperations[Rdf, Sparql] = JenaSPARQLOperations
   
   // ouch :-)
 //  http.authorityManagerFor("w3.org").sleepTime = 0

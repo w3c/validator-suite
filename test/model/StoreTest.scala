@@ -35,7 +35,7 @@ class StoreTest extends WordSpec with MustMatchers {
     organizationId = org.id,
     name = "@@")
   
-  val user = User(UserId(), "foo", "bar", "secret", org.id)
+  val user = User(UserId(), "foo", "foo@example.com", "secret", org.id)
 
   "retrieve unknown Job" in {
     val retrieved = Job.get(JobId()).result(1.second)
@@ -74,6 +74,12 @@ class StoreTest extends WordSpec with MustMatchers {
   "save and retrieve User" in {
     User.save(user)
     val retrieved = User.get(user.id).result(1.second)
+    retrieved must be === (Success(user))
+  }
+
+  "retrieve User by email" in {
+    User.save(user)
+    val retrieved = User.getByEmail("foo@example.com").result(3.second)
     retrieved must be === (Success(user))
   }
 

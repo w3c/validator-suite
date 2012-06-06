@@ -36,8 +36,31 @@ object User {
   }
   
   def getByEmail(email: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(play.api.Global.tgambet)
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.ops._
+    import conf.projections._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?s ?p ?o
+} WHERE {
+  graph ?g {
+    ?s ont:email "#email"^^xsd:string .
+    ?s ?p ?o
+  }
+}
+""".replaceAll("#email", email)
+    val construct = SparqlOps.ConstructQuery(query, xsd, ont)
+    FutureVal.applyTo(store.executeConstruct(construct)) flatMapValidation { graph =>
+      // beurk, but this works in this particular case
+      val Triple(s, _, _) = Graph.toIterable(graph).head
+      s.asUri flatMap { uri =>
+        val pointed = PointedGraph(uri, graph)
+        UserVOBinder.fromPointedGraph(pointed)
+      } map { User(_) }
+    }
   }
 
   def saveUserVO(vo: UserVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {

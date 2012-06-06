@@ -7,7 +7,7 @@ import com.ning.http.client.AsyncHttpClient
 import org.w3.vs.actor.JobsActor
 import akka.util.Timeout
 import org.w3.banana._
-import org.w3.banana.jena._
+import org.w3.banana.diesel._
 import org.w3.vs.model.Binders
 
 trait VSConfiguration {
@@ -22,13 +22,21 @@ trait VSConfiguration {
 
   val httpClient: AsyncHttpClient
   
+  val timeout: Timeout
+
   type Rdf <: RDF
   type Sparql <: SPARQL
+
+  val ops: RDFOperations[Rdf]
+
+  val projections: RDFNodeProjections[Rdf]
+
+  val diesel: Diesel[Rdf]
 
   val store: AsyncRDFStore[Rdf, Sparql]
 
   val binders: Binders[Rdf]
 
-  val timeout: Timeout
+  val SparqlOps: SPARQLOperations[Rdf, Sparql]
 
 }
