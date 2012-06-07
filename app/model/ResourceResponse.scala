@@ -45,7 +45,7 @@ case class ErrorResponse(
     runId: RunId,
     url: URL,
     action: HttpAction,
-    timestamp: DateTime = DateTime.now,
+    timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
     why: String)(implicit val conf: VSConfiguration) extends ResourceResponse {
   
   def toValueObject: ErrorResponseVO = ErrorResponseVO(id, jobId, runId, url, action, timestamp, why)
@@ -57,7 +57,7 @@ case class HttpResponse(
     runId: RunId,
     url: URL,
     action: HttpAction,
-    timestamp: DateTime = DateTime.now,
+    timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
     status: Int,
     headers: Headers,
     extractedURLs: List[URL])(implicit val conf: VSConfiguration) extends ResourceResponse {

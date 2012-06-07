@@ -80,7 +80,7 @@ case class RunVO (
     distance: Map[URL, Int] = Map.empty,
     toBeExplored: List[URL] = List.empty,
     fetched: Set[URL] = Set.empty,
-    createdAt: DateTime = DateTime.now,
+    createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
     jobId: JobId,
     resources: Int = 0,
     errors: Int = 0,

@@ -14,7 +14,7 @@ import akka.util.Duration
 import scala.collection.mutable.ListMap
 import java.util.UUID
 import scalaz.Scalaz._
-import org.joda.time.DateTime
+import org.joda.time._
 
 object Run {
 
@@ -45,7 +45,7 @@ case class Run(
     distance: Map[URL, Int] = Map.empty,
     toBeExplored: List[URL] = List.empty,
     fetched: Set[URL] = Set.empty,
-    createdAt: DateTime = DateTime.now,
+    createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
     job: Job,
     pending: Set[URL] = Set.empty,
     resources: Int = 0,

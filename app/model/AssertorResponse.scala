@@ -35,7 +35,7 @@ case class AssertorResult(
     runId: RunId,
     assertorId: AssertorId,
     sourceUrl: URL,
-    timestamp: DateTime = DateTime.now,
+    timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
     errors: Int,
     warnings: Int) extends AssertorResponse {
   

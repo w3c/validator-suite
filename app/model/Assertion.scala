@@ -16,7 +16,7 @@ case class Assertion(
     title: String,
     severity: AssertionSeverity,
     description: Option[String],
-    timestamp: DateTime = DateTime.now)(implicit conf: VSConfiguration) {
+    timestamp: DateTime = DateTime.now(DateTimeZone.UTC))(implicit conf: VSConfiguration) {
   
   //def getAssertorResult: FutureVal[Exception, AssertorResult] = AssertorResult.get(assertorResponseId)
   def getContexts: FutureVal[Exception, Iterable[Context]] = Context.getForAssertion(id) 

@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import play.api.libs.concurrent._
 import scala.concurrent.stm._
-import org.joda.time.DateTime
+import org.joda.time._
 
 object VSPromise {
   
@@ -172,7 +172,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
       } 
     }
     timeout map {
-      case (duration, started) => started.toInstant.getMillis + duration.toMillis - DateTime.now().toInstant.getMillis
+      case (duration, started) => started.toInstant.getMillis + duration.toMillis - DateTime.now(DateTimeZone.UTC).toInstant.getMillis
     } map {
       case time if (time > 0) => {
         play.core.Invoker.system.scheduler.scheduleOnce(Duration(time, TimeUnit.MILLISECONDS)) {
@@ -306,7 +306,7 @@ class VSPromise[A] private (private val future: FutureVal[A, A]) extends Promise
   
   private def forwardTimeout(promise: VSPromise[_]) = {
     timeout map {
-      case (duration, started) => started.toInstant.getMillis + duration.toMillis - DateTime.now().toInstant.getMillis
+      case (duration, started) => started.toInstant.getMillis + duration.toMillis - DateTime.now(DateTimeZone.UTC).toInstant.getMillis
     } map {
       case time if (time > 0) => promise.timeoutIn(Duration(time, TimeUnit.MILLISECONDS))
       case _ =>
