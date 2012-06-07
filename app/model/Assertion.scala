@@ -25,16 +25,21 @@ case class Assertion(
 }
 
 object Assertion {
+
   def get(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Assertion] = sys.error("ni")
+
   def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(Iterable())
   }
+
   def getForRun(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
+
   def save(assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(())
   }
+
 }
 
 case class AssertionClosed(assertion: Assertion, contexts: Iterable[Context])
@@ -65,8 +70,11 @@ case class Context(
     assertionId: AssertionId)(implicit conf: VSConfiguration) {
   
   def getAssertion: FutureVal[Exception, Assertion] = Assertion.get(assertionId)
+
   def toValueObject: ContextVO = ContextVO(id, content, line, column, assertionId)
+
   def save(): FutureVal[Exception, Unit] = Context.save(this)
+
 } 
 
 object Context {
@@ -77,11 +85,19 @@ object Context {
       column: Option[Int], 
       assertionId: AssertionId)(implicit conf: VSConfiguration): Context =
     Context(ContextId(), content, line, column, assertionId)
+
+  def apply(vo: ContextVO)(implicit conf: VSConfiguration): Context = {
+    import vo._
+    Context(id, content, line, column, assertionId)
+  }
   
   def get(id: ContextId)(implicit conf: VSConfiguration): FutureVal[Exception, Context] = sys.error("ni")
+
   def getForAssertion(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Context]] = sys.error("ni")
+
   def save(context: Context)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(())
   }
+
 }

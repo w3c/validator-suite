@@ -21,7 +21,7 @@ object ApplicationBuild extends Build {
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
     // test dependencies
-    "com.typesafe.akka" % "akka-testkit" % "2.0.1" % "test",
+    "com.typesafe.akka" % "akka-testkit" % "2.0.2" % "test",
     "org.scalatest" %% "scalatest" % "1.7.1" % "test"
   )
 
