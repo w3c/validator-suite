@@ -15,6 +15,8 @@ import scala.collection.mutable.ListMap
 import java.util.UUID
 import scalaz.Scalaz._
 import org.joda.time._
+import org.w3.banana._
+import org.w3.banana.diesel._
 
 object Run {
 
@@ -24,14 +26,65 @@ object Run {
     d1 ++ d2
   }
 
-  def apply(job: Job)(implicit conf: VSConfiguration): Run = apply(job = job)
-  
-  def get(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = sys.error("")
-
-  def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(run)
+  def getRunVO(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, RunVO] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val uri = RunUri(id)
+    FutureVal(conf.store.getNamedGraph(uri)) flatMap { graph => 
+      FutureVal.pureVal[Throwable, RunVO]{
+        val pointed = PointedGraph(uri, graph)
+        RunVOBinder.fromPointedGraph(pointed)
+      }(t => t)
+    }
   }
+
+  def get(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = {
+    for {
+      vo <- getRunVO(id)
+      job <- Job.get(vo.jobId)
+    } yield {
+      Run(
+        id = vo.id,
+        explorationMode = vo.explorationMode,
+        distance = vo.distance,
+        toBeExplored = vo.toBeExplored,
+        fetched = vo.fetched,
+        createdAt = vo.createdAt,
+        job = job,
+        pending = Set.empty,
+        resources = vo.resources,
+        errors = vo.errors,
+        warnings = vo.warnings,
+        invalidated = 0,
+        pendingAssertions = 0)
+    }
+  }
+
+    // id: RunId = RunId(),
+    // explorationMode: ExplorationMode = ProActive,
+    // distance: Map[URL, Int] = Map.empty,
+    // toBeExplored: List[URL] = List.empty,
+    // fetched: Set[URL] = Set.empty,
+    // createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
+    // job: Job,
+    // pending: Set[URL] = Set.empty,
+    // resources: Int = 0,
+    // errors: Int = 0,
+    // warnings: Int = 0,
+    // invalidated: Int = 0,
+    // pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
+
+
+  def saveJobVO(vo: RunVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val graph = RunVOBinder.toPointedGraph(vo).graph
+    val result = conf.store.addNamedGraph(RunUri(vo.id), graph)
+    FutureVal.toFutureValException(FutureVal.applyTo(result))
+  }
+
+  def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    saveJobVO(run.toValueObject)
   
 }
 
@@ -58,7 +111,7 @@ case class Run(
 
   def strategy = job.strategy
   
-  def save(): FutureVal[Exception, Run] = Run.save(this)
+  def save(): FutureVal[Exception, Unit] = Run.save(this)
   
   def toValueObject: RunVO = RunVO(id, explorationMode, distance, toBeExplored, fetched, createdAt, job, resources, errors, warnings)
   

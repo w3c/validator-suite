@@ -9,7 +9,6 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
 import org.w3.vs._
 import akka.util.duration._
-import org.w3.vs.assertor._
 
 class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
@@ -63,10 +62,12 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val run2 = Run(job = job2)
 
+  val assertorId = AssertorId()
+
   val assertion1 = Assertion(
     jobId = job1.id,
     runId = run1.id,
-    assertorId = CSSValidator.id,
+    assertorId = assertorId,
     url = URL("http://example.com/foo"),
     lang = "fr",
     title = "foo",
@@ -76,7 +77,7 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
   val assertion2 = Assertion(
     jobId = job1.id,
     runId = run1.id,
-    assertorId = CSSValidator.id,
+    assertorId = assertorId,
     url = URL("http://example.com/bar"),
     lang = "fr",
     title = "bar",
@@ -115,6 +116,7 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     Job.save(job2)
     Job.save(job3)
     Job.save(job4)
+    Run.save(run1)
   }
 
   "retrieve unknown Job" in {
@@ -193,6 +195,11 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     jobs must contain (job2)
     jobs must contain (job3)
     jobs must contain (job4)
+  }
+
+  "retrieve Run" in {
+    val retrieved = Run.get(run1.id).result(1.second)
+    retrieved must be === (Success(run1))
   }
 
 

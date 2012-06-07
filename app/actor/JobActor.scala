@@ -54,7 +54,7 @@ class JobActor(job: Job)(
   // TODO
   configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
 
-  var lastRun = Run(job) // TODO get last run data from the db?
+  var lastRun = Run(job = job) // TODO get last run data from the db?
 
   startWith(lastRun.state, lastRun)
 
@@ -159,7 +159,7 @@ class JobActor(job: Job)(
     case Event(BeLazy, run) => stateOf(run.withMode(Lazy))
     case Event(Refresh, run) => {
       val firstURLs = List(strategy.entrypoint)
-      val freshRun = Run(job)
+      val freshRun = Run(job = job)
       val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs, 0)
       stateOf(scheduleNextURLsToFetch(runData))
     }
