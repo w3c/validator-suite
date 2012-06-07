@@ -5,6 +5,7 @@ import org.w3.util._
 import org.joda.time._
 import org.w3.vs.assertor._
 import scalaz.Validation
+import org.w3.banana._
 
 case class Context(
     id: ContextId = ContextId(),
@@ -23,25 +24,37 @@ case class Context(
 
 object Context {
   
-  def apply(
-      content: String, 
-      line: Option[Int], 
-      column: Option[Int], 
-      assertionId: AssertionId)(implicit conf: VSConfiguration): Context =
-    Context(ContextId(), content, line, column, assertionId)
-
   def apply(vo: ContextVO)(implicit conf: VSConfiguration): Context = {
     import vo._
     Context(id, content, line, column, assertionId)
   }
   
-  def get(id: ContextId)(implicit conf: VSConfiguration): FutureVal[Exception, Context] = sys.error("ni")
+  def getContextVO(id: ContextId)(implicit conf: VSConfiguration): FutureVal[Exception, ContextVO] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val uri = ContextUri(id)
+    FutureVal(conf.store.getNamedGraph(uri)) flatMap { graph => 
+      FutureVal.pureVal[Throwable, ContextVO]{
+        val pointed = PointedGraph(uri, graph)
+        ContextVOBinder.fromPointedGraph(pointed)
+      }(t => t)
+    }
+  }
+
+  def get(id: ContextId)(implicit conf: VSConfiguration): FutureVal[Exception, Context] =
+    getContextVO(id) map (Context(_))
 
   def getForAssertion(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Context]] = sys.error("ni")
 
-  def save(context: Context)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(())
+  def saveContextVO(vo: ContextVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val graph = ContextVOBinder.toPointedGraph(vo).graph
+    val result = conf.store.addNamedGraph(ContextUri(vo.id), graph)
+    FutureVal.toFutureValException(FutureVal(result))
   }
+
+  def save(context: Context)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    saveContextVO(context.toValueObject)
 
 }

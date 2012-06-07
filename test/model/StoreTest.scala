@@ -120,6 +120,10 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     Run.save(run2)
     Assertion.save(assertion1)
     Assertion.save(assertion2)
+    Context.save(context1)
+    Context.save(context2)
+    Context.save(context3)
+    Context.save(context4)
   }
 
   "retrieve unknown Job" in {
@@ -208,6 +212,11 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
   "retrieve Assertion" in {
     val retrieved = Assertion.get(assertion1.id).result(1.second)
     retrieved must be === (Success(assertion1))
+  }
+
+  "retrieve Context" in {
+    val retrieved = Context.get(context1.id).result(1.second)
+    retrieved must be === (Success(context1))
   }
 
 }
