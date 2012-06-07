@@ -1,10 +1,17 @@
-@(tuples: Iterable[(Job, Run)] = None, user: User)(implicit flash: Flash)
+@(triples: Iterable[(Job, Run, Option[org.joda.time.DateTime])] = None,
+    user: User)(implicit flash: Flash)
 
 @import org.w3.vs.actor._
 
 @libs.main("Validator Suite", 
-  stylesheets = List("dashboard.css"),
-      scripts = List("model.js", "vs.js", "dashboard.js")){
+	stylesheets = List("dashboard.css"),
+	scripts = List("model.js", "vs.js", "dashboard.js"),
+	exec = """
+		$(function(){
+			window.Dashboard = new DashboardView();
+			window.VS.Socket.open();
+		});
+	"""){
    
    @***** Header ******@
    
@@ -19,7 +26,7 @@
 	<hr>
 	
 	<section id="jobs" class="list">
-		@libs.jobs(tuples)
+		@libs.jobs(triples)
 	</section>
 	
 }{ @***** Footer *****@

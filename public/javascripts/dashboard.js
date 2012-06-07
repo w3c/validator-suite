@@ -70,14 +70,14 @@ window.DashboardView = Backbone.View.extend({
 		this.jobs.on('add', this.addOne, this);
 		this.jobs.on('reset', this.addAll, this);
 		// XXX bug server-side
-		var onmessage = _.bind(this._messageCallback, this);
+		//var onmessage = _.bind(this._messageCallback, this);
 		// Parse the HTML to get initial data as an array of (model, view)
 		_.each($("#jobs article").toArray(), function(jobElem) { 
 			this.jobs.add(Job.fromHTML(jobElem));
 			$(jobElem).remove();
 		}, this);
 		// Subscribe to job updates through a WebSocket
-		this.subscribe();
+		//this.subscribe();
 	},
 	addOne: function(job) {
 		var view = new JobView({model: job});
@@ -87,16 +87,16 @@ window.DashboardView = Backbone.View.extend({
 		this.$el.empty();
 		this.jobs.each(this.addOne, this);
 	},
-	subscribe: function () {
-		VS.Socket.open().onmessage = _.bind(this._messageCallback, this);
-	},
-	_messageCallback: function (event) {
-		console.log(event.data);
-		var data = DashboardUpdate.fromJSON(event.data);
-		var job = this.jobs.get(data.get("jobId"));
-		if (!_.isUndefined(job))
-			job.syncData(data);
-	}
+//	subscribe: function () {
+//		VS.Socket.open().onmessage = _.bind(this._messageCallback, this);
+//	},
+//	_messageCallback: function (event) {
+//		console.log(event.data);
+//		var data = DashboardUpdate.fromJSON(event.data);
+//		var job = this.jobs.get(data.get("jobId"));
+//		if (!_.isUndefined(job))
+//			job.syncData(data);
+//	}
 });
 
-$(function(){window.Dashboard = new DashboardView();});
+//$(function(){window.Dashboard = new DashboardView();});

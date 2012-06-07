@@ -97,12 +97,19 @@ class JobActor(job: Job)(
       }
       stay()
     }
-    case Event(response: AssertorResponse, _run) => {
-      //logger.debug("%s: %s observed by %s" format (shortId, result.sourceUrl, result.assertorId))
-      response match {
-        case result: AssertorResult => ()//result.save()
-        case _ => ()
+    case Event(response: AssertorResultClosed, _run) => {
+      response.assertionsClosed.map{assertionClosed => 
+        assertionClosed.assertion.save()
+        assertionClosed.contexts.map(_.save())
       }
+      if (response.assertorResult.runId === _run.id) {
+        tellEverybody(NewAssertions(response.assertionsClosed.map(_.assertion)))
+        stateOf(_run.withAssertorResponse(response.assertorResult))
+      } else {
+        stay() // log maybe?
+      }
+    }
+    case Event(response: AssertorResponse, _run) => {
       if (response.runId === _run.id) {
         //tellEverybody(NewAssertorResponse(response))
         stateOf(_run.withAssertorResponse(response))

@@ -122,8 +122,10 @@ hr,
 	display:block;
 	font-size:0.85em;
 }
-.list button.delete {
+.list button.delete,
+.list button.run {
 	float:right;
+	clear:right;
 }
 .list article button,
 .job button {
@@ -134,7 +136,7 @@ hr,
 	margin:0;
 	padding:0;
 	text-decoration:underline;
-	color:blue;
+	color:#0066CC;
 	line-height:1em;
 	font-size:0.85em;
 }
@@ -632,3 +634,25 @@ nav.report li:first-child:before {
 	height:auto;
 	overflow:hidden;
 }*/
+
+
+#urlArticles .date {
+	width:20%;
+}
+#urlArticles .warnings,
+#urlArticles .errors {
+	width:10%;
+	text-align: right;
+	
+}
+#urlArticles dd {
+	padding-right: 10px;
+}
+#urlArticles dd.warnings {
+	color: #C17400;
+	font-weight: bold;
+}
+#urlArticles dd.errors {
+	color: #C11D13;
+	font-weight: bold;
+}

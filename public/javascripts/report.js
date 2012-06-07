@@ -1,30 +1,91 @@
+window.URLArticleView = Backbone.View.extend({
+	
+	tagName : "article",
+	template: _.template($('#urlArticle-template').html()), // check presence first
+	
+	initialize: function () {
+		if(this.model !== undefined) {
+			//this.attributes["jobId"] = this.model.id;
+			this.model.on('change', this.render, this);
+			this.model.on('destroy', this.remove, this);
+			//this.model.on('run', function () {alert("run");}, this);
+			//this.model.on('stop', function () {alert("run");}, this);
+		}
+	},
+	
+	render: function () {
+		this.$el.html(this.template(_.extend(this.model.toJSON())));
+		return this;
+	},
+	
+});
+
 
 window.ReportView = Backbone.View.extend({
-	el: $("#report > div"),
-	messages: new MessageList(),
+	el: $("#urlArticles"),
+	articles: new URLArticleList(),
 	
 	initialize: function () {
 		// Bind events
-		this.messages.on('add', this.addOne, this);
-		this.messages.on('reset', this.addAll, this);
-		// Subscribe to job updates through a WebSocket
+		this.articles.on('add', this.addAll, this);
+		this.articles.on('reset', this.addAll, this);
+		this.id = $("#urlArticles").attr("data-id");
 		//this.subscribe();
 	},
-	addOne: function(job) {
-		var view = new JobView({model: job});
-		this.$el.append(view.render().el);
+	addAll: function () {
+		var views = this.articles.map(function (article) {
+			return (new URLArticleView({model: article})).render().el;
+		}, this);
+		$("article", this.$el).remove();
+		_.each(views, function (view) {this.$el.append(view);}, this);
 	},
-	addAll: function(j) {
-		this.$el.empty();
-		this.jobs.each(this.addOne, this);
-	},
-	subscribe: function () {
-		//VS.Socket.open("/job/" + this.$el.text() + "/socket");
-	}
+//	subscribe: function () {
+//		VS.Socket.open({url: "/jobs/ws/" + this.id}).onmessage = _.bind(this._messageCallback, this);
+//	},
+//	_messageCallback: function (event) {
+//		console.log(event.data);
+//		try {
+//			var json = $.parseJSON(event.data);
+//			var type = json[0];
+//			if (type === "Resource") {
+//				var data = {
+//					resourceId: json[1],
+//					url: json[2]
+//				};
+//				if (this.articles.where({url: data.url}).length < 1) {
+//					this.articles.add(new URLArticle({
+//						url: data.url,
+//						timestamp: "Never",
+//					}));
+//				} else {
+//					console.log("Resource already present on the page: " + data.url);
+//				}
+//			} else if (type === "Assertions") {
+//				var assertions = json[1];
+//				_.each(assertions, function (assertion) {
+//					var url = assertion[0];
+//					var timestamp = assertion[1];
+//					var warnings = assertion[2];
+//					var errors = assertion[3];
+//					_.map(this.articles.where({url: url}), function (article) {
+//						article.set({
+//							timestamp: timestamp,
+//							warnings: article.get("warnings") + warnings,
+//							errors: article.get("errors") + errors,
+//						});
+//					});
+//					this.articles.sort();
+//				}, this);
+//			}
+//		} catch(ex) {
+//			console.log(ex);
+//			return null;
+//		}
+//	}
 });
 
 $(function () {
-//	window.Report = new ReportView();
+	//window.Report = new ReportView();
 //	var a = $("#report article");
 //	$("body").removeClass("no-js").addClass("js");
 //	a.each(function (i, article) {

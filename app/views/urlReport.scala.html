@@ -1,6 +1,7 @@
-@(article: URLArticle,
-    user: User,
-    messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
+@(job: Job,
+  article: URLArticle,
+  user: User,
+  messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
@@ -18,7 +19,7 @@
 	
 	<hr>
 	
-	<section id="urlArticles" class="list">
+	<section id="urlArticles" class="list" data-id="@job.id">
 		@libs.urlArticles(Iterable(article))
 	</section>
 	

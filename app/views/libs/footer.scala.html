@@ -14,7 +14,7 @@
 				<dd class="status"><%= data.get('activity') %></dd>
 
 				<dt>Last Completed</dt>
-				<dd class="date"><time datetime="">03/12/12 at 2:55pm</time></dd>
+				<dd class="date"><% if (lastCompleted == "Never") { %>Never<% } else { %><time datetime=""><%= lastCompleted %></time><% } %></dd>
 				
 				<dt>Warnings</dt>
 				<dd class="warnings"><%= data.get('warnings') %></dd>
@@ -45,4 +45,17 @@
 					<a class="delete" href="<%= url + '/delete' %>">delete</a>
 				</dd>
 			</dl>
+	</script>
+	
+	<script type="text/template" id="urlArticle-template">
+		<dl>
+			<dt>URL</dt>
+			<dd class="url"><%= url %></dd>
+			<dt>Last validated</dt>
+			<dd class="date"><%= timestamp %></dd>
+			<dt>Warnings</dt>
+			<dd class="warnings"><% if (timestamp === "") { %><%= "-" %><% } else { %><%= warnings %><% } %></dd>
+			<dt>Errors</dt>
+			<dd class="errors"><% if (timestamp === "") { %><%= "-" %><% } else { %><%= errors %><% } %></dd>
+		</dl>
 	</script>

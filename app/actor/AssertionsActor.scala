@@ -61,7 +61,7 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
     }
     case result: AssertorResultClosed => {
       pendingAssertions -= 1
-      context.parent ! result.assertorResult
+      context.parent ! result
       while (queue.nonEmpty && pendingAssertions <= MAX_PENDING_ASSERTION) {
         val AssertorCall(assertorId, nextRI) = queue.dequeue()
         scheduleAssertion(assertorId, nextRI)

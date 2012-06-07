@@ -18,18 +18,48 @@ case object JobsUpdate {
       JsNumber(data.health)
     ))
   }
-  
 }
 
 case object ResourceUpdate {
   
-  def json(resource: HttpResponse): JsValue = {
+  def json(resource: ResourceResponse): JsValue = {
+    resource match {
+      case resource: HttpResponse => {
+        JsArray(List(
+          JsString("Resource"),
+          JsString(resource.id.toString),
+          JsString(resource.url.toString)
+          //JsString(resource.timestamp.toString)
+        ))
+      }
+      case resource: ErrorResponse => {
+        JsArray(List(
+          JsString("FetchError"),
+          JsString(resource.id.toString)
+          //JsString(resource.url.toString),
+          //JsString(resource.timestamp.toString)
+        ))
+      }
+    }
+  }
+}
+
+case object AssertorUpdate {
+  
+  def json(assertions: Iterable[Assertion]): JsValue = {
+    val assertMessages: Iterable[JsValue] = assertions.groupBy(_.url).map{
+      case (url, assertions) => 
+        JsArray(List(
+          JsString(url.toString),
+          JsString(assertions.head.timestamp.toString),
+          JsNumber(assertions.count(_.severity == Warning)),
+          JsNumber(assertions.count(_.severity == Error))
+        ))
+    }
     JsArray(List(
-      JsString("Resource"),
-      JsString(resource.id.toString),
-      JsString(resource.url.toString),
-      JsString(resource.timestamp.toString)
+      JsString("Assertions"),
+      JsArray(assertMessages.toSeq)
     ))
   }
-  
 }
+

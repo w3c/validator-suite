@@ -29,6 +29,9 @@ case class JobData (
 
 object JobData {
   def get(id: JobDataId)(implicit conf: VSConfiguration): FutureVal[Exception, JobData] = sys.error("")
-  def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[JobData]] = sys.error("")
+  def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[JobData]] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(Iterable())
+  }
   def getForRun(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[JobData]] = sys.error("")
 }

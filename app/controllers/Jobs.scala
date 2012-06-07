@@ -40,14 +40,16 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         jobs <- user.getJobs
-        tuples <- FutureVal.sequence(
+        triples <- FutureVal.sequence(
             jobs.toSeq.sortBy(_.name).map(job => 
-              for {run <- job.getRun}
-              yield (job, run)
+              for {
+                run <- job.getRun
+                lastCompleted <- job.getLastCompleted
+              }
+              yield (job, run, lastCompleted)
             ))
       } yield {
-        //val tuples = Iterable((play.api.Global.w3, Run(play.api.Global.w3)))
-        Ok(views.html.dashboard(tuples, user))
+        Ok(views.html.dashboard(triples, user))
       }) failMap toError toPromise
     }
   }
@@ -58,9 +60,10 @@ object Jobs extends Controller {
         user <- getUser
         job <- user.getJob(id)
         run <- job.getRun
+        lastCompleted <- job.getLastCompleted
         ars <- job.getURLArticles
       } yield {
-        Ok(views.html.report(job, run, ars.map(URLArticle.apply _), user, messages))
+        Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages))
       }) failMap toError toPromise
     }
   }
@@ -70,10 +73,10 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
-        run <- job.getRun
+        //run <- job.getRun
         article <- job.getURLArticle(url)
       } yield {
-        Ok(views.html.urlReport(URLArticle(article), user, messages))
+        Ok(views.html.urlReport(job, URLArticle(article), user, messages))
       }) failMap toError toPromise
     }
   }
@@ -266,12 +269,13 @@ object Jobs extends Controller {
     val promiseEnumerator: Promise[Enumerator[JsValue]] = (
       for {
         user <- getUser
+        job <- user.getJob(id)
         organization <- user.getOrganization
       } yield {
-        organization.enumerator &> Enumeratee.collect{
-          case UpdateData(data, activity) if (data.jobId == id)=> JobsUpdate.json(data, activity)
-          //case NewResource(resource) if (resource.jobId == id) => ResourceUpdate.json(resource)
-          //case NewAssertorResponse(response) => ()
+        job.enumerator &> Enumeratee.collect{
+          case UpdateData(data, activity)=> JobsUpdate.json(data, activity)
+          case NewResource(resource) => ResourceUpdate.json(resource)
+          case NewAssertions(assertions) if (!assertions.isEmpty) => AssertorUpdate.json(assertions)
         }
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise

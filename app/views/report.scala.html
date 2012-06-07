@@ -1,12 +1,20 @@
 @(job: Job, 
     run: Run,
+    lastCompleted: Option[org.joda.time.DateTime],
     articles: Iterable[URLArticle],
     user: User,
     messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
 @libs.main("Validator Suite", 
 	stylesheets = List("dashboard.css"),
-   scripts = List("model.js", "vs.js", "report.js", "dashboard.js")){
+	scripts = List("model.js", "vs.js", "report.js", "dashboard.js"),
+	exec = """
+		$(function () {
+			window.Dashboard = new DashboardView();
+			window.Report = new ReportView();
+			VS.Socket.open({url: "/jobs/ws/""" + job.id + """ "});
+		});
+	"""){
    
    @***** Header ******@
 	
@@ -21,12 +29,12 @@
 	<hr>
 	
 	<section id="jobs" class="list">
-		@libs.jobs(List((job, run)))
+		@libs.jobs(List((job, run, lastCompleted)))
 	</section>
 	
 	<hr>
 	
-	<section id="urlArticles" class="list">
+	<section id="urlArticles" class="list" data-id="@job.id">
 		@libs.urlArticles(articles)
 	</section>
 	

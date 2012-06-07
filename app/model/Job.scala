@@ -40,6 +40,16 @@ case class Job(
   
   def getHistory: FutureVal[Exception, Iterable[JobData]] = 
     JobData.getForJob(id)
+  
+  def getLastCompleted: FutureVal[Exception, Option[DateTime]] = {
+    getHistory.map{iterable =>
+      val timestamps = iterable.map(_.timestamp)
+      if (timestamps.isEmpty)
+        None
+      else
+        Some(timestamps.max)
+    }
+  }
 
   def getRun: FutureVal[Throwable, Run] = {
     implicit def ec = conf.webExecutionContext
@@ -52,6 +62,7 @@ case class Job(
   }
   
   // resource url, time fetched, warnings, errors
+  // TODO: optimize by writing the db request directly
   def getURLArticles: FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
     Assertion.getForJob(id).map(_.groupBy(_.url).map{case (url, it) => 
       (url, 
@@ -63,9 +74,8 @@ case class Job(
   }
   
   def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
-    getURLArticles.map(it => logger.error(it.toString))
     getURLArticles.map{it => it.find(_._1 == url)} discard {
-      case None => new Exception("Unknown URL") //TODO
+      case None => new Exception("Unknown URL") //TODO type exception
     } map {
       case a => a.get
     }
@@ -96,13 +106,6 @@ case class Job(
     val enum = (PathAware(organizationsRef, path).?[Enumerator[RunUpdate]](GetEnumerator))
     Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise)
   }
-  
-//  def enumerator: Enumerator[RunUpdate] = {
-//    implicit def ec = conf.webExecutionContext
-//    val enum2: play.api.libs.concurrent.Promise[Enumerator[RunUpdate]] = 
-//      FutureVal.applyTo((organizationsRef ? GetEnumerator).mapTo[Enumerator[RunUpdate]]).failMap(_ => Enumerator.eof[RunUpdate]).toPromise
-//    Enumerator.flatten(enum2)
-//  }
   
   private val organizationsRef = system.actorFor(system / "organizations")
   private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString
