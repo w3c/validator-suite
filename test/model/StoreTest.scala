@@ -9,6 +9,7 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
 import org.w3.vs._
 import akka.util.duration._
+import org.w3.vs.assertor._
 
 class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
@@ -58,11 +59,53 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     organizationId = org.id,
     name = "job4")
 
-//  val run1 = Run
+  val run1 = Run(job = job1)
 
-//  val assertion1 = 
+  val run2 = Run(job = job2)
 
-//  val context1 = Context("foo", Some(1), None, )
+  val assertion1 = Assertion(
+    jobId = job1.id,
+    runId = run1.id,
+    assertorId = CSSValidator.id,
+    url = URL("http://example.com/foo"),
+    lang = "fr",
+    title = "foo",
+    severity = Error,
+    description = Some("some description"))
+
+  val assertion2 = Assertion(
+    jobId = job1.id,
+    runId = run1.id,
+    assertorId = CSSValidator.id,
+    url = URL("http://example.com/bar"),
+    lang = "fr",
+    title = "bar",
+    severity = Warning,
+    description = Some("some other description"))
+
+  val context1 = Context(
+    content = "blah",
+    line = Some(42),
+    column = None,
+    assertionId = assertion1.id)
+
+  val context2 = Context(
+    content = "blah",
+    line = None,
+    column = Some(42),
+    assertionId = assertion1.id)
+
+  val context3 = Context(
+    content = "blah",
+    line = Some(42),
+    column = None,
+    assertionId = assertion2.id)
+
+  val context4 = Context(
+    content = "blah",
+    line = None,
+    column = Some(42),
+    assertionId = assertion2.id)
 
   override def beforeAll(): Unit = {
     Organization.save(org)

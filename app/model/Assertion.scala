@@ -20,8 +20,11 @@ case class Assertion(
   
   //def getAssertorResult: FutureVal[Exception, AssertorResult] = AssertorResult.get(assertorResponseId)
   def getContexts: FutureVal[Exception, Iterable[Context]] = Context.getForAssertion(id) 
+
   def toValueObject: AssertionVO = AssertionVO(id, jobId, runId, assertorId, url, lang, title, severity, description, timestamp)
+
   def save(): FutureVal[Exception, Unit] = Assertion.save(this)
+
 }
 
 object Assertion {
