@@ -4,8 +4,10 @@ import org.w3.vs._
 import org.w3.util._
 import org.joda.time._
 import org.w3.vs.assertor._
-import scalaz.Validation
 import org.w3.banana._
+import scalaz.Validation._
+import scalaz.Scalaz._
+import scalaz._
 
 case class Assertion(
     id: AssertionId = AssertionId(),
@@ -55,7 +57,42 @@ object Assertion {
     FutureVal.successful(Iterable())
   }
 
-  def getForRun(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
+  def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Assertion] = {
+    implicit val c = conf
+    import conf.binders._
+    for {
+      vo <- AssertionVOBinder.fromPointedGraph(pointed)
+    } yield {
+      Assertion(vo)
+    }
+  }
+
+  def fromGraph(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[Assertion]] = {
+    import conf.diesel._
+    import conf.binders._
+    val assertions: Iterable[Validation[BananaException, Assertion]] =
+      graph.getAllInstancesOf(ont.Assertion) map { pointed => fromPointedGraph(conf)(pointed) }
+    assertions.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Assertion]
+  }
+
+  def getForRun(runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?assertionUri ?p ?o .
+} WHERE {
+  graph ?g {
+    ?assertionUri ont:runId <#runUri> .
+    ?assertionUri ?p ?o
+  }
+}
+""".replaceAll("#runUri", RunUri(runId).toString)
+    val construct = SparqlOps.ConstructQuery(query, ont)
+    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
+  }
 
   def saveAssertionVO(vo: AssertionVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf.binders._

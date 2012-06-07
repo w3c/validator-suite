@@ -219,4 +219,12 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     retrieved must be === (Success(context1))
   }
 
+  "get all assertions for a given a runId" in {
+    val assertions = Assertion.getForRun(run1.id).result(1.second) getOrElse sys.error("")
+    assertions must have size(2)
+    assertions must contain (assertion1)
+    assertions must contain (assertion2)
+
+  }
+
 }

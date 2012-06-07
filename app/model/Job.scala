@@ -15,7 +15,6 @@ import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
 import org.w3.banana._
-import org.w3.banana.diesel._
 
 // closed with its strategy
 case class Job(
