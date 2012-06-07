@@ -21,7 +21,8 @@ case class JobData (
     if (resources == 0) 0
     else {
       val errorAverage = errors.toDouble / resources.toDouble
-      (exp(log(0.5) / 10 * errorAverage) * 100).toInt
+      val h = (exp(log(0.5) / 10 * errorAverage) * 100).toInt
+      scala.math.max(1, h)
     }
   }
 }

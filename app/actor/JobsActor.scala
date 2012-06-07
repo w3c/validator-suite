@@ -50,6 +50,8 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
       val jobRef = getJobRefOrCreate(job)
       jobRef forward msg
     }
+    
+    case a => {logger.error("unexpected message: " + a.toString)}
 
   }
 

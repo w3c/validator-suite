@@ -12,6 +12,7 @@ import play.api.libs.iteratee._
 import org.w3.vs.actor.message._
 import org.w3.vs.model._
 import org.w3.util._
+import org.w3.util.akkaext._
 import org.w3.banana._
 
 case class Organization(
@@ -19,13 +20,24 @@ case class Organization(
     name: String,
     adminId: UserId)(implicit conf: VSConfiguration) {
   
+  import conf.system
+  implicit def timeout = conf.timeout
+  private val organizationsRef = system.actorFor(system / "organizations")
+  private val path = system / "organizations" / id.toString
+  
   val logger = play.Logger.of(classOf[Organization])
   
   def getAdmin: FutureVal[Exception, User] = User.get(adminId)
   
   def save(): FutureVal[Exception, Unit] = Organization.save(this)
   
-  lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
+  import akka.pattern.ask
+  
+  def enumerator: Enumerator[RunUpdate] = {
+    implicit def ec = conf.webExecutionContext
+    val enum = (PathAware(organizationsRef, path).?[Enumerator[RunUpdate]](GetEnumerator))
+    Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise) // TODO log error
+  }
   
   def toValueObject: OrganizationVO = OrganizationVO(id, name, adminId)
 

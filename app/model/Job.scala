@@ -30,8 +30,6 @@ case class Job(
   implicit def timeout = conf.timeout
   private val logger = Logger.of(classOf[Job])
   
-  lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
-  
   def toValueObject: JobVO = 
     JobVO(id, name, createdOn, creatorId, organizationId, strategy.id)
   
@@ -92,6 +90,19 @@ case class Job(
   def off(): Unit = 
     PathAware(organizationsRef, path) ! BeLazy
   
+  def enumerator: Enumerator[RunUpdate] = {
+    logger.error("job enum")
+    implicit def ec = conf.webExecutionContext
+    val enum = (PathAware(organizationsRef, path).?[Enumerator[RunUpdate]](GetEnumerator))
+    Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise)
+  }
+  
+//  def enumerator: Enumerator[RunUpdate] = {
+//    implicit def ec = conf.webExecutionContext
+//    val enum2: play.api.libs.concurrent.Promise[Enumerator[RunUpdate]] = 
+//      FutureVal.applyTo((organizationsRef ? GetEnumerator).mapTo[Enumerator[RunUpdate]]).failMap(_ => Enumerator.eof[RunUpdate]).toPromise
+//    Enumerator.flatten(enum2)
+//  }
   
   private val organizationsRef = system.actorFor(system / "organizations")
   private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString

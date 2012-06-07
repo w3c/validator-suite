@@ -53,6 +53,8 @@ class OrganizationsActor()(implicit configuration: VSConfiguration) extends Acto
       val organizationRef = getOrganizationRefOrCreate(organization)
       organizationRef forward tell
     }
+    
+    case a => {logger.error("unexpected message: " + a.toString)}
 
   }
 

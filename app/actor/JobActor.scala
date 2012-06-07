@@ -9,6 +9,7 @@ import akka.dispatch._
 import akka.actor._
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import play.api.libs.iteratee._
 import play.Logger
 import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
@@ -39,6 +40,8 @@ class JobActor(job: Job)(
 
   val http = system.actorFor(system / "http")
 
+  lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
+  
   /**
    * A shorten id for logs readability
    */
@@ -77,6 +80,10 @@ class JobActor(job: Job)(
   def stateFunction(): StateFunction = {
     case Event(GetRun, run) => {
       sender ! run
+      stay()
+    }
+    case Event(GetEnumerator, run) => {
+      sender ! enumerator
       stay()
     }
     case Event('Tick, run) => {
@@ -175,7 +182,7 @@ class JobActor(job: Job)(
     // tell all the listeners
     //tellListeners(msg)
     msg match {
-      case msg: RunUpdate => job.channel.push(msg)
+      case msg: RunUpdate => channel.push(msg)
       case _ => ()
     }
     

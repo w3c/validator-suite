@@ -252,7 +252,27 @@ object Jobs extends Controller {
         user <- getUser
         organization <- user.getOrganization
       } yield {
-        organization.enumerator &> Enumeratee.collect{case a: UpdateData => DashboardUpdate.json(a.data, a.activity)}
+        organization.enumerator &> Enumeratee.collect{case a: UpdateData => JobsUpdate.json(a.data, a.activity)}
+      }
+    ) failMap (_ => Enumerator.eof[JsValue]) toPromise
+    
+    val iteratee = Iteratee.ignore[JsValue]
+    val enumerator =  Enumerator.flatten(promiseEnumerator)
+
+    (iteratee, enumerator)
+  }
+  
+  def reportSocket(id: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
+    val promiseEnumerator: Promise[Enumerator[JsValue]] = (
+      for {
+        user <- getUser
+        organization <- user.getOrganization
+      } yield {
+        organization.enumerator &> Enumeratee.collect{
+          case UpdateData(data, activity) if (data.jobId == id)=> JobsUpdate.json(data, activity)
+          //case NewResource(resource) if (resource.jobId == id) => ResourceUpdate.json(resource)
+          //case NewAssertorResponse(response) => ()
+        }
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise
     
