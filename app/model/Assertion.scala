@@ -5,6 +5,7 @@ import org.w3.util._
 import org.joda.time._
 import org.w3.vs.assertor._
 import scalaz.Validation
+import org.w3.banana._
 
 case class Assertion(
     id: AssertionId = AssertionId(),
@@ -29,7 +30,25 @@ case class Assertion(
 
 object Assertion {
 
-  def get(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Assertion] = sys.error("ni")
+  def apply(vo: AssertionVO)(implicit conf: VSConfiguration): Assertion = {
+    import vo._
+    Assertion(id, jobId, runId, assertorId, url, lang, title, severity, description, timestamp)
+  }
+
+  def getAssertionVO(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, AssertionVO] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val uri = AssertionUri(id)
+    FutureVal(conf.store.getNamedGraph(uri)) flatMap { graph => 
+      FutureVal.pureVal[Throwable, AssertionVO]{
+        val pointed = PointedGraph(uri, graph)
+        AssertionVOBinder.fromPointedGraph(pointed)
+      }(t => t)
+    }
+  }
+
+  def get(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Assertion] =
+    getAssertionVO(id) map (Assertion(_))
 
   def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
     implicit def ec = conf.webExecutionContext
@@ -38,10 +57,16 @@ object Assertion {
 
   def getForRun(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = sys.error("ni")
 
-  def save(assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(())
+  def saveAssertionVO(vo: AssertionVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val graph = AssertionVOBinder.toPointedGraph(vo).graph
+    val result = conf.store.addNamedGraph(AssertionUri(vo.id), graph)
+    FutureVal.toFutureValException(FutureVal.applyTo(result))
   }
+
+  def save(assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    saveAssertionVO(assertion.toValueObject)
 
 }
 

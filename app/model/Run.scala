@@ -60,21 +60,6 @@ object Run {
     }
   }
 
-    // id: RunId = RunId(),
-    // explorationMode: ExplorationMode = ProActive,
-    // distance: Map[URL, Int] = Map.empty,
-    // toBeExplored: List[URL] = List.empty,
-    // fetched: Set[URL] = Set.empty,
-    // createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
-    // job: Job,
-    // pending: Set[URL] = Set.empty,
-    // resources: Int = 0,
-    // errors: Int = 0,
-    // warnings: Int = 0,
-    // invalidated: Int = 0,
-    // pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
-
-
   def saveJobVO(vo: RunVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf.binders._
     implicit val context = conf.webExecutionContext
