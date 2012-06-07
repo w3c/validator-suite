@@ -39,7 +39,7 @@ case class Job(
     Organization.get(organizationId)
   
   def getHistory: FutureVal[Exception, Iterable[JobData]] = 
-    JobData.getForJob(id)
+    sys.error("@@@")
   
   def getLastCompleted: FutureVal[Exception, Option[DateTime]] = {
     getHistory.map{iterable =>

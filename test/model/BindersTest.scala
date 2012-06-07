@@ -75,28 +75,6 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
-  /*"AssertorResultVO" in {
-    testSerializeDeserialize(AssertorResultVOBinder) {
-      AssertorResultVO(
-        jobId = JobId(),
-        runId = RunId(),
-        assertorId = AssertorId(),
-        sourceUrl = URL("http://example.com/foo"),
-        timestamp = DateTime.now(DateTimeZone.UTC))
-
-    }
-  }*/
-
-  "JobDataVO" in {
-    testSerializeDeserialize(JobDataVOBinder) {
-      JobDataVO(
-        jobId = JobId(),
-        resources = 42,
-        errors = 43,
-        warnings = 44,
-        timestamp = DateTime.now(DateTimeZone.UTC))
-    }
-  }
 
   val errorResponseVO =
     ErrorResponseVO(
@@ -141,7 +119,9 @@ class BindersTest extends WordSpec with MustMatchers {
         fetched = Set(URL("http://example.com/foo"), URL("http://example.com/bar")),
         createdAt = DateTime.now(DateTimeZone.UTC),
         jobId = JobId(),
-        jobDataId = JobDataId())
+        resources = 100,
+        errors = 42,
+        warnings = 1)
     }
   }
 

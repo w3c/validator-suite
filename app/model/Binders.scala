@@ -153,31 +153,6 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-  val JobDataVOBinder = new PointedGraphBinder[Rdf, JobDataVO] {
-
-    def toPointedGraph(t: JobDataVO): PointedGraph[Rdf] = (
-      JobDataUri(t.id).a(ont.JobData)
-        -- ont.jobId ->- JobUri(t.jobId)
-        -- ont.resources ->- t.resources
-        -- ont.errors ->- t.errors
-        -- ont.warnings ->- t.warnings
-        -- ont.timestamp ->- t.timestamp
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, JobDataVO] = {
-      for {
-        id <- pointed.node.asUri flatMap JobDataUri.getId
-        jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
-        resources <- (pointed / ont.resources).exactlyOne[Int]
-        errors <- (pointed / ont.errors).exactlyOne[Int]
-        warnings <- (pointed / ont.warnings).exactlyOne[Int]
-        timestamp <- (pointed / ont.timestamp).exactlyOne[DateTime]
-      } yield {
-        JobDataVO(id, jobId, resources, errors, warnings, timestamp)
-      }
-    }
-
-  }
 
 
 
@@ -306,7 +281,9 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
         -- ont.fetched ->- t.fetched.toList
         -- ont.createdAt ->- t.createdAt
         -- ont.jobId ->- JobUri(t.jobId)
-        -- ont.jobDataId ->- JobDataUri(t.jobDataId)
+        -- ont.resources ->- t.resources
+        -- ont.errors ->- t.errors
+        -- ont.warnings ->- t.warnings
     )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, RunVO] = {
@@ -317,9 +294,11 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
         fetched <- (pointed / ont.fetched).asList[URL]
         createdAt <- (pointed / ont.createdAt).exactlyOne[DateTime]
         jobId <- (pointed / ont.jobId).exactlyOneUri.flatMap(JobUri.getId)
-        jobDataId <- (pointed / ont.jobDataId).exactlyOneUri.flatMap(JobDataUri.getId)
+        resources <- (pointed / ont.resources).exactlyOne[Int]
+        errors <- (pointed / ont.errors).exactlyOne[Int]
+        warnings <- (pointed / ont.warnings).exactlyOne[Int]
       } yield {
-        RunVO(id, explorationMode, Map.empty, toBeExplored, fetched.toSet, createdAt, jobId, jobDataId)
+        RunVO(id, explorationMode, Map.empty, toBeExplored, fetched.toSet, createdAt, jobId, resources, errors, warnings)
       }
     }
   }

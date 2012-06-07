@@ -8,17 +8,11 @@ import org.w3.banana.jena._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
 import org.w3.vs._
+import akka.util.duration._
 
 class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   implicit val conf: VSConfiguration = new DefaultProdConfiguration { }
-
-  // def testSerializeDeserialize[T](binder: PointedGraphBinder[Jena, T])(t: T) = {
-  //   import binder._
-  //   fromPointedGraph(toPointedGraph(t)) must be === (Success(t))
-  // }
-
-  import akka.util.duration._
 
   val org = Organization(id = OrganizationId(), name = "World Wide Web Consortium", adminId = UserId())
 
@@ -63,6 +57,12 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     creatorId = user2.id,
     organizationId = org.id,
     name = "job4")
+
+//  val run1 = Run
+
+//  val assertion1 = 
+
+//  val context1 = Context("foo", Some(1), None, )
 
   override def beforeAll(): Unit = {
     Organization.save(org)

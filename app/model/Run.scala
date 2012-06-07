@@ -24,9 +24,10 @@ object Run {
     d1 ++ d2
   }
 
-  def apply(job: Job)(implicit conf: VSConfiguration): Run = apply(job = job, data = JobData(jobId = job.id))
+  def apply(job: Job)(implicit conf: VSConfiguration): Run = apply(job = job)
   
   def get(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = sys.error("")
+
   def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Run] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(run)
@@ -38,7 +39,6 @@ object Run {
  * Run represents a coherent state of for an Run, modelized as an FSM
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
-// closed with job and jobData 
 case class Run(
     id: RunId = RunId(),
     explorationMode: ExplorationMode = ProActive,
@@ -47,20 +47,24 @@ case class Run(
     fetched: Set[URL] = Set.empty,
     createdAt: DateTime = DateTime.now,
     job: Job,
-    data: JobData,
     pending: Set[URL] = Set.empty,
+    resources: Int = 0,
+    errors: Int = 0,
+    warnings: Int = 0,
     invalidated: Int = 0,
     pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
+
+  def data: JobData = JobData(job.id, resources, errors, warnings, createdAt)
 
   def strategy = job.strategy
   
   def save(): FutureVal[Exception, Run] = Run.save(this)
   
-  def toValueObject: RunVO = RunVO(id, explorationMode, distance, toBeExplored, fetched, createdAt, job, data)
+  def toValueObject: RunVO = RunVO(id, explorationMode, distance, toBeExplored, fetched, createdAt, job, resources, errors, warnings)
   
   type Explore = (URL, Int)
 
-  final def numberOfKnownUrls: Int = distance.keySet.count { _.authority === mainAuthority }
+  def numberOfKnownUrls: Int = distance.keySet.count { _.authority === mainAuthority }
 
   // assert(
   //   distance.keySet == fetched ++ pending ++ toBeExplored,
@@ -69,22 +73,22 @@ case class Run(
   // assert(pending.intersect(fetched) == Set.empty)
   // assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
 
-  final val logger = play.Logger.of(classOf[Run])
+  val logger = play.Logger.of(classOf[Run])
 
   /**
    * An exploration is over when there are no more urls to explore and no pending url
    */
-  final def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
+  def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
 
-  final def isIdle = noMoreUrlToExplore && pendingAssertions == 0
+  def isIdle = noMoreUrlToExplore && pendingAssertions == 0
 
-  final def isRunning = !isIdle
+  def isRunning = !isIdle
 
-  final def activity: RunActivity = if (isRunning) Running else Idle
+  def activity: RunActivity = if (isRunning) Running else Idle
 
-  final def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
+  def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
 
-  private final def shouldIgnore(url: URL, atDistance: Int): Boolean = {
+  private def shouldIgnore(url: URL, atDistance: Int): Boolean = {
     def notToBeFetched = IGNORE == strategy.fetch(url, atDistance)
     def alreadyKnown = distance isDefinedAt url
     notToBeFetched || alreadyKnown
@@ -203,20 +207,18 @@ case class Run(
   def withResourceResponse(response: ResourceResponse): Run = this.copy(
     pending = pending - response.url,
     fetched = fetched + response.url,
-    data = data.copy(
-      resources = response match {
-        case _: HttpResponse => data.resources + 1
-        case _ => data.resources
-      }
-    )
+    resources = response match {
+      case _: HttpResponse => resources + 1
+      case _ => resources
+    }
   )
 
   def withAssertorResponse(response: AssertorResponse): Run = response match {
-    case result: AssertorResult => this.copy(
-      data = data.copy(
-        errors = data.errors + result.errors,
-        warnings = data.warnings + result.warnings),
-      pendingAssertions = pendingAssertions - 1) // lower bound is 0
+    case result: AssertorResult =>
+      this.copy(
+        errors = errors + result.errors,
+        warnings = warnings + result.warnings,
+        pendingAssertions = pendingAssertions - 1) // lower bound is 0
     case fail: AssertorFailure => this.copy(pendingAssertions = pendingAssertions - 1) // TODO? should do something about that
   }
 

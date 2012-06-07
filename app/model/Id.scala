@@ -8,7 +8,6 @@ object Id {
   implicit def toId(e: Job): JobId = e.id
   implicit def toId(e: Run): RunId = e.id
   implicit def toId(e: User): UserId = e.id
-  implicit def toId(e: JobData): JobDataId = e.id
   implicit def toId(e: Context): ContextId = e.id
   //implicit def toId(e: Assertor): AssertorId = e.id
   implicit def toId(e: Strategy): StrategyId = e.id

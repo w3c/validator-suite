@@ -39,15 +39,6 @@ case class JobVO (
     creatorId: UserId,
     organizationId: OrganizationId,
     strategyId: StrategyId) extends ValueObject
-
-case class JobDataVO (
-    id: JobDataId = JobDataId(),
-    jobId: JobId,
-    //runId: RunId,
-    resources: Int,
-    errors: Int,
-    warnings: Int,
-    timestamp: DateTime) extends ValueObject
     
 case class OrganizationVO (
     id: OrganizationId = OrganizationId(),
@@ -91,7 +82,9 @@ case class RunVO (
     fetched: Set[URL] = Set.empty,
     createdAt: DateTime = DateTime.now,
     jobId: JobId,
-    jobDataId: JobDataId = JobDataId()) extends ValueObject
+    resources: Int = 0,
+    errors: Int = 0,
+    warnings: Int = 0) extends ValueObject
     
 case class StrategyVO (
     id: StrategyId = StrategyId(),
