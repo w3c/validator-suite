@@ -84,6 +84,16 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     severity = Warning,
     description = Some("some other description"))
 
+  val assertion3 = Assertion(
+    jobId = job2.id,
+    runId = run2.id,
+    assertorId = assertorId,
+    url = URL("http://example.com/bar"),
+    lang = "fr",
+    title = "bar",
+    severity = Warning,
+    description = Some("some other description"))
+
   val context1 = Context(
     content = "blah",
     line = Some(42),
@@ -120,6 +130,7 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     Run.save(run2)
     Assertion.save(assertion1)
     Assertion.save(assertion2)
+    Assertion.save(assertion3)
     Context.save(context1)
     Context.save(context2)
     Context.save(context3)
@@ -221,6 +232,14 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   "get all assertions for a given a runId" in {
     val assertions = Assertion.getForRun(run1.id).result(1.second) getOrElse sys.error("")
+    assertions must have size(2)
+    assertions must contain (assertion1)
+    assertions must contain (assertion2)
+
+  }
+
+  "get all assertions for a given a jobId" in {
+    val assertions = Assertion.getForJob(job1.id).result(1.second) getOrElse sys.error("")
     assertions must have size(2)
     assertions must contain (assertion1)
     assertions must contain (assertion2)
