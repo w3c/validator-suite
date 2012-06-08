@@ -60,63 +60,58 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val run1 = Run(job = job1)
 
-  val run2 = Run(job = job2)
+  val run2 = Run(job = job1)
 
   val assertorId = AssertorId()
 
-  val assertion1 = Assertion(
-    jobId = job1.id,
-    runId = run1.id,
-    assertorId = assertorId,
-    url = URL("http://example.com/foo"),
-    lang = "fr",
-    title = "foo",
-    severity = Error,
-    description = Some("some description"))
+  val nbUrlsPerAssertions = 10
+  val nbErrors = 3
+  val nbWarnings = 3
+  val nbInfos = 3
+  val nbAssertionsPerRun = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos )
+  val nbAssertionsForJob1 = 2 /* runs */ * nbAssertionsPerRun
 
-  val assertion2 = Assertion(
-    jobId = job1.id,
-    runId = run1.id,
-    assertorId = assertorId,
-    url = URL("http://example.com/bar"),
-    lang = "fr",
-    title = "bar",
-    severity = Warning,
-    description = Some("some other description"))
+  // assertions for job1
+  val assertions: Vector[Assertion] = {
+    def newAssertion(runId: RunId, url: URL, severity: AssertionSeverity): Assertion =
+      Assertion(
+        jobId = job1.id,
+        runId = runId,
+        assertorId = assertorId,
+        url = url,
+        lang = "fr",
+        title = "some title",
+        severity = severity,
+        description = Some("some description"))
+    val builder = Vector.newBuilder[Assertion]
+    builder.sizeHint(nbAssertionsForJob1)
+    for ( runId <- List(run1.id, run2.id) ; i <- 1 to nbUrlsPerAssertions ) {
+      for ( j <- 1 to nbErrors ) builder += newAssertion(runId, URL("http://example.com/foo/"+i), Error)
+      for ( j <- 1 to nbWarnings ) builder += newAssertion(runId, URL("http://example.com/foo/"+i), Warning)
+      for ( j <- 1 to nbInfos ) builder += newAssertion(runId, URL("http://example.com/foo/"+i), Info)
+    }
+    builder.result()
+  }
 
-  val assertion3 = Assertion(
-    jobId = job2.id,
-    runId = run2.id,
-    assertorId = assertorId,
-    url = URL("http://example.com/bar"),
-    lang = "fr",
-    title = "bar",
-    severity = Warning,
-    description = Some("some other description"))
-
-  val context1 = Context(
-    content = "blah",
-    line = Some(42),
-    column = None,
-    assertionId = assertion1.id)
-
-  val context2 = Context(
-    content = "blah",
-    line = None,
-    column = Some(42),
-    assertionId = assertion1.id)
-
-  val context3 = Context(
-    content = "blah",
-    line = Some(42),
-    column = None,
-    assertionId = assertion2.id)
-
-  val context4 = Context(
-    content = "blah",
-    line = None,
-    column = Some(42),
-    assertionId = assertion2.id)
+  // contexts for all the assertions in job1
+  // we just create 2 contexts per assertion
+  val contexts: Vector[Context] = {
+    val builder = Vector.newBuilder[Context]
+    builder.sizeHint(2 * nbAssertionsForJob1)
+    for ( assertion <- assertions ) {
+      builder += Context(
+        content = "blah",
+        line = Some(42),
+        column = None,
+        assertionId = assertion.id)
+      builder += Context(
+        content = "blah",
+        line = None,
+        column = Some(42),
+        assertionId = assertion.id)
+    }
+    builder.result()
+  }
 
   override def beforeAll(): Unit = {
     Organization.save(org)
@@ -128,13 +123,9 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
     Job.save(job4)
     Run.save(run1)
     Run.save(run2)
-    Assertion.save(assertion1)
-    Assertion.save(assertion2)
-    Assertion.save(assertion3)
-    Context.save(context1)
-    Context.save(context2)
-    Context.save(context3)
-    Context.save(context4)
+    assertions foreach Assertion.save
+    contexts foreach Context.save
+
   }
 
   "retrieve unknown Job" in {
@@ -221,29 +212,27 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   "retrieve Assertion" in {
-    val retrieved = Assertion.get(assertion1.id).result(1.second)
-    retrieved must be === (Success(assertion1))
+    val assertion = assertions(0)
+    val retrieved = Assertion.get(assertion.id).result(1.second)
+    retrieved must be === (Success(assertion))
   }
 
   "retrieve Context" in {
-    val retrieved = Context.get(context1.id).result(1.second)
-    retrieved must be === (Success(context1))
+    val context = contexts(0)
+    val retrieved = Context.get(context.id).result(1.second)
+    retrieved must be === (Success(context))
   }
 
   "get all assertions for a given a runId" in {
-    val assertions = Assertion.getForRun(run1.id).result(1.second) getOrElse sys.error("")
-    assertions must have size(2)
-    assertions must contain (assertion1)
-    assertions must contain (assertion2)
-
+    val retrievedAssertions = Assertion.getForRun(run1.id).result(10.second) getOrElse sys.error("")
+    retrievedAssertions must have size(nbAssertionsPerRun)
+    retrievedAssertions must contain (assertions(0))
   }
 
   "get all assertions for a given a jobId" in {
-    val assertions = Assertion.getForJob(job1.id).result(1.second) getOrElse sys.error("")
-    assertions must have size(2)
-    assertions must contain (assertion1)
-    assertions must contain (assertion2)
-
-  }
+    val retrievedAssertions = Assertion.getForJob(job1.id).result(1.second) getOrElse sys.error("")
+    retrievedAssertions must have size(nbAssertionsForJob1)
+    retrievedAssertions must contain (assertions(0))
+   }
 
 }
