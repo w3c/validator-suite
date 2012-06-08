@@ -12,4 +12,5 @@ case object BeLazy
 case object GetRun
 case object NoMorePendingAssertion
 
-case object GetEnumerator
+case object GetOrgEnumerator
+case object GetJobEnumerator

@@ -82,7 +82,7 @@ class JobActor(job: Job)(
       sender ! run
       stay()
     }
-    case Event(GetEnumerator, run) => {
+    case Event(GetJobEnumerator, run) => {
       sender ! enumerator
       stay()
     }

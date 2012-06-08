@@ -30,6 +30,12 @@ window.ReportView = Backbone.View.extend({
 		this.articles.on('add', this.addAll, this);
 		this.articles.on('reset', this.addAll, this);
 		this.id = $("#urlArticles").attr("data-id");
+		// Parse the HTML to get initial data as an array of (model, view)
+		_.each($("#urlArticles article").toArray(), function(articleElem) { 
+			this.articles.add(URLArticle.fromHTML(articleElem));
+			$(articleElem).remove();
+		}, this);
+		
 		//this.subscribe();
 	},
 	addAll: function () {

@@ -103,7 +103,7 @@ case class Job(
   
   def enumerator: Enumerator[RunUpdate] = {
     implicit def ec = conf.webExecutionContext
-    val enum = (PathAware(organizationsRef, path).?[Enumerator[RunUpdate]](GetEnumerator))
+    val enum = (PathAware(organizationsRef, path).?[Enumerator[RunUpdate]](GetJobEnumerator))
     Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise)
   }
   

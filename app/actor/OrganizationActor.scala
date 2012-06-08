@@ -36,7 +36,7 @@ class OrganizationActor(organization: Organization)(implicit val configuration: 
   def receive: Actor.Receive = {
     case m: Tell => {
       m.message match {
-        case GetEnumerator => sender ! enumerator
+        case GetOrgEnumerator => sender ! enumerator
         case _ => jobsRef.forward(m) 
       }
     }

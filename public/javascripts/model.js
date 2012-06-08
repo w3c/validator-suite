@@ -171,3 +171,12 @@ window.URLArticleList = Backbone.Collection.extend({
 		}
 	}
 });
+
+window.URLArticle.fromHTML = function(elem) {
+	return new URLArticle({
+		url: $(".url", elem).text(),
+		timestamp: $(".timestamp", elem).text(),
+		warnings: parseInt($(".warnings", elem).text()),
+		errors: parseInt($(".errors", elem).text())
+	});
+};
