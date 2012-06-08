@@ -58,7 +58,7 @@ self: LiteralBinders[Rdf] =>
     val headers = apply("headers")
     val extractedURLs = apply("extractedURLs")
 
-    val Run = apply("run")
+    val Run = apply("Run")
     val explorationMode = apply("explorationMode")
     val distance = apply("distance")
     val toBeExplored = apply("toBeExplored")

@@ -10,7 +10,15 @@ import org.w3.util.URL
 import org.w3.vs._
 import akka.util.duration._
 
-class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
+abstract class StoreTest(
+  nbUrlsPerAssertions: Int,
+  nbErrors: Int,
+  nbWarnings: Int,
+  nbInfos: Int)
+extends WordSpec with MustMatchers with BeforeAndAfterAll {
+
+  val nbAssertionsPerRun = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos )
+  val nbAssertionsForJob1 = 2 /* runs */ * nbAssertionsPerRun
 
   implicit val conf: VSConfiguration = new DefaultProdConfiguration { }
 
@@ -64,13 +72,6 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val assertorId = AssertorId()
 
-  val nbUrlsPerAssertions = 10
-  val nbErrors = 3
-  val nbWarnings = 3
-  val nbInfos = 3
-  val nbAssertionsPerRun = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos )
-  val nbAssertionsForJob1 = 2 /* runs */ * nbAssertionsPerRun
-
   // assertions for job1
   val assertions: Vector[Assertion] = {
     def newAssertion(runId: RunId, url: URL, severity: AssertionSeverity): Assertion =
@@ -114,18 +115,23 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   override def beforeAll(): Unit = {
-    Organization.save(org)
-    User.save(user)
-    User.save(user2)
-    Job.save(job1)
-    Job.save(job2)
-    Job.save(job3)
-    Job.save(job4)
-    Run.save(run1)
-    Run.save(run2)
-    assertions foreach Assertion.save
-    contexts foreach Context.save
-
+    val start = System.currentTimeMillis
+    (for {
+      _ <- Organization.save(org)
+      _ <- User.save(user)
+      _ <- User.save(user2)
+      _ <- Job.save(job1)
+      _ <- Job.save(job2)
+      _ <- Job.save(job3)
+      _ <- Job.save(job4)
+      _ <- Run.save(run1)
+      _ <- Run.save(run2)
+    } yield ()).result(1.second)
+    assertions foreach { assertion => Assertion.save(assertion).result(10.milliseconds) }
+    contexts foreach { context => Context.save(context).result(10.milliseconds) }
+    val end = System.currentTimeMillis
+    val durationInSeconds = (end - start) / 1000.0
+    println("!!!! it took about " + durationInSeconds + " seconds to load about " + (3 * nbAssertionsForJob1) + " entities")
   }
 
   "retrieve unknown Job" in {
@@ -139,7 +145,7 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
   
   "retrieve Job" in {
-    val retrieved = Job.get(job1.id).result(1.second)
+    val retrieved = Job.get(job1.id).result(10.second)
     retrieved must be === (Success(job1))
   }
 
@@ -224,15 +230,28 @@ class StoreTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   "get all assertions for a given a runId" in {
-    val retrievedAssertions = Assertion.getForRun(run1.id).result(10.second) getOrElse sys.error("")
+    val retrievedAssertions = Assertion.getForRun(run1.id).result(2.second) getOrElse sys.error("")
     retrievedAssertions must have size(nbAssertionsPerRun)
     retrievedAssertions must contain (assertions(0))
   }
 
   "get all assertions for a given a jobId" in {
-    val retrievedAssertions = Assertion.getForJob(job1.id).result(1.second) getOrElse sys.error("")
+    val retrievedAssertions = Assertion.getForJob(job1.id).result(10.second) getOrElse sys.error("")
     retrievedAssertions must have size(nbAssertionsForJob1)
     retrievedAssertions must contain (assertions(0))
    }
 
 }
+
+
+class StoreTestLight extends StoreTest(
+  nbUrlsPerAssertions = 10,
+  nbErrors = 3,
+  nbWarnings = 3,
+  nbInfos = 3)
+
+class StoreTestHeavy extends StoreTest(
+  nbUrlsPerAssertions = 100,
+  nbErrors = 10,
+  nbWarnings = 10,
+  nbInfos = 10)
