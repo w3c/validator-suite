@@ -236,10 +236,15 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   "get all assertions for a given a jobId" in {
-    val retrievedAssertions = Assertion.getForJob(job1.id).result(10.second) getOrElse sys.error("")
+    val retrievedAssertions = Assertion.getForJob(job1.id).result(2.second) getOrElse sys.error("")
     retrievedAssertions must have size(nbAssertionsForJob1)
     retrievedAssertions must contain (assertions(0))
    }
+
+  "get all URLArticles (don't know what it means :-) from a job" in {
+    val urlArticles = job1.getURLArticles.result(2.seconds) getOrElse sys.error("")
+    urlArticles must have size(nbUrlsPerAssertions)
+  }
 
 }
 

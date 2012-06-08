@@ -104,6 +104,7 @@ CONSTRUCT {
   ?assertionUri ?p ?o .
 } WHERE {
   graph ?g {
+    ?assertionUri a ont:Assertion .
     ?assertionUri ont:runId <#runUri> .
     ?assertionUri ?p ?o
   }
