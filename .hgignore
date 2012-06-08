@@ -30,3 +30,4 @@ test/observer/TempTest.scala
 .ensime
 .externalToolBuilders
 *.orig
+occupop
