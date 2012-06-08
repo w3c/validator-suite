@@ -66,7 +66,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs
   }
   
-  val timeout: Timeout = 5.seconds
+  val timeout: Timeout = 15.seconds
 
   type Rdf = Jena
   type Sparql = JenaSPARQL
