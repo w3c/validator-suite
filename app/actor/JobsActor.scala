@@ -38,7 +38,6 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
       context.children.find(_.path.name === id) match {
         case Some(jobRef) => jobRef forward msg
         case None => {
-          logger.error("Creating JobActor")
           Job.get(JobId(id)).onComplete {
             case Success(job) => to.tell(CreateJobAndForward(job, msg), from)
             case Failure(exception) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)

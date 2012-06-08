@@ -79,6 +79,7 @@ class JobActor(job: Job)(
   
   def stateFunction(): StateFunction = {
     case Event(GetRun, run) => {
+      // logger.debug("%s: received a GetRun" format shortId)
       sender ! run
       stay()
     }
@@ -158,6 +159,7 @@ class JobActor(job: Job)(
     case Event(BeProactive, run) => stateOf(run.withMode(ProActive))
     case Event(BeLazy, run) => stateOf(run.withMode(Lazy))
     case Event(Refresh, run) => {
+      // logger.debug("%s: received a Refresh" format shortId)
       val firstURLs = List(strategy.entrypoint)
       val freshRun = Run(job = job)
       val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs, 0)

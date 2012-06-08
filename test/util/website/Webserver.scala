@@ -12,7 +12,7 @@ case class Webserver(port: Int, servlet: HttpServlet) {
   var server: Server = null
  
   def start(): Unit = {
-    server = new Server()
+    server = new Server(port)
 
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS)
     context.setContextPath("/")

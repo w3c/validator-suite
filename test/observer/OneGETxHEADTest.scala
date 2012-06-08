@@ -14,6 +14,7 @@ import org.w3.vs.actor._
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
+import play.api.libs.iteratee._
 
 /**
   * Server 1 -> Server 2
@@ -41,13 +42,33 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
     (for {
       _ <- Organization.save(organizationTest)
       _ <- Job.save(job)
-    } yield ()).await(5 seconds)
+    } yield ()).result(1.second)
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     PathAware(http, http.path / "localhost_9002") ! SetSleepTime(0)
+
     val enumerator = organizationTest.enumerator
-    import play.api.libs.iteratee._
-    enumerator |>> Iteratee.foreach[RunUpdate](ru => println(ru))
+
+    job.run()
+
+    // just wait for Idle
+    // there must be a better style, or we may have to write some helper functions
+    val result =
+      enumerator &>
+//        Enumeratee.map[RunUpdate](ru => { println("yeah! "+ru); ru }) ><>
+        Enumeratee.filter[RunUpdate]{ case UpdateData(_, activity) => activity == Idle ; case _ => false } ><>
+        Enumeratee.take(1) ><>
+        Enumeratee.map(List(_)) |>>
+        Iteratee.consume()
+
+    // the effective wait
+    result.flatMap(_.run).value.get
+
+    // TODO
+    // check that there are 1 + 10 resources that were searched
+    //                      10 resources for authority localhost:9002
+
+//    Thread.sleep(3000)
     // pourquoi je ne recois rien ici???????
 //    job.listen(testActor)
     /*fishForMessagePF(3.seconds) {

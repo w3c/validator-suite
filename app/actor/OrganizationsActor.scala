@@ -33,6 +33,7 @@ class OrganizationsActor()(implicit configuration: VSConfiguration) extends Acto
   def receive = {
 
     case tell @ Tell(Child(id), msg) => {
+      // logger.debug("passing message to child %s: %s" format (msg.toString, id.toString))
       val from = sender
       val to = self
       context.children.find(_.path.name === id) match {
