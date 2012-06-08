@@ -37,8 +37,10 @@ case class Job(
   def getOrganization: FutureVal[Exception, Organization] = 
     Organization.get(organizationId)
   
-  def getHistory: FutureVal[Exception, Iterable[JobData]] = 
-    sys.error("@@@")
+  def getHistory: FutureVal[Exception, Iterable[JobData]] = {
+    implicit def ec = conf.webExecutionContext
+    FutureVal.successful(Iterable())
+  }
   
   def getLastCompleted: FutureVal[Exception, Option[DateTime]] = {
     getHistory.map{iterable =>
@@ -100,7 +102,6 @@ case class Job(
     PathAware(organizationsRef, path) ! BeLazy
   
   def enumerator: Enumerator[RunUpdate] = {
-    logger.error("job enum")
     implicit def ec = conf.webExecutionContext
     val enum = (PathAware(organizationsRef, path).?[Enumerator[RunUpdate]](GetEnumerator))
     Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise)

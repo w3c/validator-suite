@@ -32,7 +32,7 @@ object Global extends GlobalSettings {
     strategy = Strategy(
       entrypoint = URL("http://www.w3.org/"),
       linkCheck = false,
-      maxResources = 100,
+      maxResources = 10,
       filter = Filter(include = Everything, exclude = Nothing)))
       
   val tr = Job(
