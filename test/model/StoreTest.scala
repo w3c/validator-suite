@@ -15,7 +15,9 @@ abstract class StoreTest(
   nbUrlsPerAssertions: Int,
   nbErrors: Int,
   nbWarnings: Int,
-  nbInfos: Int)
+  nbInfos: Int,
+  nbHttpErrorsPerAssertions: Int,
+  nbHttpResponsesPerAssertions: Int)
 extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val nbAssertionsPerRun = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos )
@@ -96,7 +98,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   // contexts for all the assertions in job1
-  // we just create 2 contexts per assertion
   val contexts: Vector[Context] = {
     val builder = Vector.newBuilder[Context]
     builder.sizeHint(2 * nbAssertionsForJob1)
@@ -115,6 +116,28 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     builder.result()
   }
 
+  val resourceResponses: Vector[ResourceResponse] = {
+    val builder = Vector.newBuilder[ResourceResponse]
+    builder.sizeHint(nbHttpErrorsPerAssertions + nbHttpResponsesPerAssertions)
+    for ( i <- 1 to nbHttpErrorsPerAssertions)
+      builder += ErrorResponse(
+        jobId = job1,
+        runId = run1,
+        url = URL("http://example.com/error/" + i),
+        action = GET,
+        why = "because I can")
+    for ( i <- 1 to nbHttpResponsesPerAssertions)
+      builder += HttpResponse(
+        jobId = job1,
+        runId = run1,
+        url = URL("http://example.com/foo/" + i),
+        action = GET,
+        status = 200,
+        headers = Map("foo" -> List("bar")),
+        extractedURLs = List(URL("http://example.com/foo/"+i+"/1"), URL("http://example.com/foo/"+i+"/2")))
+    builder.result()
+  }
+
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
     (for {
@@ -130,9 +153,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     } yield ()).result(1.second)
     assertions foreach { assertion => Assertion.save(assertion).result(10.milliseconds) }
     contexts foreach { context => Context.save(context).result(10.milliseconds) }
+    resourceResponses foreach { rr => ResourceResponse.save(rr).result(10.milliseconds) }
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
-    println("!!!! it took about " + durationInSeconds + " seconds to load about " + (3 * nbAssertionsForJob1) + " entities")
+    println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
   }
 
   "retrieve unknown Job" in {
@@ -256,6 +280,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     urlArticles must have size(nbUrlsPerAssertions)
   }
 
+  "retrieve ResourceResponse" in {
+    val rr = resourceResponses(0)
+    ResourceResponse.get(rr.id).result(1.second) must be === (Success(rr))
+  }
 
 }
 
@@ -264,10 +292,14 @@ class StoreTestLight extends StoreTest(
   nbUrlsPerAssertions = 10,
   nbErrors = 3,
   nbWarnings = 3,
-  nbInfos = 3)
+  nbInfos = 3,
+  nbHttpErrorsPerAssertions = 2,
+  nbHttpResponsesPerAssertions = 5)
 
 class StoreTestHeavy extends StoreTest(
   nbUrlsPerAssertions = 100,
   nbErrors = 10,
   nbWarnings = 10,
-  nbInfos = 10)
+  nbInfos = 10,
+  nbHttpErrorsPerAssertions = 5,
+  nbHttpResponsesPerAssertions = 10)
