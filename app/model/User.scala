@@ -27,12 +27,37 @@ object User {
   def get(id: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, User] =
     getUserVO(id) map { User(_) }
 
-  def getForOrganization(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[User]] = sys.error("") 
+  //def getForOrganization(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[User]] = sys.error("") 
   
-  // TODO: For now these only fail with StoreExceptions but should also fail with a Unauthorized exception 
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
     implicit def ec = conf.webExecutionContext
     FutureVal.successful(play.api.Global.tgambet)
+    
+    // I tried the following but it doesn't seem to work. Note the failMap {_ => Unauthenticated}
+    /*implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.ops._
+    import conf.projections._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?s ?p ?o
+} WHERE {
+  graph ?g {
+    ?s ont:email "#email"^^xsd:string .
+    ?s ont:password "#password"^^xsd:string .
+    ?s ?p ?o
+  }
+}
+""".replaceAll("#email", email).replaceAll("#password", password)
+    val construct = SparqlOps.ConstructQuery(query, xsd, ont)
+    FutureVal.applyTo(store.executeConstruct(construct)) flatMapValidation { graph =>
+      graph.getAllInstancesOf(ont.User).exactlyOneUri flatMap { uri =>
+        val pointed = PointedGraph(uri, graph)
+        UserVOBinder.fromPointedGraph(pointed)
+      } map { User(_) }
+    } failMap {_ => Unauthenticated} */
   }
   
   def getByEmail(email: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {

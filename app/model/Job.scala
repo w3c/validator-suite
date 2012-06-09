@@ -62,7 +62,8 @@ case class Job(
     FutureVal.successful(Iterable())
   }
   
-  // resource url, time fetched, warnings, errors
+  // Represent an article on the byUrl report
+  // (resource url, last assertion timestamp, total warnings, total errors)
   // TODO: optimize by writing the db request directly
   def getURLArticles: FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
     Assertion.getForJob(id).map(_.groupBy(_.url).map{case (url, it) => 
