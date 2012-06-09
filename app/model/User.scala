@@ -30,34 +30,12 @@ object User {
   //def getForOrganization(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[User]] = sys.error("") 
   
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(play.api.Global.tgambet)
-    
-    // I tried the following but it doesn't seem to work. Note the failMap {_ => Unauthenticated}
-    /*implicit val context = conf.webExecutionContext
-    import conf._
-    import conf.ops._
-    import conf.projections._
-    import conf.binders.{ xsd => _, _ }
-    import conf.diesel._
-    val query = """
-CONSTRUCT {
-  ?s ?p ?o
-} WHERE {
-  graph ?g {
-    ?s ont:email "#email"^^xsd:string .
-    ?s ont:password "#password"^^xsd:string .
-    ?s ?p ?o
-  }
-}
-""".replaceAll("#email", email).replaceAll("#password", password)
-    val construct = SparqlOps.ConstructQuery(query, xsd, ont)
-    FutureVal.applyTo(store.executeConstruct(construct)) flatMapValidation { graph =>
-      graph.getAllInstancesOf(ont.User).exactlyOneUri flatMap { uri =>
-        val pointed = PointedGraph(uri, graph)
-        UserVOBinder.fromPointedGraph(pointed)
-      } map { User(_) }
-    } failMap {_ => Unauthenticated} */
+    getByEmail(email) flatMapValidation { user =>
+      if (user.password === password)
+        Success(user)
+      else
+        Failure(Unauthenticated)
+    }
   }
   
   def getByEmail(email: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
@@ -78,11 +56,14 @@ CONSTRUCT {
 }
 """.replaceAll("#email", email)
     val construct = SparqlOps.ConstructQuery(query, xsd, ont)
-    FutureVal.applyTo(store.executeConstruct(construct)) flatMapValidation { graph =>
-      graph.getAllInstancesOf(ont.User).exactlyOneUri flatMap { uri =>
-        val pointed = PointedGraph(uri, graph)
-        UserVOBinder.fromPointedGraph(pointed)
-      } map { User(_) }
+    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph =>
+      val userVOValidation =
+        graph.getAllInstancesOf(ont.User).exactlyOneUri flatMap { uri =>
+          val pointed = PointedGraph(uri, graph)
+          UserVOBinder.fromPointedGraph(pointed)
+        } map { User(_) }
+      // couldn't find the failMap on Validation
+      userVOValidation.fold(_ => Failure(UnknownUser), user => Success(user))
     }
   }
 

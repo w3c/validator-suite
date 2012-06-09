@@ -9,6 +9,7 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
 import org.w3.vs._
 import akka.util.duration._
+import org.w3.vs.exception._
 
 abstract class StoreTest(
   nbUrlsPerAssertions: Int,
@@ -174,8 +175,17 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   "retrieve User by email" in {
-    val retrieved = User.getByEmail("foo@example.com").result(1.second)
-    retrieved must be === (Success(user))
+    User.getByEmail("foo@example.com").result(1.second) must be === (Success(user))
+
+    User.getByEmail("unknown@example.com").result(1.second) must be === (Failure(UnknownUser))
+  }
+
+  "authenticate a user" in {
+    User.authenticate("foo@example.com", "secret").result(1.second) must be === (Success(user))
+
+    User.authenticate("foo@example.com", "bouleshit").result(1.second) must be === (Failure(Unauthenticated))
+
+    User.authenticate("unknown@example.com", "bouleshit").result(1.second) must be === (Failure(UnknownUser))
   }
 
   "get all Jobs given one creator" in {
@@ -245,6 +255,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     val urlArticles = job1.getURLArticles.result(2.seconds) getOrElse sys.error("")
     urlArticles must have size(nbUrlsPerAssertions)
   }
+
 
 }
 
