@@ -1,4 +1,4 @@
-package play.api
+/*package play.api
 
 //import play.api._
 import org.w3.vs.model._
@@ -68,16 +68,18 @@ object Global extends GlobalSettings {
       maxResources = 100,
       filter = Filter(include = Everything, exclude = Nothing)))
   
-  tgambet.save()
-  bertails.save()
-  w3c.save()
-  w3.save()
-  tr.save()
-  ibm.save()
-  lemonde.save()
+  
       
   override def onStart(app: Application): Unit = {
-
+    
+    tgambet.save()
+    bertails.save()
+    w3c.save()
+    w3.save()
+    tr.save()
+    ibm.save()
+    lemonde.save()
+    
     org.w3.vs.assertor.CSSValidator.start()
 
   }
@@ -88,3 +90,4 @@ object Global extends GlobalSettings {
   }
   
 }
+*/
