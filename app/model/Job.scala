@@ -52,7 +52,7 @@ case class Job(
     }
   }
 
-  def getRun: FutureVal[Throwable, Run] = {
+  def getRun(): FutureVal[Throwable, Run] = {
     implicit def ec = conf.webExecutionContext
     (PathAware(organizationsRef, path).?[Run](GetRun))
   }
@@ -90,6 +90,7 @@ case class Job(
     Job.delete(id)
   }
   
+  // couldn't run return a FutureVal[F, Run]?
   def run(): Unit = 
     PathAware(organizationsRef, path) ! Refresh
   

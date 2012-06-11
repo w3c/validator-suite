@@ -28,10 +28,12 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
   val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
+
+  val circumference = 10
   
-  val servers = Seq(Webserver(9001, Website.cyclic(10).toServlet))
+  val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet))
   
-  "test cyclic(10)" in {
+  "test cyclic" in {
     
     (for {
       _ <- Organization.save(organizationTest)
@@ -57,15 +59,12 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
     // the effective wait
     result.flatMap(_.run).value.get
 
-    // TODO
+    val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
 
-    //job.listen(testActor)
-    /*fishForMessagePF(3.seconds) {
-      case UpdateData(jobData) if jobData.activity == Idle => {
-        val resources = store.listResourceInfos(job.id).waitResult
-        resources must have size 11
-      }
-    }*/
+    val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
+
+    rrs must have size (circumference + 1)
+
   }
   
 }
