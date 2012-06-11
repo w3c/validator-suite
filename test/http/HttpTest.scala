@@ -116,8 +116,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
     implicit val timeout: akka.util.Timeout = 1.second
 
     def pendingFetches(): Int =
-      //Await.result(
-        (PathAware(http, http.path / "localhost_9001").?[Int](HowManyPendingRequests)).result(1.second).fold(f => throw f, s => s)
+      (PathAware(http, http.path / "localhost_9001") ? HowManyPendingRequests).mapTo[Int].result(1.second).fold(f => throw f, s => s)
 
     pendingFetches() must be === (99)
 

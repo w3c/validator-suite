@@ -75,6 +75,11 @@ CONSTRUCT {
     val construct = SparqlOps.ConstructQuery(query, ont)
     FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
   }
+  
+  // TODO: optimize?
+  def getForJob(jobId: JobId, url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
+    getForJob(jobId).map{_.filter{_.url == url}}
+  }
 
   def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Assertion] = {
     implicit val c = conf
@@ -119,7 +124,7 @@ CONSTRUCT {
     implicit val context = conf.webExecutionContext
     val graph = AssertionVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(AssertionUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result))
+    FutureVal(result)
   }
 
   def save(assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =

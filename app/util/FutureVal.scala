@@ -13,6 +13,14 @@ import scalaz._
 
 object FutureVal {
   
+  def apply[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
+    new FutureVal(future.map[Validation[Throwable, S]] { value =>
+      Success(value)
+    } recover { case t: Throwable =>
+      Failure(t)
+    })
+  }
+  
   def apply[S](body: => S)(implicit context: ExecutionContext): FutureVal[Throwable, S]  = {
     new FutureVal(Future(fromTryCatch(body)))
   }
@@ -64,19 +72,8 @@ object FutureVal {
     )
   }
   
-  // any reason for not making this one the default?
-  def apply[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = applyTo(future)
-
-  def applyTo[S](future: Future[S])(implicit context: ExecutionContext): FutureVal[Throwable, S] = {
-    new FutureVal(future.map[Validation[Throwable, S]] { value =>
-      Success(value)
-    } recover { case t: Throwable =>
-      Failure(t)
-    })
-  }
-  
   def sequence[S](iterable: Iterable[Future[S]])(implicit context: ExecutionContext): FutureVal[Throwable, Iterable[S]] = {
-    FutureVal.applyTo(Future.sequence(iterable))
+    FutureVal(Future.sequence(iterable))
   }
   
   // not optimal
@@ -96,7 +93,7 @@ object FutureVal {
   implicit def toFutureValException[A](f: FutureVal[Throwable, A]): FutureVal[Exception, A] =
     f failMap {
       case e: Exception => e
-      case error => throw error // TODO add logging
+      case error => println(error); throw error
     }
   
   implicit def toFutureValExceptionS[A](iterable: Iterable[FutureVal[Throwable, A]]): Iterable[FutureVal[Exception, A]] =
@@ -163,10 +160,11 @@ class FutureVal[+F, +S] protected (
       case Success(success_) => Promise.successful(Success(success_))
     })
   }
-
+  
   def flatMapValidation[T >: F, R](f: S => Validation[T, R]): FutureVal[T, R] =
     new FutureVal(future map { _.flatMap(f) })
-
+    //new FutureVal(future map { _.flatMap(s => fromTryCatch(f(s)).fold(f => {println(f); throw f}, ss => ss)) })
+  
   def recover[R >: S](pf: PartialFunction[F, R]): FutureVal[F, R] = {
     new FutureVal(future.map {
       case Failure(failure) if pf.isDefinedAt(failure)=> Success(pf(failure))
@@ -180,14 +178,6 @@ class FutureVal[+F, +S] protected (
       case v => v 
     })
   }
-  
-//  def transfer[T >: F, R >: S](pf: PartialFunction[Validation[F, S], Validation[T, R]])(
-//      implicit onTimeout: TimeoutException => T): FutureVal[T, R] = {
-//    new FutureVal(future.map {
-//      case v if pf.isDefinedAt(v)=> pf(v)
-//      case v => v
-//    })
-//  }
   
   def foreach(f: S => Unit): Unit = future foreach { _ foreach f }
   

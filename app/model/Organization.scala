@@ -35,7 +35,7 @@ case class Organization(
   
   def enumerator: Enumerator[RunUpdate] = {
     implicit def ec = conf.webExecutionContext
-    val enum = (PathAware(organizationsRef, path).?[Enumerator[RunUpdate]](GetOrgEnumerator))
+    val enum = (PathAware(organizationsRef, path) ? GetOrgEnumerator).mapTo[Enumerator[RunUpdate]]
     Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise) // TODO log error
   }
   
@@ -52,7 +52,7 @@ object Organization {
     import conf.binders._
     implicit val context = conf.webExecutionContext
     val uri = OrganizationUri(id)
-    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMap { graph => 
+    FutureVal(conf.store.getNamedGraph(uri)) flatMap { graph => 
       FutureVal.pureVal[Throwable, OrganizationVO]{
         val pointed = PointedGraph(uri, graph)
         OrganizationVOBinder.fromPointedGraph(pointed)
@@ -63,8 +63,8 @@ object Organization {
   def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] =
     getOrganizationVO(id) map { Organization(_) }
   
-  def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = 
-    sys.error("ni")
+//  def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = 
+//    sys.error("ni")
 
   def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     saveOrganizationVO(organization.toValueObject)
@@ -74,7 +74,7 @@ object Organization {
     implicit val context = conf.webExecutionContext
     val graph = OrganizationVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(OrganizationUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result))
+    FutureVal(result)
   }
 
 }

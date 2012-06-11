@@ -73,13 +73,14 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
-        //run <- job.getRun
-        article <- job.getURLArticle(url)
+        assertions <- job.getAssertions(url)
+        article <- job.getURLArticle(url) map {URLArticle.apply _}
       } yield {
-        Ok(views.html.urlReport(job, URLArticle(article), user, messages))
+        Ok(views.html.urlReport(job, article, assertions, user, messages))
       }) failMap toError toPromise
     }
   }
+  
   /*
   import org.w3.vs.view._
   private def group(ar: Iterable[Assertions])(implicit req: Request[AnyContent]): List[ReportSection] = {
@@ -255,7 +256,9 @@ object Jobs extends Controller {
         user <- getUser
         organization <- user.getOrganization
       } yield {
-        organization.enumerator &> Enumeratee.collect{case a: UpdateData => JobsUpdate.json(a.data, a.activity)}
+        organization.enumerator &> Enumeratee.collect{
+          case a: UpdateData => JobsUpdate.json(a.data, a.activity)
+        }
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise
     
@@ -270,7 +273,6 @@ object Jobs extends Controller {
       for {
         user <- getUser
         job <- user.getJob(id)
-        organization <- user.getOrganization
       } yield {
         job.enumerator &> Enumeratee.collect{
           case UpdateData(data, activity)=> JobsUpdate.json(data, activity)
@@ -332,8 +334,7 @@ object Jobs extends Controller {
       } yield {
         action(user)(job)
         if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
-        else        //SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages(msg, job.name)))
-          SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
+        else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
       }) failMap toError toPromise
     }
   }

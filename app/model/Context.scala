@@ -51,7 +51,7 @@ object Context {
     implicit val context = conf.webExecutionContext
     val graph = ContextVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(ContextUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal(result))
+    FutureVal(result)
   }
 
   def save(context: Context)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =

@@ -17,6 +17,8 @@ import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 import play.api.libs.iteratee._
+import play.api.libs.iteratee.Input._
+import play.api.libs.concurrent._
 
 class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
 
@@ -44,14 +46,23 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
 
     val enumerator = organizationTest.enumerator
 
+    // Tom: I couldn't find an elegant way to do what you want in the general case other that what you did. 
+    // This is a simplification for this use case
+    val result2 =
+      enumerator &>
+        Enumeratee.collect[RunUpdate]{case a: UpdateData if a.activity == Idle => a} |>>
+        Cont[UpdateData, Input[UpdateData]](in => Done(in,Input.Empty))
+
     job.run()
+    
+    //Iteratee.flatten(result2).run.value.get must be /*(an El[RunUpdate] with idle activity)*/
 
     // just wait for Idle
     // there must be a better style, or we may have to write some helper functions
     val result =
       enumerator &>
 //        Enumeratee.map[RunUpdate](ru => { println("yeah! "+ru); ru }) ><>
-        Enumeratee.filter[RunUpdate]{ case UpdateData(_, activity) => activity == Idle ; case _ => false } ><>
+        Enumeratee.filter[RunUpdate]{ case UpdateData(_, activity) => activity == Idle ; case _ => false } ><> 
         Enumeratee.take(1) ><>
         Enumeratee.map(List(_)) |>>
         Iteratee.consume()

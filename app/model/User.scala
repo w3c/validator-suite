@@ -6,10 +6,13 @@ import org.w3.vs.actor._
 import scalaz._
 import Scalaz._
 import akka.dispatch._
+import akka.util.duration._
 import org.w3.vs.exception._
 import org.w3.banana._
 
 object User {
+  
+  val logger = play.Logger.of(classOf[User])
 
   def apply(vo: UserVO)(implicit conf: VSConfiguration): User =
     User(vo.id, vo.name, vo.email, vo.password, vo.organizationId)
@@ -18,9 +21,11 @@ object User {
     import conf.binders._
     implicit val context = conf.webExecutionContext
     val uri = UserUri(id)
-    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
-      val pointed = PointedGraph(uri, graph)
-      UserVOBinder.fromPointedGraph(pointed)
+    FutureVal(conf.store.getNamedGraph(uri)) flatMap { graph => 
+      FutureVal.pureVal[Throwable, UserVO]{
+        val pointed = PointedGraph(uri, graph)
+        UserVOBinder.fromPointedGraph(pointed)
+      }(t => t)
     }
   }
   
@@ -30,11 +35,8 @@ object User {
   //def getForOrganization(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[User]] = sys.error("") 
   
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
-    getByEmail(email) flatMapValidation { user =>
-      if (user.password === password)
-        Success(user)
-      else
-        Failure(Unauthenticated)
+    getByEmail(email) discard { 
+      case user if (user.password /== password) => Unauthenticated
     }
   }
   
@@ -56,15 +58,14 @@ CONSTRUCT {
 }
 """.replaceAll("#email", email)
     val construct = SparqlOps.ConstructQuery(query, xsd, ont)
-    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph =>
-      val userVOValidation =
+    FutureVal(store.executeConstruct(construct)) flatMap { graph =>
+      FutureVal.pureVal[Throwable, UserVO]{
         graph.getAllInstancesOf(ont.User).exactlyOneUri flatMap { uri =>
           val pointed = PointedGraph(uri, graph)
           UserVOBinder.fromPointedGraph(pointed)
-        } map { User(_) }
-      // couldn't find the failMap on Validation
-      userVOValidation.fold(_ => Failure(UnknownUser), user => Success(user))
-    }
+        } 
+      }(t => t) failMap { _ => UnknownUser }
+    } map { User(_) }
   }
 
   def saveUserVO(vo: UserVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
@@ -72,7 +73,7 @@ CONSTRUCT {
     implicit val context = conf.webExecutionContext
     val graph = UserVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(UserUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result))
+    FutureVal(result)
   }
   
   def save(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =

@@ -65,7 +65,7 @@ object Run {
     implicit val context = conf.webExecutionContext
     val graph = RunVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(RunUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result))
+    FutureVal(result)
   }
 
   def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =

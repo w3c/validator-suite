@@ -23,39 +23,33 @@ import play.api.libs.iteratee._
   */
 class PendingRunTest extends RunTestHelper(new DefaultProdConfiguration {}) with TestKitHelper {
   
-  // Inutile de creer de nouveaux objets. Seuls les objets statiques dans play.api.Global peuvent marcher.
-  // JobsActor et OrganizationsActor dependent du store.
+  val strategy =
+    Strategy(
+      id=StrategyId(), 
+      entrypoint=URL("http://localhost:9001/1/"),
+      linkCheck=true,
+      maxResources = 10,
+      filter=Filter.includeEverything).noAssertor()
   
-//  val strategy =
-//    Strategy(
-//      id=StrategyId(), 
-//      entrypoint=URL("http://localhost:9001/1/"),
-//      linkCheck=true,
-//      maxResources = 10,
-//      filter=Filter.includeEverything).noAssertor()
-//  
-//  val job = Job(
-//    strategy = strategy,
-//    creatorId = play.api.Global.tgambet.id,
-//    organizationId = play.api.Global.w3c.id,
-//    name = "@@")
-  
-  val job = play.api.Global.w3
-  val org = play.api.Global.w3c
+  val job = Job(
+    strategy = strategy,
+    creatorId = userTest.id,
+    organizationId = organizationTest.id,
+    name = "@@")
   
   val servers = Seq(Webserver(9001, Website.tree(20).toServlet))
 
   "test FilteredTreeWebsiteTest" in {
-//    (for {
-//      _ <- Organization.save(org)
-//      _ <- Job.save(job)
-//    } yield ()).await(5 seconds) // inutile: lack of store
-//    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0) // inutile, strategy statique
+    (for {
+      _ <- Organization.save(organizationTest)
+      _ <- Job.save(job)
+    } yield ()).await(5 seconds)
+    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     
     job.run()
     
     //RunUpdate messages are indeed printed on the console
-    org.enumerator |>> Iteratee.foreach[RunUpdate](ru => println("Org update: " + ru.getClass))
+    //org.enumerator |>> Iteratee.foreach[RunUpdate](ru => println("Org update: " + ru.getClass))
     job.enumerator |>> Iteratee.foreach[RunUpdate](ru => println("Job update: " + ru.getClass))
     
     Thread.sleep(3000)

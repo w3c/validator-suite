@@ -1,5 +1,6 @@
 @(job: Job,
   article: URLArticle,
+  assertions: Iterable[Assertion],
   user: User,
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
@@ -26,7 +27,7 @@
 	<hr>
 	
 	<section id="assertionArticles" class="list">
-		
+		@**libs.assertionArticles(assertions)**@
 	</section>
 	
 }{ @***** Footer *****@

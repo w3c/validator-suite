@@ -5,6 +5,7 @@ import org.w3.util._
 import org.w3.util.Headers.wrapHeaders
 import org.w3.vs.http._
 import org.joda.time._
+import scalaz.Equal
 import org.w3.banana._
 import scalaz.Validation._
 import scalaz.Scalaz._
@@ -21,7 +22,7 @@ object ResourceResponse {
     import conf.binders._
     implicit val context = conf.webExecutionContext
     val uri = ResourceResponseUri(id)
-    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
+    FutureVal(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
       val pointed = PointedGraph(uri, graph)
       ResourceResponseVOBinder.fromPointedGraph(pointed)
     }
@@ -75,7 +76,7 @@ CONSTRUCT {
     implicit val context = conf.webExecutionContext
     val graph = ResourceResponseVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(ResourceResponseUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result))
+    FutureVal(result)
   }
 
   def save(rr: ResourceResponse)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =

@@ -54,12 +54,15 @@ case class Job(
 
   def getRun(): FutureVal[Throwable, Run] = {
     implicit def ec = conf.webExecutionContext
-    (PathAware(organizationsRef, path).?[Run](GetRun))
+    (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
 
-  def getLastRunAssertions: FutureVal[Exception, Iterable[Assertion]] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(Iterable())
+  def getAssertions(): FutureVal[Exception, Iterable[Assertion]] = {
+    Assertion.getForJob(this)
+  }
+  
+  def getAssertions(url: URL): FutureVal[Exception, Iterable[Assertion]] = {
+    Assertion.getForJob(this, url)
   }
   
   // Represent an article on the byUrl report
@@ -105,7 +108,7 @@ case class Job(
   
   def enumerator: Enumerator[RunUpdate] = {
     implicit def ec = conf.webExecutionContext
-    val enum = (PathAware(organizationsRef, path).?[Enumerator[RunUpdate]](GetJobEnumerator))
+    val enum = (PathAware(organizationsRef, path) ? GetJobEnumerator).mapTo[Enumerator[RunUpdate]]
     Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise)
   }
   
@@ -121,7 +124,7 @@ object Job {
     import conf.binders._
     implicit val context = conf.webExecutionContext
     val uri = JobUri(id)
-    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMap { graph => 
+    FutureVal(conf.store.getNamedGraph(uri)) flatMap { graph => 
       FutureVal.pureVal[Throwable, JobVO]{
         val pointed = PointedGraph(uri, graph)
         JobVOBinder.fromPointedGraph(pointed)
@@ -267,7 +270,7 @@ CONSTRUCT {
     implicit val context = conf.webExecutionContext
     val graph = JobVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(JobUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result))
+    FutureVal(result)
   }
 
   def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =

@@ -14,7 +14,7 @@ object Strategy {
     import conf.binders._
     implicit val context = conf.webExecutionContext
     val uri = StrategyUri(id)
-    FutureVal.applyTo(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
+    FutureVal(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
       val pointed = PointedGraph(uri, graph)
       StrategyVOBinder.fromPointedGraph(pointed)
     }
@@ -28,7 +28,7 @@ object Strategy {
     implicit val context = conf.webExecutionContext
     val graph = StrategyVOBinder.toPointedGraph(vo).graph
     val result = conf.store.addNamedGraph(StrategyUri(vo.id), graph)
-    FutureVal.toFutureValException(FutureVal.applyTo(result))
+    FutureVal(result)
   }
 
   def save(strategy: Strategy)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
