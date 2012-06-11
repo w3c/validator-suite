@@ -81,13 +81,17 @@ object Application extends Controller {
     for {
       email <- FutureVal.pure(session.get("email").get).failWith(Unauthenticated)
       user <- FutureVal.pure(Cache.getAs[User](email).get)
-          .flatMapFail(_ => User.getByEmail(email)).failWith(UnknownUser) // TODO remove fail with when implemented in getByEmail
+                .flatMapFail(_ => User.getByEmail(email))
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
       user
     }
   } 
-
+  
+  def redirectWithSlash(a: Any): ActionA = Action { req =>
+    MovedPermanently(req.uri + "/")
+  }
+  
 //  def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
 //    e match {
 //      case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> Messages("jobs.notfound"))))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("jobs.notfound")))

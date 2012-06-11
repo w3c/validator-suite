@@ -30,7 +30,7 @@
 			<h2>Job: @job.name</h2>
 			<dl>
 				<dt>Job Name</dt>
-				<dd class="name"><a href="@routes.Jobs.dispatcher(job.id)">@job.name</a></dd>
+				<dd class="name"><a href="@routes.Jobs.show(job.id)">@job.name</a></dd>
 				
 				<dt>URL</dt>
 				<dd class="url">@job.strategy.entrypoint</dd>

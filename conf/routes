@@ -12,8 +12,9 @@ POST    /jobs                       controllers.Jobs.create
 GET     /jobs/new                   controllers.Jobs.new1
 GET     /jobs/ws                    controllers.Jobs.dashboardSocket()
 GET     /jobs/ws/:id                controllers.Jobs.reportSocket(id: JobId)
-GET     /jobs/:id                   controllers.Jobs.show(id: JobId)
-POST    /jobs/:id                   controllers.Jobs.dispatcher(id: JobId)
+GET     /jobs/:id                   controllers.Application.redirectWithSlash(id: JobId)
+GET     /jobs/:id/                  controllers.Jobs.show(id: JobId)
+POST    /jobs/:id/                  controllers.Jobs.dispatcher(id: JobId)
 GET     /jobs/:id/edit              controllers.Jobs.edit(id: JobId)
 GET     /jobs/:id/:url              controllers.Jobs.report(id: JobId, url: org.w3.util.URL)
 

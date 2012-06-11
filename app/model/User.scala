@@ -64,7 +64,7 @@ CONSTRUCT {
           val pointed = PointedGraph(uri, graph)
           UserVOBinder.fromPointedGraph(pointed)
         } 
-      }(t => t) failMap { _ => UnknownUser }
+      }(t => t) failMap { _ => UnknownUser } // Are there no other types of failure? The failMap might catch too much
     } map { User(_) }
   }
 

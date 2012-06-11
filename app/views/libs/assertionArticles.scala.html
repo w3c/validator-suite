@@ -1,0 +1,32 @@
+@(assertions: Iterable[Assertion] = None)
+		<aside>
+			<h2>Definitions</h2>
+			<dl>
+				<dt class="severity"><dfn>Severity</dfn></dt>
+				<dd>def</dd>
+				<dt class="message"><dfn>Message</dfn></dt>
+				<dd>def</dd>
+				<dt class="description"><dfn>Description</dfn></dt>
+				<dd>def</dd>
+				<dt class="timestamp"><dfn>Last validated</dfn></dt>
+				<dd>def</dd>
+				<dt class="assertor"><dfn>Assertor</dfn></dt>
+				<dd>def</dd>
+			</dl>
+		</aside>
+		
+		@assertions.map { case assertion =>
+		<hr>
+		<article>
+			<dl>
+				<dt>Severity</dt>
+				<dd class="url">article.url</dd>
+				<dt>Last validated</dt>
+				<dd class="timestamp">article.lastValidated</dd>
+				<dt>Warnings</dt>
+				<dd class="warnings">article.warnings</dd>
+				<dt>Errors</dt>
+				<dd class="errors">article.errors</dd>
+			</dl>
+		</article>
+		}
