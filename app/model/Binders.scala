@@ -182,7 +182,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   val ErrorResponseVOBinder = new PointedGraphBinder[Rdf, ErrorResponseVO] {
 
     def toPointedGraph(t: ErrorResponseVO): PointedGraph[Rdf] = (
-      ResourceResponseUri(t.id).a(ont.ErrorResponse)
+      ResourceResponseUri(t.id).a(ont.ResourceResponse).a(ont.ErrorResponse)
         -- ont.jobId ->- JobUri(t.jobId)
         -- ont.runId ->- RunUri(t.runId)
         -- ont.url ->- t.url
@@ -212,7 +212,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   val HttpResponseVOBinder = new PointedGraphBinder[Rdf, HttpResponseVO] {
 
     def toPointedGraph(t: HttpResponseVO): PointedGraph[Rdf] = (
-      ResourceResponseUri(t.id).a(ont.HttpResponse)
+      ResourceResponseUri(t.id).a(ont.ResourceResponse).a(ont.HttpResponse)
         -- ont.jobId ->- JobUri(t.jobId)
         -- ont.runId ->- RunUri(t.runId)
         -- ont.url ->- t.url
@@ -256,14 +256,8 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
     }
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponseVO] = {
-      // import org.w3.banana.jena._
-      // val mToJena = new RDFTransformer[Rdf, Jena](ops, JenaOperations)
-      // val graph = mToJena.transform(pointed.graph)
-      // println(JenaTurtleWriter.asString(graph, ""))
-      // println("****** " + (pointed / rdf("type")))
-      // println("&&&&&& " + (pointed / rdf("type")).headOption.toString)
       // TODO improve banana rdf to avoid this horrible thing...
-      if ((pointed / rdf("type")).headOption.map(_.node) == Some(ont.ErrorResponse))
+      if ((pointed / rdf("type")).exists(_.node == ont.ErrorResponse))
         ErrorResponseVOBinder.fromPointedGraph(pointed)
       else
         HttpResponseVOBinder.fromPointedGraph(pointed)

@@ -285,6 +285,13 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     ResourceResponse.get(rr.id).result(1.second) must be === (Success(rr))
   }
 
+  "get all resources for a given a runId" in {
+    val rrs = ResourceResponse.getForRun(run1.id).result(2.second) getOrElse sys.error("fooooo")
+    rrs must have size (nbHttpErrorsPerAssertions + nbHttpResponsesPerAssertions)
+    rrs must contain (resourceResponses(0))
+   }
+
+
 }
 
 

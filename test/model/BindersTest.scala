@@ -15,7 +15,20 @@ class BindersTest extends WordSpec with MustMatchers {
 
   def testSerializeDeserialize[T](binder: PointedGraphBinder[Jena, T])(t: T) = {
     import binder._
-    fromPointedGraph(toPointedGraph(t)) must be === (Success(t))
+    val pointed = toPointedGraph(t)
+    val result = fromPointedGraph(pointed)
+    result match {
+      case Failure(throwable) => {
+        println("1. "+t)
+        println("2. === ")
+        println(JenaTurtleWriter.asString(pointed.graph, "foo"))
+        println("===")
+        println("3. "+result)
+//        throwable.printStackTrace()
+      }
+      case _ => ()
+    }
+    result must be === (Success(t))
   }
 
   "OrganizationVO" in {

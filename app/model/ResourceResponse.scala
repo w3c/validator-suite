@@ -5,8 +5,10 @@ import org.w3.util._
 import org.w3.util.Headers.wrapHeaders
 import org.w3.vs.http._
 import org.joda.time._
-import scalaz.Equal
 import org.w3.banana._
+import scalaz.Validation._
+import scalaz.Scalaz._
+import scalaz._
 
 object ResourceResponse {
 
@@ -30,7 +32,43 @@ object ResourceResponse {
 
   def getForJob(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
 
-  def getForRun(id: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] = sys.error("")
+  def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, ResourceResponse] = {
+    implicit val c = conf
+    import conf.binders._
+    for {
+      vo <- ResourceResponseVOBinder.fromPointedGraph(pointed)
+    } yield {
+      ResourceResponse(vo)
+    }
+  }
+
+  def fromGraph(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[ResourceResponse]] = {
+    import conf.diesel._
+    import conf.binders._
+    val rrs: Iterable[Validation[BananaException, ResourceResponse]] =
+      graph.getAllInstancesOf(ont.ResourceResponse) map { pointed => fromPointedGraph(conf)(pointed) }
+    rrs.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, ResourceResponse]
+  }
+
+  def getForRun(runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] = {
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?s ?p ?o .
+} WHERE {
+  graph ?g {
+    ?rrUri a ont:ResourceResponse .
+    ?rrUri ont:runId <#runUri> .
+    ?s ?p ?o
+  }
+}
+""".replaceAll("#runUri", RunUri(runId).toString)
+    val construct = SparqlOps.ConstructQuery(query, ont)
+    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
+  }
 
   def saveResourceResponseVO(vo: ResourceResponseVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf.binders._
