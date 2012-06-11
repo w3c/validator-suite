@@ -44,7 +44,11 @@ object Context {
   def get(id: ContextId)(implicit conf: VSConfiguration): FutureVal[Exception, Context] =
     getContextVO(id) map (Context(_))
 
-  def getForAssertion(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Context]] = sys.error("ni")
+  def getForAssertion(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Context]] = {
+    // TODO
+    implicit val context = conf.webExecutionContext
+    FutureVal.successful(Iterable())
+  }
 
   def saveContextVO(vo: ContextVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf.binders._

@@ -1,6 +1,6 @@
 @(job: Job,
   article: URLArticle,
-  assertions: Iterable[Assertion],
+  assertions: Iterable[(Assertion, Iterable[Context])],
   user: User,
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 

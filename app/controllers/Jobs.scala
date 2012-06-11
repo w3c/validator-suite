@@ -45,8 +45,7 @@ object Jobs extends Controller {
               for {
                 run <- job.getRun
                 lastCompleted <- job.getLastCompleted
-              }
-              yield (job, run, lastCompleted)
+              } yield (job, run, lastCompleted)
             ))
       } yield {
         Ok(views.html.dashboard(triples, user))
@@ -73,10 +72,16 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
-        assertions <- job.getAssertions(url)
         article <- job.getURLArticle(url) map {URLArticle.apply _}
+        assertions <- job.getAssertions(url)
+        tuples <- FutureVal.sequence(
+            assertions.map(assertion => 
+              for {
+                contexts <- assertion.getContexts
+              } yield (assertion, contexts)
+            ))
       } yield {
-        Ok(views.html.urlReport(job, article, assertions, user, messages))
+        Ok(views.html.urlReport(job, article, tuples, user, messages))
       }) failMap toError toPromise
     }
   }
