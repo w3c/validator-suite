@@ -45,7 +45,7 @@ object Run {
       Run(
         id = vo.id,
         explorationMode = vo.explorationMode,
-        distance = vo.distance,
+        knownUrls = vo.knownUrls,
         toBeExplored = vo.toBeExplored,
         fetched = vo.fetched,
         createdAt = vo.createdAt,
@@ -79,7 +79,7 @@ object Run {
 case class Run(
     id: RunId = RunId(),
     explorationMode: ExplorationMode = ProActive,
-    distance: Map[URL, Int] = Map.empty,
+    knownUrls: Set[URL] = Set.empty,
     toBeExplored: List[URL] = List.empty,
     fetched: Set[URL] = Set.empty,
     createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
@@ -97,11 +97,9 @@ case class Run(
   
   def save(): FutureVal[Exception, Unit] = Run.save(this)
   
-  def toValueObject: RunVO = RunVO(id, explorationMode, distance, toBeExplored, fetched, createdAt, job, resources, errors, warnings)
+  def toValueObject: RunVO = RunVO(id, explorationMode, knownUrls, toBeExplored, fetched, createdAt, job, resources, errors, warnings)
   
-  type Explore = (URL, Int)
-
-  def numberOfKnownUrls: Int = distance.keySet.count { _.authority === mainAuthority }
+  def numberOfKnownUrls: Int = knownUrls.count { _.authority === mainAuthority }
 
   // assert(
   //   distance.keySet == fetched ++ pending ++ toBeExplored,
@@ -125,9 +123,9 @@ case class Run(
 
   def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
 
-  private def shouldIgnore(url: URL, atDistance: Int): Boolean = {
-    def notToBeFetched = IGNORE == strategy.fetch(url, atDistance)
-    def alreadyKnown = distance isDefinedAt url
+  private def shouldIgnore(url: URL): Boolean = {
+    def notToBeFetched = IGNORE == strategy.fetch(url, 0/* @@@ */)
+    def alreadyKnown = knownUrls contains url
     notToBeFetched || alreadyKnown
   }
 
@@ -136,29 +134,12 @@ case class Run(
   /**
    * Returns an Observation with the new urls to be explored
    */
-  def withNewUrlsToBeExplored(urls: List[URL], atDistance: Int): (Run, List[URL]) = {
-    val filteredUrls = urls.filterNot{ url => shouldIgnore(url, atDistance) }.distinct.take(numberOfRemainingAllowedFetches)
-    val newDistance = distance ++ filteredUrls.map { url => url -> atDistance }
+  def withNewUrlsToBeExplored(urls: List[URL]): (Run, List[URL]) = {
+    val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct.take(numberOfRemainingAllowedFetches)
     val newData = this.copy(
       toBeExplored = toBeExplored ++ filteredUrls,
-      distance = newDistance)
+      knownUrls = knownUrls ++ filteredUrls)
     (newData, filteredUrls)
-  }
-
-  /**
-   * Returns an Observation with the new urls to be explored
-   */
-  def withNewUrlsToBeExplored(urlsWithDistance: List[(URL, Int)]): (Run, List[URL]) = {
-    // as it's a map, there is no duplicated url :-)
-    // also, the ListMap preserves the order of insertion
-
-    val map: ListMap[URL, Int] = ListMap.empty
-    map ++= urlsWithDistance.filterNot { case (url, distance) => shouldIgnore(url, distance) }
-    val newUrls = map.keys.toList.take(numberOfRemainingAllowedFetches)
-    val newData = this.copy(
-      toBeExplored = toBeExplored ++ newUrls,
-      distance = distance ++ map)
-    (newData, newUrls)
   }
 
   val mainAuthority: Authority = strategy.mainAuthority
@@ -223,7 +204,7 @@ case class Run(
    *
    * The returned Observation has all the Explores marked as being pending.
    */
-  def takeAtMost(n: Int): (Run, List[Explore]) = {
+  def takeAtMost(n: Int): (Run, List[URL]) = {
     var current: Run = this
     var urls: List[URL] = List.empty
     for {
@@ -233,7 +214,7 @@ case class Run(
       current = observation
       urls ::= url
     }
-    (current, urls.reverse map { url => url -> distance(url) })
+    (current, urls.reverse)
   }
 
 //  def withCompletedFetch(url: URL): Run = this.copy(

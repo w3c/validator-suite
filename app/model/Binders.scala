@@ -273,6 +273,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
     def toPointedGraph(t: RunVO): PointedGraph[Rdf] = (
       RunUri(t.id).a(ont.Run)
         -- ont.explorationMode ->- t.explorationMode
+        -- ont.knownUrls -->- t.knownUrls.toList
         -- ont.toBeExplored -->- t.toBeExplored
         -- ont.fetched -->- t.fetched.toList
         -- ont.createdAt ->- t.createdAt
@@ -286,6 +287,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
       for {
         id <- pointed.as[Rdf#URI] flatMap RunUri.getId
         explorationMode <- (pointed / ont.explorationMode).as[ExplorationMode]
+        knownUrls <- (pointed / ont.knownUrls).as[List[URL]]
         toBeExplored <- (pointed / ont.toBeExplored).as[List[URL]]
         fetched <- (pointed / ont.fetched).as[List[URL]]
         createdAt <- (pointed / ont.createdAt).as[DateTime]
@@ -294,7 +296,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
         errors <- (pointed / ont.errors).as[Int]
         warnings <- (pointed / ont.warnings).as[Int]
       } yield {
-        RunVO(id, explorationMode, Map.empty, toBeExplored, fetched.toSet, createdAt, jobId, resources, errors, warnings)
+        RunVO(id, explorationMode, knownUrls.toSet, toBeExplored, fetched.toSet, createdAt, jobId, resources, errors, warnings)
       }
     }
   }
@@ -351,7 +353,6 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
     def toPointedGraph(t: StrategyVO): PointedGraph[Rdf] = (
       StrategyUri(t.id).a(ont.Strategy)
         -- ont.entrypoint ->- t.entrypoint
-        -- ont.distance ->- t.distance
         -- ont.linkCheck ->- t.linkCheck.toString
         -- ont.maxResources ->- t.maxResources
         -- ont.assertorSelector -->- t.assertorSelector
@@ -361,12 +362,11 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
       for {
         id <- pointed.as[Rdf#URI] flatMap StrategyUri.getId
         entrypoint <- (pointed / ont.entrypoint).as[URL]
-        distance <- (pointed / ont.distance).as[Int]
         linkCheck <- (pointed / ont.linkCheck).as[String].map(_.toBoolean)
         maxResources <- (pointed / ont.maxResources).as[Int]
         assertorSelector <- (pointed / ont.assertorSelector).as[AssertorSelector]
       } yield {
-        StrategyVO(id, entrypoint, distance, linkCheck, maxResources, Filter.includeEverything, assertorSelector)
+        StrategyVO(id, entrypoint, linkCheck, maxResources, Filter.includeEverything, assertorSelector)
       }
     }
   }

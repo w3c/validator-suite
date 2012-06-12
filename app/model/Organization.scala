@@ -21,10 +21,13 @@ case class Organization(
     adminId: UserId)(implicit conf: VSConfiguration) {
   
   import conf.system
+
   implicit def timeout = conf.timeout
+
   private val organizationsRef = system.actorFor(system / "organizations")
+
   private val path = system / "organizations" / id.toString
-  
+
   val logger = play.Logger.of(classOf[Organization])
   
   def getAdmin: FutureVal[Exception, User] = User.get(adminId)
@@ -33,11 +36,35 @@ case class Organization(
   
   import akka.pattern.ask
   
-  def enumerator: Enumerator[RunUpdate] = {
-    implicit def ec = conf.webExecutionContext
-    val enum = (PathAware(organizationsRef, path) ? GetOrgEnumerator).mapTo[Enumerator[RunUpdate]]
-    Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise) // TODO log error
+  lazy val enumerator: Enumerator[RunUpdate] = {
+    val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
+    val subscriber: ActorRef = system.actorOf(Props(new Actor {
+      def receive = {
+        case msg: RunUpdate =>
+          try {
+            channel.push(msg)
+          } catch { 
+            case e: ClosedChannelException => {
+              logger.error("ClosedChannel exception: ", e)
+              channel.eofAndEnd()
+            }
+            case e => {
+              logger.error("Enumerator exception: ", e)
+              channel.eofAndEnd()
+            }
+          }
+        case msg => logger.error("subscriber got " + msg)
+      }
+    }))
+    listen(subscriber)
+    _enumerator
   }
+
+  def listen(implicit listener: ActorRef): Unit =
+    PathAware(organizationsRef, path).tell(Listen(listener), listener)
+  
+  def deafen(implicit listener: ActorRef): Unit =
+    PathAware(organizationsRef, path).tell(Deafen(listener), listener)
   
   def toValueObject: OrganizationVO = OrganizationVO(id, name, adminId)
 

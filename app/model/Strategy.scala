@@ -70,6 +70,6 @@ case class Strategy (
 
   def noAssertor(): Strategy = this.copy(assertorSelector = AssertorSelector.noAssertor)
   
-  def toValueObject: StrategyVO = StrategyVO(id, entrypoint, distance, linkCheck, maxResources, filter, assertorSelector)
+  def toValueObject: StrategyVO = StrategyVO(id, entrypoint, linkCheck, maxResources, filter, assertorSelector)
   
 }

@@ -77,7 +77,7 @@ case class HttpResponseVO (
 case class RunVO (
     id: RunId = RunId(),
     explorationMode: ExplorationMode = ProActive,
-    distance: Map[URL, Int] = Map.empty,
+    knownUrls: Set[URL] = Set.empty,
     toBeExplored: List[URL] = List.empty,
     fetched: Set[URL] = Set.empty,
     createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
@@ -89,7 +89,6 @@ case class RunVO (
 case class StrategyVO (
     id: StrategyId = StrategyId(),
     entrypoint: URL,
-    distance: Int,
     linkCheck: Boolean,
     maxResources: Int,
     filter: Filter,

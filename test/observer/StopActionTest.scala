@@ -28,23 +28,53 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
   val servers = Seq(Webserver(9001, Website.cyclic(1000).toServlet))
 
   "test stop" in {
+    
     (for {
-      //a <- Organization.save(play.api.Global.w3c)
+      a <- Organization.save(organizationTest)
       _ <- Job.save(job)
-    } yield ()).await(5 seconds)
+    } yield ()).await(1.second)
+
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
+
+    val enumerator = organizationTest.enumerator
+
+// import play.api.libs.iteratee._
+// import play.api.libs.iteratee.Input._
+// import play.api.libs.concurrent._
+
+//     val waitForNewResource =
+//       enumerator &>
+//       Enumeratee.collect[RunUpdate] { case msg@NewResource(ri) => {
+//         ri.url must be === (URL("http://localhost:9001/"))
+//         job.cancel()
+//         (msg: RunUpdate)
+//       }} &>
+//       Enumeratee.collect[RunUpdate] { case msg@UpdateData(jobData, activity) if activity == Idle => {
+//         val rrs = ResourceResponse.getForJob(job).result(1.second) getOrElse sys.error("getForRun")
+//         rrs.size must be < (100)
+//         (msg: RunUpdate)
+//       }} |>>
+//       Cont[RunUpdate, Input[RunUpdate]](in => Done(in,Input.Empty))
+
+
     job.run()
-    //job.listen(testActor)
+
+//    Iteratee.flatten(waitForNewResource).run.value.get
+
+    job.listen(testActor)
+
     fishForMessagePF(3.seconds) {
       case NewResource(ri) => ri.url must be === (URL("http://localhost:9001/"))
     }
+
     job.cancel()
-    /*fishForMessagePF(3.seconds) {
-      case UpdateData(jobData) if jobData.activity == Idle => {
-        val resources = store.listResourceInfos(job.id).waitResult
-        resources.size must be < (100)
+
+    fishForMessagePF(3.seconds) {
+      case UpdateData(jobData, activity) if activity == Idle => {
+        val rrs = ResourceResponse.getForJob(job).result(1.second) getOrElse sys.error("getForRun")
+        rrs.size must be < (100)
       }
-    }*/
+    }
   }
   
 }

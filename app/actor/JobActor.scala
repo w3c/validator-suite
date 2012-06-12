@@ -25,9 +25,8 @@ import org.joda.time.DateTime
 import org.w3.util.akkaext._
 
 // TODO extract all pure function in a companion object
-class JobActor(job: Job)(
-  implicit val configuration: VSConfiguration)
-    extends Actor with FSM[(RunActivity, ExplorationMode), Run] {
+class JobActor(job: Job)(implicit val configuration: VSConfiguration)
+extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
 
   import configuration._
 
@@ -119,18 +118,19 @@ class JobActor(job: Job)(
       }
     }
     case Event(response: ResourceResponse, _run) => {
-      //logger.debug("ResourceResponse: " + response.url)
+      logger.debug("<<< " + response.url)
       response.save()
+      val runWithResponse = _run.withResourceResponse(response)
+      logger.debug("pending - "+runWithResponse.pending)
       response match {
-        case resource: ResourceResponse if response.runId === _run.id => {
+        case resource: ResourceResponse if response.runId === runWithResponse.id => {
           tellEverybody(NewResource(resource))
-          _run.explorationMode match {
+          runWithResponse.explorationMode match {
             case ProActive => {
-              val distance = _run.distance.get(resource.url) getOrElse sys.error("Broken assumption: %s wasn't in pendingFetches" format resource.url)
               // TODO do something with the newUrls
               val run = resource match {
                 case httpResponse: HttpResponse => {
-                  val (run, newUrls) = _run.withResourceResponse(httpResponse).withNewUrlsToBeExplored(httpResponse.extractedURLs, distance + 1)
+                  val (run, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
                   if (!newUrls.isEmpty) logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, run.numberOfKnownUrls))
                   val assertors =
                     for {
@@ -147,17 +147,21 @@ class JobActor(job: Job)(
                   }
                 }
                 case failure: ErrorResponse => {
-                  _run.withResourceResponse(failure)
+                  runWithResponse
                 }
               }
               
               stateOf(scheduleNextURLsToFetch(run))
             }
-            case Lazy => stay()
+            case Lazy => stay() using runWithResponse
           }
         }
         case _ => {logger.debug("wrong run id"); stay()}
       }
+    }
+    case Event(msg: ListenerMessage, _) => {
+      listenerHandler(msg)
+      stay()
     }
     case Event(BeProactive, run) => stateOf(run.withMode(ProActive))
     case Event(BeLazy, run) => stateOf(run.withMode(Lazy))
@@ -165,10 +169,11 @@ class JobActor(job: Job)(
       // logger.debug("%s: received a Refresh" format shortId)
       val firstURLs = List(strategy.entrypoint)
       val freshRun = Run(job = job)
-      val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs, 0)
+      val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs)
       stateOf(scheduleNextURLsToFetch(runData))
     }
     case Event(Stop, run) => {
+      logger.error("Stop")
       assertionsActorRef ! Stop
       stateOf(run.stopMe())
     }
@@ -181,6 +186,7 @@ class JobActor(job: Job)(
   onTransition {
     case _ -> _ => {
       val msg = UpdateData(nextStateData.data, nextStateData.activity)
+      logger.error(msg.toString + " &&& " + nextStateData.pendingAssertions + " &&& " + nextStateData.pending)
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
@@ -192,12 +198,7 @@ class JobActor(job: Job)(
     // tell the organization
     context.actorFor("../..") ! msg
     // tell all the listeners
-    //tellListeners(msg)
-    msg match {
-      case msg: RunUpdate => channel.push(msg)
-      case _ => ()
-    }
-    
+    tellListeners(msg)
   }
 
   /**
@@ -231,9 +232,8 @@ class JobActor(job: Job)(
    *
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
-  private final def fetch(explore: Run#Explore, runId: RunId): Unit = {
-    val (url, distance) = explore
-    val action = strategy.fetch(url, distance)
+  private final def fetch(url: URL, runId: RunId): Unit = {
+    val action = strategy.fetch(url, 0)
     action match {
       case GET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))

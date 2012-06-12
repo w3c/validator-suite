@@ -105,17 +105,44 @@ case class Job(
 
   def off(): Unit = 
     PathAware(organizationsRef, path) ! BeLazy
-  
-  def enumerator: Enumerator[RunUpdate] = {
-    implicit def ec = conf.webExecutionContext
-    val enum = (PathAware(organizationsRef, path) ? GetJobEnumerator).mapTo[Enumerator[RunUpdate]]
-    Enumerator.flatten(enum failMap (_ => Enumerator.eof[RunUpdate]) toPromise)
+
+  lazy val enumerator: Enumerator[RunUpdate] = {
+    val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
+    val subscriber: ActorRef = system.actorOf(Props(new Actor {
+      def receive = {
+        case msg: RunUpdate =>
+          try {
+            channel.push(msg)
+          } catch { 
+            case e: ClosedChannelException => {
+              logger.error("ClosedChannel exception: ", e)
+              channel.eofAndEnd()
+            }
+            case e => {
+              logger.error("Enumerator exception: ", e)
+              channel.eofAndEnd()
+            }
+          }
+        case msg => logger.error("subscriber got " + msg)
+      }
+    }))
+    listen(subscriber)
+    _enumerator
   }
+
+  def listen(implicit listener: ActorRef): Unit =
+    PathAware(organizationsRef, path).tell(Listen(listener), listener)
+  
+  def deafen(implicit listener: ActorRef): Unit =
+    PathAware(organizationsRef, path).tell(Deafen(listener), listener)
   
   private val organizationsRef = system.actorFor(system / "organizations")
+  
   private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString
+  
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
+
 }
 
 object Job {
