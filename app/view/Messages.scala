@@ -16,6 +16,7 @@ case object JobsUpdate {
       JsNumber(data.errors),
       JsNumber(data.warnings),
       JsNumber(data.health)
+      // TODO add lastCompleted
     ))
   }
 }
@@ -47,11 +48,13 @@ case object ResourceUpdate {
 case object AssertorUpdate {
   
   def json(assertions: Iterable[Assertion]): JsValue = {
-    val assertMessages: Iterable[JsValue] = assertions.groupBy(_.url).map{
+    val assertMessages: Iterable[JsValue] = assertions.groupBy(_.url).collect{
       case (url, assertions) => 
         JsArray(List(
           JsString(url.toString),
-          JsString(assertions.head.timestamp.toString),
+          // TODO: I don't maintain a <time> element with javascript.
+          // Ask someone if that semantic is still relevant post js
+          JsString(Helper.formatTime(assertions.head.timestamp)),
           JsNumber(assertions.count(_.severity == Warning)),
           JsNumber(assertions.count(_.severity == Error))
         ))

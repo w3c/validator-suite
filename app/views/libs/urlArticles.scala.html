@@ -18,9 +18,9 @@
 		<article>
 			<dl>
 				<dt>URL</dt>
-				<dd class="url"><a href="@{java.net.URLEncoder.encode(article.url.toString, "utf-8")}">@article.url</a></dd>
+				<dd class="url"><a href="@Helper.encode(article.url)">@article.url</a></dd>
 				<dt>Last validated</dt>
-				<dd class="timestamp">@article.lastValidated</dd>
+				<dd class="timestamp"><time datetime="@article.lastValidated">@Helper.formatTime(article.lastValidated)</time></dd>
 				<dt>Warnings</dt>
 				<dd class="warnings">@article.warnings</dd>
 				<dt>Errors</dt>

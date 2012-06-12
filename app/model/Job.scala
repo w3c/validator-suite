@@ -75,7 +75,7 @@ case class Job(
        it.count(_.severity == Warning),
        it.count(_.severity == Error)
       )
-    })
+    }.filter(t => t._2 != 0 || t._3 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4))
   }
   
   def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {

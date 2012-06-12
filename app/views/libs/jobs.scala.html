@@ -41,7 +41,7 @@
 				<dt>Last Completed</dt>
 				<dd class="date">
 					@lastCompleted match{ 
-					  case Some(date) => {<time datetime="">date</time>}
+					  case Some(date) => {<time datetime="@date">@Helper.formatTime(date)</time>}
 					  case _ => {Never}
 					}
 				</dd>

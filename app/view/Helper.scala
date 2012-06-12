@@ -1,6 +1,18 @@
 package org.w3.vs.view
 
-sealed trait Section
+import org.joda.time._
+import org.joda.time.format._
+import org.w3.util.URL
+
+object Helper {
+  
+  val TimeFormatter = org.joda.time.format.DateTimeFormat.forPattern("MM/dd/yy' at 'K:ma")
+  def formatTime(time: DateTime): String = TimeFormatter.print(time).toLowerCase
+  def encode(url: URL): String = java.net.URLEncoder.encode(url.toString, "utf-8")
+  
+}
+
+/*sealed trait Section
 case class ReportSection(header: ReportHeader, list: Either[List[ReportValue], List[ReportSection]]) extends Section
 case object EmptySection extends Section
 
@@ -213,3 +225,4 @@ object Helper {
   }
   
 }
+*/

@@ -27,7 +27,7 @@ window.VS = {
 		
 		_onmessage: function(event) {
 			console.log(event.data);
-			try {
+			//try {
 				var json = $.parseJSON(event.data);
 				var type = json[0];
 				if (type === "Dashboard" && Dashboard !== undefined) {
@@ -35,7 +35,7 @@ window.VS = {
 					var job = Dashboard.jobs.get(data.get("jobId"));
 					if (!_.isUndefined(job))
 						job.syncData(data);
-				} else if (type === "Resource" && Report !== undefined) {
+				} /*else if (type === "Resource" && Report !== undefined) {
 					var data = {
 						resourceId: json[1],
 						url: json[2]
@@ -48,27 +48,37 @@ window.VS = {
 					} else {
 						console.log("Resource already present on the page: " + data.url);
 					}
-				} else if (type === "Assertions" && Report !== undefined) {
+				}*/ else if (type === "Assertions" && Report !== undefined) {
 					var assertions = json[1];
 					_.each(assertions, function (assertion) {
 						var url = assertion[0];
 						var timestamp = assertion[1];
 						var warnings = assertion[2];
 						var errors = assertion[3];
-						_.map(Report.articles.where({url: url}), function (article) {
-							article.set({
+						var current = Report.articles.where({url: url});
+						if (current.length < 1) {
+							Report.articles.add(new URLArticle({
+								url: url,
 								timestamp: timestamp,
-								warnings: article.get("warnings") + warnings,
-								errors: article.get("errors") + errors,
+								warnings: warnings,
+								errors: errors,
+							}), true); // silent
+						} else {
+							_.map(current, function (article) {
+								article.set({
+									timestamp: timestamp,
+									warnings: article.get("warnings") + warnings,
+									errors: article.get("errors") + errors,
+								});
 							});
-						});
+						}
 						Report.articles.sort();
 					});
 				}
-			} catch(ex) {
-				console.log(ex);
-				return null;
-			}
+//			} catch(ex) {
+//				console.log(ex);
+//				return null;
+//			}
 		}
 	},
 

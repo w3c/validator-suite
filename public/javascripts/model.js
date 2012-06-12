@@ -113,7 +113,6 @@ window.Job = Backbone.Model.extend({
 	syncData: function(jobData) {
 		//if (!_.isEqual(jobData.attributes, this.get('data').attributes)) {
 			this.set({data: jobData});
-			console.log("dataUpdated");
 		//}
 	},
 	
@@ -153,12 +152,7 @@ window.URLArticle = Backbone.Model.extend({
 
 window.URLArticleList = Backbone.Collection.extend({
 	model: URLArticle,
-	
 	comparator: function (article1, article2) {
-		console.log("------------");
-		console.log(article1.get("url"));
-		console.log(article2.get("url"));
-		console.log(article1.url < article2.url);
 		if (article1.get("errors") > article2.get("errors")) {
 			return -1;
 		} else if (article1.get("errors") === article2.get("errors")) {
