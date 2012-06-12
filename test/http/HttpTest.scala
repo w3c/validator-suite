@@ -93,7 +93,6 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
       inside (fetchResponse) { case response: ErrorResponse =>
         response.url must be === (URL("http://foo.localhost/bar"))
         response.action must be === (HEAD)
-        response.why.getClass.getName must be === ("java.net.ConnectException")
         response.runId must be === newRunId
       }
 
