@@ -11,13 +11,13 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%coloredLevel %logger{15} - %message%n%xException{5}</pattern>
+      <pattern>%coloredLevel %logger{15} - %message%n%xException{40}</pattern>
     </encoder>
   </appender>
   
   <appender name="STDOUTCALLER" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%coloredLevel %logger{15} %caller{2} - %message%n%xException{5}</pattern>
+      <pattern>%coloredLevel %logger{15} %caller{2} - %message%n%xException{40}</pattern>
     </encoder>
   </appender>
 
