@@ -118,46 +118,40 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       }
     }
     case Event(response: ResourceResponse, _run) => {
+
+      def getAssertors(httpResponse: HttpResponse): List[FromHttpResponseAssertor] =
+        for {
+          mimetype <- httpResponse.headers.mimetype.toList if httpResponse.action === GET
+          assertorName <- strategy.assertorSelector.get(mimetype).flatten
+        } yield Assertors.get(assertorName)
+
       logger.debug("<<< " + response.url)
       response.save()
+      tellEverybody(NewResource(response))
+
       val runWithResponse = _run.withResourceResponse(response)
-      logger.debug("pending - "+runWithResponse.pending)
-      response match {
-        case resource: ResourceResponse if response.runId === runWithResponse.id => {
-          tellEverybody(NewResource(resource))
-          runWithResponse.explorationMode match {
-            case ProActive => {
-              // TODO do something with the newUrls
-              val run = resource match {
-                case httpResponse: HttpResponse => {
-                  val (run, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
-                  if (!newUrls.isEmpty) logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, run.numberOfKnownUrls))
-                  val assertors =
-                    for {
-                      mimetype <- httpResponse.headers.mimetype.toList if httpResponse.action === GET
-                      assertorName <- strategy.assertorSelector.get(mimetype).flatten
-                    } yield Assertors.get(assertorName)
-                  if (response.action === GET && assertors.nonEmpty) {
-                    assertors foreach { assertor =>
-                      assertionsActorRef ! AssertorCall(assertor, httpResponse)
-                    }
-                    run.copy(pendingAssertions = run.pendingAssertions + assertors.size)
-                  } else {
-                    run
-                  }
-                }
-                case failure: ErrorResponse => {
-                  runWithResponse
-                }
-              }
-              
-              stateOf(scheduleNextURLsToFetch(run))
-            }
-            case Lazy => stay() using runWithResponse
-          }
+
+      (response, runWithResponse.explorationMode) match {
+        // we do something only if
+        // * we're ProActive
+        // * it's an HttpResponse (not a failure)
+        // * this is for the current run (btw, it's not an error when it's not)
+        case (httpResponse: HttpResponse, ProActive) if response.runId === runWithResponse.id => {
+          val (runWithNewURLs, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
+          if (!newUrls.isEmpty)
+            logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, runWithResponse.numberOfKnownUrls))
+          // schedule assertions (why only if it's a GET?)
+          val assertors = getAssertors(httpResponse)
+          if (httpResponse.action === GET)
+            assertors foreach { assertor => assertionsActorRef ! AssertorCall(assertor, httpResponse) }
+          // schedule new fetches
+          val runWithPendingAssertions =
+            runWithNewURLs.copy(pendingAssertions = runWithNewURLs.pendingAssertions + assertors.size)
+          stateOf(scheduleNextURLsToFetch(runWithPendingAssertions))
         }
-        case _ => {logger.debug("wrong run id"); stay()}
+        case _ => stateOf(runWithResponse)
       }
+
     }
     case Event(msg: ListenerMessage, _) => {
       listenerHandler(msg)
@@ -173,7 +167,6 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       stateOf(scheduleNextURLsToFetch(runData))
     }
     case Event(Stop, run) => {
-      logger.error("Stop")
       assertionsActorRef ! Stop
       stateOf(run.stopMe())
     }
@@ -186,7 +179,6 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
   onTransition {
     case _ -> _ => {
       val msg = UpdateData(nextStateData.data, nextStateData.activity)
-      logger.error(msg.toString + " &&& " + nextStateData.pendingAssertions + " &&& " + nextStateData.pending)
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
@@ -222,8 +214,8 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
 
   private final def scheduleNextURLsToFetch(run: Run): Run = {
     val (newObservation, explores) = run.takeAtMost(MAX_URL_TO_FETCH)
-    //val runId = run.id
-    explores foreach { explore => fetch(explore, run.id) }
+    val runId = run.id
+    explores foreach { explore => fetch(explore, runId) }
     newObservation
   }
 

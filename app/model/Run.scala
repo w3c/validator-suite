@@ -217,11 +217,6 @@ case class Run(
     (current, urls.reverse)
   }
 
-//  def withCompletedFetch(url: URL): Run = this.copy(
-//    pending = pending - url,
-//    fetched = fetched + url,
-//    data = data.copy(resources = data.resources + 1))
-  
   def withResourceResponse(response: ResourceResponse): Run = this.copy(
     pending = pending - response.url,
     fetched = fetched + response.url,
