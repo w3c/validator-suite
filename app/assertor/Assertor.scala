@@ -9,8 +9,8 @@ import org.w3.vs.model.AssertorId
  */
 trait Assertor {
   // TODO Fix this.
-  implicit val conf = org.w3.vs.Prod.configuration
-  implicit val executionContext = conf.assertorExecutionContext  
+  implicit lazy val conf = org.w3.vs.Prod.configuration
+  implicit lazy val executionContext = conf.assertorExecutionContext  
   
   val id: AssertorId = AssertorId() 
   val name: String

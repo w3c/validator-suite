@@ -59,7 +59,7 @@ CONSTRUCT {
     val construct = SparqlOps.ConstructQuery(query, xsd, ont)
     FutureVal(store.executeConstruct(construct)) flatMap { graph =>
       FutureVal.pureVal[Throwable, UserVO]{
-        graph.getAllInstancesOf(ont.User).exactlyOneUri flatMap { uri =>
+        graph.getAllInstancesOf(ont.User).as[Rdf#URI] flatMap { uri =>
           val pointed = PointedGraph(uri, graph)
           UserVOBinder.fromPointedGraph(pointed)
         } 
