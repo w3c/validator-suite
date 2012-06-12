@@ -1,18 +1,15 @@
 package org.w3.vs.model
 
 import org.w3.banana._
-import org.w3.banana.diesel._
 import scalaz._
 import scalaz.Scalaz._
 import scalaz.Validation._
 
 trait UriBuilders[Rdf <: RDF] {
+self: Binders[Rdf] =>
 
-  val ops: RDFOperations[Rdf]
-  val diesel: Diesel[Rdf]
-  
-  import ops._
   import diesel._
+  import ops._
 
   object AssertionUri extends PrefixBuilder("", "https://validator.w3.org/suite/assertion/", ops) {
     def apply(id: AssertionId): Rdf#URI = apply(id.toString)

@@ -1,15 +1,14 @@
 package org.w3.vs.model
 
 import org.w3.banana._
-import org.w3.banana.diesel._
 import scalaz._
 import scalaz.Scalaz._
 import scalaz.Validation._
 
 trait Ontologies[Rdf <: RDF] {
-self: LiteralBinders[Rdf] =>
+self: Binders[Rdf] =>
 
-  val ops: RDFOperations[Rdf]
+  import diesel._
   import ops._
 
   object ont extends PrefixBuilder("ont", "https://validator.w3.org/suite/ontology#", ops) {
@@ -70,11 +69,15 @@ self: LiteralBinders[Rdf] =>
     val entrypoint = apply("entrypoint")
     val linkCheck = apply("linkCheck")
     val maxResources = apply("maxResources")
+    val assertorSelector = apply("assertorSelector")
     
     val User = apply("User")
     val email = apply("email")
     val password = apply("password")
     val organizationId = apply("organizationId")
+
+    val AssertorSelector = apply("AssertorSelector")
+    val map = apply("map")
     
   }
 

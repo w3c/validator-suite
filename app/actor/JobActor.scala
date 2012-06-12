@@ -132,11 +132,14 @@ class JobActor(job: Job)(
                 case httpResponse: HttpResponse => {
                   val (run, newUrls) = _run.withResourceResponse(httpResponse).withNewUrlsToBeExplored(httpResponse.extractedURLs, distance + 1)
                   if (!newUrls.isEmpty) logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, run.numberOfKnownUrls))
-                  val assertors = strategy.assertorsFor(resource)
-                  if (assertors.nonEmpty) {
-                    assertors foreach { 
-                      case assertor: FromHttpResponseAssertor => assertionsActorRef ! AssertorCall(assertor, httpResponse)
-                      case _ => logger.error("With the current model and logic jobActor only supports FromHttpResponseAssertor")
+                  val assertors =
+                    for {
+                      mimetype <- httpResponse.headers.mimetype.toList if httpResponse.action === GET
+                      assertorName <- strategy.assertorSelector.get(mimetype).flatten
+                    } yield Assertors.get(assertorName)
+                  if (response.action === GET && assertors.nonEmpty) {
+                    assertors foreach { assertor =>
+                      assertionsActorRef ! AssertorCall(assertor, httpResponse)
                     }
                     run.copy(pendingAssertions = run.pendingAssertions + assertors.size)
                   } else {

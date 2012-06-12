@@ -36,7 +36,7 @@ object Strategy {
   
   def apply(vo: StrategyVO)(implicit conf: VSConfiguration): Strategy = {
     import vo._
-    Strategy(id, entrypoint, linkCheck, maxResources, filter)
+    Strategy(id, entrypoint, linkCheck, maxResources, filter, assertorSelector)
   }
 
 }
@@ -47,7 +47,7 @@ case class Strategy (
     linkCheck: Boolean,
     maxResources: Int,
     filter: Filter = Filter.includeEverything,
-    assertorsFor: AssertorSelector = AssertorSelector.simple)(implicit conf: VSConfiguration) {
+    assertorSelector: AssertorSelector = AssertorSelector.simple)(implicit conf: VSConfiguration) {
   
   val distance: Int = 50
   
@@ -68,8 +68,8 @@ case class Strategy (
       IGNORE
     }
 
-  def noAssertor(): Strategy = this.copy(assertorsFor = AssertorSelector.noAssertor)
+  def noAssertor(): Strategy = this.copy(assertorSelector = AssertorSelector.noAssertor)
   
-  def toValueObject: StrategyVO = StrategyVO(id, entrypoint, distance, linkCheck, maxResources, filter)
+  def toValueObject: StrategyVO = StrategyVO(id, entrypoint, distance, linkCheck, maxResources, filter, assertorSelector)
   
 }

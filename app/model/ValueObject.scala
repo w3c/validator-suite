@@ -92,7 +92,8 @@ case class StrategyVO (
     distance: Int,
     linkCheck: Boolean,
     maxResources: Int,
-    filter: Filter) extends ValueObject
+    filter: Filter,
+    assertorSelector: AssertorSelector) extends ValueObject
     
 case class UserVO (
     id: UserId = UserId(),

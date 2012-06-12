@@ -44,7 +44,6 @@ object User {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.ops._
-    import conf.projections._
     import conf.binders.{ xsd => _, _ }
     import conf.diesel._
     val query = """

@@ -10,7 +10,7 @@ import org.w3.util.URL
 
 class BindersTest extends WordSpec with MustMatchers {
 
-  val binders = Binders(JenaOperations, JenaGraphUnion, JenaGraphTraversal)
+  val binders = Binders(JenaDiesel)
   import binders._
 
   def testSerializeDeserialize[T](binder: PointedGraphBinder[Jena, T])(t: T) = {
@@ -145,7 +145,8 @@ class BindersTest extends WordSpec with MustMatchers {
         distance = 2,
         linkCheck = true,
         maxResources = 100,
-        filter = Filter.includeEverything)
+        filter = Filter.includeEverything,
+        assertorSelector = AssertorSelector("custom-assertor-selector", Map("nawak" -> List("cssval", "valnu"))))
     }
   }
 

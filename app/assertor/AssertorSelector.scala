@@ -1,41 +1,28 @@
-package org.w3.vs.assertor
+package org.w3.vs.model
 
 import org.w3.util.Headers._
 import org.w3.vs.model._
 import scalaz.Scalaz._
 
-trait AssertorSelector extends (ResourceResponse => Iterable[Assertor]) {
-  def name: String
-
-  override def equals(other: Any): Boolean = other match {
-    case ass: AssertorSelector => this.name == ass.name
-    case _ => false
-  }
-
-  override def toString = name
-
-}
+case class AssertorSelector(
+  name: String,
+  // maps a mime-type to a list of assertor name
+  map: Map[String, List[String]])
 
 object AssertorSelector {
 
-  val noAssertor: AssertorSelector = new AssertorSelector {
-    val name = "no-assertor"
-    def apply(response: ResourceResponse): Iterable[Assertor] = Seq.empty
-  }
+  implicit def assertorSelector2Map(as: AssertorSelector): Map[String, List[String]] = as.map
 
-  def fromMimeType(pf: PartialFunction[String, Iterable[Assertor]]) = new AssertorSelector {
-    val name = "from-mime-type"
-    def apply(response: ResourceResponse): Iterable[Assertor] = {
-      response match {
-        case a: HttpResponse if a.action == GET => a.headers.mimetype.collect(pf).flatten
-        case _ => Seq.empty
-      }
-    }
-  }
+  val noAssertor: AssertorSelector = AssertorSelector("no-assertor", Map.empty)
 
-  val simple: AssertorSelector = fromMimeType {
-    case "text/html" | "application/xhtml+xml" => Seq(ValidatorNu, HTMLValidator, I18nChecker)
-    case "text/css" => Seq(CSSValidator)
+  val simple: AssertorSelector = {
+    import org.w3.vs.assertor._
+    AssertorSelector(
+      "simple-assertor-selector",
+      Map(
+        "text/html" -> List(ValidatorNu.name, HTMLValidator.name, I18nChecker.name),
+        "application/xhtml+xml" -> List(ValidatorNu.name, HTMLValidator.name, I18nChecker.name),
+        "text/css" -> List(CSSValidator.name)))
   }
 
 }

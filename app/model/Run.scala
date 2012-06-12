@@ -16,7 +16,6 @@ import java.util.UUID
 import scalaz.Scalaz._
 import org.joda.time._
 import org.w3.banana._
-import org.w3.banana.diesel._
 
 object Run {
 
