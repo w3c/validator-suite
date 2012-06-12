@@ -22,15 +22,15 @@
 		<article>
 			<dl>
 				<dt>Assertor</dt>
-				<dd class="assertor">@assertion.assertorId</dd>
+				<dd class="assertor">@org.w3.vs.assertor.Assertor.getName(assertion.assertorId)</dd>
 				<dt>Severity</dt>
 				<dd class="severity">@assertion.severity</dd>
 				<dt>Message</dt>
-				<dd class="message">@assertion.title</dd>
+				<dd class="message">@HtmlFormat.raw(assertion.title)</dd>
 				<dt>Description</dt>
-				<dd class="description">@assertion.description</dd>
+				<dd class="description">@assertion.description.map(HtmlFormat.raw _)</dd>
 				<dt>Last validated</dt>
-				<dd class="timestamp">@assertion.timestamp</dd>
+				<dd class="timestamp"><time datetime="@assertion.timestamp">@Helper.formatTime(assertion.timestamp)</time></dd>
 				<dt>Contexts</dt>
 				@contexts.map { case context =>
 				<dd class="context">@context.toString</dd>

@@ -1,9 +1,12 @@
 package org.w3.vs.view
 
+import org.w3.util._
 import org.w3.vs._
 import org.w3.vs.model._
+import org.w3.vs.assertor._
 import play.api.libs.json._
 import scalaz._
+import org.joda.time.{ DateTime, DateTimeZone }
 
 case object JobsUpdate {
   
@@ -48,13 +51,14 @@ case object ResourceUpdate {
 case object AssertorUpdate {
   
   def json(assertions: Iterable[Assertion]): JsValue = {
-    val assertMessages: Iterable[JsValue] = assertions.groupBy(_.url).collect{
+    //implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
+    val assertMessages: Iterable[JsValue] = assertions.groupBy(_.url).map{
       case (url, assertions) => 
         JsArray(List(
           JsString(url.toString),
           // TODO: I don't maintain a <time> element with javascript.
           // Ask someone if that semantic is still relevant post js
-          JsString(Helper.formatTime(assertions.head.timestamp)),
+          JsString(Helper.formatTime(assertions.map(_.timestamp).max)),
           JsNumber(assertions.count(_.severity == Warning)),
           JsNumber(assertions.count(_.severity == Error))
         ))

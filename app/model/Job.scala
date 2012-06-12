@@ -58,11 +58,11 @@ case class Job(
   }
 
   def getAssertions(): FutureVal[Exception, Iterable[Assertion]] = {
-    Assertion.getForJob(this)
+    Assertion.getForJob(this).map(_.filter(_.severity != Info))
   }
   
   def getAssertions(url: URL): FutureVal[Exception, Iterable[Assertion]] = {
-    Assertion.getForJob(this, url)
+    Assertion.getForJob(this, url).map(_.filter(_.severity != Info))
   }
   
   // Represent an article on the byUrl report

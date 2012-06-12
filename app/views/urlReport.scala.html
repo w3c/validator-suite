@@ -15,7 +15,7 @@
 }{ @***** Content *****@ 
 	
 	@libs.admin(user)
-	@libs.navigation("TODO", List())
+	@libs.navigation("Report for \"" + article.url +"\"", List((job.name, routes.Jobs.show(job.id).toString), (article.url.toString, "")))
 	@libs.messages(messages)
 	
 	<hr>

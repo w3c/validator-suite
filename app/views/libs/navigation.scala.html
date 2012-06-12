@@ -12,11 +12,10 @@
 		<ul>
 			<li><a href="@routes.Jobs.index">dashboard</a></li>
 			@crumbs.map { crumb =>
-			  @if(crumb._2 == "") {
-		  	    <li>@crumb._1</li>
-			  } else {
-			    <li><a href="@crumb._2">@crumb._1</a></li>
-			  }
-			}
+			@if(crumb._2 == "") {
+			<li>@crumb._1</li>
+			} else {
+			<li><a href="@crumb._2">@crumb._1</a></li>
+			}}
 		</ul>
 	</nav>

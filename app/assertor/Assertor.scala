@@ -15,3 +15,17 @@ trait Assertor {
   val id: AssertorId = AssertorId() 
   val name: String
 }
+
+object Assertor {
+  
+  def getName(id: AssertorId): String = {
+    id match {
+      case CSSValidator.id => CSSValidator.name
+      case HTMLValidator.id => HTMLValidator.name
+      case ValidatorNu.id => ValidatorNu.name
+      case I18nChecker.id => I18nChecker.name
+      case _ => "Unknown assertor?"
+    }
+  }
+  
+}
