@@ -18,7 +18,8 @@ abstract class StoreTest(
   nbWarnings: Int,
   nbInfos: Int,
   nbHttpErrorsPerAssertions: Int,
-  nbHttpResponsesPerAssertions: Int)
+  nbHttpResponsesPerAssertions: Int,
+  nbJobDatas: Int)
 extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val nbAssertionsPerRun = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos )
@@ -139,6 +140,22 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     builder.result()
   }
 
+  // jobdatas for run1
+  val jobDatas: Vector[JobData] = {
+    val now = DateTime.now(DateTimeZone.UTC)
+    val builder = Vector.newBuilder[JobData]
+    builder.sizeHint(nbJobDatas)
+    for (i <- 1 to nbJobDatas)
+      builder += JobData(
+        id = JobDataId(),
+        runId = run1.id,
+        resources = 1000,
+        errors = 42,
+        warnings = 1,
+        timestamp = now.plusSeconds(2))
+    builder.result()
+  }
+
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
     (for {
@@ -155,6 +172,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     assertions foreach { assertion => Assertion.save(assertion).result(10.milliseconds) }
     contexts foreach { context => Context.save(context).result(10.milliseconds) }
     resourceResponses foreach { rr => ResourceResponse.save(rr).result(10.milliseconds) }
+    jobDatas foreach { jd => JobData.save(jd).result(10.milliseconds) }
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
     println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
@@ -300,6 +318,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     retrieved must have size (2)
   }
 
+  "save and retrieve JobData" in {
+    val jobData = jobDatas(0)
+    val retrieved = JobData.get(jobData.id).result(1.second)
+    retrieved must be === (Success(jobData))
+  }
+
 
 }
 
@@ -310,7 +334,8 @@ class StoreTestLight extends StoreTest(
   nbWarnings = 3,
   nbInfos = 3,
   nbHttpErrorsPerAssertions = 2,
-  nbHttpResponsesPerAssertions = 5)
+  nbHttpResponsesPerAssertions = 5,
+  nbJobDatas = 3)
 
 class StoreTestHeavy extends StoreTest(
   nbUrlsPerAssertions = 100,
@@ -318,4 +343,5 @@ class StoreTestHeavy extends StoreTest(
   nbWarnings = 10,
   nbInfos = 10,
   nbHttpErrorsPerAssertions = 5,
-  nbHttpResponsesPerAssertions = 10)
+  nbHttpResponsesPerAssertions = 10,
+  nbJobDatas = 3)

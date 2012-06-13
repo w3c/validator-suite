@@ -5,6 +5,8 @@ import org.w3.util._
 import org.w3.vs.actor._
 import org.joda.time.DateTime
 import scala.math._
+import org.w3.banana._
+import scalaz.Scalaz._
 
 case class JobData (
     id: JobDataId,
@@ -27,6 +29,25 @@ object JobData {
       val h = (exp(log(0.5) / 10 * errorAverage) * 100).toInt
       scala.math.max(1, h)
     }
+  }
+
+  def save(jobData: JobData)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val graph = JobDataBinder.toPointedGraph(jobData).graph
+    val result = conf.store.addNamedGraph(JobDataUri(jobData.id), graph)
+    FutureVal(result)
+  }
+
+  def get(jobDataId: JobDataId)(implicit conf: VSConfiguration): FutureVal[Exception, JobData] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    val uri = JobDataUri(jobDataId)
+    FutureVal(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
+      val pointed = PointedGraph(uri, graph)
+      JobDataBinder.fromPointedGraph(pointed)
+    }
+
   }
 
 }
