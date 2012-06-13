@@ -1,6 +1,7 @@
 package org.w3.util
 
 import java.net.{URL => jURL}
+import scalaz.Equal
 
 case class URL(url: String) {
   
@@ -45,6 +46,8 @@ object URL {
   def fromString(url: String) = URL(url)
   
   def clearHash(url: URL): URL = URL(new jURL(url.protocol, url.host, url.port, url.file))
+
+  implicit val equal = Equal.equalA[URL]
   
 }
 

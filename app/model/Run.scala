@@ -95,6 +95,8 @@ case class Run(
     invalidated: Int = 0,
     pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
 
+  val logger = play.Logger.of(classOf[Run])
+
   def getJobData(): JobData = JobData(JobDataId(), id, resources, errors, warnings, createdAt)
 
   def health: Int = JobData.health(resources, errors, warnings)
@@ -115,12 +117,38 @@ case class Run(
   def save(): FutureVal[Exception, Unit] = Run.save(this)
   
   def delete(): FutureVal[Exception, Unit] = Run.delete(this)
+
+  // Represent an article on the byUrl report
+  // (resource url, last assertion timestamp, total warnings, total errors)
+  // TODO: optimize by writing the db request directly
+  def getURLArticles(): FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
+    for {
+      assertions <- Assertion.getForRun(id)
+    } yield {
+      assertions.groupBy(_.url).map { case (url, it) => 
+        (url, 
+         it.map(_.timestamp).max,
+         it.count(_.severity == Warning),
+         it.count(_.severity == Error))
+      }.filter(t => t._3 != 0 || t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4)
+    }
+  }
+
+  def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
+    getURLArticles().map{it => it.find(_._1 == url)} discard {
+      case None => new Exception("Unknown URL") //TODO type exception
+    } map {
+      case a => a.get
+    }
+  }
+
+
+
+  /* methods related to the data */
   
   def toValueObject: RunVO = RunVO(id, explorationMode, knownUrls, toBeExplored, fetched, createdAt, job, resources, errors, warnings)
   
   def numberOfKnownUrls: Int = knownUrls.count { _.authority === mainAuthority }
-
-  val logger = play.Logger.of(classOf[Run])
 
   /**
    * An exploration is over when there are no more urls to explore and no pending url

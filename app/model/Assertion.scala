@@ -54,38 +54,7 @@ object Assertion {
 
   def get(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Assertion] =
     getAssertionVO(id) map (Assertion(_))
-
-  @deprecated("", "")
-  def getForJob(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
-    implicit val context = conf.webExecutionContext
-    import conf._
-    import conf.binders.{ xsd => _, _ }
-    import conf.diesel._
-    val query = """
-CONSTRUCT {
-  ?assertionUri ?p ?o .
-} WHERE {
-  graph ?runUri {
-    ?runUri a ont:Run .
-    ?runUri ont:jobId <#jobUri>
-  }
-  graph ?assertionUri {
-    ?assertionUri a ont:Assertion .
-    ?assertionUri ont:runId ?runUri .
-    ?assertionUri ?p ?o
-  }
-}
-""".replaceAll("#jobUri", JobUri(jobId).toString)
-    val construct = SparqlOps.ConstructQuery(query, ont)
-    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
-  }
   
-  // TODO: optimize?
-  @deprecated("", "")
-  def getForJob(jobId: JobId, url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
-    getForJob(jobId).map{_.filter{_.url == url}}
-  }
-
   def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Assertion] = {
     implicit val c = conf
     import conf.binders._
@@ -103,6 +72,10 @@ CONSTRUCT {
       graph.getAllInstancesOf(ont.Assertion) map { pointed => fromPointedGraph(conf)(pointed) }
     assertions.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Assertion]
   }
+
+  // TODO
+  def getForRun(runId: RunId, url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] =
+    getForRun(runId) map { _.filter { _.url === url } }
 
   def getForRun(runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
     implicit val context = conf.webExecutionContext

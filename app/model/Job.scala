@@ -44,34 +44,23 @@ case class Job(
   }
 
   def getAssertions(): FutureVal[Exception, Iterable[Assertion]] = {
-    Assertion.getForJob(this).map(_.filter(_.severity != Info))
-  }
-  
-  def getAssertions(url: URL): FutureVal[Exception, Iterable[Assertion]] = {
-    Assertion.getForJob(this, url).map(_.filter(_.severity != Info))
-  }
-  
-  // Represent an article on the byUrl report
-  // (resource url, last assertion timestamp, total warnings, total errors)
-  // TODO: optimize by writing the db request directly
-  def getURLArticles: FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
-    Assertion.getForJob(id).map(_.groupBy(_.url).map{case (url, it) => 
-      (url, 
-       it.map(_.timestamp).max,
-       it.count(_.severity == Warning),
-       it.count(_.severity == Error)
-      )
-    }.filter(t => t._3 != 0 || t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4))
-  }
-  
-  def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
-    getURLArticles.map{it => it.find(_._1 == url)} discard {
-      case None => new Exception("Unknown URL") //TODO type exception
-    } map {
-      case a => a.get
+    for {
+      run <- getRun()
+      assertions <- Assertion.getForRun(run.id)
+    } yield {
+      assertions filter { _.severity != Info }
     }
   }
   
+  def getAssertions(url: URL): FutureVal[Exception, Iterable[Assertion]] = {
+    for {
+      run <- getRun()
+      assertions <- Assertion.getForRun(run.id, url)
+    } yield {
+      assertions filter { _.severity != Info }
+    }
+  }
+    
   def save(): FutureVal[Exception, Job] = Job.save(this) map { _ => this }
   
   def delete(): FutureVal[Exception, Unit] = {

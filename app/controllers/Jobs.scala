@@ -60,7 +60,7 @@ object Jobs extends Controller {
         job <- user.getJob(id)
         run <- job.getRun()
         lastCompleted <- run.getLastCompleted()
-        ars <- job.getURLArticles
+        ars <- run.getURLArticles()
       } yield {
         Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages))
       }) failMap toError toPromise
@@ -72,7 +72,8 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
-        article <- job.getURLArticle(url) map {URLArticle.apply _}
+        run <- job.getRun()
+        article <- run.getURLArticle(url) map {URLArticle.apply _}
         assertions <- job.getAssertions(url)
         tuples <- FutureVal.sequence(
             assertions.map(assertion => 
