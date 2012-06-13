@@ -324,6 +324,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     retrieved must be === (Success(jobData))
   }
 
+  "retrieve all jobDatas for a given runId" in {
+    val retrieved = JobData.getForRun(run1.id).result(1.second) getOrElse sys.error("test JobData.getForRun")
+    retrieved must have size (nbJobDatas)
+  }
 
 }
 
