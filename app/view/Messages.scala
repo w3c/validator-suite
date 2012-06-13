@@ -13,7 +13,7 @@ case object JobsUpdate {
   def json(data: JobData, activity: RunActivity): JsValue = {
     JsArray(List(
       JsString("Dashboard"),
-      JsString(data.jobId.toString),
+      JsString(data.runId.toString),
       JsString(activity.toString),
       JsNumber(data.resources),
       JsNumber(data.errors),

@@ -7,13 +7,20 @@ import org.joda.time.DateTime
 import scala.math._
 
 case class JobData (
-    jobId: JobId,
+    id: JobDataId,
+    runId: RunId,
     resources: Int,
     errors: Int,
     warnings: Int,
     timestamp: DateTime) {
   
-  def health: Int = {
+  def health: Int = JobData.health(resources, errors, warnings)
+
+}
+
+object JobData {
+
+  def health(resources: Int, errors: Int, warnings: Int): Int = {
     if (resources == 0) 0
     else {
       val errorAverage = errors.toDouble / resources.toDouble
@@ -21,4 +28,5 @@ case class JobData (
       scala.math.max(1, h)
     }
   }
+
 }

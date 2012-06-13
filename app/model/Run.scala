@@ -94,7 +94,9 @@ case class Run(
     invalidated: Int = 0,
     pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
 
-  def data: JobData = JobData(job.id, resources, errors, warnings, createdAt)
+  def getJobData(): JobData = JobData(JobDataId(), id, resources, errors, warnings, createdAt)
+
+  def health: Int = JobData.health(resources, errors, warnings)
 
   def strategy = job.strategy
   

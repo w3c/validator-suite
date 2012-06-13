@@ -9,7 +9,6 @@ object Id {
   implicit def toId(e: Run): RunId = e.id
   implicit def toId(e: User): UserId = e.id
   implicit def toId(e: Context): ContextId = e.id
-  //implicit def toId(e: Assertor): AssertorId = e.id
   implicit def toId(e: Strategy): StrategyId = e.id
   implicit def toId(e: Assertion): AssertionId = e.id
   implicit def toId(e: Organization): OrganizationId = e.id
