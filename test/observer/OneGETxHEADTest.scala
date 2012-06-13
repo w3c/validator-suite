@@ -47,38 +47,19 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     PathAware(http, http.path / "localhost_9002") ! SetSleepTime(0)
 
-    val enumerator = organizationTest.enumerator
-
     job.run()
 
-    // just wait for Idle
-    // there must be a better style, or we may have to write some helper functions
-    val result =
-      enumerator &>
-//        Enumeratee.map[RunUpdate](ru => { println("yeah! "+ru); ru }) ><>
-        Enumeratee.filter[RunUpdate]{ case UpdateData(_, activity) => activity == Idle ; case _ => false } ><>
-        Enumeratee.take(1) ><>
-        Enumeratee.map(List(_)) |>>
-        Iteratee.consume()
+    job.listen(testActor)
 
-    // the effective wait
-    result.flatMap(_.run).value.get
-
-    // TODO
-    // check that there are 1 + 10 resources that were searched
-    //                      10 resources for authority localhost:9002
-
-//    Thread.sleep(3000)
-    // pourquoi je ne recois rien ici???????
-//    job.listen(testActor)
-    /*fishForMessagePF(3.seconds) {
-      case UpdateData(jobData) if jobData.activity == Idle => {
-        def ris = store.listResourceInfos(job.id).waitResult()
-        ris must have size 11
-        val urls8081 = ris filter { _.url.authority == "localhost:9002" }
-        urls8081 must have size(j)
+    fishForMessagePF(3.seconds) {
+      case UpdateData(_, activity) if activity == Idle => {
+        val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
+        val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
+        rrs must have size (j + 1)
+        rrs.filter( _.url.authority == "localhost:9002" ) must have size (j)
       }
-    }*/
+    }
+
   }
 
 }
