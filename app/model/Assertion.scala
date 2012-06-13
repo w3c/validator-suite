@@ -27,6 +27,8 @@ case class Assertion(
   def toValueObject: AssertionVO = AssertionVO(id, jobId, runId, assertorId, url, lang, title, severity, description, timestamp)
 
   def save(): FutureVal[Exception, Unit] = Assertion.save(this)
+  
+  def delete(): FutureVal[Exception, Unit] = Assertion.delete(this)
 
 }
 
@@ -130,6 +132,9 @@ CONSTRUCT {
   def save(assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     saveAssertionVO(assertion.toValueObject)
 
+  def delete(assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    sys.error("")
+    
 }
 
 case class AssertionClosed(assertion: Assertion, contexts: Iterable[Context])

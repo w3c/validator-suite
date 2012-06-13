@@ -78,8 +78,10 @@ CONSTRUCT {
   def save(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     saveUserVO(user.toValueObject)
 
+  def delete(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    sys.error("")
+    
 }
-
 
 
 case class User (
@@ -103,6 +105,8 @@ case class User (
   }
   
   def save(): FutureVal[Exception, Unit] = User.save(this)
+  
+  def delete(): FutureVal[Exception, Unit] = User.delete(this)
 
   def toValueObject: UserVO = UserVO(id, name, email, password, organizationId)
 }

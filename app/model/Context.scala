@@ -19,6 +19,8 @@ case class Context(
   def toValueObject: ContextVO = ContextVO(id, content, line, column, assertionId)
 
   def save(): FutureVal[Exception, Unit] = Context.save(this)
+  
+  def delete(): FutureVal[Exception, Unit] = Context.delete(this)
 
 } 
 
@@ -61,4 +63,7 @@ object Context {
   def save(context: Context)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     saveContextVO(context.toValueObject)
 
+  def delete(context: Context)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    sys.error("")
+    
 }

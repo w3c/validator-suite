@@ -34,6 +34,9 @@ object Strategy {
   def save(strategy: Strategy)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     saveStrategyVO(strategy.toValueObject)
   
+  def delete(strategy: Strategy)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    sys.error("")
+    
   def apply(vo: StrategyVO)(implicit conf: VSConfiguration): Strategy = {
     import vo._
     Strategy(id, entrypoint, linkCheck, maxResources, filter, assertorSelector)
@@ -69,6 +72,10 @@ case class Strategy (
     }
 
   def noAssertor(): Strategy = this.copy(assertorSelector = AssertorSelector.noAssertor)
+  
+  def save() = Strategy.save(this)
+  
+  def delete() = Strategy.delete(this)
   
   def toValueObject: StrategyVO = StrategyVO(id, entrypoint, linkCheck, maxResources, filter, assertorSelector)
   
