@@ -38,22 +38,6 @@ case class Job(
   def getOrganization(): FutureVal[Exception, Organization] = 
     Organization.get(organizationId)
   
-  @deprecated("you should get the Run yourself", "")
-  def getHistory(): FutureVal[Exception, Iterable[JobData]] = {
-    for {
-      run <- getRun()
-      jobDatas <- run.getHistory()
-    } yield jobDatas
-  }
-  
-  @deprecated("you should get the Run yourself", "")
-  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
-    for {
-      run <- getRun()
-      timestampOpt <- run.getLastCompleted()
-    } yield timestampOpt
-  }
-
   def getRun(): FutureVal[Throwable, Run] = {
     implicit def ec = conf.webExecutionContext
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
