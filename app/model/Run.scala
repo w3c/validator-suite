@@ -73,6 +73,7 @@ object Run {
   
   def delete(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     sys.error("")
+
 }
 
 /**
@@ -98,6 +99,17 @@ case class Run(
 
   def health: Int = JobData.health(resources, errors, warnings)
 
+  def getHistory(): FutureVal[Exception, Iterable[JobData]] =
+    JobData.getForRun(id)
+
+  // TODO optimize with a query
+  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
+    getHistory() map { jobDatas =>
+      val timestamps = jobDatas.view map { _.timestamp }
+      if (timestamps.isEmpty) None else Some(timestamps.max)
+    }
+  }
+
   def strategy = job.strategy
   
   def save(): FutureVal[Exception, Unit] = Run.save(this)
@@ -107,13 +119,6 @@ case class Run(
   def toValueObject: RunVO = RunVO(id, explorationMode, knownUrls, toBeExplored, fetched, createdAt, job, resources, errors, warnings)
   
   def numberOfKnownUrls: Int = knownUrls.count { _.authority === mainAuthority }
-
-  // assert(
-  //   distance.keySet == fetched ++ pending ++ toBeExplored,
-  //   Run.diff(distance.keySet, fetched ++ pending ++ toBeExplored).toString)
-  // assert(toBeExplored.toSet.intersect(pending) == Set.empty)
-  // assert(pending.intersect(fetched) == Set.empty)
-  // assert(toBeExplored.toSet.intersect(fetched) == Set.empty)
 
   val logger = play.Logger.of(classOf[Run])
 

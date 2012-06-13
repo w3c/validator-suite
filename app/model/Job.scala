@@ -33,24 +33,25 @@ case class Job(
   def toValueObject: JobVO = 
     JobVO(id, name, createdOn, creatorId, organizationId, strategy.id)
   
-  def getCreator: FutureVal[Exception, User] = User.get(creatorId)
+  def getCreator(): FutureVal[Exception, User] = User.get(creatorId)
   
-  def getOrganization: FutureVal[Exception, Organization] = 
+  def getOrganization(): FutureVal[Exception, Organization] = 
     Organization.get(organizationId)
   
-  def getHistory: FutureVal[Exception, Iterable[JobData]] = {
-    implicit def ec = conf.webExecutionContext
-    FutureVal.successful(Iterable())
+  @deprecated("you should get the Run yourself", "")
+  def getHistory(): FutureVal[Exception, Iterable[JobData]] = {
+    for {
+      run <- getRun()
+      jobDatas <- run.getHistory()
+    } yield jobDatas
   }
   
-  def getLastCompleted: FutureVal[Exception, Option[DateTime]] = {
-    getHistory.map{iterable =>
-      val timestamps = iterable.map(_.timestamp)
-      if (timestamps.isEmpty)
-        None
-      else
-        Some(timestamps.max)
-    }
+  @deprecated("you should get the Run yourself", "")
+  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
+    for {
+      run <- getRun()
+      timestampOpt <- run.getLastCompleted()
+    } yield timestampOpt
   }
 
   def getRun(): FutureVal[Throwable, Run] = {
