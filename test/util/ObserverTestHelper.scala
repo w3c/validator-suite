@@ -43,6 +43,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   
   override def afterAll: Unit = {
     configuration.system.shutdown()
+    configuration.system.awaitTermination()
     servers foreach { _.stop() }
     org.w3.vs.Prod.configuration = configurationBeforeTest
   }
