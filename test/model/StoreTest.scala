@@ -269,6 +269,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     retrievedAssertions must contain (assertions(0))
   }
 
+  // Wrong test, Assertion.getForJob(job1.id) must be equivalent to Assertion.getForRun(run1.id) if run1.id is the last run.
+  // It's currently implicit but could be exposed by adding a runIdOption to Assertion.getForJob's signature
   "get all assertions for a given a jobId" in {
     val retrievedAssertions = Assertion.getForJob(job1.id).result(2.second) getOrElse sys.error("")
     retrievedAssertions must have size(nbAssertionsForJob1)
