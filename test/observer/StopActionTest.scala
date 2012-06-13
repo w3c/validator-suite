@@ -36,8 +36,6 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
-    val enumerator = organizationTest.enumerator
-
     job.run()
 
     job.listen(testActor)

@@ -44,37 +44,17 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    val enumerator = organizationTest.enumerator
-
-    // Tom: I couldn't find an elegant way to do what you want in the general case other that what you did. 
-    // This is a simplification for this use case
-    val result2 =
-      enumerator &>
-        Enumeratee.collect[RunUpdate]{case a: UpdateData if a.activity == Idle => a} |>>
-        Cont[UpdateData, Input[UpdateData]](in => Done(in,Input.Empty))
-
     job.run()
+
+    job.listen(testActor)
     
-    //Iteratee.flatten(result2).run.value.get must be /*(an El[RunUpdate] with idle activity)*/
-
-    // just wait for Idle
-    // there must be a better style, or we may have to write some helper functions
-    val result =
-      enumerator &>
-//        Enumeratee.map[RunUpdate](ru => { println("yeah! "+ru); ru }) ><>
-        Enumeratee.filter[RunUpdate]{ case UpdateData(_, activity) => activity == Idle ; case _ => false } ><> 
-        Enumeratee.take(1) ><>
-        Enumeratee.map(List(_)) |>>
-        Iteratee.consume()
-
-    // the effective wait
-    result.flatMap(_.run).value.get
-
-    val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
-
-    val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
-
-    rrs must have size (circumference + 1)
+    fishForMessagePF(3.seconds) {
+      case UpdateData(_, activity) if activity == Idle => {
+        val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
+        val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
+        rrs must have size (circumference + 1)
+      }
+    }
 
   }
   

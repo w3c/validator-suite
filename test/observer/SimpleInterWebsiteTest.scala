@@ -39,8 +39,6 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       _ <- Job.save(job)
     } yield ()).result(1.second)
 
-    val enumerator = organizationTest.enumerator
-
     job.run()
 
     job.listen(testActor)
