@@ -55,6 +55,7 @@ object Assertion {
   def get(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Assertion] =
     getAssertionVO(id) map (Assertion(_))
 
+  @deprecated("", "")
   def getForJob(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
     implicit val context = conf.webExecutionContext
     import conf._
@@ -80,6 +81,7 @@ CONSTRUCT {
   }
   
   // TODO: optimize?
+  @deprecated("", "")
   def getForJob(jobId: JobId, url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
     getForJob(jobId).map{_.filter{_.url == url}}
   }

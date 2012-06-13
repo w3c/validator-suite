@@ -32,6 +32,7 @@ object ResourceResponse {
   def get(id: ResourceResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] =
     getResourceResponseVO(id) map { ResourceResponse(_) }
 
+  @deprecated("", "")
   def getForJob(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] =
     for {
       job <- Job.get(jobId)
