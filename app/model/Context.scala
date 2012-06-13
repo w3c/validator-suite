@@ -7,6 +7,9 @@ import org.joda.time._
 import org.w3.vs.assertor._
 import scalaz.Validation
 import org.w3.banana._
+import scalaz.Validation._
+import scalaz.Scalaz._
+import scalaz._
 
 case class Context(
     id: ContextId = ContextId(),
@@ -47,10 +50,42 @@ object Context {
   def get(id: ContextId)(implicit conf: VSConfiguration): FutureVal[Exception, Context] =
     getContextVO(id) map (Context(_))
 
-  def getForAssertion(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Context]] = {
-    // TODO
+  def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Context] = {
+    implicit val c = conf
+    import conf.binders._
+    for {
+      vo <- ContextVOBinder.fromPointedGraph(pointed)
+    } yield {
+      Context(vo)
+    }
+  }
+
+  def fromGraph(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[Context]] = {
+    import conf.diesel._
+    import conf.binders._
+    val assertions: Iterable[Validation[BananaException, Context]] =
+      graph.getAllInstancesOf(ont.Context) map { pointed => fromPointedGraph(conf)(pointed) }
+    assertions.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Context]
+  }
+
+  def getForAssertion(assertionId: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Context]] = {
     implicit val context = conf.webExecutionContext
-    FutureVal.successful(Iterable())
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?contextUri ?p ?o .
+} WHERE {
+  graph ?contextUri {
+    ?contextUri a ont:Context .
+    ?contextUri ont:assertionId <#assertionUri> .
+    ?contextUri ?p ?o
+  }
+}
+""".replaceAll("#assertionUri", AssertionUri(assertionId).toString)
+    val construct = SparqlOps.ConstructQuery(query, ont)
+    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
   }
 
   def saveContextVO(vo: ContextVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {

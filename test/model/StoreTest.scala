@@ -294,6 +294,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     rrs must contain (resourceResponses(0))
    }
 
+  "retrieve all context for a given assertionId" in {
+    val assertion = assertions(0)
+    val retrieved = Context.getForAssertion(assertion.id).result(1.second) getOrElse sys.error("test getForAssertion")
+    retrieved must have size (2)
+  }
+
 
 }
 
