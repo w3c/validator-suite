@@ -43,6 +43,7 @@ case class Job(
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
 
+  @deprecated("", "")
   def getAssertions(): FutureVal[Exception, Iterable[Assertion]] = {
     for {
       run <- getRun()
@@ -52,6 +53,7 @@ case class Job(
     }
   }
   
+  @deprecated("", "")
   def getAssertions(url: URL): FutureVal[Exception, Iterable[Assertion]] = {
     for {
       run <- getRun()
