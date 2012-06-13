@@ -33,24 +33,29 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 
   "test FilteredTreeWebsiteTest" in {
-    //stores.OrganizationStore.put(organizationTest)
-    //store.putJob(job).waitResult()
+
     (for {
       a <- Organization.save(organizationTest)
       b <- Job.save(job)
-    } yield ()).await(5 seconds)
+    } yield ()).result(1.second)
+
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
+
     job.run()
-    //job.listen(testActor)
-    /*fishForMessagePF(3.seconds) {
-      case UpdateData(jobData) if jobData.activity == Idle => {
-        def ris = store.listResourceInfos(job.id).waitResult()
-        ris must have size (50)
-        ris foreach { ri =>
-          ri.url.toString must startWith regex ("http://localhost:9001/[13]")
+
+    job.listen(testActor)
+
+    fishForMessagePF(3.seconds) {
+      case UpdateData(_, activity) if activity == Idle => {
+        val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
+        val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
+        rrs must have size (50)
+        rrs foreach { rr =>
+          rr.url.toString must startWith regex ("http://localhost:9001/[13]")
         }
       }
-    }*/
+    }
+
   }
 
 }
