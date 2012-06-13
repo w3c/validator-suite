@@ -149,7 +149,8 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
             runWithNewURLs.copy(pendingAssertions = runWithNewURLs.pendingAssertions + assertors.size)
           stateOf(scheduleNextURLsToFetch(runWithPendingAssertions))
         }
-        case _ => stateOf(scheduleNextURLsToFetch(runWithResponse))
+        case (errorResponse: ErrorResponse, ProActive) => stateOf(scheduleNextURLsToFetch(runWithResponse))
+        case _ => stateOf(runWithResponse)
       }
 
     }

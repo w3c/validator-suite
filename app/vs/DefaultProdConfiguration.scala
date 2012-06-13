@@ -107,7 +107,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
     strategy = Strategy(
       entrypoint = URL("http://www.w3.org/"),
       linkCheck = false,
-      maxResources = 10,
+      maxResources = 100,
       filter = Filter(include = Everything, exclude = Nothing)))
       
   val tr = Job(
