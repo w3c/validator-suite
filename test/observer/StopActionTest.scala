@@ -38,28 +38,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
 
     val enumerator = organizationTest.enumerator
 
-// import play.api.libs.iteratee._
-// import play.api.libs.iteratee.Input._
-// import play.api.libs.concurrent._
-
-//     val waitForNewResource =
-//       enumerator &>
-//       Enumeratee.collect[RunUpdate] { case msg@NewResource(ri) => {
-//         ri.url must be === (URL("http://localhost:9001/"))
-//         job.cancel()
-//         (msg: RunUpdate)
-//       }} &>
-//       Enumeratee.collect[RunUpdate] { case msg@UpdateData(jobData, activity) if activity == Idle => {
-//         val rrs = ResourceResponse.getForJob(job).result(1.second) getOrElse sys.error("getForRun")
-//         rrs.size must be < (100)
-//         (msg: RunUpdate)
-//       }} |>>
-//       Cont[RunUpdate, Input[RunUpdate]](in => Done(in,Input.Empty))
-
-
     job.run()
-
-//    Iteratee.flatten(waitForNewResource).run.value.get
 
     job.listen(testActor)
 

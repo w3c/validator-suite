@@ -43,28 +43,15 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
 
     job.run()
 
-    // just wait for Idle
-    // there must be a better style, or we may have to write some helper functions
-    val result =
-      enumerator &>
-//        Enumeratee.map[RunUpdate](ru => { println("yeah! "+ru); ru }) ><>
-        Enumeratee.filter[RunUpdate]{ case UpdateData(_, activity) => activity == Idle ; case _ => false } ><>
-        Enumeratee.take(1) ><>
-        Enumeratee.map(List(_)) |>>
-        Iteratee.consume()
+    job.listen(testActor)
 
-    // the effective wait
-    result.flatMap(_.run).value.get
-
-    // TODO    
-
-    //job.listen(testActor)
-    /*fishForMessagePF(3.seconds) {
-      case UpdateData(jobData) if jobData.activity == Idle => {
-        def ris = store.listResourceInfos(job.id).waitResult()
-        ris must have size 2
+    fishForMessagePF(3.seconds) {
+      case UpdateData(_, activity) if activity == Idle => {
+        val rrs = ResourceResponse.getForJob(job).result(1.second) getOrElse sys.error("getForRun")
+        rrs must have size (2)
       }
-    }*/
+    }
+
   }
   
 }
