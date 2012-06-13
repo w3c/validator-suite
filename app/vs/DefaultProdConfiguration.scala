@@ -5,6 +5,7 @@ import org.w3.util._
 import org.w3.vs.http._
 import org.w3.vs.actor._
 import org.w3.vs.model._
+import org.w3.vs.store._
 import org.w3.vs.assertor._
 import akka.util.duration._
 import akka.util.Timeout

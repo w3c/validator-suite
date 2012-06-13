@@ -1,6 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs._
+import org.w3.vs.store._
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
@@ -10,7 +11,6 @@ import java.nio.channels.ClosedChannelException
 import org.w3.vs.VSConfiguration
 import play.api.libs.iteratee._
 import org.w3.vs.actor.message._
-import org.w3.vs.model._
 import org.w3.util._
 import org.w3.util.akkaext._
 import org.w3.banana._

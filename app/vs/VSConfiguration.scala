@@ -7,7 +7,7 @@ import com.ning.http.client.AsyncHttpClient
 import org.w3.vs.actor.JobsActor
 import akka.util.Timeout
 import org.w3.banana._
-import org.w3.vs.model.Binders
+import org.w3.vs.store.Binders
 
 trait VSConfiguration {
   

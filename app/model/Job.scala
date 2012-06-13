@@ -3,6 +3,7 @@ package org.w3.vs.model
 import java.nio.channels.ClosedChannelException
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.akkaext._
+import org.w3.vs.store._
 import org.w3.vs.actor.message._
 import org.w3.vs.exception._
 import org.w3.vs.VSConfiguration

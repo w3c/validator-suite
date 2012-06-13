@@ -1,6 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs._
+import org.w3.vs.store._
 import org.w3.util._
 import org.w3.vs.assertor._
 import akka.dispatch._
@@ -70,6 +71,8 @@ object Run {
   def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     saveJobVO(run.toValueObject)
   
+  def delete(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    sys.error("")
 }
 
 /**
@@ -96,6 +99,8 @@ case class Run(
   def strategy = job.strategy
   
   def save(): FutureVal[Exception, Unit] = Run.save(this)
+  
+  def delete(): FutureVal[Exception, Unit] = Run.delete(this)
   
   def toValueObject: RunVO = RunVO(id, explorationMode, knownUrls, toBeExplored, fetched, createdAt, job, resources, errors, warnings)
   

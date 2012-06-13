@@ -1,12 +1,13 @@
-package org.w3.vs.model
+package org.w3.vs.store
 
-import org.scalatest._
+import org.scalatest.{Filter => ScalaTestFilter, _}
 import org.scalatest.matchers._
 import scalaz._
 import org.w3.banana._
 import org.w3.banana.jena._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
+import org.w3.vs.model._
 
 class BindersTest extends WordSpec with MustMatchers {
 

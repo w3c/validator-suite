@@ -1,9 +1,10 @@
-package org.w3.vs.model
+package org.w3.vs.store
 
 import org.w3.vs._
+import org.w3.vs.model._
 import org.w3.util.URL
 import scala.util.matching.Regex
-import org.scalatest._
+import org.scalatest.{Filter => ScalaTestFilter, _}
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.matchers.{ Matcher, MatchResult }
 
