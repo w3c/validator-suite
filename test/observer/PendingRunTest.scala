@@ -39,43 +39,41 @@ class PendingRunTest extends RunTestHelper(new DefaultProdConfiguration {}) with
   
   val servers = Seq(Webserver(9001, Website.tree(20).toServlet))
 
-  "test FilteredTreeWebsiteTest" in {
+  "test PendingRunTest" in {
+
     (for {
       _ <- Organization.save(organizationTest)
       _ <- Job.save(job)
-    } yield ()).await(5 seconds)
+    } yield ()).result(1.second)
+
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
     
     job.run()
+
+    job.listen(testActor)
     
-    //RunUpdate messages are indeed printed on the console
-    //org.enumerator |>> Iteratee.foreach[RunUpdate](ru => println("Org update: " + ru.getClass))
-    job.enumerator |>> Iteratee.foreach[RunUpdate](ru => println("Job update: " + ru.getClass))
-    
-    Thread.sleep(3000)
+    val runId1 = fishForMessagePF(3.seconds) { case NewResource(ri) => ri.runId }
 
-    /*val runId1 = fishForMessagePF(10.seconds) {
-      case NewResource(ri) => ri.runId
-    }*/
+    job.run()
 
-    //job.run()
-
-    /*val (runId2, timestamp) = fishForMessagePF(3.seconds) {
+    val (runId2, timestamp) = fishForMessagePF(3.seconds) {
       case NewResource(ri) if ri.runId != runId1 => (ri.runId, ri.timestamp)
-    }*/
+    }
 
-    //job ! HttpResponse(job.id, runId1, URL("http://localhost:9001/1/3/"), HEAD, 200, Map.empty, "")
+    job ! HttpResponse(job.id, runId1, URL("http://localhost:9001/1/3/"), HEAD, 200, Map.empty, "")
 
-    /*fishForMessagePF(3.seconds) {
-      case UpdateData(jobData) if jobData.activity == Idle => ()
-    }*/
+    fishForMessagePF(3.seconds) {
+      case UpdateData(_, activity) if activity == Idle => ()
+    }
 
-    /*store.listResourceInfos(job.id).waitResult().toSeq.sortBy(_.timestamp) foreach { ri =>
-      println(ri.toTinyString)
-    }*/
+    val rrs1 = ResourceResponse.getForRun(runId1).result(1.second) getOrElse sys.error("getForRun")
+    val rrs2 = ResourceResponse.getForRun(runId2).result(1.second) getOrElse sys.error("getForRun")
 
-    //val risAfterRefresh = store.listResourceInfosByRunId(runId1, after = Some(timestamp)).waitResult()
+    // there must be a resource in the first run that has arrived *after* at least one resource in the second run
+    val condition = rrs1 exists { rr1 => rrs2 exists { rr2 => rr1.timestamp isAfter rr2.timestamp } }
 
-    //risAfterRefresh must not be ('Empty)
+    condition must be (true)
+
   }
+
 }
