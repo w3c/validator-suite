@@ -226,7 +226,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
   private final def fetch(url: URL, runId: RunId): Unit = {
-    val action = strategy.fetch(url, 0)
+    val action = strategy.getActionFor(url)
     action match {
       case GET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))

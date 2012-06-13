@@ -136,7 +136,7 @@ case class Run(
   def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
 
   private def shouldIgnore(url: URL): Boolean = {
-    def notToBeFetched = IGNORE == strategy.fetch(url, 0/* @@@ */)
+    def notToBeFetched = IGNORE === strategy.getActionFor(url)
     def alreadyKnown = knownUrls contains url
     notToBeFetched || alreadyKnown
   }

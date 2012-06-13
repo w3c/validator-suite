@@ -43,8 +43,8 @@ object Jobs extends Controller {
         triples <- FutureVal.sequence(
             jobs.toSeq.sortBy(_.name).map(job => 
               for {
-                run <- job.getRun
-                lastCompleted <- job.getLastCompleted
+                run <- job.getRun()
+                lastCompleted <- run.getLastCompleted()
               } yield (job, run, lastCompleted)
             ))
       } yield {
@@ -58,8 +58,8 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
-        run <- job.getRun
-        lastCompleted <- job.getLastCompleted
+        run <- job.getRun()
+        lastCompleted <- run.getLastCompleted()
         ars <- job.getURLArticles
       } yield {
         Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages))
