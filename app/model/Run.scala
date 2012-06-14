@@ -98,25 +98,13 @@ case class Run(
 
   val logger = play.Logger.of(classOf[Run])
 
-  def getJobData(): JobData = JobData(JobDataId(), id, resources, errors, warnings, createdAt)
+  def jobData: JobData = JobData(id, resources, errors, warnings, createdAt)
   
   def getAssertions: FutureVal[Exception, Iterable[Assertion]] = Assertion.getForRun(this)
 
   def getAssertions(url: URL): FutureVal[Exception, Iterable[Assertion]] = Assertion.getForRun(this, url)
   
-  def health: Int = JobData.health(resources, errors, warnings)
-
-  // No!
-  def getHistory(): FutureVal[Exception, Iterable[JobData]] =
-    JobData.getForRun(id)
-
-  // TODO optimize with a query
-  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
-    getHistory() map { jobDatas =>
-      val timestamps = jobDatas.view map { _.timestamp }
-      if (timestamps.isEmpty) None else Some(timestamps.max)
-    }
-  }
+  def health: Int = jobData.health
 
   def strategy = job.strategy
   

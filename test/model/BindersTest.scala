@@ -161,17 +161,4 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
-
-  "JobData" in {
-    testSerializeDeserialize(JobDataBinder) {
-      JobData(
-        id = JobDataId(),
-        runId = RunId(),
-        resources = 1000,
-        errors = 42,
-        warnings = 1,
-        timestamp = DateTime.now(DateTimeZone.UTC))
-    }
-  }
-
 }

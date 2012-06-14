@@ -143,22 +143,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     builder.result()
   }
 
-  // jobdatas for run1
-  val jobDatas: Vector[JobData] = {
-    val now = DateTime.now(DateTimeZone.UTC)
-    val builder = Vector.newBuilder[JobData]
-    builder.sizeHint(nbJobDatas)
-    for (i <- 1 to nbJobDatas)
-      builder += JobData(
-        id = JobDataId(),
-        runId = run1.id,
-        resources = 1000,
-        errors = 42,
-        warnings = 1,
-        timestamp = now.plusSeconds(2))
-    builder.result()
-  }
-
   implicit val context = conf.webExecutionContext
   
   override def beforeAll(): Unit = {
@@ -177,7 +161,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     FutureVal.sequence(assertions map { Assertion.save _ }).await(10.seconds)
     FutureVal.sequence(contexts map { Context.save _ }).await(10.seconds)
     FutureVal.sequence(resourceResponses map { ResourceResponse.save _ }).await(10.seconds)
-    FutureVal.sequence(jobDatas map { JobData.save _ }).await(10.seconds)
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
     println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
@@ -316,16 +299,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     retrieved must have size (2)
   }
 
-  "save and retrieve JobData" in {
-    val jobData = jobDatas(0)
-    val retrieved = JobData.get(jobData.id).result(1.second)
-    retrieved must be === (Success(jobData))
-  }
-
-  "retrieve all jobDatas for a given runId" in {
-    val retrieved = JobData.getForRun(run1.id).result(1.second) getOrElse sys.error("test JobData.getForRun")
-    retrieved must have size (nbJobDatas)
-  }
 
 }
 

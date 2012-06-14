@@ -100,6 +100,18 @@ case class Job(
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
 
+  def getHistory(): FutureVal[Exception, Iterable[JobData]] =
+    null
+
+  // TODO optimize with a query
+  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
+    getHistory() map { jobDatas =>
+      val timestamps = jobDatas.view map { _.timestamp }
+      if (timestamps.isEmpty) None else Some(timestamps.max)
+    }
+  }
+
+
 }
 
 object Job {

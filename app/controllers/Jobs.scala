@@ -44,7 +44,7 @@ object Jobs extends Controller {
             jobs.toSeq.sortBy(_.name).map(job => 
               for {
                 run <- job.getRun()
-                lastCompleted <- run.getLastCompleted()
+                lastCompleted <- job.getLastCompleted()
               } yield (job, run, lastCompleted)
             ))
       } yield {
@@ -59,7 +59,7 @@ object Jobs extends Controller {
         user <- getUser
         job <- user.getJob(id)
         run <- job.getRun()
-        lastCompleted <- run.getLastCompleted()
+        lastCompleted <- job.getLastCompleted()
         ars <- run.getURLArticles()
       } yield {
         Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages))

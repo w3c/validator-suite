@@ -371,32 +371,6 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
 
-  val JobDataBinder = new PointedGraphBinder[Rdf, JobData] {
-
-    def toPointedGraph(t: JobData): PointedGraph[Rdf] = (
-      JobDataUri(t.id).a(ont.JobData)
-        -- ont.runId ->- RunUri(t.runId)
-        -- ont.resources ->- t.resources
-        -- ont.errors ->- t.errors
-        -- ont.warnings ->- t.warnings
-        -- ont.timestamp ->- t.timestamp
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, JobData] = {
-      for {
-        id <- pointed.as[Rdf#URI] flatMap JobDataUri.getId
-        runId <- (pointed / ont.runId).as[Rdf#URI] flatMap RunUri.getId
-        resources <- (pointed / ont.resources).as[Int]
-        errors <- (pointed / ont.errors).as[Int]
-        warnings <- (pointed / ont.warnings).as[Int]
-        timestamp <- (pointed / ont.timestamp).as[DateTime]
-      } yield {
-        JobData(id, runId, resources, errors, warnings, timestamp)
-      }
-    }
-
-  }
-
 
 
 }
