@@ -14,7 +14,9 @@ import akka.util.duration._
 import akka.util.Duration
 import scala.collection.mutable.ListMap
 import java.util.UUID
+import scalaz.Validation._
 import scalaz.Scalaz._
+import scalaz._
 import org.joda.time._
 import org.w3.banana._
 
@@ -72,6 +74,34 @@ object Run {
   
   def delete(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     sys.error("")
+
+  def getRunVOs(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[RunVO]] = {
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+CONSTRUCT {
+  ?runUri ?p ?o
+} WHERE {
+  graph ?g {
+    ?runUri ont:jobId <#jobUri> .
+    ?runUri ?p ?o
+  }
+}
+""".replaceAll("#jobUri", JobUri(jobId).toString)
+    val construct = SparqlOps.ConstructQuery(query, xsd, ont)
+    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraphVO(conf)(graph) }
+
+  }
+
+  def fromGraphVO(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[RunVO]] = {
+    import conf.diesel._
+    import conf.binders._
+    val vos: Iterable[Validation[BananaException, RunVO]] =
+      graph.getAllInstancesOf(ont.Run) map { pointed => RunVOBinder.fromPointedGraph(pointed) }
+    vos.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, RunVO]
+  }
 
 }
 

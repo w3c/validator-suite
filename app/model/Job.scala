@@ -100,8 +100,8 @@ case class Job(
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
 
-  def getHistory(): FutureVal[Exception, Iterable[JobData]] =
-    null
+  def getHistory(): FutureVal[Exception, Iterable[RunVO]] =
+    Run.getRunVOs(id)
 
   // TODO optimize with a query
   def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
@@ -231,8 +231,6 @@ CONSTRUCT {
     import conf.binders._
     val jobsVal: Iterable[Validation[BananaException, Job]] =
       graph.getAllInstancesOf(ont.Job) map { pointed => fromPointedGraph(conf)(pointed) }
-    // the Monad for ({type l[X] = Validation[BananaException, X]})#l is provided by banana-rdf
-    // there is no instance for Traverse[Iterable] in scalaz, hence the .toList
     jobsVal.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Job]
   }
 

@@ -186,20 +186,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     retrieved must be === (Success(org))
   }
   
-  // why is that throwing exceptions in the logs?
-  // also it's very slow...
-  // "retrieve run" in {
-  //   // Doesn't really have to do anything in that file. Useful for current debug
-  //   val orgId = OrganizationId()
-  //   val job = job1.copy(id = JobId(), organizationId = orgId)
-  //   val org1 = org.copy(id = orgId)
-  //   job.getRun.result(1.second) must be ('Failure)
-  //   org1.save()
-  //   job.getRun.result(1.second) must be ('Failure)
-  //   job.save()
-  //   job.getRun.result(1.second) must be ('Success)
-  // }
-
   "save and retrieve User" in {
     val retrieved = User.get(user.id).result(1.second)
     retrieved must be === (Success(user))
@@ -256,6 +242,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
   "retrieve Run" in {
     val retrieved = Run.get(run1.id).result(1.second)
     retrieved must be === (Success(run1))
+  }
+
+  "get all RunVOs given a JobId" in {
+    val retrieved = Run.getRunVOs(job1.id).result(2.second) getOrElse sys.error("test Run.getRunVOs")
+    retrieved must have size (2)
   }
 
   "retrieve Assertion" in {
