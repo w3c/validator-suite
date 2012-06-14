@@ -42,26 +42,6 @@ case class Job(
     implicit def ec = conf.webExecutionContext
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
-
-  @deprecated("", "")
-  def getAssertions(): FutureVal[Exception, Iterable[Assertion]] = {
-    for {
-      run <- getRun()
-      assertions <- Assertion.getForRun(run.id)
-    } yield {
-      assertions filter { _.severity != Info }
-    }
-  }
-  
-  @deprecated("", "")
-  def getAssertions(url: URL): FutureVal[Exception, Iterable[Assertion]] = {
-    for {
-      run <- getRun()
-      assertions <- Assertion.getForRun(run.id, url)
-    } yield {
-      assertions filter { _.severity != Info }
-    }
-  }
     
   def save(): FutureVal[Exception, Job] = Job.save(this) map { _ => this }
   

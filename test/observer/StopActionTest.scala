@@ -46,9 +46,11 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
 
     job.cancel()
 
+    val run = job.getRun.result(1.second).fold(f => sys.error("getRun failed"), s => s)
+    
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData, activity) if activity == Idle => {
-        val rrs = ResourceResponse.getForJob(job).result(1.second) getOrElse sys.error("getForRun")
+        val rrs = ResourceResponse.getForRun(run).result(1.second) getOrElse sys.error("getForRun")
         rrs.size must be < (100)
       }
     }

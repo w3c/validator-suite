@@ -74,7 +74,7 @@ object Jobs extends Controller {
         job <- user.getJob(id)
         run <- job.getRun()
         article <- run.getURLArticle(url) map {URLArticle.apply _}
-        assertions <- job.getAssertions(url)
+        assertions <- run.getAssertions(url)
         tuples <- FutureVal.sequence(
             assertions.map(assertion => 
               for {

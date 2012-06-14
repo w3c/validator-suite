@@ -98,9 +98,14 @@ case class Run(
   val logger = play.Logger.of(classOf[Run])
 
   def getJobData(): JobData = JobData(JobDataId(), id, resources, errors, warnings, createdAt)
+  
+  def getAssertions: FutureVal[Exception, Iterable[Assertion]] = Assertion.getForRun(this)
 
+  def getAssertions(url: URL): FutureVal[Exception, Iterable[Assertion]] = Assertion.getForRun(this, url)
+  
   def health: Int = JobData.health(resources, errors, warnings)
 
+  // No!
   def getHistory(): FutureVal[Exception, Iterable[JobData]] =
     JobData.getForRun(id)
 

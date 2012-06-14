@@ -32,14 +32,6 @@ object ResourceResponse {
   def get(id: ResourceResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] =
     getResourceResponseVO(id) map { ResourceResponse(_) }
 
-  @deprecated("", "")
-  def getForJob(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] =
-    for {
-      job <- Job.get(jobId)
-      run <- job.getRun()
-      rrs <- ResourceResponse.getForRun(run.id)
-    } yield rrs
-
   def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, ResourceResponse] = {
     implicit val c = conf
     import conf.binders._

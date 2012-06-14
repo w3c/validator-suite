@@ -6,11 +6,12 @@ import scalaz._
 import org.w3.banana._
 import org.w3.banana.jena._
 import org.joda.time.{ DateTime, DateTimeZone }
-import org.w3.util.URL
+import org.w3.util._
 import org.w3.vs._
 import org.w3.vs.model._
 import akka.util.duration._
 import org.w3.vs.exception._
+import org.w3.vs.DefaultProdConfiguration
 
 abstract class StoreTest(
   nbUrlsPerAssertions: Int,
@@ -156,6 +157,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     builder.result()
   }
 
+  implicit val context = conf.webExecutionContext
+  
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
     (for {
@@ -169,10 +172,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
       _ <- Run.save(run1)
       _ <- Run.save(run2)
     } yield ()).result(1.second)
-    assertions foreach { assertion => Assertion.save(assertion).result(10.milliseconds) }
-    contexts foreach { context => Context.save(context).result(10.milliseconds) }
-    resourceResponses foreach { rr => ResourceResponse.save(rr).result(10.milliseconds) }
-    jobDatas foreach { jd => JobData.save(jd).result(10.milliseconds) }
+    FutureVal.sequence(assertions map { Assertion.save _ }).await(10.seconds)
+    FutureVal.sequence(contexts map { Context.save _ }).await(10.seconds)
+    FutureVal.sequence(resourceResponses map { ResourceResponse.save _ }).await(10.seconds)
+    FutureVal.sequence(jobDatas map { JobData.save _ }).await(10.seconds)
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
     println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
@@ -218,9 +221,9 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   "retrieve User by email" in {
-    User.getByEmail("foo@example.com").result(1.second) must be === (Success(user))
+    User.getByEmail("foo@example.com").result(2.second) must be === (Success(user))
 
-    User.getByEmail("unknown@example.com").result(1.second) must be === (Failure(UnknownUser))
+    User.getByEmail("unknown@example.com").result(2.second) must be === (Failure(UnknownUser))
   }
 
   "authenticate a user" in {
