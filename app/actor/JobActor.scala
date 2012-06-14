@@ -92,7 +92,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       if (run ne lastRun) {
         run.save()
         // tell the subscribers about the current run for this run
-        val msg = UpdateData(run.getJobData(), run.activity)
+        val msg = UpdateData(job.id, run.getJobData(), run.activity)
         tellEverybody(msg)
         lastRun = run
       }
@@ -180,7 +180,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
 
   onTransition {
     case _ -> _ => {
-      val msg = UpdateData(nextStateData.getJobData(), nextStateData.activity)
+      val msg = UpdateData(job.id, nextStateData.getJobData(), nextStateData.activity)
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))

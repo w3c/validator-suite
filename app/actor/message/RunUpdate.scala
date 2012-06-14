@@ -15,7 +15,7 @@ import scalaz._
  */
 sealed trait RunUpdate 
 
-case class UpdateData(data: JobData, activity: RunActivity) extends RunUpdate
+case class UpdateData(jobId: JobId, data: JobData, activity: RunActivity) extends RunUpdate
 
 /**
  * A new Response was received during the exploration

@@ -10,10 +10,10 @@ import org.joda.time.{ DateTime, DateTimeZone }
 
 case object JobsUpdate {
   
-  def json(data: JobData, activity: RunActivity): JsValue = {
+  def json(jobId: JobId, data: JobData, activity: RunActivity): JsValue = {
     JsArray(List(
       JsString("Dashboard"),
-      JsString(data.runId.toString),
+      JsString(jobId.toString),
       JsString(activity.toString),
       JsNumber(data.resources),
       JsNumber(data.errors),

@@ -33,8 +33,11 @@ window.VS = {
 				if (type === "Dashboard" && Dashboard !== undefined) {
 					var data = DashboardUpdate.fromJSON(json);
 					var job = Dashboard.jobs.get(data.get("jobId"));
-					if (!_.isUndefined(job))
+					if (!_.isUndefined(job)) {
 						job.syncData(data);
+					} else {
+						console.log("error - unknown JobId");
+					}
 				} /*else if (type === "Resource" && Report !== undefined) {
 					var data = {
 						resourceId: json[1],
