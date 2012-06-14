@@ -76,17 +76,19 @@ object FutureVal {
     FutureVal(Future.sequence(iterable))
   }
   
-  // not optimal
   def sequence[F, S](iterable: Iterable[FutureVal[F, S]])(implicit context: ExecutionContext, onTimeout: TimeoutException => F): FutureVal[F, Iterable[S]] = {
-    iterable.foldLeft(FutureVal.successful[F, Seq[S]](Seq.empty[S]))(
-      (f1, f2) => f1.flatFold(
-          failure => f1,
-          seq => f2.fold(
-              failure => failure,
-              s => s +: seq
-          )
-      )
-    )
+    // manipulate Futures
+    val futures: Iterable[Future[Validation[F, S]]] = iterable map { _.future }
+    // reduce the Futures to a single one
+    val future: Future[Iterable[Validation[F, S]]] = Future.sequence(futures)
+    // for a given F, a Validation[F, X] can be made a monad
+    implicit val validationFMonad = validationMonad[F]
+    // there is no Traversable typeclass instance for Iterable made available in scalaz
+    // but there is one for List, hence the .toList
+    val futureValidation: Future[Validation[F, Iterable[S]]] =
+      future map { validations => validations.toList.sequence[({type l[x] = Validation[F, x]})#l, S] }
+    val futureVal: FutureVal[F, Iterable[S]] = new FutureVal(futureValidation)
+    futureVal
   }
   
   // An implicit conversion from FutureVal[Throwable, A] to FutureVal[Exception, A]. We don't try to catch Error typed exceptions.

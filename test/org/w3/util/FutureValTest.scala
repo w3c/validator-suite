@@ -169,7 +169,7 @@ class FutureValTest extends WordSpec with MustMatchers {
       def seq = FutureVal.sequence(Iterable(f1, f2))
       
       seq.waitFor(1 second).isCompleted must be (true)
-      seq.waitFor(1 second).result(1.second) must be (Success(Seq("s2", "s1"))) // order?
+      seq.waitFor(1 second).result(1.second).map(_.toSet) must be (Success(Set("s2", "s1"))) // order?
       
     }
     
