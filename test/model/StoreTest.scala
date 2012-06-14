@@ -74,9 +74,16 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val now = DateTime.now(DateTimeZone.UTC)
 
+  // a job may have never completed, for example if the user has forced a new run
+  // is this assumption ok?
+  // or do we want to force a completedAt before switching to the new Job? this would be weird
   val run1 = Run(job = job1, createdAt = now, completedAt = None)
 
-  val run2 = Run(job = job1, createdAt = now.plusMinutes(5), completedAt = None)
+  val run2 = Run(job = job1, createdAt = now.plusMinutes(5), completedAt = Some(now.plusMinutes(7)))
+
+  val run3 = Run(job = job1, createdAt = now.plusMinutes(10), completedAt = Some(now.plusMinutes(12)))
+
+  val run4 = Run(job = job1, createdAt = now.plusMinutes(15), completedAt = None)
 
   val assertorId = AssertorId()
 
@@ -157,6 +164,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
       _ <- Job.save(job4)
       _ <- Run.save(run1)
       _ <- Run.save(run2)
+      _ <- Run.save(run3)
+      _ <- Run.save(run4)
     } yield ()).result(1.second)
     FutureVal.sequence(assertions map { Assertion.save _ }).await(10.seconds)
     FutureVal.sequence(contexts map { Context.save _ }).await(10.seconds)
@@ -246,7 +255,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   "get all RunVOs given a JobId" in {
     val retrieved = Run.getRunVOs(job1.id).result(2.second) getOrElse sys.error("test Run.getRunVOs")
-    retrieved must have size (2)
+    retrieved must have size (4)
   }
 
   "retrieve Assertion" in {
@@ -290,6 +299,14 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     retrieved must have size (2)
   }
 
+  "get history of JobDatas for a given jobId" in {
+    // define test logic
+  }
+
+  "get timestamp of latest completed Run for given jobId" in {
+    val retrieved = job1.getLastCompleted().result(1.second) getOrElse sys.error("test getForAssertion")
+    retrieved must be === (Some(run3.completedAt.get))
+  }
 
 }
 
