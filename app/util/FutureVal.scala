@@ -78,7 +78,7 @@ object FutureVal {
   
   def sequence[F, S](iterable: Iterable[FutureVal[F, S]])(implicit context: ExecutionContext, onTimeout: TimeoutException => F): FutureVal[F, Iterable[S]] = {
     // manipulate Futures
-    val futures: Iterable[Future[Validation[F, S]]] = iterable map { _.future }
+    val futures: Iterable[Future[Validation[F, S]]] = iterable.view map { _.future }
     // reduce the Futures to a single one
     val future: Future[Iterable[Validation[F, S]]] = Future.sequence(futures)
     // for a given F, a Validation[F, X] can be made a monad

@@ -72,9 +72,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     organizationId = org.id,
     name = "job4")
 
-  val run1 = Run(job = job1)
+  val now = DateTime.now(DateTimeZone.UTC)
 
-  val run2 = Run(job = job1)
+  val run1 = Run(job = job1, createdAt = now, completedAt = None)
+
+  val run2 = Run(job = job1, createdAt = now.plusMinutes(5), completedAt = None)
 
   val assertorId = AssertorId()
 

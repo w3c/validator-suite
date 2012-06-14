@@ -129,10 +129,10 @@ class BindersTest extends WordSpec with MustMatchers {
   "RunVO" in {
     testSerializeDeserialize(RunVOBinder) {
       RunVO(
-        toBeExplored = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")),
-        fetched = Set(URL("http://example.com/foo"), URL("http://example.com/bar")),
-        createdAt = DateTime.now(DateTimeZone.UTC),
         jobId = JobId(),
+        createdAt = DateTime.now(DateTimeZone.UTC),
+        completedAt = Some(DateTime.now(DateTimeZone.UTC)),
+        timestamp = DateTime.now(DateTimeZone.UTC),
         resources = 100,
         errors = 42,
         warnings = 1)

@@ -274,11 +274,10 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
     def toPointedGraph(t: RunVO): PointedGraph[Rdf] = (
       RunUri(t.id).a(ont.Run)
         -- ont.explorationMode ->- t.explorationMode
-        -- ont.knownUrls -->- t.knownUrls.toList
-        -- ont.toBeExplored -->- t.toBeExplored
-        -- ont.fetched -->- t.fetched.toList
-        -- ont.createdAt ->- t.createdAt
         -- ont.jobId ->- JobUri(t.jobId)
+        -- ont.createdAt ->- t.createdAt
+        -- ont.completedAt ->- t.completedAt
+        -- ont.timestamp ->- t.timestamp
         -- ont.resources ->- t.resources
         -- ont.errors ->- t.errors
         -- ont.warnings ->- t.warnings
@@ -287,17 +286,16 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, RunVO] = {
       for {
         id <- pointed.as[Rdf#URI] flatMap RunUri.getId
-        explorationMode <- (pointed / ont.explorationMode).as[ExplorationMode]
-        knownUrls <- (pointed / ont.knownUrls).as[List[URL]]
-        toBeExplored <- (pointed / ont.toBeExplored).as[List[URL]]
-        fetched <- (pointed / ont.fetched).as[List[URL]]
-        createdAt <- (pointed / ont.createdAt).as[DateTime]
         jobId <- (pointed / ont.jobId).as[Rdf#URI] flatMap JobUri.getId
+        explorationMode <- (pointed / ont.explorationMode).as[ExplorationMode]
+        createdAt <- (pointed / ont.createdAt).as[DateTime]
+        completedAt <- (pointed / ont.completedAt).asOption[DateTime]
+        timestamp <- (pointed / ont.timestamp).as[DateTime]
         resources <- (pointed / ont.resources).as[Int]
         errors <- (pointed / ont.errors).as[Int]
         warnings <- (pointed / ont.warnings).as[Int]
       } yield {
-        RunVO(id, explorationMode, knownUrls.toSet, toBeExplored, fetched.toSet, createdAt, jobId, resources, errors, warnings)
+        RunVO(id, jobId, explorationMode, createdAt, completedAt, timestamp, resources, errors, warnings)
       }
     }
   }

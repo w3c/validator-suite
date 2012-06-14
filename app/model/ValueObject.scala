@@ -76,12 +76,16 @@ case class HttpResponseVO (
     
 case class RunVO (
     id: RunId = RunId(),
-    explorationMode: ExplorationMode = ProActive,
-    knownUrls: Set[URL] = Set.empty,
-    toBeExplored: List[URL] = List.empty,
-    fetched: Set[URL] = Set.empty,
-    createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
+    // to be removed
     jobId: JobId,
+    explorationMode: ExplorationMode = ProActive,
+    // when the underlying Run was created/started
+    createdAt: DateTime,
+    // when the underlying Run reached Idle for the last time
+    // it's None if it has never been there
+    completedAt: Option[DateTime],
+    // when this RunVO was persisted
+    timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
     resources: Int = 0,
     errors: Int = 0,
     warnings: Int = 0) extends ValueObject

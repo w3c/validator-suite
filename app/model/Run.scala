@@ -46,10 +46,9 @@ object Run {
       Run(
         id = vo.id,
         explorationMode = vo.explorationMode,
-        knownUrls = vo.knownUrls,
-        toBeExplored = vo.toBeExplored,
-        fetched = vo.fetched,
         createdAt = vo.createdAt,
+        completedAt = vo.completedAt,
+        timestamp = vo.timestamp,
         job = job,
         pending = Set.empty,
         resources = vo.resources,
@@ -86,7 +85,9 @@ case class Run(
     knownUrls: Set[URL] = Set.empty,
     toBeExplored: List[URL] = List.empty,
     fetched: Set[URL] = Set.empty,
-    createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
+    createdAt: DateTime,
+    completedAt: Option[DateTime],
+    timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
     job: Job,
     pending: Set[URL] = Set.empty,
     resources: Int = 0,
@@ -151,7 +152,7 @@ case class Run(
 
   /* methods related to the data */
   
-  def toValueObject: RunVO = RunVO(id, explorationMode, knownUrls, toBeExplored, fetched, createdAt, job, resources, errors, warnings)
+  def toValueObject: RunVO = RunVO(id, job.id, explorationMode, createdAt, completedAt, timestamp, resources, errors, warnings)
   
   def numberOfKnownUrls: Int = knownUrls.count { _.authority === mainAuthority }
 

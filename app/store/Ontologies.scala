@@ -60,11 +60,8 @@ self: Binders[Rdf] =>
 
     val Run = apply("Run")
     val explorationMode = apply("explorationMode")
-    val knownUrls = apply("knownUrls")
-    val toBeExplored = apply("toBeExplored")
-    val fetched = apply("fetched")
     val createdAt = apply("createdAt")
-    val jobDataId = apply("jobDataId")
+    val completedAt = apply("completedAt")
 
     val Strategy = apply("Strategy")
     val entrypoint = apply("entrypoint")

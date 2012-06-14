@@ -21,7 +21,7 @@ import org.w3.util.Headers.wrapHeaders
 import akka.pattern.pipe
 import scalaz._
 import scalaz.Scalaz._
-import org.joda.time.DateTime
+import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.akkaext._
 
 // TODO extract all pure function in a companion object
@@ -53,7 +53,8 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
   // TODO
   configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
 
-  var lastRun = Run(job = job) // TODO get last run data from the db?
+  var lastRun =
+    Run(job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None) // TODO get last run data from the db?
 
   startWith(lastRun.state, lastRun)
 
@@ -163,7 +164,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     case Event(Refresh, run) => {
       // logger.debug("%s: received a Refresh" format shortId)
       val firstURLs = List(strategy.entrypoint)
-      val freshRun = Run(job = job)
+      val freshRun = Run(job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None)
       val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs)
       stateOf(scheduleNextURLsToFetch(runData))
     }

@@ -10,6 +10,7 @@ import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
 
+@deprecated("about to be removed", "")
 case class JobData (
     id: JobDataId,
     runId: RunId,
