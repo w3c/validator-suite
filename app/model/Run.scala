@@ -94,30 +94,6 @@ CONSTRUCT {
     FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraphVO(conf)(graph) }
   }
 
-  def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
-    implicit val context = conf.webExecutionContext
-    import conf._
-    import conf.binders.{ xsd => _, _ }
-    import conf.diesel._
-    val query = """
-SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
-  graph ?g {
-    ?runUri ont:jobId <#jobUri> .
-    ?runUri ont:completedAt ?timestamp
-  }
-}
-""".replaceAll("#jobUri", JobUri(jobId).toString)
-    import SparqlOps._
-    val select = SelectQuery(query, xsd, ont)
-    // TODO improve banana-rdf here...
-    FutureVal(store.executeSelect(select)) flatMap { rows =>
-      FutureVal.pureVal[Throwable, Option[DateTime]]{rows.headOption match {
-        case None => Success(None)
-        case Some(row) => getNode(row, "lastCompleted").as[DateTime] map { Some(_) }
-      }}(t => t)
-    }
-  }
-
   def fromGraphVO(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[RunVO]] = {
     import conf.diesel._
     import conf.binders._

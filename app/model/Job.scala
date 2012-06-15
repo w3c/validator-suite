@@ -42,6 +42,15 @@ case class Job(
     implicit def ec = conf.webExecutionContext
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
+  
+  // returns only completed JobDatas
+  def getHistory(): FutureVal[Exception, Iterable[JobData]] =
+    Run.getRunVOs(id) map { _ map { JobData.apply _ } filter { _ isCompleted } }
+
+  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
+    //Job.getLastCompleted(this)
+    getHistory() map { times => times.isEmpty.fold(None, times.maxBy(_.completedAt.get).completedAt) }
+  }
     
   def save(): FutureVal[Exception, Job] = Job.save(this) map { _ => this }
   
@@ -99,15 +108,6 @@ case class Job(
   
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
-
-  // returns only completed JobDatas
-  def getHistory(): FutureVal[Exception, Iterable[JobData]] =
-    Run.getRunVOs(id) map { _ map { JobData.apply _ } filter { _ isCompleted } }
-
-  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
-    //Run.getLastCompleted(id)
-    getHistory() map { times => times.isEmpty.fold(None, times.maxBy(_.completedAt.get).completedAt) }
-  }
 
 }
 
@@ -254,7 +254,30 @@ CONSTRUCT {
     val construct = SparqlOps.ConstructQuery(query, xsd, ont)
     FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
   }
-
+  
+    def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
+  graph ?g {
+    ?runUri ont:jobId <#jobUri> .
+    ?runUri ont:completedAt ?timestamp
+  }
+}
+""".replaceAll("#jobUri", JobUri(jobId).toString)
+    import SparqlOps._
+    val select = SelectQuery(query, xsd, ont)
+    // TODO improve banana-rdf here...
+    FutureVal(store.executeSelect(select)) flatMap { rows =>
+      FutureVal.pureVal[Throwable, Option[DateTime]]{rows.headOption match {
+        case None => Success(None)
+        case Some(row) => getNode(row, "lastCompleted").as[DateTime] map { Some(_) }
+      }}(t => t)
+    }
+  }
   
   def saveJobVO(vo: JobVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf.binders._
