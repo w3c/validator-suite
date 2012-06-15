@@ -23,7 +23,7 @@ abstract class StoreTest(
   nbJobDatas: Int)
 extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
-  val nbAssertionsPerRun = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos )
+  val nbAssertionsPerRun = nbUrlsPerAssertions * 2 /* nb of assertors */ * ( nbErrors + nbWarnings + nbInfos ) /* nb of contexts */
   val nbAssertionsForJob1 = 2 /* runs */ * nbAssertionsPerRun
 
   implicit val conf: VSConfiguration = new DefaultProdConfiguration { }
@@ -39,14 +39,14 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
       entrypoint=URL("http://localhost:9001/"),
       linkCheck=true,
       maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing)) //.noAssertor()
+      filter=Filter(include=Everything, exclude=Nothing))
 
   val strategy2 =
     Strategy( 
       entrypoint=URL("http://localhost:9001/foo"),
       linkCheck=true,
       maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing)) //.noAssertor()
+      filter=Filter(include=Everything, exclude=Nothing))
   
   val job1 = Job(
     strategy = strategy,
@@ -85,11 +85,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val run4 = Run(job = job1, createdAt = now.plusMinutes(15), completedAt = None)
 
-  val assertorId = AssertorId()
+  val assertorIds = List(AssertorId(), AssertorId())
 
   // assertions for job1
   val assertions: Vector[Assertion] = {
-    def newAssertion(runId: RunId, url: URL, severity: AssertionSeverity): Assertion =
+    def newAssertion(runId: RunId, assertorId: AssertorId, url: URL, severity: AssertionSeverity): Assertion =
       Assertion(
         jobId = job1.id,
         runId = runId,
@@ -101,10 +101,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
         description = Some("some description"))
     val builder = Vector.newBuilder[Assertion]
     builder.sizeHint(nbAssertionsForJob1)
-    for ( runId <- List(run1.id, run2.id) ; i <- 1 to nbUrlsPerAssertions ) {
-      for ( j <- 1 to nbErrors ) builder += newAssertion(runId, URL("http://example.com/foo/"+i), Error)
-      for ( j <- 1 to nbWarnings ) builder += newAssertion(runId, URL("http://example.com/foo/"+i), Warning)
-      for ( j <- 1 to nbInfos ) builder += newAssertion(runId, URL("http://example.com/foo/"+i), Info)
+    for ( runId <- List(run1.id, run2.id) ; assertorId <- assertorIds ; i <- 1 to nbUrlsPerAssertions ) {
+      for ( j <- 1 to nbErrors ) builder += newAssertion(runId, assertorId, URL("http://example.com/foo/"+i), Error)
+      for ( j <- 1 to nbWarnings ) builder += newAssertion(runId, assertorId, URL("http://example.com/foo/"+i), Warning)
+      for ( j <- 1 to nbInfos ) builder += newAssertion(runId, assertorId, URL("http://example.com/foo/"+i), Info)
     }
     builder.result()
   }

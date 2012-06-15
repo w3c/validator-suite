@@ -24,7 +24,7 @@ object Assertor {
       case HTMLValidator.id => HTMLValidator.name
       case ValidatorNu.id => ValidatorNu.name
       case I18nChecker.id => I18nChecker.name
-      case _ => "Unknown assertor?"
+      case _ => "unknown assertor with id " + id.toString
     }
   }
   
