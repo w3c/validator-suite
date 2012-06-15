@@ -1,6 +1,7 @@
 @(assertions: Iterable[(Assertion, Iterable[Context])] = None)
 		<aside>
-			<h2>Definitions</h2>
+			<h2>Assertions</h2>
+			<h3>Definitions</h3>
 			<dl>
 			   <dt class="assertor"><dfn>Assertor</dfn></dt>
 				<dd>def</dd>
@@ -24,7 +25,7 @@
 				<dt>Assertor</dt>
 				<dd class="assertor">@org.w3.vs.assertor.Assertor.getName(assertion.assertorId)</dd>
 				<dt>Severity</dt>
-				<dd class="severity">@assertion.severity</dd>
+				<dd class="severity @assertion.severity">@assertion.severity</dd>
 				<dt>Message</dt>
 				<dd class="message">@HtmlFormat.raw(assertion.title)</dd>
 				<dt>Description</dt>
@@ -33,7 +34,11 @@
 				<dd class="timestamp"><time datetime="@assertion.timestamp">@Helper.formatTime(assertion.timestamp)</time></dd>
 				<dt>Contexts</dt>
 				@contexts.map { case context =>
-				<dd class="context">@context.toString</dd>
+				<dd class="context">
+					<span>Line: @context.line</span>
+					<span>Column: @context.column</span>
+					<span><code>@HtmlFormat.raw(context.content)</code></span>
+				</dd>
 				}
 			</dl>
 		</article>

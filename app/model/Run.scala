@@ -168,8 +168,16 @@ case class Run(
       case a => a.get
     }
   }
-
-
+  
+  // TODO
+  // Returns the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url.
+  def getAssertorArticles(url: URL): FutureVal[Exception, Iterable[(AssertorId, String, Int, Int)]] = {
+    implicit val context = org.w3.vs.Prod.configuration.webExecutionContext
+    FutureVal.successful(Iterable(
+      (ValidatorNu.id, Assertor.getName(ValidatorNu.id), 9999, 9999),
+      (CSSValidator.id, Assertor.getName(CSSValidator.id), 9999, 9999)
+    ))
+  }
 
   /* methods related to the data */
   

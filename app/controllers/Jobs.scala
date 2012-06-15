@@ -29,7 +29,6 @@ object Jobs extends Controller {
   val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
   // TODO: make the implicit explicit!!!
   implicit def configuration = org.w3.vs.Prod.configuration
-  //implicit def ec: ExecutionContext = configuration.webExecutionContext
   
   import Application._
   
@@ -73,7 +72,8 @@ object Jobs extends Controller {
         user <- getUser
         job <- user.getJob(id)
         run <- job.getRun()
-        article <- run.getURLArticle(url) map {URLArticle.apply _}
+        article <- run.getURLArticle(url) map URLArticle.apply _
+        assertors <- run.getAssertorArticles(url) map {_.map(AssertorArticle.apply _)}
         assertions <- run.getAssertions(url) map (_.filter(_.severity != Info))
         tuples <- FutureVal.sequence(
             assertions.map(assertion => 
@@ -82,7 +82,7 @@ object Jobs extends Controller {
               } yield (assertion, contexts)
             ))
       } yield {
-        Ok(views.html.urlReport(job, article, tuples, user, messages))
+        Ok(views.html.urlReport(job, article, assertors, tuples, user, messages))
       }) failMap toError toPromise
     }
   }

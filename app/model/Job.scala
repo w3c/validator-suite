@@ -255,7 +255,7 @@ CONSTRUCT {
     FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
   }
   
-    def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
+  def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.binders.{ xsd => _, _ }

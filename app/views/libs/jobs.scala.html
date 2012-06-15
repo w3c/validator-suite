@@ -1,6 +1,7 @@
 @(triples: Iterable[(Job, Run, Option[org.joda.time.DateTime])] = None)
 		<aside>
-			<h2>Definitions</h2>
+			<h2>Jobs</h2>
+			<h3>Definitions</h3>
 			<dl>
 				<dt class="name"><dfn>Job Name</dfn></dt>
 				<dd>The name of the job</dd>
@@ -27,7 +28,7 @@
 		
 		@triples.map { case (job, run, lastCompleted) =>
 		<article data-id="@job.id">
-			<h2>Job: @job.name</h2>
+			<!-- <h2>Job: @job.name</h2> -->
 			<dl>
 				<dt>Job Name</dt>
 				<dd class="name"><a href="@routes.Jobs.show(job.id)">@job.name</a></dd>
