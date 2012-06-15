@@ -26,7 +26,7 @@ object Jobs extends Controller {
   
   type ActionA = Action[AnyContent]
   
-  val logger = play.Logger.of("Controller.Jobs")
+  val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
   // TODO: make the implicit explicit!!!
   implicit def configuration = org.w3.vs.Prod.configuration
   //implicit def ec: ExecutionContext = configuration.webExecutionContext

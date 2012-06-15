@@ -100,11 +100,14 @@ case class Job(
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
 
+  // returns only completed JobDatas
   def getHistory(): FutureVal[Exception, Iterable[JobData]] =
-    Run.getRunVOs(id) map { vos => vos map { vo => JobData(vo.id, vo.resources, vo.errors, vo.warnings, vo.timestamp) } }
+    Run.getRunVOs(id) map { _ map { JobData.apply _ } filter { _ isCompleted } }
 
-  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] =
-    Run.getLastCompleted(id)
+  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
+    //Run.getLastCompleted(id)
+    getHistory() map { times => times.isEmpty.fold(None, times.maxBy(_.completedAt.get).completedAt) }
+  }
 
 }
 

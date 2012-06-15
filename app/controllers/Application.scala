@@ -31,13 +31,18 @@ object Application extends Controller {
   
   type ActionA = Action[AnyContent]
   
+  val logger = play.Logger.of("org.w3.vs.controllers.Application")
+  
   implicit def configuration = org.w3.vs.Prod.configuration
   
   implicit def toError(t: Throwable)(implicit req: Request[_]): Result = {
     t match {
       // TODO timeout, store exception, etc...
       case _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.unauthorized"))))).withNewSession
-      case t: Throwable => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage)))))
+      case t: Throwable => {
+        logger.error("Unexpected exception: " + t.getMessage, t)
+        InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage)))))
+      }
     }
   }
   

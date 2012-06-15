@@ -39,7 +39,6 @@ class OrganizationsActor()(implicit configuration: VSConfiguration) extends Acto
       context.children.find(_.path.name === id) match {
         case Some(organizationRef) => organizationRef forward tell
         case None => {
-          logger.info("Creating OrganizationActor: " + id)
           Organization.get(OrganizationId(id)) onComplete {
             case Success(organization) => to.tell(CreateOrganizationAndForward(organization, tell), from)
             case Failure(exception) => logger.error("Couldn't find organization with id: " + id, exception)

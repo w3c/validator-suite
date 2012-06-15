@@ -95,36 +95,28 @@ CONSTRUCT {
   }
 
   def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
-    getRunVOs(jobId) map { vos => vos map { vo => JobData(vo.id, vo.resources, vo.errors, vo.warnings, vo.timestamp) } } map { jobDatas =>
-      val timestamps = jobDatas.view map { _.timestamp }
-      println("**** "+timestamps.toList)
-      if (timestamps.isEmpty) None else Some(timestamps.max)
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
+  graph ?g {
+    ?runUri ont:jobId <#jobUri> .
+    ?runUri ont:completedAt ?timestamp
+  }
+}
+""".replaceAll("#jobUri", JobUri(jobId).toString)
+    import SparqlOps._
+    val select = SelectQuery(query, xsd, ont)
+    // TODO improve banana-rdf here...
+    FutureVal(store.executeSelect(select)) flatMap { rows =>
+      FutureVal.pureVal[Throwable, Option[DateTime]]{rows.headOption match {
+        case None => Success(None)
+        case Some(row) => getNode(row, "lastCompleted").as[DateTime] map { Some(_) }
+      }}(t => t)
     }
   }
-
-//  def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
-//    implicit val context = conf.webExecutionContext
-//    import conf._
-//    import conf.binders.{ xsd => _, _ }
-//    import conf.diesel._
-//    val query = """
-//SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
-//  graph ?g {
-//    ?runUri ont:jobId <#jobUri> .
-//    ?runUri ont:completedAt ?timestamp
-//  }
-//}
-//""".replaceAll("#jobUri", JobUri(jobId).toString)
-//    import SparqlOps._
-//    val select = SelectQuery(query, xsd, ont)
-//    // TODO improve banana-rdf here...
-//    FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
-//      rows.headOption match {
-//        case None => Success(None)
-//        case Some(row) => getNode(row, "lastCompleted").as[DateTime] map { Some(_) }
-//      }
-//    }
-//  }
 
   def fromGraphVO(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[RunVO]] = {
     import conf.diesel._
@@ -163,7 +155,7 @@ case class Run(
   // it should be completedAt but this one is an Option
   // jobData should itself be an Option[JobData]
   // and Job.getHistory should flatten the Option[JobData]s
-  def jobData: JobData = JobData(id, resources, errors, warnings, createdAt)
+  def jobData: JobData = JobData(id, resources, errors, warnings, createdAt, completedAt)
   
   def getAssertions: FutureVal[Exception, Iterable[Assertion]] = Assertion.getForRun(this)
 
