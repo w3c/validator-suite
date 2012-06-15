@@ -43,7 +43,7 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
 
     job.listen(testActor)
 
-    val run = job.getRun.result(1.second).fold(f => sys.error("getRun failed"), s => s)
+    val run = job.getRun().result(1.second).fold(f => sys.error("getRun failed"), s => s)
     
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {

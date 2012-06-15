@@ -270,12 +270,13 @@ SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
 """.replaceAll("#jobUri", JobUri(jobId).toString)
     import SparqlOps._
     val select = SelectQuery(query, xsd, ont)
-    // TODO improve banana-rdf here...
-    FutureVal(store.executeSelect(select)) flatMap { rows =>
-      FutureVal.pureVal[Throwable, Option[DateTime]]{rows.headOption match {
-        case None => Success(None)
-        case Some(row) => getNode(row, "lastCompleted").as[DateTime] map { Some(_) }
-      }}(t => t)
+    FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
+      // it's an aggregate query (MAX), so there is always one row
+      val row = rows.head
+      if (! row.isDefinedAt("lastCompleted"))
+        Success(None)
+      else
+        row("lastCompleted").as[DateTime] map { Some(_) }
     }
   }
   

@@ -304,8 +304,13 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
   }
 
   "get timestamp of latest completed Run for given jobId" in {
-    val retrieved = job1.getLastCompleted().result(1.second) getOrElse sys.error("test getForAssertion")
-    retrieved must be === (Some(run3.completedAt.get))
+    val retrieved = job1.getLastCompleted().result(1.second) getOrElse sys.error("test Job.getLastCompleted")
+    retrieved must be === (run3.completedAt)
+  }
+
+  "get timestamp of latest completed Run for given jobId that has never been completed once" in {
+    val retrieved = job2.getLastCompleted().result(1.second) getOrElse sys.error("test Job.getLastCompleted")
+    retrieved must be === (None)
   }
 
 }
