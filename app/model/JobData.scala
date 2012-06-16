@@ -12,6 +12,7 @@ import scalaz._
 
 case class JobData (
     runId: RunId,
+    jobId: JobId,
     resources: Int,
     errors: Int,
     warnings: Int,
@@ -27,7 +28,7 @@ case class JobData (
 object JobData {
 
   def apply(runVO: RunVO): JobData = {
-    JobData(runVO.id, runVO.resources, runVO.errors,runVO.warnings, runVO.createdAt, runVO.completedAt)
+    JobData(runVO.id, runVO.jobId, runVO.resources, runVO.errors, runVO.warnings, runVO.createdAt, runVO.completedAt)
   }
   
   def health(resources: Int, errors: Int, warnings: Int): Int = {

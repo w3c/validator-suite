@@ -6,20 +6,21 @@ import org.w3.vs.model._
 import org.w3.vs.assertor._
 import play.api.libs.json._
 import scalaz._
+import scalaz.Scalaz._
 import org.joda.time.{ DateTime, DateTimeZone }
 
 case object JobsUpdate {
   
-  def json(jobId: JobId, data: JobData, activity: RunActivity): JsValue = {
+  def json(data: JobData, activity: RunActivity): JsValue = {
     JsArray(List(
       JsString("Dashboard"),
-      JsString(jobId.toString),
+      JsString(data.jobId.toString),
       JsString(activity.toString),
       JsNumber(data.resources),
       JsNumber(data.errors),
       JsNumber(data.warnings),
-      JsNumber(data.health)
-      // TODO add lastCompleted
+      JsNumber(data.health),
+      JsString(data.completedAt.fold(Helper.formatTime _, "Never"))
     ))
   }
 }

@@ -21,7 +21,8 @@ window.DashboardUpdate = Backbone.Model.extend({
 		resources: 0,
 		errors: 0,
 		warnings: 0,
-		health: 0
+		health: 0,
+		lastCompleted: "Never"
 	}
 });
 
@@ -33,7 +34,8 @@ window.DashboardUpdate.fromJSON = function (json) {
 			resources: json[3],
 			errors: json[4],
 			warnings: json[5],
-			health: json[6]
+			health: json[6],
+			lastCompleted: json[7] 
 		});
 	} catch(ex) {
 		console.log(ex);
@@ -50,7 +52,6 @@ window.Job = Backbone.Model.extend({
 		data: new DashboardUpdate(), // A collection of DashboardUpdates containing a timestamp is what we need to build a graph
 		createdAt: "",
 		lastRun: "",
-		lastCompleted: "Never",
 		messages: new MessageList()
 	},
 	

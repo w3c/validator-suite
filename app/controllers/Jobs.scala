@@ -263,7 +263,7 @@ object Jobs extends Controller {
         organization <- user.getOrganization
       } yield {
         organization.enumerator &> Enumeratee.collect{
-          case a: UpdateData => JobsUpdate.json(a.jobId, a.data, a.activity)
+          case a: UpdateData => JobsUpdate.json(a.data, a.activity)
         }
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise
@@ -281,7 +281,7 @@ object Jobs extends Controller {
         job <- user.getJob(id)
       } yield {
         job.enumerator &> Enumeratee.collect{
-          case UpdateData(jobId, data, activity)=> JobsUpdate.json(jobId, data, activity)
+          case a: UpdateData => JobsUpdate.json(a.data, a.activity)
           //case NewResource(resource) => ResourceUpdate.json(resource)
           case NewAssertions(assertions) if (assertions.count(_.severity == Warning) != 0 || assertions.count(_.severity == Error) != 0) => AssertorUpdate.json(assertions)
         }

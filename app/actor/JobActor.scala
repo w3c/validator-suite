@@ -99,7 +99,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         // Should really the frequency of broadcast and the frequency of saves be coupled?
         run.save()
         // tell the subscribers about the current run for this run
-        val msg = UpdateData(job.id, run.jobData, run.activity)
+        val msg = UpdateData(job.id, run.jobData, run.activity, run.completedAt)
         tellEverybody(msg)
         lastRun = run
       }
@@ -187,7 +187,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
 
   onTransition {
     case _ -> _ => {
-      val msg = UpdateData(job.id, nextStateData.jobData, nextStateData.activity)
+      val msg = UpdateData(job.id, nextStateData.jobData, nextStateData.activity, nextStateData.completedAt)
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
