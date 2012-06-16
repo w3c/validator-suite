@@ -170,13 +170,54 @@ case class Run(
   }
   
   // TODO
-  // Returns the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url.
+  // Returns the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url.@@@
   def getAssertorArticles(url: URL): FutureVal[Exception, Iterable[(AssertorId, String, Int, Int)]] = {
-    implicit val context = org.w3.vs.Prod.configuration.webExecutionContext
-    FutureVal.successful(Iterable(
-      (ValidatorNu.id, Assertor.getName(ValidatorNu.id), 9999, 9999),
-      (CSSValidator.id, Assertor.getName(CSSValidator.id), 9999, 9999)
-    ))
+
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+SELECT ?assertorUri ?warnings ?errors WHERE {
+{
+  SELECT ?assertorUri (COUNT(?warning) AS ?warnings) WHERE {
+    graph ?g1 {
+      ?warning a ont:Assertion .
+      ?warning ont:runId <#runUri> .
+      ?warning ont:severity "warning"^^xsd:string .
+      ?warning ont:url "#url"^^xsd:anyURI .
+      ?warning ont:assertorId ?assertorUri
+    }
+  } GROUP BY ?assertorUri
+} .
+{
+  SELECT ?assertorUri (COUNT(?error) AS ?errors) WHERE {
+    graph ?g2 {
+      ?error a ont:Assertion .
+      ?error ont:runId <#runUri> .
+      ?error ont:severity "error"^^xsd:string .
+      ?error ont:url "#url"^^xsd:anyURI .
+      ?error ont:assertorId ?assertorUri
+    }
+  } GROUP BY ?assertorUri
+}
+}
+""".replaceAll("#runUri", RunUri(id).toString).replaceAll("#url", url.toString)
+    import SparqlOps._
+    val select = SelectQuery(query, xsd, ont)
+    FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
+//      println("&&&&&77 "+rows.toList)
+      val foo = rows map { row =>
+        println("row: "+row)
+        val assertorId = CSSValidator.id
+        val warnings = 42//row("warnings").toString.toInt
+        val errors = 42//row("errors").toString.toInt
+        (assertorId, "foo", warnings, errors)
+      }
+      Success(foo)
+    }
+
+
   }
 
   /* methods related to the data */

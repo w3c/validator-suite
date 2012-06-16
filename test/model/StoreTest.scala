@@ -23,7 +23,8 @@ abstract class StoreTest(
   nbJobDatas: Int)
 extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
-  val nbAssertionsPerRun = nbUrlsPerAssertions * 2 /* nb of assertors */ * ( nbErrors + nbWarnings + nbInfos ) /* nb of contexts */
+  val nbAssertionsPerRunPerAssertor = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos ) /* nb of contexts */
+  val nbAssertionsPerRun = 2 /* nb of assertors */ * nbAssertionsPerRunPerAssertor
   val nbAssertionsForJob1 = 2 /* runs */ * nbAssertionsPerRun
 
   implicit val conf: VSConfiguration = new DefaultProdConfiguration { }
@@ -99,6 +100,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
         title = "some title",
         severity = severity,
         description = Some("some description"))
+    ///
+    // val a = newAssertion(run1.id, assertorIds(0), URL("http://example.com/foo/1"), Error)
+    // import conf.binders._
+    // val pointed = AssertionVOBinder.toPointedGraph(a.toValueObject)
+    // Jena.dump(pointed.graph)
+    ///
     val builder = Vector.newBuilder[Assertion]
     builder.sizeHint(nbAssertionsForJob1)
     for ( runId <- List(run1.id, run2.id) ; assertorId <- assertorIds ; i <- 1 to nbUrlsPerAssertions ) {
@@ -282,6 +289,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
     urlArticles must have size(nbUrlsPerAssertions)
   }
 
+  "getAssertorArticles must return the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url." in {
+    val retrieved = run1.getAssertorArticles(URL("http://example.com/foo/1")).result(1.seconds) getOrElse sys.error("test Run.getAssertorArticles")
+    println("*** "+retrieved.toList)
+//    urlArticles must have size(nbUrlsPerAssertions)
+  }
+
   "retrieve ResourceResponse" in {
     val rr = resourceResponses(0)
     ResourceResponse.get(rr.id).result(1.second) must be === (Success(rr))
@@ -318,9 +331,9 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
 class StoreTestLight extends StoreTest(
   nbUrlsPerAssertions = 10,
-  nbErrors = 3,
+  nbErrors = 2,
   nbWarnings = 3,
-  nbInfos = 3,
+  nbInfos = 4,
   nbHttpErrorsPerAssertions = 2,
   nbHttpResponsesPerAssertions = 5,
   nbJobDatas = 3)
