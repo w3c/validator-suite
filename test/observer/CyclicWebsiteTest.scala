@@ -49,7 +49,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
     job.listen(testActor)
     
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, _, activity) if activity == Idle => {
+      case UpdateData(_, activity) if activity == Idle => {
         val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
         val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
         rrs must have size (circumference + 1)

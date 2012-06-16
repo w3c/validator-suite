@@ -16,7 +16,7 @@ import org.joda.time._
  */
 sealed trait RunUpdate 
 
-case class UpdateData(jobId: JobId, data: JobData, activity: RunActivity, completedAt: Option[DateTime]) extends RunUpdate
+case class UpdateData(data: JobData, activity: RunActivity) extends RunUpdate
 
 /**
  * A new Response was received during the exploration

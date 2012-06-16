@@ -63,7 +63,7 @@ class PendingRunTest extends RunTestHelper(new DefaultProdConfiguration {}) with
     job ! HttpResponse(job.id, runId1, URL("http://localhost:9001/1/3/"), HEAD, 200, Map.empty, "")
 
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, _, activity) if activity == Idle => ()
+      case UpdateData(_, activity) if activity == Idle => ()
     }
 
     val rrs1 = ResourceResponse.getForRun(runId1).result(1.second) getOrElse sys.error("getForRun")
