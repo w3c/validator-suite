@@ -118,7 +118,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
     strategy = Strategy(
       entrypoint = URL("http://www.w3.org/TR"),
       linkCheck = false,
-      maxResources = 100,
+      maxResources = 10,
       filter=Filter.includePrefixes("http://www.w3.org/TR")))
         
   val ibm = Job(
@@ -129,7 +129,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
     strategy = Strategy(
       entrypoint = URL("http://www.ibm.com"),
       linkCheck = false,
-      maxResources = 100,
+      maxResources = 20,
       filter = Filter(include=Everything, exclude=Nothing)))
     
   val lemonde = Job(
@@ -140,7 +140,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
     strategy = Strategy(
       entrypoint = URL("http://www.lemonde.fr"),
       linkCheck = false,
-      maxResources = 100,
+      maxResources = 30,
       filter = Filter(include = Everything, exclude = Nothing)))
   
   tgambet.save()
