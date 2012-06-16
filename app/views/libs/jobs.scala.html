@@ -28,7 +28,7 @@
 		
 		@triples.map { case (job, run, lastCompleted) =>
 		<article data-id="@job.id">
-			<!-- <h2>Job: @job.name</h2> -->
+			@** <h2>Job: @job.name</h2> **@
 			<dl>
 				<dt>Job Name</dt>
 				<dd class="name"><a href="@routes.Jobs.show(job.id)">@job.name</a></dd>

@@ -23,6 +23,7 @@ import scalaz._
 import scalaz.Scalaz._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.akkaext._
+import org.joda.time.DateTimeZone
 
 // TODO extract all pure function in a companion object
 class JobActor(job: Job)(implicit val configuration: VSConfiguration)
@@ -68,7 +69,12 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         logger.debug("%s: transition to new state %s" format (shortId, newState.toString))
         goto(newState)
       }
-    stayOrGoto using run
+    val run_ = if (run.noMoreUrlToExplore && run.pendingAssertions == 0) {
+      val completed = run.copy(completedAt = Some(DateTime.now(DateTimeZone.UTC)))
+      completed.save()
+      completed
+    } else run
+    stayOrGoto using run_
   }
 
   when((Idle, ProActive))(stateFunction)
@@ -90,6 +96,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     case Event('Tick, run) => {
       // do it only if necessary (ie. something has changed since last time)
       if (run ne lastRun) {
+        // Should really the frequency of broadcast and the frequency of saves be coupled?
         run.save()
         // tell the subscribers about the current run for this run
         val msg = UpdateData(job.id, run.jobData, run.activity)
@@ -184,6 +191,9 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
+        if (nextStateData.pendingAssertions == 0) {
+          logger.info("Assertion phase finished.")
+        }
       }
     }
   }

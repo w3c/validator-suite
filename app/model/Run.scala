@@ -127,10 +127,6 @@ case class Run(
 
   val logger = play.Logger.of(classOf[Run])
 
-  // Q: what is jobData's timestamp value?
-  // it should be completedAt but this one is an Option
-  // jobData should itself be an Option[JobData]
-  // and Job.getHistory should flatten the Option[JobData]s
   def jobData: JobData = JobData(id, resources, errors, warnings, createdAt, completedAt)
   
   def getAssertions: FutureVal[Exception, Iterable[Assertion]] = Assertion.getForRun(this)

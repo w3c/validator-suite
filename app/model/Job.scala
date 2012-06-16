@@ -43,13 +43,21 @@ case class Job(
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
   
-  // returns only completed JobDatas
+  // Get all runVos for this job, group by id, and for each runId take the latest completed jobData if any
   def getHistory(): FutureVal[Exception, Iterable[JobData]] =
-    Run.getRunVOs(id) map { _ map { JobData.apply _ } filter { _ isCompleted } }
+    Run.getRunVOs(id) map { runVOs => {
+      runVOs groupBy (_.id) map { case (id, datas) => {
+        val completed = datas filter ( _.completedAt.isDefined )
+        completed.isEmpty fold (
+          None,
+          Some(completed maxBy ( _.completedAt.get ))
+        )
+      }} collect {case Some(runVO) => JobData(runVO)}
+    }}
 
   def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
-    //Job.getLastCompleted(this)
-    getHistory() map { times => times.isEmpty.fold(None, times.maxBy(_.completedAt.get).completedAt) }
+    //getHistory() map { times => times.isEmpty.fold(None, times.maxBy(_.completedAt.get).completedAt) }
+    Job.getLastCompleted(this)
   }
     
   def save(): FutureVal[Exception, Job] = Job.save(this) map { _ => this }
