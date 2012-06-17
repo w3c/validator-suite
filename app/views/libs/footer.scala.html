@@ -14,7 +14,7 @@
 				<dd class="status"><%= data.get('activity') %></dd>
 
 				<dt>Last Completed</dt>
-				<dd class="date"><% if (data.get('lastCompleted') == "Never") { %>Never<% } else { %><time datetime=""><%= data.get('lastCompleted') %></time><% } %></dd>
+				<dd class="date"><%= data.get('lastCompleted') %></dd>
 				
 				<dt>Warnings</dt>
 				<dd class="warnings"><%= data.get('warnings') %></dd>
