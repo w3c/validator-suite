@@ -17,13 +17,26 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
           assertorId = id,
           sourceUrl = response.url,
           why = throwable.getMessage),
-      assertions => AssertorResultClosed(AssertorResult(
+      assertions => {
+        val groupedAssertions: Iterable[AssertionClosed] = assertions.groupBy(_.assertion.title.trim).map{
+          case (title, assertionsClosed) => {
+            val assertion = assertionsClosed.head.assertion
+            val contexts = assertionsClosed.foldLeft[Iterable[Context]](Iterable()){ (contexts, assertionClosed) => {
+                val ctxs = assertionClosed.contexts map (_.copy(assertionId = assertion.id))
+                contexts ++ ctxs
+              }}
+            AssertionClosed(assertion, contexts)
+          }
+        }
+        AssertorResultClosed(AssertorResult(
           jobId = response.jobId,
           runId = response.runId,
           assertorId = id,
           sourceUrl = response.url,
-          errors = assertions.count(_.assertion.severity == Error),
-          warnings = assertions.count(_.assertion.severity == Warning)),
-          assertions)
+          // TODO
+          errors = groupedAssertions.count(_.assertion.severity == Error),
+          warnings = groupedAssertions.count(_.assertion.severity == Warning)),
+          groupedAssertions)
+      }
     )
 }

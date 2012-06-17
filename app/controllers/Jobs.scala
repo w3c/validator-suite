@@ -47,7 +47,7 @@ object Jobs extends Controller {
               } yield (job, run, lastCompleted)
             ))
       } yield {
-        Ok(views.html.dashboard(triples, user))
+        Ok(views.html.dashboard(triples, user)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
@@ -61,7 +61,7 @@ object Jobs extends Controller {
         lastCompleted <- job.getLastCompleted()
         ars <- run.getURLArticles()
       } yield {
-        Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages))
+        Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
@@ -78,11 +78,11 @@ object Jobs extends Controller {
         tuples <- FutureVal.sequence(
             assertions.map(assertion => 
               for {
-                contexts <- assertion.getContexts
+                contexts <- assertion.getContexts map (_.toSeq sortBy (_.line))
               } yield (assertion, contexts)
-            ))
+            )).map(_.toSeq.sortBy(-_._2.size))
       } yield {
-        Ok(views.html.urlReport(job, article, assertors, tuples, user, messages))
+        Ok(views.html.urlReport(job, article, assertors, tuples, user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
