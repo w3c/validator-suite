@@ -28,4 +28,4 @@ case class NewResource(resource: ResourceResponse) extends RunUpdate
  */
 case class NewAssertorResponse(response: AssertorResponse) extends RunUpdate
 
-case class NewAssertions(assertions: Iterable[Assertion]) extends RunUpdate
+case class NewAssertions(assertionsClosed: Iterable[AssertionClosed]) extends RunUpdate

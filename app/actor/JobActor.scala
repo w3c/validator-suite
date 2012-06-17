@@ -111,7 +111,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         assertionClosed.contexts.map(_.save())
       }
       if (response.assertorResult.runId === _run.id) {
-        tellEverybody(NewAssertions(response.assertionsClosed.map(_.assertion)))
+        tellEverybody(NewAssertions(response.assertionsClosed))
         stateOf(_run.withAssertorResponse(response.assertorResult))
       } else {
         stay() // log maybe?
