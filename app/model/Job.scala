@@ -281,10 +281,10 @@ SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
     FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
       // it's an aggregate query (MAX), so there is always one row
       val row = rows.head
-      if (! row.isDefinedAt("lastCompleted"))
-        Success(None)
-      else
-        row("lastCompleted").as[DateTime] map { Some(_) }
+      row("lastCompleted").fold(
+        failure => Success(None),
+        value => value.as[DateTime] map { Some(_) }
+      )
     }
   }
   

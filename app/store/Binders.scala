@@ -20,8 +20,6 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   import diesel._
 
-  implicit val ops = diesel.ops
-
   val xsd = XSDPrefix(ops)
   val anyURI = xsd("anyURI")
 
@@ -38,7 +36,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   /* binders for entities */
 
-  val AssertionVOBinder = new PointedGraphBinder[Rdf, AssertionVO] {
+  implicit val AssertionVOBinder = new PointedGraphBinder[Rdf, AssertionVO] {
 
     def toPointedGraph(t: AssertionVO): PointedGraph[Rdf] = (
       AssertionUri(t.id).a(ont.Assertion)
@@ -55,10 +53,10 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertionVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap AssertionUri.getId
-        jobId <- (pointed / ont.jobId).as[Rdf#URI] flatMap JobUri.getId
-        runId <- (pointed / ont.runId).as[Rdf#URI].flatMap(RunUri.getId)
-        assertorId <- (pointed / ont.assertorId).as[Rdf#URI].flatMap(AssertorUri.getId)
+        id <- pointed.as[AssertionId]
+        jobId <- (pointed / ont.jobId).as[JobId]
+        runId <- (pointed / ont.runId).as[RunId]
+        assertorId <- (pointed / ont.assertorId).as[AssertorId]
         url <- (pointed / ont.url).as[URL]
         lang <- (pointed / ont.lang).as[String]
         title <- (pointed / ont.title).as[String]
@@ -73,7 +71,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
 
-  val ContextVOBinder = new PointedGraphBinder[Rdf, ContextVO] {
+  implicit val ContextVOBinder = new PointedGraphBinder[Rdf, ContextVO] {
 
     def toPointedGraph(t: ContextVO): PointedGraph[Rdf] = (
       ContextUri(t.id).a(ont.Context)
@@ -85,11 +83,11 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ContextVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap ContextUri.getId
+        id <- pointed.as[ContextId]
         content <- (pointed / ont.content).as[String]
         line <- (pointed / ont.line).asOption[Int]
         column <- (pointed / ont.column).asOption[Int]
-        assertionId <- (pointed / ont.assertionId).as[Rdf#URI].flatMap(AssertionUri.getId)
+        assertionId <- (pointed / ont.assertionId).as[AssertionId]
       } yield {
         ContextVO(id, content, line, column, assertionId)
       }
@@ -98,36 +96,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
 
-
-  /*val AssertorResultVOBinder = new PointedGraphBinder[Rdf, AssertorResultVO] {
-
-    def toPointedGraph(t: AssertorResultVO): PointedGraph[Rdf] = (
-      AssertorResponseUri(t.id).a(ont.AssertorResult)
-        -- ont.jobId ->- JobUri(t.jobId)
-        -- ont.runId ->- RunUri(t.runId)
-        -- ont.assertorId ->- AssertorUri(t.assertorId)
-        -- ont.sourceUrl ->- t.sourceUrl
-        -- ont.timestamp ->- t.timestamp
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertorResultVO] = {
-      for {
-        id <- pointed.as[Rdf#URI] flatMap AssertorResponseUri.getId
-        jobId <- (pointed / ont.jobId).asUri.flatMap(JobUri.getId)
-        runId <- (pointed / ont.runId).asUri.flatMap(RunUri.getId)
-        assertorId <- (pointed / ont.assertorId).asUri.flatMap(AssertorUri.getId)
-        sourceUrl <- (pointed / ont.sourceUrl).as[URL]
-        timestamp <- (pointed / ont.timestamp).as[DateTime]
-      } yield {
-        AssertorResultVO(id, jobId, runId, assertorId, sourceUrl, timestamp)
-      }
-    }
-
-  }*/
-
-
-
-  val JobVOBinder = new PointedGraphBinder[Rdf, JobVO] {
+  implicit val JobVOBinder = new PointedGraphBinder[Rdf, JobVO] {
 
     def toPointedGraph(t: JobVO): PointedGraph[Rdf] = (
       JobUri(t.id).a(ont.Job)
@@ -140,12 +109,12 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, JobVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap JobUri.getId
+        id <- pointed.as[JobId]
         name <- (pointed / ont.name).as[String]
         createdOn <- (pointed / ont.createdOn).as[DateTime]
-        creator <- (pointed / ont.creator).as[Rdf#URI] flatMap UserUri.getId
-        organization <- (pointed / ont.organization).as[Rdf#URI] flatMap OrganizationUri.getId
-        strategy <- (pointed / ont.strategy).as[Rdf#URI] flatMap StrategyUri.getId
+        creator <- (pointed / ont.creator).as[UserId]
+        organization <- (pointed / ont.organization).as[OrganizationId]
+        strategy <- (pointed / ont.strategy).as[StrategyId]
       } yield {
         JobVO(id, name, createdOn, creator, organization, strategy)
       }
@@ -159,7 +128,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-  val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
+  implicit val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
 
     def toPointedGraph(t: OrganizationVO): PointedGraph[Rdf] = (
       OrganizationUri(t.id).a(ont.Organization)
@@ -169,9 +138,9 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, OrganizationVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap OrganizationUri.getId
+        id <- pointed.as[OrganizationId]
         name <- (pointed / ont.name).as[String]
-        adminId <- (pointed / ont.admin).as[Rdf#URI].flatMap(UserUri.getId)
+        adminId <- (pointed / ont.admin).as[UserId]
       } yield {
         OrganizationVO(id, name, adminId)
       }
@@ -182,7 +151,8 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-  val ErrorResponseVOBinder = new PointedGraphBinder[Rdf, ErrorResponseVO] {
+  implicit val ErrorResponseVOBinder = new PointedGraphBinder[Rdf, ErrorResponseVO] {
+
 
     def toPointedGraph(t: ErrorResponseVO): PointedGraph[Rdf] = (
       ResourceResponseUri(t.id).a(ont.ResourceResponse).a(ont.ErrorResponse)
@@ -196,9 +166,9 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ErrorResponseVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap ResourceResponseUri.getId
-        jobId <- (pointed / ont.jobId).as[Rdf#URI].flatMap(JobUri.getId)
-        runId <- (pointed / ont.runId).as[Rdf#URI].flatMap(RunUri.getId)
+        id <- pointed.as[ResourceResponseId]
+        jobId <- (pointed / ont.jobId).as[JobId]
+        runId <- (pointed / ont.runId).as[RunId]
         url <- (pointed / ont.url).as[URL]
         action <- (pointed / ont.action).as[HttpAction]
         timestamp <- (pointed / ont.timestamp).as[DateTime]
@@ -212,7 +182,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-  val HttpResponseVOBinder = new PointedGraphBinder[Rdf, HttpResponseVO] {
+  implicit val HttpResponseVOBinder = new PointedGraphBinder[Rdf, HttpResponseVO] {
 
     def toPointedGraph(t: HttpResponseVO): PointedGraph[Rdf] = (
       ResourceResponseUri(t.id).a(ont.ResourceResponse).a(ont.HttpResponse)
@@ -222,15 +192,15 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
         -- ont.action ->- t.action
         -- ont.timestamp ->- t.timestamp
         -- ont.status ->- t.status
-        -- ont.headers -->- t.headers
-        -- ont.extractedURLs -->- t.extractedURLs
+        -- ont.headers ->- t.headers
+        -- ont.extractedURLs ->- t.extractedURLs
     )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, HttpResponseVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap ResourceResponseUri.getId
-        jobId <- (pointed / ont.jobId).as[Rdf#URI].flatMap(JobUri.getId)
-        runId <- (pointed / ont.runId).as[Rdf#URI].flatMap(RunUri.getId)
+        id <- pointed.as[ResourceResponseId]
+        jobId <- (pointed / ont.jobId).as[JobId]
+        runId <- (pointed / ont.runId).as[RunId]
         url <- (pointed / ont.url).as[URL]
         action <- (pointed / ont.action).as[HttpAction]
         timestamp <- (pointed / ont.timestamp).as[DateTime]
@@ -251,7 +221,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
 
-  val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
+  implicit val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
 
     def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] = t match {
       case e: ErrorResponseVO => ErrorResponseVOBinder.toPointedGraph(e)
@@ -269,7 +239,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
   // does not map distance as this one will be soon removed
-  val RunVOBinder = new PointedGraphBinder[Rdf, RunVO] {
+  implicit val RunVOBinder = new PointedGraphBinder[Rdf, RunVO] {
 
     def toPointedGraph(t: RunVO): PointedGraph[Rdf] = (
       RunUri(t.id).a(ont.Run)
@@ -285,8 +255,8 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, RunVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap RunUri.getId
-        jobId <- (pointed / ont.jobId).as[Rdf#URI] flatMap JobUri.getId
+        id <- pointed.as[RunId]
+        jobId <- (pointed / ont.jobId).as[JobId]
         explorationMode <- (pointed / ont.explorationMode).as[ExplorationMode]
         createdAt <- (pointed / ont.createdAt).as[DateTime]
         completedAt <- (pointed / ont.completedAt).asOption[DateTime]
@@ -301,7 +271,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
 
-  val UserVOBinder = new PointedGraphBinder[Rdf, UserVO] {
+  implicit val UserVOBinder = new PointedGraphBinder[Rdf, UserVO] {
 
     def toPointedGraph(t: UserVO): PointedGraph[Rdf] = (
       UserUri(t.id).a(ont.User)
@@ -313,11 +283,11 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, UserVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap UserUri.getId
+        id <- pointed.as[UserId]
         name <- (pointed / ont.name).as[String]
         email <- (pointed / ont.email).as[String]
         password <- (pointed / ont.password).as[String]
-        organizationId <- (pointed / ont.organizationId).as[Rdf#URI] flatMap OrganizationUri.getId
+        organizationId <- (pointed / ont.organizationId).as[OrganizationId]
       } yield {
         UserVO(id, name, email, password, organizationId)
       }
@@ -329,7 +299,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
     def toPointedGraph(t: AssertorSelector): PointedGraph[Rdf] = (
       bnode().a(ont.AssertorSelector)
         -- ont.name ->- t.name
-        -- ont.map -->- t.map
+        -- ont.map ->- t.map
     )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertorSelector] = {
@@ -344,7 +314,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   }
 
   // works only for Filter(include = Everything, exclude = Nothing) for the moment
-  val StrategyVOBinder = new PointedGraphBinder[Rdf, StrategyVO] {
+  implicit val StrategyVOBinder = new PointedGraphBinder[Rdf, StrategyVO] {
 
     // WTF?
     // implicit val binder: PointedGraphBinder[Rdf, AssertorSelector] = AssertorSelectorBinder
@@ -354,12 +324,12 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
         -- ont.entrypoint ->- t.entrypoint
         -- ont.linkCheck ->- t.linkCheck.toString
         -- ont.maxResources ->- t.maxResources
-        -- ont.assertorSelector -->- t.assertorSelector
+        -- ont.assertorSelector ->- t.assertorSelector
     )
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, StrategyVO] = {
       for {
-        id <- pointed.as[Rdf#URI] flatMap StrategyUri.getId
+        id <- pointed.as[StrategyId]
         entrypoint <- (pointed / ont.entrypoint).as[URL]
         linkCheck <- (pointed / ont.linkCheck).as[String].map(_.toBoolean)
         maxResources <- (pointed / ont.maxResources).as[Int]

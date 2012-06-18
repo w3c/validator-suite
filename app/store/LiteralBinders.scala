@@ -11,92 +11,90 @@ import org.w3.util._
 trait LiteralBinders[Rdf <: RDF] {
 this: Binders[Rdf] =>
 
+  import diesel._
   import ops._
 
-  implicit val urlBinder = new NodeBinder[Rdf, URL] {
+  implicit val urlBinder: TypedLiteralBinder[Rdf, URL] = new TypedLiteralBinder[Rdf, URL] {
 
-    def fromNode(node: Rdf#Node): Validation[BananaException, URL] =
-      asTypedLiteral(node) flatMap {
-        case TypedLiteral(lexicalForm, datatype) =>
-          if (datatype == anyURI)
-            try {
-              Success(URL(lexicalForm))
-            } catch {
-              case t => Failure(FailedConversion(node.toString + " is of type xsd:anyURI but its lexicalForm could not be made a URL: " + lexicalForm))
-            }
-          else
-            Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
-      }
+    def fromTypedLiteral(literal: Rdf#TypedLiteral): Validation[BananaException, URL] = {
+      val TypedLiteral(lexicalForm, datatype) = literal
+      if (datatype == anyURI)
+        try {
+          Success(URL(lexicalForm))
+        } catch {
+          case t => Failure(FailedConversion(literal.toString + " is of type xsd:anyURI but its lexicalForm could not be made a URL: " + lexicalForm))
+        }
+      else
+        Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
+    }
 
-    def toNode(t: URL): Rdf#Node = TypedLiteral(t.toString, anyURI)
+    def toTypedLiteral(t: URL): Rdf#TypedLiteral = TypedLiteral(t.toString, anyURI)
 
   }
 
   // TODO decide if it's a uri or a datatype (if the latter, use a real datatype)
-  implicit val assertionSeverityBinder = new NodeBinder[Rdf, AssertionSeverity] {
+  implicit val assertionSeverityBinder: TypedLiteralBinder[Rdf, AssertionSeverity] = new TypedLiteralBinder[Rdf, AssertionSeverity] {
 
-    def fromNode(node: Rdf#Node): Validation[BananaException, AssertionSeverity] =
-      asTypedLiteral(node) flatMap {
-        case TypedLiteral(lexicalForm, datatype) =>
-          if (datatype == xsd.string)
-            try {
-              Success(AssertionSeverity(lexicalForm))
-            } catch {
-              case t => Failure(FailedConversion(node.toString + " is of type xsd:string but its lexicalForm could not be made a AssertionSeverity: " + lexicalForm))
-            }
-          else
-            Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
+    def fromTypedLiteral(literal: Rdf#TypedLiteral): Validation[BananaException, AssertionSeverity] = {
+      val TypedLiteral(lexicalForm, datatype) = literal
+      if (datatype == xsd.string)
+        try {
+          Success(AssertionSeverity(lexicalForm))
+        } catch {
+          case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made a AssertionSeverity: " + lexicalForm))
+        }
+      else
+        Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
+    }
+
+    def toTypedLiteral(t: AssertionSeverity): Rdf#TypedLiteral = {
+      val literal = t match {
+        case Error => "error"
+        case Warning => "warning"
+        case Info => "info"
       }
-
-    def toNode(t: AssertionSeverity): Rdf#Node = t match {
-      case Error => "error"
-      case Warning => "warning"
-      case Info => "info"
+      StringBinder.toTypedLiteral(literal)
     }
 
   }
 
 
-  implicit val httpActionBinder = new NodeBinder[Rdf, HttpAction] {
+  implicit val httpActionBinder: TypedLiteralBinder[Rdf, HttpAction] = new TypedLiteralBinder[Rdf, HttpAction] {
 
-    def fromNode(node: Rdf#Node): Validation[BananaException, HttpAction] = {
-      asTypedLiteral(node) flatMap {
-        case TypedLiteral(lexicalForm, datatype) =>
-          if (datatype == xsd.string)
-            try {
-              Success(HttpAction(lexicalForm))
-            } catch {
-              case t => Failure(FailedConversion(node.toString + " is of type xsd:string but its lexicalForm could not be made a HttpAction: " + lexicalForm))
-            }
-          else
-            Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
-      }
+    def fromTypedLiteral(literal: Rdf#TypedLiteral): Validation[BananaException, HttpAction] = {
+      val TypedLiteral(lexicalForm, datatype) = literal
+      if (datatype == xsd.string)
+        try {
+          Success(HttpAction(lexicalForm))
+        } catch {
+          case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made a HttpAction: " + lexicalForm))
+        }
+      else
+        Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
     }
 
-    def toNode(t: HttpAction): Rdf#Node = t.toString
+    def toTypedLiteral(t: HttpAction): Rdf#TypedLiteral = StringBinder.toTypedLiteral(t.toString)
 
   }
 
 
 
 
-  implicit val explorationModeBinder = new NodeBinder[Rdf, ExplorationMode] {
+  implicit val explorationModeBinder: TypedLiteralBinder[Rdf, ExplorationMode] = new TypedLiteralBinder[Rdf, ExplorationMode] {
 
-    def fromNode(node: Rdf#Node): Validation[BananaException, ExplorationMode] = {
-      asTypedLiteral(node) flatMap {
-        case TypedLiteral(lexicalForm, datatype) =>
-          if (datatype == xsd.string)
-            try {
-              Success(ExplorationMode(lexicalForm))
-            } catch {
-              case t => Failure(FailedConversion(node.toString + " is of type xsd:string but its lexicalForm could not be made a ExplorationMode: " + lexicalForm))
-            }
-          else
-            Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
-      }
+    def fromTypedLiteral(literal: Rdf#TypedLiteral): Validation[BananaException, ExplorationMode] = {
+      val TypedLiteral(lexicalForm, datatype) = literal
+      if (datatype == xsd.string)
+        try {
+          Success(ExplorationMode(lexicalForm))
+        } catch {
+          case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made a ExplorationMode: " + lexicalForm))
+        }
+      else
+        Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
     }
 
-    def toNode(t: ExplorationMode): Rdf#Node = t.toString
+    def toTypedLiteral(t: ExplorationMode): Rdf#TypedLiteral = StringBinder.toTypedLiteral(t.toString)
 
   }
 

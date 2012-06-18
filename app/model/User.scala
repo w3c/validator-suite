@@ -33,8 +33,6 @@ object User {
   def get(id: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, User] =
     getUserVO(id) map { User(_) }
 
-  //def getForOrganization(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[User]] = sys.error("") 
-  
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
     getByEmail(email) discard { 
       case user if (user.password /== password) => Unauthenticated
@@ -60,11 +58,8 @@ CONSTRUCT {
     val construct = SparqlOps.ConstructQuery(query, xsd, ont)
     FutureVal(store.executeConstruct(construct)) flatMap { graph =>
       FutureVal.pureVal[Throwable, UserVO]{
-        graph.getAllInstancesOf(ont.User).as[Rdf#URI] flatMap { uri =>
-          val pointed = PointedGraph(uri, graph)
-          UserVOBinder.fromPointedGraph(pointed)
-        } 
-      }(t => t) failMap { _ => UnknownUser } // Are there no other types of failure? The failMap might catch too much
+        graph.getAllInstancesOf(ont.User).as[UserVO]
+      }(t => t) failMap { _ => UnknownUser }
     } map { User(_) }
   }
 
