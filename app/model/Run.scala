@@ -143,24 +143,53 @@ case class Run(
 
   // Represent an article on the byUrl report
   // (resource url, last assertion timestamp, total warnings, total errors)
-  // TODO: optimize by writing the sparql query
-  def getURLArticles(): FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
-    for {
-      assertions <- getAssertions
-    } yield {
-      // For a given resource the number of errors is the sum on the assertions of type error of the number of contexts or 1 if there are none.
-      // ie~ errors.map(error => max(1, error.contexts.size)).foldLeft(_+_)
-      assertions.groupBy(_.url).map { case (url, assertions) => {
-        def count(severity: AssertionSeverity) = assertions.filter(_.severity == severity).foldLeft(0)((count, assertion) =>
-            assertion.getContexts.result(1.second).fold(f => count, s => count + scala.math.max(1, s.size))
-          )
-        (url, 
-         assertions.map(_.timestamp).max,
-         count(Warning),
-         count(Error))
-         // by default valid resources (total errors + total warnings = 0) are filtered out and the articles are sorted by url 
-         // and number of errors. this will move somewhere else 
-      }}.filter(t => t._3 + t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4)
+  def getURLArticles(): FutureVal[Exception, List[(URL, DateTime, Int, Int)]] = {
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+SELECT ?url ?warnings ?errors ?latestWarning ?latestError {
+  {
+    SELECT ?url (SUM(IF(BOUND(?ctx), 1, 0)) AS ?warnings) (MAX(?when) AS ?latestWarning) {
+      graph ?g {
+        ?assertion ont:runId <#runUri> ;
+                   ont:severity "warning"^^xsd:string ;
+                   ont:url ?url ;
+                   ont:timestamp ?when .
+      }
+      OPTIONAL { graph ?ctx { ?ctx ont:assertionId ?assertion } }
+    } GROUP BY ?url
+  }
+  {
+    SELECT ?url (SUM(IF(BOUND(?ctx), 1, 0)) AS ?errors) (MAX(?when) AS ?latestError) {
+      graph ?g {
+        ?assertion ont:runId <#runUri> ;
+                   ont:severity "error"^^xsd:string ;
+                   ont:url ?url ;
+                   ont:timestamp ?when .
+      }
+      OPTIONAL { graph ?ctx { ?ctx ont:assertionId ?assertion } }
+    } GROUP BY ?url
+  }
+}
+""".replaceAll("#runUri", RunUri(id).toString)
+    import SparqlOps._
+    val select = SelectQuery(query, xsd, ont)
+    FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
+      val results = rows map { row =>
+        for {
+          url <- row("url").flatMap(_.as[URL])
+          warnings <- row("warnings").flatMap(_.as[Int])
+          errors <- row("errors").flatMap(_.as[Int])
+          latestWarning <- row("latestWarning").flatMap(_.as[DateTime])
+          latestError <- row("latestError").flatMap(_.as[DateTime])
+        } yield {
+          val latest = if (latestWarning isAfter latestError) latestWarning else latestError
+          ((url, latest, warnings, errors))
+        }
+      }
+      results.toList.sequence[({type l[x] = Validation[BananaException, x]})#l, (URL, DateTime, Int, Int)]
     }
   }
 

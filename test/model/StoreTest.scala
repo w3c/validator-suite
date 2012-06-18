@@ -283,10 +283,13 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     retrievedAssertions must contain (assertions(0))
   }
 
-  // TODO @thomas: please write a real (at first failing) test for getURLArticle and getURLArticles
   "get all URLArticles from a run" in {
-    val urlArticles = run1.getURLArticles().result(2.seconds) getOrElse sys.error("test Run.getURLArticles")
-    urlArticles must have size(nbUrlsPerAssertions)
+    val retrieved = run1.getURLArticles().result(2.seconds) getOrElse sys.error("test Run.getURLArticles")
+    retrieved must have size (nbUrlsPerAssertions)
+    retrieved foreach { case (url, latest, warnings, errors) =>
+      warnings must be (2 /* assertors */ * 2 /* ctx */ * nbWarnings)
+      errors must be (2 /* assertors */ * 2 /* ctx */ * nbErrors)
+    }
   }
 
   "getAssertorArticles must return the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url." in {
