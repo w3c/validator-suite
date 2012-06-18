@@ -21,7 +21,7 @@ abstract class StoreTest(
   nbHttpErrorsPerAssertions: Int,
   nbHttpResponsesPerAssertions: Int,
   nbJobDatas: Int)
-extends WordSpec with MustMatchers with BeforeAndAfterAll {
+extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   val nbAssertionsPerRunPerAssertor = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos ) /* nb of contexts */
   val nbAssertionsPerRun = 2 /* nb of assertors */ * nbAssertionsPerRunPerAssertor
@@ -291,8 +291,31 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   "getAssertorArticles must return the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url." in {
     val retrieved = run1.getAssertorArticles(URL("http://example.com/foo/1")).result(1.seconds) getOrElse sys.error("test Run.getAssertorArticles")
-    println("*** "+retrieved.toList)
-//    urlArticles must have size(nbUrlsPerAssertions)
+    retrieved must have size (2)
+    retrieved foreach { resultPerAssertor =>
+      inside(resultPerAssertor) {
+        case (assertorId, _, foundWarnings, foundErrors) => {
+          foundWarnings must be (nbWarnings*2)
+          foundErrors must be (nbErrors*2)
+        }
+      }
+    }
+  }
+
+  "getAssertorArticles(url, severity) must return the number of occurrences for this url and severity" in {
+    val retrieved1 = run1.getAssertorArticles(URL("http://example.com/foo/1"), Error).result(1.seconds) getOrElse sys.error("test Run.getAssertorArticles")
+    // there are 2 different assertors here
+    retrieved1 must have size (2)
+    assertorIds foreach { assertorId =>
+      retrieved1 must contain ((assertorId, nbErrors*2))
+    }
+
+    val retrieved2 = run1.getAssertorArticles(URL("http://example.com/foo/1"), Warning).result(1.seconds) getOrElse sys.error("test Run.getAssertorArticles")
+    // there are 2 different assertors here
+    retrieved2 must have size (2)
+    assertorIds foreach { assertorId =>
+      retrieved2 must contain ((assertorId, nbWarnings*2))
+    }
   }
 
   "retrieve ResourceResponse" in {
