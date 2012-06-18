@@ -143,23 +143,28 @@ case class Run(
 
   // Represent an article on the byUrl report
   // (resource url, last assertion timestamp, total warnings, total errors)
-  // TODO: optimize by writing the db request directly
+  // TODO: optimize by writing the sparql query
   def getURLArticles(): FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
     for {
       assertions <- getAssertions
     } yield {
+      // For a given resource the number of errors is the sum on the assertions of type error of the number of contexts or 1 if there are none.
+      // ie~ errors.map(error => max(1, error.contexts.size)).foldLeft(_+_)
       assertions.groupBy(_.url).map { case (url, assertions) => {
-        def count(severity: AssertionSeverity) = assertions.filter(_.severity == severity).foldLeft(0)((count, assertion) => 
+        def count(severity: AssertionSeverity) = assertions.filter(_.severity == severity).foldLeft(0)((count, assertion) =>
             assertion.getContexts.result(1.second).fold(f => count, s => count + scala.math.max(1, s.size))
           )
         (url, 
          assertions.map(_.timestamp).max,
          count(Warning),
          count(Error))
-      }}.filter(t => t._3 != 0 || t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4)
+         // by default valid resources (total errors + total warnings = 0) are filtered out and the articles are sorted by url 
+         // and number of errors. this will move somewhere else 
+      }}.filter(t => t._3 + t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4)
     }
   }
 
+  // TODO: write sparql query.
   def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
     getURLArticles().map{it => it.find(_._1 == url)} discard {
       case None => new Exception("Unknown URL") //TODO type exception
