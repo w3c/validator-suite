@@ -146,14 +146,17 @@ case class Run(
   // TODO: optimize by writing the db request directly
   def getURLArticles(): FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
     for {
-      assertions <- Assertion.getForRun(id)
+      assertions <- getAssertions
     } yield {
-      assertions.groupBy(_.url).map { case (url, it) => 
+      assertions.groupBy(_.url).map { case (url, assertions) => {
+        def count(severity: AssertionSeverity) = assertions.filter(_.severity == severity).foldLeft(0)((count, assertion) => 
+            assertion.getContexts.result(1.second).fold(f => count, s => count + scala.math.max(1, s.size))
+          )
         (url, 
-         it.map(_.timestamp).max,
-         it.count(_.severity == Warning),
-         it.count(_.severity == Error))
-      }.filter(t => t._3 != 0 || t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4)
+         assertions.map(_.timestamp).max,
+         count(Warning),
+         count(Error))
+      }}.filter(t => t._3 != 0 || t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4)
     }
   }
 

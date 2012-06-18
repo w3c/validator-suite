@@ -105,24 +105,23 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       }
       stay()
     }
-    case Event(response: AssertorResultClosed, _run) => {
-      response.assertionsClosed.map{assertionClosed => 
-        assertionClosed.assertion.save()
-        assertionClosed.contexts.map(_.save())
+    case Event(result: AssertorResult, _run) => {
+      result.assertions.map{assertionC => 
+        assertionC.assertion.save()
+        assertionC.contexts.map(_.save())
       }
-      if (response.assertorResult.runId === _run.id) {
-        tellEverybody(NewAssertions(response.assertionsClosed))
-        stateOf(_run.withAssertorResponse(response.assertorResult))
+      if (result.runId === _run.id) {
+        tellEverybody(NewAssertorResult(result))
+        stateOf(_run.withAssertorResponse(result))
       } else {
-        stay() // log maybe?
+        stay()
       }
     }
-    case Event(response: AssertorResponse, _run) => {
-      if (response.runId === _run.id) {
-        //tellEverybody(NewAssertorResponse(response))
-        stateOf(_run.withAssertorResponse(response))
+    case Event(failure: AssertorFailure, _run) => {
+      if (failure.runId === _run.id) {
+        stateOf(_run.withAssertorResponse(failure))
       } else {
-        stay() // log maybe?
+        stay()
       }
     }
     case Event(response: ResourceResponse, _run) => {

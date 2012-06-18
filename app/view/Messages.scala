@@ -25,49 +25,38 @@ case object JobsUpdate {
   }
 }
 
-case object ResourceUpdate {
-  
-  def json(resource: ResourceResponse): JsValue = {
-    resource match {
-      case resource: HttpResponse => {
-        JsArray(List(
-          JsString("Resource"),
-          JsString(resource.id.toString),
-          JsString(resource.url.toString)
-          //JsString(resource.timestamp.toString)
-        ))
-      }
-      case resource: ErrorResponse => {
-        JsArray(List(
-          JsString("FetchError"),
-          JsString(resource.id.toString)
-          //JsString(resource.url.toString),
-          //JsString(resource.timestamp.toString)
-        ))
-      }
-    }
-  }
-}
+//case object ResourceUpdate {
+//  
+//  def json(resource: ResourceResponse): JsValue = {
+//    resource match {
+//      case resource: HttpResponse => {
+//        JsArray(List(
+//          JsString("Resource"),
+//          JsString(resource.id.toString),
+//          JsString(resource.url.toString)
+//        ))
+//      }
+//      case resource: ErrorResponse => {
+//        JsArray(List(
+//          JsString("FetchError"),
+//          JsString(resource.id.toString)
+//        ))
+//      }
+//    }
+//  }
+//}
 
 case object AssertorUpdate {
   
-  def json(assertions: Iterable[Assertion]): JsValue = {
-    //implicit def dateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan(_ isBefore _)
-    val assertMessages: Iterable[JsValue] = assertions.groupBy(_.url).map{
-      case (url, assertions) => 
-        JsArray(List(
-          JsString(url.toString),
-          // TODO: I don't maintain a <time> element with javascript.
-          // Ask someone if that semantic is still relevant post js
-          JsString(Helper.formatTime(assertions.map(_.timestamp).max)),
-          JsNumber(assertions.count(_.severity == Warning)),
-          JsNumber(assertions.count(_.severity == Error))
-        ))
-    }
+  def json(result: AssertorResult): JsValue = {
     JsArray(List(
-      JsString("Assertions"),
-      JsArray(assertMessages.toSeq)
+      JsString("AssertorResult"),
+      JsString(result.url.toString),
+      JsString(Helper.formatTime(result.timestamp)),
+      JsNumber(result.warnings),
+      JsNumber(result.errors)
     ))
   }
+  
 }
 

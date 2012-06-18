@@ -16,7 +16,6 @@ sealed trait AssertorResponse {
   val timestamp: DateTime
 }
 
-// not a persisted object for now
 case class AssertorFailure(
     id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
@@ -24,12 +23,8 @@ case class AssertorFailure(
     assertorId: AssertorId,
     sourceUrl: URL,
     timestamp: DateTime = new DateTime,
-    why: String) extends AssertorResponse
+    why: Throwable) extends AssertorResponse
 
-/** 
- *  AssertorResult 
- */
-// closed with number of errors and warnings
 case class AssertorResult(
     id: AssertorResponseId = AssertorResponseId(),
     jobId: JobId,
@@ -37,31 +32,11 @@ case class AssertorResult(
     assertorId: AssertorId,
     sourceUrl: URL,
     timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
-    errors: Int,
-    warnings: Int) extends AssertorResponse {
+    url: URL,
+    assertions: Iterable[AssertionClosed]) extends AssertorResponse {
   
-  //def isValid = ! hasError
-  //def hasError: Boolean = assertions exists {_.severity == Error}
-  //def hasWarnings: Boolean = assertions exists {_.severity == Warning}
-  //def numberOfErrors = assertions.filter(_.severity == Error).size
-  //def numberOfWarnings = assertions.filter(_.severity == Warning).size
+  lazy val errors = assertions.filter(_.assertion.severity == Error).foldLeft(0){(count, assertionClosed) => count + scala.math.max(1, assertionClosed.contexts.size)}
+  lazy val warnings = assertions.filter(_.assertion.severity == Warning).foldLeft(0){(count, assertionClosed) => count + scala.math.max(1, assertionClosed.contexts.size)}
+  lazy val isValid = ! (assertions.exists(_.assertion.severity == Error) || assertions.exists(_.assertion.severity == Warning)) 
   
-  //def getJob: FutureVal[Exception, Job] = sys.error("ni")
-  //def getRun: FutureVal[Exception, Run] = sys.error("ni")
-  //def getAssertor: FutureVal[Exception, Assertor] = sys.error("ni")
-  //def getAssertions: FutureVal[Exception, Iterable[Assertion]] = Assertion.getForResponse(id)
-  //def save(): FutureVal[Exception, AssertorResult] = AssertorResult.save(this)
-}
-
-case class AssertorResultClosed(assertorResult: AssertorResult, assertionsClosed: Iterable[AssertionClosed])
-
-object AssertorResult {
-  
-  //def get(id: AssertorResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, AssertorResult] = sys.error("ni")
-  //def getForJob(id: JobId, after: Option[DateTime] = None)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
-  //def getForURL(url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[AssertorResult]] = sys.error("ni")
-  //def save(result: AssertorResult)(implicit conf: VSConfiguration): FutureVal[Exception, AssertorResult] = {
-  //  implicit def ec = conf.webExecutionContext
-  //  FutureVal.successful(result)
-  //}
 }

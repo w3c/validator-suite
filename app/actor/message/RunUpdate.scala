@@ -23,9 +23,4 @@ case class UpdateData(data: JobData, activity: RunActivity) extends RunUpdate
  */
 case class NewResource(resource: ResourceResponse) extends RunUpdate
 
-/**
- * A new Assertion was received
- */
-case class NewAssertorResponse(response: AssertorResponse) extends RunUpdate
-
-case class NewAssertions(assertionsClosed: Iterable[AssertionClosed]) extends RunUpdate
+case class NewAssertorResult(result: AssertorResult) extends RunUpdate

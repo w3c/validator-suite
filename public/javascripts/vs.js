@@ -51,13 +51,13 @@ window.VS = {
 					} else {
 						console.log("Resource already present on the page: " + data.url);
 					}
-				}*/ else if (type === "Assertions" && Report !== undefined) {
-					var assertions = json[1];
-					_.each(assertions, function (assertion) {
-						var url = assertion[0];
-						var timestamp = assertion[1];
-						var warnings = assertion[2];
-						var errors = assertion[3];
+				}*/ else if (type === "AssertorResult" && Report !== undefined) {
+					//var assertions = json[1];
+					//_.each(assertions, function (assertion) {
+						var url = json[1];
+						var timestamp = json[2];
+						var warnings = json[3];
+						var errors = json[4];
 						var current = Report.articles.where({url: url});
 						if (current.length < 1) {
 							Report.articles.add(new URLArticle({
@@ -76,7 +76,7 @@ window.VS = {
 							});
 						}
 						Report.articles.sort();
-					});
+					//});
 				}
 //			} catch(ex) {
 //				console.log(ex);

@@ -112,9 +112,9 @@ window.Job = Backbone.Model.extend({
 	},
 	
 	syncData: function(jobData) {
-		//if (!_.isEqual(jobData.attributes, this.get('data').attributes)) {
-			this.set({data: jobData});
-		//}
+		if (jobData.get("lastCompleted") == "Never")
+			jobData.set("lastCompleted", this.get("data").get("lastCompleted"));
+		this.set({data: jobData});
 	},
 	
 	log: function () {console.log(JSON.stringify(this.toJSON()));},

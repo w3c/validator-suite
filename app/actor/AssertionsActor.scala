@@ -24,6 +24,7 @@ import org.joda.time.DateTime
 import org.w3.util.akkaext._
 import scala.collection.mutable.Queue
 import org.w3.vs.actor.message.Stop
+import scala.concurrent.stm._
 
 case class AssertorCall(assertor: FromHttpResponseAssertor, response: HttpResponse)
 
@@ -39,18 +40,20 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
 
   import configuration.assertorExecutionContext
 
-  var pendingAssertions: Int = 0
+  var pendingAssertions: Ref[Int] = Ref(0)
 
   val queue = Queue[AssertorCall]()
 
   private final def scheduleAssertion(assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
     
     assertor.assert(response) onComplete {
+      case _ => pendingAssertions.single() -= 1
+    } onComplete {
       case Failure(f) => self ! f
-      case Success(s) => self ! s
+      case Success(results) => results foreach (result => self ! result)
     }
     
-    pendingAssertions += 1
+    pendingAssertions.single() += 1
     
   }
 
@@ -59,25 +62,25 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
     case Stop => {
       queue.dequeueAll(_ => true)
     }
-    case result: AssertorResultClosed => {
-      pendingAssertions -= 1
+    case result: AssertorResult => {
+      //pendingAssertions -= 1
       context.parent ! result
-      while (queue.nonEmpty && pendingAssertions <= MAX_PENDING_ASSERTION) {
+      while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
         val AssertorCall(assertorId, nextRI) = queue.dequeue()
         scheduleAssertion(assertorId, nextRI)
       }
     }
     case result: AssertorFailure => {
-      pendingAssertions -= 1
+      //pendingAssertions -= 1
       context.parent ! result
-      while (queue.nonEmpty && pendingAssertions <= MAX_PENDING_ASSERTION) {
+      while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
         val AssertorCall(assertorId, nextRI) = queue.dequeue()
         scheduleAssertion(assertorId, nextRI)
       }
     }
 
     case call @ AssertorCall(assertorId, response) => {
-      if (pendingAssertions > MAX_PENDING_ASSERTION) {
+      if (pendingAssertions.single() > MAX_PENDING_ASSERTION) {
         queue.enqueue(call)
       } else {
         scheduleAssertion(assertorId, response)

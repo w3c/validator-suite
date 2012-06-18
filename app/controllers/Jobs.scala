@@ -283,7 +283,8 @@ object Jobs extends Controller {
         job.enumerator &> Enumeratee.collect{
           case a: UpdateData => JobsUpdate.json(a.data, a.activity)
           //case NewResource(resource) => ResourceUpdate.json(resource)
-          case NewAssertions(assertions) if (assertions.count(_.severity == Warning) != 0 || assertions.count(_.severity == Error) != 0) => AssertorUpdate.json(assertions)
+          //case NewAssertions(assertionsC) if (assertionsC.count(_.assertion.severity == Warning) != 0 || assertionsC.count(_.assertion.severity == Error) != 0) => AssertorUpdate.json(assertionsC)
+          case NewAssertorResult(result) if (!result.isValid) => AssertorUpdate.json(result)
         }
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise

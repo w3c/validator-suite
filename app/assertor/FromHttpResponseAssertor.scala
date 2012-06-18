@@ -9,34 +9,36 @@ import akka.dispatch.ExecutionContext
 
 trait FromHttpResponseAssertor extends FromURLAssertor {
   
-  def assert(response: HttpResponse): FutureVal[AssertorFailure, AssertorResultClosed] = 
+  def assert(response: HttpResponse): FutureVal[AssertorFailure, Iterable[AssertorResult]] = 
     assert(response.url, response.jobId, response.runId) fold (
       throwable => AssertorFailure(
           jobId = response.jobId,
           runId = response.runId,
           assertorId = id,
           sourceUrl = response.url,
-          why = throwable.getMessage),
+          why = throwable),
       assertions => {
-        val groupedAssertions: Iterable[AssertionClosed] = assertions.groupBy(_.assertion.title.trim).map{
-          case (title, assertionsClosed) => {
-            val assertion = assertionsClosed.head.assertion
-            val contexts = assertionsClosed.foldLeft[Iterable[Context]](Iterable()){ (contexts, assertionClosed) => {
-                val ctxs = assertionClosed.contexts map (_.copy(assertionId = assertion.id))
+        val groupedAssertions: Iterable[(URL, Iterable[AssertionClosed])] = 
+          assertions.groupBy(_.assertion.url).map{ case (url, assertions1) => {
+            val flattenByTitle = assertions1.groupBy(_.assertion.title).map{ case (title, assertions2) => {
+              val assertion = assertions2.head.assertion
+              val contexts = assertions2.foldLeft[Iterable[Context]](Iterable()){ (contexts, assertionC) => {
+                val ctxs = assertionC.contexts map (_.copy(assertionId = assertion.id))
                 contexts ++ ctxs
               }}
-            AssertionClosed(assertion, contexts)
-          }
+              AssertionClosed(assertion, contexts)
+            }}
+            (url, flattenByTitle)
+          }}
+        groupedAssertions.map{case (url, assertions) =>
+          AssertorResult(
+            jobId = response.jobId,
+            runId = response.runId,
+            assertorId = id,
+            sourceUrl = response.url,
+            url = url,
+            assertions = assertions)
         }
-        AssertorResultClosed(AssertorResult(
-          jobId = response.jobId,
-          runId = response.runId,
-          assertorId = id,
-          sourceUrl = response.url,
-          // TODO
-          errors = groupedAssertions.count(_.assertion.severity == Error),
-          warnings = groupedAssertions.count(_.assertion.severity == Warning)),
-          groupedAssertions)
       }
     )
 }
