@@ -44,6 +44,10 @@ object ValidatorNu extends FromHttpResponseAssertor {
 	  val assertionId = AssertionId();
       val severity = AssertionSeverity((obj \ "type") match {
 	    case JsString("non-document-error") => throw new Exception("validator.nu failed");
+	    case JsString("info") => (obj \ "subType") match {
+	      case JsString("warning") => "warning";
+	      case _ => "info"
+	    }
 	    case JsString(s) => s; 
 	    case _ => throw new Exception("malformed json") // TODO
 	  })
