@@ -75,7 +75,7 @@ object Assertion {
 
   // TODO
   def getForRun(runId: RunId, url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] =
-    getForRun(runId) map { _.filter { _.url === url } }
+    getForRun(runId) map { _.filter { _.url === url }.toSeq.sortBy { _.title} }
 
   def getForRun(runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
     implicit val context = conf.webExecutionContext
