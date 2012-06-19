@@ -73,7 +73,7 @@ object Jobs extends Controller {
         job <- user.getJob(id)
         run <- job.getRun()
         article <- run.getURLArticle(url) map URLArticle.apply _
-        assertors <- run.getAssertorArticles(url) map {_.map(AssertorArticle.apply _)}
+        assertors <- FutureVal.successful(Iterable()) //run.getAssertorArticles(url) map {_.map(AssertorArticle.apply _)}
         assertions <- run.getAssertions(url) map (_.filter(_.severity != Info))
         tuples <- FutureVal.sequence(
             assertions.map(assertion => 

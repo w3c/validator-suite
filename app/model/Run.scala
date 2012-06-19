@@ -145,14 +145,16 @@ case class Run(
   // (resource url, last assertion timestamp, total warnings, total errors)
   // TODO: optimize by writing the sparql query
   def getURLArticles(): FutureVal[Exception, Iterable[(URL, DateTime, Int, Int)]] = {
+    implicit val context = conf.webExecutionContext
     for {
-      assertions <- getAssertions
+      assertions <- getAssertions 
+      t <- FutureVal.sequence(assertions.map(assertion => assertion.getContexts.map(contexts => (assertion, contexts))))
     } yield {
       // For a given resource the number of errors is the sum on the assertions of type error of the number of contexts or 1 if there are none.
       // ie~ errors.map(error => max(1, error.contexts.size)).foldLeft(_+_)
-      assertions.groupBy(_.url).map { case (url, assertions) => {
-        def count(severity: AssertionSeverity) = assertions.filter(_.severity == severity).foldLeft(0)((count, assertion) =>
-            assertion.getContexts.result(1.second).fold(f => count, s => count + scala.math.max(1, s.size))
+      t.groupBy(_._1.url).map { case (url, assertionsAndContexts) => {
+        def count(severity: AssertionSeverity) = assertionsAndContexts.filter(_._1.severity == severity).foldLeft(0)((count, assertionContext) =>
+            count + scala.math.max(1, assertionContext._2.size)
           )
         (url, 
          assertions.map(_.timestamp).max,
@@ -166,10 +168,18 @@ case class Run(
 
   // TODO: write sparql query.
   def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
-    getURLArticles().map{it => it.find(_._1 == url)} discard {
-      case None => new Exception("Unknown URL") //TODO type exception
-    } map {
-      case a => a.get
+    implicit val context = conf.webExecutionContext
+    for {
+      assertions <- getAssertions(url)
+      t <- FutureVal.sequence(assertions.map(assertion => assertion.getContexts.map(contexts => (assertion, contexts))))
+    } yield {
+      def count(severity: AssertionSeverity) = t.filter(_._1.severity == severity).foldLeft(0)((count, assertionContext) => 
+          count + scala.math.max(1, assertionContext._2.size)
+        )
+      (url, 
+       assertions.map(_.timestamp).max,
+       count(Warning),
+       count(Error))
     }
   }
 
@@ -201,6 +211,10 @@ SELECT ?assertorUri (COUNT(?contextUri) AS ?contexts) WHERE {
       val results = rows map { row =>
         for {
           assertorId <- row("assertorUri").flatMap(_.as[AssertorId])
+//org.w3.banana.VarNotFound: var assertorUri not found in QuerySolution ( ?contexts = 0 )
+//    at org.w3.banana.jena.JenaSPARQLEngine$$anon$3.apply(JenaSPARQLEngine.scala:20) ~[banana-jena_2.9.1-x04-SNAPSHOT.jar:x04-SNAPSHOT]
+//    at org.w3.vs.model.Run$$anonfun$getAssertorArticles$1$$anonfun$4.apply(Run.scala:209) ~[classes/:na]
+//    at org.w3.vs.model.Run$$anonfun$getAssertorArticles$1$$anonfun$4.apply(Run.scala:207) ~[classes/:na]
           nbContexts <- row("contexts").flatMap(_.as[Int])
         } yield ((assertorId, nbContexts))
       }
