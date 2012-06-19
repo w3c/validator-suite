@@ -201,10 +201,58 @@ SELECT ?url ?warnings ?errors ?latestWarning ?latestError {
 
   // TODO: write sparql query.
   def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
-    getURLArticles().map{it => it.find(_._1 == url)} discard {
-      case None => new Exception("Unknown URL") //TODO type exception
-    } map {
-      case a => a.get
+    implicit val context = conf.webExecutionContext
+    import conf._
+    import conf.binders.{ xsd => _, _ }
+    import conf.diesel._
+    val query = """
+SELECT (IF(BOUND(?warnings), ?warnings, 0) AS ?warn)
+       (IF(BOUND(?errors), ?errors, 0) AS ?err)
+       (IF (!BOUND(?a), ?b , IF (!BOUND(?b), ?a, IF (?a > ?b, ?a, ?b)) ) AS ?latest) {
+  {
+    SELECT (COUNT(*) AS ?warnings) (MAX(?when) AS ?a) {
+      graph ?g {
+        ?assertion ont:runId <#runUri> ;
+                   ont:severity "warning"^^xsd:string ;
+                   ont:url "#url"^^xsd:anyURI ;
+                   ont:timestamp ?when .
+      }
+      OPTIONAL { graph ?ctx { ?ctx ont:assertionId ?assertion } }
+    }
+  }
+  {
+    SELECT (COUNT(*) AS ?errors) (MAX(?when) AS ?b) {
+      graph ?g {
+        ?assertion ont:runId <#runUri> ;
+                   ont:severity "error"^^xsd:string ;
+                   ont:url "#url"^^xsd:anyURI ;
+                   ont:timestamp ?when .
+      }
+      OPTIONAL { graph ?ctx { ?ctx ont:assertionId ?assertion } }
+    }
+  }
+}
+""".replaceAll("#runUri", RunUri(id).toString).replaceAll("#url", url.toString)
+    import SparqlOps._
+    val select = SelectQuery(query, xsd, ont)
+    FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
+      // there is at least one answer because it's an aggregate
+      // TODO see with ericP if we can have something more idiomatic
+      val row = rows.head
+      //row.vars foreach { v => println(v + " -> " + row(v)) }
+      val result =
+        for {
+          warnings <- row("warn").flatMap(_.as[Int])
+          errors <- row("err").flatMap(_.as[Int])
+          latest <- row("latest").flatMap(_.as[DateTime])
+        } yield {
+          (url, latest, warnings, errors)
+        }
+      // result match {
+      //   case Failure(VarNotFound(_)) => Failure(org.w3.vs.exception.Unexpected(new Exception("Unknown URL")))
+      //   case _ => result
+      // }
+    result
     }
   }
   

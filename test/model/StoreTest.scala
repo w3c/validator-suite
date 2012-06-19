@@ -304,7 +304,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       severity = Warning,
       description = Some("some description")).save().await(10.seconds)
     // I'm not sure why run1.getURLArticle(url) returns nothing here. What am i doing wrong?
-    val retrieved = run1.getURLArticle(url).result(60.seconds).fold(f => throw f, s => s)
+    val retrieved = run1.getURLArticle(url).result(1.second).fold(f => throw f, s => s)
     retrieved._3 must be (1)
     retrieved._4 must be (0) // I think that with the current implementation this will fail and return 1 instead of 0 
   }
