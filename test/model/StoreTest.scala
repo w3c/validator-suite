@@ -192,9 +192,14 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     retrieved must be ('Failure) // TODO test exception type (UnknownOrganization)
   }
   
-  "retrieve Job" in {
-    val retrieved = Job.get(job1.id).result(10.second)
-    retrieved must be === (Success(job1))
+  "create, put, retrieve, delete Job" in {
+    val job = job1.copy(id = JobId())
+    Job.get(job.id).result(1.second) must be ('failure)
+    Job.save(job).result(1.second) must be ('success)
+    val retrieved = Job.get(job.id).result(10.second)
+    retrieved must be (Success(job))
+    Job.delete(job).result(1.second) must be ('success)
+    Job.get(job.id).result(1.second) must be ('failure)
   }
 
   "retrieve Organization" in {

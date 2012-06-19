@@ -302,7 +302,11 @@ SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
       _ <- Strategy.save(job.strategy)
     } yield ()
   
-  def delete(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = sys.error("")
+  def delete(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf.binders._
+    implicit val context = conf.webExecutionContext
+    FutureVal(conf.store.removeGraph(JobUri(id)))
+  }
 
 }
 
