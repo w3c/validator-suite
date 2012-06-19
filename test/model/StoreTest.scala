@@ -292,6 +292,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     }
   }
 
+  "get all URLArticles from a run with no assertions" in {
+    val retrieved = run3.getURLArticles().result(2.seconds) getOrElse sys.error("test Run.getURLArticles")
+    retrieved must be ('empty)
+  }
+
   "getAssertorArticles must return the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url." in {
     val retrieved = run1.getAssertorArticles(URL("http://example.com/foo/1")).result(1.seconds) getOrElse sys.error("test Run.getAssertorArticles")
     retrieved must have size (2)

@@ -186,10 +186,16 @@ SELECT ?url ?warnings ?errors ?latestWarning ?latestError {
           latestError <- row("latestError").flatMap(_.as[DateTime])
         } yield {
           val latest = if (latestWarning isAfter latestError) latestWarning else latestError
-          ((url, latest, warnings, errors))
+          (url, latest, warnings, errors)
         }
       }
-      results.toList.sequence[({type l[x] = Validation[BananaException, x]})#l, (URL, DateTime, Int, Int)]
+      val finalResults = results.toList.sequence[({type l[x] = Validation[BananaException, x]})#l, (URL, DateTime, Int, Int)]
+      // the request is correct, so if a VarNotFound, it means that we had one empty row
+      // need to see with ericP how to make it directly "no row"
+      finalResults match {
+        case Failure(VarNotFound(_)) => Success(List[(URL, DateTime, Int, Int)]())
+        case _ => finalResults
+      }
     }
   }
 
