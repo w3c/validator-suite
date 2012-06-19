@@ -173,10 +173,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       _ <- Run.save(run2)
       _ <- Run.save(run3)
       _ <- Run.save(run4)
-    } yield ()).result(1.second)
-    FutureVal.sequence(assertions map { Assertion.save _ }).await(10.seconds)
-    FutureVal.sequence(contexts map { Context.save _ }).await(10.seconds)
-    FutureVal.sequence(resourceResponses map { ResourceResponse.save _ }).await(10.seconds)
+      _ <- FutureVal.sequence(assertions map { Assertion.save _ })
+      _ <- FutureVal.sequence(contexts map { Context.save _ })
+      _ <- FutureVal.sequence(resourceResponses map { ResourceResponse.save _ }) 
+    } yield ()).await(30.second)
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
     println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
@@ -285,8 +285,14 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   // TODO @thomas: please write a real (at first failing) test for getURLArticle and getURLArticles
   "get all URLArticles from a run" in {
-    val urlArticles = run1.getURLArticles().result(2.seconds) getOrElse sys.error("test Run.getURLArticles")
+    // getURLArticles is slow and needs to be optimized. StoreTestHeavy really doesn't like this test
+    // and start printing deadLetters. CPU utilization spikes up too and stays up after end of test.
+    val urlArticles = run1.getURLArticles().result(60.seconds) getOrElse sys.error("test Run.getURLArticles")
     urlArticles must have size(nbUrlsPerAssertions)
+    urlArticles foreach {article =>
+      article._3 must be (nbWarnings * assertorIds.size * 2) // 2 is the number of contexts by assertion
+      article._4 must be (nbErrors * assertorIds.size * 2)
+    }
   }
 
   "getAssertorArticles must return the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url." in {
