@@ -78,8 +78,14 @@ trait DefaultProdConfiguration extends VSConfiguration {
 
   val diesel: Diesel[Rdf] = JenaDiesel
 
+//  val store: AsyncRDFStore[Rdf, Sparql] = {
+//    val blockingStore = JenaStore(DatasetGraphFactory.createMem())
+//    val asyncStore = AsyncRDFStore(blockingStore, system)(timeout)
+//    asyncStore
+//  }
+
   val store: AsyncRDFStore[Rdf, Sparql] = {
-    val blockingStore = JenaStore(DatasetGraphFactory.createMem())
+    val blockingStore = JenaStore(com.hp.hpl.jena.tdb.TDBFactory.createDatasetGraph())
     val asyncStore = AsyncRDFStore(blockingStore, system)(timeout)
     asyncStore
   }

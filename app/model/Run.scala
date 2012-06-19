@@ -201,61 +201,55 @@ SELECT ?url ?warnings ?errors ?latestWarning ?latestError {
       case a => a.get
     }
   }
-
-  def getAssertorArticles(url: URL, severity: AssertionSeverity): FutureVal[Exception, List[(AssertorId, Int)]] = {
+  
+  // Returns the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url.
+  def getAssertorArticles(url: URL): FutureVal[Exception, List[(AssertorId, String, Int, Int)]] = {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.binders.{ xsd => _, _ }
     import conf.diesel._
     val query = """
-SELECT ?assertorUri (COUNT(?contextUri) AS ?contexts) WHERE {
-  graph ?g {
-    ?assertionUri a ont:Assertion .
-    ?assertionUri ont:runId <#runUri> .
-    ?assertionUri ont:severity "#severity"^^xsd:string .
-    ?assertionUri ont:url "#url"^^xsd:anyURI .
-    ?assertionUri ont:assertorId ?assertorUri
+SELECT DISTINCT ?assertor ?warnings ?errors WHERE {
+  {
+    SELECT ?assertor (SUM(IF(BOUND(?ctx), 1, 0)) AS ?warnings) {
+      graph ?g {
+        ?assertion a ont:Assertion ;
+                   ont:runId <#runUri> ;
+                   ont:severity "warning"^^xsd:string ;
+                   ont:url "#url"^^xsd:anyURI ;
+                   ont:assertorId ?assertor
+      }
+      OPTIONAL { graph ?ctx { ?ctx ont:assertionId ?assertion } }
+    } GROUP BY ?assertor
   }
-  graph ?contextUri {
-    ?contextUri a ont:Context .
-    ?contextUri ont:assertionId ?assertionUri .
+  {
+    SELECT ?assertor (SUM(IF(BOUND(?ctx), 1, 0)) AS ?errors) {
+      graph ?g {
+        ?assertion a ont:Assertion ;
+                   ont:runId <#runUri> ;
+                   ont:severity "error"^^xsd:string ;
+                   ont:url "#url"^^xsd:anyURI ;
+                   ont:assertorId ?assertor
+      }
+      OPTIONAL { graph ?ctx { ?ctx ont:assertionId ?assertion } }
+    } GROUP BY ?assertor
   }
-} GROUP BY ?assertorUri
-""".replaceAll("#runUri", RunUri(id).toString)
-   .replaceAll("#url", url.toString)
-   .replaceAll("#severity", severity.toString)
+}
+""".replaceAll("#runUri", RunUri(id).toString).replaceAll("#url", url.toString)
     import SparqlOps._
     val select = SelectQuery(query, xsd, ont)
     FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
       val results = rows map { row =>
         for {
-          assertorId <- row("assertorUri").flatMap(_.as[AssertorId])
-          nbContexts <- row("contexts").flatMap(_.as[Int])
-        } yield ((assertorId, nbContexts))
-      }
-      results.toList.sequence[({type l[x] = Validation[BananaException, x]})#l, (AssertorId, Int)]
-    }
-  }
-  
-  // Returns the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url.@@@
-  def getAssertorArticles(url: URL): FutureVal[Exception, List[(AssertorId, String, Int, Int)]] = {
-    implicit val context = conf.webExecutionContext
-    for {
-      warnings <- getAssertorArticles(url, Warning)
-      errors <- getAssertorArticles(url, Error)
-    } yield {
-      val warningsMap: Map[AssertorId, Int] = warnings.toMap
-      val errorsMap: Map[AssertorId, Int] = errors.toMap
-      val results =
-        for {
-          assertorId <- warningsMap.keySet ++ errorsMap.keySet
+          assertorId <- row("assertor").flatMap(_.as[AssertorId])
+          warnings <- row("warnings").flatMap(_.as[Int])
+          errors <- row("errors").flatMap(_.as[Int])
         } yield {
           val assertorName = Assertor.getName(assertorId)
-          val nbWarnings = warningsMap.getOrElse(assertorId, 1)
-          val nbErrors = errorsMap.getOrElse(assertorId, 1)
-          (assertorId, assertorName, nbWarnings, nbErrors)
+          (assertorId, assertorName, warnings, errors)
         }
-      results.toList
+      }
+      results.toList.sequence[({type l[x] = Validation[BananaException, x]})#l, (AssertorId, String, Int, Int)]
     }
   }
 
