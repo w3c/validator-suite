@@ -317,15 +317,16 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         form <- JobForm.bind failMap (form => InvalidJobFormException(form, user, idOpt))
-        job <- idOpt.fold(
-            id => user.getJob(id).flatMap[Exception, Job](j => form.update(j).save()),
-            form.createJob(user).save()
+        jobM <- idOpt.fold(
+            id => user.getJob(id).flatMap(j => form.update(j).save().map(job => (job, "jobs.updated"))),
+            form.createJob(user).save().map(job => (job, "jobs.created"))
           )
       } yield {
+        val (job, msg) = jobM
         if (isAjax) 
-          Created(views.html.libs.messages(List(("info" -> Messages("jobs.created", job.name))))) 
+          Created(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
         else
-          SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages("jobs.updated", job.name)))
+          SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
       }) failMap {
         case InvalidJobFormException(form, user, idOpt) => BadRequest(views.html.jobForm(form, user, idOpt))
         case t => toError(t)
