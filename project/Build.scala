@@ -17,6 +17,7 @@ object ApplicationBuild extends Build {
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
     "org.w3" %% "banana-jena" % "x04-SNAPSHOT",
+    "org.apache.jena" % "jena-tdb" % "0.9.0-incubating",
     "org.w3" %% "css-validator-standalone" % "1.0-SNAPSHOT" intransitive(),
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
@@ -42,7 +43,8 @@ object ApplicationBuild extends Build {
     templatesImport += "scalaz.{Validation, Failure, Success}",
     resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    resolvers += "repo.codahale.com" at "http://repo.codahale.com"
+    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
+    resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
 
     // ensimeConfig := sexp(
     //   key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),

@@ -201,7 +201,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val retrieved = Organization.get(org.id).result(1.second)
     retrieved must be === (Success(org))
   }
-  
+
   "save and retrieve User" in {
     val retrieved = User.get(user.id).result(1.second)
     retrieved must be === (Success(user))
@@ -283,15 +283,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     retrievedAssertions must contain (assertions(0))
   }
 
-  // TODO @thomas: please write a real (at first failing) test for getURLArticle and getURLArticles
   "get all URLArticles from a run" in {
-    // getURLArticles is slow and needs to be optimized. StoreTestHeavy really doesn't like this test
-    // and start printing deadLetters. CPU utilization spikes up too and stays up after end of test.
-    val urlArticles = run1.getURLArticles().result(60.seconds) getOrElse sys.error("test Run.getURLArticles")
-    urlArticles must have size(nbUrlsPerAssertions)
-    urlArticles foreach {article =>
-      article._3 must be (nbWarnings * assertorIds.size * 2) // 2 is the number of contexts by assertion
-      article._4 must be (nbErrors * assertorIds.size * 2)
+    val retrieved = run1.getURLArticles().result(2.seconds) getOrElse sys.error("test Run.getURLArticles")
+    retrieved must have size (nbUrlsPerAssertions)
+    retrieved foreach { case (url, latest, warnings, errors) =>
+      warnings must be (assertorIds.size * 2 /* ctx */ * nbWarnings)
+      errors must be (assertorIds.size * 2 /* ctx */ * nbErrors)
     }
   }
 
@@ -305,22 +302,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
           foundErrors must be (nbErrors*2)
         }
       }
-    }
-  }
-
-  "getAssertorArticles(url, severity) must return the number of occurrences for this url and severity" in {
-    val retrieved1 = run1.getAssertorArticles(URL("http://example.com/foo/1"), Error).result(1.seconds) getOrElse sys.error("test Run.getAssertorArticles")
-    // there are 2 different assertors here
-    retrieved1 must have size (2)
-    assertorIds foreach { assertorId =>
-      retrieved1 must contain ((assertorId, nbErrors*2))
-    }
-
-    val retrieved2 = run1.getAssertorArticles(URL("http://example.com/foo/1"), Warning).result(1.seconds) getOrElse sys.error("test Run.getAssertorArticles")
-    // there are 2 different assertors here
-    retrieved2 must have size (2)
-    assertorIds foreach { assertorId =>
-      retrieved2 must contain ((assertorId, nbWarnings*2))
     }
   }
 

@@ -333,7 +333,9 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
         entrypoint <- (pointed / ont.entrypoint).as[URL]
         linkCheck <- (pointed / ont.linkCheck).as[String].map(_.toBoolean)
         maxResources <- (pointed / ont.maxResources).as[Int]
-        assertorSelector <- (pointed / ont.assertorSelector).as[AssertorSelector]
+        // looks like there is a bug with TDB: we get back several AssertorSelector
+        // this must be because of the use of a bnode as a subject, so unicity may not be enforced
+        assertorSelector <- (pointed / ont.assertorSelector).takeOneAs[AssertorSelector]
       } yield {
         StrategyVO(id, entrypoint, linkCheck, maxResources, Filter.includeEverything, assertorSelector)
       }
