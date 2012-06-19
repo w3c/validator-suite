@@ -76,7 +76,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   val now = DateTime.now(DateTimeZone.UTC)
 
   // a job may have never completed, for example if the user has forced a new run
-  // is this assumption ok?
+  // is this assumption ok? -> yes
   // or do we want to force a completedAt before switching to the new Job? this would be weird
   val run1 = Run(job = job1, createdAt = now, completedAt = None)
 
@@ -290,6 +290,23 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       warnings must be (assertorIds.size * 2 /* ctx */ * nbWarnings)
       errors must be (assertorIds.size * 2 /* ctx */ * nbErrors)
     }
+  }
+  
+  "get the URLArticle for a specific URL" in {
+    val url = URL("http://www.test.com")
+    Assertion(
+      jobId = job1,
+      runId = run1,
+      assertorId = assertorIds(0),
+      url = url,
+      lang = "fr",
+      title = "some title",
+      severity = Warning,
+      description = Some("some description")).save().await(10.seconds)
+    // I'm not sure why run1.getURLArticle(url) returns nothing here. What am i doing wrong?
+    val retrieved = run1.getURLArticle(url).result(60.seconds).fold(f => throw f, s => s)
+    retrieved._3 must be (1)
+    retrieved._4 must be (0) // I think that with the current implementation this will fail and return 1 instead of 0 
   }
 
   "get all URLArticles from a run with no assertions" in {
