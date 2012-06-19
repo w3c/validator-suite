@@ -50,6 +50,7 @@ window.JobView = Backbone.View.extend({
 	},
 	run: function () {
 		this.model.run({wait:true});
+		try { window.Report.articles.reset(); } catch(ex) { }
 		return false;
 	},
 	_delete: function () {
