@@ -195,18 +195,10 @@ SELECT ?url ?warnings ?errors ?latestWarning ?latestError {
 
   // TODO: write sparql query.
   def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
-    implicit val context = conf.webExecutionContext
-    for {
-      assertions <- getAssertions(url)
-      t <- FutureVal.sequence(assertions.map(assertion => assertion.getContexts.map(contexts => (assertion, contexts))))
-    } yield {
-      def count(severity: AssertionSeverity) = t.filter(_._1.severity == severity).foldLeft(0)((count, assertionContext) => 
-          count + scala.math.max(1, assertionContext._2.size)
-        )
-      (url, 
-       assertions.map(_.timestamp).max,
-       count(Warning),
-       count(Error))
+    getURLArticles().map{it => it.find(_._1 == url)} discard {
+      case None => new Exception("Unknown URL") //TODO type exception
+    } map {
+      case a => a.get
     }
   }
   
