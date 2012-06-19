@@ -149,9 +149,12 @@ case class Run(
     import conf.binders.{ xsd => _, _ }
     import conf.diesel._
     val query = """
-SELECT ?url ?warnings ?errors ?latestWarning ?latestError {
+SELECT ?url
+       (IF (BOUND(?w), ?w, 0) AS ?warnings)
+       (IF (BOUND(?e), ?e, 0) AS ?errors)
+       (IF (!BOUND(?a), ?b , IF (!BOUND(?b), ?a, IF (?a > ?b, ?a, ?b)) ) AS ?latest) {
   {
-    SELECT ?url (SUM(IF(BOUND(?ctx), 1, 0)) AS ?warnings) (MAX(?when) AS ?latestWarning) {
+    SELECT ?url (COUNT(*) AS ?w) (MAX(?when) AS ?a) {
       graph ?g {
         ?assertion ont:runId <#runUri> ;
                    ont:severity "warning"^^xsd:string ;
@@ -162,7 +165,7 @@ SELECT ?url ?warnings ?errors ?latestWarning ?latestError {
     } GROUP BY ?url
   }
   {
-    SELECT ?url (SUM(IF(BOUND(?ctx), 1, 0)) AS ?errors) (MAX(?when) AS ?latestError) {
+    SELECT ?url (COUNT(*) AS ?e) (MAX(?when) AS ?b) {
       graph ?g {
         ?assertion ont:runId <#runUri> ;
                    ont:severity "error"^^xsd:string ;
@@ -182,10 +185,8 @@ SELECT ?url ?warnings ?errors ?latestWarning ?latestError {
           url <- row("url").flatMap(_.as[URL])
           warnings <- row("warnings").flatMap(_.as[Int])
           errors <- row("errors").flatMap(_.as[Int])
-          latestWarning <- row("latestWarning").flatMap(_.as[DateTime])
-          latestError <- row("latestError").flatMap(_.as[DateTime])
+          latest <- row("latest").flatMap(_.as[DateTime])
         } yield {
-          val latest = if (latestWarning isAfter latestError) latestWarning else latestError
           (url, latest, warnings, errors)
         }
       }
