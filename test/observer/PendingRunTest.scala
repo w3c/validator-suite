@@ -66,6 +66,8 @@ class PendingRunTest extends RunTestHelper(new DefaultProdConfiguration {}) with
       case UpdateData(_, activity) if activity == Idle => ()
     }
 
+    Thread.sleep(100)
+
     val rrs1 = ResourceResponse.getForRun(runId1).result(1.second) getOrElse sys.error("getForRun")
     val rrs2 = ResourceResponse.getForRun(runId2).result(1.second) getOrElse sys.error("getForRun")
 

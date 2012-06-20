@@ -53,6 +53,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
 
     fishForMessagePF(3.seconds) {
       case UpdateData(_, activity) if activity == Idle => {
+        Thread.sleep(100)
         val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
         val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
         rrs must have size (j + 1)

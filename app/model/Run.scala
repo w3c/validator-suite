@@ -180,7 +180,7 @@ SELECT ?url
     import SparqlOps._
     val select = SelectQuery(query, xsd, ont)
     FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
-      val results = rows map { row =>
+      val results = rows.toIterable map { row =>
         for {
           url <- row("url").flatMap(_.as[URL])
           warnings <- row("warnings").flatMap(_.as[Int])
@@ -239,7 +239,7 @@ SELECT (IF(BOUND(?warnings), ?warnings, 0) AS ?warn)
     FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
       // there is at least one answer because it's an aggregate
       // TODO see with ericP if we can have something more idiomatic
-      val row = rows.head
+      val row = rows.toIterable.head
       //row.vars foreach { v => println(v + " -> " + row(v)) }
       val result =
         for {
@@ -294,7 +294,7 @@ SELECT DISTINCT ?assertor ?warnings ?errors WHERE {
     import SparqlOps._
     val select = SelectQuery(query, xsd, ont)
     FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
-      val results = rows map { row =>
+      val results = rows.toIterable map { row =>
         for {
           assertorId <- row("assertor").flatMap(_.as[AssertorId])
           warnings <- row("warnings").flatMap(_.as[Int])

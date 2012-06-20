@@ -50,6 +50,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
     
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData, activity) if activity == Idle => {
+        Thread.sleep(100)
         val rrs = ResourceResponse.getForRun(run).result(1.second) getOrElse sys.error("getForRun")
         rrs.size must be < (100)
       }

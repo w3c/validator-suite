@@ -280,7 +280,7 @@ SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
     val select = SelectQuery(query, xsd, ont)
     FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
       // it's an aggregate query (MAX), so there is always one row
-      val row = rows.head
+      val row = rows.toIterable.head
       row("lastCompleted").fold(
         failure => Success(None),
         value => value.as[DateTime] map { Some(_) }
