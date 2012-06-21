@@ -102,7 +102,57 @@ CONSTRUCT {
     vos.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, RunVO]
   }
 
+// given one job
+//   latest RunVO: max createdAt
+//   take all fields
+// for this runId
+//   take all the ResourceResponseVO
+//   take all the AssertionVO
+//   sort them
+//   replay them on the Run
+
+
+  def getLatestRun(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[Run]] = {
+    implicit val context = conf.webExecutionContext
+    Job.getLastCreated(jobId) flatMap {
+      case None => FutureVal.successful[Exception, Option[Run]](None)
+      case Some((runId, createdAt)) =>
+        for {
+          job <- Job.get(jobId)
+          vo <- Run.getRunVO(runId)
+          rrs <- ResourceResponse.getForRun(runId)
+          assertions <- Assertion.getForRun(runId)
+        } yield {
+          var run = Run(
+            id = vo.id,
+            explorationMode = vo.explorationMode,
+            createdAt = vo.createdAt,
+            completedAt = vo.completedAt,
+            timestamp = vo.timestamp,
+            job = job)
+          // sort by timestamp first!
+          // go through all the rrs to construct List[URL] respecting order of discovering
+          //   accumulate url
+          //   accumulate extractedURLs if HttpResponse
+          // at this point, we know
+          //   knownUrls: everything from accumulation (Set)
+          //   fetched: accumulation minus received urls (Set)
+          //   toBeExplored: accumulation minus duplicates minus fetched urls
+          // go through assertions
+          //   update run on the way
+          //   build a List[AssertorCall]
+          // the AssertorCall that were pending are:
+          //   we got a rr for url u
+          //   but there is no assertion received
+          //   schedule these guys again (don't forget to maintain the counter of pending assertions)
+
+          null
+        }
+    }
+  }
+
 }
+
 
 /**
  * Run represents a coherent state of for an Run, modelized as an FSM
@@ -200,7 +250,6 @@ SELECT ?url
     }
   }
 
-  // TODO: write sparql query.
   def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
     implicit val context = conf.webExecutionContext
     import conf._
@@ -249,10 +298,6 @@ SELECT (IF(BOUND(?warnings), ?warnings, 0) AS ?warn)
         } yield {
           (url, latest, warnings, errors)
         }
-      // result match {
-      //   case Failure(VarNotFound(_)) => Failure(org.w3.vs.exception.Unexpected(new Exception("Unknown URL")))
-      //   case _ => result
-      // }
     result
     }
   }

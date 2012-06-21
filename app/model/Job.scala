@@ -262,30 +262,52 @@ CONSTRUCT {
     val construct = SparqlOps.ConstructQuery(query, xsd, ont)
     FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
   }
-  
-  def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
+
+  def getLast(conf: VSConfiguration)(jobId: JobId, property: conf.Rdf#URI): FutureVal[Exception, Option[(RunId, DateTime)]] = {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.binders.{ xsd => _, _ }
     import conf.diesel._
     val query = """
-SELECT (MAX(?timestamp) AS ?lastCompleted) WHERE {
-  graph ?g {
-    ?runUri ont:jobId <#jobUri> .
-    ?runUri ont:completedAt ?timestamp
+SELECT ?run ?last WHERE {
+  {
+    SELECT (MAX(?timestamp) AS ?last) WHERE {
+      graph ?run {
+        ?run ont:jobId <#jobUri> ;
+             <#property> ?timestamp
+      }
+    }
+  }
+  graph ?run {
+    ?run ont:jobId <#jobUri> ;
+          <#property> ?last
   }
 }
-""".replaceAll("#jobUri", JobUri(jobId).toString)
+""".replaceAll("#jobUri", JobUri(jobId).toString).replaceAll("#property", property.toString)
     import SparqlOps._
     val select = SelectQuery(query, xsd, ont)
+    implicit val binder = UriToNodeBinder(RunUri)
     FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
       // it's an aggregate query (MAX), so there is always one row
-      val row = rows.toIterable.head
-      row("lastCompleted").fold(
-        failure => Success(None),
-        value => value.as[DateTime] map { Some(_) }
-      )
+      rows.toIterable.headOption match {
+        case Some(row) =>
+          for {
+            run <- row("run") flatMap (_.as[RunId])
+            last <- row("last") flatMap (_.as[DateTime])
+          } yield Some(run, last)
+        case None => Success[Exception, Option[(RunId, DateTime)]](None)
+      }
     }
+  }
+
+  def getLastCreated(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[(RunId, DateTime)]] = {
+    import conf.binders.ont
+    getLast(conf)(jobId, ont.createdAt)
+  }
+
+  def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
+    import conf.binders.ont
+    getLast(conf)(jobId, ont.completedAt) map { _ map { _._2 } }
   }
   
   def saveJobVO(vo: JobVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
