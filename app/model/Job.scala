@@ -65,16 +65,16 @@ case class Job(
   
   // couldn't run return a FutureVal[F, Run]?
   def run(): Unit = 
-    PathAware(organizationsRef, path) ! Refresh
+    PathAware(organizationsRef, path) ! Refresh()
   
   def cancel(): Unit = 
-    PathAware(organizationsRef, path) ! Stop
+    PathAware(organizationsRef, path) ! Stop()
 
   def on(): Unit = 
-    PathAware(organizationsRef, path) ! BeProactive
+    PathAware(organizationsRef, path) ! BeProactive()
 
   def off(): Unit = 
-    PathAware(organizationsRef, path) ! BeLazy
+    PathAware(organizationsRef, path) ! BeLazy()
 
   lazy val enumerator: Enumerator[RunUpdate] = {
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]

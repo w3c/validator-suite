@@ -156,16 +156,16 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       listenerHandler(msg)
       stay()
     }
-    case Event(BeProactive, run) => stateOf(run.withMode(ProActive))
-    case Event(BeLazy, run) => stateOf(run.withMode(Lazy))
-    case Event(Refresh, run) => {
+    case Event(BeProactive(_), run) => stateOf(run.withMode(ProActive))
+    case Event(BeLazy(_), run) => stateOf(run.withMode(Lazy))
+    case Event(Refresh(_), run) => {
       // logger.debug("%s: received a Refresh" format shortId)
       val firstURLs = List(strategy.entrypoint)
       val freshRun = Run(job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None)
       val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs)
       stateOf(scheduleNextURLsToFetch(runData))
     }
-    case Event(Stop, run) => {
+    case Event(Stop(_), run) => {
       assertionsActorRef ! Stop
       stateOf(run.stopMe())
     }

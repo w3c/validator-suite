@@ -118,6 +118,29 @@ CONSTRUCT {
             completedAt = vo.completedAt,
             timestamp = vo.timestamp,
             job = job)
+
+          var receivedUrls: List[URL] = List.empty
+          var extractedUrls: List[URL] = List.empty
+          rrs.toList.sortBy(_.timestamp) foreach {
+            case httpResponse: HttpResponse => {
+              receivedUrls = httpResponse.url :: receivedUrls
+              extractedUrls = httpResponse.extractedURLs ++ extractedUrls
+            }
+            case errorResponse: ErrorResponse => {
+              receivedUrls = errorResponse.url :: receivedUrls   
+            }
+          }
+
+          var errors = 0
+          var warnings = 0
+          assertions.toList.sortBy(_.timestamp) foreach { ass =>
+            ass.severity match {
+              case Error => errors += 1
+              case Warning => warnings += 1
+              case Info => ()
+            }
+          }
+
           // sort by timestamp first!
           // go through all the rrs to construct List[URL] respecting order of discovering
           //   accumulate url
