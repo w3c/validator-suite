@@ -5,6 +5,7 @@ import org.w3.banana._
 trait Ontologies[Rdf <: RDF] {
 self: Binders[Rdf] =>
 
+  import diesel._
   import ops._
 
   object ont extends PrefixBuilder("ont", "https://validator.w3.org/suite/ontology#", ops) {
