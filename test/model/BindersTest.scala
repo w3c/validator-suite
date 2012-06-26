@@ -22,7 +22,7 @@ class BindersTest extends WordSpec with MustMatchers {
       case Failure(throwable) => {
         println("1. "+t)
         println("2. === ")
-        println(JenaTurtleWriter.asString(pointed.graph, "foo"))
+        JenaUtil.dump(pointed.graph)
         println("===")
         println("3. "+result)
 //        throwable.printStackTrace()

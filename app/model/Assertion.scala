@@ -77,6 +77,7 @@ object Assertion {
   def getForRun(runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
     implicit val context = conf.webExecutionContext
     import conf._
+    import conf.diesel._
     import conf.binders.{ xsd => _, _ }
     val query = """
 CONSTRUCT {

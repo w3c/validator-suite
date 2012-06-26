@@ -16,7 +16,7 @@ object ApplicationBuild extends Build {
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "x07-SNAPSHOT",
+    "org.w3" %% "banana-jena" % "x10-SNAPSHOT",
     "org.w3" %% "css-validator-standalone" % "1.0-SNAPSHOT" intransitive(),
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
