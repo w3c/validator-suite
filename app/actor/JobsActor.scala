@@ -1,17 +1,10 @@
 package org.w3.vs.actor
 
 import akka.actor._
-import akka.dispatch._
-import akka.pattern.ask
-import org.w3.vs.http._
 import org.w3.vs.model._
-import org.w3.vs.assertor._
 import org.w3.vs.VSConfiguration
 import scalaz._
 import Scalaz._
-import akka.util.Timeout
-import akka.util.duration._
-import message._
 import scalaz._
 import org.w3.util.akkaext._
 

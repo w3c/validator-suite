@@ -2,7 +2,7 @@ package org.w3.util.localwebsite
 
 import java.net._
 import java.io._
-import java.util.{Map => jMap, List => jList, HashMap => jHashMap, LinkedList}
+import java.util.{Map => jMap, List => jList, HashMap => jHashMap}
 import scala.collection.JavaConverters._
 
 class LocalCache(base: File, mode: CacheMode) extends ResponseCache {

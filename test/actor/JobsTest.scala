@@ -2,17 +2,8 @@ package org.w3.vs.actor
 
 import org.w3.util._
 import org.w3.vs.util._
-import org.w3.util.website._
 import org.w3.vs.model._
-import akka.util.Duration
-import java.util.concurrent.TimeUnit._
-import akka.dispatch.Await
-import akka.util.duration._
-import akka.util.Duration
-import java.util.concurrent.TimeUnit.SECONDS
-import akka.testkit.TestKit
 import org.w3.vs.DefaultProdConfiguration
-import org.w3.vs.actor._
 
 class JobsTest extends RunTestHelper(new DefaultProdConfiguration { }) {
   

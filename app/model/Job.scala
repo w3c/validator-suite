@@ -3,16 +3,12 @@ package org.w3.vs.model
 import java.nio.channels.ClosedChannelException
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.akkaext._
-import org.w3.vs.store._
 import org.w3.vs.actor.message._
-import org.w3.vs.exception._
 import org.w3.vs.VSConfiguration
 import akka.actor._
-import akka.dispatch._
 import play.api.libs.iteratee._
 import play.Logger
 import org.w3.util._
-import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
 import org.w3.banana._
@@ -147,7 +143,6 @@ object Job {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.binders.{ xsd => _, _ }
-    import conf.diesel._
     val query = """
 CONSTRUCT {
   ?jobUri ?p ?o .
@@ -174,7 +169,6 @@ CONSTRUCT {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.binders.{ xsd => _, _ }
-    import conf.diesel._
     val query = """
 CONSTRUCT {
   ?jobUri ?p ?o .
@@ -198,7 +192,6 @@ CONSTRUCT {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.binders.{ xsd => _, _ }
-    import conf.diesel._
     val query = """
 CONSTRUCT {
   ?jobUri ?p ?o .
@@ -219,7 +212,6 @@ CONSTRUCT {
   
   def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Job] = {
     implicit val c = conf
-    import conf.ops._
     import conf.diesel._
     import conf.binders._
     for {

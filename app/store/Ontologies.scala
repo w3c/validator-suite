@@ -1,15 +1,10 @@
 package org.w3.vs.store
 
-import org.w3.vs.model._
 import org.w3.banana._
-import scalaz._
-import scalaz.Scalaz._
-import scalaz.Validation._
 
 trait Ontologies[Rdf <: RDF] {
 self: Binders[Rdf] =>
 
-  import diesel._
   import ops._
 
   object ont extends PrefixBuilder("ont", "https://validator.w3.org/suite/ontology#", ops) {

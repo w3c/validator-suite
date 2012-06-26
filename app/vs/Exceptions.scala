@@ -1,6 +1,5 @@
 package org.w3.vs.exception
 
-import play.api.data.Form 
 import org.w3.vs.view._
 import org.w3.vs.model._
 

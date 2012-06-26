@@ -1,6 +1,5 @@
 package org.w3.util
 
-import org.w3.vs._
 
 /**
  * helper class to deal with HTTP headers

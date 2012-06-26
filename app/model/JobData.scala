@@ -1,14 +1,7 @@
 package org.w3.vs.model
 
-import org.w3.vs._
-import org.w3.util._
-import org.w3.vs.actor._
 import org.joda.time.DateTime
 import scala.math._
-import org.w3.banana._
-import scalaz.Validation._
-import scalaz.Scalaz._
-import scalaz._
 
 case class JobData (
     runId: RunId,

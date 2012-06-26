@@ -1,11 +1,8 @@
 package org.w3.util.website
 
 import javax.servlet.http._
-import org.eclipse.jetty.server.nio.SelectChannelConnector
-import org.eclipse.jetty.server.{ Server }
-import org.eclipse.jetty.server.handler.ContextHandlerCollection
-import org.eclipse.jetty.webapp.WebAppContext
-import org.eclipse.jetty.servlet.{ DefaultServlet, ServletContextHandler, ServletHolder }
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.servlet.{ ServletContextHandler, ServletHolder }
 
 case class Webserver(port: Int, servlet: HttpServlet) {
 

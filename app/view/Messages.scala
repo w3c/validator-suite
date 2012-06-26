@@ -1,13 +1,8 @@
 package org.w3.vs.view
 
-import org.w3.util._
-import org.w3.vs._
 import org.w3.vs.model._
-import org.w3.vs.assertor._
 import play.api.libs.json._
-import scalaz._
 import scalaz.Scalaz._
-import org.joda.time.{ DateTime, DateTimeZone }
 
 case object JobsUpdate {
   

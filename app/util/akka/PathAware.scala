@@ -2,7 +2,6 @@ package org.w3.util.akkaext
 
 import akka.actor._
 import akka.dispatch._
-import java.nio.file._
 import java.net.URI
 import org.w3.util._
 

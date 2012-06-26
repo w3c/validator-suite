@@ -1,11 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs._
-import org.w3.vs.store._
-import org.w3.vs.assertor._
 import org.w3.util._
-import org.w3.util.Headers._
-import scalaz.Scalaz._
 import akka.dispatch._
 import org.w3.banana._
 

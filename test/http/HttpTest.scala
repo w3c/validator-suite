@@ -2,15 +2,11 @@ package org.w3.vs.http
 
 import org.w3.vs._
 import org.scalatest._
-import org.scalatest.matchers.MustMatchers
-import akka.testkit.{TestKit, ImplicitSender}
 import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
 import org.w3.util._
-import akka.util.Duration
 import akka.util.duration._
-import akka.dispatch._
 import org.w3.util.akkaext._
 
 class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with Inside {

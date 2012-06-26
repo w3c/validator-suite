@@ -1,6 +1,5 @@
 package controllers
 
-import java.util.concurrent.TimeUnit.SECONDS
 
 import org.w3.util._
 import org.w3.vs.controllers._
@@ -9,9 +8,6 @@ import org.w3.vs.model._
 import org.w3.vs.view._
 import org.w3.vs.actor.message._
 
-import Application._
-import akka.dispatch.Future
-import akka.util.duration._
 import play.api.i18n.Messages
 import play.api.libs.concurrent.Promise
 import play.api.libs.iteratee.Enumeratee
@@ -20,7 +16,6 @@ import play.api.libs.iteratee.Iteratee
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import scalaz.Scalaz._
-import scalaz._
 
 object Jobs extends Controller {
   

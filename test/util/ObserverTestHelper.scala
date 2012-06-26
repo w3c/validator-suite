@@ -1,12 +1,7 @@
 package org.w3.vs.util
 
 import org.w3.vs.model._
-import org.w3.vs.http.Http
-import akka.actor.{Actor, TypedActor}
 import akka.testkit.{TestKit, ImplicitSender}
-import akka.util.Duration
-import java.util.concurrent.TimeUnit._
-import akka.actor.ActorSystem
 import org.w3.vs.VSConfiguration
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers

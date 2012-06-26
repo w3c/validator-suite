@@ -6,18 +6,13 @@ import org.w3.vs.http._
 import org.w3.vs.actor._
 import org.w3.vs.model._
 import org.w3.vs.store._
-import org.w3.vs.assertor._
 import akka.util.duration._
 import akka.util.Timeout
-import akka.util.Duration
 import akka.dispatch.ExecutionContext
 import java.util.concurrent.Executors
 import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
-import org.w3.vs._
 import org.w3.banana._
 import org.w3.banana.jena._
-import com.hp.hpl.jena.sparql.core._
-import org.joda.time.DateTime
 import org.joda.time._
 
 trait DefaultProdConfiguration extends VSConfiguration {

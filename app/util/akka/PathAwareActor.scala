@@ -2,8 +2,6 @@ package org.w3.util.akkaext
 
 import akka.actor.Actor
 import java.net.URI
-import java.nio.file.Paths
-import java.nio.file.Path
 
 trait PathAwareActor {
 this: Actor =>

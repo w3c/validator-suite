@@ -1,11 +1,7 @@
 package org.w3.vs.model
 
-import org.w3.vs._
-import org.w3.vs.store._
 import org.w3.util._
 import org.joda.time._
-import org.w3.vs.assertor._
-import scalaz.Validation
 
 sealed trait AssertorResponse {
   val id: AssertorResponseId

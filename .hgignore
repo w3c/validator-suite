@@ -27,6 +27,7 @@ test/resources
 test/observer/TempTest.scala
 *.egp
 .idea
+.idea_modules
 .ensime
 .externalToolBuilders
 *.orig

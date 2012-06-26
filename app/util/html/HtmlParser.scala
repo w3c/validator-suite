@@ -3,7 +3,6 @@ package org.w3.util.html
 import org.w3.util.URL
 import java.io._
 import org.xml.sax._
-import org.xml.sax.helpers.DefaultHandler
 
 object HtmlParser extends HtmlParser
 

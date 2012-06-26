@@ -2,14 +2,12 @@ package org.w3.util
 
 import akka.dispatch._
 import akka.util.duration._
-import akka.util.Duration
 import org.scalatest._
 import org.scalatest.matchers._
 import org.scalatest.junit.JUnitRunner
 import java.util.concurrent.{Future => JavaFuture, _}
-import play.api.libs.concurrent.{Promise => PlayPromise, _}
+import play.api.libs.concurrent.{Promise => PlayPromise}
 import org.junit.runner.RunWith
-import scalaz._
 
 @RunWith(classOf[JUnitRunner])
 class VSPromiseTest extends WordSpec with MustMatchers {

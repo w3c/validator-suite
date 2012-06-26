@@ -2,17 +2,13 @@ package org.w3.vs.http
 
 import com.ning.http.client._
 import akka.actor._
-import akka.dispatch._
 import org.w3.util._
-import org.w3.vs.actor._
-import akka.util.Duration
 import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import play.Logger
 import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
 import scala.collection.mutable.Queue
-import org.w3.util.akkaext._
 
 object AuthorityManager {
 
@@ -142,8 +138,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
       }
         
       def onCompleted(): Unit = {
-        import scala.collection.JavaConverters._
-        
+
         finish {
           val response = builder.build()
           import java.util.{Map => jMap, List => jList}

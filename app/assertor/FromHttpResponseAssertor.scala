@@ -2,10 +2,6 @@ package org.w3.vs.assertor
 
 import org.w3.util._
 import org.w3.vs.model._
-import scalaz._
-import Validation._
-import scala.io.Source
-import akka.dispatch.ExecutionContext
 
 trait FromHttpResponseAssertor extends FromURLAssertor {
   

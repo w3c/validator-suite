@@ -6,7 +6,6 @@ import akka.dispatch.ExecutionContext
 import akka.dispatch.Future
 import akka.dispatch.Promise
 import akka.util.Duration
-import akka.util.duration._
 import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._

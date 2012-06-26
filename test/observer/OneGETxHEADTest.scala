@@ -4,17 +4,11 @@ import org.w3.util._
 import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
-import org.specs2.mutable.Specification
-import akka.dispatch.Await
 import akka.util.duration._
-import akka.util.Duration
-import java.util.concurrent.TimeUnit.SECONDS
 import org.w3.vs.DefaultProdConfiguration
-import org.w3.vs.actor._
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
-import play.api.libs.iteratee._
 
 /**
   * Server 1 -> Server 2

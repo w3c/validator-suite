@@ -3,20 +3,13 @@ package org.w3.vs
 import org.w3.util._
 import org.w3.vs.Prod.configuration
 import org.w3.vs.model._
-import org.w3.vs.exception._
-import play.api.data.Forms._
 import play.api.data.format.Formats._
 import play.api.data.format.Formatter
-import play.api.data._
 import play.api.data.FormError
 import play.api.libs.iteratee._
 import play.api.libs.json.JsValue
-import play.api.mvc.Results._
 import play.api.mvc._
 import play.api.mvc.PathBindable
-import play.api._
-import scalaz._
-import play.api.i18n.Messages
 import java.net.URLDecoder
 import java.net.URLEncoder
 

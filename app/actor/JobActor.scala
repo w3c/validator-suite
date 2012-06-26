@@ -5,23 +5,15 @@ import org.w3.vs.model._
 import org.w3.util._
 import org.w3.vs.assertor._
 import org.w3.vs.actor.message._
-import akka.dispatch._
 import akka.actor._
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
-import java.util.concurrent.TimeUnit.MILLISECONDS
 import play.api.libs.iteratee._
 import play.Logger
 import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
 import akka.util.duration._
-import akka.util.Duration
-import scala.collection.mutable.LinkedList
-import scala.collection.mutable.LinkedHashMap
 import org.w3.util.Headers.wrapHeaders
-import akka.pattern.pipe
-import scalaz._
 import scalaz.Scalaz._
-import org.joda.time.{ DateTime, DateTimeZone }
+import org.joda.time.DateTime
 import org.w3.util.akkaext._
 import org.joda.time.DateTimeZone
 
@@ -34,7 +26,6 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
   val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
 
   // TODO is it really what we want? I don't think so
-  import TypedActor.dispatcher
 
   val logger = Logger.of(classOf[JobActor])
 

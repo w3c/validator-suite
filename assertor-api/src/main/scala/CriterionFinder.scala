@@ -1,6 +1,5 @@
 package org.w3.assertor
 
-import java.io._
 
 /**
  * a lookup table for Criterions

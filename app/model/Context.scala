@@ -1,13 +1,8 @@
 package org.w3.vs.model
 
 import org.w3.vs._
-import org.w3.vs.store._
 import org.w3.util._
-import org.joda.time._
-import org.w3.vs.assertor._
-import scalaz.Validation
 import org.w3.banana._
-import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
 
@@ -72,7 +67,6 @@ object Context {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.binders.{ xsd => _, _ }
-    import conf.diesel._
     val query = """
 CONSTRUCT {
   ?contextUri ?p ?o .

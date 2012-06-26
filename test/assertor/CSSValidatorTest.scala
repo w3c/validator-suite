@@ -1,9 +1,7 @@
 package org.w3.vs.assertor
 
 import org.w3.util.URL
-import akka.util.Duration
 import akka.util.duration._
-import org.w3.vs.model.AssertionClosed
 import org.scalatest._
 import org.scalatest.matchers._
 

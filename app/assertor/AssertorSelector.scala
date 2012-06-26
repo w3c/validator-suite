@@ -1,8 +1,5 @@
 package org.w3.vs.model
 
-import org.w3.util.Headers._
-import org.w3.vs.model._
-import scalaz.Scalaz._
 
 case class AssertorSelector(
   name: String,

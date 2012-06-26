@@ -2,10 +2,7 @@ package org.w3.vs.store
 
 import org.w3.vs.model._
 import org.w3.banana._
-import org.w3.banana.NodeBinder._
 import scalaz._
-import scalaz.Scalaz._
-import scalaz.Validation._
 import org.w3.util._
 
 trait LiteralBinders[Rdf <: RDF] {

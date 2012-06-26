@@ -1,13 +1,9 @@
 package org.w3.vs.model
 
 import org.w3.vs._
-import org.w3.vs.store._
 import org.w3.util._
-import org.w3.vs.actor._
 import scalaz._
 import Scalaz._
-import akka.dispatch._
-import akka.util.duration._
 import org.w3.vs.exception._
 import org.w3.banana._
 
@@ -42,7 +38,6 @@ object User {
   def getByEmail(email: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.ops._
     import conf.binders.{ xsd => _, _ }
     import conf.diesel._
     val query = """

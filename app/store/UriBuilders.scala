@@ -3,8 +3,6 @@ package org.w3.vs.store
 import org.w3.vs.model._
 import org.w3.banana._
 import scalaz._
-import scalaz.Scalaz._
-import scalaz.Validation._
 
 trait UriBuilders[Rdf <: RDF] {
 self: Binders[Rdf] =>

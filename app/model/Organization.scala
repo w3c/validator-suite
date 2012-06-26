@@ -1,12 +1,8 @@
 package org.w3.vs.model
 
-import org.w3.vs._
-import org.w3.vs.store._
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
-import akka.actor.actorRef2Scala
-import akka.dispatch._
 import java.nio.channels.ClosedChannelException
 import org.w3.vs.VSConfiguration
 import play.api.libs.iteratee._
@@ -33,9 +29,8 @@ case class Organization(
   def getAdmin: FutureVal[Exception, User] = User.get(adminId)
   
   def save(): FutureVal[Exception, Unit] = Organization.save(this)
-  
-  import akka.pattern.ask
-  
+
+
   lazy val enumerator: Enumerator[RunUpdate] = {
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
     val subscriber: ActorRef = system.actorOf(Props(new Actor {

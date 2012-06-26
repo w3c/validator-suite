@@ -1,7 +1,6 @@
 package org.w3.vs.view
 
 import org.joda.time._
-import org.joda.time.format._
 import org.w3.util.URL
 
 object Helper {

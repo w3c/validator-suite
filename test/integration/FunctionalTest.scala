@@ -2,8 +2,6 @@ package org.w3.vs.integration
 
 import play.api.test._
 import play.api.test.Helpers._
-import play.api.libs._
-import org.w3.util.localwebsite.LocalCache._
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 

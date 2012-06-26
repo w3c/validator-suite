@@ -5,7 +5,6 @@ import akka.util.duration._
 import akka.util.Duration
 import scalaz._
 import Scalaz._
-import Validation._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import play.api.libs.concurrent._

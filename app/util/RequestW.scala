@@ -1,7 +1,6 @@
 package org.w3.util
 
 import dispatch._
-import org.w3.vs._
 
 class RequestW(req:Request) {
 

@@ -1,6 +1,5 @@
 package org.w3.vs.assertor
 
-import org.w3.vs._
 import org.w3.vs.model.AssertorId
 
 /**

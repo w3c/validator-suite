@@ -1,6 +1,5 @@
 package org.w3.vs.model
 
-import org.w3.vs._
 import org.w3.util.URL
 import scala.util.matching.Regex
 

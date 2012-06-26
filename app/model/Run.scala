@@ -1,20 +1,8 @@
 package org.w3.vs.model
 
 import org.w3.vs._
-import org.w3.vs.store._
 import org.w3.util._
 import org.w3.vs.assertor._
-import akka.dispatch._
-import akka.actor._
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
-import java.util.concurrent.TimeUnit.MILLISECONDS
-import play.Logger
-import org.w3.vs.http._
-import akka.util.duration._
-import akka.util.Duration
-import scala.collection.mutable.ListMap
-import java.util.UUID
-import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
 import org.joda.time._

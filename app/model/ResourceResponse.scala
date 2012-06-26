@@ -1,14 +1,10 @@
 package org.w3.vs.model
 
 import org.w3.vs._
-import org.w3.vs.store._
 import org.w3.util._
 import org.w3.util.Headers.wrapHeaders
-import org.w3.vs.http._
 import org.joda.time._
-import scalaz.Equal
 import org.w3.banana._
-import scalaz.Validation._
 import scalaz.Scalaz._
 import scalaz._
 
@@ -54,7 +50,6 @@ object ResourceResponse {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.binders.{ xsd => _, _ }
-    import conf.diesel._
     val query = """
 CONSTRUCT {
   ?s ?p ?o .

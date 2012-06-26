@@ -1,13 +1,6 @@
 package org.w3.vs.actor.message
 
-import org.w3.util.URL
-import org.w3.vs.assertor._
 import org.w3.vs.model._
-import org.w3.vs.actor._
-import play.api.libs.json._
-import org.w3.vs.model._
-import scalaz._
-import org.joda.time._
 
 /**
  * An update that happened on an Observation.
