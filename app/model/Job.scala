@@ -142,7 +142,7 @@ object Job {
   def getFor(userId: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     val query = """
 CONSTRUCT {
   ?jobUri ?p ?o .
@@ -168,7 +168,7 @@ CONSTRUCT {
   def getFor(organizationId: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     val query = """
 CONSTRUCT {
   ?jobUri ?p ?o .
@@ -191,7 +191,7 @@ CONSTRUCT {
   def getFor(strategyId: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     val query = """
 CONSTRUCT {
   ?jobUri ?p ?o .
@@ -234,7 +234,7 @@ CONSTRUCT {
   def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     import conf.diesel._
     val query = """
 CONSTRUCT {
@@ -258,7 +258,7 @@ CONSTRUCT {
   def getLast(conf: VSConfiguration)(jobId: JobId, property: conf.Rdf#URI): FutureVal[Exception, Option[(RunId, DateTime)]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     import conf.diesel._
     val query = """
 SELECT ?run ?last WHERE {

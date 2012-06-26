@@ -38,7 +38,7 @@ object User {
   def getByEmail(email: String)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     import conf.diesel._
     val query = """
 CONSTRUCT {

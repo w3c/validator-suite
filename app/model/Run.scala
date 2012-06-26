@@ -66,7 +66,7 @@ object Run {
   def getRunVOs(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[RunVO]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     import conf.diesel._
     val query = """
 CONSTRUCT {
@@ -207,7 +207,7 @@ case class Run(
   def getURLArticles(): FutureVal[Exception, List[(URL, DateTime, Int, Int)]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     import conf.diesel._
     val query = """
 SELECT ?url
@@ -264,7 +264,7 @@ SELECT ?url
   def getURLArticle(url: URL): FutureVal[Exception, (URL, DateTime, Int, Int)] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     import conf.diesel._
     val query = """
 SELECT (IF(BOUND(?warnings), ?warnings, 0) AS ?warn)
@@ -317,7 +317,7 @@ SELECT (IF(BOUND(?warnings), ?warnings, 0) AS ?warn)
   def getAssertorArticles(url: URL): FutureVal[Exception, List[(AssertorId, String, Int, Int)]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     import conf.diesel._
     val query = """
 SELECT DISTINCT ?assertor ?warnings ?errors WHERE {

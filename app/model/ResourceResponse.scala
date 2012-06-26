@@ -49,7 +49,7 @@ object ResourceResponse {
   def getForRun(runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[ResourceResponse]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     val query = """
 CONSTRUCT {
   ?s ?p ?o .

@@ -78,7 +78,7 @@ object Assertion {
     implicit val context = conf.webExecutionContext
     import conf._
     import conf.diesel._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     val query = """
 CONSTRUCT {
   ?assertionUri ?p ?o .

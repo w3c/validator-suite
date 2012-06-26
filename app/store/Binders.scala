@@ -18,7 +18,6 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
   import diesel._
 
-  val xsd = XSDPrefix(ops)
   val anyURI = xsd("anyURI")
 
   /* helper: to be moved */

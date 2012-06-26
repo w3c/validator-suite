@@ -66,7 +66,7 @@ object Context {
   def getForAssertion(assertionId: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Context]] = {
     implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders.{ xsd => _, _ }
+    import conf.binders._
     val query = """
 CONSTRUCT {
   ?contextUri ?p ?o .
