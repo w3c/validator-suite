@@ -15,18 +15,20 @@ object ResourceResponse {
     case hr: HttpResponseVO => HttpResponse(hr)
   }
 
-  def getResourceResponseVO(id: ResourceResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponseVO] = {
+  def getResourceResponseVO(runId: RunId, rrId: ResourceResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponseVO] = {
     import conf.binders._
     implicit val context = conf.webExecutionContext
-    val uri = ResourceResponseUri(id)
-    FutureVal(conf.store.getNamedGraph(uri)) flatMapValidation { graph => 
+    val graphUri = RunUri(runId)
+    FutureVal(conf.store.getNamedGraph(graphUri)) flatMapValidation { graph => 
+      val uri = ResourceResponseUri.toUri(runId, rrId)
+      // this is not very safe, TODO banana-rdf
       val pointed = PointedGraph(uri, graph)
       ResourceResponseVOBinder.fromPointedGraph(pointed)
     }
   }
   
-  def get(id: ResourceResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] =
-    getResourceResponseVO(id) map { ResourceResponse(_) }
+  def get(runId: RunId, rrId: ResourceResponseId)(implicit conf: VSConfiguration): FutureVal[Exception, ResourceResponse] =
+    getResourceResponseVO(runId, rrId) map { ResourceResponse(_) }
 
   def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, ResourceResponse] = {
     implicit val c = conf
@@ -69,7 +71,7 @@ CONSTRUCT {
     import conf.binders._
     implicit val context = conf.webExecutionContext
     val graph = ResourceResponseVOBinder.toPointedGraph(vo).graph
-    val result = conf.store.addNamedGraph(ResourceResponseUri(vo.id), graph)
+    val result = conf.store.appendToNamedGraph(RunUri(vo.runId), graph)
     FutureVal(result)
   }
 

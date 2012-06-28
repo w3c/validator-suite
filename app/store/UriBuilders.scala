@@ -3,6 +3,7 @@ package org.w3.vs.store
 import org.w3.vs.model._
 import org.w3.banana._
 import scalaz._
+import scalaz.Scalaz._
 
 trait UriBuilders[Rdf <: RDF] {
 self: Binders[Rdf] =>
@@ -59,12 +60,14 @@ self: Binders[Rdf] =>
     def toUri(t: OrganizationId): Rdf#URI = apply(t)
   }
 
-  implicit object ResourceResponseUri
-  extends PrefixBuilder("", "https://validator.w3.org/suite/resourceResponse/", ops)
-  with URIBinder[Rdf, ResourceResponseId] {
-    def apply(id: ResourceResponseId): Rdf#URI = apply(id.toString)
-    def fromUri(uri: Rdf#URI): Validation[BananaException, ResourceResponseId] = getLocalName(uri) map ResourceResponseId.apply
-    def toUri(t: ResourceResponseId): Rdf#URI = apply(t)
+  implicit object ResourceResponseUri {
+
+    def fromUri(uri: Rdf#URI): Validation[BananaException, ResourceResponseId] =
+      for {
+        fragment <- uri.fragment toSuccess WrongExpectation(uri + " has no fragment")
+      } yield ResourceResponseId(fragment)
+
+    def toUri(runId: RunId, rrId: ResourceResponseId): Rdf#URI = RunUri.toUri(runId).fragment(rrId.toString)
   }
 
   implicit object RunUri

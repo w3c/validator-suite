@@ -332,7 +332,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   "retrieve ResourceResponse" in {
     val rr = resourceResponses(0)
-    ResourceResponse.get(rr.id).result(1.second) must be === (Success(rr))
+    val retrieved = ResourceResponse.get(rr.runId, rr.id).result(1.second)
+    retrieved must be (Success(rr))
   }
 
   "get all resources for a given a runId" in {

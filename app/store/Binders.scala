@@ -152,7 +152,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
 
     def toPointedGraph(t: ErrorResponseVO): PointedGraph[Rdf] = (
-      ResourceResponseUri(t.id).a(ont.ResourceResponse).a(ont.ErrorResponse)
+      ResourceResponseUri.toUri(t.runId, t.id).a(ont.ResourceResponse).a(ont.ErrorResponse)
         -- ont.jobId ->- JobUri(t.jobId)
         -- ont.runId ->- RunUri(t.runId)
         -- ont.url ->- t.url
@@ -163,7 +163,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ErrorResponseVO] = {
       for {
-        id <- pointed.as[ResourceResponseId]
+        id <- pointed.as[Rdf#URI] flatMap ResourceResponseUri.fromUri
         jobId <- (pointed / ont.jobId).as[JobId]
         runId <- (pointed / ont.runId).as[RunId]
         url <- (pointed / ont.url).as[URL]
@@ -182,7 +182,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
   implicit val HttpResponseVOBinder = new PointedGraphBinder[Rdf, HttpResponseVO] {
 
     def toPointedGraph(t: HttpResponseVO): PointedGraph[Rdf] = (
-      ResourceResponseUri(t.id).a(ont.ResourceResponse).a(ont.HttpResponse)
+      ResourceResponseUri.toUri(t.runId, t.id).a(ont.ResourceResponse).a(ont.HttpResponse)
         -- ont.jobId ->- JobUri(t.jobId)
         -- ont.runId ->- RunUri(t.runId)
         -- ont.url ->- t.url
@@ -195,7 +195,7 @@ extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, HttpResponseVO] = {
       for {
-        id <- pointed.as[ResourceResponseId]
+        id <- pointed.as[Rdf#URI] flatMap ResourceResponseUri.fromUri
         jobId <- (pointed / ont.jobId).as[JobId]
         runId <- (pointed / ont.runId).as[RunId]
         url <- (pointed / ont.url).as[URL]
