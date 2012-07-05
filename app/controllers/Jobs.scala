@@ -54,7 +54,7 @@ object Jobs extends Controller {
         job <- user.getJob(id)
         run <- job.getRun()
         lastCompleted <- job.getLastCompleted()
-        ars <- run.getURLArticles()
+        ars <- run.getURLArticles() map (_.filter(t => t._3 != 0 || t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4))
       } yield {
         Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise

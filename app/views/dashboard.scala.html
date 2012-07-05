@@ -12,23 +12,23 @@
 			window.VS.Socket.open();
 		});
 	"""){
-   
-   @***** Header ******@
-   
+
+	@***** Header ******@
+
 	@libs.header()
-	
+
 }{ @***** Content *****@ 
-	
+
 	@libs.admin(user)
 	@libs.navigation("Dashboard", List())
 	@libs.messages()
-	
+
 	<hr>
-	
+
 	<section id="jobs" class="list">
 		@libs.jobs(triples)
 	</section>
-	
+
 }{ @***** Footer *****@
 
 	@libs.footer()

@@ -1,0 +1,68 @@
+.folds aside,
+.folds dt,
+.folds .assertor,
+.folds .description,
+.folds .timestamp,
+.folds .severity {
+	display: none;
+}
+
+.folds article:nth-of-type(2n) {
+	background: #f5f5f5;
+}
+.folds {
+	padding: 0 !important;
+}
+.folds article {
+	padding: 10px;
+}
+.folds .message {
+	font-weight: bold;
+}
+.folds .message:before {
+	content: "+ ";
+	display:inline-block;
+	width:10px;
+	height:13px;
+}
+.folds article:focus .message:before {
+	content: "- ";
+}
+
+.folds .occurrences {
+	float:right;
+}
+
+.folds .severity {
+/* 	float: left; */
+/* 	background: red; */
+/* 	width: 10px; */
+/* 	height: 32px; */
+/* 	margin-top: -10px; */
+/* 	font-size: 0; */
+/* 	margin-right: 6px; */
+	display: none;
+}
+.folds .warning {
+	border-left: 10px solid #be6e00;
+	margin-bottom: 1px;
+}
+.folds .error {
+	border-left: 10px solid #bf170c;
+	margin-bottom: 1px;
+}
+.folds .context {
+	display: none;
+	padding: 10px 0 0 10px;
+}
+.folds article:focus .context {
+	display: block;
+}
+
+.folds .code {
+	display: block;
+	background-color: #f7edec;
+	border: 1px solid #cbcdca;
+	padding: 4px;
+	margin-top: 5px;
+}

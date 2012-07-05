@@ -1,0 +1,60 @@
+.list {
+	display:table;
+	border-collapse: collapse;
+	table-layout: auto;
+	width: 100%;
+	padding: 0 !important;
+}
+.list aside,
+.list article {
+	display: table-row-group;
+}
+.list aside {
+	border-bottom:1px solid @borderColor;
+}
+.list article:nth-of-type(2n) {
+	background: @headerBgColor;
+}
+.list dl {
+	display: table-row;
+}
+.list dd,
+.list dt,
+.list header > * {
+	display: table-cell;
+	vertical-align: middle;
+	padding:10px 5px;
+}
+.list aside dt:first-of-type,
+.list article dd:first-of-type {
+	padding-left:10px;
+}
+.list aside dt:last-of-type,
+.list article dd:last-of-type {
+	padding-right:10px;
+}
+.list .run,
+.list .stop,
+.list .delete {
+	display:block;
+	font-size:0.85em;
+}
+.list button.delete,
+.list button.run,
+.list button.stop {
+	float:right;
+	clear:right;
+}
+.list article button,
+.job button {
+	font-family: "Trebuchet MS",sans-serif;
+	border:none;
+	background:none;
+	cursor:pointer;
+	margin:0;
+	padding:0;
+	text-decoration:underline;
+	color:#0066CC;
+	line-height:1em;
+	font-size:0.85em;
+}

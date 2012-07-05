@@ -71,6 +71,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     organizationId = org.id,
     name = "job4")
 
+  val job5 = Job(
+    strategy = strategy,
+    creatorId = user.id,
+    organizationId = org.id,
+    name = "job5")
+
   val now = DateTime.now(DateTimeZone.UTC)
 
   // a job may have never completed, for example if the user has forced a new run
@@ -83,6 +89,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   val run3 = Run(job = job1, createdAt = now.plusMinutes(10), completedAt = Some(now.plusMinutes(12)))
 
   val run4 = Run(job = job1, createdAt = now.plusMinutes(15), completedAt = None)
+
+  val run5 = Run(job = job5, createdAt = now, completedAt = None)
 
   val assertorIds = List(AssertorId(), AssertorId())
 
@@ -294,22 +302,41 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       errors must be (assertorIds.size * 2 /* ctx */ * nbErrors)
     }
   }
-  
-  "get the URLArticle for a specific URL" in {
-    val url = URL("http://www.test.com")
+
+  "get all URLArticles from a run 2" in {
+    val url = URL("http://www.test.com/1")
     Assertion(
-      jobId = job1,
-      runId = run1,
+      jobId = job5,
+      runId = run5,
       assertorId = assertorIds(0),
       url = url,
       lang = "fr",
       title = "some title",
       severity = Warning,
       description = Some("some description")).save().await(10.seconds)
-    // I'm not sure why run1.getURLArticle(url) returns nothing here. What am i doing wrong?
-    val retrieved = run1.getURLArticle(url).result(1.second).fold(f => throw f, s => s)
+    val retrieved = run5.getURLArticles().result(1.second).fold(f => throw f, s => s)
+    println(retrieved)
+    retrieved must have size (1)
+    retrieved foreach { case (url, latest, warnings, errors) =>
+      warnings must be (1)
+      errors must be (0)
+    }
+  }
+
+  "get the URLArticle for a specific URL" in {
+    val url = URL("http://www.test.com")
+    Assertion(
+      jobId = job5,
+      runId = run5,
+      assertorId = assertorIds(0),
+      url = url,
+      lang = "fr",
+      title = "some title",
+      severity = Warning,
+      description = Some("some description")).save().await(10.seconds)
+    val retrieved = run5.getURLArticle(url).result(1.second).fold(f => throw f, s => s)
     retrieved._3 must be (1)
-    retrieved._4 must be (0) // I think that with the current implementation this will fail and return 1 instead of 0 
+    retrieved._4 must be (0)
   }
 
   "get all URLArticles from a run with no assertions" in {

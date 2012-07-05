@@ -1,4 +1,4 @@
-@(articles: Iterable[URLArticle] = None)
+@(resources: Iterable[URLArticle] = None)
 		<aside>
 			<h2>Resources</h2>
 			<h3>Definitions</h3>
@@ -14,18 +14,18 @@
 			</dl>
 		</aside>
 		
-		@articles.map { case article =>
+		@resources.map { case resource =>
 		<hr>
 		<article>
 			<dl>
 				<dt>URL</dt>
-				<dd class="url"><a href="@Helper.encode(article.url)">@article.url</a></dd>
+				<dd class="url"><a href="@Helper.encode(resource.url)">@resource.url</a></dd>
 				<dt>Last validated</dt>
-				<dd class="timestamp"><time datetime="@article.lastValidated">@Helper.formatTime(article.lastValidated)</time></dd>
+				<dd class="timestamp"><time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time></dd>
 				<dt>Warnings</dt>
-				<dd class="warnings">@article.warnings</dd>
+				<dd class="warnings">@resource.warnings</dd>
 				<dt>Errors</dt>
-				<dd class="errors">@article.errors</dd>
+				<dd class="errors">@resource.errors</dd>
 			</dl>
 		</article>
 		}

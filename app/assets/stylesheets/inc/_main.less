@@ -1,4 +1,3 @@
-
 .bodyLayout(@h, @f) {
 	body {
 		padding-top: @h + @borderSize;
@@ -28,6 +27,7 @@ body {
 	}
 	> footer {
 		border-top:1px solid @borderColor;
+		background: @headerBgColor;
 	}
 }
 
@@ -45,13 +45,34 @@ body {
 #main > :last-child {
 	border-bottom: none;
 }
-#main > .list {
-	padding: 0;
+
+#jobs > h1,
+#nav > h1,
+#admin > h1,
+#messages > h1,
+#crumbs > h1,
+hr,
+.list aside dd,
+.list aside h2,
+.list aside h3,
+.list article dt {
+	display:none;
 }
 
-.structureMedia () {
-/* 	@media screen and (min-width: @bodyW) { */
-/* 		.header(100px, 10px); */
-/* 		.bodyLayout(100px, @footerH); */
-/* 	} */
+a:link,
+a:visited {
+	color:#0066CC;
+	text-decoration:none;
+}
+a:link:hover {
+	text-decoration:underline;
+}
+
+dd.warnings {
+	color: #C17400;
+	font-weight: bold;
+}
+dd.errors {
+	color: #C11D13;
+	font-weight: bold;
 }

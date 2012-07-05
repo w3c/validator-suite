@@ -1,7 +1,7 @@
 @(job: Job, 
     run: Run,
     lastCompleted: Option[org.joda.time.DateTime],
-    articles: Iterable[URLArticle],
+    resources: Iterable[URLArticle],
     user: User,
     messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
@@ -35,7 +35,7 @@
 	<hr>
 	
 	<section id="urlArticles" class="list" data-id="@job.id">
-		@libs.urlArticles(articles)
+		@libs.resources(resources)
 	</section>
 	
 	@**<section class="controls">

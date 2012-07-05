@@ -1,0 +1,18 @@
+#nav li {
+	display:inline;
+}
+#nav li:not(:first-child) {
+	margin-left:10px;
+}
+#nav {
+	position: absolute;
+	top: -53px;
+	left: 185px;
+	z-index: 2;
+	border-bottom: none;
+}
+
+/* Crumb nav */
+#crumbs {font-size:0.85em;}
+#crumbs li {display:inline;}
+#crumbs li:not(:last-child):after {content: " > "}
