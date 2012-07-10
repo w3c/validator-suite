@@ -1,7 +1,7 @@
 .bodyLayout(@h, @f) {
 	body {
 		padding-top: @h + @borderSize;
-		padding-bottom: @f + @borderSize;
+		padding-bottom: @f; // @borderSize;
 		> header {
 			height: @h;
 		}
@@ -82,4 +82,10 @@ dd.errors {
 	url('../types/League_Gothic-webfont.svg#LeagueGothicRegular') format('svg');
 	font-weight: normal;
 	font-style: normal;
+}
+
+.list aside,
+footer,
+#crumbs {
+	background-image: url('../images/texture.gif')
 }

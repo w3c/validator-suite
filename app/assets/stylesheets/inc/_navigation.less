@@ -34,6 +34,16 @@
 
 
 /* Crumb nav */
-#crumbs {font-size:0.85em;}
-#crumbs li {display:inline;}
+#crumbs {
+	font-size:0.9em;
+	padding:15px 10px;
+}
+#crumbs li {
+	display:inline;
+	text-transform: capitalize;
+}
 #crumbs li:not(:last-child):after {content: " > "}
+#crumbs a {
+	color:black;
+	text-decoration: underline;
+}
