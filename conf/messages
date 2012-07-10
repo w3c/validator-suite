@@ -1,6 +1,6 @@
 # Application
 application.loggedOut=You''ve been logged out
-application.invalidCredentials=Invalid credentials
+application.invalidCredentials=Username or password did not match.
 application.unauthorized=You must be logged in to access this page
 
 # Jobs

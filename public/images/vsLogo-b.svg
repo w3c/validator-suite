@@ -30,6 +30,14 @@
 		<polygon id="E12"  points="  0, 0      224, -688   1073, -688   1273, -74    809, 263   724, 0    "/>
 		<polygon id="M12a" points=" 39, -120   185, -568    986, -568   1132, -120                        "/>
 		<polygon id="M12b" points="                                     1132, -120   770, 143   685, -120 "/>
+
+		<polygon id="E14"  points="  0, 0      224, -688   1094, -688   1290, -87    809, 263   724, 0    "/>
+		<polygon id="M14a" points=" 45, -140   178, -548    993, -548   1125, -140                        "/>
+		<polygon id="M14b" points="                                     1125, -140   764, 123   678, -140 "/>
+
+		<polygon id="E16"  points="  0, 0      224, -688   1115, -688   1307, -99    809, 263   724, 0    "/>
+		<polygon id="M16a" points=" 52, -160   172, -528    999, -528   1119, -160                        "/>
+		<polygon id="M16b" points="                                     1119, -160   757, 103   672, -160 "/>
 	</defs>
 	
 	<g class="logo m10">
@@ -73,6 +81,50 @@
 			<use xlink:href="#M12a" transform="rotate(216)"/>
 			<use xlink:href="#M12b" transform="rotate(288)"/>
 			<use xlink:href="#M12a" transform="rotate(288)"/>
+		</g>
+	</g>
+
+	<g class="logo m14">
+		<g class="border">
+			<use xlink:href="#E14" transform="rotate(0)"/>
+			<use xlink:href="#E14" transform="rotate(72)"/>
+			<use xlink:href="#E14" transform="rotate(144)"/>
+			<use xlink:href="#E14" transform="rotate(216)"/>
+			<use xlink:href="#E14" transform="rotate(288)"/>
+		</g>
+		<g class="color">
+			<use xlink:href="#M14b" transform="rotate(0)"/>
+			<use xlink:href="#M14a" transform="rotate(0)"/>
+			<use xlink:href="#M14b" transform="rotate(72)"/>
+			<use xlink:href="#M14a" transform="rotate(72)"/>
+			<use xlink:href="#M14b" transform="rotate(144)"/>
+			<use xlink:href="#M14a" transform="rotate(144)"/>
+			<use xlink:href="#M14b" transform="rotate(216)"/>
+			<use xlink:href="#M14a" transform="rotate(216)"/>
+			<use xlink:href="#M14b" transform="rotate(288)"/>
+			<use xlink:href="#M14a" transform="rotate(288)"/>
+		</g>
+	</g>
+
+	<g class="logo m16">
+		<g class="border" filter = "url(#shadow)">
+			<use xlink:href="#E16" transform="rotate(0)"/>
+			<use xlink:href="#E16" transform="rotate(72)"/>
+			<use xlink:href="#E16" transform="rotate(144)"/>
+			<use xlink:href="#E16" transform="rotate(216)"/>
+			<use xlink:href="#E16" transform="rotate(288)"/>
+		</g>
+		<g class="color">
+			<use xlink:href="#M16b" transform="rotate(0)"/>
+			<use xlink:href="#M16a" transform="rotate(0)"/>
+			<use xlink:href="#M16b" transform="rotate(72)"/>
+			<use xlink:href="#M16a" transform="rotate(72)"/>
+			<use xlink:href="#M16b" transform="rotate(144)"/>
+			<use xlink:href="#M16a" transform="rotate(144)"/>
+			<use xlink:href="#M16b" transform="rotate(216)"/>
+			<use xlink:href="#M16a" transform="rotate(216)"/>
+			<use xlink:href="#M16b" transform="rotate(288)"/>
+			<use xlink:href="#M16a" transform="rotate(288)"/>
 		</g>
 	</g>
 	

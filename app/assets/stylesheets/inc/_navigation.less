@@ -1,16 +1,37 @@
-#nav li {
-	display:inline;
-}
-#nav li:not(:first-child) {
-	margin-left:10px;
+#nav ul {
+	font-size:0;
 }
 #nav {
+	padding:0;
 	position: absolute;
-	top: -53px;
-	left: 185px;
+	top: -60px;
+	left: 80px;
 	z-index: 2;
 	border-bottom: none;
+	font-family: 'LeagueGothicRegular', Arial, sans-serif;
+	color: white;
+	line-height:60px;
+
+	a {
+		color: white;
+		text-transform: uppercase
+	}
+
 }
+#nav li {
+	font-size: 26px;
+	display:inline-block;
+	padding:0 20px;
+	border-right: 1px solid #4e90c2;
+	box-shadow: 1px 0 0 #1a4a78;
+	-moz-box-shadow: 1px 0 0 #1a4a78;
+	-webkit-shadow: 1px 0 0 #1a4a78;
+	text-shadow: 1px 1px 0 #1a4a78;
+}
+#nav li:last-child:before {
+	content:"+ ";
+}
+
 
 /* Crumb nav */
 #crumbs {font-size:0.85em;}
