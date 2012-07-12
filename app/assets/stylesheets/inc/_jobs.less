@@ -2,29 +2,44 @@
 #jobs article dd:last-of-type {
 	//text-align:right;
 }
-#jobs .resources,
-#jobs .errors,
-#jobs .warnings {
-	//text-align: right;
-	width:60px;
+#jobs dt.health {
+	border-right: none;
+	width: 50px;
 }
-#jobs .maxResources {
-	//text-align: right;
-	width:100px;
+#jobs dt.health dfn,
+#jobs dt.actions dfn{
+	display: none;
 }
-#jobs .health,
-#jobs .distance {
-	//text-align: center;
+#jobs dt.name,
+#jobs dt.url{
+	text-align: left;
+}
+#jobs article .resources,
+#jobs article .errors,
+#jobs article .warnings {
+	text-align: right;
+	width: 70px;
+	padding-right:20px;
+}
+#jobs article .maxResources {
+	text-align: right;
+	width: 80px;
+	padding-right:20px;
+}
+#jobs .name a {
+	color: black;
+	font-weight: bold;
+	text-decoration: underline;
 }
 
 /* job meta on report page */
-.job {}
+/*.job {}
 .job {
 	display:table;
 	width:100%;
 	border-bottom:0 !important;
 	padding-bottom:0 !important;
-/*border-collapse:collapse;*/
+    border-collapse:collapse;
 }
 .job div {
 	display:table-cell;
@@ -51,7 +66,7 @@
 }
 .job form {
 	display:inline;
-}
+}*/
 
 /*#jobs {*/
 /* http://www.useragentman.com/blog/2012/01/03/cross-browser-html5-progress-bars-in-depth/ */
@@ -59,12 +74,13 @@ progress{
 	appearance: none;
 	-moz-appearance: none;
 	-webkit-appearance: none;
-	width: 100px;
-	height: 11px;
-	border:none;
+	width: 50px;
+	height: 13px;
+	border: 1px solid black;
+	border-radius: 2px;
 	color: #3bbc00; // IE10? TODO Remove styles for IE9-
 	background: #bb1e17;
-	margin-bottom: 1px;
+	//margin-bottom: 0px;
 
 	&::-webkit-progress-bar {
 		background: #bb1e17;
