@@ -33,7 +33,7 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        jobs <- user.getJobs
+        jobs <- Job.getFor(user.id)
         triples <- FutureVal.sequence(
             jobs.toSeq.sortBy(_.name).map(job => 
               for {
@@ -54,7 +54,8 @@ object Jobs extends Controller {
         job <- user.getJob(id)
         run <- job.getRun()
         lastCompleted <- job.getLastCompleted()
-        ars <- run.getURLArticles() map (_.filter(t => t._3 != 0 || t._4 != 0).toSeq.sortBy(_._1.toString).sortBy(e => -e._4))
+        // TODO: make it more efficient, and maybe move it inside Run
+        ars = run.urlArticles.filter(t => t._3 != 0 || t._4 != 0).sortBy(_._1.toString).sortBy(e => -e._4)
       } yield {
         Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
@@ -67,15 +68,10 @@ object Jobs extends Controller {
         user <- getUser
         job <- user.getJob(id)
         run <- job.getRun()
-        article <- run.getURLArticle(url) map URLArticle.apply _
-        assertors <- FutureVal.successful(Iterable()) //run.getAssertorArticles(url) map {_.map(AssertorArticle.apply _)}
-        assertions <- run.getAssertions(url) map (_.filter(_.severity != Info))
-        tuples <- FutureVal.sequence(
-            assertions.map(assertion => 
-              for {
-                contexts <- assertion.getContexts map (_.toSeq sortBy (_.line))
-              } yield (assertion, contexts)
-            )).map(_.toSeq.sortBy(-_._2.size))
+        article = URLArticle(run.urlArticle(url).get) // <- can be None !!!!!!!!
+        assertors = Iterable() //run.getAssertorArticles(url) map {_.map(AssertorArticle.apply _)}
+        assertions = run.assertions filter { a => a.url === url && a.severity != Info }
+        tuples = assertions.toSeq sortBy ( - _.contexts.size ) map { a => (a, a.contexts.sortBy(_.line)) }
       } yield {
         Ok(views.html.urlReport(job, article, assertors, tuples, user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
@@ -257,7 +253,9 @@ object Jobs extends Controller {
         user <- getUser
         organization <- user.getOrganization
       } yield {
-        organization.enumerator &> Enumeratee.collect{
+        // ready to explode...
+        // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
+        organization.get.enumerator &> Enumeratee.collect{
           case a: UpdateData => JobsUpdate.json(a.data, a.activity)
         }
       }

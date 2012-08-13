@@ -5,341 +5,126 @@ import org.w3.banana._
 import scalaz._
 import org.joda.time.DateTime
 import org.w3.util._
+import org.w3.vs._
+import diesel._
+import ops._
 
-// object Binders {
-//   def apply[Rdf <: RDF](diesel: Diesel[Rdf]): Binders[Rdf] = new Binders[Rdf](diesel)
-// }
+object Binders extends Binders
 
-/**
- * creates [EntityGraphBinder]s for the VS entities
- */
-case class Binders[Rdf <: RDF](diesel: Diesel[Rdf])
-extends UriBuilders[Rdf] with Ontologies[Rdf] with LiteralBinders[Rdf] {
-
-  import diesel._
+trait Binders extends UriBuilders with LiteralBinders {
 
   val anyURI = xsd("anyURI")
 
-  /* helper: to be moved */
+  /* ontology definition */
 
-  class IfDefined[S](s: S) {
-    def ifDefined[T](opt: Option[T])(func: (S, T) => S) = opt match {
-      case None => s
-      case Some(t) => func(s, t)
-    }
+  object ont extends PrefixBuilder("ont", "https://validator.w3.org/suite/ontology#")(ops) {
+
+//    val assertionClasses = classUrisFor[Assertion](ont("Assertion"))
+//    val contextClasses = classUrisFor[](ont("Context"))
+//    val assertorResultClasses = classUrisFor[](ont("AssertorResult"))
+//    val jobClasses = classUrisFor[](ont("Job"))
+//    val jobDataClasses = classUrisFor[](ont("JobData"))
+//    val organizationClasses = classUrisFor[](ont("Organization"))
+//    val resourceResponseClasses = classUrisFor[](ont("ResourceResponse"))
+//    val errorResponseClasses = classUrisFor[](ont("ErrorResponse"))
+//    val httpResponseClasses = classUrisFor[](ont("HttpResponse"))
+//    val runClasses = classUrisFor[](ont("Run"))
+//    val strategyClasses = classUrisFor[](ont("Strategy"))
+//    val userClasses = classUrisFor[](ont("User"))
+//    val assertorSelectorClasses = classUrisFor[](ont("AssertorSelector")
+
+    lazy val url = property[URL](apply("url"))
+    lazy val lang = property[String](apply("lang"))
+    lazy val title = property[String](apply("title"))
+    lazy val severity = property[AssertionSeverity](apply("severity"))
+    lazy val description = property[Option[String]](apply("description"))
+
+    lazy val content = property[String](apply("content"))
+    lazy val line = property[Option[Int]](apply("line"))
+    lazy val column = property[Option[Int]](apply("column"))
+    lazy val assertion = property[Assertion](apply("assertion"))
+    lazy val assertions = set[Assertion](apply("assertion"))
+
+    lazy val job = property[(OrganizationId, JobId)](apply("job"))
+    lazy val run = property[(OrganizationId, JobId, RunId)](apply("run"))
+    lazy val assertor = property[AssertorId](apply("assertor"))
+    lazy val createdAt = property[DateTime](apply("createdAt"))
+    lazy val timestamp = property[DateTime](apply("timestamp"))
+    lazy val user = property[UserVO](apply("user"))
+
+    lazy val name = property[String](apply("name"))
+    lazy val creator = property[UserId](apply("creator"))
+    lazy val organization = property[OrganizationId](apply("organization"))
+    lazy val organizationOpt = optional[OrganizationId](apply("organization"))
+    lazy val strategy = property[Strategy](apply("strategy"))(StrategyBinder)
+
+    lazy val resources = property[Int](apply("resources"))
+    lazy val errors = property[Int](apply("errors"))
+    lazy val warnings = property[Int](apply("warnings"))
+
+    lazy val admin = property[UserId](apply("admin"))
+
+    lazy val action = property[HttpAction](apply("action"))
+    lazy val why = property[String](apply("why"))
+    lazy val status = property[Int](apply("status"))
+    lazy val headers = property[Headers](apply("headers"))
+    lazy val urls = property[List[URL]](apply("urls"))
+
+    lazy val explorationMode = property[ExplorationMode](apply("explorationMode"))
+    lazy val completedAt = property[Option[DateTime]](apply("completedAt"))
+
+    lazy val linkCheck = property[Boolean](apply("linkCheck"))
+    lazy val maxResources = property[Int](apply("maxResources"))
+    lazy val assertorSelector = property[AssertorSelector](apply("assertorSelector"))
+    
+    lazy val email = property[String](apply("email"))
+    lazy val password = property[String](apply("password"))
+
+    lazy val map = property[Map[String, List[String]]](apply("map"))
+    lazy val runUri = property[Rdf#URI](apply("run"))
+    lazy val contexts = property[List[Context]](apply("contexts"))
+    lazy val resourceResponse = set[ResourceResponse](apply("resourceResponse"))
+    
   }
-
-  implicit def addIfDefinedMethod[S](s: S): IfDefined[S] = new IfDefined[S](s)
 
   /* binders for entities */
 
-  implicit val AssertionVOBinder = new PointedGraphBinder[Rdf, AssertionVO] {
+  implicit lazy val ContextBinder: PointedGraphBinder[Rdf, Context] = pgb[Context](ont.content, ont.line, ont.column)(Context.apply, Context.unapply)
 
-    def toPointedGraph(t: AssertionVO): PointedGraph[Rdf] = (
-      AssertionUri(t.id).a(ont.Assertion)
-        -- ont.jobId ->- JobUri(t.jobId)
-        -- ont.runId ->- RunUri(t.runId)
-        -- ont.assertorId ->- AssertorUri(t.assertorId)
-        -- ont.url ->- t.url
-        -- ont.lang ->- t.lang
-        -- ont.title ->- t.title
-        -- ont.severity ->- t.severity
-        -- ont.description ->- t.description
-        -- ont.timestamp ->- t.timestamp
-    )
+  implicit lazy val AssertionBinder: PointedGraphBinder[Rdf, Assertion] = pgb[Assertion](ont.url, ont.assertor, ont.contexts, ont.lang, ont.title, ont.severity, ont.description, ont.timestamp)(Assertion.apply, Assertion.unapply)
 
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertionVO] = {
-      for {
-        id <- pointed.as[AssertionId]
-        jobId <- (pointed / ont.jobId).as[JobId]
-        runId <- (pointed / ont.runId).as[RunId]
-        assertorId <- (pointed / ont.assertorId).as[AssertorId]
-        url <- (pointed / ont.url).as[URL]
-        lang <- (pointed / ont.lang).as[String]
-        title <- (pointed / ont.title).as[String]
-        severity <- (pointed / ont.severity).as[AssertionSeverity]
-        description <- (pointed / ont.description).asOption[String]
-        timestamp <- (pointed / ont.timestamp).as[DateTime]
-      } yield {
-        AssertionVO(id, jobId, runId, assertorId, url, lang, title, severity, description, timestamp)
-      }
+  implicit lazy val JobVOBinder = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.creator, ont.organization)(JobVO.apply, JobVO.unapply)
+
+  implicit lazy val OrganizationVOBinder = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
+
+  implicit lazy val ErrorResponseBinder = pgb[ErrorResponse](ont.run, ont.url, ont.action, ont.timestamp, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
+
+  implicit lazy val HttpResponseBinder = pgb[HttpResponse](ont.run, ont.url, ont.action, ont.timestamp, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
+
+
+  implicit lazy val ResourceResponseBinder = new PointedGraphBinder[Rdf, ResourceResponse] {
+
+    def toPointedGraph(t: ResourceResponse): PointedGraph[Rdf] = t match {
+      case e @ ErrorResponse(_, _, _, _, _) => ErrorResponseBinder.toPointedGraph(e)
+      case h @ HttpResponse(_, _, _, _, _, _, _) => HttpResponseBinder.toPointedGraph(h)
+    }
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponse] = {
+      ErrorResponseBinder.fromPointedGraph(pointed) orElse HttpResponseBinder.fromPointedGraph(pointed)
     }
 
   }
 
+  implicit lazy val RunVOBinder = pgbWithId[RunVO]("#thing")(ont.job, ont.explorationMode, ont.createdAt, ont.assertions, ont.completedAt, ont.timestamp, ont.resources, ont.errors, ont.warnings)(RunVO.apply, RunVO.unapply)
 
-  implicit val ContextVOBinder = new PointedGraphBinder[Rdf, ContextVO] {
+  implicit lazy val UserVOBinder = pgbWithId[UserVO]("#me")(ont.name, ont.email, ont.password, ont.organizationOpt)(UserVO.apply, UserVO.unapply)
 
-    def toPointedGraph(t: ContextVO): PointedGraph[Rdf] = (
-      ContextUri(t.id).a(ont.Context)
-        -- ont.content ->- t.content
-        -- ont.line ->- t.line
-        -- ont.column ->- t.column
-        -- ont.assertionId ->- AssertionUri(t.assertionId)
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ContextVO] = {
-      for {
-        id <- pointed.as[ContextId]
-        content <- (pointed / ont.content).as[String]
-        line <- (pointed / ont.line).asOption[Int]
-        column <- (pointed / ont.column).asOption[Int]
-        assertionId <- (pointed / ont.assertionId).as[AssertionId]
-      } yield {
-        ContextVO(id, content, line, column, assertionId)
-      }
-    }
-
-  }
-
-
-  implicit val JobVOBinder = new PointedGraphBinder[Rdf, JobVO] {
-
-    def toPointedGraph(t: JobVO): PointedGraph[Rdf] = (
-      JobUri(t.id).a(ont.Job)
-        -- ont.name ->- t.name
-        -- ont.createdOn ->- t.createdOn
-        -- ont.creator ->- UserUri(t.creatorId)
-        -- ont.organization ->- OrganizationUri(t.organizationId)
-        -- ont.strategy ->- StrategyUri(t.strategyId)
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, JobVO] = {
-      for {
-        id <- pointed.as[JobId]
-        name <- (pointed / ont.name).as[String]
-        createdOn <- (pointed / ont.createdOn).as[DateTime]
-        creator <- (pointed / ont.creator).as[UserId]
-        organization <- (pointed / ont.organization).as[OrganizationId]
-        strategy <- (pointed / ont.strategy).as[StrategyId]
-      } yield {
-        JobVO(id, name, createdOn, creator, organization, strategy)
-      }
-    }
-
-  }
-
-
-
-
-
-
-
-  implicit val OrganizationVOBinder = new PointedGraphBinder[Rdf, OrganizationVO] {
-
-    def toPointedGraph(t: OrganizationVO): PointedGraph[Rdf] = (
-      OrganizationUri(t.id).a(ont.Organization)
-        -- ont.name ->- t.name
-        -- ont.admin ->- UserUri(t.admin)
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, OrganizationVO] = {
-      for {
-        id <- pointed.as[OrganizationId]
-        name <- (pointed / ont.name).as[String]
-        adminId <- (pointed / ont.admin).as[UserId]
-      } yield {
-        OrganizationVO(id, name, adminId)
-      }
-    }
-
-  }
-
-
-
-
-  implicit val ErrorResponseVOBinder = new PointedGraphBinder[Rdf, ErrorResponseVO] {
-
-
-    def toPointedGraph(t: ErrorResponseVO): PointedGraph[Rdf] = (
-      ResourceResponseUri.toUri(t.runId, t.id).a(ont.ResourceResponse).a(ont.ErrorResponse)
-        -- ont.jobId ->- JobUri(t.jobId)
-        -- ont.runId ->- RunUri(t.runId)
-        -- ont.url ->- t.url
-        -- ont.action ->- t.action
-        -- ont.timestamp ->- t.timestamp
-        -- ont.why ->- t.why
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ErrorResponseVO] = {
-      for {
-        id <- pointed.as[Rdf#URI] flatMap ResourceResponseUri.fromUri
-        jobId <- (pointed / ont.jobId).as[JobId]
-        runId <- (pointed / ont.runId).as[RunId]
-        url <- (pointed / ont.url).as[URL]
-        action <- (pointed / ont.action).as[HttpAction]
-        timestamp <- (pointed / ont.timestamp).as[DateTime]
-        why <- (pointed / ont.why).as[String]
-      } yield {
-        ErrorResponseVO(id, jobId, runId, url, action, timestamp, why)
-      }
-    }
-
-  }
-
-
-
-  implicit val HttpResponseVOBinder = new PointedGraphBinder[Rdf, HttpResponseVO] {
-
-    def toPointedGraph(t: HttpResponseVO): PointedGraph[Rdf] = (
-      ResourceResponseUri.toUri(t.runId, t.id).a(ont.ResourceResponse).a(ont.HttpResponse)
-        -- ont.jobId ->- JobUri(t.jobId)
-        -- ont.runId ->- RunUri(t.runId)
-        -- ont.url ->- t.url
-        -- ont.action ->- t.action
-        -- ont.timestamp ->- t.timestamp
-        -- ont.status ->- t.status
-        -- ont.headers ->- t.headers
-        -- ont.extractedURLs ->- t.extractedURLs
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, HttpResponseVO] = {
-      for {
-        id <- pointed.as[Rdf#URI] flatMap ResourceResponseUri.fromUri
-        jobId <- (pointed / ont.jobId).as[JobId]
-        runId <- (pointed / ont.runId).as[RunId]
-        url <- (pointed / ont.url).as[URL]
-        action <- (pointed / ont.action).as[HttpAction]
-        timestamp <- (pointed / ont.timestamp).as[DateTime]
-        status <- (pointed / ont.status).as[Int]
-        headers <- (pointed / ont.headers).as[Headers]
-        urls <- (pointed / ont.extractedURLs).as[List[URL]]
-      } yield {
-        HttpResponseVO(id, jobId, runId, url, action, timestamp, status, headers, urls)
-      }
-    }
-
-  }
-
-
-
-
-
-
-
-
-  implicit val ResourceResponseVOBinder = new PointedGraphBinder[Rdf, ResourceResponseVO] {
-
-    def toPointedGraph(t: ResourceResponseVO): PointedGraph[Rdf] = t match {
-      case e: ErrorResponseVO => ErrorResponseVOBinder.toPointedGraph(e)
-      case h: HttpResponseVO => HttpResponseVOBinder.toPointedGraph(h)
-    }
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponseVO] = {
-      // TODO improve banana rdf to avoid this horrible thing...
-      if ((pointed / rdf("type")).exists(_.node == ont.ErrorResponse))
-        ErrorResponseVOBinder.fromPointedGraph(pointed)
-      else
-        HttpResponseVOBinder.fromPointedGraph(pointed)
-    }
-
-  }
-
-  // does not map distance as this one will be soon removed
-  implicit val RunVOBinder = new PointedGraphBinder[Rdf, RunVO] {
-
-    def toPointedGraph(t: RunVO): PointedGraph[Rdf] = (
-      RunUri(t.id).a(ont.Run)
-        -- ont.explorationMode ->- t.explorationMode
-        -- ont.jobId ->- JobUri(t.jobId)
-        -- ont.createdAt ->- t.createdAt
-        -- ont.completedAt ->- t.completedAt
-        -- ont.timestamp ->- t.timestamp
-        -- ont.resources ->- t.resources
-        -- ont.errors ->- t.errors
-        -- ont.warnings ->- t.warnings
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, RunVO] = {
-      for {
-        id <- pointed.as[RunId]
-        jobId <- (pointed / ont.jobId).as[JobId]
-        explorationMode <- (pointed / ont.explorationMode).as[ExplorationMode]
-        createdAt <- (pointed / ont.createdAt).as[DateTime]
-        completedAt <- (pointed / ont.completedAt).asOption[DateTime]
-        timestamp <- (pointed / ont.timestamp).as[DateTime]
-        resources <- (pointed / ont.resources).as[Int]
-        errors <- (pointed / ont.errors).as[Int]
-        warnings <- (pointed / ont.warnings).as[Int]
-      } yield {
-        RunVO(id, jobId, explorationMode, createdAt, completedAt, timestamp, resources, errors, warnings)
-      }
-    }
-  }
-
-
-  implicit val UserVOBinder = new PointedGraphBinder[Rdf, UserVO] {
-
-    def toPointedGraph(t: UserVO): PointedGraph[Rdf] = (
-      UserUri(t.id).a(ont.User)
-        -- ont.name ->- t.name
-        -- ont.email ->- t.email
-        -- ont.password ->- t.password
-        -- ont.organizationId ->- OrganizationUri(t.organizationId)
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, UserVO] = {
-      for {
-        id <- pointed.as[UserId]
-        name <- (pointed / ont.name).as[String]
-        email <- (pointed / ont.email).as[String]
-        password <- (pointed / ont.password).as[String]
-        organizationId <- (pointed / ont.organizationId).as[OrganizationId]
-      } yield {
-        UserVO(id, name, email, password, organizationId)
-      }
-    }
-  }
-
-  implicit val AssertorSelectorBinder: PointedGraphBinder[Rdf, AssertorSelector] = new PointedGraphBinder[Rdf, AssertorSelector] {
-
-    def toPointedGraph(t: AssertorSelector): PointedGraph[Rdf] = (
-      bnode().a(ont.AssertorSelector)
-        -- ont.name ->- t.name
-        -- ont.map ->- t.map
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertorSelector] = {
-      for {
-        name <- (pointed / ont.name).as[String]
-        map <- (pointed / ont.map).as[Map[String, List[String]]]
-      } yield {
-        AssertorSelector(name, map)
-      }
-    }
-
-  }
+  implicit lazy val AssertorSelectorBinder = pgb[AssertorSelector](ont.name, ont.map)(AssertorSelector.apply, AssertorSelector.unapply)
 
   // works only for Filter(include = Everything, exclude = Nothing) for the moment
-  implicit val StrategyVOBinder = new PointedGraphBinder[Rdf, StrategyVO] {
-
-    // WTF?
-    // implicit val binder: PointedGraphBinder[Rdf, AssertorSelector] = AssertorSelectorBinder
-
-    def toPointedGraph(t: StrategyVO): PointedGraph[Rdf] = (
-      StrategyUri(t.id).a(ont.Strategy)
-        -- ont.entrypoint ->- t.entrypoint
-        -- ont.linkCheck ->- t.linkCheck.toString
-        -- ont.maxResources ->- t.maxResources
-        -- ont.assertorSelector ->- t.assertorSelector
-    )
-
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, StrategyVO] = {
-      for {
-        id <- pointed.as[StrategyId]
-        entrypoint <- (pointed / ont.entrypoint).as[URL]
-        linkCheck <- (pointed / ont.linkCheck).as[String].map(_.toBoolean)
-        maxResources <- (pointed / ont.maxResources).as[Int]
-        // looks like there is a bug with TDB: we get back several AssertorSelector
-        // this must be because of the use of a bnode as a subject, so unicity may not be enforced
-        assertorSelector <- (pointed / ont.assertorSelector).takeOneAs[AssertorSelector]
-      } yield {
-        StrategyVO(id, entrypoint, linkCheck, maxResources, Filter.includeEverything, assertorSelector)
-      }
-    }
-  }
-
-
-
+  implicit lazy val StrategyBinder: PointedGraphBinder[Rdf, Strategy] =
+    pgb[Strategy](ont.url, ont.linkCheck, ont.maxResources, ont.assertorSelector)(
+      { (url, lc, maxR, as) => Strategy(url, lc, maxR, Filter.includeEverything, as) },
+      { s => Some((s.entrypoint, s.linkCheck, s.maxResources, s.assertorSelector)) })
 
 }

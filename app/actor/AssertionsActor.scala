@@ -9,6 +9,7 @@ import scalaz._
 import scala.collection.mutable.Queue
 import org.w3.vs.actor.message.Stop
 import scala.concurrent.stm._
+import org.w3.util._
 
 case class AssertorCall(assertor: FromHttpResponseAssertor, response: HttpResponse)
 
@@ -20,23 +21,26 @@ object AssertionsActor {
 
 import AssertionsActor._
 
-class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) extends Actor {
+class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
+  implicit val executionContext = conf.assertorExecutionContext
 
   var pendingAssertions: Ref[Int] = Ref(0)
 
   val queue = Queue[AssertorCall]()
 
   private final def scheduleAssertion(assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
+
+    pendingAssertions.single() += 1
     
-    assertor.assert(response) onComplete {
+    FutureVal {
+      assertor.assert(response)
+    } onComplete {
       case _ => pendingAssertions.single() -= 1
     } onComplete {
       case Failure(f) => self ! f
-      case Success(results) => results foreach (result => self ! result)
+      case Success(result) => self ! result
     }
-    
-    pendingAssertions.single() += 1
     
   }
 
@@ -45,7 +49,9 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
     case Stop => {
       queue.dequeueAll(_ => true)
     }
+
     case result: AssertorResult => {
+      // not sure why this is done this way (Alex)
       //pendingAssertions -= 1
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
@@ -53,6 +59,7 @@ class AssertionsActor(job: Job)(implicit val configuration: VSConfiguration) ext
         scheduleAssertion(assertorId, nextRI)
       }
     }
+
     case result: AssertorFailure => {
       //pendingAssertions -= 1
       context.parent ! result

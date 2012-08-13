@@ -19,7 +19,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
   
   val servers = Seq(Webserver(9001, Website.cyclic(1000).toServlet))
 
@@ -32,22 +32,19 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
-    job.run()
+    val (orgId, jobId, runId) = job.run().result(1.second).toOption.get
 
     job.listen(testActor)
 
     fishForMessagePF(3.seconds) {
-      case NewResource(ri) => ri.url must be === (URL("http://localhost:9001/"))
+      case NewResource(_, ri) => ri.url must be(URL("http://localhost:9001/"))
     }
 
     job.cancel()
 
-    val run = job.getRun.result(1.second).fold(f => sys.error("getRun failed"), s => s)
-    
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData, activity) if activity == Idle => {
-        Thread.sleep(100)
-        val rrs = ResourceResponse.getForRun(run).result(1.second) getOrElse sys.error("getForRun")
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).await(3.seconds).toOption.get
         rrs.size must be < (100)
       }
     }

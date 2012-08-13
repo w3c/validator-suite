@@ -23,8 +23,8 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
       maxResources = 50,
       filter=Filter.includePrefixes("http://localhost:9001/1", "http://localhost:9001/3")).noAssertor()
   
-  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
-  
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
+
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 
   "test FilteredTreeWebsiteTest" in {
@@ -44,7 +44,7 @@ class FilteredTreeWebsiteTest extends RunTestHelper(new DefaultProdConfiguration
       case UpdateData(_, activity) if activity == Idle => {
         Thread.sleep(100)
         val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
-        val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
+        val rrs = ResourceResponse.bananaGetFor(run.runUri).await(3.seconds).toOption.get
         rrs must have size (50)
         rrs foreach { rr =>
           rr.url.toString must startWith regex ("http://localhost:9001/[13]")

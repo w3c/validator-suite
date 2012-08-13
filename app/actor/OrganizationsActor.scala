@@ -9,16 +9,16 @@ import org.w3.util.akkaext._
 
 case class CreateOrganizationAndForward(organization: Organization, tell: Tell)
 
-class OrganizationsActor()(implicit configuration: VSConfiguration) extends Actor with PathAwareActor {
+class OrganizationsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareActor {
 
   val logger = play.Logger.of(classOf[OrganizationsActor])
 
   def getOrganizationRefOrCreate(organization: Organization): ActorRef = {
-    val id = organization.id.toString
+    val id = organization.id
     try {
-      context.actorOf(Props(new OrganizationActor(organization)), name = id)
+      context.actorOf(Props(new OrganizationActor(organization)), name = id.toString)
     } catch {
-      case iane: InvalidActorNameException => context.actorFor(self.path / id)
+      case iane: InvalidActorNameException => context.actorFor(self.path / id.toString)
     }
   }
 

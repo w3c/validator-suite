@@ -19,7 +19,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
 
   val circumference = 10
   
@@ -34,15 +34,13 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    job.run()
+    val (orgId, jobId, runId) = job.run().result(1.second).toOption.get
 
     job.listen(testActor)
     
     fishForMessagePF(3.seconds) {
       case UpdateData(_, activity) if activity == Idle => {
-        Thread.sleep(100)
-        val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
-        val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).await(3.seconds).toOption.get
         rrs must have size (circumference + 1)
       }
     }

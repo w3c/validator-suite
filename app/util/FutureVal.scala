@@ -102,7 +102,7 @@ object FutureVal {
   
 }
 
-class FutureVal[+F, +S] protected (
+class FutureVal[+F, +S] protected[util] (
     private val future: Future[Validation[F, S]])(
     implicit val timeout: Function1[TimeoutException, F], context: ExecutionContext) {
   
@@ -207,7 +207,7 @@ class FutureVal[+F, +S] protected (
     }
   }
     
-  def result(atMost: Duration): Validation[F, S] = {
+  def result(atMost: Duration = Duration(5, "seconds")): Validation[F, S] = {
     try {
       Await.result(future, atMost)
     } catch {
@@ -258,12 +258,23 @@ class FutureVal[+F, +S] protected (
     future.onSuccess(pf)
     this
   }
+
+  import play.api.libs.concurrent.{ Promise => PlayPromise, _ }
   
-  def toPromise[R](implicit evF: F <:< R, evS: S <:< R): VSPromise[R] =
-    VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]])
+  def toPromise[R](implicit evF: F <:< R, evS: S <:< R): PlayPromise[R] = {
+    val f: Future[Validation[R, R]] = this.asInstanceOf[FutureVal[R, R]].future
+    f.map(_.fold(f => f, s => s)).asPromise
+  }
+    
+    // VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]])
   
-  def toPromise[R](onTimeout: TimeoutException => R)(implicit evF: F <:< R, evS: S <:< R): VSPromise[R] =
-    VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]].onTimeout(onTimeout)) // TODO default timeout?
+  def toPromise[R](onTimeout: TimeoutException => R)(implicit evF: F <:< R, evS: S <:< R): PlayPromise[R] = {
+    val f: Future[Validation[R, R]] = this.asInstanceOf[FutureVal[R, R]].future.onFailure {
+      case te: TimeoutException => onTimeout(te)
+    }
+    f.map(_.fold(f => f, s => s)).asPromise
+  }
+//    VSPromise.applyTo(this.asInstanceOf[FutureVal[R, R]].onTimeout(onTimeout)) // TODO default timeout?
   
 }
 

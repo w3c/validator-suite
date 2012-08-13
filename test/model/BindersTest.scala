@@ -8,11 +8,11 @@ import org.w3.banana.jena._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
 import org.w3.vs.model._
+import Binders._
+import org.w3.vs._
+import org.w3.vs.diesel._
 
 class BindersTest extends WordSpec with MustMatchers {
-
-  val binders = Binders(JenaDiesel)
-  import binders._
 
   def testSerializeDeserialize[T](binder: PointedGraphBinder[Jena, T])(t: T) = {
     import binder._
@@ -38,115 +38,93 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
-  "JobVO" in {
-    testSerializeDeserialize(JobVOBinder) {
-      JobVO(
-        name = "foo",
-        createdOn = DateTime.now(DateTimeZone.UTC),
-        creatorId = UserId(),
-        organizationId = OrganizationId(),
-        strategyId = StrategyId())
-    }
-  }
-
-  "AssertionVO no description" in {
-    testSerializeDeserialize(AssertionVOBinder) {
-      AssertionVO(
-        jobId = JobId(),
-        runId = RunId(),
-        assertorId = AssertorId(),
-        url = URL("http://example.com/foo"),
-        lang = "fr",
-        title = "bar",
-        severity = Warning,
-        description = None,
-        timestamp = DateTime.now(DateTimeZone.UTC))
-    }
-  }
-
-  "AssertionVO with description" in {
-    testSerializeDeserialize(AssertionVOBinder) {
-      AssertionVO(
-        jobId = JobId(),
-        runId = RunId(),
-        assertorId = AssertorId(),
-        url = URL("http://example.com/foo"),
-        lang = "fr",
-        title = "bar",
-        severity = Warning,
-        description = Some("some desc"),
-        timestamp = DateTime.now(DateTimeZone.UTC))
-    }
-  }
-
-  "ContextVO" in {
-    testSerializeDeserialize(ContextVOBinder) {
-      ContextVO(
-        content = "foo",
-        line = Some(42),
-        column = None,
-        assertionId = AssertionId())
-    }
-  }
-
-
-  val errorResponseVO =
-    ErrorResponseVO(
-      jobId = JobId(),
-      runId = RunId(),
-      url = URL("http://example.com/foo"),
-      action = GET,
-      timestamp = DateTime.now(DateTimeZone.UTC),
-      why = "just because")
-
-  "ErrorResponseVO" in {
-    testSerializeDeserialize(ErrorResponseVOBinder)(errorResponseVO)
-  }
-
-  val httpResponseVO =
-    HttpResponseVO(
-      jobId = JobId(),
-      runId = RunId(),
-      url = URL("http://example.com/foo"),
-      action = GET,
-      timestamp = DateTime.now(DateTimeZone.UTC),
-      status = 200,
-      headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
-      extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))
-
-  "HttpResponseVO" in {
-    testSerializeDeserialize(HttpResponseVOBinder)(httpResponseVO)
-  }
-
-  "ResourceResponseVO as ErrorResponseVO" in {
-    testSerializeDeserialize(ResourceResponseVOBinder)(errorResponseVO)
-  }
-
-  "ResourceResponseVO as HttpResponseVO" in {
-    testSerializeDeserialize(ResourceResponseVOBinder)(httpResponseVO)
-  }
-
-  "RunVO" in {
-    testSerializeDeserialize(RunVOBinder) {
-      RunVO(
-        jobId = JobId(),
-        createdAt = DateTime.now(DateTimeZone.UTC),
-        completedAt = Some(DateTime.now(DateTimeZone.UTC)),
-        timestamp = DateTime.now(DateTimeZone.UTC),
-        resources = 100,
-        errors = 42,
-        warnings = 1)
-    }
-  }
-
   "StrategyVO" in {
-    testSerializeDeserialize(StrategyVOBinder) {
-      StrategyVO(
+    testSerializeDeserialize(StrategyBinder) {
+      Strategy(
         entrypoint = URL("http://example.com/foo"),
         linkCheck = true,
         maxResources = 100,
         filter = Filter.includeEverything,
         assertorSelector = AssertorSelector("custom-assertor-selector", Map("nawak" -> List("cssval", "valnu"))))
+    }
+  }
+
+  "JobVO" in {
+    val strategy =
+      Strategy(
+        entrypoint = URL("http://example.com/foo"),
+        linkCheck = true,
+        maxResources = 100,
+        filter = Filter.includeEverything,
+        assertorSelector = AssertorSelector("custom-assertor-selector", Map("nawak" -> List("cssval", "valnu"))))
+    testSerializeDeserialize(JobVOBinder) {
+      JobVO(
+        name = "foo",
+        createdOn = DateTime.now(DateTimeZone.UTC),
+        strategy = strategy,
+        creator = UserId(),
+        organization = OrganizationId())
+    }
+  }
+
+  "Assertion" in {
+    val assertion =
+      Assertion(
+        url = URL("http://example.com/foo"),
+        assertorId = AssertorId(),
+        contexts = List(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
+        lang = "fr",
+        title = "bar",
+        severity = Warning,
+        description = None,
+        timestamp = DateTime.now(DateTimeZone.UTC))
+    assertion.toPG.as[Assertion] must be(Success(assertion))
+  }
+
+
+  val errorResponse =
+    ErrorResponse(
+      url = URL("http://example.com/foo"),
+      action = GET,
+      timestamp = DateTime.now(DateTimeZone.UTC),
+      context = (OrganizationId(), JobId(), RunId()),
+      why = "just because")
+
+  "ErrorResponse" in {
+    errorResponse.toPG.as[ErrorResponse] must be(Success(errorResponse))
+  }
+
+  val httpResponse =
+    HttpResponse(
+      url = URL("http://example.com/foo"),
+      action = GET,
+      timestamp = DateTime.now(DateTimeZone.UTC),
+      context = (OrganizationId(), JobId(), RunId()),
+      status = 200,
+      headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
+      extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))
+
+  "HttpResponse" in {
+    httpResponse.toPG.as[HttpResponse] must be(Success(httpResponse))
+  }
+
+  "ResourceResponse as ErrorResponse" in {
+    errorResponse.toPG.as[ResourceResponse] must be(Success(errorResponse))
+  }
+
+  "ResourceResponse as HttpResponse" in {
+    httpResponse.toPG.as[ResourceResponse] must be(Success(httpResponse))
+  }
+
+  "RunVO" in {
+    testSerializeDeserialize(RunVOBinder) {
+      RunVO(
+        context = (OrganizationId(), JobId()),
+        createdAt = DateTime.now(DateTimeZone.UTC),
+        completedAt = Some(DateTime.now(DateTimeZone.UTC)),
+        resources = 100,
+        errors = 42,
+        warnings = 1)
     }
   }
 
@@ -157,8 +135,28 @@ class BindersTest extends WordSpec with MustMatchers {
         name = "foo bar",
         email = "foo@example.com",
         password = "secret",
-        organizationId = OrganizationId())
+        organization = Some(OrganizationId()))
     }
   }
+
+  "UserId" in {
+    val userId = UserId()
+    userId.toPG.as[UserId] must be(Success(userId))
+  } 
+
+  "OrganizationId" in {
+    val orgId = OrganizationId()
+    orgId.toPG.as[OrganizationId] must be(Success(orgId))
+  } 
+
+  "(OrganizationId, JobId)" in {
+    val orgJobId = (OrganizationId(), JobId())
+    orgJobId.toPG.as[(OrganizationId, JobId)] must be(Success(orgJobId))
+  } 
+
+  "(OrganizationId, JobId, RunId)" in {
+    val orgJobRunId = (OrganizationId(), JobId(), RunId())
+    orgJobRunId.toPG.as[(OrganizationId, JobId, RunId)] must be(Success(orgJobRunId))
+  } 
 
 }

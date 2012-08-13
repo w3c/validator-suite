@@ -21,7 +21,7 @@ class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) w
       maxResources = maxResources,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
   
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 
@@ -42,7 +42,7 @@ class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) w
       case UpdateData(_, activity) if activity == Idle => {
         Thread.sleep(100)
         val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
-        val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
+        val rrs = ResourceResponse.bananaGetFor(run.runUri).await(3.seconds).toOption.get
         rrs must have size (maxResources)
       }
     }

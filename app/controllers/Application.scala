@@ -61,8 +61,8 @@ object Application extends Controller {
           param <- body.get("uri")
           uri <- param.headOption
         } yield uri) fold (
-          uri => SeeOther(uri).withSession("email" -> user.email), // Redirect to "uri" param if specified
-          SeeOther(routes.Jobs.index.toString).withSession("email" -> user.email)
+          uri => SeeOther(uri).withSession("email" -> user.vo.email), // Redirect to "uri" param if specified
+          SeeOther(routes.Jobs.index.toString).withSession("email" -> user.vo.email)
         )
       }) toPromise
     }

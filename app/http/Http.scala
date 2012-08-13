@@ -9,7 +9,7 @@ import scalaz.Scalaz._
 import org.w3.util.akkaext._
 import AuthorityManager.encode
 
-case class Fetch(url: URL, action: HttpAction, runId: RunId, jobId: JobId)
+case class Fetch(url: URL, action: HttpAction, context: (OrganizationId, JobId, RunId))
 case class SetSleepTime(value: Long)
 case object HowManyPendingRequests
 
@@ -40,7 +40,7 @@ class Http()(implicit configuration: VSConfiguration) extends Actor with PathAwa
       val authorityManagerRef = getAuthorityManagerRefOrCreate(name)
       authorityManagerRef forward msg
     }
-    case fetch @ Fetch(url, _, _, _) => {
+    case fetch @ Fetch(url, _, _) => {
       val authority = url.authority
       val authorityManagerRef = getAuthorityManagerRefOrCreate(authority)
       authorityManagerRef forward fetch

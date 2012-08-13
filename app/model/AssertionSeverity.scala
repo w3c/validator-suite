@@ -1,5 +1,7 @@
 package org.w3.vs.model
 
+import scalaz.Equal
+
 sealed trait AssertionSeverity {
   override def toString: String = this match {
     case Error => "error"
@@ -12,6 +14,9 @@ case object Warning extends AssertionSeverity
 case object Info extends AssertionSeverity
 
 object AssertionSeverity {
+
+  implicit val equal = Equal.equalA[AssertionSeverity]
+
   def apply(severity: String): AssertionSeverity = {
     severity.toLowerCase.trim match {
       case "error" => Error

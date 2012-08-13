@@ -14,6 +14,6 @@ case class UpdateData(data: JobData, activity: RunActivity) extends RunUpdate
 /**
  * A new Response was received during the exploration
  */
-case class NewResource(resource: ResourceResponse) extends RunUpdate
+case class NewResource(context: (OrganizationId, JobId, RunId), resource: ResourceResponse) extends RunUpdate
 
 case class NewAssertorResult(result: AssertorResult) extends RunUpdate

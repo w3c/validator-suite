@@ -64,8 +64,8 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
       scheduleTick()
     }
 
-    case fetch @ Fetch(url, action, runId, jobId) => {
-      doFetch(sender, url, action, runId, jobId)
+    case fetch @ Fetch(url, action, context) => {
+      doFetch(sender, url, action, context)
     }
 
     case 'Tick if queue.isEmpty => {
@@ -73,8 +73,8 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
     }
 
     case 'Tick => {
-      val (thesender, Fetch(url, action, runId, jobId)) = queue.dequeue()
-      doFetch(thesender, url, action, runId, jobId)
+      val (thesender, Fetch(url, action, context)) = queue.dequeue()
+      doFetch(thesender, url, action, context)
       if (queue.nonEmpty)
         scheduleTick()
       else
@@ -88,7 +88,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
   }
 
 
-  final def doFetch(to: ActorRef, url: URL, action: HttpAction, runId: RunId, jobId: JobId): Unit = {
+  final def doFetch(to: ActorRef, url: URL, action: HttpAction, context: (OrganizationId, JobId, RunId)): Unit = {
 
     lastFetchTimestamp = current()
     
@@ -107,7 +107,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
             body
           } catch {
             case t: Throwable => {
-              to ! ErrorResponse(jobId = jobId, runId = runId, url = url, action = action, why = t.getMessage)
+              to ! ErrorResponse(context = context, url = url, action = action, why = t.getMessage)
               throw t // rethrow for benefit of AsyncHttpClient
             }
           } finally {
@@ -147,7 +147,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
           val headers: Headers =
             (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
           val body = response.getResponseBody()
-          val fetchResponse = HttpResponse(jobId = jobId, runId = runId, url = url, action = action, status = status, headers = headers, body = body)
+          val fetchResponse = HttpResponse(context = context, url = url, action = action, status = status, headers = headers, body = body)
           to ! fetchResponse
         }
       }

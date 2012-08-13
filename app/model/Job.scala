@@ -12,60 +12,63 @@ import org.w3.util._
 import scalaz.Scalaz._
 import scalaz._
 import org.w3.banana._
+import org.w3.banana.util._
+import org.w3.banana.LinkedDataStore._
+import org.w3.vs._
+import diesel._
+import org.w3.vs.store.Binders._
+import org.w3.vs.sparql._
+import org.w3.banana.util._
 
-// closed with its strategy
-case class Job(
-    id: JobId = JobId(),
-    name: String,
-    createdOn: DateTime = DateTime.now(DateTimeZone.UTC),
-    creatorId: UserId,
-    organizationId: OrganizationId,
-    strategy: Strategy)(implicit conf: VSConfiguration) {
+case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
-  import conf.system
-  implicit def timeout = conf.timeout
+  import conf._
+
+  val jobUri = JobUri(vo.organization, id)
+
+  val ldr: LinkedDataResource[Rdf] = LinkedDataResource(jobUri.fragmentLess, vo.toPG)
+
+  val orgUri: Rdf#URI = vo.organization.toUri
+  val creatorUri: Rdf#URI = vo.creator.toUri
+
   private val logger = Logger.of(classOf[Job])
   
-  def toValueObject: JobVO = 
-    JobVO(id, name, createdOn, creatorId, organizationId, strategy.id)
-  
-  def getCreator(): FutureVal[Exception, User] = User.get(creatorId)
-  
-  def getOrganization(): FutureVal[Exception, Organization] = 
-    Organization.get(organizationId)
-  
+  def getCreator(): FutureVal[Exception, User] =
+    User.bananaGet(creatorUri).toFutureVal
+
+  def getOrganization(): FutureVal[Exception, Organization] = Organization.get(orgUri)
+    
   def getRun(): FutureVal[Throwable, Run] = {
     implicit def ec = conf.webExecutionContext
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
   
   // Get all runVos for this job, group by id, and for each runId take the latest completed jobData if any
-  def getHistory(): FutureVal[Exception, Iterable[JobData]] =
-    Run.getRunVOs(id) map { runVOs => {
-      runVOs groupBy (_.id) map { case (id, datas) => {
-        val completed = datas filter ( _.completedAt.isDefined )
-        completed.isEmpty fold (
-          None,
-          Some(completed maxBy ( _.completedAt.get ))
-        )
-      }} collect {case Some(runVO) => JobData(runVO)}
-    }}
+  def getHistory(): FutureVal[Exception, Iterable[JobData]] = null
+//    Run.getRunVOs(id) map { runVOs => {
+//      runVOs groupBy (_.id) map { case (id, datas) => {
+//        val completed = datas filter ( _.completedAt.isDefined )
+//        completed.isEmpty fold (
+//          None,
+//          Some(completed maxBy ( _.completedAt.get ))
+//        )
+//      }} collect {case Some(runVO) => JobData(runVO)}
+//    }}
 
   def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
     //getHistory() map { times => times.isEmpty.fold(None, times.maxBy(_.completedAt.get).completedAt) }
-    Job.getLastCompleted(this)
+    Job.getLastCompleted(jobUri)
   }
-    
-  def save(): FutureVal[Exception, Job] = Job.save(this) map { _ => this }
+  
+  def save(): FutureVal[Exception, Job] = Job.save(this)
   
   def delete(): FutureVal[Exception, Unit] = {
     cancel()
-    Job.delete(id)
+    Job.delete(this)
   }
   
-  // couldn't run return a FutureVal[F, Run]?
-  def run(): Unit = 
-    PathAware(organizationsRef, path) ! Refresh()
+  def run(): FutureVal[Exception, (OrganizationId, JobId, RunId)] = 
+    (PathAware(organizationsRef, path) ? Refresh()).mapTo[(OrganizationId, JobId, RunId)]
   
   def cancel(): Unit = 
     PathAware(organizationsRef, path) ! Stop()
@@ -107,8 +110,11 @@ case class Job(
     PathAware(organizationsRef, path).tell(Deafen(listener), listener)
   
   private val organizationsRef = system.actorFor(system / "organizations")
-  
-  private val path = system / "organizations" / organizationId.toString / "jobs" / id.toString
+
+  private val path = {
+    val relPath = jobUri.relativize(URI("https://validator.w3.org/suite/")).getString
+    system / "organizations" / vo.organization.id / "jobs" / id.id
+  }
   
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
     PathAware(organizationsRef, path) ! message
@@ -117,209 +123,162 @@ case class Job(
 
 object Job {
 
-  def getJobVO(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, JobVO] = {
-    import conf.binders._
-    implicit val context = conf.webExecutionContext
-    val uri = JobUri(id)
-    FutureVal(conf.store.getNamedGraph(uri)) flatMap { graph => 
-      FutureVal.pureVal[Throwable, JobVO]{
-        val pointed = PointedGraph(uri, graph)
-        JobVOBinder.fromPointedGraph(pointed)
-      }(t => t)
-    }
-  }
+  def apply(
+    id: JobId = JobId(),
+    name: String,
+    createdOn: DateTime = DateTime.now(DateTimeZone.UTC),
+    strategy: Strategy,
+    creator: UserId,
+    organization: OrganizationId)(
+    implicit conf: VSConfiguration): Job =
+      Job(id, JobVO(name, createdOn, strategy, creator, organization))
 
+  implicit def toVO(job: Job): JobVO = job.vo
 
-  def get(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {
+  def get(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Job] =
+    get(JobUri(orgId, jobId))
+
+  def bananaGet(jobUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Job] = {
+    import conf._
     for {
-      vo <- getJobVO(id)
-      strategy <- Strategy.get(vo.strategyId)
-    } yield {
-      Job(id, vo.name, vo.createdOn, vo.creatorId, vo.organizationId, strategy)
-    }
+      ids <- JobUri.fromUri(jobUri).bf
+      jobLDR <- store.get(jobUri)
+      jobVO <- jobLDR.resource.as[JobVO]
+    } yield new Job(ids._2, jobVO) { override val ldr = jobLDR } // little optimization :-)
   }
-  
+
+  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Job] =
+    bananaGet(jobUri).toFutureVal
+
   def getFor(userId: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
-    implicit val context = conf.webExecutionContext
     import conf._
-    import conf.binders._
     val query = """
 CONSTRUCT {
-  ?jobUri ?p ?o .
+  ?user ont:organization ?org .
+  ?org ont:job ?job .
   ?s2 ?p2 ?o2
 } WHERE {
-  graph <#userUri> {
-    <#userUri> ont:organizationId ?organizationUri
+  BIND (iri(strbefore(str(?user), "#")) AS ?userG) .
+  graph ?userG {
+    ?user ont:organization ?org .
   } .
-  graph ?g {
-    ?jobUri ont:organization ?organizationUri .
-    ?jobUri ont:strategy ?strategyUri .
-    ?jobUri ?p ?o .
+  BIND (iri(strbefore(str(?org), "#")) AS ?orgG) .
+  graph ?orgG {
+    ?org ont:job ?job .
   } .
-  graph ?strategyUri {
+  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
+  graph ?jobG {
     ?s2 ?p2 ?o2
   }
 }
-""".replaceAll("#userUri", UserUri(userId).toString)
-    val construct = SparqlOps.ConstructQuery(query, ont)
-    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
-  }
-  
-  def getFor(organizationId: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
-    implicit val context = conf.webExecutionContext
-    import conf._
-    import conf.binders._
-    val query = """
-CONSTRUCT {
-  ?jobUri ?p ?o .
-  ?s2 ?p2 ?o2
-} WHERE {
-  graph ?g {
-    ?jobUri ont:organization <#organizationUri> .
-    ?jobUri ont:strategy ?strategyUri .
-    ?jobUri ?p ?o .
-  } .
-  graph ?strategyUri {
-    ?s2 ?p2 ?o2
-  }
-}
-""".replaceAll("#organizationUri", OrganizationUri(organizationId).toString)
-    val construct = SparqlOps.ConstructQuery(query, ont)
-    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
-  }
-  
-  def getFor(strategyId: StrategyId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
-    implicit val context = conf.webExecutionContext
-    import conf._
-    import conf.binders._
-    val query = """
-CONSTRUCT {
-  ?jobUri ?p ?o .
-  ?s2 ?p2 ?o2
-} WHERE {
-  graph ?g {
-    ?jobUri ont:strategy <#strategyUri> .
-    ?jobUri ?p ?o .
-  } .
-  graph <#strategyUri> {
-    ?s2 ?p2 ?o2
-  }
-}
-""".replaceAll("#strategyUri", StrategyUri(strategyId).toString)
-    val construct = SparqlOps.ConstructQuery(query, ont)
-    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
-  }
-  
-  def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Job] = {
-    implicit val c = conf
-    import conf.diesel._
-    import conf.binders._
-    for {
-      vo <- JobVOBinder.fromPointedGraph(pointed)
-      strategyVO <- (pointed / ont.strategy).exactlyOnePointedGraph.flatMap(StrategyVOBinder.fromPointedGraph(_))
+"""
+    val construct = ConstructQuery(query, ont)
+    val r = for {
+      graph <- store.executeConstruct(construct, Map("user" -> userId.toUri))
+      pointedOrg = PointedGraph[Rdf](userId.toUri, graph)
+      it <- (pointedOrg / ont.organization / ont.job).asSet2[(OrganizationId, JobId), JobVO]
     } yield {
-      val strategy = Strategy(strategyVO)
-      Job(vo.id, vo.name, vo.createdOn, vo.creatorId, vo.organizationId, strategy)
+      it map { case (ids, jobVO) => Job(ids._2, jobVO) }
     }
+    r.toFutureVal
   }
 
-  def fromGraph(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[Job]] = {
-    import conf.diesel._
-    import conf.binders._
-    val jobsVal: Iterable[Validation[BananaException, Job]] =
-      graph.getAllInstancesOf(ont.Job) map { pointed => fromPointedGraph(conf)(pointed) }
-    jobsVal.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Job]
-  }
-
-  def getCreatedBy(creator: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
-    implicit val context = conf.webExecutionContext
+  
+  def getFor(orgUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     import conf._
-    import conf.binders._
-    import conf.diesel._
     val query = """
 CONSTRUCT {
-  ?jobUri ?p ?o .
+  ?org ont:job ?job .
   ?s2 ?p2 ?o2
 } WHERE {
-  graph ?g {
-    ?jobUri ont:creator <#creatorUri> .
-    ?jobUri ?p ?o .
-    ?jobUri ont:strategy ?strategyUri .
+  BIND (iri(strbefore(str(?org), "#")) AS ?orgG) .
+  graph ?orgG {
+    ?org ont:job ?job .
   } .
-  graph ?strategyUri {
+  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
+  graph ?jobG {
     ?s2 ?p2 ?o2
   }
 }
-""".replaceAll("#creatorUri", UserUri(creator).toString)
-    val construct = SparqlOps.ConstructQuery(query, xsd, ont)
-    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
+"""
+    val construct = ConstructQuery(query, ont)
+    val r = for {
+      graph <- store.executeConstruct(construct, Map("org" -> orgUri))
+      pointedOrg = PointedGraph[Rdf](orgUri, graph)
+      it <- (pointedOrg / ont.job).asSet2[(OrganizationId, JobId), JobVO]
+    } yield {
+      it map { case (ids, jobVO) => Job(ids._2, jobVO) }
+    }
+    r.toFutureVal
   }
 
-  def getLast(conf: VSConfiguration)(jobId: JobId, property: conf.Rdf#URI): FutureVal[Exception, Option[(RunId, DateTime)]] = {
-    implicit val context = conf.webExecutionContext
-    import conf._
-    import conf.binders._
-    import conf.diesel._
-    val query = """
-SELECT ?run ?last WHERE {
-  {
-    SELECT (MAX(?timestamp) AS ?last) WHERE {
-      graph ?run {
-        ?run ont:jobId <#jobUri> ;
-             <#property> ?timestamp
-      }
-    }
+  def getFor(organizationId: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] =
+    getFor(organizationId.toUri)
+  
+  def getCreatedBy(creator: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
+    sys.error("to be implemented?")
   }
-  graph ?run {
-    ?run ont:jobId <#jobUri> ;
-          <#property> ?last
+
+  def getLast(jobUri: Rdf#URI, property: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[(RunId, DateTime)]] = {
+    import conf._
+    val query = """
+SELECT ?run ?timestamp WHERE {
+  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
+  graph ?jobG {
+    ?job ont:run ?run
+  }
+  BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
+  graph ?runG {
+    ?run ?prop ?timestamp
   }
 }
-""".replaceAll("#jobUri", JobUri(jobId).toString).replaceAll("#property", property.toString)
-    import SparqlOps._
-    val select = SelectQuery(query, xsd, ont)
-    implicit val binder = UriToNodeBinder(RunUri)
-    FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
-      // it's an aggregate query (MAX), so there is always one row
-      rows.toIterable.headOption match {
-        case Some(row) =>
-          for {
-            run <- row("run") flatMap (_.as[RunId])
-            last <- row("last") flatMap (_.as[DateTime])
-          } yield Some(run, last)
-        case None => Success[Exception, Option[(RunId, DateTime)]](None)
+"""
+    val select = SelectQuery(query, ont)
+    val r = store.executeSelect(select, Map("job" -> jobUri, "prop" -> property)) map { rows =>
+      val rds: Iterable[BananaValidation[(RunId, DateTime)]] = rows.toIterable map { row =>
+        val runId = row("run").flatMap(_.as[(OrganizationId, JobId, RunId)]).map(_._3)
+        val timestamp = row("timestamp").flatMap(_.as[DateTime])
+        (runId |@| timestamp)(Tuple2.apply)
+      }
+      rds.toList.sequence match {
+        case Failure(_) => None
+        case Success(it) if it.isEmpty => None
+        case Success(it) => Some(it.maxBy(_._2))
       }
     }
+    r.toFutureVal
   }
 
-  def getLastCreated(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[(RunId, DateTime)]] = {
-    import conf.binders.ont
-    getLast(conf)(jobId, ont.createdAt)
+  def getLastCreated(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[(RunId, DateTime)]] = {
+    import conf._
+    getLast(jobUri, ont.createdAt.uri)
   }
 
-  def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
-    import conf.binders.ont
-    getLast(conf)(jobId, ont.completedAt) map { _ map { _._2 } }
-  }
-  
-  def saveJobVO(vo: JobVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
-    import conf.binders._
-    implicit val context = conf.webExecutionContext
-    val graph = JobVOBinder.toPointedGraph(vo).graph
-    val result = conf.store.addNamedGraph(JobUri(vo.id), graph)
-    FutureVal(result)
+  def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
+    import conf._
+    getLast(jobUri, ont.completedAt.uri) map { _.map { _._2 } }
   }
 
-  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
-    for {
-      _ <- saveJobVO(job.toValueObject)
-      _ <- Strategy.save(job.strategy)
+  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {
+    import conf._
+    val orgUri = job.vo.organization.toUri
+    val creatorUri = job.vo.creator.toUri
+    val r = for {
+      _ <- store.put(job.ldr)
+      _ <- store.append(orgUri, orgUri -- ont.job ->- job.jobUri)
+      _ <- store.append(creatorUri, creatorUri -- ont.job ->- job.jobUri)
+    } yield job
+    r.toFutureVal
+  }
+
+  def delete(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+    import conf._
+    val r = for {
+      _ <- store.patch(job.orgUri,
+                       delete = job.orgUri -- ont.job ->- job.jobUri)
+      _ <- store.delete(job.jobUri.fragmentLess)
     } yield ()
-  
-  def delete(id: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
-    import conf.binders._
-    implicit val context = conf.webExecutionContext
-    FutureVal(conf.store.removeGraph(JobUri(id)))
+    r.toFutureVal
   }
 
 }

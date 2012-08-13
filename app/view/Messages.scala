@@ -46,7 +46,7 @@ case object AssertorUpdate {
   def json(result: AssertorResult): JsValue = {
     JsArray(List(
       JsString("AssertorResult"),
-      JsString(result.url.toString),
+      JsString(result.sourceUrl.toString),
       JsString(Helper.formatTime(result.timestamp)),
       JsNumber(result.warnings),
       JsNumber(result.errors)

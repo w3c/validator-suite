@@ -14,6 +14,12 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
 
   val logger = play.Logger.of(classOf[JobsActor])
 
+  def orgId: OrganizationId = {
+    val elements = self.path.elements.toList
+    val orgIdStr = elements(elements.size - 2)
+    OrganizationId(orgIdStr)
+  }
+
   def getJobRefOrCreate(job: Job): ActorRef = {
     val id = job.id.toString
     try {
@@ -31,7 +37,9 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
       context.children.find(_.path.name === id) match {
         case Some(jobRef) => jobRef forward msg
         case None => {
-          Job.get(JobId(id)).onComplete {
+          // should get the relPath and provide the uri to the job in the store
+          // later: make the job actor as something backed by a graph in the store!
+          Job.get(orgId, JobId(id)).onComplete {
             case Success(job) => to.tell(CreateJobAndForward(job, msg), from)
             case Failure(exception) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)
           }

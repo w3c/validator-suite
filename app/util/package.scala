@@ -24,4 +24,20 @@ package object util {
     def equal(a1: DateTime, a2: DateTime) = DateTimeOrdering.compare(a1, a2) == 0
   }
 
+  import org.w3.banana._
+  import org.w3.banana.util._
+  import org.w3.vs.VSConfiguration
+  import java.util.concurrent.TimeoutException
+  import akka.dispatch.ExecutionContext
+  
+  class BananaFutureW[T](bf: BananaFuture[T], timeout: Function1[TimeoutException, Exception], context: ExecutionContext) {
+    def toFutureVal: FutureVal[Exception, T] =
+      new FutureVal[Exception, T](bf.inner)(timeout, context)
+  }
+
+  implicit def toBananaFutureW[T](bf: BananaFuture[T])(implicit timeout: Function1[TimeoutException, Exception], context: ExecutionContext): BananaFutureW[T] =
+    new BananaFutureW[T](bf, timeout, context)
+
+  def shortId(id: String): String = id.substring(0, 6)
+
 }

@@ -4,13 +4,12 @@ import org.w3.vs.model._
 import org.w3.util.URL
 import org.specs2.mutable._
 import akka.util.duration._
-import org.w3.vs.model.AssertionClosed
 
 object HTMLValidatorTest extends Specification with AssertionResultMatcher {
 
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
-    val assertion: Iterable[AssertionClosed] = HTMLValidator.assert(url, JobId(), RunId()).result(intToDurationInt(30).seconds).fold(f => throw f, s => s)
+    val assertion: Iterable[Assertion] = HTMLValidator.assert(url)
     assertion must (haveErrorz)
   }
 

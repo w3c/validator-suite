@@ -10,28 +10,41 @@ import org.w3.vs.model._
 import akka.util.duration._
 import org.w3.vs.exception._
 import org.w3.vs.DefaultProdConfiguration
+import org.w3.vs.diesel._
+import org.w3.vs.store.Binders._
 
 abstract class StoreTest(
   nbUrlsPerAssertions: Int,
-  nbErrors: Int,
-  nbWarnings: Int,
-  nbInfos: Int,
+  severities: Map[AssertionSeverity, Int],
   nbHttpErrorsPerAssertions: Int,
   nbHttpResponsesPerAssertions: Int,
   nbJobDatas: Int)
 extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
-  val nbAssertionsPerRunPerAssertor = nbUrlsPerAssertions * ( nbErrors + nbWarnings + nbInfos ) /* nb of contexts */
+  val nbAssertionsPerRunPerAssertor = nbUrlsPerAssertions * ( severities(Error) + severities(Warning) + severities(Info) ) /* nb of contexts */
   val nbAssertionsPerRun = 2 /* nb of assertors */ * nbAssertionsPerRunPerAssertor
   val nbAssertionsForJob1 = 2 /* runs */ * nbAssertionsPerRun
 
   implicit val conf: VSConfiguration = new DefaultProdConfiguration { }
 
-  val org = Organization(id = OrganizationId(), name = "World Wide Web Consortium", adminId = UserId())
+  import conf._
 
-  val user = User(UserId(), "foo", "foo@example.com", "secret", org.id)
+  // used to remember the uri that was assigned to an object saved into the store
+  val uriMap: collection.mutable.Map[AnyRef, Rdf#URI] = {
+    import collection.JavaConverters._
+    val identityMap = new java.util.IdentityHashMap[AnyRef, Rdf#URI]
+    identityMap.asScala
+  }
 
-  val user2 = User(UserId(), "bar", "bar@example.com", "secret", org.id)
+  // that's exactly why manipulating the id ourselves is a bad idea
+  val orgId = OrganizationId()
+  val user1Id = UserId()
+
+  val org: Organization = Organization(orgId, "World Wide Web Consortium", user1Id)
+
+  val user1: User = User(user1Id, "foo", "foo@example.com", "secret", Some(orgId))
+
+  val user2 = User(UserId(), "bar", "bar@example.com", "secret", Some(org.id))
   
   val strategy =
     Strategy( 
@@ -47,165 +60,161 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing))
   
+  val now = DateTime.now(DateTimeZone.UTC)
+
   val job1 = Job(
+    id = JobId(),
+    name = "job1",
+    createdOn = now,
     strategy = strategy,
-    creatorId = user.id,
-    organizationId = org.id,
-    name = "job1")
+    creator = user1.id,
+    organization = org.id)
 
   val job2 = Job(
+    id = JobId(),
+    name = "job2",
+    createdOn = now,
     strategy = strategy,
-    creatorId = user.id,
-    organizationId = org.id,
-    name = "job2")
+    creator = user1.id,
+    organization = org.id)
 
   val job3 = Job(
+    id = JobId(),
+    name = "job3",
+    createdOn = now,
     strategy = strategy,
-    creatorId = user.id,
-    organizationId = org.id,
-    name = "job3")
+    creator = user1.id,
+    organization = org.id)
 
   val job4 = Job(
+    id = JobId(),
+    name = "job4",
+    createdOn = now,
     strategy = strategy2,
-    creatorId = user2.id,
-    organizationId = org.id,
-    name = "job4")
+    creator = user2.id,
+    organization = org.id)
 
   val job5 = Job(
+    id = JobId(),
+    name = "job5",
+    createdOn = now,
     strategy = strategy,
-    creatorId = user.id,
-    organizationId = org.id,
-    name = "job5")
-
-  val now = DateTime.now(DateTimeZone.UTC)
+    creator = user1.id,
+    organization = OrganizationId())
 
   // a job may have never completed, for example if the user has forced a new run
   // is this assumption ok? -> yes
   // or do we want to force a completedAt before switching to the new Job? this would be weird
-  val run1 = Run(job = job1, createdAt = now, completedAt = None)
+  var run1 = Run(id = RunId(), job = job1, createdAt = now, completedAt = None)
 
-  val run2 = Run(job = job1, createdAt = now.plusMinutes(5), completedAt = Some(now.plusMinutes(7)))
+  var run2 = Run(id = RunId(), job = job1, createdAt = now.plusMinutes(5), completedAt = Some(now.plusMinutes(7)))
 
-  val run3 = Run(job = job1, createdAt = now.plusMinutes(10), completedAt = Some(now.plusMinutes(12)))
+  var run3 = Run(id = RunId(), job = job1, createdAt = now.plusMinutes(10), completedAt = Some(now.plusMinutes(12)))
 
-  val run4 = Run(job = job1, createdAt = now.plusMinutes(15), completedAt = None)
+  var run4 = Run(id = RunId(), job = job1, createdAt = now.plusMinutes(15), completedAt = None)
 
-  val run5 = Run(job = job5, createdAt = now, completedAt = None)
+  var run5 = Run(id = RunId(), job = job5, createdAt = now, completedAt = None)
 
   val assertorIds = List(AssertorId(), AssertorId())
 
-  // assertions for job1
-  val assertions: Vector[Assertion] = {
-    def newAssertion(runId: RunId, assertorId: AssertorId, url: URL, severity: AssertionSeverity): Assertion =
+    def newAssertion(url: URL, assertorId: AssertorId, severity: AssertionSeverity): Assertion = {
+      val contexts = List(Context("blah", Some(42), None), Context("blarf", None, Some(42)))
       Assertion(
-        jobId = job1.id,
-        runId = runId,
-        assertorId = assertorId,
         url = url,
+        assertorId = assertorId,
+        contexts = contexts,
         lang = "fr",
         title = "some title",
         severity = severity,
         description = Some("some description"))
-    ///
-    // val a = newAssertion(run1.id, assertorIds(0), URL("http://example.com/foo/1"), Error)
-    // import conf.binders._
-    // val pointed = AssertionVOBinder.toPointedGraph(a.toValueObject)
-    // Jena.dump(pointed.graph)
-    ///
-    val builder = Vector.newBuilder[Assertion]
-    builder.sizeHint(nbAssertionsForJob1)
-    for ( runId <- List(run1.id, run2.id) ; assertorId <- assertorIds ; i <- 1 to nbUrlsPerAssertions ) {
-      for ( j <- 1 to nbErrors ) builder += newAssertion(runId, assertorId, URL("http://example.com/foo/"+i), Error)
-      for ( j <- 1 to nbWarnings ) builder += newAssertion(runId, assertorId, URL("http://example.com/foo/"+i), Warning)
-      for ( j <- 1 to nbInfos ) builder += newAssertion(runId, assertorId, URL("http://example.com/foo/"+i), Info)
     }
-    builder.result()
-  }
 
-  // contexts for all the assertions in job1
-  val contexts: Vector[Context] = {
-    val builder = Vector.newBuilder[Context]
-    builder.sizeHint(2 * nbAssertionsForJob1)
-    for ( assertion <- assertions ) {
-      builder += Context(
-        content = "blah",
-        line = Some(42),
-        column = None,
-        assertionId = assertion.id)
-      builder += Context(
-        content = "blah",
-        line = None,
-        column = Some(42),
-        assertionId = assertion.id)
+  // these assertions are for job1, in run1
+  def addAssertions(): Unit = {
+    for {
+//      runId <- List(run1.id, run2.id)
+      assertorId <- assertorIds
+      i <- 1 to nbUrlsPerAssertions
+      severity <- List(Error, Warning, Info)
+      nb = severities(severity)
+      j <- 1 to nb
+    } {
+      val assertion = newAssertion(URL("http://example.com/foo/"+i), assertorId, severity)
+      /* println("addAssertions(): http://example.com/foo/"+i) */
+      assertion.bananaSave(org.id, job1.id, run1.id).await(3.seconds)
+      run1 = run1.copy(assertions = run1.assertions + assertion)
     }
-    builder.result()
   }
 
-  val resourceResponses: Vector[ResourceResponse] = {
-    val builder = Vector.newBuilder[ResourceResponse]
-    builder.sizeHint(nbHttpErrorsPerAssertions + nbHttpResponsesPerAssertions)
-    for ( i <- 1 to nbHttpErrorsPerAssertions)
-      builder += ErrorResponse(
-        jobId = job1,
-        runId = run1,
-        url = URL("http://example.com/error/" + i),
-        action = GET,
-        why = "because I can")
-    for ( i <- 1 to nbHttpResponsesPerAssertions)
-      builder += HttpResponse(
-        jobId = job1,
-        runId = run1,
-        url = URL("http://example.com/foo/" + i),
-        action = GET,
-        status = 200,
-        headers = Map("foo" -> List("bar")),
-        extractedURLs = List(URL("http://example.com/foo/"+i+"/1"), URL("http://example.com/foo/"+i+"/2")))
-    builder.result()
-  }
+//   val resourceResponses: Vector[ResourceResponse] = {
+//     val builder = Vector.newBuilder[ResourceResponse]
+//     builder.sizeHint(nbHttpErrorsPerAssertions + nbHttpResponsesPerAssertions)
+//     for ( i <- 1 to nbHttpErrorsPerAssertions)
+//       builder += ErrorResponse(
+//         jobId = job1,
+//         runId = run1,
+//         url = URL("http://example.com/error/" + i),
+//         action = GET,
+//         why = "because I can")
+//     for ( i <- 1 to nbHttpResponsesPerAssertions)
+//       builder += HttpResponse(
+//         jobId = job1,
+//         runId = run1,
+//         url = URL("http://example.com/foo/" + i),
+//         action = GET,
+//         status = 200,
+//         headers = Map("foo" -> List("bar")),
+//         extractedURLs = List(URL("http://example.com/foo/"+i+"/1"), URL("http://example.com/foo/"+i+"/2")))
+//     builder.result()
+//   }
 
-  implicit val context = conf.webExecutionContext
-  
+
+
+
+
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
-    (for {
+    val r = for {
       _ <- Organization.save(org)
-      _ <- User.save(user)
+      _ <- User.save(user1)
       _ <- User.save(user2)
       _ <- Job.save(job1)
       _ <- Job.save(job2)
       _ <- Job.save(job3)
       _ <- Job.save(job4)
+      _ <- Job.save(job5)
       _ <- Run.save(run1)
       _ <- Run.save(run2)
       _ <- Run.save(run3)
       _ <- Run.save(run4)
-      _ <- FutureVal.sequence(assertions map { Assertion.save _ })
-      _ <- FutureVal.sequence(contexts map { Context.save _ })
-      _ <- FutureVal.sequence(resourceResponses map { ResourceResponse.save _ }) 
-    } yield ()).await(30.second)
+      _ <- Run.save(run5)
+    } yield ()
+    r.await(10.second)
+    addAssertions() // <- already blocking
+
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
     println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
   }
 
   "retrieve unknown Job" in {
-    val retrieved = Job.get(JobId()).result(1.second)
+    val retrieved = Job.get(OrganizationId(), JobId()).result(1.second)
     retrieved must be ('Failure) // TODO test exception type (UnknownJob)
   }
   
   "retrieve unknown Organization" in {
-    val retrieved = Organization.get(OrganizationId()).result(1.second)
+    val retrieved = Organization.get(organizationContainer / "foo").result(1.second)
     retrieved must be ('Failure) // TODO test exception type (UnknownOrganization)
   }
-  
+ 
   "create, put, retrieve, delete Job" in {
     val job = job1.copy(id = JobId())
-    Job.get(job.id).result(1.second) must be ('failure)
+    Job.get(org.id, job.id).result(1.second) must be ('failure)
     Job.save(job).result(1.second) must be ('success)
-    val retrieved = Job.get(job.id).result(10.second)
+    val retrieved = Job.get(org.id, job.id).result(10.second)
     retrieved must be (Success(job))
     Job.delete(job).result(1.second) must be ('success)
-    Job.get(job.id).result(1.second) must be ('failure)
+    Job.get(org.id, job.id).result(1.second) must be ('failure)
   }
 
   "retrieve Organization" in {
@@ -214,39 +223,41 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "save and retrieve User" in {
-    val retrieved = User.get(user.id).result(1.second)
-    retrieved must be === (Success(user))
+    val retrieved = User.get(user1.id).result(1.second)
+    retrieved must be === (Success(user1))
   }
 
   "retrieve User by email" in {
-    User.getByEmail("foo@example.com").result(2.second) must be === (Success(user))
+    User.getByEmail("foo@example.com").result(1.second) must be === (Success(user1))
 
-    User.getByEmail("unknown@example.com").result(2.second) must be === (Failure(UnknownUser))
+    User.getByEmail("unknown@example.com").result(1.second) must be === (Failure(UnknownUser))
   }
 
   "authenticate a user" in {
-    User.authenticate("foo@example.com", "secret").result(1.second) must be === (Success(user))
+    User.authenticate("foo@example.com", "secret").result(1.second) must be === (Success(user1))
 
     User.authenticate("foo@example.com", "bouleshit").result(1.second) must be === (Failure(Unauthenticated))
 
     User.authenticate("unknown@example.com", "bouleshit").result(1.second) must be === (Failure(UnknownUser))
   }
 
-  "get all Jobs given one creator" in {
-    val jobs = Job.getFor(strategy.id).result(1.second) getOrElse sys.error("")
-    jobs must have size(3)
-    jobs must contain (job1)
-    jobs must contain (job2)
-    jobs must contain (job3)
-  }
+  // this test was a duplicate of the next one: must be adapted
+//  "get all Jobs given one creator" in {
+//    val jobs = Job.getFor(strategy.id).result(1.second) getOrElse sys.error("")
+//    jobs must have size(3)
+//    jobs must contain (job1)
+//    jobs must contain (job2)
+//    jobs must contain (job3)
+//  }
 
-  "get all Jobs sharing the same strategy" in {
-    val jobs = Job.getFor(strategy.id).result(1.second) getOrElse sys.error("")
-    jobs must have size(3)
-    jobs must contain (job1)
-    jobs must contain (job2)
-    jobs must contain (job3)
-  }
+  // do we need to share strategies?
+//  "get all Jobs sharing the same strategy" in {
+//    val jobs = Job.getFor(strategy.id).result(1.second) getOrElse sys.error("")
+//    jobs must have size(3)
+//    jobs must contain (job1)
+//    jobs must contain (job2)
+//    jobs must contain (job3)
+//  }
 
   "get all Jobs that belong to the same organization" in {
     val jobs = Job.getFor(org.id).result(1.second) getOrElse sys.error("")
@@ -258,7 +269,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "get all Jobs a user can access through all the organizations he belongs to" in {
-    val jobs = Job.getFor(user).result(1.second) getOrElse sys.error("")
+    val jobs = Job.getFor(user1.id).result(1.second) getOrElse sys.error("")
     jobs must have size(4)
     jobs must contain (job1)
     jobs must contain (job2)
@@ -267,15 +278,18 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve Run" in {
-    val retrieved = Run.get(run1.id).result(1.second)
-    retrieved must be === (Success(run1))
+    val run = Run.get(run1.runUri).result(10.second)
+    run.map(_.assertions.size) must be === (Success(run1.assertions.size))
   }
 
-  "get all RunVOs given a JobId" in {
-    val retrieved = Run.getRunVOs(job1.id).result(2.second) getOrElse sys.error("test Run.getRunVOs")
-    retrieved must have size (4)
+  "get all Runs given a JobId" in {
+    val runs = Run.getFor(job1.jobUri).result(30.second).map(_.toSet)
+    runs must be(Success(Set(run1, run2, run3, run4)))
   }
 
+//  I guess we don't need that anymore as everything is accessible directly under a Run
+
+/*
   "retrieve Assertion" in {
     val assertion = assertions(0)
     val retrieved = Assertion.get(assertion.id).result(1.second)
@@ -293,119 +307,129 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     retrievedAssertions must have size(nbAssertionsPerRun)
     retrievedAssertions must contain (assertions(0))
   }
+*/
 
   "get all URLArticles from a run" in {
-    val retrieved = run1.getURLArticles().result(2.seconds) getOrElse sys.error("test Run.getURLArticles")
-    retrieved must have size (nbUrlsPerAssertions)
-    retrieved foreach { case (url, latest, warnings, errors) =>
-      warnings must be (assertorIds.size * 2 /* ctx */ * nbWarnings)
-      errors must be (assertorIds.size * 2 /* ctx */ * nbErrors)
+    val run = Run.bananaGet(org.id, job1.id, run1.id).await(3.seconds).toOption.get
+    val urlArticles = run.urlArticles
+    urlArticles must have size (nbUrlsPerAssertions)
+    urlArticles foreach { case (url, latest, warnings, errors) =>
+      warnings must be (assertorIds.size * 2 /* ctx */ * severities(Warning))
+      errors must be (assertorIds.size * 2 /* ctx */ * severities(Error))
     }
   }
 
+
   "get all URLArticles from a run 2" in {
     val url = URL("http://www.test.com/1")
-    Assertion(
-      jobId = job5,
-      runId = run5,
-      assertorId = assertorIds(0),
-      url = url,
-      lang = "fr",
-      title = "some title",
-      severity = Warning,
-      description = Some("some description")).save().await(10.seconds)
-    val retrieved = run5.getURLArticles().result(1.second).fold(f => throw f, s => s)
-    println(retrieved)
-    retrieved must have size (1)
-    retrieved foreach { case (url, latest, warnings, errors) =>
-      warnings must be (1)
-      errors must be (0)
-    }
+    val assertion =
+      Assertion(
+        url = url,
+        assertorId = assertorIds(0),
+        contexts = List.empty,
+        lang = "fr",
+        title = "some title",
+        severity = Warning,
+        description = Some("some description"))
+    assertion.bananaSave(run5.runUri).await(3.seconds)
+    val run = Run.bananaGet(run5.runUri).await(3.seconds).toOption.get
+    val retrieved = run.urlArticles
+    run.urlArticles must have size (1)
+    val (_, _, warnings, errors) = run.urlArticles.head
+    warnings must be(1)
+    errors must be(0)
   }
 
   "get the URLArticle for a specific URL" in {
     val url = URL("http://www.test.com")
-    Assertion(
-      jobId = job5,
-      runId = run5,
-      assertorId = assertorIds(0),
-      url = url,
-      lang = "fr",
-      title = "some title",
-      severity = Warning,
-      description = Some("some description")).save().await(10.seconds)
-    val retrieved = run5.getURLArticle(url).result(1.second).fold(f => throw f, s => s)
-    retrieved._3 must be (1)
-    retrieved._4 must be (0)
+    val assertion =
+      Assertion(
+        url = url,
+        assertorId = assertorIds(0),
+        contexts = List.empty,
+        lang = "fr",
+        title = "some title",
+        severity = Warning,
+        description = Some("some description"))
+    assertion.bananaSave(run5.runUri).await(3.seconds)
+    val run = Run.bananaGet(run5.runUri).await(3.seconds).toOption.get
+    val Some((rUrl, _, warnings, errors)) = run.urlArticle(url)
+    rUrl must be(url)
+    warnings must be (1)
+    errors must be (0)
   }
 
   "get all URLArticles from a run with no assertions" in {
-    val retrieved = run3.getURLArticles().result(2.seconds) getOrElse sys.error("test Run.getURLArticles")
-    retrieved must be ('empty)
+    val run = Run.bananaGet(run3.runUri).await(3.seconds).toOption.get
+    run.urlArticles must be ('empty)
   }
 
   "getAssertorArticles must return the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url." in {
-    val retrieved = run1.getAssertorArticles(URL("http://example.com/foo/1")).result(1.seconds) getOrElse sys.error("test Run.getAssertorArticles")
-    retrieved must have size (2)
-    retrieved foreach { resultPerAssertor =>
+    val run = Run.bananaGet(run1.runUri).await(3.seconds).toOption.get
+    val aas = run.assertorArticles(URL("http://example.com/foo/1"))
+    aas must have size (2)
+    aas foreach { resultPerAssertor =>
       inside(resultPerAssertor) {
         case (assertorId, _, foundWarnings, foundErrors) => {
-          foundWarnings must be (nbWarnings*2)
-          foundErrors must be (nbErrors*2)
+          foundWarnings must be (severities(Warning) * 2)
+          foundErrors must be (severities(Error) * 2)
         }
       }
     }
   }
 
-  "retrieve ResourceResponse" in {
-    val rr = resourceResponses(0)
-    val retrieved = ResourceResponse.get(rr.runId, rr.id).result(1.second)
-    retrieved must be (Success(rr))
-  }
-
-  "get all resources for a given a runId" in {
-    val rrs = ResourceResponse.getForRun(run1.id).result(2.second) getOrElse sys.error("fooooo")
-    rrs must have size (nbHttpErrorsPerAssertions + nbHttpResponsesPerAssertions)
-    rrs must contain (resourceResponses(0))
-   }
-
-  "retrieve all context for a given assertionId" in {
-    val assertion = assertions(0)
-    val retrieved = Context.getForAssertion(assertion.id).result(1.second) getOrElse sys.error("test getForAssertion")
-    retrieved must have size (2)
-  }
-
-  "get history of JobDatas for a given jobId" in {
-    // define test logic
-  }
-
-  "get timestamp of latest completed Run for given jobId" in {
-    val retrieved = job1.getLastCompleted().result(1.second) getOrElse sys.error("test Job.getLastCompleted")
-    retrieved must be === (run3.completedAt)
-  }
-
-  "get timestamp of latest completed Run for given jobId that has never been completed once" in {
-    val retrieved = job2.getLastCompleted().result(1.second) getOrElse sys.error("test Job.getLastCompleted")
-    retrieved must be === (None)
-  }
+//  "retrieve ResourceResponse" in {
+//    val rr = resourceResponses(0)
+//    val retrieved = ResourceResponse.get(rr.runId, rr.id).result(1.second)
+//    retrieved must be (Success(rr))
+//  }
+//
+//  "get all resources for a given a runId" in {
+//    val rrs = ResourceResponse.getForRun(run1.id).result(2.second) getOrElse sys.error("fooooo")
+//    rrs must have size (nbHttpErrorsPerAssertions + nbHttpResponsesPerAssertions)
+//    rrs must contain (resourceResponses(0))
+//   }
+//
+//  "retrieve all context for a given assertionId" in {
+//    val assertion = assertions(0)
+//    val retrieved = Context.getForAssertion(assertion.id).result(1.second) getOrElse sys.error("test getForAssertion")
+//    retrieved must have size (2)
+//  }
+//
+//  "get history of JobDatas for a given jobId" in {
+//    // define test logic
+//  }
+//
+//  "get timestamp of latest completed Run for given jobId" in {
+//    val retrieved = job1.getLastCompleted().result(1.second) getOrElse sys.error("test Job.getLastCompleted")
+//    retrieved must be === (run3.completedAt)
+//  }
+//
+//  "get timestamp of latest completed Run for given jobId that has never been completed once" in {
+//    val retrieved = job2.getLastCompleted().result(1.second) getOrElse sys.error("test Job.getLastCompleted")
+//    retrieved must be === (None)
+//  }
 
 }
 
 
+//class StoreTestVeryLight extends StoreTest(
+//  nbUrlsPerAssertions = 1,
+//  severities = Map(Error -> 1, Warning -> 1, Info -> 1),
+//  nbHttpErrorsPerAssertions = 1,
+//  nbHttpResponsesPerAssertions = 1,
+//  nbJobDatas = 1)
+
 class StoreTestLight extends StoreTest(
   nbUrlsPerAssertions = 10,
-  nbErrors = 2,
-  nbWarnings = 3,
-  nbInfos = 4,
+  severities = Map(Error -> 2, Warning -> 3, Info -> 4),
   nbHttpErrorsPerAssertions = 2,
   nbHttpResponsesPerAssertions = 5,
   nbJobDatas = 3)
 
-class StoreTestHeavy extends StoreTest(
-  nbUrlsPerAssertions = 100,
-  nbErrors = 10,
-  nbWarnings = 10,
-  nbInfos = 10,
-  nbHttpErrorsPerAssertions = 5,
-  nbHttpResponsesPerAssertions = 10,
-  nbJobDatas = 3)
+//class StoreTestHeavy extends StoreTest(
+//  nbUrlsPerAssertions = 100,
+//  severities = Map(Error -> 10, Warning -> 10, Info -> 10),
+//  nbHttpErrorsPerAssertions = 5,
+//  nbHttpResponsesPerAssertions = 10,
+//  nbJobDatas = 3)

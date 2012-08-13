@@ -4,13 +4,13 @@ import org.w3.util._
 import org.w3.vs.model._
 import scala.io.Source
 
-trait FromFileAssertor extends FromSourceAssertor {
+object FromFileAssertor extends FromSourceAssertor with UnicornFormatAssertor {
   
-  def assert(file: java.io.File, jobId: JobId, runId: RunId): FutureVal[Throwable, Iterable[AssertionClosed]] = 
-    FutureVal {
-      Source.fromFile(file)
-    } flatMap { source =>
-      assert(source, jobId, runId)
-    }
+  val name = "from-file-assertor"
+
+  def assert(file: java.io.File): Iterable[Assertion] = {
+    val source = Source.fromFile(file)
+    assert(source)
+  }
 
 }

@@ -9,13 +9,13 @@ import org.w3.vs.model._
 
 trait ErrorMatchers {
 
-  val haveError: Matcher[Traversable[AssertionClosed]] = new Matcher[Traversable[AssertionClosed]] {
-    def apply(left: Traversable[AssertionClosed]) = {
+  val haveError: Matcher[Traversable[Assertion]] = new Matcher[Traversable[Assertion]] {
+    def apply(left: Traversable[Assertion]) = {
       val failureMessageSuffix = "found errors"
       val negatedFailureMessageSuffix = "didnt find errors"
 
       MatchResult(
-        left exists { _.assertion.severity == Error },
+        left exists { _.severity == Error },
         failureMessageSuffix,
         negatedFailureMessageSuffix,
         failureMessageSuffix,
@@ -39,7 +39,7 @@ class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll
 
   "there should be no CSS error in http://www.w3.org/2011/08/validator-test/no-error.css" in {
     val url = URL("http://www.w3.org/2011/08/validator-test/no-error.css")
-    val assertion: Iterable[AssertionClosed] = CSSValidator.assert(url, JobId(), RunId()).result(intToDurationInt(30).seconds).fold(f => throw f, s => s)
+    val assertion: Iterable[Assertion] = CSSValidator.assert(url)
     assertion must not (haveError)
   }
 

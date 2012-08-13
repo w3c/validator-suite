@@ -12,11 +12,11 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     // runtime dependencies
     "nu.validator.htmlparser" % "htmlparser" % "1.2.1" intransitive(),
-    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://scala-tools.org/repo-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
+    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT",
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "x13-SNAPSHOT",
+    "org.w3" %% "banana-jena" % "x02-SNAPSHOT",
     "org.w3" %% "css-validator-standalone" % "1.0-SNAPSHOT" intransitive(),
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
@@ -33,7 +33,8 @@ object ApplicationBuild extends Build {
 //    scalaVersion := "2.9.1",
     testOptions in Test := Nil,
     scalacOptions ++= Seq("-Ydependent-method-types"),
-//  testOptions in Test += Tests.Argument("-oF")
+    // activates full stacktrace and durations
+    testOptions in Test += Tests.Argument("-oDF"),
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
     templatesImport += "org.w3.vs.view._",

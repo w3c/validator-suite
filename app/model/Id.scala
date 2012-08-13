@@ -1,38 +1,34 @@
 package org.w3.vs.model
 
+import org.w3.vs._
 import scalaz.Equal
 import java.util.UUID
+import org.w3.vs.store.Binders._
+import org.w3.vs.diesel._
 
-object Id {
-  
-  implicit def toId(e: Job): JobId = e.id
-  implicit def toId(e: Run): RunId = e.id
-  implicit def toId(e: User): UserId = e.id
-  implicit def toId(e: Context): ContextId = e.id
-  implicit def toId(e: Strategy): StrategyId = e.id
-  implicit def toId(e: Assertion): AssertionId = e.id
-  implicit def toId(e: Organization): OrganizationId = e.id
-  implicit def toId(e: ResourceResponse): ResourceResponseId = e.id
-  implicit def toId(e: AssertorResponse): AssertorResponseId = e.id
-  
-}
-
-class Id(private val uuid: UUID = UUID.randomUUID()) {
+class Id(val uuid: UUID) {
   def shortId: String = toString.substring(0, 6)
-  override def toString = uuid.toString
+  def id: String = uuid.toString()
+  override def toString = uuid.toString()
 }
 
-case class JobId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class RunId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class UserId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class JobDataId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class ContextId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class AssertorId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class StrategyId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class AssertionId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class OrganizationId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class ResourceResponseId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class AssertorResponseId (private val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class JobId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid) {
+  def toUri(orgId: OrganizationId): Rdf#URI = JobUri(orgId, this)
+}
+case class RunId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid) {
+  def toUri(orgId: OrganizationId, jobId: JobId): Rdf#URI = RunUri(orgId, jobId, this)
+}
+case class UserId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid) {
+  def toUri: Rdf#URI = UserUri(this)
+}
+case class JobDataId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class ContextId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class AssertorId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class StrategyId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class AssertionId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class OrganizationId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class ResourceResponseId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
+case class AssertorResponseId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 
 object JobId {
   def apply(s: String): JobId = JobId(UUID.fromString(s))

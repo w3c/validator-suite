@@ -4,12 +4,12 @@ import org.w3.vs.model._
 import org.w3.banana._
 import scalaz._
 import org.w3.util._
+import org.w3.vs._
+import diesel._
+import ops._
 
-trait LiteralBinders[Rdf <: RDF] {
-this: Binders[Rdf] =>
-
-  import diesel._
-  import ops._
+trait LiteralBinders {
+self: Binders =>
 
   implicit val urlBinder: TypedLiteralBinder[Rdf, URL] = new TypedLiteralBinder[Rdf, URL] {
 
@@ -19,7 +19,7 @@ this: Binders[Rdf] =>
         try {
           Success(URL(lexicalForm))
         } catch {
-          case t => Failure(FailedConversion(literal.toString + " is of type xsd:anyURI but its lexicalForm could not be made a URL: " + lexicalForm))
+          case t => Failure(FailedConversion(literal.toString() + " is of type xsd:anyURI but its lexicalForm could not be made a URL: " + lexicalForm))
         }
       else
         Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
@@ -38,7 +38,7 @@ this: Binders[Rdf] =>
         try {
           Success(AssertionSeverity(lexicalForm))
         } catch {
-          case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made a AssertionSeverity: " + lexicalForm))
+          case t => Failure(FailedConversion(literal.toString() + " is of type xsd:string but its lexicalForm could not be made a AssertionSeverity: " + lexicalForm))
         }
       else
         Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
@@ -50,7 +50,7 @@ this: Binders[Rdf] =>
         case Warning => "warning"
         case Info => "info"
       }
-      StringBinder.toTypedLiteral(literal)
+      StringLiteralBinder.toTypedLiteral(literal)
     }
 
   }
@@ -64,13 +64,13 @@ this: Binders[Rdf] =>
         try {
           Success(HttpAction(lexicalForm))
         } catch {
-          case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made a HttpAction: " + lexicalForm))
+          case t => Failure(FailedConversion(literal.toString() + " is of type xsd:string but its lexicalForm could not be made a HttpAction: " + lexicalForm))
         }
       else
         Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
     }
 
-    def toTypedLiteral(t: HttpAction): Rdf#TypedLiteral = StringBinder.toTypedLiteral(t.toString)
+    def toTypedLiteral(t: HttpAction): Rdf#TypedLiteral = StringLiteralBinder.toTypedLiteral(t.toString)
 
   }
 
@@ -85,13 +85,13 @@ this: Binders[Rdf] =>
         try {
           Success(ExplorationMode(lexicalForm))
         } catch {
-          case t => Failure(FailedConversion(literal.toString + " is of type xsd:string but its lexicalForm could not be made a ExplorationMode: " + lexicalForm))
+          case t => Failure(FailedConversion(literal.toString() + " is of type xsd:string but its lexicalForm could not be made a ExplorationMode: " + lexicalForm))
         }
       else
         Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
     }
 
-    def toTypedLiteral(t: ExplorationMode): Rdf#TypedLiteral = StringBinder.toTypedLiteral(t.toString)
+    def toTypedLiteral(t: ExplorationMode): Rdf#TypedLiteral = StringLiteralBinder.toTypedLiteral(t.toString)
 
   }
 

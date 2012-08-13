@@ -21,8 +21,8 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")(implicitConfiguration)
-  
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
+
   val servers = Seq(
       Webserver(9001, Website(Seq("/" --> "http://localhost:9002/")).toServlet),
       Webserver(9002, Website(Seq()).toServlet)
@@ -34,16 +34,13 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       _ <- Job.save(job)
     } yield ()).result(1.second)
 
-    job.run()
+    val (orgId, jobId, runId) = job.run().result(1.second).toOption.get
 
     job.listen(testActor)
 
-    val run = job.getRun().result(1.second).fold(f => sys.error("getRun failed"), s => s)
-    
     fishForMessagePF(3.seconds) {
       case UpdateData(_, activity) if activity == Idle => {
-        Thread.sleep(100)
-        val rrs = ResourceResponse.getForRun(run).result(1.second) getOrElse sys.error("getForRun")
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).await(3.seconds).toOption.get
         rrs must have size (2)
       }
     }

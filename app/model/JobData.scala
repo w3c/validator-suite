@@ -21,7 +21,7 @@ case class JobData (
 object JobData {
 
   def apply(runVO: RunVO): JobData = {
-    JobData(runVO.id, runVO.jobId, runVO.resources, runVO.errors, runVO.warnings, runVO.createdAt, runVO.completedAt)
+    null // JobData(runVO.id, runVO.jobId, runVO.resources, runVO.errors, runVO.warnings, runVO.createdAt, runVO.completedAt)
   }
   
   def health(resources: Int, errors: Int, warnings: Int): Int = {

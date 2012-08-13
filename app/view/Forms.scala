@@ -61,25 +61,30 @@ class ValidJobForm private [view] (
   val (name, url, linkCheck, maxResources) = bind
   
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
-    Job(
-      name = name,
-      organizationId = user.organizationId,
-      creatorId = user.id,
-      strategy = Strategy(
-        entrypoint = url,
-        linkCheck = linkCheck,
-        maxResources = maxResources))
+    null
+//    val vo = JobVO(
+//      
+//
+//    Job(
+//      name = name,
+//      organizationId = user.organizationId,
+//      creatorId = user.id,
+//      strategy = Strategy(
+//        entrypoint = url,
+//        linkCheck = linkCheck,
+//        maxResources = maxResources))
   }
   
   def update(job: Job)(implicit conf: VSConfiguration): Job = {
-    job.copy(
-        name = name,
-        strategy = job.strategy.copy(
-            entrypoint = url, 
-            linkCheck = linkCheck, 
-            maxResources = maxResources
-        )
-    )
+    null
+//     job.copy(
+//         name = name,
+//         strategy = job.strategy.copy(
+//             entrypoint = url, 
+//             linkCheck = linkCheck, 
+//             maxResources = maxResources
+//         )
+//     )
   }
   
 }

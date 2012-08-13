@@ -6,108 +6,34 @@ import org.joda.time._
 import org.w3.banana._
 import scalaz.Scalaz._
 import scalaz._
+import org.w3.banana._
+import org.w3.banana.util._
+import org.w3.banana.LinkedDataStore._
+import org.w3.vs._
+import diesel._
+import org.w3.vs.store.Binders._
+import org.w3.vs.sparql._
+import org.w3.banana.util._
 
 case class Assertion(
-    id: AssertionId = AssertionId(),
-    jobId: JobId,
-    runId: RunId,
-    assertorId: AssertorId,
     url: URL,
+    assertorId: AssertorId,
+    contexts: List[Context],
     lang: String,
     title: String,
     severity: AssertionSeverity,
     description: Option[String],
-    timestamp: DateTime = DateTime.now(DateTimeZone.UTC))(implicit conf: VSConfiguration) {
-  
-  //def getAssertorResult: FutureVal[Exception, AssertorResult] = AssertorResult.get(assertorResponseId)
-  def getContexts: FutureVal[Exception, Iterable[Context]] = Context.getForAssertion(id) 
+    timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
-  def toValueObject: AssertionVO = AssertionVO(id, jobId, runId, assertorId, url, lang, title, severity, description, timestamp)
+  def bananaSave(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): BananaFuture[Unit] =
+    bananaSave((orgId, jobId, runId).toUri)
 
-  def save(): FutureVal[Exception, Unit] = Assertion.save(this)
-  
-  def delete(): FutureVal[Exception, Unit] = Assertion.delete(this)
-
-}
-
-object Assertion {
-
-  def apply(vo: AssertionVO)(implicit conf: VSConfiguration): Assertion = {
-    import vo._
-    Assertion(id, jobId, runId, assertorId, url, lang, title, severity, description, timestamp)
-  }
-
-  def getAssertionVO(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, AssertionVO] = {
-    import conf.binders._
-    implicit val context = conf.webExecutionContext
-    val uri = AssertionUri(id)
-    FutureVal(conf.store.getNamedGraph(uri)) flatMap { graph => 
-      FutureVal.pureVal[Throwable, AssertionVO]{
-        val pointed = PointedGraph(uri, graph)
-        AssertionVOBinder.fromPointedGraph(pointed)
-      }(t => t)
-    }
-  }
-
-  def get(id: AssertionId)(implicit conf: VSConfiguration): FutureVal[Exception, Assertion] =
-    getAssertionVO(id) map (Assertion(_))
-  
-  def fromPointedGraph(conf: VSConfiguration)(pointed: PointedGraph[conf.Rdf]): Validation[BananaException, Assertion] = {
-    implicit val c = conf
-    import conf.binders._
-    for {
-      vo <- AssertionVOBinder.fromPointedGraph(pointed)
-    } yield {
-      Assertion(vo)
-    }
-  }
-
-  def fromGraph(conf: VSConfiguration)(graph: conf.Rdf#Graph): Validation[BananaException, Iterable[Assertion]] = {
-    import conf.diesel._
-    import conf.binders._
-    val assertions: Iterable[Validation[BananaException, Assertion]] =
-      graph.getAllInstancesOf(ont.Assertion) map { pointed => fromPointedGraph(conf)(pointed) }
-    assertions.toList.sequence[({type l[X] = Validation[BananaException, X]})#l, Assertion]
-  }
-
-  // TODO
-  def getForRun(runId: RunId, url: URL)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] =
-    getForRun(runId) map { _.filter { _.url === url }.toSeq.sortBy { _.title} }
-
-  def getForRun(runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Assertion]] = {
-    implicit val context = conf.webExecutionContext
+  def bananaSave(runUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
-    import conf.diesel._
-    import conf.binders._
-    val query = """
-CONSTRUCT {
-  ?assertionUri ?p ?o .
-} WHERE {
-  graph ?g {
-    ?assertionUri a ont:Assertion .
-    ?assertionUri ont:runId <#runUri> .
-    ?assertionUri ?p ?o
+    store.append(runUri, runUri -- ont.assertion ->- this.toPG)
   }
+
+  def save(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+    bananaSave(orgId, jobId, runId).toFutureVal
+
 }
-""".replaceAll("#runUri", RunUri(runId).toString)
-    val construct = SparqlOps.ConstructQuery(query, ont)
-    FutureVal(store.executeConstruct(construct)) flatMapValidation { graph => fromGraph(conf)(graph) }
-  }
-
-  def saveAssertionVO(vo: AssertionVO)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
-    import conf.binders._
-    implicit val context = conf.webExecutionContext
-    val graph = AssertionVOBinder.toPointedGraph(vo).graph
-    val result = conf.store.addNamedGraph(AssertionUri(vo.id), graph)
-    FutureVal(result)
-  }
-
-  def save(assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
-    saveAssertionVO(assertion.toValueObject)
-
-  def delete(assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
-    sys.error("")
-    
-}
-
-case class AssertionClosed(assertion: Assertion, contexts: Iterable[Context])

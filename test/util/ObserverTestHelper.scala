@@ -20,12 +20,11 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   implicit val implicitConfiguration: VSConfiguration = configuration
 
   val http = system.actorFor(system / "http")
-  //val store = configuration.store
-  //val stores = configuration.stores
 
-  val organizationTest = Organization(OrganizationId(), "test orga", UserId())
-
-  val userTest = User(organizationId = organizationTest.id, email = "", name = "", password = "")
+  val orgTestId = OrganizationId()
+  val userTestId = UserId()
+  val organizationTest = Organization(orgTestId, "test orga", userTestId)
+  val userTest = User(userId = userTestId, organization = Some(orgTestId), email = "", name = "", password = "")
   
   val logger = play.Logger.of(classOf[RunTestHelper])
   

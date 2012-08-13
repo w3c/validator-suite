@@ -18,10 +18,13 @@ import org.w3.util.akkaext._
 import org.joda.time.DateTimeZone
 
 // TODO extract all pure function in a companion object
-class JobActor(job: Job)(implicit val configuration: VSConfiguration)
+class JobActor(job: Job)(implicit val conf: VSConfiguration)
 extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
 
-  import configuration._
+  import conf._
+
+  val orgId = job.organization
+  val jobId = job.id
 
   val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
 
@@ -43,10 +46,10 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
   // at instanciation of this actor
 
   // TODO
-  configuration.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
+  conf.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
 
   var lastRun =
-    Run(job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None) // TODO get last run data from the db?
+    Run(id = RunId(), job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None) // TODO get last run data from the db?
 
   startWith(lastRun.state, lastRun)
 
@@ -97,11 +100,8 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       stay()
     }
     case Event(result: AssertorResult, _run) => {
-      result.assertions.map{assertionC => 
-        assertionC.assertion.save()
-        assertionC.contexts.map(_.save())
-      }
-      if (result.runId === _run.id) {
+      result.assertions foreach { _.save(orgId, jobId, _run.id) }
+      if (result.context._3 === _run.id) {
         tellEverybody(NewAssertorResult(result))
         stateOf(_run.withAssertorResponse(result))
       } else {
@@ -109,7 +109,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       }
     }
     case Event(failure: AssertorFailure, _run) => {
-      if (failure.runId === _run.id) {
+      if (failure.context._3 === _run.id) {
         stateOf(_run.withAssertorResponse(failure))
       } else {
         stay()
@@ -124,8 +124,8 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         } yield Assertors.get(assertorName)
 
       logger.debug("<<< " + response.url)
-      response.save()
-      tellEverybody(NewResource(response))
+      ResourceResponse.save(response)
+      tellEverybody(NewResource((orgId, jobId, _run.id), response))
 
       val runWithResponse = _run.withResourceResponse(response)
 
@@ -134,7 +134,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         // * we're ProActive
         // * it's an HttpResponse (not a failure)
         // * this is for the current run (btw, it's not an error when it's not)
-        case (httpResponse: HttpResponse, ProActive) if response.runId === runWithResponse.id => {
+        case (httpResponse: HttpResponse, ProActive) if response.context._3 === runWithResponse.id => {
           val (runWithNewURLs, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
           if (!newUrls.isEmpty)
             logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, runWithResponse.numberOfKnownUrls))
@@ -161,7 +161,8 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     case Event(Refresh(_), run) => {
       // logger.debug("%s: received a Refresh" format shortId)
       val firstURLs = List(strategy.entrypoint)
-      val freshRun = Run(job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None)
+      val freshRun = Run(id = RunId(), job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None)
+      sender ! (orgId, jobId, freshRun.id)
       val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs)
       stateOf(scheduleNextURLsToFetch(runData))
     }
@@ -231,11 +232,11 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     action match {
       case GET => {
         logger.debug("%s: GET >>> %s" format (shortId, url))
-        http ! Fetch(url, GET, runId, job.id)
+        http ! Fetch(url, GET, (job.vo.organization, job.id, runId))
       }
       case HEAD => {
         logger.debug("%s: HEAD >>> %s" format (shortId, url))
-        http ! Fetch(url, HEAD, runId, job.id)
+        http ! Fetch(url, HEAD, (job.vo.organization, job.id, runId))
       }
       case IGNORE => {
         logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))

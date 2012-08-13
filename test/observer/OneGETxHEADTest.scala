@@ -25,7 +25,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
-  val job = Job(strategy = strategy, creatorId = userTest.id, organizationId = organizationTest.id, name = "@@")
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
   
   val servers = Seq(
       Webserver(9001, (Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toServlet)),
@@ -49,7 +49,7 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
       case UpdateData(_, activity) if activity == Idle => {
         Thread.sleep(100)
         val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
-        val rrs = ResourceResponse.getForRun(run.id).result(1.second) getOrElse sys.error("getForRun")
+        val rrs = ResourceResponse.bananaGetFor(run.runUri).await(3.seconds).toOption.get
         rrs must have size (j + 1)
         rrs.filter( _.url.authority == "localhost:9002" ) must have size (j)
       }
