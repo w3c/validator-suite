@@ -1,34 +1,23 @@
 Validator Suite
 ---------------
 
-### Play 2.0 RC1
+### Play 2.1-SNAPSHOT
 
-* [latest commit](https://github.com/playframework/Play20/commit/c05152254a4ff06728ee785940e2584cc235ed14)
+For the time being, use [this particular commit](https://github.com/playframework/Play20/commit/82fb6f472698cdba3178ebb2f67a2062aec9125b)
 
-    git clone git://github.com/playframework/Play20.git
-    cd Play20/framework
-    git checkout c05152254a4ff06728ee785940e2584cc235ed14
-    ./build publish-local
-    cd ..
-    cp -r repository/local/play ~/.ivy2/local
-
-Then make `Play20/framework` part of your `PATH`
-
-    export PATH=$PATH:/path/to/play20
+```
+git clone git://github.com/playframework/Play20.git
+cd Play20/framework
+git checkout 82fb6f472698cdba3178ebb2f67a2062aec9125b
+./build publish-local
+```
 
 ### start geeking
 
-    hg clone https://dvcs.w3.org/hg/validator-suite
-    cd validator-suite
-    ./sbt 'eclipse same-target'
+You need Java 7. First build will take time as it fetches all the dependencies.
 
-The only requirement is Java 6. Then sbt will take care of the rest. This can take several minutes the very first time.
-
-### Eclipse
-
-Be sure you ran '''eclipse same-target''' from sbt. The visit the following links:
-
-* [http://www.scala-ide.org/](http://www.scala-ide.org/)
-* [https://www.assembla.com/wiki/show/scala-ide/Setup](https://www.assembla.com/wiki/show/scala-ide/Setup)
-* [https://www.assembla.com/spaces/scala-ide/wiki/Getting_Started](https://www.assembla.com/spaces/scala-ide/wiki/Getting_Started)
-
+```
+git clone git@github.com:w3c/validator-suite.git
+cd validator-suite
+<path-to-Play20>/play
+```
