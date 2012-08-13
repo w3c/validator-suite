@@ -35,6 +35,7 @@ object ApplicationBuild extends Build {
     scalacOptions ++= Seq("-Ydependent-method-types"),
     // activates full stacktrace and durations
     testOptions in Test += Tests.Argument("-oDF"),
+    testOptions in Test += Tests.Argument("-l", "org.w3.vs.util.SlowTest"),
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
     templatesImport += "org.w3.vs.view._",

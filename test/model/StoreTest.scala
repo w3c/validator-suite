@@ -427,9 +427,9 @@ class StoreTestLight extends StoreTest(
   nbHttpResponsesPerAssertions = 5,
   nbJobDatas = 3)
 
-//class StoreTestHeavy extends StoreTest(
-//  nbUrlsPerAssertions = 100,
-//  severities = Map(Error -> 10, Warning -> 10, Info -> 10),
-//  nbHttpErrorsPerAssertions = 5,
-//  nbHttpResponsesPerAssertions = 10,
-//  nbJobDatas = 3)
+abstract class StoreTestHeavy extends StoreTest(
+  nbUrlsPerAssertions = 100,
+  severities = Map(Error -> 10, Warning -> 10, Info -> 10),
+  nbHttpErrorsPerAssertions = 5,
+  nbHttpResponsesPerAssertions = 10,
+  nbJobDatas = 3)
