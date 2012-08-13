@@ -21,7 +21,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
     http ! Fetch(URL("http://localhost:9001/"), HEAD, context)
 
-    val fetchResponse = expectMsgType[ResourceResponse](1.second)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
 
     inside (fetchResponse) { case response: HttpResponse =>
       response.url must be(URL("http://localhost:9001/"))
@@ -41,7 +41,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
     
     http ! Fetch(URL("http://localhost:9001/"), GET, context)
 
-    val fetchResponse = expectMsgType[ResourceResponse](1.second)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
 
     inside (fetchResponse) { case response: HttpResponse =>
       response.url must be(URL("http://localhost:9001/"))
@@ -60,7 +60,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
       
     http ! Fetch(URL("http://localhost:9001/404/foo"), HEAD, context)
 
-    val fetchResponse = expectMsgType[ResourceResponse](1.second)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
 
     inside (fetchResponse) { case response: HttpResponse =>
       response.url must be(URL("http://localhost:9001/404/foo"))
@@ -80,7 +80,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
       
       http ! Fetch(URL("http://foo.localhost/bar"), HEAD, context)
       
-      val fetchResponse = expectMsgType[ResourceResponse](1.second)
+      val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
       
       inside (fetchResponse) { case response: ErrorResponse =>
         response.url must be(URL("http://foo.localhost/bar"))
@@ -101,16 +101,16 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
       http ! Fetch(URL("http://localhost:9001/"+i), HEAD, context)
     }
 
-    val fetchResponse = expectMsgType[ResourceResponse](1.second)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
     
-    implicit val timeout: akka.util.Timeout = 1.second
+    implicit val timeout: akka.util.Timeout = 3.seconds
 
     def pendingFetches(): Int =
-      (PathAware(http, http.path / "localhost_9001") ? HowManyPendingRequests).mapTo[Int].result(1.second).fold(f => throw f, s => s)
+      (PathAware(http, http.path / "localhost_9001") ? HowManyPendingRequests).mapTo[Int].result(3.seconds).fold(f => throw f, s => s)
 
     pendingFetches() must be(99)
 
-    val secondResponse =  expectMsgType[ResourceResponse](1.second)
+    val secondResponse =  expectMsgType[ResourceResponse](3.seconds)
 
     pendingFetches() must be(98)
 
