@@ -1,4 +1,0 @@
-validator-suite
-===============
-
-Validator Suite
