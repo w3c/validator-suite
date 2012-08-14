@@ -32,7 +32,7 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
-    val (orgId, jobId, runId) = job.run().result(1.second).toOption.get
+    val (orgId, jobId, runId) = job.run().getOrFail(1.second)
 
     job.listen(testActor)
 
@@ -43,8 +43,8 @@ class StopActionTest extends RunTestHelper(new DefaultProdConfiguration { }) wit
     job.cancel()
 
     fishForMessagePF(3.seconds) {
-      case UpdateData(jobData, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).await(3.seconds).toOption.get
+      case UpdateData(jobData, _, activity) if activity == Idle => {
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail(3.seconds)
         rrs.size must be < (100)
       }
     }

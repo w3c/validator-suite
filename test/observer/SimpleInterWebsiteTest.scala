@@ -34,13 +34,13 @@ class SimpleInterWebsiteTest extends RunTestHelper(new DefaultProdConfiguration 
       _ <- Job.save(job)
     } yield ()).result(1.second)
 
-    val (orgId, jobId, runId) = job.run().result(1.second).toOption.get
+    val (orgId, jobId, runId) = job.run().getOrFail(1.second)
 
     job.listen(testActor)
 
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).await(3.seconds).toOption.get
+      case UpdateData(_, _, activity) if activity == Idle => {
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail(3.seconds)
         rrs must have size (2)
       }
     }

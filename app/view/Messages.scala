@@ -6,10 +6,10 @@ import scalaz.Scalaz._
 
 case object JobsUpdate {
   
-  def json(data: JobData, activity: RunActivity): JsValue = {
+  def json(data: JobData, jobId: JobId, activity: RunActivity): JsValue = {
     JsArray(List(
       JsString("Dashboard"),
-      JsString(data.jobId.toString),
+      JsString(jobId.toString),
       JsString(activity.toString),
       JsNumber(data.resources),
       JsNumber(data.errors),

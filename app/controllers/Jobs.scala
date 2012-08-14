@@ -256,7 +256,7 @@ object Jobs extends Controller {
         // ready to explode...
         // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
         organization.get.enumerator &> Enumeratee.collect{
-          case a: UpdateData => JobsUpdate.json(a.data, a.activity)
+          case a: UpdateData => JobsUpdate.json(a.data, a.jobId, a.activity)
         }
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise
@@ -274,7 +274,7 @@ object Jobs extends Controller {
         job <- user.getJob(id)
       } yield {
         job.enumerator &> Enumeratee.collect{
-          case a: UpdateData => JobsUpdate.json(a.data, a.activity)
+          case a: UpdateData => JobsUpdate.json(a.data, a.jobId, a.activity)
           //case NewResource(resource) => ResourceUpdate.json(resource)
           //case NewAssertions(assertionsC) if (assertionsC.count(_.assertion.severity == Warning) != 0 || assertionsC.count(_.assertion.severity == Error) != 0) => AssertorUpdate.json(assertionsC)
           case NewAssertorResult(result) if (!result.isValid) => AssertorUpdate.json(result)

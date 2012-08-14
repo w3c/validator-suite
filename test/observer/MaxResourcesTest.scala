@@ -34,15 +34,13 @@ class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) w
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    job.run()
+    val (orgId, jobId, runId) = job.run().getOrFail(1.second)
 
     job.listen(testActor)
 
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, activity) if activity == Idle => {
-        Thread.sleep(100)
-        val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
-        val rrs = ResourceResponse.bananaGetFor(run.runUri).await(3.seconds).toOption.get
+      case UpdateData(_, _, activity) if activity == Idle => {
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail(3.seconds)
         rrs must have size (maxResources)
       }
     }

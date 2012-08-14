@@ -34,13 +34,13 @@ class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration 
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    val (orgId, jobId, runId) = job.run().result(1.second).toOption.get
+    val (orgId, jobId, runId) = job.run().getOrFail(1.second)
 
     job.listen(testActor)
     
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).await(3.seconds).toOption.get
+      case UpdateData(_, _, activity) if activity == Idle => {
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail(3.seconds)
         rrs must have size (circumference + 1)
       }
     }

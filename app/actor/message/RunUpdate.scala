@@ -9,7 +9,7 @@ import org.w3.vs.model._
  */
 sealed trait RunUpdate 
 
-case class UpdateData(data: JobData, activity: RunActivity) extends RunUpdate
+case class UpdateData(data: JobData, jobId: JobId, activity: RunActivity) extends RunUpdate
 
 /**
  * A new Response was received during the exploration

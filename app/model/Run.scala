@@ -134,69 +134,9 @@ CONSTRUCT {
 
   def getLatestRun(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[Run]] = {
     null
-//    implicit val context = conf.webExecutionContext
-//    Job.getLastCreated(jobId) flatMap {
-//      case None => FutureVal.successful[Exception, Option[Run]](None)
-//      case Some((runId, createdAt)) =>
-//        for {
-//          job <- Job.get(jobId)
-//          vo <- Run.getRunVO(runId)
-//          rrs <- ResourceResponse.getForRun(runId)
-//          assertions <- Assertion.getForRun(runId)
-//        } yield {
-//          var run = Run(
-//            id = vo.id,
-//            explorationMode = vo.explorationMode,
-//            createdAt = vo.createdAt,
-//            completedAt = vo.completedAt,
-//            timestamp = vo.timestamp,
-//            job = job)
-//
-//          var receivedUrls: List[URL] = List.empty
-//          var extractedUrls: List[URL] = List.empty
-//          rrs.toList.sortBy(_.timestamp) foreach {
-//            case httpResponse: HttpResponse => {
-//              receivedUrls = httpResponse.url :: receivedUrls
-//              extractedUrls = httpResponse.extractedURLs ++ extractedUrls
-//            }
-//            case errorResponse: ErrorResponse => {
-//              receivedUrls = errorResponse.url :: receivedUrls   
-//            }
-//          }
-//
-//          var errors = 0
-//          var warnings = 0
-//          assertions.toList.sortBy(_.timestamp) foreach { ass =>
-//            ass.severity match {
-//              case Error => errors += 1
-//              case Warning => warnings += 1
-//              case Info => ()
-//            }
-//          }
-//
-//          // sort by timestamp first!
-//          // go through all the rrs to construct List[URL] respecting order of discovering
-//          //   accumulate url
-//          //   accumulate extractedURLs if HttpResponse
-//          // at this point, we know
-//          //   knownUrls: everything from accumulation (Set)
-//          //   fetched: accumulation minus received urls (Set)
-//          //   toBeExplored: accumulation minus duplicates minus fetched urls
-//          // go through assertions
-//          //   update run on the way
-//          //   build a List[AssertorCall]
-//          // the AssertorCall that were pending are:
-//          //   we got a rr for url u
-//          //   but there is no assertion received
-//          //   schedule these guys again (don't forget to maintain the counter of pending assertions)
-//
-//          null
-//        }
-//    }
   }
 
 }
-
 
 /**
  * Run represents a coherent state of for an Run, modelized as an FSM
@@ -227,16 +167,12 @@ case class Run(
   lazy val ldr: LinkedDataResource[Rdf] =
     LinkedDataResource(runUri, this.toVO.toPG)
 
-  def jobData: JobData = JobData(id, job.id, resources, errors, warnings, createdAt, completedAt)
+  def jobData: JobData = JobData(resources, errors, warnings, createdAt, completedAt)
   
   def health: Int = jobData.health
 
   def strategy = job.strategy
   
-  def save(): FutureVal[Exception, Unit] = Run.save(this)
-  
-  def delete(): FutureVal[Exception, Unit] = Run.delete(this)
-
   /**
    * Represent an article on the byUrl report
    * (resource url, last assertion timestamp, total warnings, total errors)
@@ -279,55 +215,6 @@ case class Run(
     }
     aas.toList
   }
-
-//    implicit val context = conf.webExecutionContext
-//    import conf._
-//    import conf.binders._
-//    import conf.diesel._
-//    val query = """
-//SELECT DISTINCT ?assertor ?warnings ?errors WHERE {
-//  {
-//    SELECT ?assertor (SUM(IF(BOUND(?ctx), 1, 0)) AS ?warnings) {
-//      graph ?g {
-//        ?assertion a ont:Assertion ;
-//                   ont:runId <#runUri> ;
-//                   ont:severity "warning"^^xsd:string ;
-//                   ont:url "#url"^^xsd:anyURI ;
-//                   ont:assertorId ?assertor
-//      }
-//      OPTIONAL { graph ?ctx { ?ctx ont:assertionId ?assertion } }
-//    } GROUP BY ?assertor
-//  }
-//  {
-//    SELECT ?assertor (SUM(IF(BOUND(?ctx), 1, 0)) AS ?errors) {
-//      graph ?g {
-//        ?assertion a ont:Assertion ;
-//                   ont:runId <#runUri> ;
-//                   ont:severity "error"^^xsd:string ;
-//                   ont:url "#url"^^xsd:anyURI ;
-//                   ont:assertorId ?assertor
-//      }
-//      OPTIONAL { graph ?ctx { ?ctx ont:assertionId ?assertion } }
-//    } GROUP BY ?assertor
-//  }
-//}
-//""".replaceAll("#runUri", RunUri(id).toString).replaceAll("#url", url.toString)
-//    import SparqlOps._
-//    val select = SelectQuery(query, xsd, ont)
-//    FutureVal(store.executeSelect(select)) flatMapValidation { rows =>
-//      val results = rows.toIterable map { row =>
-//        for {
-//          assertorId <- row("assertor").flatMap(_.as[AssertorId])
-//          warnings <- row("warnings").flatMap(_.as[Int])
-//          errors <- row("errors").flatMap(_.as[Int])
-//        } yield {
-//          val assertorName = Assertor.getName(assertorId)
-//          (assertorId, assertorName, warnings, errors)
-//        }
-//      }
-//      results.toList.sequence[({type l[x] = Validation[BananaException, x]})#l, (AssertorId, String, Int, Int)]
-//    }
-
 
   /* methods related to the data */
   
