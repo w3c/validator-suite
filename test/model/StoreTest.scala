@@ -218,17 +218,17 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve Organization" in {
-    val retrieved = Organization.get(org.id).result(1.second)
-    retrieved must be === (Success(org))
+    val retrieved = Organization.get(org.id).getOrFail(3.seconds)
+    retrieved must be(org)
   }
 
   "save and retrieve User" in {
-    val retrieved = User.get(user1.id).result(1.second)
-    retrieved must be === (Success(user1))
+    val retrieved = User.get(user1.id).getOrFail(3.seconds)
+    retrieved must be(user1)
   }
 
   "retrieve User by email" in {
-    User.getByEmail("foo@example.com").result(1.second) must be === (Success(user1))
+    User.getByEmail("foo@example.com").getOrFail(3.seconds) must be(user1)
 
     User.getByEmail("unknown@example.com").result(1.second) must be === (Failure(UnknownUser))
   }
@@ -241,26 +241,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     User.authenticate("unknown@example.com", "bouleshit").result(1.second) must be === (Failure(UnknownUser))
   }
 
-  // this test was a duplicate of the next one: must be adapted
-//  "get all Jobs given one creator" in {
-//    val jobs = Job.getFor(strategy.id).result(1.second) getOrElse sys.error("")
-//    jobs must have size(3)
-//    jobs must contain (job1)
-//    jobs must contain (job2)
-//    jobs must contain (job3)
-//  }
-
-  // do we need to share strategies?
-//  "get all Jobs sharing the same strategy" in {
-//    val jobs = Job.getFor(strategy.id).result(1.second) getOrElse sys.error("")
-//    jobs must have size(3)
-//    jobs must contain (job1)
-//    jobs must contain (job2)
-//    jobs must contain (job3)
-//  }
-
   "get all Jobs that belong to the same organization" in {
-    val jobs = Job.getFor(org.id).result(1.second) getOrElse sys.error("")
+    val jobs = Job.getFor(org.id).getOrFail(3.seconds)
     jobs must have size(4)
     jobs must contain (job1)
     jobs must contain (job2)
@@ -269,7 +251,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "get all Jobs a user can access through all the organizations he belongs to" in {
-    val jobs = Job.getFor(user1.id).result(1.second) getOrElse sys.error("")
+    val jobs = Job.getFor(user1.id).getOrFail(3.seconds)
     jobs must have size(4)
     jobs must contain (job1)
     jobs must contain (job2)
@@ -278,13 +260,13 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve Run" in {
-    val run = Run.get(run1.runUri).result(10.second)
-    run.map(_.assertions.size) must be === (Success(run1.assertions.size))
+    val run = Run.get(run1.runUri).getOrFail(10.seconds)
+    run.assertions.size must be(run1.assertions.size)
   }
 
   "get all Runs given a JobId" in {
-    val runs = Run.getFor(job1.jobUri).result(30.second).map(_.toSet)
-    runs must be(Success(Set(run1, run2, run3, run4)))
+    val runs = Run.getFor(job1.jobUri).getOrFail(30.second).toSet
+    runs must be(Set(run1, run2, run3, run4))
   }
 
 //  I guess we don't need that anymore as everything is accessible directly under a Run
@@ -310,7 +292,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 */
 
   "get all URLArticles from a run" in {
-    val run = Run.bananaGet(org.id, job1.id, run1.id).await(3.seconds).toOption.get
+    val run = Run.bananaGet(org.id, job1.id, run1.id).getOrFail(3.seconds)
     val urlArticles = run.urlArticles
     urlArticles must have size (nbUrlsPerAssertions)
     urlArticles foreach { case (url, latest, warnings, errors) =>
@@ -332,7 +314,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         severity = Warning,
         description = Some("some description"))
     assertion.bananaSave(run5.runUri).await(3.seconds)
-    val run = Run.bananaGet(run5.runUri).await(3.seconds).toOption.get
+    val run = Run.bananaGet(run5.runUri).getOrFail(3.seconds)
     val retrieved = run.urlArticles
     run.urlArticles must have size (1)
     val (_, _, warnings, errors) = run.urlArticles.head
@@ -360,12 +342,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "get all URLArticles from a run with no assertions" in {
-    val run = Run.bananaGet(run3.runUri).await(3.seconds).toOption.get
+    val run = Run.bananaGet(run3.runUri).getOrFail(3.seconds)
     run.urlArticles must be ('empty)
   }
 
   "getAssertorArticles must return the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url." in {
-    val run = Run.bananaGet(run1.runUri).await(3.seconds).toOption.get
+    val run = Run.bananaGet(run1.runUri).getOrFail(3.seconds)
     val aas = run.assertorArticles(URL("http://example.com/foo/1"))
     aas must have size (2)
     aas foreach { resultPerAssertor =>
@@ -413,12 +395,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 }
 
 
-//class StoreTestVeryLight extends StoreTest(
-//  nbUrlsPerAssertions = 1,
-//  severities = Map(Error -> 1, Warning -> 1, Info -> 1),
-//  nbHttpErrorsPerAssertions = 1,
-//  nbHttpResponsesPerAssertions = 1,
-//  nbJobDatas = 1)
+abstract class StoreTestVeryLight extends StoreTest(
+  nbUrlsPerAssertions = 0,
+  severities = Map(Error -> 0, Warning -> 0, Info -> 0),
+  nbHttpErrorsPerAssertions = 0,
+  nbHttpResponsesPerAssertions = 0,
+  nbJobDatas = 0)
 
 class StoreTestLight extends StoreTest(
   nbUrlsPerAssertions = 10,

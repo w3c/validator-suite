@@ -4,7 +4,6 @@ import org.scalatest.{Filter => ScalaTestFilter, _}
 import org.scalatest.matchers._
 import scalaz._
 import org.w3.banana._
-import org.w3.banana.jena._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
 import org.w3.vs.model._
@@ -14,7 +13,7 @@ import org.w3.vs.diesel._
 
 class BindersTest extends WordSpec with MustMatchers {
 
-  def testSerializeDeserialize[T](binder: PointedGraphBinder[Jena, T])(t: T) = {
+  def testSerializeDeserialize[T](binder: PointedGraphBinder[Rdf, T])(t: T) = {
     import binder._
     val pointed = toPointedGraph(t)
     val result = fromPointedGraph(pointed)
@@ -22,7 +21,7 @@ class BindersTest extends WordSpec with MustMatchers {
       case Failure(throwable) => {
         println("1. "+t)
         println("2. === ")
-        JenaUtil.dump(pointed.graph)
+        println(pointed.graph)
         println("===")
         println("3. "+result)
 //        throwable.printStackTrace()

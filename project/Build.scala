@@ -16,7 +16,8 @@ object ApplicationBuild extends Build {
     "net.databinder" %% "dispatch-http" % "0.8.6",
     "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "x02-SNAPSHOT",
+    //"org.w3" %% "banana-sesame" % "x03-SNAPSHOT",
+    "org.w3" %% "banana-jena" % "x03-SNAPSHOT",
     "org.w3" %% "css-validator-standalone" % "1.0-SNAPSHOT" intransitive(),
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
@@ -28,6 +29,7 @@ object ApplicationBuild extends Build {
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
 //  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-jena")
+//  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-sesame")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
 //    scalaVersion := "2.9.1",
@@ -42,10 +44,10 @@ object ApplicationBuild extends Build {
     templatesImport += "org.w3.vs.model._",
     templatesImport += "org.w3.vs.exception._",
     templatesImport += "scalaz.{Validation, Failure, Success}",
-    resolvers += "repo.novus snaps" at "http://repo.novus.com/snapshots/",
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     resolvers += "repo.codahale.com" at "http://repo.codahale.com",
     resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
+    // resolvers += "sesame-repo-releases" at "http://repo.aduna-software.org/maven2/releases/"
 
     // ensimeConfig := sexp(
     //   key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),

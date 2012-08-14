@@ -94,14 +94,14 @@ CONSTRUCT {
   ?s2 ?p2 ?o2
 } WHERE {
   BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
-  graph ?jobG { ?job ont:run ?run } .
-  BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
   {
     { 
       graph ?jobG { ?s1 ?p1 ?o1 }
     }
       UNION
     {
+      graph ?jobG { ?job ont:run ?run } .
+      BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
       graph ?runG { ?s2 ?p2 ?o2 }
     }
   }

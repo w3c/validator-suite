@@ -214,6 +214,15 @@ class FutureVal[+F, +S] protected[util] (
       case e: TimeoutException => Failure(timeout(e))
     }
   }
+
+  def getOrFail(atMost: Duration = Duration(5, "seconds"))(implicit ev: F <:< Throwable): S = {
+    try {
+      val r = Await.result(future, atMost)
+      r.fold(t => throw ev(t), s => s)
+    } catch {
+      case e: TimeoutException => throw e
+    }
+  }
   
   def waitFor(atMost: Duration): FutureVal[F, S] = {
     try {
