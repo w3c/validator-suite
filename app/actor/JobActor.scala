@@ -100,7 +100,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       stay()
     }
     case Event(result: AssertorResult, _run) => {
-      result.assertions foreach { _.save(orgId, jobId, _run.id) }
+      result.assertions foreach { assertion => Assertion.save(_run.runUri, assertion) }
       if (result.context._3 === _run.id) {
         tellEverybody(NewAssertorResult(result))
         stateOf(_run.withAssertorResponse(result))
