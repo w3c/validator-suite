@@ -97,16 +97,16 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val OrganizationVOBinder = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
 
-  implicit lazy val ErrorResponseBinder = pgb[ErrorResponse](ont.run, ont.url, ont.action, ont.timestamp, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
+  implicit lazy val ErrorResponseBinder = pgb[ErrorResponse](ont.url, ont.action, ont.timestamp, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
 
-  implicit lazy val HttpResponseBinder = pgb[HttpResponse](ont.run, ont.url, ont.action, ont.timestamp, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
+  implicit lazy val HttpResponseBinder = pgb[HttpResponse](ont.url, ont.action, ont.timestamp, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
 
 
   implicit lazy val ResourceResponseBinder = new PointedGraphBinder[Rdf, ResourceResponse] {
 
     def toPointedGraph(t: ResourceResponse): PointedGraph[Rdf] = t match {
-      case e @ ErrorResponse(_, _, _, _, _) => ErrorResponseBinder.toPointedGraph(e)
-      case h @ HttpResponse(_, _, _, _, _, _, _) => HttpResponseBinder.toPointedGraph(h)
+      case e @ ErrorResponse(_, _, _, _) => ErrorResponseBinder.toPointedGraph(e)
+      case h @ HttpResponse(_, _, _, _, _, _) => HttpResponseBinder.toPointedGraph(h)
     }
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponse] = {

@@ -138,9 +138,8 @@ CONSTRUCT {
 
   /* addResourceResponse */
 
-  def addResourceResponse(rr: ResourceResponse)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+  def addResourceResponse(runUri: Rdf#URI, rr: ResourceResponse)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
-    val runUri: Rdf#URI = rr.context.toUri
     store.append(runUri, runUri -- ont.resourceResponse ->- rr.toPG)
   }
 

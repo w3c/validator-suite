@@ -11,7 +11,7 @@ import org.w3.vs.actor.message.Stop
 import scala.concurrent.stm._
 import org.w3.util._
 
-case class AssertorCall(assertor: FromHttpResponseAssertor, response: HttpResponse)
+case class AssertorCall(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse)
 
 object AssertionsActor {
 
@@ -31,11 +31,11 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
   val queue = Queue[AssertorCall]()
 
-  private final def scheduleAssertion(assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
+  private final def scheduleAssertion(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
 
     pendingAssertions.single() += 1
     
-    assertor assert response onComplete {
+    assertor.assert(context, response) onComplete {
       case _ => pendingAssertions.single() -= 1
     } onComplete {
       case Failure(f: AssertorFailure) => self ! f
@@ -54,24 +54,24 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
       // not sure why this is done this way (Alex)
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
-        val AssertorCall(assertorId, nextRI) = queue.dequeue()
-        scheduleAssertion(assertorId, nextRI)
+        val AssertorCall(context, assertorId, nextRI) = queue.dequeue()
+        scheduleAssertion(context, assertorId, nextRI)
       }
     }
 
     case result: AssertorFailure => {
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
-        val AssertorCall(assertorId, nextRI) = queue.dequeue()
-        scheduleAssertion(assertorId, nextRI)
+        val AssertorCall(context, assertorId, nextRI) = queue.dequeue()
+        scheduleAssertion(context, assertorId, nextRI)
       }
     }
 
-    case call @ AssertorCall(assertorId, response) => {
+    case call @ AssertorCall(context, assertorId, response) => {
       if (pendingAssertions.single() > MAX_PENDING_ASSERTION) {
         queue.enqueue(call)
       } else {
-        scheduleAssertion(assertorId, response)
+        scheduleAssertion(context, assertorId, response)
       }
     }
 

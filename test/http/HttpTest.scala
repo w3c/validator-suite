@@ -21,14 +21,14 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
     http ! Fetch(URL("http://localhost:9001/"), HEAD, context)
 
-    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
+    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
 
-    inside (fetchResponse) { case response: HttpResponse =>
+    inside (fetchResponse) { case (contextRun: RunId, response: HttpResponse) =>
       response.url must be(URL("http://localhost:9001/"))
       response.action must be(HEAD)
       response.status must be(200)
       //body must be === ""
-      response.context must be(context)
+      contextRun must be(context._3)
     }
 
   }
@@ -41,14 +41,14 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
     
     http ! Fetch(URL("http://localhost:9001/"), GET, context)
 
-    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
+    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
 
-    inside (fetchResponse) { case response: HttpResponse =>
+    inside (fetchResponse) { case (contextRun: RunId, response: HttpResponse) =>
       response.url must be(URL("http://localhost:9001/"))
       response.action must be(GET)
       response.status must be(200)
       //body must not be ('empty)
-      response.context must be(context)
+      contextRun must be(context._3)
     }
 
   }
@@ -60,13 +60,13 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
       
     http ! Fetch(URL("http://localhost:9001/404/foo"), HEAD, context)
 
-    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
+    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
 
-    inside (fetchResponse) { case response: HttpResponse =>
+    inside (fetchResponse) { case (contextRun: RunId, response: HttpResponse) =>
       response.url must be(URL("http://localhost:9001/404/foo"))
       response.action must be(HEAD)
       response.status must be(404)
-      response.context must be(context)
+      contextRun must be(context._3)
     }
 
   }
@@ -80,12 +80,12 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
       
       http ! Fetch(URL("http://foo.localhost/bar"), HEAD, context)
       
-      val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
+      val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
       
-      inside (fetchResponse) { case response: ErrorResponse =>
+      inside (fetchResponse) { case (contextRun: RunId, response: ErrorResponse) =>
         response.url must be(URL("http://foo.localhost/bar"))
         response.action must be(HEAD)
-        response.context must be(context)
+        contextRun must be(context._3)
       }
 
     }
@@ -101,7 +101,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
       http ! Fetch(URL("http://localhost:9001/"+i), HEAD, context)
     }
 
-    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
+    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
     
     implicit val timeout: akka.util.Timeout = 3.seconds
 
@@ -110,7 +110,7 @@ class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with In
 
     pendingFetches() must be(99)
 
-    val secondResponse =  expectMsgType[ResourceResponse](3.seconds)
+    val secondResponse =  expectMsgType[(RunId, ResourceResponse)](3.seconds)
 
     pendingFetches() must be(98)
 

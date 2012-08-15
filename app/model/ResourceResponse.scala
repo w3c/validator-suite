@@ -30,14 +30,12 @@ object ResourceResponse {
 }
 
 sealed trait ResourceResponse {
-  val context: (OrganizationId, JobId, RunId)
   val url: URL
   val action: HttpAction
   val timestamp: DateTime
 }
 
 case class ErrorResponse(
-    context: (OrganizationId, JobId, RunId),
     url: URL,
     action: HttpAction,
     timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
@@ -46,7 +44,6 @@ case class ErrorResponse(
 object HttpResponse {
 
   def apply(
-      context: (OrganizationId, JobId, RunId),
       url: URL,
       action: HttpAction,
       status: Int,
@@ -58,13 +55,12 @@ object HttpResponse {
       case "text/css" => URLExtractor.fromCSS(url, body).distinct
     } getOrElse List.empty
     
-    HttpResponse(context = context, url = url, action = action, status = status, headers = headers, extractedURLs = extractedURLs)
+    HttpResponse(url = url, action = action, status = status, headers = headers, extractedURLs = extractedURLs)
   }
 
 }
 
 case class HttpResponse(
-    context: (OrganizationId, JobId, RunId),
     url: URL,
     action: HttpAction,
     timestamp: DateTime = DateTime.now(DateTimeZone.UTC),

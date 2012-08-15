@@ -86,7 +86,6 @@ class BindersTest extends WordSpec with MustMatchers {
       url = URL("http://example.com/foo"),
       action = GET,
       timestamp = DateTime.now(DateTimeZone.UTC),
-      context = (OrganizationId(), JobId(), RunId()),
       why = "just because")
 
   "ErrorResponse" in {
@@ -98,7 +97,6 @@ class BindersTest extends WordSpec with MustMatchers {
       url = URL("http://example.com/foo"),
       action = GET,
       timestamp = DateTime.now(DateTimeZone.UTC),
-      context = (OrganizationId(), JobId(), RunId()),
       status = 200,
       headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
       extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))

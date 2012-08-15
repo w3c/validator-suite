@@ -115,7 +115,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         stay()
       }
     }
-    case Event(response: ResourceResponse, _run) => {
+    case Event((contextRun: RunId, response: ResourceResponse), _run) => {
 
       def getAssertors(httpResponse: HttpResponse): List[FromHttpResponseAssertor] =
         for {
@@ -124,7 +124,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         } yield Assertors.get(assertorName)
 
       logger.debug("<<< " + response.url)
-      Run.addResourceResponse(response)
+      Run.addResourceResponse(_run.runUri, response)
       tellEverybody(NewResource((orgId, jobId, _run.id), response))
 
       val runWithResponse = _run.withResourceResponse(response)
@@ -134,14 +134,14 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         // * we're ProActive
         // * it's an HttpResponse (not a failure)
         // * this is for the current run (btw, it's not an error when it's not)
-        case (httpResponse: HttpResponse, ProActive) if response.context._3 === runWithResponse.id => {
+        case (httpResponse: HttpResponse, ProActive) if contextRun === runWithResponse.id => {
           val (runWithNewURLs, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
           if (!newUrls.isEmpty)
             logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, runWithResponse.numberOfKnownUrls))
           // schedule assertions (why only if it's a GET?)
           val assertors = getAssertors(httpResponse)
           if (httpResponse.action === GET)
-            assertors foreach { assertor => assertionsActorRef ! AssertorCall(assertor, httpResponse) }
+            assertors foreach { assertor => assertionsActorRef ! AssertorCall((orgId, jobId, _run.id), assertor, httpResponse) }
           // schedule new fetches
           val runWithPendingAssertions =
             runWithNewURLs.copy(pendingAssertions = runWithNewURLs.pendingAssertions + assertors.size)

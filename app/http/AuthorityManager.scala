@@ -107,7 +107,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
             body
           } catch {
             case t: Throwable => {
-              to ! ErrorResponse(context = context, url = url, action = action, why = t.getMessage)
+              to ! (context._3, ErrorResponse(url = url, action = action, why = t.getMessage))
               throw t // rethrow for benefit of AsyncHttpClient
             }
           } finally {
@@ -147,8 +147,8 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
           val headers: Headers =
             (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
           val body = response.getResponseBody()
-          val fetchResponse = HttpResponse(context = context, url = url, action = action, status = status, headers = headers, body = body)
-          to ! fetchResponse
+          val fetchResponse = HttpResponse(url = url, action = action, status = status, headers = headers, body = body)
+          to ! (context._3, fetchResponse)
         }
       }
     }
