@@ -16,15 +16,6 @@ import org.w3.banana.util._
 
 object ResourceResponse {
 
-  def bananaSave(rr: ResourceResponse)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
-    import conf._
-    val runUri: Rdf#URI = rr.context.toUri
-    store.append(runUri, runUri -- ont.resourceResponse ->- rr.toPG)
-  }
-
-  def save(rr: ResourceResponse)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
-    bananaSave(rr).toFutureVal
-
   def bananaGetFor(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): BananaFuture[Set[ResourceResponse]] =
     bananaGetFor((orgId, jobId, runId).toUri)
 

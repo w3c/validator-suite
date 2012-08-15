@@ -141,7 +141,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     } {
       val assertion = newAssertion(URL("http://example.com/foo/"+i), assertorId, severity)
       /* println("addAssertions(): http://example.com/foo/"+i) */
-      Assertion.bananaSave(org.id, job1.id, run1.id, assertion).await(3.seconds)
+      Run.addAssertion(org.id, job1.id, run1.id, assertion).await(3.seconds)
       run1 = run1.copy(assertions = run1.assertions + assertion)
     }
   }
@@ -291,7 +291,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         title = "some title",
         severity = Warning,
         description = Some("some description"))
-    Assertion.bananaSave(run5.runUri, assertion).await(3.seconds)
+    Run.addAssertion(run5.runUri, assertion).await(3.seconds)
     val run = Run.bananaGet(run5.runUri).getOrFail(3.seconds)
     val retrieved = run.urlArticles
     run.urlArticles must have size (1)
@@ -311,7 +311,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         title = "some title",
         severity = Warning,
         description = Some("some description"))
-    Assertion.bananaSave(run5.runUri, assertion).await(3.seconds)
+    Run.addAssertion(run5.runUri, assertion).await(3.seconds)
     val run = Run.bananaGet(run5.runUri).await(3.seconds).toOption.get
     val Some((rUrl, _, warnings, errors)) = run.urlArticle(url)
     rUrl must be(url)

@@ -126,8 +126,22 @@ CONSTRUCT {
   def delete(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     sys.error("")
 
-  def getLatestRun(jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Option[Run]] = {
-    null
+  /* Assertion */
+
+  def addAssertion(orgId: OrganizationId, jobId: JobId, runId: RunId, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] =
+    addAssertion((orgId, jobId, runId).toUri, assertion)
+
+  def addAssertion(runUri: Rdf#URI, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+    import conf._
+    store.append(runUri, runUri -- ont.assertion ->- assertion.toPG)
+  }
+
+  /* addResourceResponse */
+
+  def addResourceResponse(rr: ResourceResponse)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+    import conf._
+    val runUri: Rdf#URI = rr.context.toUri
+    store.append(runUri, runUri -- ont.resourceResponse ->- rr.toPG)
   }
 
 }

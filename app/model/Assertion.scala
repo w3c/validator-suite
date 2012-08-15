@@ -24,22 +24,3 @@ case class Assertion(
     severity: AssertionSeverity,
     description: Option[String],
     timestamp: DateTime = DateTime.now(DateTimeZone.UTC))
-
-object Assertion {
-
-  def bananaSave(orgId: OrganizationId, jobId: JobId, runId: RunId, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] =
-    bananaSave((orgId, jobId, runId).toUri, assertion)
-
-  def bananaSave(runUri: Rdf#URI, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
-    import conf._
-    store.append(runUri, runUri -- ont.assertion ->- assertion.toPG)
-  }
-
-  def save(orgId: OrganizationId, jobId: JobId, runId: RunId, assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
-    save((orgId, jobId, runId).toUri, assertion)
-
-  def save(runUri: Rdf#URI, assertion: Assertion)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
-    bananaSave(runUri, assertion).toFutureVal
-
-
-}

@@ -100,7 +100,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       stay()
     }
     case Event(result: AssertorResult, _run) => {
-      result.assertions foreach { assertion => Assertion.save(_run.runUri, assertion) }
+      result.assertions foreach { assertion => Run.addAssertion(_run.runUri, assertion) }
       if (result.context._3 === _run.id) {
         tellEverybody(NewAssertorResult(result))
         stateOf(_run.withAssertorResponse(result))
@@ -124,7 +124,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         } yield Assertors.get(assertorName)
 
       logger.debug("<<< " + response.url)
-      ResourceResponse.save(response)
+      Run.addResourceResponse(response)
       tellEverybody(NewResource((orgId, jobId, _run.id), response))
 
       val runWithResponse = _run.withResourceResponse(response)
