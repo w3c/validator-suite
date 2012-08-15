@@ -1,6 +1,5 @@
 package controllers
 
-
 import org.w3.util._
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
@@ -34,15 +33,9 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         jobs <- Job.getFor(user.id)
-        triples <- FutureVal.sequence(
-            jobs.toSeq.sortBy(_.name).map(job => 
-              for {
-                run <- job.getRun()
-                lastCompleted <- job.getLastCompleted()
-              } yield (job, run, lastCompleted)
-            ))
+        jobViews <- JobView.fromJobs(jobs)
       } yield {
-        Ok(views.html.dashboard(triples, user)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.dashboard(Page(jobViews), user)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
@@ -52,12 +45,14 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
-        run <- job.getRun()
+        jobView <- JobView.fromJob(job)
+        resourceViews <- ResourceView.fromJob(job)
+        /*run <- job.getRun()
         lastCompleted <- job.getLastCompleted()
         // TODO: make it more efficient, and maybe move it inside Run
-        ars = run.urlArticles.filter(t => t._3 != 0 || t._4 != 0).sortBy(_._1.toString).sortBy(e => -e._4)
+        ars = run.urlArticles.filter(t => t._3 != 0 || t._4 != 0).sortBy(_._1.toString).sortBy(e => -e._4)*/
       } yield {
-        Ok(views.html.report(job, run, lastCompleted, ars.map(URLArticle.apply _), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.report(jobView, Page(resourceViews)/*job, run, lastCompleted, ars.map(URLArticle.apply _)*/, user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }

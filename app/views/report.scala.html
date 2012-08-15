@@ -1,11 +1,9 @@
-@(job: Job, 
-    run: Run,
-    lastCompleted: Option[org.joda.time.DateTime],
-    resources: Iterable[URLArticle],
+@(job: JobView,
+    page: Page[ResourceView],
     user: User,
     messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
-@libs.main("Validator Suite", 
+@libs.main("Validator Suite",
 	stylesheets = List("dashboard.css"),
 	scripts = List("model.js", "vs.js", "report.js", "dashboard.js"),
 	exec = """
@@ -29,13 +27,13 @@
 	<hr>
 	
 	<section id="jobs" class="list1">
-		@libs.jobs(List((job, run, lastCompleted)))
+		@libs.jobs(List(job))
 	</section>
 	
 	<hr>
 	
 	<section id="urlArticles" class="list" data-id="@job.id">
-		@libs.resources(resources)
+		@libs.resources(page.iterator)
 	</section>
 	
 	@**<section class="controls">
@@ -84,6 +82,19 @@
 	
 }{ @***** Footer *****@
 
-	@libs.footer()
+@libs.footer {
+<p class="page-legend">Viewing @page.firstIndex-@page.lastIndex of @page.totalSize results</p>
+<form method="get" class="page-form">
+    @if(page.perPage != page.defaultPerPage) {
+    <input type=hidden id="n" name="n" value="@page.perPage"/>
+    }
+    <label for="p">Go to page:</label>
+    <select id="p" name="p">
+        @for(i <- 1 until page.maxPage + 1) {
+        <option@if(page.current == i){ selected}>@i</option>}
+    </select>
+    <button type=submit>Go</button>
+</form>
+}
 
 }

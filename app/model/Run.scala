@@ -454,6 +454,7 @@ case class Run(
   def withAssertorResponse(response: AssertorResponse): Run = response match {
     case result: AssertorResult =>
       this.copy(
+        assertions = assertions ++ result.assertions,
         errors = errors + result.errors,
         warnings = warnings + result.warnings,
         pendingAssertions = pendingAssertions - 1) // lower bound is 0

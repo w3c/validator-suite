@@ -1,4 +1,4 @@
-@(triples: Iterable[(Job, Run, Option[org.joda.time.DateTime])] = None)
+@(jobs: Iterable[JobView] = None)
 		<aside>
 			<h2>Jobs</h2>
 			<h3>Definitions</h3>
@@ -26,7 +26,7 @@
 			</dl>
 		</aside>
 		
-		@triples.map { case (job, run, lastCompleted) =>
+		@jobs.map { case job =>
 		<article data-id="@job.id">
 			@** <h2>Job: @job.name</h2> **@
 			<dl>
@@ -34,45 +34,45 @@
 				<dd class="name"><a href="@routes.Jobs.show(job.id)">@job.name</a></dd>
 				
 				<dt>URL</dt>
-				<dd class="url">@job.strategy.entrypoint</dd>
+				<dd class="url">@job.url</dd>
 				
 				<dt>Status</dt>
-				<dd class="status">@run.activity.toString</dd>
+				<dd class="status">@job.status</dd>
 
 				<dt>Last Completed</dt>
 				<dd class="date">
-					@lastCompleted match{ 
+					@job.lastCompleted match{
 					  case Some(date) => {<time datetime="@date">@Helper.formatTime(date)</time>}
 					  case _ => {Never}
 					}
 				</dd>
 				
 				<dt>Warnings</dt>
-				<dd class="warnings">@run.warnings</dd>
+				<dd class="warnings">@job.warnings</dd>
 				
 				<dt>Errors</dt>
-				<dd class="errors">@run.errors</dd>
+				<dd class="errors">@job.errors</dd>
 				
 				<dt>Resources</dt>
-				<dd class="resources">@run.resources</dd>
+				<dd class="resources">@job.resources</dd>
 				
 				<dt>Max resources</dt>
-				<dd class="maxResources">@job.strategy.maxResources</dd>
+				<dd class="maxResources">@job.maxResources</dd>
 				
 				<dt>Health</dt>
 				<dd class="health">
-					<progress max=100 value=@run.health title="@run.health%">
-						@run.health%
+					<progress max=100 value=@job.health title="@job.health%">
+						@job.health%
 					</progress>
 				</dd>
 				
 				<dt>Actions</dt>
 				<dd class="actions">
 					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
-						@{run.activity match {
+						@**{run.activity match {
 						  case Running => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
 						  case Idle => {<button type="submit" name="action" value="run" class="run">run now</button>}
-						}}
+						}}**@
 						<button type="submit" name="action" value="delete" class="delete">delete</button>
 					</form>
 				</dd>

@@ -23,6 +23,8 @@ import AssertionsActor._
 
 class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
+  val logger = play.Logger.of(classOf[AssertionsActor])
+
   implicit val executionContext = conf.assertorExecutionContext
 
   var pendingAssertions: Ref[Int] = Ref(0)
@@ -33,13 +35,11 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
     pendingAssertions.single() += 1
     
-    FutureVal {
-      assertor.assert(response)
-    } onComplete {
+    assertor assert response onComplete {
       case _ => pendingAssertions.single() -= 1
     } onComplete {
-      case Failure(f) => self ! f
-      case Success(result) => self ! result
+      case Failure(f: AssertorFailure) => self ! f
+      case Success(result: AssertorResult) => self ! result
     }
     
   }
@@ -52,7 +52,6 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
     case result: AssertorResult => {
       // not sure why this is done this way (Alex)
-      //pendingAssertions -= 1
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
         val AssertorCall(assertorId, nextRI) = queue.dequeue()
@@ -61,7 +60,6 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
     }
 
     case result: AssertorFailure => {
-      //pendingAssertions -= 1
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
         val AssertorCall(assertorId, nextRI) = queue.dequeue()

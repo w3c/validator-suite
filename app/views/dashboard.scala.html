@@ -1,36 +1,49 @@
-@(triples: Iterable[(Job, Run, Option[org.joda.time.DateTime])] = None,
+@(page: Page[JobView],
     user: User)(implicit flash: Flash)
 
 @import org.w3.vs.actor._
 
 @libs.main("Validator Suite", 
-	stylesheets = List("dashboard.css"),
-	scripts = List("model.js", "vs.js", "dashboard.js"),
-	exec = """
-		$(function(){
-			window.Dashboard = new DashboardView();
-			window.VS.Socket.open();
-		});
-	"""){
+    stylesheets = List("dashboard.css"),
+    scripts = List("model.js", "vs.js", "dashboard.js"),
+    exec = """
+        $(function(){
+            window.Dashboard = new DashboardView();
+            window.VS.Socket.open();
+        });
+    """){
 
-	@***** Header ******@
+    @***** Header ******@
 
-	@libs.header()
+    @libs.header()
 
 }{ @***** Content *****@ 
 
-	@libs.admin(user)
-	@libs.navigation("Dashboard", List())
-	@libs.messages()
+    @libs.admin(user)
+    @libs.navigation("Dashboard", List())
+    @libs.messages()
 
-	<hr>
+    <hr>
 
-	<section id="jobs" class="list">
-		@libs.jobs(triples)
-	</section>
+    <section id="jobs" class="list">
+        @libs.jobs(page.iterator)
+    </section>
 
 }{ @***** Footer *****@
 
-	@libs.footer()
+    @libs.footer {
+    <p class="page-legend">Viewing @page.firstIndex-@page.lastIndex of @page.totalSize results</p>
+    <form method="get" class="page-form">
+        @if(page.perPage != page.defaultPerPage) {
+        <input type=hidden id="n" name="n" value="@page.perPage"/>
+        }
+        <label for="p">Go to page:</label>
+        <select id="p" name="p">
+        @for(i <- 1 until page.maxPage + 1) {
+            <option@if(page.current == i){ selected}>@i</option>}
+        </select>
+        <button type=submit>Go</button>
+    </form>
+    }
 
 }
