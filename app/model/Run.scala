@@ -16,12 +16,6 @@ import org.w3.banana.util._
 
 object Run {
 
-  def diff(l: Set[URL], r: Set[URL]): Set[URL] = {
-    val d1 = l -- r
-    val d2 = r -- l
-    d1 ++ d2
-  }
-
   def apply(id: RunId, job: Job, vo: RunVO)(implicit conf: VSConfiguration): Run = {
     import vo._
     Run(
@@ -158,7 +152,7 @@ case class Run(
     errors: Int = 0,
     warnings: Int = 0,
     invalidated: Int = 0,
-    pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
+    pendingAssertions: Int = 0) {
 
   val logger = play.Logger.of(classOf[Run])
 
