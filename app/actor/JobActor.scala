@@ -65,7 +65,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       }
     val run_ = if (run.noMoreUrlToExplore && run.pendingAssertions == 0) {
       val completed = run.copy(completedAt = Some(DateTime.now(DateTimeZone.UTC)))
-      completed.save()
+      Run.save(completed)
       completed
     } else run
     stayOrGoto using run_
@@ -91,16 +91,16 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       // do it only if necessary (ie. something has changed since last time)
       if (run ne lastRun) {
         // Should really the frequency of broadcast and the frequency of saves be coupled?
-        run.save()
+        Run.save(run)
         // tell the subscribers about the current run for this run
-        val msg = UpdateData(run.jobData, run.activity)
+        val msg = UpdateData(run.jobData, job.id, run.activity)
         tellEverybody(msg)
         lastRun = run
       }
       stay()
     }
     case Event(result: AssertorResult, _run) => {
-      result.assertions foreach { _.save(orgId, jobId, _run.id) }
+      result.assertions foreach { assertion => Assertion.save(_run.runUri, assertion) }
       if (result.context._3 === _run.id) {
         tellEverybody(NewAssertorResult(result))
         stateOf(_run.withAssertorResponse(result))
@@ -178,7 +178,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
 
   onTransition {
     case _ -> _ => {
-      val msg = UpdateData(nextStateData.jobData, nextStateData.activity)
+      val msg = UpdateData(nextStateData.jobData, job.id, nextStateData.activity)
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))

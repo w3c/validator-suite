@@ -141,7 +141,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     } {
       val assertion = newAssertion(URL("http://example.com/foo/"+i), assertorId, severity)
       /* println("addAssertions(): http://example.com/foo/"+i) */
-      assertion.bananaSave(org.id, job1.id, run1.id).await(3.seconds)
+      Assertion.bananaSave(org.id, job1.id, run1.id, assertion).await(3.seconds)
       run1 = run1.copy(assertions = run1.assertions + assertion)
     }
   }
@@ -269,28 +269,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     runs must be(Set(run1, run2, run3, run4))
   }
 
-//  I guess we don't need that anymore as everything is accessible directly under a Run
-
-/*
-  "retrieve Assertion" in {
-    val assertion = assertions(0)
-    val retrieved = Assertion.get(assertion.id).result(1.second)
-    retrieved must be === (Success(assertion))
-  }
-
-  "retrieve Context" in {
-    val context = contexts(0)
-    val retrieved = Context.get(context.id).result(1.second)
-    retrieved must be === (Success(context))
-  }
-
-  "get all assertions for a given a runId" in {
-    val retrievedAssertions = Assertion.getForRun(run1.id).result(2.second) getOrElse sys.error("")
-    retrievedAssertions must have size(nbAssertionsPerRun)
-    retrievedAssertions must contain (assertions(0))
-  }
-*/
-
   "get all URLArticles from a run" in {
     val run = Run.bananaGet(org.id, job1.id, run1.id).getOrFail(3.seconds)
     val urlArticles = run.urlArticles
@@ -313,7 +291,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         title = "some title",
         severity = Warning,
         description = Some("some description"))
-    assertion.bananaSave(run5.runUri).await(3.seconds)
+    Assertion.bananaSave(run5.runUri, assertion).await(3.seconds)
     val run = Run.bananaGet(run5.runUri).getOrFail(3.seconds)
     val retrieved = run.urlArticles
     run.urlArticles must have size (1)
@@ -333,7 +311,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         title = "some title",
         severity = Warning,
         description = Some("some description"))
-    assertion.bananaSave(run5.runUri).await(3.seconds)
+    Assertion.bananaSave(run5.runUri, assertion).await(3.seconds)
     val run = Run.bananaGet(run5.runUri).await(3.seconds).toOption.get
     val Some((rUrl, _, warnings, errors)) = run.urlArticle(url)
     rUrl must be(url)
@@ -360,24 +338,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     }
   }
 
-//  "retrieve ResourceResponse" in {
-//    val rr = resourceResponses(0)
-//    val retrieved = ResourceResponse.get(rr.runId, rr.id).result(1.second)
-//    retrieved must be (Success(rr))
-//  }
-//
-//  "get all resources for a given a runId" in {
-//    val rrs = ResourceResponse.getForRun(run1.id).result(2.second) getOrElse sys.error("fooooo")
-//    rrs must have size (nbHttpErrorsPerAssertions + nbHttpResponsesPerAssertions)
-//    rrs must contain (resourceResponses(0))
-//   }
-//
-//  "retrieve all context for a given assertionId" in {
-//    val assertion = assertions(0)
-//    val retrieved = Context.getForAssertion(assertion.id).result(1.second) getOrElse sys.error("test getForAssertion")
-//    retrieved must have size (2)
-//  }
-//
 //  "get history of JobDatas for a given jobId" in {
 //    // define test logic
 //  }

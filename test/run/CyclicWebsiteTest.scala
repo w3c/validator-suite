@@ -10,52 +10,41 @@ import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 
-/**
-  * Server 1 -> Server 2
-  * 1 GET       10 HEAD
-  */
-class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
-  
-  val j = 10
-  
+class CyclicWebsiteCrawlTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
+
   val strategy =
-    Strategy(
+    Strategy( 
       entrypoint=URL("http://localhost:9001/"),
       linkCheck=true,
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
   
   val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
-  
-  val servers = Seq(
-      Webserver(9001, (Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toServlet)),
-      Webserver(9002, Website(Seq()).toServlet)
-  )
 
-  "test OneGETxHEAD" in {
+  val circumference = 10
+  
+  val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet))
+  
+  "test cyclic" in {
+    
     (for {
       _ <- Organization.save(organizationTest)
       _ <- Job.save(job)
     } yield ()).result(1.second)
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
-    PathAware(http, http.path / "localhost_9002") ! SetSleepTime(0)
 
-    job.run()
+    val (orgId, jobId, runId) = job.run().getOrFail(1.second)
 
     job.listen(testActor)
-
+    
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, activity) if activity == Idle => {
-        Thread.sleep(100)
-        val run = job.getRun().result(1.second) getOrElse sys.error("getRun")
-        val rrs = ResourceResponse.bananaGetFor(run.runUri).await(3.seconds).toOption.get
-        rrs must have size (j + 1)
-        rrs.filter( _.url.authority == "localhost:9002" ) must have size (j)
+      case UpdateData(_, _, activity) if activity == Idle => {
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail(3.seconds)
+        rrs must have size (circumference + 1)
       }
     }
 
   }
-
+  
 }
-
