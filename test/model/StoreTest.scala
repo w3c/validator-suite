@@ -105,15 +105,15 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   // a job may have never completed, for example if the user has forced a new run
   // is this assumption ok? -> yes
   // or do we want to force a completedAt before switching to the new Job? this would be weird
-  var run1 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now, completedAt = None)
+  var run1 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now)
 
-  var run2 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(5), completedAt = Some(now.plusMinutes(7)))
+  var run2 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(5)).completedAt(now.plusMinutes(7))
 
-  var run3 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(10), completedAt = Some(now.plusMinutes(12)))
+  var run3 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(10)).completedAt(now.plusMinutes(12))
 
-  var run4 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(15), completedAt = None)
+  var run4 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(15))
 
-  var run5 = Run(id = (org.id, job5.id, RunId()), strategy = job5.strategy, createdAt = now, completedAt = None)
+  var run5 = Run(id = (org.id, job5.id, RunId()), strategy = job5.strategy, createdAt = now)
 
   val assertorIds = List(AssertorId(), AssertorId())
 
@@ -142,8 +142,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       val assertion = newAssertion(URL("http://example.com/foo/"+i), assertorId, severity)
       /* println("addAssertions(): http://example.com/foo/"+i) */
       Run.addAssertion(run1.runUri, assertion).await(3.seconds)
-      run1 = run1.copy(assertions = run1.assertions + assertion)
+      run1 = run1.withAssertions(List(assertion))
     }
+    Run.completedAt(run2.runUri, now.plusMinutes(7)).await(3.seconds)
+    Run.completedAt(run3.runUri, now.plusMinutes(12)).await(3.seconds)
   }
 
 //   val resourceResponses: Vector[ResourceResponse] = {
@@ -355,12 +357,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 }
 
 
-abstract class StoreTestVeryLight extends StoreTest(
-  nbUrlsPerAssertions = 0,
-  severities = Map(Error -> 0, Warning -> 0, Info -> 0),
-  nbHttpErrorsPerAssertions = 0,
-  nbHttpResponsesPerAssertions = 0,
-  nbJobDatas = 0)
+class StoreTestSuperLight extends StoreTest(
+  nbUrlsPerAssertions = 1,
+  severities = Map(Error -> 1, Warning -> 0, Info -> 0),
+  nbHttpErrorsPerAssertions = 1,
+  nbHttpResponsesPerAssertions = 1,
+  nbJobDatas = 1)
 
 class StoreTestLight extends StoreTest(
   nbUrlsPerAssertions = 10,

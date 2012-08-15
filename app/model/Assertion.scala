@@ -24,3 +24,20 @@ case class Assertion(
     severity: AssertionSeverity,
     description: Option[String],
     timestamp: DateTime = DateTime.now(DateTimeZone.UTC))
+
+object Assertion {
+
+  def countErrorsAndWarnings(assertions: Iterable[Assertion]): (Int, Int) = {
+    var errors = 0
+    var warnings = 0
+    assertions foreach { assertion =>
+      assertion.severity match {
+        case Error => errors += math.max(1, assertion.contexts.size)
+        case Warning => warnings += math.max(1, assertion.contexts.size)
+        case Info => ()
+      }
+    }
+    (errors, warnings)
+  }
+
+}

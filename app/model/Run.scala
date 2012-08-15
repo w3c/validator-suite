@@ -16,22 +16,6 @@ import org.w3.banana.util._
 
 object Run {
 
-  def apply(vo: RunVO): Run = {
-    import vo._
-    Run(
-      id = id,
-      strategy = strategy,
-      explorationMode = explorationMode,
-      assertions = assertions,
-      createdAt = createdAt,
-      completedAt = completedAt,
-      timestamp = timestamp,
-      pending = Set.empty,
-      resources = resources,
-      errors = errors,
-      warnings = warnings)
-  }
-
   def bananaGet(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): BananaFuture[Run] =
     bananaGet((orgId, jobId, runId).toUri)
 
@@ -43,22 +27,7 @@ object Run {
 
   def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Run] = {
     import conf._
-    val query = """
-CONSTRUCT {
-  ?s1 ?p1 ?o1 .
-} WHERE {
-  BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
-  {
-    graph ?runG { ?s1 ?p1 ?o1 }
-  }
-}
-"""
-    val construct = ConstructQuery(query, ont)
-    for {
-      graph <- store.executeConstruct(construct, Map("run" -> runUri))
-      pointedRun = PointedGraph[Rdf](runUri, graph)
-      runVO <- pointedRun.as[RunVO]
-    } yield Run(runVO)
+    store.get(runUri) flatMap { _.resource.as[Run] }
   }
 
   def getFor(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Run]] =
@@ -81,10 +50,8 @@ CONSTRUCT {
     val r = for {
       graph <- store.executeConstruct(construct, Map("job" -> jobUri))
       pointedJob = PointedGraph[Rdf](jobUri, graph)
-      vos <- (pointedJob / ont.run).asSet[RunVO]
-    } yield {
-      vos map { vo => Run(vo) }
-    }
+      runs <- (pointedJob / ont.run).asSet[Run]
+    } yield runs
     r.toFutureVal
   }
 
@@ -118,28 +85,46 @@ CONSTRUCT {
     store.append(runUri, runUri -- ont.resourceResponse ->- rr.toPG)
   }
 
+  def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy): Run =
+    new Run(id, strategy)
+
+  /* other events */
+
+  def completedAt(runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+    import conf._
+    store.append(runUri, runUri -- ont.completedAt ->- at)
+  }
+
+  def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): Run =
+    new Run(id, strategy, createdAt)
+
 }
 
 /**
  * Run represents a coherent state of for an Run, modelized as an FSM
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
-case class Run(
+case class Run private (
     id: (OrganizationId, JobId, RunId),
     strategy: Strategy,
+    createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
+    // from completion event, None at creation
+    completedAt: Option[DateTime] = None,
+    // from user event, ProActive by default at creation
     explorationMode: ExplorationMode = ProActive,
-    knownUrls: Set[URL] = Set.empty,
+    // based on scheduled fetches
     toBeExplored: List[URL] = List.empty,
     fetched: Set[URL] = Set.empty,
-    createdAt: DateTime,
-    assertions: Set[Assertion] = Set.empty,
-    completedAt: Option[DateTime],
-    timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
     pending: Set[URL] = Set.empty,
+    // based on added resources
+    knownUrls: Set[URL] = Set.empty,
     resources: Int = 0,
+    // based on added assertions
+    assertions: Set[Assertion] = Set.empty,
     errors: Int = 0,
     warnings: Int = 0,
     invalidated: Int = 0,
+    // based on scheduled assertions
     pendingAssertions: Int = 0) {
 
   val logger = play.Logger.of(classOf[Run])
@@ -149,6 +134,10 @@ case class Run(
   def jobData: JobData = JobData(resources, errors, warnings, createdAt, completedAt)
   
   def health: Int = jobData.health
+
+  /* combinators */
+
+  def completedAt(at: DateTime): Run = copy(completedAt = Some(at))
 
   /**
    * Represent an article on the byUrl report
@@ -195,10 +184,8 @@ case class Run(
 
   /* methods related to the data */
   
-  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(runUri, this.toVO.toPG)
+  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(runUri, this.toPG)
 
-  def toVO: RunVO = RunVO(id, strategy, explorationMode, createdAt, assertions, completedAt, timestamp, resources, errors, warnings)
-  
   def numberOfKnownUrls: Int = knownUrls.count { _.authority === mainAuthority }
 
   /**
@@ -317,13 +304,18 @@ case class Run(
     }
   )
 
+  def withAssertions(assertions: Iterable[Assertion]): Run = {
+    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(assertions)
+    this.copy(
+      assertions = this.assertions ++ assertions,
+      errors = this.errors + nbErrors,
+      warnings = this.warnings + nbWarnings)
+  }
+    
   def withAssertorResponse(response: AssertorResponse): Run = response match {
     case result: AssertorResult =>
-      this.copy(
-        assertions = assertions ++ result.assertions,
-        errors = errors + result.errors,
-        warnings = warnings + result.warnings,
-        pendingAssertions = pendingAssertions - 1) // lower bound is 0
+      this.withAssertions(result.assertions)
+          .copy(pendingAssertions = pendingAssertions - 1) // lower bound is 0
     case fail: AssertorFailure => this.copy(pendingAssertions = pendingAssertions - 1) // TODO? should do something about that
   }
 

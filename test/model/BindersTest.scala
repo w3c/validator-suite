@@ -114,17 +114,9 @@ class BindersTest extends WordSpec with MustMatchers {
     httpResponse.toPG.as[ResourceResponse] must be(Success(httpResponse))
   }
 
-  "RunVO" in {
-    testSerializeDeserialize(RunVOBinder) {
-      RunVO(
-        id = (OrganizationId(), JobId(), RunId()),
-        strategy = strategy,
-        createdAt = DateTime.now(DateTimeZone.UTC),
-        completedAt = Some(DateTime.now(DateTimeZone.UTC)),
-        resources = 100,
-        errors = 42,
-        warnings = 1)
-    }
+  "Run" in {
+    val run = Run(id = (OrganizationId(), JobId(), RunId()), strategy = strategy)
+    run.toPG.as[Run] must be(Success(run))
   }
 
 

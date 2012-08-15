@@ -115,7 +115,45 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   }
 
-  implicit lazy val RunVOBinder = pgbWithId[RunVO]("#thing")(ont.run, ont.strategy, ont.explorationMode, ont.createdAt, ont.assertions, ont.completedAt, ont.timestamp, ont.resources, ont.errors, ont.warnings)(RunVO.apply, RunVO.unapply)
+  implicit lazy val RunBinder: PointedGraphBinder[Rdf, Run] = new PointedGraphBinder[Rdf, Run] {
+
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, Run] = {
+//      println("**********")
+//      println(pointed.pointer)
+//      org.w3.banana.jena.JenaUtil.dump(pointed.graph)
+//      println("**********")
+      for {
+        id <- (pointed / ont.run).as[(OrganizationId, JobId, RunId)]
+        strategy <- (pointed / ont.strategy).as[Strategy]
+        createdAt <- (pointed / ont.createdAt).as[DateTime]
+        completedAt <- (pointed / ont.completedAt).asOption[DateTime]
+        explorationMode <- (pointed / ont.explorationMode).asOption[ExplorationMode] // <- WRONG
+        assertions <- (pointed / ont.assertion).asSet[Assertion]
+        rrs <- (pointed / ont.resourceResponse).asSet[ResourceResponse]
+      } yield {
+        var run = Run(id = id, strategy = strategy, createdAt = createdAt)
+        run = run.withAssertions(assertions)
+        rrs foreach { rr =>
+          rr match {
+            case HttpResponse(_, _, _, _, _, urls) => run = run.withNewUrlsToBeExplored(urls)._1
+            case _ => ()
+          }
+        }
+        completedAt foreach { at => run = run.completedAt(at) }
+        run
+      }
+    }
+
+    def toPointedGraph(run: Run): PointedGraph[Rdf] = (
+      ops.makeUri("#thing")
+      -- ont.run ->- run.id.toUri
+      -- ont.strategy ->- run.strategy
+      -- ont.createdAt ->- run.createdAt
+    )
+
+  }
+
+ //pgbWithId[Run]("#thing")(ont.run, ont.strategy, ont.explorationMode, ont.createdAt, ont.assertions, ont.completedAt, ont.timestamp, ont.resources, ont.errors, ont.warnings)(RunVO.apply, RunVO.unapply)
 
   implicit lazy val UserVOBinder = pgbWithId[UserVO]("#me")(ont.name, ont.email, ont.password, ont.organizationOpt)(UserVO.apply, UserVO.unapply)
 

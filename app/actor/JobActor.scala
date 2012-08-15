@@ -48,8 +48,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
   // TODO
   conf.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
 
-  var lastRun =
-    Run(id = (orgId, jobId, RunId()), strategy = strategy, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None) // TODO get last run data from the db?
+  var lastRun: Run = Run(id = (orgId, jobId, RunId()), strategy = strategy) // TODO get last run data from the db?
 
   startWith(lastRun.state, lastRun)
 
@@ -117,32 +116,37 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     }
     case Event((contextRun: RunId, response: ResourceResponse), _run) => {
 
-      logger.debug("<<< " + response.url)
-      Run.addResourceResponse(_run.runUri, response)
-      tellEverybody(NewResource(_run.id, response))
+      if (contextRun === _run.id._3) {
 
-      val runWithResponse = _run.withResourceResponse(response)
+        logger.debug("<<< " + response.url)
+        Run.addResourceResponse(_run.runUri, response)
+        tellEverybody(NewResource(_run.id, response))
 
-      (response, runWithResponse.explorationMode) match {
-        // we do something only if
-        // * we're ProActive
-        // * it's an HttpResponse (not a failure)
-        // * this is for the current run (btw, it's not an error when it's not)
-        case (httpResponse: HttpResponse, ProActive) if contextRun === runWithResponse.id._3 => {
-          val (runWithNewURLs, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
-          if (!newUrls.isEmpty)
-            logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, runWithResponse.numberOfKnownUrls))
-          // schedule assertions (why only if it's a GET?)
-          val assertors = strategy.getAssertors(httpResponse)
-          if (httpResponse.action === GET)
-            assertors foreach { assertor => assertionsActorRef ! AssertorCall(_run.id, assertor, httpResponse) }
-          // schedule new fetches
-          val runWithPendingAssertions =
-            runWithNewURLs.copy(pendingAssertions = runWithNewURLs.pendingAssertions + assertors.size)
-          stateOf(scheduleNextURLsToFetch(runWithPendingAssertions))
+        val runWithResponse = _run.withResourceResponse(response)
+
+        (response, runWithResponse.explorationMode) match {
+          // we do something only if
+          // * we're ProActive
+          // * it's an HttpResponse (not a failure)
+          case (httpResponse: HttpResponse, ProActive) => {
+            val (runWithNewURLs, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
+            if (!newUrls.isEmpty)
+              logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, runWithResponse.numberOfKnownUrls))
+            // schedule assertions (why only if it's a GET?)
+            val assertors = strategy.getAssertors(httpResponse)
+            if (httpResponse.action === GET)
+              assertors foreach { assertor => assertionsActorRef ! AssertorCall(_run.id, assertor, httpResponse) }
+            // schedule new fetches
+            val runWithPendingAssertions =
+              runWithNewURLs.copy(pendingAssertions = runWithNewURLs.pendingAssertions + assertors.size)
+            stateOf(scheduleNextURLsToFetch(runWithPendingAssertions))
+          }
+          case (errorResponse: ErrorResponse, ProActive) => stateOf(scheduleNextURLsToFetch(runWithResponse))
+          case _ => stateOf(runWithResponse)
         }
-        case (errorResponse: ErrorResponse, ProActive) => stateOf(scheduleNextURLsToFetch(runWithResponse))
-        case _ => stateOf(runWithResponse)
+      } else {
+        logger.debug("<<< " + response.url + " (from previous run)")
+        stateOf(_run)
       }
 
     }
@@ -155,7 +159,8 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     case Event(Refresh(_), run) => {
       // logger.debug("%s: received a Refresh" format shortId)
       val firstURLs = List(strategy.entrypoint)
-      val freshRun = Run(id = (orgId, jobId, RunId()), strategy = strategy, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None)
+      val freshRun =
+        Run(id = (orgId, jobId, RunId()), strategy = strategy)
       sender ! freshRun.id
       val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs)
       stateOf(scheduleNextURLsToFetch(runData))

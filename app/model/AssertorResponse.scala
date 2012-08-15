@@ -2,6 +2,8 @@ package org.w3.vs.model
 
 import org.w3.util._
 import org.joda.time._
+import scalaz._
+import scalaz.Scalaz._
 
 sealed trait AssertorResponse {
   val context: (OrganizationId, JobId, RunId)
@@ -23,12 +25,8 @@ case class AssertorResult(
     timestamp: DateTime = new DateTime,
     assertions: Iterable[Assertion]) extends AssertorResponse {
   
-  lazy val errors =
-    assertions.collect{ case a if a.severity == Error => scala.math.max(1, a.contexts.size) }.foldLeft(0)(_ + _)
+  lazy val (errors, warnings) = Assertion.countErrorsAndWarnings(assertions)
 
-  lazy val warnings =
-    assertions.collect{ case a if a.severity == Warning => scala.math.max(1, a.contexts.size) }.foldLeft(0)(_ + _)
-
-  lazy val isValid = ! assertions.exists(a => a.severity == Error || a.severity == Warning)
+  lazy val isValid = (errors === 0) && (warnings === 0)
   
 }
