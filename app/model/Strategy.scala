@@ -4,6 +4,8 @@ import org.w3.vs._
 import org.w3.util._
 import akka.dispatch._
 import org.w3.banana._
+import scalaz._
+import scalaz.Scalaz._
 
 case class Strategy (
     entrypoint: URL,
@@ -12,13 +14,11 @@ case class Strategy (
     filter: Filter = Filter.includeEverything,
     assertorSelector: AssertorSelector = AssertorSelector.simple) {
   
-  val mainAuthority: Authority = entrypoint.authority
-  
-  val authorityToObserve: Authority = mainAuthority
+  def mainAuthority: Authority = entrypoint.authority
   
   def getActionFor(url: URL): HttpAction =
     if (filter.passThrough(url)) {
-      if (url.authority == entrypoint.authority)
+      if (url.authority === entrypoint.authority)
         GET
       else if (linkCheck)
         HEAD
@@ -28,6 +28,4 @@ case class Strategy (
       IGNORE
     }
 
-  def noAssertor(): Strategy = this.copy(assertorSelector = AssertorSelector.noAssertor)
-  
 }

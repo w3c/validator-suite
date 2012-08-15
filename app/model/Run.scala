@@ -152,7 +152,7 @@ case class Run(
     errors: Int = 0,
     warnings: Int = 0,
     invalidated: Int = 0,
-    pendingAssertions: Int = 0) {
+    pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
 
   val logger = play.Logger.of(classOf[Run])
 

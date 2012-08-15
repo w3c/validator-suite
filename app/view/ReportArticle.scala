@@ -70,7 +70,7 @@ object JobView {
       run.errors,
       run.resources,
       job.strategy.maxResources,
-      run.health
+      run.jobData.health
     )
 }
 

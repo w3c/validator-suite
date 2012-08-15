@@ -23,7 +23,8 @@ class OneGETxHEADTest extends RunTestHelper(new DefaultProdConfiguration { }) wi
       entrypoint=URL("http://localhost:9001/"),
       linkCheck=true,
       maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
+      filter=Filter(include=Everything, exclude=Nothing),
+      assertorSelector = AssertorSelector.noAssertor)
   
   val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
   

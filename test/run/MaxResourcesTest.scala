@@ -19,7 +19,8 @@ class MaxResourcesTest extends RunTestHelper(new DefaultProdConfiguration { }) w
       entrypoint=URL("http://localhost:9001/"),
       linkCheck=true,
       maxResources = maxResources,
-      filter=Filter(include=Everything, exclude=Nothing)).noAssertor()
+      filter=Filter(include=Everything, exclude=Nothing),
+      assertorSelector = AssertorSelector.noAssertor)
   
   val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
   
