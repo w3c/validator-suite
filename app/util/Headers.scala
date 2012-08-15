@@ -8,9 +8,9 @@ class HeadersW(headers: Headers) {
 
   import HeadersW._
 
-  lazy val contentTypeHeader: Option[String] = headers get "Content-Type" flatMap { _.headOption }
-  lazy val mimetype: Option[String] = contentTypeHeader flatMap { extractMimeType(_) }
-  lazy val charset: Option[String] = contentTypeHeader flatMap { extractCharset(_)}
+  def contentTypeHeader: Option[String] = headers get "Content-Type" flatMap { _.headOption }
+  def mimetype: Option[String] = contentTypeHeader flatMap { extractMimeType(_) }
+  def charset: Option[String] = contentTypeHeader flatMap { extractCharset(_)}
 
 }
 
@@ -19,7 +19,13 @@ object Headers {
   val DEFAULT_CHARSET = "UTF-8"
 }
 
-object HeadersW {
+trait HeadersImplicits {
+
+ implicit def wrapHeaders(headers: Headers):HeadersW = new HeadersW(headers)
+
+}
+
+object HeadersW extends HeadersImplicits {
 
   val CONTENT_TYPE_REGEX = """^(\w+?/\w+?)(;.*)?$""".r
   val CHARSET_REGEX = """charset=(.*)$""".r
@@ -28,9 +34,6 @@ object HeadersW {
     import scala.collection.JavaConversions._
     mapAsScalaMap(headers).toMap map { case (k, l) => (k, asScalaBuffer(l).toList) }
   }
-
-  implicit def wrapHeaders(headers: Headers):HeadersW =
-    new HeadersW(headers)
 
   def extractMimeType(contentTypeHeader:String):Option[String] =
     CONTENT_TYPE_REGEX findFirstMatchIn contentTypeHeader map { _.group(1) }

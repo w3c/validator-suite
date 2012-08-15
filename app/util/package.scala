@@ -1,8 +1,8 @@
 package org.w3
 
-import java.net.{URL => jURL}
+import java.net.{ URL => jURL }
 
-package object util {
+package object util extends HeadersImplicits {
   
   type Host = String
   type Protocol = String

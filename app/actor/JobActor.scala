@@ -117,12 +117,6 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     }
     case Event((contextRun: RunId, response: ResourceResponse), _run) => {
 
-      def getAssertors(httpResponse: HttpResponse): List[FromHttpResponseAssertor] =
-        for {
-          mimetype <- httpResponse.headers.mimetype.toList if httpResponse.action === GET
-          assertorName <- strategy.assertorSelector.get(mimetype).flatten
-        } yield Assertors.get(assertorName)
-
       logger.debug("<<< " + response.url)
       Run.addResourceResponse(_run.runUri, response)
       tellEverybody(NewResource(_run.id, response))
@@ -139,7 +133,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
           if (!newUrls.isEmpty)
             logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, runWithResponse.numberOfKnownUrls))
           // schedule assertions (why only if it's a GET?)
-          val assertors = getAssertors(httpResponse)
+          val assertors = strategy.getAssertors(httpResponse)
           if (httpResponse.action === GET)
             assertors foreach { assertor => assertionsActorRef ! AssertorCall(_run.id, assertor, httpResponse) }
           // schedule new fetches

@@ -28,4 +28,13 @@ case class Strategy (
       IGNORE
     }
 
+  // TODO revise how this is done
+  import org.w3.vs.assertor._
+  def getAssertors(httpResponse: HttpResponse): List[FromHttpResponseAssertor] = {
+    for {
+      mimetype <- httpResponse.headers.mimetype.toList if httpResponse.action === GET
+      assertorName <- assertorSelector.get(mimetype).flatten
+    } yield Assertors.get(assertorName)
+  }
+
 }
