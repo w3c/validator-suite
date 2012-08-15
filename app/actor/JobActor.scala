@@ -39,7 +39,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
   /**
    * A shorten id for logs readability
    */
-  def shortId: String = job.id.shortId + "/" + stateData.id.shortId
+  def shortId: String = job.id.shortId + "/" + stateData.id._3.shortId
 
   implicit def strategy = job.strategy
 
@@ -49,7 +49,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
   conf.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
 
   var lastRun =
-    Run(id = RunId(), job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None) // TODO get last run data from the db?
+    Run(id = (orgId, jobId, RunId()), strategy = strategy, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None) // TODO get last run data from the db?
 
   startWith(lastRun.state, lastRun)
 
@@ -101,7 +101,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     }
     case Event(result: AssertorResult, _run) => {
       result.assertions foreach { assertion => Run.addAssertion(_run.runUri, assertion) }
-      if (result.context._3 === _run.id) {
+      if (result.context === _run.id) {
         tellEverybody(NewAssertorResult(result))
         stateOf(_run.withAssertorResponse(result))
       } else {
@@ -109,7 +109,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       }
     }
     case Event(failure: AssertorFailure, _run) => {
-      if (failure.context._3 === _run.id) {
+      if (failure.context === _run.id) {
         stateOf(_run.withAssertorResponse(failure))
       } else {
         stay()
@@ -125,7 +125,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
 
       logger.debug("<<< " + response.url)
       Run.addResourceResponse(_run.runUri, response)
-      tellEverybody(NewResource((orgId, jobId, _run.id), response))
+      tellEverybody(NewResource(_run.id, response))
 
       val runWithResponse = _run.withResourceResponse(response)
 
@@ -134,14 +134,14 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
         // * we're ProActive
         // * it's an HttpResponse (not a failure)
         // * this is for the current run (btw, it's not an error when it's not)
-        case (httpResponse: HttpResponse, ProActive) if contextRun === runWithResponse.id => {
+        case (httpResponse: HttpResponse, ProActive) if contextRun === runWithResponse.id._3 => {
           val (runWithNewURLs, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
           if (!newUrls.isEmpty)
             logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, runWithResponse.numberOfKnownUrls))
           // schedule assertions (why only if it's a GET?)
           val assertors = getAssertors(httpResponse)
           if (httpResponse.action === GET)
-            assertors foreach { assertor => assertionsActorRef ! AssertorCall((orgId, jobId, _run.id), assertor, httpResponse) }
+            assertors foreach { assertor => assertionsActorRef ! AssertorCall(_run.id, assertor, httpResponse) }
           // schedule new fetches
           val runWithPendingAssertions =
             runWithNewURLs.copy(pendingAssertions = runWithNewURLs.pendingAssertions + assertors.size)
@@ -161,8 +161,8 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     case Event(Refresh(_), run) => {
       // logger.debug("%s: received a Refresh" format shortId)
       val firstURLs = List(strategy.entrypoint)
-      val freshRun = Run(id = RunId(), job = job, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None)
-      sender ! (orgId, jobId, freshRun.id)
+      val freshRun = Run(id = (orgId, jobId, RunId()), strategy = strategy, createdAt = DateTime.now(DateTimeZone.UTC), completedAt = None)
+      sender ! freshRun.id
       val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs)
       stateOf(scheduleNextURLsToFetch(runData))
     }
@@ -196,28 +196,9 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     tellListeners(msg)
   }
 
-  /**
-   * tries to get the latest snapshot, then replays the events that happened on it
-   */
-//  private final def initialConditions(): Run = store.latestSnapshotFor(job.id).waitResult() match {
-//    case None => Run.makeFresh(jobId = job.id, strategy = strategy)
-//    case Some(snapshot) => replayEventsOn(Run(strategy, snapshot), Some(snapshot.createdAt))
-//  }
-
-//  final private def replayEventsOn(_run: Run, afterOpt: Option[DateTime]): Run = {
-//    var run = _run
-//    store.listResourceInfos(job.id, after = afterOpt).waitResult() foreach { resourceInfo =>
-//      run = run.withCompletedFetch(resourceInfo.url)
-//    }
-//    store.listAssertorResponses(job.id, after = afterOpt).waitResult() foreach { assertorResult =>
-//      run = run.withAssertorResponse(assertorResult)
-//    }
-//    run
-//  }
-
   private final def scheduleNextURLsToFetch(run: Run): Run = {
     val (newObservation, explores) = run.takeAtMost(MAX_URL_TO_FETCH)
-    val runId = run.id
+    val runId = run.id._3
     explores foreach { explore => fetch(explore, runId) }
     newObservation
   }

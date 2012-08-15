@@ -48,14 +48,15 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
+  val strategy =
+    Strategy(
+      entrypoint = URL("http://example.com/foo"),
+      linkCheck = true,
+      maxResources = 100,
+      filter = Filter.includeEverything,
+      assertorSelector = AssertorSelector("custom-assertor-selector", Map("nawak" -> List("cssval", "valnu"))))
+
   "JobVO" in {
-    val strategy =
-      Strategy(
-        entrypoint = URL("http://example.com/foo"),
-        linkCheck = true,
-        maxResources = 100,
-        filter = Filter.includeEverything,
-        assertorSelector = AssertorSelector("custom-assertor-selector", Map("nawak" -> List("cssval", "valnu"))))
     testSerializeDeserialize(JobVOBinder) {
       JobVO(
         name = "foo",
@@ -116,7 +117,8 @@ class BindersTest extends WordSpec with MustMatchers {
   "RunVO" in {
     testSerializeDeserialize(RunVOBinder) {
       RunVO(
-        context = (OrganizationId(), JobId()),
+        id = (OrganizationId(), JobId(), RunId()),
+        strategy = strategy,
         createdAt = DateTime.now(DateTimeZone.UTC),
         completedAt = Some(DateTime.now(DateTimeZone.UTC)),
         resources = 100,

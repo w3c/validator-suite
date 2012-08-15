@@ -16,11 +16,11 @@ import org.w3.banana.util._
 
 object Run {
 
-  def apply(id: RunId, job: Job, vo: RunVO)(implicit conf: VSConfiguration): Run = {
+  def apply(vo: RunVO): Run = {
     import vo._
     Run(
       id = id,
-      job = job,
+      strategy = strategy,
       explorationMode = explorationMode,
       assertions = assertions,
       createdAt = createdAt,
@@ -45,21 +45,11 @@ object Run {
     import conf._
     val query = """
 CONSTRUCT {
-  ?run ont:job ?job .
   ?s1 ?p1 ?o1 .
-  ?s2 ?p2 ?o2
 } WHERE {
   BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
-  graph ?runG { ?run ont:job ?job } .
-  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
   {
-    { 
-      graph ?jobG { ?s1 ?p1 ?o1 }
-    }
-      UNION
-    {
-      graph ?runG { ?s2 ?p2 ?o2 }
-    }
+    graph ?runG { ?s1 ?p1 ?o1 }
   }
 }
 """
@@ -67,13 +57,8 @@ CONSTRUCT {
     for {
       graph <- store.executeConstruct(construct, Map("run" -> runUri))
       pointedRun = PointedGraph[Rdf](runUri, graph)
-      ids <- pointedRun.as[(OrganizationId, JobId, RunId)]
       runVO <- pointedRun.as[RunVO]
-      jobVO <- (pointedRun / ont.job).as[JobVO]
-    } yield {
-      val job = Job(ids._2, jobVO)
-      Run(ids._3, job, runVO)
-    }
+    } yield Run(runVO)
   }
 
   def getFor(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Run]] =
@@ -85,37 +70,27 @@ CONSTRUCT {
 CONSTRUCT {
   ?job ont:run ?run .
   ?s1 ?p1 ?o1 .
-  ?s2 ?p2 ?o2
 } WHERE {
   BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
-  {
-    { 
-      graph ?jobG { ?s1 ?p1 ?o1 }
-    }
-      UNION
-    {
-      graph ?jobG { ?job ont:run ?run } .
-      BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
-      graph ?runG { ?s2 ?p2 ?o2 }
-    }
-  }
+  graph ?jobG { ?job ont:run ?run } .
+  BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
+  graph ?runG { ?s1 ?p1 ?o1 }
 }
 """
     val construct = ConstructQuery(query, ont)
     val r = for {
       graph <- store.executeConstruct(construct, Map("job" -> jobUri))
       pointedJob = PointedGraph[Rdf](jobUri, graph)
-      job <- pointedJob.as2[(OrganizationId, JobId), JobVO].map{ case ((_, id), vo) => Job(id, vo) }
-      it <- (pointedJob / ont.run).asSet2[(OrganizationId, JobId, RunId), RunVO]
+      vos <- (pointedJob / ont.run).asSet[RunVO]
     } yield {
-      it map { case ((_, _, runId), runVO) => Run(runId, job, runVO) }
+      vos map { vo => Run(vo) }
     }
     r.toFutureVal
   }
 
   def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
-    val jobUri = run.toVO.context.toUri
+    val jobUri = (run.id._1, run.id._2).toUri
     val r = for {
       _ <- store.put(run.ldr)
       _ <- store.append(jobUri, jobUri -- ont.run ->- run.runUri)
@@ -150,8 +125,8 @@ CONSTRUCT {
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
 case class Run(
-    id: RunId,
-    job: Job,
+    id: (OrganizationId, JobId, RunId),
+    strategy: Strategy,
     explorationMode: ExplorationMode = ProActive,
     knownUrls: Set[URL] = Set.empty,
     toBeExplored: List[URL] = List.empty,
@@ -165,21 +140,16 @@ case class Run(
     errors: Int = 0,
     warnings: Int = 0,
     invalidated: Int = 0,
-    pendingAssertions: Int = 0)(implicit conf: VSConfiguration) {
+    pendingAssertions: Int = 0) {
 
   val logger = play.Logger.of(classOf[Run])
 
-  val runUri = (job.organization, job.id, id).toUri
-
-  lazy val ldr: LinkedDataResource[Rdf] =
-    LinkedDataResource(runUri, this.toVO.toPG)
+  val runUri = id.toUri
 
   def jobData: JobData = JobData(resources, errors, warnings, createdAt, completedAt)
   
   def health: Int = jobData.health
 
-  def strategy = job.strategy
-  
   /**
    * Represent an article on the byUrl report
    * (resource url, last assertion timestamp, total warnings, total errors)
@@ -225,7 +195,9 @@ case class Run(
 
   /* methods related to the data */
   
-  def toVO: RunVO = RunVO((job.organization, job.id), explorationMode, createdAt, assertions, completedAt, timestamp, resources, errors, warnings)
+  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(runUri, this.toVO.toPG)
+
+  def toVO: RunVO = RunVO(id, strategy, explorationMode, createdAt, assertions, completedAt, timestamp, resources, errors, warnings)
   
   def numberOfKnownUrls: Int = knownUrls.count { _.authority === mainAuthority }
 

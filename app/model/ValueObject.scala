@@ -18,7 +18,8 @@ case class OrganizationVO (
   admin: UserId) extends ValueObject
     
 case class RunVO (
-    context: (OrganizationId, JobId),
+    id: (OrganizationId, JobId, RunId),
+    strategy: Strategy,
     explorationMode: ExplorationMode = ProActive,
     // when the underlying Run was created/started
     createdAt: DateTime,

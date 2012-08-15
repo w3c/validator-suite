@@ -115,7 +115,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   }
 
-  implicit lazy val RunVOBinder = pgbWithId[RunVO]("#thing")(ont.job, ont.explorationMode, ont.createdAt, ont.assertions, ont.completedAt, ont.timestamp, ont.resources, ont.errors, ont.warnings)(RunVO.apply, RunVO.unapply)
+  implicit lazy val RunVOBinder = pgbWithId[RunVO]("#thing")(ont.run, ont.strategy, ont.explorationMode, ont.createdAt, ont.assertions, ont.completedAt, ont.timestamp, ont.resources, ont.errors, ont.warnings)(RunVO.apply, RunVO.unapply)
 
   implicit lazy val UserVOBinder = pgbWithId[UserVO]("#me")(ont.name, ont.email, ont.password, ont.organizationOpt)(UserVO.apply, UserVO.unapply)
 
