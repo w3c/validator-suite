@@ -17,7 +17,7 @@
 	border: solid white;
 	border-width: 1px 1px 1px 0;
 	padding: 14px 10px;
-	text-align: center;
+	//text-align: center;
 }
 .list aside dt:hover:not(.health):not(.actions) {
 	background: rgba(0,0,0,0.08);
@@ -88,4 +88,38 @@
 	color:#0066CC;
 	line-height:1em;
 	font-size:0.85em;
+}
+
+.list .sort a {
+    display: inline-block;
+    vertical-align: middle;
+    width: 0;
+    height: 0;
+    opacity:0.7;
+    margin-left:2px;
+}
+.list .sort a.ascend {
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 7px solid #000;
+}
+.list .sort a.descend {
+     border-left: 4px solid transparent;
+     border-right: 4px solid transparent;
+     border-bottom: 7px solid #000;
+ }
+
+.list dt {
+    .sort {
+        float:right;
+        font-size: 0;
+        line-height: 13px;
+    }
+    .sort a {
+        visibility: hidden;
+    }
+    .sort .current {
+        visibility: visible;
+    }
+    &:hover .sort a {visibility: visible}
 }

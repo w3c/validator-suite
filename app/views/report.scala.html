@@ -8,9 +8,9 @@
 	scripts = List("model.js", "vs.js", "report.js", "dashboard.js"),
 	exec = """
 		$(function () {
-			window.Dashboard = new DashboardView();
-			window.Report = new ReportView();
-			VS.Socket.open({url: "/jobs/ws/""" + job.id + """ "});
+			//window.Dashboard = new DashboardView();
+			//window.Report = new ReportView();
+			//VS.Socket.open({url: "/jobs/ws/""" + job.id + """ "});
 		});
 	"""){
    
@@ -26,8 +26,8 @@
 	
 	<hr>
 	
-	<section id="jobs" class="list1">
-		@libs.jobs(List(job))
+	<section id="jobs" class="list">
+		@libs.jobs(Page(List(job)))
 	</section>
 	
 	<hr>
@@ -85,7 +85,7 @@
 @libs.footer {
 <p class="page-legend">Viewing @page.firstIndex-@page.lastIndex of @page.totalSize results</p>
 <form method="get" class="page-form">
-    @if(page.perPage != page.defaultPerPage) {
+    @if(page.perPage != Page.defaultPerPage) {
     <input type=hidden id="n" name="n" value="@page.perPage"/>
     }
     <label for="p">Go to page:</label>

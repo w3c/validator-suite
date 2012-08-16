@@ -8,8 +8,8 @@
     scripts = List("model.js", "vs.js", "dashboard.js"),
     exec = """
         $(function(){
-            window.Dashboard = new DashboardView();
-            window.VS.Socket.open();
+            //window.Dashboard = new DashboardView();
+            //window.VS.Socket.open();
         });
     """){
 
@@ -26,7 +26,7 @@
     <hr>
 
     <section id="jobs" class="list">
-        @libs.jobs(page.iterator)
+        @libs.jobs(page) @**.iterator, Some((page.current, page.perPage)))**@
     </section>
 
 }{ @***** Footer *****@
@@ -34,7 +34,7 @@
     @libs.footer {
     <p class="page-legend">Viewing @page.firstIndex-@page.lastIndex of @page.totalSize results</p>
     <form method="get" class="page-form">
-        @if(page.perPage != page.defaultPerPage) {
+        @if(page.perPage != Page.defaultPerPage) {
         <input type=hidden id="n" name="n" value="@page.perPage"/>
         }
         <label for="p">Go to page:</label>

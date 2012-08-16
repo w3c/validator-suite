@@ -6,6 +6,7 @@ import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
 import org.w3.vs.view._
+import org.w3.vs.view.View._
 import org.w3.vs.actor.message._
 
 import play.api.i18n.Messages
