@@ -1,3 +1,53 @@
+
+# JobView
+job.name=Job Name
+job.name.detail=The name of the job
+job.url=URL
+job.url.detail=The seed URL for this job, entry point of the crawler
+job.status=Status
+job.status.detail=The current status of the job, either Idle or Running.
+job.completed=Last completed
+job.completed.detail=The date the job was last completed
+job.warnings=Warnings
+job.warnings.detail=The total number or warnings reported by the job's assertors
+job.errors=Errors
+job.errors.detail=The total number of errors reported by the job's assertors
+job.resources=Resources
+job.resources.detail=The total number of resources that have been considered by the crawler
+job.maxResources=Max resources
+job.maxResources.detail=The maximum number of resources to crawl
+job.health=Health
+job.health.detail=An indicator of the overall quality of the job's resources
+job.actions=Actions
+job.actions.detail=Actions to perform on the job
+
+# ResourceView
+resource.url=URL
+resource.url.detail= TODO
+resource.validated=Last validated
+resource.validated.detail= TODO
+resource.warnings=Warnings
+resource.warnings.detail= TODO
+resource.errors=Errors
+resource.errors.detail= TODO
+
+# AssertionView
+assertion.assertor=Assertor
+assertion.assertor.detail= TODO
+assertion.severity=Severity
+assertion.severity.detail= TODO
+assertion.occurrences=Occurrences
+assertion.occurrences.detail= TODO
+assertion.message=Message
+assertion.message.detail= TODO
+assertion.description=Description
+assertion.description.detail= TODO
+assertion.validated=Validated on
+assertion.validated.detail= TODO
+assertion.context=Contexts
+assertion.context.detail= TODO
+
+
 # Application
 application.loggedOut=You''ve been logged out
 application.invalidCredentials=Username or password did not match.
@@ -16,7 +66,5 @@ jobs.deleted=Job {0} deleted
 # Exceptions
 exceptions.store=Store Exception: {0}
 exceptions.unexpected=Unexpected Exception: {0}
-
 error.timeout=Request timed out
-
 debug.unexpected=Unexpected: {0}

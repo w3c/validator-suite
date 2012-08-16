@@ -3,7 +3,6 @@ package org.w3.vs.view
 import org.joda.time.DateTime
 import play.api.templates.Html
 import org.w3.util._
-
 import org.w3.vs.model._
 import org.w3.vs.assertor.Assertor
 
@@ -43,24 +42,15 @@ object AssertionView {
     )
   }
 
-}
-
-case class ContextView(
-    line: Option[Int],
-    column: Option[Int],
-    content: Option[Html]) extends View
-
-object ContextView {
-
-  def apply(context: Context): ContextView = {
-    ContextView(
-      context.line,
-      context.column,
-      context.content match {
-        case "" => None
-        case s => Some(Html(s))
-      }
-    )
-  }
+  val params = Seq[String](
+    "assertor",
+    "severity",
+    "occurrences",
+    "message",
+    "description",
+    "validated",
+    "context"
+  )
 
 }
+

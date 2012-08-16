@@ -1,83 +1,16 @@
 @(page: Page[JobView])
 
-		<aside>
-			<h2>Jobs</h2>
-			<h3>Definitions</h3>
-			<dl>
-				<dt class="name"><dfn>Job Name</dfn> @libs.sort(page, "name")</dt>
-				<dd>The name of the job</dd>
-				<dt class="url"><dfn>URL</dfn> @libs.sort(page, "url")</dt>
-				<dd>The seed URL for this job, entry point of the crawler</dd>
-				<dt class="status"><dfn>Status</dfn> @libs.sort(page, "status")</dt>
-				<dd>The current status of the job, either Idle or Running.</dd>
-				<dt class="completed"><dfn>Last completed</dfn> @libs.sort(page, "completed")</dt>
-				<dd>The date the job was last completed</dd>
-				<dt class="warnings"><dfn>Warnings</dfn> @libs.sort(page, "warnings")</dt>
-				<dd>The total number or warnings reported by the job's assertors</dd>
-				<dt class="errors"><dfn>Errors</dfn> @libs.sort(page, "errors")</dt>
-				<dd>The total number of errors reported by the job's assertors</dd>
-				<dt class="resources"><dfn>Resources</dfn> @libs.sort(page, "resources")</dt>
-				<dd>The total number of resources that have been considered by the crawler</dd>
-				<dt class="maxResources"><dfn>Max resources</dfn> @libs.sort(page, "maxResources")</dt>
-				<dd>The maximum number of resources to crawl</dd>
-				<dt class="health"><dfn>Health</dfn> @libs.sort(page, "health")</dt>
-				<dd>An indicator of the overall quality of the job's resources</dd>
-				<dt class="actions"><dfn>Actions</dfn></dt>
-				<dd>Actions to perform on the job</dd>
-			</dl>
-		</aside>
-		
-		@page.iterator.map { case job =>
-        <hr>
-		<article data-id="@job.id">
-			@** <h2>Job: @job.name</h2> **@
-			<dl>
-				<dt>Job Name</dt>
-				<dd class="name"><a href="@routes.Jobs.show(job.id)">@job.name</a></dd>
-				
-				<dt>URL</dt>
-				<dd class="url">@job.url</dd>
-				
-				<dt>Status</dt>
-				<dd class="status">@job.status</dd>
+        <aside>
+            <h2>Jobs</h2>
+            <h3>Definitions</h3>
+            <dl>
+                @JobView.params.map {param =>
+                <dt class="@param"><dfn>@Messages("job.%s" format param)</dfn> @libs.sort(page, param)</dt>
+                <dd>@Messages("job.%s.detail" format param)</dd>
+                }
+                <dt class="actions"><dfn>@Messages("job.actions")</dfn></dt>
+                <dd>@Messages("job.actions.detail")</dd>
+            </dl>
+        </aside>
 
-				<dt>Last Completed</dt>
-				<dd class="completed">
-					@job.lastCompleted match{
-					  case Some(date) => {<time datetime="@date">@Helper.formatTime(date)</time>}
-					  case _ => {Never}
-					}
-				</dd>
-				
-				<dt>Warnings</dt>
-				<dd class="warnings">@job.warnings</dd>
-				
-				<dt>Errors</dt>
-				<dd class="errors">@job.errors</dd>
-				
-				<dt>Resources</dt>
-				<dd class="resources">@job.resources</dd>
-				
-				<dt>Max resources</dt>
-				<dd class="maxResources">@job.maxResources</dd>
-				
-				<dt>Health</dt>
-				<dd class="health">
-					<progress max=100 value=@job.health title="@job.health%">
-						@job.health%
-					</progress>
-				</dd>
-				
-				<dt>Actions</dt>
-				<dd class="actions">
-					<form action="@routes.Jobs.dispatcher(job.id)" method="post">
-						@{job.status match {
-						  case "running" => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
-						  case "idle" => {<button type="submit" name="action" value="run" class="run">run now</button>}
-						}}
-						<button type="submit" name="action" value="delete" class="delete">delete</button>
-					</form>
-				</dd>
-			</dl>
-		</article>
-		}
+        @page.iterator.map { case job => @model.job(job)}

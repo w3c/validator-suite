@@ -1,27 +1,29 @@
-@(assertors: Iterable[AssertorArticle] = None)
-		<aside>
-			<h2>Assertors</h2>
-			<h3>Definitions</h3>
-			<dl>
-			   <dt class="assertor"><dfn>Assertor</dfn></dt>
-				<dd>Name of the assertor</dd>
-				<dt class="warnings"><dfn>Warnings</dfn></dt>
-				<dd>Total number of warnings reported by this assertor for the current job</dd>
-				<dt class="errors"><dfn>Errors</dfn></dt>
-				<dd>Total number of errors reported by this assertor for the current job</dd>
-			</dl>
-		</aside>
-		
-		@assertors.map { assertor =>
-		<hr>
-		<article data-id="@assertor.id">
-			<dl>
-				<dt>Assertor</dt>
-				<dd class="assertor">@assertor.name</dd>
-				<dt>Warnings</dt>
-				<dd class="warnings">@assertor.warnings</dd>
-				<dt>Errors</dt>
-				<dd class="errors">@assertor.errors</dd>
-			</dl>
-		</article>
-		}
+@(assertors: String = "")
+        @**<aside>
+            <h2>Assertors</h2>
+            <h3>Definitions</h3>
+            <dl>
+               <dt class="assertor"><dfn>Assertor</dfn></dt>
+                <dd>Name of the assertor</dd>
+                <dt class="warnings"><dfn>Warnings</dfn></dt>
+                <dd>Total number of warnings reported by this assertor for the current job</dd>
+                <dt class="errors"><dfn>Errors</dfn></dt>
+                <dd>Total number of errors reported by this assertor for the current job</dd>
+            </dl>
+        </aside>
+        
+        @assertors.map { assertor =>
+        <hr>
+        <article data-id="@assertor.id">
+            <dl>
+                <dt>Assertor</dt>
+                <dd class="assertor">@assertor.name</dd>
+                <dt>Warnings</dt>
+                <dd class="warnings">@assertor.warnings</dd>
+                <dt>Errors</dt>
+                <dd class="errors">@assertor.errors</dd>
+            </dl>
+        </article>
+        }
+
+**@

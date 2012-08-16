@@ -1,0 +1,16 @@
+@(resource: ResourceView)
+<article>
+    <dl>
+        <dt>URL</dt>
+        <dd class="url"><a href="@Helper.encode(resource.url)">@resource.url</a></dd>
+
+        <dt>Last validated</dt>
+        <dd class="time"><time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time></dd>
+
+        <dt>Warnings</dt>
+        <dd class="warnings">@resource.warnings</dd>
+
+        <dt>Errors</dt>
+        <dd class="errors">@resource.errors</dd>
+    </dl>
+</article>

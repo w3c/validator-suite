@@ -21,4 +21,11 @@ object ResourceView {
     }
   }
 
+  val params = Seq[String](
+    "url",
+    "validated",
+    "warnings",
+    "errors"
+  )
+
 }

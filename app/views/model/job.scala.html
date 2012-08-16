@@ -1,0 +1,53 @@
+@(job: JobView)
+
+<article data-id="@job.id">
+    @** <h2>Job: @job.name</h2> **@
+    <dl>
+        <dt>Job Name</dt>
+        <dd class="name"><a href="@routes.Jobs.show(job.id)">@job.name</a></dd>
+
+        <dt>URL</dt>
+        <dd class="url">@job.url</dd>
+
+        <dt>Status</dt>
+        <dd class="status">@job.status</dd>
+
+        <dt>Last Completed</dt>
+        <dd class="completed">
+        @job.lastCompleted match{
+          case Some(date) => {<time datetime="@date">@Helper.formatTime(date)</time>}
+          case _ => {Never}
+        }
+        </dd>
+
+        <dt>Warnings</dt>
+        <dd class="warnings">@job.warnings</dd>
+
+        <dt>Errors</dt>
+        <dd class="errors">@job.errors</dd>
+
+        <dt>Resources</dt>
+        <dd class="resources">@job.resources</dd>
+
+        <dt>Max resources</dt>
+        <dd class="maxResources">@job.maxResources</dd>
+
+        <dt>Health</dt>
+        <dd class="health">
+            <progress max=100 value=@job.health title="@job.health%">
+                @job.health%
+            </progress>
+        </dd>
+
+        <dt>Actions</dt>
+        <dd class="actions">
+            <form action="@routes.Jobs.dispatcher(job.id)" method="post">
+                @{job.status match {
+                  case "running" => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
+                  case "idle" => {<button type="submit" name="action" value="run" class="run">run now</button>}
+                }}
+                <button type="submit" name="action" value="delete" class="delete">delete</button>
+            </form>
+        </dd>
+    </dl>
+</article>
