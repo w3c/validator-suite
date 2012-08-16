@@ -1,9 +1,8 @@
 package org.w3.vs.view
 
-import org.w3.vs.model.{Run, Job, JobId}
+import org.w3.vs.model.{Job, JobId}
 import org.w3.util.{FutureVal, URL}
 import org.joda.time.DateTime
-import collection.immutable.{SortedSet, SortedMap, HashMap}
 
 case class JobView(
     id: JobId,
@@ -24,28 +23,26 @@ object JobView {
 
   def fromJob(job: Job): FutureVal[Exception, JobView] = {
     for {
-      run <- job.getRun()
+      activity <- job.getActivity()
       lastCompleted <- job.getLastCompleted()
-    } yield JobView(job, run, lastCompleted)
+      data <- job.getData()
+    } yield JobView(
+        job.id,
+        job.name,
+        job.strategy.entrypoint,
+        activity.toString,
+        lastCompleted,
+        data.warnings,
+        data.errors,
+        data.resources,
+        job.strategy.maxResources,
+        data.health
+      )
   }
 
   def fromJobs(jobs: Iterable[Job]): FutureVal[Exception, Iterable[JobView]] = {
     FutureVal.sequence(jobs.map(fromJob _))
   }
-
-  def apply(job: Job, run: Run, lastCompleted: Option[DateTime]): JobView =
-    JobView(
-      job.id,
-      job.name,
-      job.strategy.entrypoint,
-      run.activity.toString,
-      lastCompleted,
-      run.warnings,
-      run.errors,
-      run.resources,
-      job.strategy.maxResources,
-      run.jobData.health
-    )
 
   val params = Seq[String](
     "name",

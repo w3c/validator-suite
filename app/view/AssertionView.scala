@@ -25,9 +25,7 @@ object AssertionView {
   import org.w3.util.FutureVal._
 
   def fromJob(job: Job): FutureVal[Exception, Iterable[AssertionView]] = {
-    job.getRun() map {
-      run => run.assertions.toIterable.map(apply(_))
-    }
+    job.getAssertions().map{_.map(apply(_))}
   }
 
   def apply(assertion: Assertion): AssertionView = {

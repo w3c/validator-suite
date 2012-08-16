@@ -1,8 +1,8 @@
 package org.w3.vs.view
 
 import org.joda.time.DateTime
-import org.w3.util.{FutureVal, URL}
-import org.w3.vs.model.Job
+import org.w3.util._
+import org.w3.vs.model.{Info, Warning, Error, Job}
 
 case class ResourceView(
     url: URL,
@@ -12,12 +12,21 @@ case class ResourceView(
 
 object ResourceView {
 
-  def apply(t: (URL, DateTime, Int, Int)): ResourceView =
-    ResourceView(t._1, t._2, t._3, t._4)
-
   def fromJob(job: Job): FutureVal[Exception, Iterable[ResourceView]] = {
-    job.getRun() map {
-      run => run.urlArticles map ResourceView.apply _
+    job.getAssertions() map {
+      _.groupBy(_.url) map { case (url, as) =>
+        val last = as.maxBy(_.timestamp).timestamp
+        var errors = 0
+        var warnings = 0
+        as foreach { a =>
+          a.severity match {
+            case Error => errors += math.max(1, a.contexts.size)
+            case Warning => warnings += math.max(1, a.contexts.size)
+            case Info => ()
+          }
+        }
+        ResourceView(url, last, warnings, errors)
+      }
     }
   }
 

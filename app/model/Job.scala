@@ -4,7 +4,6 @@ import java.nio.channels.ClosedChannelException
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.akkaext._
 import org.w3.vs.actor.message._
-import org.w3.vs.VSConfiguration
 import akka.actor._
 import play.api.libs.iteratee._
 import play.Logger
@@ -18,7 +17,6 @@ import org.w3.vs._
 import diesel._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
-import org.w3.banana.util._
 
 case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
@@ -38,11 +36,26 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
   def getOrganization(): FutureVal[Exception, Organization] = Organization.get(orgUri)
     
-  def getRun(): FutureVal[Throwable, Run] = {
+  def getRun(): FutureVal[Exception, Run] = {
     implicit def ec = conf.webExecutionContext
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
-  
+
+  def getAssertions(): FutureVal[Exception, Iterable[Assertion]] = {
+    getRun() map {
+      run => run.assertions.toIterable
+    }
+  }
+
+  def getActivity(): FutureVal[Exception, RunActivity] = {
+    getRun().map(_.activity)
+  }
+
+  def getData(): FutureVal[Exception, JobData] = {
+    getRun().map(_.jobData)
+  }
+
+
   // Get all runVos for this job, group by id, and for each runId take the latest completed jobData if any
   def getHistory(): FutureVal[Exception, Iterable[JobData]] = null
 //    Run.getRunVOs(id) map { runVOs => {
