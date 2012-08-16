@@ -16,7 +16,7 @@
 	background: rgba(0,0,0,0.05);
 	border: solid white;
 	border-width: 1px 1px 1px 0;
-	padding: 14px 10px;
+	padding: 14px 0;
 	//text-align: center;
 }
 .list aside dt:hover:not(.health):not(.actions) {
@@ -28,6 +28,7 @@
 .list dfn {
 	font-style: normal;
 	color:black;
+    margin-left: 10px;
 }
 .list article:first-of-type dd {
 	padding-top: 17px;
@@ -56,11 +57,11 @@
 }
 .list aside dt:first-of-type,
 .list article dd:first-of-type {
-	padding-left:10px;
+	//padding-left:10px;
 }
 .list aside dt:last-of-type,
 .list article dd:last-of-type {
-	padding-right:10px;
+	//padding-right:10px;
 }
 
 
@@ -90,36 +91,60 @@
 	font-size:0.85em;
 }
 
-.list .sort a {
-    display: inline-block;
-    vertical-align: middle;
-    width: 0;
-    height: 0;
-    opacity:0.7;
-    margin-left:2px;
-}
 .list .sort a.ascend {
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 7px solid #000;
+    //outline: 1px solid black;
 }
 .list .sort a.descend {
-     border-left: 4px solid transparent;
-     border-right: 4px solid transparent;
-     border-bottom: 7px solid #000;
+    //outline: 1px solid white;
  }
 
 .list dt {
+
     .sort {
-        float:right;
+        height: 0;
         font-size: 0;
-        line-height: 13px;
+        line-height: 0;
+        position: relative;
+        display: block;
     }
     .sort a {
-        visibility: hidden;
+        //visibility: hidden;
+        display: inline-block;
+        vertical-align: middle;
+        position: absolute;
+        top: -27px;
+        width: 100%;
+        height: 41px;
+        z-index: 3;
+    }
+    &:hover .sort a {
+        //visibility: visible
     }
     .sort .current {
         visibility: visible;
+        width: 18px;
+        right: 0;
+        z-index: 2;
     }
-    &:hover .sort a {visibility: visible}
+    .sort a span {
+        display: none;
+        height:0;
+        width:0;
+        overflow: hidden;
+    }
+    .sort .ascend span {
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 7px solid #000;
+    }
+    .sort .descend span {
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-bottom: 7px solid #000;
+    }
+    .sort .current span {
+        display: block;
+        margin: 17px 0;
+    }
+
 }
