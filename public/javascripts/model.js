@@ -131,7 +131,7 @@ window.Job.fromHTML = function(elem) {
 			errors: parseInt($(".errors", elem).text()),
 			warnings: parseInt($(".warnings", elem).text()),			
 			health: parseInt($(".health progress", elem).attr("value")),
-			lastCompleted: $(".date", elem).text()
+			lastCompleted: $(".completed", elem).text()
 		}),
 		maxResources: parseInt($(".maxResources", elem).text()),
 		health: parseInt($(".health progress", elem).attr("value"))

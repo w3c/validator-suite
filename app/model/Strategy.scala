@@ -34,7 +34,7 @@ case class Strategy (
     for {
       mimetype <- httpResponse.headers.mimetype.toList if httpResponse.action === GET
       assertorName <- assertorSelector.get(mimetype).flatten
-    } yield Assertors.get(assertorName)
+    } yield Assertor.get(assertorName)
   }
 
 }

@@ -1,0 +1,9 @@
+@(page: Page[_], param: String)
+    <span class="sort">
+        <a class="ascend @if(page.isSortedBy(param)){current}"
+           href="@page.queryString.sortBy(param) @**?sort=@param@if(perPage != Page.defaultPerPage){&n=@perPage}@if(current != 1){&p=@current}**@"
+           title="Sort in ascending order">▴</a>
+        <a class="descend @if(page.isSortedBy(param, false)){current}"
+           href="@page.queryString.sortBy(param, false) @**?sort=-@param@if(perPage != Page.defaultPerPage){&n=@perPage}@if(current != 1){&p=@current}**@"
+           title="Sort in descending order">▾</a>
+    </span>

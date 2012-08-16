@@ -36,7 +36,7 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
   }
 
   val sortParam: (String, Boolean) = {
-    req.getQueryString("sort").map(param =>
+    req.queryString.get("sort").flatten.headOption.map(param =>
       if (param.startsWith("-"))
         (param.replaceFirst("-",""), false)
       else
@@ -58,12 +58,10 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
   val lastIndex: Int = scala.math.min(current * perPage, totalSize)
 
   def isSortedBy(param: String, ascending: Boolean = true): Boolean = {
-    val is = sortParam match {
+    sortParam match {
       case (p, a) if(p == param && a == ascending) => true
       case _ => false
     }
-    println(is)
-    is
   }
 
   val queryString = new Object {

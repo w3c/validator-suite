@@ -1,6 +1,7 @@
 package org.w3.vs.model
 
-import scalaz.Equal
+import scalaz.{Ordering => OrderingZ, _}
+import scalaz.Scalaz._
 
 sealed trait AssertionSeverity {
   override def toString: String = this match {
@@ -23,6 +24,19 @@ object AssertionSeverity {
       case "warning" => Warning
       case "info" => Info
       case _ => Info // TODO log
+    }
+  }
+
+  implicit val ordering: Ordering[AssertionSeverity] = new Ordering[AssertionSeverity] {
+    def compare(x: AssertionSeverity, y: AssertionSeverity): Int = {
+      (x, y) match {
+        case (a, b) if (a === b) => 0
+        case _@(Error, _) => +1
+        case _@(Info, _) => -1
+        case _@(Warning, Info) => +1
+        case _@(Warning, Error) => -1
+        case _@(Warning, Warning) => 0 // compilation complains without this
+      }
     }
   }
 }

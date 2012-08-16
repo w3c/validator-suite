@@ -1,44 +1,42 @@
 @(job: Job,
-  resource: URLArticle,
-  assertors: Iterable[AssertorArticle],
-  assertions: Iterable[(Assertion, Iterable[Context])],
+  resource: ResourceView,
+  assertions: Iterable[AssertionView],
   user: User,
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
-@libs.main("Validator Suite", 
-	stylesheets = List("dashboard.css"),
-   scripts = List("model.js", "vs.js", "report.js", "dashboard.js")){
+@libs.main("Validator Suite",
+    stylesheets = List("dashboard.css"),
+    scripts = List("model.js", "vs.js", "report.js", "dashboard.js")){
    
-   @***** Header ******@
-	
-	@libs.header()
-	
-}{ @***** Content *****@ 
-	
-	@libs.admin(user)
-	@libs.navigation("Report for \"" + resource.url +"\"", List((job.name, routes.Jobs.show(job.id).toString), (resource.url.toString, "")))
-	@libs.messages(messages)
-	
-	<hr>
-	
-	<section id="urlArticles" class="list" data-id="@job.id">
-		@**libs.resources(Iterable(resource))**@
-	</section>
-	
-	<!--<hr>
-	
-	<section id="assertors" class="tabs">
-		@libs.assertors(assertors)
-	</section> -->
-	
-	<hr>
-	
-	<section id="assertionArticles" class="folds">
-		@libs.assertions(assertions)
-	</section>
-	
+  @***** Header ******@
+    
+    @libs.header()
+    
+}{ @***** Content *****@
+    
+    @libs.admin(user)
+    @libs.navigation("Report for \"" + resource.url +"\"", List((job.name, routes.Jobs.show(job.id).toString), (resource.url.toString, "")))
+    @libs.messages(messages)
+    
+    <hr>
+    
+    <section id="urlArticles" class="list" data-id="@job.id">
+        @libs.resources(Page(Iterable(resource)))
+    </section>
+    
+    <!--<hr>
+    <section id="assertors" class="tabs">
+        @**libs.assertors(assertors)**@
+    </section> -->
+    
+    <hr>
+    
+    <section id="assertionArticles" class="folds">
+        @libs.assertions(Page(assertions))
+    </section>
+    
 }{ @***** Footer *****@
 
-	@libs.footer()
+    @libs.footer()
 
 }

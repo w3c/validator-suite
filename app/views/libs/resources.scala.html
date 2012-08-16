@@ -1,29 +1,33 @@
-@(resources: Iterable[ResourceView] = None)
+@(page: Page[ResourceView])
+
 		<aside>
 			<h2>Resources</h2>
 			<h3>Definitions</h3>
 			<dl>
-				<dt class="url"><dfn>URL</dfn></dt>
+				<dt class="url"><dfn>URL</dfn> @libs.sort(page, "url")</dt>
 				<dd>def</dd>
-				<dt class="timestamp"><dfn>Last validated</dfn></dt>
+				<dt class="validated"><dfn>Last validated</dfn> @libs.sort(page, "validated")</dt>
 				<dd>def</dd>
-				<dt class="warnings"><dfn>Warnings</dfn></dt>
+				<dt class="warnings"><dfn>Warnings</dfn> @libs.sort(page, "warnings")</dt>
 				<dd>def</dd>
-				<dt class="errors"><dfn>Errors</dfn></dt>
+				<dt class="errors"><dfn>Errors</dfn> @libs.sort(page, "errors")</dt>
 				<dd>def</dd>
 			</dl>
 		</aside>
 		
-		@resources.map { case resource =>
+		@page.iterator.map { case resource =>
 		<hr>
 		<article>
 			<dl>
 				<dt>URL</dt>
 				<dd class="url"><a href="@Helper.encode(resource.url)">@resource.url</a></dd>
+
 				<dt>Last validated</dt>
-				<dd class="timestamp"><time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time></dd>
+				<dd class="time"><time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time></dd>
+
 				<dt>Warnings</dt>
 				<dd class="warnings">@resource.warnings</dd>
+
 				<dt>Errors</dt>
 				<dd class="errors">@resource.errors</dd>
 			</dl>

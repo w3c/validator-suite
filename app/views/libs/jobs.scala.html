@@ -1,37 +1,26 @@
 @(page: Page[JobView])
 
-@sortForm(param: String) = {
-    <span class="sort">
-        <a class="ascend @if(page.isSortedBy(param)){current}"
-           href="@page.queryString.sortBy(param) @**?sort=@param@if(perPage != Page.defaultPerPage){&n=@perPage}@if(current != 1){&p=@current}**@"
-           title="Sort in ascending order">▴</a>
-        <a class="descend @if(page.isSortedBy(param, false)){current}"
-           href="@page.queryString.sortBy(param, false) @**?sort=-@param@if(perPage != Page.defaultPerPage){&n=@perPage}@if(current != 1){&p=@current}**@"
-           title="Sort in descending order">▾</a>
-    </span>
-}
-
 		<aside>
 			<h2>Jobs</h2>
 			<h3>Definitions</h3>
 			<dl>
-				<dt class="name"><dfn>Job Name</dfn>@sortForm("name")</dt>
+				<dt class="name"><dfn>Job Name</dfn> @libs.sort(page, "name")</dt>
 				<dd>The name of the job</dd>
-				<dt class="url"><dfn>URL</dfn>@sortForm("url")</dt>
+				<dt class="url"><dfn>URL</dfn> @libs.sort(page, "url")</dt>
 				<dd>The seed URL for this job, entry point of the crawler</dd>
-				<dt class="status"><dfn>Status</dfn>@sortForm("status")</dt>
+				<dt class="status"><dfn>Status</dfn> @libs.sort(page, "status")</dt>
 				<dd>The current status of the job, either Idle or Running.</dd>
-				<dt class="date"><dfn>Last completed</dfn>@sortForm("date")</dt>
+				<dt class="completed"><dfn>Last completed</dfn> @libs.sort(page, "completed")</dt>
 				<dd>The date the job was last completed</dd>
-				<dt class="warnings"><dfn>Warnings</dfn>@sortForm("warnings")</dt>
+				<dt class="warnings"><dfn>Warnings</dfn> @libs.sort(page, "warnings")</dt>
 				<dd>The total number or warnings reported by the job's assertors</dd>
-				<dt class="errors"><dfn>Errors</dfn>@sortForm("errors")</dt>
+				<dt class="errors"><dfn>Errors</dfn> @libs.sort(page, "errors")</dt>
 				<dd>The total number of errors reported by the job's assertors</dd>
-				<dt class="resources"><dfn>Resources</dfn>@sortForm("resources")</dt>
+				<dt class="resources"><dfn>Resources</dfn> @libs.sort(page, "resources")</dt>
 				<dd>The total number of resources that have been considered by the crawler</dd>
-				<dt class="maxResources"><dfn>Max resources</dfn>@sortForm("maxResources")</dt>
+				<dt class="maxResources"><dfn>Max resources</dfn> @libs.sort(page, "maxResources")</dt>
 				<dd>The maximum number of resources to crawl</dd>
-				<dt class="health"><dfn>Health</dfn>@sortForm("health")</dt>
+				<dt class="health"><dfn>Health</dfn> @libs.sort(page, "health")</dt>
 				<dd>An indicator of the overall quality of the job's resources</dd>
 				<dt class="actions"><dfn>Actions</dfn></dt>
 				<dd>Actions to perform on the job</dd>
@@ -53,7 +42,7 @@
 				<dd class="status">@job.status</dd>
 
 				<dt>Last Completed</dt>
-				<dd class="date">
+				<dd class="completed">
 					@job.lastCompleted match{
 					  case Some(date) => {<time datetime="@date">@Helper.formatTime(date)</time>}
 					  case _ => {Never}

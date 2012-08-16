@@ -34,7 +34,7 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        jobs <- Job.getFor(user.id)
+        jobs <- Job.getFor(user.id) // Job.getAll
         jobViews <- JobView.fromJobs(jobs)
       } yield {
         Ok(views.html.dashboard(Page(jobViews), user)).withHeaders(("Cache-Control", "no-cache, no-store"))
@@ -46,15 +46,11 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        job <- user.getJob(id)
+        job <- user.getJob(id) // Job.get(id, user.id)
         jobView <- JobView.fromJob(job)
         resourceViews <- ResourceView.fromJob(job)
-        /*run <- job.getRun()
-        lastCompleted <- job.getLastCompleted()
-        // TODO: make it more efficient, and maybe move it inside Run
-        ars = run.urlArticles.filter(t => t._3 != 0 || t._4 != 0).sortBy(_._1.toString).sortBy(e => -e._4)*/
       } yield {
-        Ok(views.html.report(jobView, Page(resourceViews)/*job, run, lastCompleted, ars.map(URLArticle.apply _)*/, user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.report(jobView, Page(resourceViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
@@ -64,13 +60,15 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
-        run <- job.getRun()
-        article = URLArticle(run.urlArticle(url).get) // <- can be None !!!!!!!!
-        assertors = Iterable() //run.getAssertorArticles(url) map {_.map(AssertorArticle.apply _)}
-        assertions = run.assertions filter { a => a.url === url && a.severity != Info }
-        tuples = assertions.toSeq sortBy ( - _.contexts.size ) map { a => (a, a.contexts.sortBy(_.line)) }
+        resource <- ResourceView.fromJob(job).map(_.filter(_.url === url).head) // TODO headOption -> None = exception
+        assertions <- AssertionView.fromJob(job).map(_.filter(_.url === url))
+        //run <- job.getRun()
+        //article = URLArticle(run.urlArticle(url).get) // <- can be None !!!!!!!!
+        //assertors = Iterable() //run.getAssertorArticles(url) map {_.map(AssertorArticle.apply _)}
+        //assertions = run.assertions filter { a => a.url === url && a.severity != Info }
+        //tuples = assertions.toSeq sortBy ( - _.contexts.size ) map { a => (a, a.contexts.sortBy(_.line)) }
       } yield {
-        Ok(views.html.urlReport(job, article, assertors, tuples, user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.urlReport(job, resource, assertions, user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
