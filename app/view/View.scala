@@ -37,10 +37,10 @@ object View {
 
   implicit def resourceViewOrdering(param: (String, Boolean)): Ordering[ResourceView] = {
     val ordering = param._1 match {
+      case "url"       => Ordering[String].on[ResourceView](_.url.toString)
       case "validated" => Ordering[(DateTime, String)].on[ResourceView](view => (view.lastValidated, view.url.toString))
       case "warnings"  => Ordering[(Int, String)].on[ResourceView](view => (view.warnings, view.url.toString))
-      case "errors"    => Ordering[(Int, String)].on[ResourceView](view => (view.errors, view.url.toString))
-      case _           => Ordering[String].on[ResourceView](_.url.toString)
+      case _           => Ordering[(Int, String)].on[ResourceView](view => (view.errors, view.url.toString))
     }
     if (param._2) ordering.reverse else ordering
   }
