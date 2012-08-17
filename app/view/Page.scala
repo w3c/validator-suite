@@ -7,7 +7,7 @@ object Page {
   val maxPerPage = 1000
 }
 
-case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Request[_], ordering: ((String, Boolean)) => Ordering[A]) {
+case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Request[_], ordering: PageOrdering[A]) {
 
   val perPage: Int = {
     try {
@@ -35,19 +35,19 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
     } catch {case _ => 1}
   }
 
-  val sortParam: (String, Boolean) = {
+  val sortParam: SortParam = {
     req.queryString.get("sort").flatten.headOption.map(param =>
       if (param.startsWith("-"))
-        (param.replaceFirst("-",""), false)
+        ordering.validate(SortParam(param.replaceFirst("-",""), true))
       else
-        (param, true)
-    ).getOrElse(("", true))
+        ordering.validate(SortParam(param, false))
+    ).getOrElse(ordering.default)
   }
 
   val iterator: Iterable[A] = {
     val offset = (current - 1) * perPage
     iterable.toSeq
-      .sorted(ordering(sortParam))  //With((a: A, b: A) => a.compare(b, sortParam))
+      .sorted(ordering.ordering(sortParam))
       .slice(offset, offset + perPage)
   }
 
@@ -59,20 +59,20 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
 
   def isSortedBy(param: String, ascending: Boolean = true): Boolean = {
     sortParam match {
-      case (p, a) if(p == param && a == ascending) => true
+      case SortParam(p, a) if(p == param && a == ascending) => true
       case _ => false
     }
   }
 
   val queryString = new Object {
-    def sortBy(param: String, ascending: Boolean = true): String = toString(perPage, current, (param, ascending))
+    def sortBy(param: String, ascending: Boolean = true): String = toString(perPage, current, SortParam(param, ascending))
     override def toString = toString(perPage, current, sortParam)
-    def toString(perPage: Int, current: Int, sortParam: (String, Boolean)) = {
+    def toString(perPage: Int, current: Int, sortParam: SortParam) = {
       List(
         if (perPage != Page.defaultPerPage) "n=" + perPage else "",
         sortParam match {
-          case (a, true) if (a != "") => "sort=" + sortParam._1
-          case (a, false) if (a != "") => "sort=-" + sortParam._1
+          case SortParam(a, true) if (a != "") => "sort=-" + sortParam.name
+          case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
           case _ => ""
         },
         if (current != 1) "p=" + current else ""

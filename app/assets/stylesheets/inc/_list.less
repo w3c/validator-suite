@@ -138,16 +138,32 @@
     .sort .ascend span {
         border-left: 4px solid transparent;
         border-right: 4px solid transparent;
-        border-top: 7px solid #000;
+        border-bottom: 7px solid #000;
     }
     .sort .descend span {
         border-left: 4px solid transparent;
         border-right: 4px solid transparent;
-        border-bottom: 7px solid #000;
+        border-top: 7px solid #000;
     }
     .sort .current span {
         display: block;
         margin: 17px 0;
     }
 
+}
+
+.list .health {
+    width: 70px;
+}
+.list article .resources,
+.list article .errors,
+.list article .warnings {
+    text-align: right;
+    width: 75px;
+    padding-right: 20px;
+}
+.list article .maxResources {
+    text-align: right;
+    width: 105px;
+    padding-right: 20px;
 }
