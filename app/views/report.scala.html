@@ -4,82 +4,91 @@
     messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
 @libs.main("Validator Suite",
-	stylesheets = List("dashboard.css"),
-	scripts = List("model.js", "vs.js", "report.js", "dashboard.js"),
-	exec = """
-		$(function () {
-			//window.Dashboard = new DashboardView();
-			//window.Report = new ReportView();
-			//VS.Socket.open({url: "/jobs/ws/""" + job.id + """ "});
-		});
-	"""){
+    stylesheets = List("dashboard.css"),
+    scripts = List("model.js", "vs.js", "report.js", "dashboard.js"),
+    exec = """
+        $(function () {
+            //window.Dashboard = new DashboardView();
+            //window.Report = new ReportView();
+            //VS.Socket.open({url: "/jobs/ws/""" + job.id + """ "});
+        });
+    """){
    
    @***** Header ******@
-	
-	@libs.header()
-	
+    
+    @libs.header()
+    
 }{ @***** Content *****@ 
-	
-	@libs.admin(user)
-	@libs.navigation("Report for job \"" + job.name +"\"", List((job.name ,"")))
-	@libs.messages(messages)
-	
-	<hr>
-	
-	<section id="jobs" class="list">
-		@pages.jobs(Page(List(job)))
-	</section>
-	
-	<hr>
-	
-	<section id="urlArticles" class="list" data-id="@job.id">
-		@pages.resources(page)
-	</section>
-	
-	@**<section class="controls">
-		<h2>Controls</h2>
-		<h3>Report type</h3>
-		<form class="group">
-			<fieldset>
-				<input name=group type=radio value="url.assertor" id="url.assertor" @if(req.queryString.get("group").flatten.isEmpty || req.queryString.get("group").flatten.exists(_ == "url.assertor")){checked}>
-				<label for="url.assertor">Group by url</label>
-				<input name=group type=radio value="message.url" id="message.url" @if(req.queryString.get("group").flatten.exists(_ == "message.url")){checked}>
-				<label for="message.url">Group by message and url</label>
-				<input name=group type=radio value="message.context" id="message.context" @if(req.queryString.get("group").flatten.exists(_ == "message.context")){checked}>
-				<label for="message.context">Group by message and context</label>
-				@**<input name=flat id=flat type=checkbox @if(req.queryString.get("flat").flatten.exists(_ == "on")){checked}>** @
-				@**<label for="flat">flat</label>** @
-			</fieldset>
-			<button type=submit>Go</button>
-		</form>
-		<form method="post">
-		@**{run.activity match {
-		  case Running => {<button type="submit" name="action" value="stop" class="stop">Cancel</button>}
-		  case Idle => {<button type="submit" name="action" value="run" class="run">Run</button>}
-		}}** @
-		</form>
-		<h3>Find a url</h3>
-		<form class="search">
-			<input name=url type=text placeholder="Search url" required>
-			<button type=submit>Go</button>
-		</form>
-	</section>**@
-	
-	@**<nav class="report"><div>
-	<span class="showing">Showing: @report.size / @pageNav.totalMessages</span>
-	@if(pageNav.totalPages > 1) {
-	<ul>
-	@for(i <- 1 to pageNav.totalPages) {
-		@if(i != pageNav.currentPage) {
-		<li><a href="?p=@i&@req.rawQueryString">@i</a></li>
-		} else {
-		<li><b>@i</b></li>
-		}
-	}
-	</ul>
-	}
-	</div></nav>**@
-	
+    
+    @libs.admin(user)
+    @libs.navigation("Report for job \"" + job.name +"\"", List((job.name ,"")))
+    @libs.messages(messages)
+    
+    <hr>
+    
+    <section id="jobs" class="single">
+        <aside>
+            <h3>Definitions</h3>
+            <dl>
+                @JobView.params.map {param =>
+                <dt class="@param"><dfn>@Messages("job.%s" format param)</dfn></dt>
+                <dd>@Messages("job.%s.detail" format param)</dd>
+                }
+            </dl>
+        </aside>
+        @model.job(job)
+    </section>
+    
+    <hr>
+    
+    <section id="urlArticles" class="list" data-id="@job.id">
+        @pages.resources(page)
+    </section>
+    
+    @**<section class="controls">
+        <h2>Controls</h2>
+        <h3>Report type</h3>
+        <form class="group">
+            <fieldset>
+                <input name=group type=radio value="url.assertor" id="url.assertor" @if(req.queryString.get("group").flatten.isEmpty || req.queryString.get("group").flatten.exists(_ == "url.assertor")){checked}>
+                <label for="url.assertor">Group by url</label>
+                <input name=group type=radio value="message.url" id="message.url" @if(req.queryString.get("group").flatten.exists(_ == "message.url")){checked}>
+                <label for="message.url">Group by message and url</label>
+                <input name=group type=radio value="message.context" id="message.context" @if(req.queryString.get("group").flatten.exists(_ == "message.context")){checked}>
+                <label for="message.context">Group by message and context</label>
+                @**<input name=flat id=flat type=checkbox @if(req.queryString.get("flat").flatten.exists(_ == "on")){checked}>** @
+                @**<label for="flat">flat</label>** @
+            </fieldset>
+            <button type=submit>Go</button>
+        </form>
+        <form method="post">
+        @**{run.activity match {
+          case Running => {<button type="submit" name="action" value="stop" class="stop">Cancel</button>}
+          case Idle => {<button type="submit" name="action" value="run" class="run">Run</button>}
+        }}** @
+        </form>
+        <h3>Find a url</h3>
+        <form class="search">
+            <input name=url type=text placeholder="Search url" required>
+            <button type=submit>Go</button>
+        </form>
+    </section>**@
+    
+    @**<nav class="report"><div>
+    <span class="showing">Showing: @report.size / @pageNav.totalMessages</span>
+    @if(pageNav.totalPages > 1) {
+    <ul>
+    @for(i <- 1 to pageNav.totalPages) {
+        @if(i != pageNav.currentPage) {
+        <li><a href="?p=@i&@req.rawQueryString">@i</a></li>
+        } else {
+        <li><b>@i</b></li>
+        }
+    }
+    </ul>
+    }
+    </div></nav>**@
+    
 }{ @***** Footer *****@
 
 @libs.footer {

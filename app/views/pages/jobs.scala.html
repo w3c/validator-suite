@@ -5,7 +5,7 @@
             <h3>Definitions</h3>
             <dl>
                 @JobView.params.map {param =>
-                <dt class="@param"><dfn>@Messages("job.%s" format param)</dfn> @libs.sort(page, param)</dt>
+                <dt class="@param"><dfn>@Messages("job.%s" format param)</dfn>@if(page.size > 1){ @libs.sort(page, param)}</dt>
                 <dd>@Messages("job.%s.detail" format param)</dd>
                 }
                 <dt class="actions"><dfn>@Messages("job.actions")</dfn></dt>

@@ -1,0 +1,163 @@
+
+#jobs.single {
+
+    // layout
+
+    display: table;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border-collapse: separate;
+    width: 100%;
+    position: relative;
+    padding-top: 0;
+    padding-right: 20px;
+
+    h3 {display: none;}
+
+    dfn {font-style: normal;}
+
+    aside {
+        display: table-row-group;
+        dl {display: table-row;}
+        dt {
+            display: table-cell;
+            &.health, &.maxResources {display: none;}
+        }
+        dd {display: none;}
+    }
+
+    article {
+        display: table-row-group;
+        dl {display: table-row;}
+        dt {display: none;}
+        dd {
+            display: table-cell;
+            &.maxResources {display: none}
+            &.health,
+            &.actions {
+                display: block;
+                position: absolute;
+            }
+            &.health {right: 20px; bottom:40px}
+            &.actions {left: 10px; bottom:10px}
+        }
+    }
+
+    // metadata
+
+    aside {
+        dt {
+            color: #06C;
+            font-weight: bold;
+            font-size: 0.9em;
+            border-top: @rb-border
+        }
+
+    }
+    article {
+        dd {
+            font-size: 1.1em;
+        }
+        .name a {
+            color:black;
+
+        }
+    }
+
+    // result box
+
+    @rb-width: 70px;
+    @rb-padding: 20px;
+    @rb-border: 1px solid #C8C8C8;
+    @rb-background: #F6F7F9;
+
+    background-image: url('../images/texture.gif');
+
+    aside {
+        .warnings,
+        .errors,
+        .resources {
+            width: @rb-width;
+            padding-top: 10px;
+            padding-bottom: 5px;
+
+            font-size: 1em;
+            color: grey;
+            font-weight: bold;
+            font-style: normal;
+            text-align: center;
+
+            background: @rb-background;
+
+            border-top: @rb-border;
+
+            position: relative;
+            top: -20px;
+            right: -10px;
+        }
+        .warnings {
+            border-left: @rb-border;
+            -webkit-border-top-left-radius: 5px;
+            -moz-border-radius-topleft: 5px;
+            border-top-left-radius: 5px;
+            padding-left: @rb-padding;
+        }
+        .resources {
+            border-right: @rb-border;
+            -webkit-border-top-right-radius: 5px;
+            -moz-border-radius-topright: 5px;
+            border-top-right-radius: 5px;
+            padding-right: @rb-padding;
+        }
+    }
+
+    article {
+        .warnings,
+        .errors,
+        .resources {
+            background: @rb-background;
+
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+
+            padding-bottom: 30px;
+            border-bottom: @rb-border;
+
+            position: relative;
+            top: -20px;
+            right: -10px;
+        }
+        .warnings {
+            border-left: @rb-border;
+            padding-left: @rb-padding;
+            -webkit-border-bottom-left-radius: 5px;
+            -moz-border-radius-bottomleft: 5px;
+            border-bottom-left-radius: 5px;
+        }
+        .resources {
+            border-right: @rb-border;
+            padding-right: @rb-padding;
+            -webkit-border-bottom-right-radius: 5px;
+            -moz-border-radius-bottomright: 5px;
+            border-bottom-right-radius: 5px;
+        }
+        .health {
+            /*background: @rb-background;
+            border-right: @rb-border;
+            border-left: @rb-border;
+            padding: 0 5px;*/
+            //visibility: hidden;
+            progress {
+                -moz-box-sizing: border-box;
+                box-sizing: border-box;
+                width: 3 * @rb-width + 2 * @rb-padding - 18px;
+                height: 15px;
+            }
+        }
+    }
+
+
+
+
+}
