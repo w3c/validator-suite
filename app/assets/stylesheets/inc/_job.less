@@ -10,7 +10,7 @@
     width: 100%;
     position: relative;
     padding-top: 0;
-    padding-right: 20px;
+    //padding-right: 20px;
 
     h3 {display: none;}
 
@@ -38,7 +38,7 @@
                 display: block;
                 position: absolute;
             }
-            &.health {right: 20px; bottom:40px}
+            &.health {right: 20px; bottom:20px}
             &.actions {left: 10px; bottom:10px}
         }
     }
@@ -74,9 +74,16 @@
     background-image: url('../images/texture.gif');
 
     aside {
+        /*.warnings,
+        .errors,
+        .resources {
+            width: @rb-width;
+        }*/
+
         .warnings,
         .errors,
         .resources {
+            //display: block;
             width: @rb-width;
             padding-top: 10px;
             padding-bottom: 5px;
@@ -91,9 +98,9 @@
 
             border-top: @rb-border;
 
-            position: relative;
-            top: -20px;
-            right: -10px;
+            //position: relative;
+            //top: -20px;
+            //right: -10px;
         }
         .warnings {
             border-left: @rb-border;
@@ -124,9 +131,9 @@
             padding-bottom: 30px;
             border-bottom: @rb-border;
 
-            position: relative;
-            top: -20px;
-            right: -10px;
+            //position: relative; // ff does not allow relative positioning of table displayed elements
+            //top: -20px;
+            //right: -10px;
         }
         .warnings {
             border-left: @rb-border;
