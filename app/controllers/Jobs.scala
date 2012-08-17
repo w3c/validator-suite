@@ -306,8 +306,14 @@ object Jobs extends Controller {
         user <- getUser
         form <- JobForm.bind failMap (form => InvalidJobFormException(form, user, idOpt))
         jobM <- idOpt.fold(
-            id => user.getJob(id).flatMap(j => form.update(j).save().map(job => (job, "jobs.updated"))),
-            form.createJob(user).save().map(job => (job, "jobs.created"))
+            id => user.getJob(id)
+              .flatMap(j => form.update(j)
+              .save()
+              .map(job => (job, "jobs.updated"))),
+            form
+              .createJob(user)
+              .save()
+              .map(job => (job, "jobs.created"))
           )
       } yield {
         val (job, msg) = jobM

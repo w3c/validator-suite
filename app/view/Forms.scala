@@ -61,22 +61,18 @@ class ValidJobForm private [view] (
   val (name, url, linkCheck, maxResources) = bind
   
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
-    null
-//    val vo = JobVO(
-//      
-//
-//    Job(
-//      name = name,
-//      organizationId = user.organizationId,
-//      creatorId = user.id,
-//      strategy = Strategy(
-//        entrypoint = url,
-//        linkCheck = linkCheck,
-//        maxResources = maxResources))
+    Job(
+      name = name,
+      organization = user.vo.organization.get, // TODO what if organization = None?
+      creator = user.id,
+      strategy = Strategy(
+        entrypoint = url,
+        linkCheck = linkCheck,
+        maxResources = maxResources))
   }
   
   def update(job: Job)(implicit conf: VSConfiguration): Job = {
-    null
+    null  // TODO decide, implement
 //     job.copy(
 //         name = name,
 //         strategy = job.strategy.copy(
@@ -92,7 +88,7 @@ class ValidJobForm private [view] (
 object JobForm {
   
   def bind()(implicit req: Request[_], context: ExecutionContext): FutureVal[JobForm, ValidJobForm] = {
-	val form = playForm.bindFromRequest
+    val form = playForm.bindFromRequest
     implicit def onTo(to: TimeoutException): JobForm = new JobForm(form.withError("key", Messages("error.timeout")))
     FutureVal.validated[JobForm, ValidJobForm](
       form.fold(
