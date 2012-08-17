@@ -9,21 +9,18 @@ sealed trait AssertorResponse {
   val context: (OrganizationId, JobId, RunId)
   val assertorId: AssertorId
   val sourceUrl: URL
-  val timestamp: DateTime
 }
 case class AssertorFailure(
     context: (OrganizationId, JobId, RunId),
     assertorId: AssertorId,
     sourceUrl: URL,
-    timestamp: DateTime = new DateTime,
-    why: Throwable) extends AssertorResponse
+    why: String) extends AssertorResponse
 
 case class AssertorResult(
     context: (OrganizationId, JobId, RunId),
     assertorId: AssertorId,
     sourceUrl: URL,
-    timestamp: DateTime = new DateTime,
-    assertions: Iterable[Assertion]) extends AssertorResponse {
+    assertions: List[Assertion]) extends AssertorResponse {
   
   lazy val (errors, warnings) = Assertion.countErrorsAndWarnings(assertions)
 

@@ -17,8 +17,6 @@ import org.w3.banana.jena._
 
 trait DefaultProdConfiguration extends VSConfiguration {
   
-  val MAX_URL_TO_FETCH = 10
-  
   val assertorExecutionContext: ExecutionContext = {
     import java.util.concurrent.{ExecutorService, Executors}
     val executor: ExecutorService = Executors.newFixedThreadPool(10)

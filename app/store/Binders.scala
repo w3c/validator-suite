@@ -8,6 +8,7 @@ import org.w3.util._
 import org.w3.vs._
 import diesel._
 import ops._
+import org.w3.vs.actor.message._
 
 object Binders extends Binders
 
@@ -33,6 +34,9 @@ trait Binders extends UriBuilders with LiteralBinders {
 //    val userClasses = classUrisFor[](ont("User"))
 //    val assertorSelectorClasses = classUrisFor[](ont("AssertorSelector")
 
+    lazy val beProactive = apply("beProactive")
+    lazy val beLazy = apply("beLazy")
+
     lazy val url = property[URL](apply("url"))
     lazy val lang = property[String](apply("lang"))
     lazy val title = property[String](apply("title"))
@@ -43,7 +47,7 @@ trait Binders extends UriBuilders with LiteralBinders {
     lazy val line = property[Option[Int]](apply("line"))
     lazy val column = property[Option[Int]](apply("column"))
     lazy val assertion = property[Assertion](apply("assertion"))
-    lazy val assertions = set[Assertion](apply("assertion"))
+    lazy val assertions = property[List[Assertion]](apply("assertions"))
 
     lazy val job = property[(OrganizationId, JobId)](apply("job"))
     lazy val run = property[(OrganizationId, JobId, RunId)](apply("run"))
@@ -83,11 +87,68 @@ trait Binders extends UriBuilders with LiteralBinders {
     lazy val map = property[Map[String, List[String]]](apply("map"))
     lazy val runUri = property[Rdf#URI](apply("run"))
     lazy val contexts = property[List[Context]](apply("contexts"))
-    lazy val resourceResponse = set[ResourceResponse](apply("resourceResponse"))
-    
+    lazy val resourceResponse = property[ResourceResponse](apply("resourceResponse"))    
+    lazy val assertorResponse = property[AssertorResponse](apply("assertorResponse"))
+    lazy val event = set[RunEvent](apply("event"))
   }
 
   /* binders for entities */
+
+  implicit lazy val BeProactiveBinder: PointedGraphBinder[Rdf, BeProactive.type] = constant(BeProactive, ont.beProactive)
+
+  implicit lazy val BeLazyBinder: PointedGraphBinder[Rdf, BeLazy.type] = constant(BeLazy, ont.beLazy)
+
+  implicit lazy val AssertorFailureBinder = pgb[AssertorFailure](ont.run, ont.assertor, ont.url, ont.why)(AssertorFailure.apply, AssertorFailure.unapply)
+
+  implicit lazy val AssertorResultBinder = pgb[AssertorResult](ont.run, ont.assertor, ont.url, ont.assertions)(AssertorResult.apply, AssertorResult.unapply)
+
+  implicit lazy val AssertorResponseBinder = new PointedGraphBinder[Rdf, AssertorResponse] {
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertorResponse] =
+      AssertorResultBinder.fromPointedGraph(pointed) orElse AssertorFailureBinder.fromPointedGraph(pointed)
+    def toPointedGraph(ar: AssertorResponse): PointedGraph[Rdf] = ar match {
+      case result: AssertorResult => AssertorResultBinder.toPointedGraph(result)
+      case failure: AssertorFailure => AssertorFailureBinder.toPointedGraph(failure)
+    }
+  }
+
+  //
+
+  implicit lazy val AssertorResponseEventBinder: PointedGraphBinder[Rdf, AssertorResponseEvent] = pgb[AssertorResponseEvent](ont.assertorResponse, ont.timestamp)(AssertorResponseEvent.apply, AssertorResponseEvent.unapply)
+
+  implicit lazy val ResourceResponseEventBinder: PointedGraphBinder[Rdf, ResourceResponseEvent] = pgb[ResourceResponseEvent](ont.resourceResponse, ont.timestamp)(ResourceResponseEvent.apply, ResourceResponseEvent.unapply)
+
+  implicit lazy val BeProactiveEventBinder = new PointedGraphBinder[Rdf, BeProactiveEvent] {
+    val binder = PointedGraphBinder[Rdf, (BeProactive.type, DateTime)]
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, BeProactiveEvent] =
+      binder.fromPointedGraph(pointed) map { case (_, timestamp) => BeProactiveEvent(timestamp) }
+    def toPointedGraph(event: BeProactiveEvent): PointedGraph[Rdf] =
+      binder.toPointedGraph((BeProactive, event.timestamp))
+  }
+
+  implicit lazy val BeLazyEventBinder = new PointedGraphBinder[Rdf, BeLazyEvent] {
+    val binder = PointedGraphBinder[Rdf, (BeLazy.type, DateTime)]
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, BeLazyEvent] =
+      binder.fromPointedGraph(pointed) map { case (_, timestamp) => BeLazyEvent(timestamp) }
+    def toPointedGraph(event: BeLazyEvent): PointedGraph[Rdf] =
+      binder.toPointedGraph((BeLazy, event.timestamp))
+
+  }
+
+  implicit lazy val RunEventBinder: PointedGraphBinder[Rdf, RunEvent] = new PointedGraphBinder[Rdf, RunEvent] {
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, RunEvent] =
+      AssertorResponseEventBinder.fromPointedGraph(pointed) orElse
+        ResourceResponseEventBinder.fromPointedGraph(pointed) orElse
+        BeProactiveEventBinder.fromPointedGraph(pointed) orElse
+        BeLazyEventBinder.fromPointedGraph(pointed)
+    def toPointedGraph(event: RunEvent): PointedGraph[Rdf] = event match {
+      case e: AssertorResponseEvent => AssertorResponseEventBinder.toPointedGraph(e)
+      case e: ResourceResponseEvent => ResourceResponseEventBinder.toPointedGraph(e)
+      case e: BeProactiveEvent => BeProactiveEventBinder.toPointedGraph(e)
+      case e: BeLazyEvent => BeLazyEventBinder.toPointedGraph(e)
+    }
+  }
+
+  //
 
   implicit lazy val ContextBinder: PointedGraphBinder[Rdf, Context] = pgb[Context](ont.content, ont.line, ont.column)(Context.apply, Context.unapply)
 
@@ -97,16 +158,16 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val OrganizationVOBinder = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
 
-  implicit lazy val ErrorResponseBinder = pgb[ErrorResponse](ont.url, ont.action, ont.timestamp, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
+  implicit lazy val ErrorResponseBinder = pgb[ErrorResponse](ont.url, ont.action, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
 
-  implicit lazy val HttpResponseBinder = pgb[HttpResponse](ont.url, ont.action, ont.timestamp, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
+  implicit lazy val HttpResponseBinder = pgb[HttpResponse](ont.url, ont.action, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
 
 
   implicit lazy val ResourceResponseBinder = new PointedGraphBinder[Rdf, ResourceResponse] {
 
     def toPointedGraph(t: ResourceResponse): PointedGraph[Rdf] = t match {
-      case e @ ErrorResponse(_, _, _, _) => ErrorResponseBinder.toPointedGraph(e)
-      case h @ HttpResponse(_, _, _, _, _, _) => HttpResponseBinder.toPointedGraph(h)
+      case e @ ErrorResponse(_, _, _) => ErrorResponseBinder.toPointedGraph(e)
+      case h @ HttpResponse(_, _, _, _, _) => HttpResponseBinder.toPointedGraph(h)
     }
 
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponse] = {
@@ -127,19 +188,18 @@ trait Binders extends UriBuilders with LiteralBinders {
         strategy <- (pointed / ont.strategy).as[Strategy]
         createdAt <- (pointed / ont.createdAt).as[DateTime]
         completedAt <- (pointed / ont.completedAt).asOption[DateTime]
-        explorationMode <- (pointed / ont.explorationMode).asOption[ExplorationMode] // <- WRONG
-        assertions <- (pointed / ont.assertion).asSet[Assertion]
-        rrs <- (pointed / ont.resourceResponse).asSet[ResourceResponse]
+        events <- (pointed / ont.event).asSet[RunEvent]
       } yield {
-        var run = Run(id = id, strategy = strategy, createdAt = createdAt)
-        run = run.withAssertions(assertions)
-        rrs foreach { rr =>
-          rr match {
-            case HttpResponse(_, _, _, _, _, urls) => run = run.withNewUrlsToBeExplored(urls)._1
-            case _ => ()
-          }
-        }
+        var run = Run.initialRun(id = id, strategy = strategy, createdAt = createdAt)._1
         completedAt foreach { at => run = run.completedAt(at) }
+        events.toList.sortBy(_.timestamp) foreach {
+          case AssertorResponseEvent(ar@AssertorResult(_, _, _, _), _) => run = run.withAssertorResult(ar)
+          case AssertorResponseEvent(af@AssertorFailure(_, _, _, _), _) => run = run.withAssertorFailure(af)
+          case ResourceResponseEvent(hr@HttpResponse(_, _, _, _, _), _) => run = run.withHttpResponse(hr)._1
+          case ResourceResponseEvent(er@ErrorResponse(_, _, _), _) => run = run.withErrorResponse(er)
+          case BeProactiveEvent(_) => ()
+          case BeLazyEvent(_) => ()
+        }
         run
       }
     }

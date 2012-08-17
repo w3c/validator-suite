@@ -36,11 +36,6 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
 
   lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
   
-  /**
-   * A shorten id for logs readability
-   */
-  def shortId: String = job.id.shortId + "/" + stateData.id._3.shortId
-
   implicit def strategy = job.strategy
 
   // at instanciation of this actor
@@ -48,26 +43,31 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
   // TODO
   conf.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
 
-  var lastRun: Run = Run(id = (orgId, jobId, RunId()), strategy = strategy) // TODO get last run data from the db?
+  var lastRun: Run = Run.freshRun(orgId, jobId, strategy)._1
+ //Run.freshRun(orgId, jobId, strategy)._1 // TODO get last run data from the db?
 
   startWith(lastRun.state, lastRun)
 
   def stateOf(run: Run): State = {
+    val runId: RunId = run.id._3
     val currentState = stateName
     val newState = run.state
     val stayOrGoto =
       if (currentState === newState) {
         stay()
       } else {
-        logger.debug("%s: transition to new state %s" format (shortId, newState.toString))
+        logger.debug("%s: transition to new state %s" format (run.shortId, newState.toString))
         goto(newState)
       }
-    val run_ = if (run.noMoreUrlToExplore && run.pendingAssertions == 0) {
-      val completed = run.copy(completedAt = Some(DateTime.now(DateTimeZone.UTC)))
-      Run.save(completed)
-      completed
-    } else run
-    stayOrGoto using run_
+    val run2 =
+      if (run.noMoreUrlToExplore && run.pendingAssertions == 0) {
+        val now = DateTime.now(DateTimeZone.UTC)
+        Run.completedAt(run.runUri, now)
+        run.copy(completedAt = Some(now))
+      } else {
+        run
+      }
+    stayOrGoto using run2
   }
 
   when((Idle, ProActive))(stateFunction)
@@ -90,82 +90,69 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       // do it only if necessary (ie. something has changed since last time)
       if (run ne lastRun) {
         // Should really the frequency of broadcast and the frequency of saves be coupled?
-        Run.save(run)
+        // this is wrong: should just save a new JobData instead
+        //Run.save(run)
         // tell the subscribers about the current run for this run
         val msg = UpdateData(run.jobData, job.id, run.activity)
         tellEverybody(msg)
+        // ???
         lastRun = run
       }
       stay()
     }
-    case Event(result: AssertorResult, _run) => {
-      result.assertions foreach { assertion => Run.addAssertion(_run.runUri, assertion) }
-      if (result.context === _run.id) {
-        tellEverybody(NewAssertorResult(result))
-        stateOf(_run.withAssertorResponse(result))
-      } else {
-        stay()
-      }
+    // just ignore this event if from a previous Run
+    case Event(ar: AssertorResponse, run) if ar.context /== run.id => {
+      logger.debug("%s (previous run): received assertor response" format (run.shortId))
+      stay()
     }
-    case Event(failure: AssertorFailure, _run) => {
-      if (failure.context === _run.id) {
-        stateOf(_run.withAssertorResponse(failure))
-      } else {
-        stay()
-      }
+    case Event(result: AssertorResult, run) => {
+      val now = DateTime.now(DateTimeZone.UTC)
+      Run.saveEvent(run.runUri, AssertorResponseEvent(result, now))
+      tellEverybody(NewAssertorResult(result, now))
+      stateOf(run.withAssertorResult(result))
     }
-    case Event((contextRun: RunId, response: ResourceResponse), _run) => {
-
-      if (contextRun === _run.id._3) {
-
-        logger.debug("<<< " + response.url)
-        Run.addResourceResponse(_run.runUri, response)
-        tellEverybody(NewResource(_run.id, response))
-
-        val runWithResponse = _run.withResourceResponse(response)
-
-        (response, runWithResponse.explorationMode) match {
-          // we do something only if
-          // * we're ProActive
-          // * it's an HttpResponse (not a failure)
-          case (httpResponse: HttpResponse, ProActive) => {
-            val (runWithNewURLs, newUrls) = runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs)
-            if (!newUrls.isEmpty)
-              logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, newUrls.size, runWithResponse.numberOfKnownUrls))
-            // schedule assertions (why only if it's a GET?)
-            val assertors = strategy.getAssertors(httpResponse)
-            if (httpResponse.action === GET)
-              assertors foreach { assertor => assertionsActorRef ! AssertorCall(_run.id, assertor, httpResponse) }
-            // schedule new fetches
-            val runWithPendingAssertions =
-              runWithNewURLs.copy(pendingAssertions = runWithNewURLs.pendingAssertions + assertors.size)
-            stateOf(scheduleNextURLsToFetch(runWithPendingAssertions))
-          }
-          case (errorResponse: ErrorResponse, ProActive) => stateOf(scheduleNextURLsToFetch(runWithResponse))
-          case _ => stateOf(runWithResponse)
-        }
-      } else {
-        logger.debug("<<< " + response.url + " (from previous run)")
-        stateOf(_run)
-      }
-
+    case Event(failure: AssertorFailure, run) => {
+      Run.saveEvent(run.runUri, AssertorResponseEvent(failure))
+      stateOf(run.withAssertorFailure(failure))
+    }
+    // just ignore this event if from a previous Run
+    case Event((contextRun: RunId, response: ResourceResponse), run) if contextRun /== run.id._3 => {
+      logger.debug("%s (previous run): <<< %s" format (run.shortId, response.url))
+      stay()
+    }
+    case Event((_: RunId, httpResponse: HttpResponse), run) => {
+      logger.debug("%s: <<< %s" format (run.shortId, httpResponse.url))
+      Run.saveEvent(run.runUri, ResourceResponseEvent(httpResponse))
+      tellEverybody(NewResource(run.id, httpResponse))
+      val (newRun, urlsToFetch, assertorCalls) =
+        run.withHttpResponse(httpResponse)
+      if (! urlsToFetch.isEmpty)
+        urlsToFetch foreach { url => fetch(url, run.id._3) }
+      if (! assertorCalls.isEmpty)
+        assertorCalls foreach { call => assertionsActorRef ! call }
+      stateOf(newRun)
+    }
+    case Event((_: RunId, error: ErrorResponse), run) => {
+      logger.debug("%s: <<< error when fetching %s" format (run.shortId, error.url))
+      Run.saveEvent(run.runUri, ResourceResponseEvent(error))
+      tellEverybody(NewResource(run.id, error))
+      stateOf(run)
     }
     case Event(msg: ListenerMessage, _) => {
       listenerHandler(msg)
       stay()
     }
-    case Event(BeProactive(_), run) => stateOf(run.withMode(ProActive))
-    case Event(BeLazy(_), run) => stateOf(run.withMode(Lazy))
-    case Event(Refresh(_), run) => {
-      // logger.debug("%s: received a Refresh" format shortId)
-      val firstURLs = List(strategy.entrypoint)
-      val freshRun =
-        Run(id = (orgId, jobId, RunId()), strategy = strategy)
+    case Event(BeProactive, run) => stateOf(run.withMode(ProActive))
+    case Event(BeLazy, run) => stateOf(run.withMode(Lazy))
+    case Event(Refresh, run) => {
+      logger.debug("%s: received a Refresh" format run.shortId)
+      val (freshRun, urlsToBeFetched) = Run.freshRun(orgId, jobId, strategy)
       sender ! freshRun.id
-      val (runData, _) = freshRun.withNewUrlsToBeExplored(firstURLs)
-      stateOf(scheduleNextURLsToFetch(runData))
+      urlsToBeFetched foreach { url => fetch(url, freshRun.id._3) }
+      stateOf(freshRun)
     }
-    case Event(Stop(_), run) => {
+    case Event(Stop, run) => {
+      logger.debug("%s: received a Stop" format run.shortId)
       assertionsActorRef ! Stop
       stateOf(run.stopMe())
     }
@@ -180,7 +167,7 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
       val msg = UpdateData(nextStateData.jobData, job.id, nextStateData.activity)
       tellEverybody(msg)
       if (nextStateData.noMoreUrlToExplore) {
-        logger.info("%s: Exploration phase finished. Fetched %d pages" format (shortId, nextStateData.fetched.size))
+        logger.info("%s: Exploration phase finished. Fetched %d pages" format (nextStateData.shortId, nextStateData.fetched.size))
         if (nextStateData.pendingAssertions == 0) {
           logger.info("Assertion phase finished.")
         }
@@ -195,31 +182,26 @@ extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
     tellListeners(msg)
   }
 
-  private final def scheduleNextURLsToFetch(run: Run): Run = {
-    val (newObservation, explores) = run.takeAtMost(MAX_URL_TO_FETCH)
-    val runId = run.id._3
-    explores foreach { explore => fetch(explore, runId) }
-    newObservation
-  }
-
   /**
    * Fetch one URL
    *
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
+  // TODO Run.withHttpResponse should return a List[Fetch] instead of List[URL]
   private final def fetch(url: URL, runId: RunId): Unit = {
+    val currentRun = stateData
     val action = strategy.getActionFor(url)
     action match {
       case GET => {
-        logger.debug("%s: GET >>> %s" format (shortId, url))
+        logger.debug("%s: >>> GET %s" format (currentRun.shortId, url))
         http ! Fetch(url, GET, (job.vo.organization, job.id, runId))
       }
       case HEAD => {
-        logger.debug("%s: HEAD >>> %s" format (shortId, url))
+        logger.debug("%s: >>> HEAD %s" format (currentRun.shortId, url))
         http ! Fetch(url, HEAD, (job.vo.organization, job.id, runId))
       }
       case IGNORE => {
-        logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (shortId, url))
+        logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (currentRun.shortId, url))
       }
     }
   }

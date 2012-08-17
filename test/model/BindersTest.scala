@@ -67,17 +67,18 @@ class BindersTest extends WordSpec with MustMatchers {
     }
   }
 
+  val assertion =
+    Assertion(
+      url = URL("http://example.com/foo"),
+      assertorId = AssertorId(),
+      contexts = List(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
+      lang = "fr",
+      title = "bar",
+      severity = Warning,
+      description = None,
+      timestamp = DateTime.now(DateTimeZone.UTC))
+
   "Assertion" in {
-    val assertion =
-      Assertion(
-        url = URL("http://example.com/foo"),
-        assertorId = AssertorId(),
-        contexts = List(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
-        lang = "fr",
-        title = "bar",
-        severity = Warning,
-        description = None,
-        timestamp = DateTime.now(DateTimeZone.UTC))
     assertion.toPG.as[Assertion] must be(Success(assertion))
   }
 
@@ -86,7 +87,6 @@ class BindersTest extends WordSpec with MustMatchers {
     ErrorResponse(
       url = URL("http://example.com/foo"),
       action = GET,
-      timestamp = DateTime.now(DateTimeZone.UTC),
       why = "just because")
 
   "ErrorResponse" in {
@@ -97,7 +97,6 @@ class BindersTest extends WordSpec with MustMatchers {
     HttpResponse(
       url = URL("http://example.com/foo"),
       action = GET,
-      timestamp = DateTime.now(DateTimeZone.UTC),
       status = 200,
       headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
       extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))
@@ -106,19 +105,76 @@ class BindersTest extends WordSpec with MustMatchers {
     httpResponse.toPG.as[HttpResponse] must be(Success(httpResponse))
   }
 
-  "ResourceResponse as ErrorResponse" in {
+  "ResourceResponse" in {
     errorResponse.toPG.as[ResourceResponse] must be(Success(errorResponse))
-  }
-
-  "ResourceResponse as HttpResponse" in {
     httpResponse.toPG.as[ResourceResponse] must be(Success(httpResponse))
   }
 
-  "Run" in {
-    val run = Run(id = (OrganizationId(), JobId(), RunId()), strategy = strategy)
-    run.toPG.as[Run] must be(Success(run))
+//  "Run" in {
+//    val run = Run(id = (OrganizationId(), JobId(), RunId()), strategy = strategy)
+//    run.toPG.as[Run] must be(Success(run))
+//  }
+
+  val assertorResult =
+    AssertorResult((OrganizationId(), JobId(), RunId()), AssertorId(), URL("http://example.com"), List(assertion))
+
+  val assertorFailure =
+    AssertorFailure((OrganizationId(), JobId(), RunId()), AssertorId(), URL("http://example.com"), "parceke")
+
+  "AssertorResult" in {
+    assertorResult.toPG.as[AssertorResult] must be(Success(assertorResult))
   }
 
+  "AssertorFailure" in {
+    assertorFailure.toPG.as[AssertorFailure] must be(Success(assertorFailure))
+  }
+
+  "AssertorResponse" in {
+    assertorResult.toPG.as[AssertorResponse] must be(Success(assertorResult))
+    assertorFailure.toPG.as[AssertorResponse] must be(Success(assertorFailure))
+  }
+
+  val assertorResultEvent = AssertorResponseEvent(assertorResult)
+  val assertorFailureEvent = AssertorResponseEvent(assertorFailure)
+
+  "AssertorResponseEvent(AssertorResult)" in {
+    assertorResultEvent.toPG.as[AssertorResponseEvent] must be(Success(assertorResultEvent))
+  }
+
+  "AssertorResponseEvent(AssertorFailure)" in {
+    assertorFailureEvent.toPG.as[AssertorResponseEvent] must be(Success(assertorFailureEvent))
+  }
+
+  val httpResponseEvent = ResourceResponseEvent(httpResponse)
+  val errorResponseEvent = ResourceResponseEvent(errorResponse)
+
+  "ResourceResponseEvent(HttpResponse)" in {
+    httpResponseEvent.toPG.as[ResourceResponseEvent] must be(Success(httpResponseEvent))
+  }
+  
+  "ResourceResponseEvent(ErrorResponse)" in {
+    errorResponseEvent.toPG.as[ResourceResponseEvent] must be(Success(errorResponseEvent))
+  }
+
+  val beProactiveEvent = BeProactiveEvent()
+  val beLazyEvent = BeLazyEvent()
+
+  "BeProactiveEvent" in {
+    beProactiveEvent.toPG.as[BeProactiveEvent] must be(Success(beProactiveEvent))
+  }
+
+  "BeLazyEvent" in {
+    beLazyEvent.toPG.as[BeLazyEvent] must be(Success(beLazyEvent))
+  }
+
+  "RunEvent" in {
+    assertorResultEvent.toPG.as[RunEvent] must be(Success(assertorResultEvent))
+    assertorFailureEvent.toPG.as[RunEvent] must be(Success(assertorFailureEvent))
+    httpResponseEvent.toPG.as[RunEvent] must be(Success(httpResponseEvent))
+    errorResponseEvent.toPG.as[RunEvent] must be(Success(errorResponseEvent))
+    beProactiveEvent.toPG.as[RunEvent] must be(Success(beProactiveEvent))
+    beLazyEvent.toPG.as[RunEvent] must be(Success(beLazyEvent))
+  }
 
   "UserVO" in {
     testSerializeDeserialize(UserVOBinder) {

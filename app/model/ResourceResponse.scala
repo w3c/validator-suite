@@ -23,8 +23,10 @@ object ResourceResponse {
     import conf._
     for {
       ldr <- store.get(runUri)
-      rrs <- (ldr.resource / ont.resourceResponse).asSet[ResourceResponse]
-    } yield rrs
+      events <- (ldr.resource / ont.event).asSet[RunEvent]
+    } yield {
+      events collect { case ResourceResponseEvent(rr, _) => rr }
+    }
   }
 
 }
@@ -32,13 +34,11 @@ object ResourceResponse {
 sealed trait ResourceResponse {
   val url: URL
   val action: HttpAction
-  val timestamp: DateTime
 }
 
 case class ErrorResponse(
     url: URL,
     action: HttpAction,
-    timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
     why: String) extends ResourceResponse
 
 object HttpResponse {
@@ -63,7 +63,6 @@ object HttpResponse {
 case class HttpResponse(
     url: URL,
     action: HttpAction,
-    timestamp: DateTime = DateTime.now(DateTimeZone.UTC),
     status: Int,
     headers: Headers,
     extractedURLs: List[URL]) extends ResourceResponse

@@ -3,6 +3,7 @@ package org.w3.vs.view
 import org.w3.vs.model._
 import play.api.libs.json._
 import scalaz.Scalaz._
+import org.joda.time._
 
 case object JobsUpdate {
   
@@ -43,11 +44,11 @@ case object JobsUpdate {
 
 case object AssertorUpdate {
   
-  def json(result: AssertorResult): JsValue = {
+  def json(result: AssertorResult, timestamp: DateTime): JsValue = {
     JsArray(List(
       JsString("AssertorResult"),
       JsString(result.sourceUrl.toString),
-      JsString(Helper.formatTime(result.timestamp)),
+      JsString(Helper.formatTime(timestamp)),
       JsNumber(result.warnings),
       JsNumber(result.errors)
     ))
