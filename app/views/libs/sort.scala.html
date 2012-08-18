@@ -2,10 +2,10 @@
 @if(page.size > 1) {
     <span class="sort">
         <a class="ascend @if(page.isSortedBy(param)){current}"
-           href="@page.queryString.sortBy(param)"
+           href="@page.queryString.sortBy(param).copy(page = 1)"
            title="Sort in ascending order"><span>▴</span></a>
         <a class="descend @if(page.isSortedBy(param, false)){current}"
-           href="@page.queryString.sortBy(param, false)"
+           href="@page.queryString.sortBy(param, false).copy(page = 1)"
            title="Sort in descending order"><span>▾</span></a>
     </span>
 }

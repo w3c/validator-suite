@@ -67,7 +67,25 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
     }
   }
 
-  val queryString = new Object {
+  case class QueryString(page: Int, perPage: Int, sortParam: SortParam) {
+    override def toString = {
+      List(
+        if (perPage != Page.defaultPerPage) "n=" + perPage else "",
+        sortParam match {
+          case a if (a == ordering.default) => ""
+          case SortParam(a, true) if (a != "") => "sort=-" + sortParam.name
+          case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
+          case _ => ""
+        },
+        if (page!= 1) "p=" + page else ""
+      ).filter(_ != "").mkString("?","&","")
+    }
+    def sortBy(param: String, ascending: Boolean = true) = this.copy(sortParam = SortParam(param, ascending))
+  }
+
+  val queryString = QueryString(current, perPage, sortParam)
+
+    /*new Object {
     def sortBy(param: String, ascending: Boolean = true): String = toString(perPage, current, SortParam(param, ascending))
     override def toString = toString(perPage, current, sortParam)
     def toString(perPage: Int, current: Int, sortParam: SortParam) = {
@@ -82,7 +100,7 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
         if (current != 1) "p=" + current else ""
       ).filter(_ != "").mkString("?","&","")
     }
-  }
+  }*/
 
   val defaultSort: SortParam = ordering.default
 
