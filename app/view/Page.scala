@@ -5,6 +5,9 @@ import play.api.mvc.Request
 object Page {
   val defaultPerPage = 50
   val maxPerPage = 1000
+
+  def apply[A <: View](a: A)(implicit req: Request[_], ordering: PageOrdering[A]): Page[A] = Page(Iterable(a))
+
 }
 
 case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Request[_], ordering: PageOrdering[A]) {
@@ -71,6 +74,7 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
       List(
         if (perPage != Page.defaultPerPage) "n=" + perPage else "",
         sortParam match {
+          case a if (a == ordering.default) => ""
           case SortParam(a, true) if (a != "") => "sort=-" + sortParam.name
           case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
           case _ => ""
@@ -79,5 +83,7 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
       ).filter(_ != "").mkString("?","&","")
     }
   }
+
+  val defaultSort: SortParam = ordering.default
 
 }

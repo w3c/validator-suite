@@ -1,0 +1,30 @@
+@(page: Page[_])
+<p class="page-legend">Viewing @page.firstIndex-@page.lastIndex of @page.totalSize results</p>
+<form method="get" class="page-form">
+    @if(page.perPage != Page.defaultPerPage) {
+    <input type=hidden name="n" value="@page.perPage"/>}
+    @if(page.sortParam != page.defaultSort) {
+    <input type=hidden name="sort" value="@page.sortParam.name"/>}
+    <button type=submit name="p" value="@(page.current + 1)"@if(page.current >= page.maxPage){ disabled}>Next</button>
+</form>
+
+<form method="get" class="page-form">
+    @if(page.perPage != Page.defaultPerPage) {
+    <input type=hidden name="n" value="@page.perPage"/>}
+    @if(page.sortParam != page.defaultSort) {
+    <input type=hidden name="sort" value="@page.sortParam.name"/>}
+    <button type=submit name="p" value="@(page.current - 1)"@if(page.current <= 1) { disabled}>Previous</button>
+</form>
+
+<form method="get" class="page-form">
+    @if(page.perPage != Page.defaultPerPage) {
+    <input type=hidden name="n" value="@page.perPage"/>}
+    @if(page.sortParam != page.defaultSort) {
+    <input type=hidden name="sort" value="@page.sortParam.name"/>}
+    <label for="p">Go to page:</label>
+    <select id="p" name="p">
+        @for(i <- 1 until page.maxPage + 1) {
+        <option@if(page.current == i){ selected}>@i</option>}
+    </select>
+    <button type=submit>Go</button>
+</form>

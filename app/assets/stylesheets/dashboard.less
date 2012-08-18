@@ -24,24 +24,15 @@
 .page-form {
     display: inline;
     float: right;
-    padding: 6px 10px;
+    padding: 6px 10px 6px 0;
+
+    select {
+        margin-right: 6px;
+    }
 }
 .page-form > * {
     vertical-align: middle;
     margin: 0;
-}
-.page-form button {
-    background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-    background: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-    background: -o-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-    background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-    border: 1px solid #AAA;
-    border-radius: 2px;
-    color: #444;
-    padding: 3px 12px;
-    margin:0;
-    vertical-align: middle;
-    font-size: 0.9em;
 }
 
 button {
@@ -56,6 +47,10 @@ button {
     margin:0;
     vertical-align: middle;
     font-size: 0.9em;
+}
+
+button[disabled] {
+    color: grey;
 }
 
 /*.controls {

@@ -32,18 +32,7 @@
 }{ @***** Footer *****@
 
     @libs.footer {
-    <p class="page-legend">Viewing @page.firstIndex-@page.lastIndex of @page.totalSize results</p>
-    <form method="get" class="page-form">
-        @if(page.perPage != Page.defaultPerPage) {
-        <input type=hidden id="n" name="n" value="@page.perPage"/>
-        }
-        <label for="p">Go to page:</label>
-        <select id="p" name="p">
-        @for(i <- 1 until page.maxPage + 1) {
-            <option@if(page.current == i){ selected}>@i</option>}
-        </select>
-        <button type=submit>Go</button>
-    </form>
+    @libs.pageCtrl(page)
     }
 
 }

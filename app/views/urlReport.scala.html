@@ -1,6 +1,6 @@
 @(job: Job,
   resource: ResourceView,
-  assertions: Iterable[AssertionView],
+  page: Page[AssertionView],
   user: User,
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
@@ -20,23 +20,27 @@
     
     <hr>
     
-    <section id="urlArticles" class="list" data-id="@job.id">
+    <section id="resources" class="list" data-id="@job.id">
         @pages.resources(Page(Iterable(resource)))
     </section>
-    
-    <!--<hr>
+
+    @**
+    <hr>
     <section id="assertors" class="tabs">
-        @**libs.assertors(assertors)**@
-    </section> -->
+        @libs.assertors(assertors)
+    </section>
+    **@
     
     <hr>
     
-    <section id="assertionArticles" class="folds">
-        @pages.assertions(Page(assertions))
+    <section id="assertions" class="folds">
+        @pages.assertions(page)
     </section>
     
 }{ @***** Footer *****@
 
-    @libs.footer()
+    @libs.footer{
+    @libs.pageCtrl(page)
+    }
 
 }
