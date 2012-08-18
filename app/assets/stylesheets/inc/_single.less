@@ -1,0 +1,60 @@
+@rb-border: 1px solid #C8C8C8;
+
+.single {
+
+    display: table;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    border-collapse: separate;
+    width: 100%;
+    position: relative;
+    background-image: url('../images/texture.gif');
+    padding-top: 0 !important;
+
+    h2, h3 {display: none;}
+
+    dfn {font-style: normal;}
+
+    aside {
+        display: table-row-group;
+        dl {display: table-row;}
+        dt {
+            display: table-cell;
+            padding-top: 10px;
+            padding-bottom: 5px;
+            border-top: @rb-border;
+            color: #06C;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        dd {display: none;}
+
+        .warnings,
+        .errors,
+        .resources {
+            color: grey;
+            font-style: normal;
+            font-size: 1em;
+            font-weight: bold;
+            text-align: center;
+        }
+    }
+
+    article {
+        display: table-row-group;
+        dl {display: table-row;}
+        dt {display: none;}
+        dd {
+            display: table-cell;
+            font-size: 1.2em;
+        }
+
+        .warnings,
+        .errors,
+        .resources {
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+        }
+    }
+}

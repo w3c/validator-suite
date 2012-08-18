@@ -4,25 +4,13 @@
 @rb-border: 1px solid #C8C8C8;
 @rb-background: #F6F7F9;
 
-#jobs.single {
+#resources.single {
 
     aside {
-        dt {
-            &.health,
-            &.actions,
-            &.maxResources {
-                display: none;
-            }
-        }
-        .warnings,
-        .errors,
-        .resources {
+        .warnings, .errors {
             width: @rb-width;
             background: @rb-background;
             border-top: @rb-border;
-            //position: relative;
-            //top: -20px;
-            //right: -10px;
         }
         .warnings {
             border-left: @rb-border;
@@ -31,7 +19,7 @@
             border-top-left-radius: 5px;
             padding-left: @rb-padding;
         }
-        .resources {
+        .errors {
             border-right: @rb-border;
             -webkit-border-top-right-radius: 5px;
             -moz-border-radius-topright: 5px;
@@ -41,36 +29,17 @@
     }
 
     article {
-        .name a {
-            color:black;
+        .url a {
+            font-weight: bold;
+            color: black;
         }
-        dd {
-            &.maxResources {
-                display: none
-            }
-            &.health,
-            &.actions {
-                display: block;
-                position: absolute;
-            }
-            &.health {
-                right: 20px;
-                bottom: 20px;
-            }
-            &.actions {
-                left: 10px;
-                bottom:10px;
-            }
-        }
+
         .warnings,
         .errors,
         .resources {
             background: @rb-background;
-            padding-bottom: 30px;
+            padding-bottom: 10px;
             border-bottom: @rb-border;
-            //position: relative; // ff does not allow relative positioning of table displayed elements
-            //top: -20px;
-            //right: -10px;
         }
         .warnings {
             border-left: @rb-border;
@@ -79,20 +48,13 @@
             -moz-border-radius-bottomleft: 5px;
             border-bottom-left-radius: 5px;
         }
-        .resources {
+        .errors {
             border-right: @rb-border;
             padding-right: @rb-padding;
             -webkit-border-bottom-right-radius: 5px;
             -moz-border-radius-bottomright: 5px;
             border-bottom-right-radius: 5px;
         }
-        .health {
-            progress {
-                -moz-box-sizing: border-box;
-                box-sizing: border-box;
-                width: 3 * @rb-width + 2 * @rb-padding - 18px;
-                height: 15px;
-            }
-        }
     }
+
 }
