@@ -2,7 +2,7 @@
 <article>
     <dl>
         <dt>URL</dt>
-        <dd class="url"><a href="@Helper.encode(resource.url)">@resource.url</a></dd>
+        <dd class="url"><a href="@Helper.encode(resource.url)">@Helper.shorten(resource.url, 80)</a></dd>
 
         <dt>Last validated</dt>
         <dd class="time"><time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time></dd>
