@@ -139,31 +139,6 @@ case class Run private (
 
   def completedAt(at: DateTime): Run = copy(completedAt = Some(at))
 
-  /**
-   * Represent an article on the byUrl report
-   * (resource url, last assertion timestamp, total warnings, total errors)
-   * if there is no context, the assertion counts for 1
-   */
-  lazy val urlArticles: List[(URL, DateTime, Int, Int)] = {
-    val uas = assertions.groupBy(_.url) map { case (url, as) =>
-      val last = as.maxBy(_.timestamp).timestamp
-      var errors = 0
-      var warnings = 0
-      as foreach { a =>
-        a.severity match {
-          case Error => errors += math.max(1, a.contexts.size)
-          case Warning => warnings += math.max(1, a.contexts.size)
-          case Info => ()
-        }
-      }
-      (url, last, warnings, errors)
-    }
-    uas.toList
-  }
-
-  def urlArticle(url: URL): Option[(URL, DateTime, Int, Int)] =
-    urlArticles find { _._1 === url }
-
   /* methods related to the data */
   
   def ldr: LinkedDataResource[Rdf] = LinkedDataResource(runUri, this.toPG)
