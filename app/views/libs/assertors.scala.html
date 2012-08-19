@@ -22,7 +22,7 @@
         </dl>
         </article>
 
-        @assertors.map { assertor =>
+        @assertors.toSeq.sorted(Ordering[(Int, String)].on[AssertorView](v => (-v.errors, Messages(v.key)))).map { assertor =>
         <hr>
         <article data-id="@assertor.key"@if(Some(assertor.key) == page.filter){ class=current}>
             <dl>

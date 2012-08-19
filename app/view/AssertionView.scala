@@ -13,9 +13,10 @@ case class AssertionView(
     message: Html,
     description: Option[Html],
     validated: DateTime,
+    occurrences: Int,
     contexts: Iterable[ContextView]) extends View {
 
-  val occurrences: Int = contexts.size
+  //val occurrences: Int = contexts.size
 
 }
 
@@ -39,7 +40,10 @@ object AssertionView {
       Html(assertion.title),
       assertion.description.map(Html.apply _),
       assertion.timestamp,
-      assertion.contexts.map(ContextView.apply _)
+      scala.math.max(1, assertion.contexts.size),
+      assertion.contexts.toSeq.sorted(
+        Ordering[(Int, Int)].on[Context](context => (context.line.getOrElse(1000000), context.column.getOrElse(1000000)))
+      ).map(ContextView.apply _)
     )
   }
 
