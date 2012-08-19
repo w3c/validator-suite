@@ -163,24 +163,6 @@ case class Run private (
 
   def urlArticle(url: URL): Option[(URL, DateTime, Int, Int)] =
     urlArticles find { _._1 === url }
-  
-  // Returns the assertors that validated @url, with their name and the total number of warnings and errors that they reported for @url.
-  def assertorArticles(url: URL): List[(AssertorId, String, Int, Int)] = {
-    val aas = assertions.filter(_.url === url).groupBy(_.assertorId) map { case (assertorId, as) =>
-      var errors = 0
-      var warnings = 0
-      as foreach { a =>
-        a.severity match {
-          case Error => errors += math.max(1, a.contexts.size)
-          case Warning => warnings += math.max(1, a.contexts.size)
-          case Info => ()
-        }
-      }
-      val assertorName = Assertor.getName(assertorId)
-      (assertorId, assertorName, warnings, errors)
-    }
-    aas.toList
-  }
 
   /* methods related to the data */
   

@@ -20,6 +20,9 @@ case class AssertionView(
 }
 
 object AssertionView {
+  def fromAssertions(assertions: Iterable[Assertion]): Iterable[AssertionView] = {
+    assertions map (apply _)
+  }
 
   import org.w3.util.FutureVal
   import org.w3.util.FutureVal._
@@ -31,7 +34,7 @@ object AssertionView {
   def apply(assertion: Assertion): AssertionView = {
     AssertionView(
       assertion.url,
-      Assertor.getName(assertion.assertorId),
+      Assertor.getKey(assertion.assertorId),
       assertion.severity,
       Html(assertion.title),
       assertion.description.map(Html.apply _),

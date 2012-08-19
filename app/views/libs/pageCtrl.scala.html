@@ -3,7 +3,7 @@
 <form method="get" class="page-form">
     @if(page.perPage != Page.defaultPerPage) {
     <input type=hidden name="n" value="@page.perPage"/>}
-    @if(page.sortParam != page.defaultSort) {
+    @if(page.sortParam != page.defaultSortParam) {
     <input type=hidden name="sort" value="@page.sortParam.name"/>}
     <button type=submit name="p" value="@(page.current + 1)"@if(page.current >= page.maxPage){ disabled}>Next</button>
 </form>
@@ -11,7 +11,7 @@
 <form method="get" class="page-form">
     @if(page.perPage != Page.defaultPerPage) {
     <input type=hidden name="n" value="@page.perPage"/>}
-    @if(page.sortParam != page.defaultSort) {
+    @if(page.sortParam != page.defaultSortParam) {
     <input type=hidden name="sort" value="@page.sortParam.name"/>}
     <button type=submit name="p" value="@(page.current - 1)"@if(page.current <= 1) { disabled}>Previous</button>
 </form>
@@ -19,7 +19,7 @@
 <form method="get" class="page-form">
     @if(page.perPage != Page.defaultPerPage) {
     <input type=hidden name="n" value="@page.perPage"/>}
-    @if(page.sortParam != page.defaultSort) {
+    @if(page.sortParam != page.defaultSortParam) {
     <input type=hidden name="sort" value="@page.sortParam.name"/>}
     <label for="p">Go to page:</label>
     <select id="p" name="p">

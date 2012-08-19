@@ -68,3 +68,9 @@ exceptions.store=Store Exception: {0}
 exceptions.unexpected=Unexpected Exception: {0}
 error.timeout=Request timed out
 debug.unexpected=Unexpected: {0}
+
+#assertors
+assertor.checker.i18n=I18n Checker
+assertor.validator.nu=Validator.nu
+assertor.validator.css=CSS Validator
+assertor.validator.html=HTML Validator

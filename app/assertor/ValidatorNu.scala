@@ -14,7 +14,7 @@ import play.api.templates.HtmlFormat
  */
 object ValidatorNu extends FromHttpResponseAssertor {
 
-  val name = "Validator.nu"
+  val key = "validator.nu"
   
   def validatorURL(encodedURL: String) =
     "http://validator.w3.org/nu/?doc=" + encodedURL + "&out=json"

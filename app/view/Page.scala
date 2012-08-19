@@ -6,13 +6,17 @@ object Page {
   val defaultPerPage = 50
   val maxPerPage = 1000
 
-  def apply[A <: View](a: A)(implicit req: Request[_], ordering: PageOrdering[A]): Page[A] = Page(Iterable(a))
+  def apply[A <: View](a: A)(implicit req: Request[_], ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = new Page(Iterable(a))
+  def apply[A <: View](i: Iterable[A])(implicit req: Request[_], ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = new Page(i)
 
 }
 
-case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Request[_], ordering: PageOrdering[A]) {
+class Page[A <: View](private val iterable: Iterable[A])(implicit req: Request[_], ordering: PageOrdering[A], filtering: PageFiltering[A]) {
 
-  val perPage: Int = {
+  def size: Int = iterator.size
+  def totalSize: Int = iterable.size
+
+  def perPage: Int = {
     try {
       req.getQueryString("n").get.toInt match {
         case p if (p < 1) => Page.defaultPerPage
@@ -24,11 +28,11 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
     }
   }
 
-  val maxPage: Int = {
+  def maxPage: Int = {
     scala.math.ceil(iterable.size.toDouble / perPage.toDouble).toInt
   }
 
-  val current: Int =  {
+  def current: Int =  {
     try {
       req.getQueryString("p").get.toInt  match {
         case p if (p < 1) => 1
@@ -38,7 +42,12 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
     } catch {case _ => 1}
   }
 
-  val sortParam: SortParam = {
+  def firstIndex: Int = (current - 1) * perPage + 1
+  def lastIndex: Int = scala.math.min(current * perPage, totalSize)
+
+  def defaultSortParam: SortParam = ordering.default
+
+  def sortParam: SortParam = {
     req.queryString.get("sort").flatten.headOption.map(param =>
       if (param.startsWith("-"))
         ordering.validate(SortParam(param.replaceFirst("-",""), true))
@@ -47,18 +56,21 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
     ).getOrElse(ordering.default)
   }
 
-  val iterator: Iterable[A] = {
-    val offset = (current - 1) * perPage
-    iterable.toSeq
-      .sorted(ordering.ordering(sortParam))
-      .slice(offset, offset + perPage)
+  def filter: Option[String] = {
+    try {
+      req.getQueryString("filter").get.toString match {
+        case a => Some(a)
+      }
+    } catch {
+      case _ => None
+    }
   }
 
-  val size: Int = iterator.size
-  val totalSize: Int = iterable.size
+  //val size: Int = iterator.size
+  //val totalSize: Int = iterable.size
 
-  val firstIndex: Int = (current - 1) * perPage + 1
-  val lastIndex: Int = scala.math.min(current * perPage, totalSize)
+  //val firstIndex: Int = (current - 1) * perPage + 1
+  //val lastIndex: Int = scala.math.min(current * perPage, totalSize)
 
   def isSortedBy(param: String, ascending: Boolean = true): Boolean = {
     sortParam match {
@@ -67,7 +79,9 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
     }
   }
 
-  case class QueryString(page: Int, perPage: Int, sortParam: SortParam) {
+  def queryString = QueryString(current, perPage, sortParam, filter)
+
+  case class QueryString(page: Int, perPage: Int, sortParam: SortParam, filter: Option[String]) {
     override def toString = {
       List(
         if (perPage != Page.defaultPerPage) "n=" + perPage else "",
@@ -77,31 +91,21 @@ case class Page[A <: View](private val iterable: Iterable[A])(implicit req: Requ
           case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
           case _ => ""
         },
+        if (filter!= None) "filter=" + filter.get else "",
         if (page!= 1) "p=" + page else ""
       ).filter(_ != "").mkString("?","&","")
     }
     def sortBy(param: String, ascending: Boolean = true) = this.copy(sortParam = SortParam(param, ascending))
+    def filterBy(param: Option[String]) = this.copy(filter = param)
+    def goToPage(page: Int) = this.copy(page = page)
   }
 
-  val queryString = QueryString(current, perPage, sortParam)
-
-    /*new Object {
-    def sortBy(param: String, ascending: Boolean = true): String = toString(perPage, current, SortParam(param, ascending))
-    override def toString = toString(perPage, current, sortParam)
-    def toString(perPage: Int, current: Int, sortParam: SortParam) = {
-      List(
-        if (perPage != Page.defaultPerPage) "n=" + perPage else "",
-        sortParam match {
-          case a if (a == ordering.default) => ""
-          case SortParam(a, true) if (a != "") => "sort=-" + sortParam.name
-          case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
-          case _ => ""
-        },
-        if (current != 1) "p=" + current else ""
-      ).filter(_ != "").mkString("?","&","")
-    }
-  }*/
-
-  val defaultSort: SortParam = ordering.default
+  def iterator: Iterable[A] = {
+    val offset = (current - 1) * perPage
+    iterable.toSeq
+      .filter(filtering.filter(filter))
+      .sorted(ordering.order(sortParam))
+      .slice(offset, offset + perPage)
+  }
 
 }

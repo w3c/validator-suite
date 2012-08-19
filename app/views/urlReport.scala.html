@@ -1,5 +1,6 @@
 @(job: Job,
   resource: ResourceView,
+  assertors: Iterable[AssertorView],
   page: Page[AssertionView],
   user: User,
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
@@ -15,7 +16,7 @@
 }{ @***** Content *****@
     
     @libs.admin(user)
-    @libs.navigation("Report for \"" + resource.url +"\"", List((job.name, routes.Jobs.show(job.id).toString), (resource.url.toString, "")))
+    @libs.navigation("Report for \"" + resource.url +"\"", List((job.name, routes.Jobs.show(job.id).toString), (Helper.shorten(resource.url, 50), "")))
     @libs.messages(messages)
     
     <hr>
@@ -24,12 +25,10 @@
         @pages.resources(Page(resource))
     </section>
 
-    @**
     <hr>
     <section id="assertors" class="tabs">
-        @libs.assertors(assertors)
+        @libs.assertors(assertors, page)
     </section>
-    **@
     
     <hr>
     

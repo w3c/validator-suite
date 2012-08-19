@@ -21,7 +21,7 @@ object View {
   }
 
   implicit def jobViewOrdering: PageOrdering[JobView] = new PageOrdering[JobView] {
-    def params: Iterable[String] = Iterable(
+    val params: Iterable[String] = Iterable(
       "name",
       "url",
       "status",
@@ -31,8 +31,8 @@ object View {
       "resources",
       "maxResources",
       "health")
-    def default: SortParam = SortParam("name", true)
-    def ordering(param: SortParam): Ordering[JobView] = {
+    val default: SortParam = SortParam("name", true)
+    def order(param: SortParam): Ordering[JobView] = {
       val ord = validate(param).name match {
         case "name"         => Ordering[String].on[JobView](_.name)
         case "url"          => Ordering[(String, String)].on[JobView](job => (job.url.toString, job.name))
@@ -49,13 +49,13 @@ object View {
   }
 
   implicit def resourceViewOrdering: PageOrdering[ResourceView] = new PageOrdering[ResourceView] {
-    def params: Iterable[String] = Iterable(
+    val params: Iterable[String] = Iterable(
       "url",
       "validated",
       "warnings",
       "errors")
-    def default: SortParam = SortParam("errors", false)
-    def ordering(param: SortParam): Ordering[ResourceView] = {
+    val default: SortParam = SortParam("errors", false)
+    def order(param: SortParam): Ordering[ResourceView] = {
       val ord = validate(param).name match {
         case "url"       => Ordering[String].on[ResourceView](_.url.toString)
         case "validated" => Ordering[(DateTime, String)].on[ResourceView](view => (view.lastValidated, view.url.toString))
@@ -67,9 +67,9 @@ object View {
   }
 
   implicit def assertionViewOrdering: PageOrdering[AssertionView] = new PageOrdering[AssertionView] {
-    def params: Iterable[String] = Iterable("url")
-    def default: SortParam = SortParam("url", false)
-    def ordering(param: SortParam): Ordering[AssertionView] = {
+    val params: Iterable[String] = Iterable("url")
+    val default: SortParam = SortParam("url", false)
+    def order(param: SortParam): Ordering[AssertionView] = {
       val ord = validate(param).name match {
         // TODO
         //case "validated" => Ordering[(DateTime, String)].on[AssertionView](view => (view.lastValidated, view.url.toString))

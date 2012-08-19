@@ -46,9 +46,10 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        job <- user.getJob(id) // Job.get(id, user.id)
+        job <- user.getJob(id)
+        assertions <- job.getAssertions()
         jobView <- JobView.fromJob(job)
-        resourceViews <- ResourceView.fromJob(job)
+        resourceViews = ResourceView.fromAssertions(assertions)
       } yield {
         Ok(views.html.report(jobView, Page(resourceViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
@@ -60,10 +61,12 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         job <- user.getJob(id)
-        resource <- ResourceView.fromJob(job).map(_.filter(_.url === url).head) // TODO headOption -> None = exception
-        assertions <- AssertionView.fromJob(job).map(_.filter(_.url === url))
+        assertions <- job.getAssertions().map(_.filter(_.url === url)) // TODO Empty = exception
+        resourceView = ResourceView.fromAssertions(assertions).head
+        assertorViews = AssertorView.fromAssertions(assertions)
+        assertionViews = AssertionView.fromAssertions(assertions)
       } yield {
-        Ok(views.html.urlReport(job, resource, Page(assertions), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.urlReport(job, resourceView, assertorViews, Page(assertionViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }

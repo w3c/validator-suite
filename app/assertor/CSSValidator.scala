@@ -8,7 +8,7 @@ import org.w3.cssvalidator.{ CSSValidator => CSSVal }
  */
 object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  val name = "CSS Validator"
+  val key = "validator.css"
   
   var cssval: CSSVal = null
 

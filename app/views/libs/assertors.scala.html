@@ -1,6 +1,5 @@
-@(assertors: String = "")
-        @**<aside>
-            <h2>Assertors</h2>
+@(assertors: Iterable[AssertorView], page: Page[AssertionView])
+        <aside>
             <h3>Definitions</h3>
             <dl>
                <dt class="assertor"><dfn>Assertor</dfn></dt>
@@ -9,21 +8,39 @@
                 <dd>Total number of warnings reported by this assertor for the current job</dd>
                 <dt class="errors"><dfn>Errors</dfn></dt>
                 <dd>Total number of errors reported by this assertor for the current job</dd>
+                <dt class="actions"><dfn>Actions</dfn></dt>
+                <dd>Def</dd>
             </dl>
         </aside>
-        
+
+        <article@if(page.filter == None){ class=current}>
+        <dl>
+            <dt>Assertor</dt>
+            <dd class="assertor">All</dd>
+            <dt>Actions</dt>
+            <dd class="actions"><a href="@page.queryString.goToPage(1).filterBy(None)">filter</a></dd>
+        </dl>
+        </article>
+
         @assertors.map { assertor =>
         <hr>
-        <article data-id="@assertor.id">
+        <article data-id="@assertor.key"@if(Some(assertor.key) == page.filter){ class=current}>
             <dl>
                 <dt>Assertor</dt>
-                <dd class="assertor">@assertor.name</dd>
+                <dd class="assertor">@Messages("assertor." + assertor.key)</dd>
                 <dt>Warnings</dt>
                 <dd class="warnings">@assertor.warnings</dd>
                 <dt>Errors</dt>
                 <dd class="errors">@assertor.errors</dd>
+                <dt>Actions</dt>
+                <dd class="actions">
+                    @if(Some(assertor.key) != page.filter){
+                    <a href="@page.queryString.goToPage(1).filterBy(Some(assertor.key))">filter</a>
+                    } else {
+                    [current filter]
+                    }
+                </dd>
             </dl>
         </article>
         }
 
-**@

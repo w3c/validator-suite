@@ -12,25 +12,25 @@ trait Assertor {
   implicit lazy val executionContext = conf.assertorExecutionContext  
   
   val id: AssertorId = AssertorId() 
-  val name: String
+  val key: String
 }
 
 object Assertor {
   
-  def getName(id: AssertorId): String = {
+  def getKey(id: AssertorId): String = {
     id match {
-      case CSSValidator.id => CSSValidator.name
-      case HTMLValidator.id => HTMLValidator.name
-      case ValidatorNu.id => ValidatorNu.name
-      case I18nChecker.id => I18nChecker.name
+      case CSSValidator.id => CSSValidator.key
+      case HTMLValidator.id => HTMLValidator.key
+      case ValidatorNu.id => ValidatorNu.key
+      case I18nChecker.id => I18nChecker.key
       case _ => "unknown assertor with id " + id.toString
     }
   }
 
   val get: PartialFunction[String, FromHttpResponseAssertor] = Map[String, FromHttpResponseAssertor](
-    ValidatorNu.name -> ValidatorNu,
-    HTMLValidator.name -> HTMLValidator,
-    I18nChecker.name -> I18nChecker,
-    CSSValidator.name -> CSSValidator)
+    ValidatorNu.key -> ValidatorNu,
+    HTMLValidator.key -> HTMLValidator,
+    I18nChecker.key -> I18nChecker,
+    CSSValidator.key -> CSSValidator)
 
 }

@@ -5,7 +5,7 @@ case class SortParam(name: String, ascending: Boolean) {val descending = !ascend
 trait PageOrdering[A] {
   def params: Iterable[String]
   def default: SortParam
-  def ordering(param: SortParam): Ordering[A]
+  def order(param: SortParam): Ordering[A]
   def validate(param: SortParam): SortParam = {
     if (params.exists(_ == param.name)) param else default
   }
