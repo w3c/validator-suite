@@ -1,11 +1,11 @@
 @(page: Page[_], param: String)
 @if(page.size > 1) {
     <span class="sort">
-        <a class="ascend @if(page.isSortedBy(param)){current}"
-           href="@page.queryString.sortBy(param).copy(page = 1)"
+        <a class="ascend @if(page.sortParam == SortParam(param, true)){current}"
+           href="@page.sortBy(SortParam(param, true)).goToPage(1).queryString"
            title="Sort in ascending order"><span>▴</span></a>
-        <a class="descend @if(page.isSortedBy(param, false)){current}"
-           href="@page.queryString.sortBy(param, false).copy(page = 1)"
+        <a class="descend @if(page.sortParam == SortParam(param, false)){current}"
+           href="@page.sortBy(SortParam(param, false)).goToPage(1).queryString"
            title="Sort in descending order"><span>▾</span></a>
     </span>
 }

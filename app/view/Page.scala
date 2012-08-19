@@ -2,110 +2,102 @@ package org.w3.vs.view
 
 import play.api.mvc.Request
 
-object Page {
-  val defaultPerPage = 50
-  val maxPerPage = 1000
+case class Page[A <: View] private (
+    iterable: Iterable[A],
+    ordering: PageOrdering[A],
+    filtering: PageFiltering[A],
+    current: Int = 1,                             // p=
+    perPage: Int = Page.defaultPerPage,           // n=
+    filter: Option[String] = None,                // filter=
+    sortParam: SortParam = SortParam("", true)) { // sort=
 
-  def apply[A <: View](a: A)(implicit req: Request[_], ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = new Page(Iterable(a))
-  def apply[A <: View](i: Iterable[A])(implicit req: Request[_], ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = new Page(i)
-
-}
-
-class Page[A <: View](private val iterable: Iterable[A])(implicit req: Request[_], ordering: PageOrdering[A], filtering: PageFiltering[A]) {
-
-  def size: Int = iterator.size
   def totalSize: Int = iterable.size
 
-  def perPage: Int = {
-    try {
-      req.getQueryString("n").get.toInt match {
-        case p if (p < 1) => Page.defaultPerPage
-        case p if (p > Page.maxPerPage) => Page.maxPerPage
-        case p => p
-      }
-    } catch {
-      case _ => Page.defaultPerPage
-    }
-  }
+  def size: Int = iterator.size
 
-  def maxPage: Int = {
-    scala.math.ceil(iterable.size.toDouble / perPage.toDouble).toInt
-  }
-
-  def current: Int =  {
-    try {
-      req.getQueryString("p").get.toInt  match {
-        case p if (p < 1) => 1
-        case p if (p > maxPage)=> maxPage
-        case p => p
-      }
-    } catch {case _ => 1}
-  }
-
-  def firstIndex: Int = (current - 1) * perPage + 1
-  def lastIndex: Int = scala.math.min(current * perPage, totalSize)
-
-  def defaultSortParam: SortParam = ordering.default
-
-  def sortParam: SortParam = {
-    req.queryString.get("sort").flatten.headOption.map(param =>
-      if (param.startsWith("-"))
-        ordering.validate(SortParam(param.replaceFirst("-",""), true))
-      else
-        ordering.validate(SortParam(param, false))
-    ).getOrElse(ordering.default)
-  }
-
-  def filter: Option[String] = {
-    try {
-      req.getQueryString("filter").get.toString match {
-        case a => Some(a)
-      }
-    } catch {
-      case _ => None
-    }
-  }
-
-  //val size: Int = iterator.size
-  //val totalSize: Int = iterable.size
-
-  //val firstIndex: Int = (current - 1) * perPage + 1
-  //val lastIndex: Int = scala.math.min(current * perPage, totalSize)
-
-  def isSortedBy(param: String, ascending: Boolean = true): Boolean = {
-    sortParam match {
-      case SortParam(p, a) if(p == param && a == ascending) => true
-      case _ => false
-    }
-  }
-
-  def queryString = QueryString(current, perPage, sortParam, filter)
-
-  case class QueryString(page: Int, perPage: Int, sortParam: SortParam, filter: Option[String]) {
-    override def toString = {
-      List(
-        if (perPage != Page.defaultPerPage) "n=" + perPage else "",
-        sortParam match {
-          case a if (a == ordering.default) => ""
-          case SortParam(a, true) if (a != "") => "sort=-" + sortParam.name
-          case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
-          case _ => ""
-        },
-        if (filter!= None) "filter=" + filter.get else "",
-        if (page!= 1) "p=" + page else ""
-      ).filter(_ != "").mkString("?","&","")
-    }
-    def sortBy(param: String, ascending: Boolean = true) = this.copy(sortParam = SortParam(param, ascending))
-    def filterBy(param: Option[String]) = this.copy(filter = param)
-    def goToPage(page: Int) = this.copy(page = page)
-  }
+  def offset = (current - 1) * perPage
 
   def iterator: Iterable[A] = {
-    val offset = (current - 1) * perPage
     iterable.toSeq
       .filter(filtering.filter(filter))
       .sorted(ordering.order(sortParam))
       .slice(offset, offset + perPage)
   }
 
+  def maxPage: Int = scala.math.ceil(iterable.size.toDouble / perPage.toDouble).toInt
+
+  def goToPage(page: Int): Page[A] = {
+    page match {
+      case p if p == current => this
+      case p if p > maxPage => this.copy(current = maxPage)
+      case p if p < 1 => this.copy(current = 1)
+      case p => this.copy(current = p)
+    }
+  }
+
+  def show(perPage: Int): Page[A] = {
+    perPage match {
+      case n if n > Page.maxPerPage => this.copy(perPage = Page.maxPerPage)
+      case n if n < 1 => this.copy(perPage = 1)
+      case n => this.copy(perPage = n)
+    }
+  }
+
+  def sortBy(sort: SortParam): Page[A] = this.copy(sortParam = ordering.validate(sort))
+
+  def filterBy(filter: Option[String]): Page[A] = this.copy(filter = filtering.validate(filter))
+
+  def firstIndex: Int = if (iterable.isEmpty) 0 else offset + 1
+
+  def lastIndex: Int = scala.math.min(offset + perPage, totalSize)
+
+  def queryString: String = {
+    List(
+      if (perPage != Page.defaultPerPage) "n=" + perPage else "",
+      sortParam match {
+        case a if (a == ordering.default) => ""
+        case SortParam(a, true) if (a != "") => "sort=-" + sortParam.name
+        case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
+        case _ => ""
+      },
+      if (filter!= None) "filter=" + filter.get else "",
+      if (current!= 1) "p=" + current else ""
+    ).filter(_ != "").mkString("?","&","")
+  }
+
+}
+
+object Page {
+  val defaultPerPage = 50
+  val maxPerPage = 1000
+
+  def apply[A <: View](a: A)(implicit req: Request[_], ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = {
+    apply(Iterable(a))
+  }
+
+  def apply[A <: View](a: Iterable[A])(
+      implicit req: Request[_],
+      ordering: PageOrdering[A],
+      filtering: PageFiltering[A]): Page[A] = {
+
+    val page    = try { req.getQueryString("p").get.toInt } catch { case _ => 1 }
+    val perPage = try { req.getQueryString("n").get.toInt } catch { case _ => Page.defaultPerPage }
+    val filter = req.getQueryString("filter")
+    val sort =
+      try {
+        req.queryString.get("sort").flatten.head match {
+          case param if (param.startsWith("-")) => SortParam(param.replaceFirst("-",""), true)
+          case param => SortParam(param, false)
+        }
+      } catch {
+        case _ => ordering.default
+      }
+
+    Page[A](a, ordering, filtering)
+      .show(perPage)
+      .sortBy(sort)
+      .filterBy(filter)
+      .goToPage(page)
+
+  }
 }

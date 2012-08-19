@@ -74,3 +74,6 @@ assertor.checker.i18n=I18n Checker
 assertor.validator.nu=Validator.nu
 assertor.validator.css=CSS Validator
 assertor.validator.html=HTML Validator
+
+pagination.legend=Viewing {0}-{1} of {2} results
+pagination.empty=

@@ -16,7 +16,14 @@ trait Assertor {
 }
 
 object Assertor {
-  
+
+  val keys = Iterable(
+    CSSValidator.key,
+    HTMLValidator.key,
+    ValidatorNu.key,
+    I18nChecker.key
+  )
+
   def getKey(id: AssertorId): String = {
     id match {
       case CSSValidator.id => CSSValidator.key

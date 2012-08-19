@@ -18,7 +18,7 @@
             <dt>Assertor</dt>
             <dd class="assertor">All</dd>
             <dt>Actions</dt>
-            <dd class="actions"><a href="@page.queryString.goToPage(1).filterBy(None)">filter</a></dd>
+            <dd class="actions"><a href="@page.filterBy(None).queryString">filter</a></dd>
         </dl>
         </article>
 
@@ -35,7 +35,7 @@
                 <dt>Actions</dt>
                 <dd class="actions">
                     @if(Some(assertor.key) != page.filter){
-                    <a href="@page.queryString.goToPage(1).filterBy(Some(assertor.key))">filter</a>
+                    <a href="@page.filterBy(Some(assertor.key)).goToPage(1).queryString">filter</a>
                     } else {
                     [current filter]
                     }
