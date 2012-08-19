@@ -139,7 +139,7 @@ object Jobs extends Controller {
           case a: UpdateData => JobsUpdate.json(a.data, a.jobId, a.activity)
           //case NewResource(resource) => ResourceUpdate.json(resource)
           //case NewAssertions(assertionsC) if (assertionsC.count(_.assertion.severity == Warning) != 0 || assertionsC.count(_.assertion.severity == Error) != 0) => AssertorUpdate.json(assertionsC)
-          case NewAssertorResult(result) if (!result.isValid) => AssertorUpdate.json(result)
+          case NewAssertorResult(result, datetime) if (!result.isValid) => AssertorUpdate.json(result, datetime)
         }
       }
     ) failMap (_ => Enumerator.eof[JsValue]) toPromise

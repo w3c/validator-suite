@@ -81,16 +81,16 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   }
   
   def run(): FutureVal[Exception, (OrganizationId, JobId, RunId)] = 
-    (PathAware(organizationsRef, path) ? Refresh()).mapTo[(OrganizationId, JobId, RunId)]
+    (PathAware(organizationsRef, path) ? Refresh).mapTo[(OrganizationId, JobId, RunId)]
   
   def cancel(): Unit = 
-    PathAware(organizationsRef, path) ! Stop()
+    PathAware(organizationsRef, path) ! Stop
 
   def on(): Unit = 
-    PathAware(organizationsRef, path) ! BeProactive()
+    PathAware(organizationsRef, path) ! BeProactive
 
   def off(): Unit = 
-    PathAware(organizationsRef, path) ! BeLazy()
+    PathAware(organizationsRef, path) ! BeLazy
 
   lazy val enumerator: Enumerator[RunUpdate] = {
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]

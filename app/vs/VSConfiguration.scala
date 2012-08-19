@@ -11,8 +11,6 @@ trait VSConfiguration {
   
   val system: ActorSystem
   
-  val MAX_URL_TO_FETCH: Int
-  
   val assertorExecutionContext: ExecutionContext
   
   val webExecutionContext: ExecutionContext

@@ -13,6 +13,7 @@ import org.w3.vs.store.Binders._
 import org.w3.vs.diesel._
 import org.w3.vs.sparql._
 import org.w3.banana.util._
+import org.w3.vs.actor.AssertorCall
 
 object Run {
 
@@ -70,23 +71,39 @@ CONSTRUCT {
 
   /* Assertion */
 
-  def addAssertion(orgId: OrganizationId, jobId: JobId, runId: RunId, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] =
-    addAssertion((orgId, jobId, runId).toUri, assertion)
+//  def addAssertion(orgId: OrganizationId, jobId: JobId, runId: RunId, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] =
+//    addAssertion((orgId, jobId, runId).toUri, assertion)
+//
+//  def addAssertion(runUri: Rdf#URI, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+//    import conf._
+//    store.append(runUri, runUri -- ont.assertion ->- assertion.toPG)
+//  }
+//
 
-  def addAssertion(runUri: Rdf#URI, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
-    import conf._
-    store.append(runUri, runUri -- ont.assertion ->- assertion.toPG)
+  def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy): Run =
+    new Run(id, strategy)
+
+  def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): Run =
+    new Run(id, strategy, createdAt)
+
+  def initialRun(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): (Run, List[URL]) = {
+    new Run(id = id, strategy = strategy, createdAt = createdAt)
+      .withNewUrlsToBeExplored(List(strategy.entrypoint))
+      .takeAtMost(Strategy.maxUrlsToFetch)
+  }
+
+  def freshRun(orgId: OrganizationId, jobId: JobId, strategy: Strategy): (Run, List[URL]) = {
+    new Run(id = (orgId, jobId, RunId()), strategy = strategy)
+      .withNewUrlsToBeExplored(List(strategy.entrypoint))
+      .takeAtMost(Strategy.maxUrlsToFetch)
   }
 
   /* addResourceResponse */
 
-  def addResourceResponse(runUri: Rdf#URI, rr: ResourceResponse)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+  def saveEvent(runUri: Rdf#URI, event: RunEvent)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
-    store.append(runUri, runUri -- ont.resourceResponse ->- rr.toPG)
+    store.append(runUri, runUri -- ont.event ->- event.toPG)
   }
-
-  def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy): Run =
-    new Run(id, strategy)
 
   /* other events */
 
@@ -94,9 +111,6 @@ CONSTRUCT {
     import conf._
     store.append(runUri, runUri -- ont.completedAt ->- at)
   }
-
-  def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): Run =
-    new Run(id, strategy, createdAt)
 
 }
 
@@ -128,6 +142,8 @@ case class Run private (
     pendingAssertions: Int = 0) {
 
   val logger = play.Logger.of(classOf[Run])
+
+  val shortId: String = id._2.shortId + "/" + id._3.shortId
 
   val runUri = id.toUri
 
@@ -165,17 +181,6 @@ case class Run private (
   }
 
   def numberOfRemainingAllowedFetches = strategy.maxResources - numberOfKnownUrls
-
-  /**
-   * Returns an Observation with the new urls to be explored
-   */
-  def withNewUrlsToBeExplored(urls: List[URL]): (Run, List[URL]) = {
-    val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct.take(numberOfRemainingAllowedFetches)
-    val newData = this.copy(
-      toBeExplored = toBeExplored ++ filteredUrls,
-      knownUrls = knownUrls ++ filteredUrls)
-    (newData, filteredUrls)
-  }
 
   val mainAuthority: Authority = strategy.mainAuthority
 
@@ -244,36 +249,77 @@ case class Run private (
     var urls: List[URL] = List.empty
     for {
       i <- 1 to (n - pending.size)
-      (observation, url) <- current.take
+      (run, url) <- current.take
     } {
-      current = observation
+      current = run
       urls ::= url
     }
     (current, urls.reverse)
   }
 
-  def withResourceResponse(response: ResourceResponse): Run = this.copy(
-    pending = pending - response.url,
-    fetched = fetched + response.url,
-    resources = response match {
-      case _: HttpResponse => resources + 1
-      case _ => resources
-    }
-  )
-
-  def withAssertions(assertions: Iterable[Assertion]): Run = {
-    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(assertions)
-    this.copy(
-      assertions = this.assertions ++ assertions,
-      errors = this.errors + nbErrors,
-      warnings = this.warnings + nbWarnings)
+  /**
+   * Returns an Observation with the new urls to be explored
+   */
+  private def withNewUrlsToBeExplored(urls: List[URL]): Run = {
+    val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct.take(numberOfRemainingAllowedFetches)
+    if (! filteredUrls.isEmpty)
+      logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, filteredUrls.size, this.numberOfKnownUrls))
+    val run = this.copy(
+      toBeExplored = toBeExplored ++ filteredUrls,
+      knownUrls = knownUrls ++ filteredUrls
+    )
+    run
   }
-    
-  def withAssertorResponse(response: AssertorResponse): Run = response match {
-    case result: AssertorResult =>
-      this.withAssertions(result.assertions)
-          .copy(pendingAssertions = pendingAssertions - 1) // lower bound is 0
-    case fail: AssertorFailure => this.copy(pendingAssertions = pendingAssertions - 1) // TODO? should do something about that
+
+  private def runWithResponse(response: ResourceResponse): Run = {
+    this.copy(
+      pending = pending - response.url,
+      fetched = fetched + response.url,
+      resources = resources + 1
+    )      
+  }
+
+  def withHttpResponse(httpResponse: HttpResponse): (Run, List[URL], List[AssertorCall]) = {
+    // add the new response
+    val runWithResponse = this.runWithResponse(httpResponse)
+    // extract the urls to be explored
+    val (runWithPendingFetches, urlsToFetch) =
+      if (explorationMode === ProActive)
+        runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs).takeAtMost(Strategy.maxUrlsToFetch)
+      else
+        (runWithResponse, List.empty)
+    // extract the calls to the assertor to be made
+    val assertorCalls =
+      if (explorationMode === ProActive && httpResponse.action === GET) {
+        val assertors = strategy.getAssertors(httpResponse)
+        assertors map { assertor => AssertorCall(this.id, assertor, httpResponse) }
+      } else {
+        List.empty
+      }
+    val runWithPendingAssertorCalls =
+      runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions + assertorCalls.size)
+    (runWithPendingAssertorCalls, urlsToFetch, assertorCalls)
+  }
+
+  def withErrorResponse(errorResponse: ErrorResponse): Run = {
+    this.copy(
+      pending = pending - errorResponse.url,
+      fetched = fetched + errorResponse.url
+    )
+  }
+
+  def withAssertorResult(result: AssertorResult): Run = {
+    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions)
+    this.copy(
+      assertions = this.assertions ++ result.assertions,
+      errors = this.errors + nbErrors,
+      warnings = this.warnings + nbWarnings,
+      pendingAssertions = pendingAssertions - 1) // lower bound is 0
+  }
+
+  def withAssertorFailure(fail: AssertorFailure): Run = {
+    // TODO? should do something about that
+    this.copy(pendingAssertions = pendingAssertions - 1)
   }
 
   def stopMe(): Run =

@@ -7,6 +7,10 @@ import org.w3.banana._
 import scalaz._
 import scalaz.Scalaz._
 
+object Strategy {
+  val maxUrlsToFetch = 10
+}
+
 case class Strategy (
     entrypoint: URL,
     linkCheck: Boolean,
