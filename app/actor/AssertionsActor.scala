@@ -7,9 +7,9 @@ import akka.actor._
 import System.{ currentTimeMillis => now }
 import scalaz._
 import scala.collection.mutable.Queue
-import org.w3.vs.actor.message.Stop
 import scala.concurrent.stm._
 import org.w3.util._
+import JobActor._
 
 case class AssertorCall(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse)
 

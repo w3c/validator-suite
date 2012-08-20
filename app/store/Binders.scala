@@ -8,7 +8,7 @@ import org.w3.util._
 import org.w3.vs._
 import diesel._
 import ops._
-import org.w3.vs.actor.message._
+import org.w3.vs.actor.JobActor._
 
 object Binders extends Binders
 
@@ -19,20 +19,6 @@ trait Binders extends UriBuilders with LiteralBinders {
   /* ontology definition */
 
   object ont extends PrefixBuilder("ont", "https://validator.w3.org/suite/ontology#")(ops) {
-
-//    val assertionClasses = classUrisFor[Assertion](ont("Assertion"))
-//    val contextClasses = classUrisFor[](ont("Context"))
-//    val assertorResultClasses = classUrisFor[](ont("AssertorResult"))
-//    val jobClasses = classUrisFor[](ont("Job"))
-//    val jobDataClasses = classUrisFor[](ont("JobData"))
-//    val organizationClasses = classUrisFor[](ont("Organization"))
-//    val resourceResponseClasses = classUrisFor[](ont("ResourceResponse"))
-//    val errorResponseClasses = classUrisFor[](ont("ErrorResponse"))
-//    val httpResponseClasses = classUrisFor[](ont("HttpResponse"))
-//    val runClasses = classUrisFor[](ont("Run"))
-//    val strategyClasses = classUrisFor[](ont("Strategy"))
-//    val userClasses = classUrisFor[](ont("User"))
-//    val assertorSelectorClasses = classUrisFor[](ont("AssertorSelector")
 
     lazy val beProactive = apply("beProactive")
     lazy val beLazy = apply("beLazy")

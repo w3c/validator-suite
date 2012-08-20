@@ -17,6 +17,7 @@ import org.w3.vs._
 import diesel._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
+import org.w3.vs.actor.JobActor._
 
 case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 

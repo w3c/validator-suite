@@ -17,6 +17,24 @@ import org.joda.time.DateTime
 import org.w3.util.akkaext._
 import org.joda.time.DateTimeZone
 
+object JobActor {
+
+  /* user generated events */
+  case object Refresh
+  case object Stop
+  case object BeProactive
+  case object BeLazy
+
+  /* events internal to the application */
+  case object GetRun
+  case object NoMorePendingAssertion
+  case object GetOrgEnumerator
+  case object GetJobEnumerator
+
+}
+
+import JobActor._
+
 // TODO extract all pure function in a companion object
 class JobActor(job: Job)(implicit val conf: VSConfiguration)
 extends Actor with FSM[(RunActivity, ExplorationMode), Run] with Listeners {
