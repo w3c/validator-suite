@@ -40,7 +40,7 @@ object PageOrdering {
       "resources",
       "maxResources",
       "health")
-    val default: SortParam = SortParam("name", true)
+    val default: SortParam = SortParam("name", ascending = true)
     def order_(safeParam: SortParam): Ordering[JobView] = {
       val ord = safeParam.name match {
         case "name"         => Ordering[String].on[JobView](_.name)
@@ -63,7 +63,7 @@ object PageOrdering {
       "validated",
       "warnings",
       "errors")
-    val default: SortParam = SortParam("errors", false)
+    val default: SortParam = SortParam("errors", ascending = false)
     def order_(safeParam: SortParam): Ordering[ResourceView] = {
       val ord = safeParam.name match {
         case "url"       => Ordering[String].on[ResourceView](_.url.toString)
@@ -76,13 +76,16 @@ object PageOrdering {
   }
 
   implicit def assertionViewOrdering: PageOrdering[AssertionView] = new PageOrdering[AssertionView] {
-    val params: Iterable[String] = Iterable("url")
-    val default: SortParam = SortParam("url", false)
+    val params: Iterable[String] = Iterable("")
+    val default: SortParam = SortParam("", ascending = true)
     def order_(safeParam: SortParam): Ordering[AssertionView] = {
       val ord = safeParam.name match {
-        // TODO
-        //case "validated" => Ordering[(DateTime, String)].on[AssertionView](view => (view.lastValidated, view.url.toString))
-        case _           => Ordering[(AssertionSeverity, Int, String)].on[AssertionView](a => (a.severity, a.occurrences, a.message.text))
+        case _ => {
+          val a = Ordering[AssertionSeverity].reverse
+          val b = Ordering[Int].reverse
+          val c = Ordering[String]
+          Ordering.Tuple3(a, b, c).on[AssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.message.text))
+        }
       }
       if (safeParam.ascending) ord else ord.reverse
     }
