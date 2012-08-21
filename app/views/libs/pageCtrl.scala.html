@@ -5,14 +5,6 @@
         } else {@Messages("pagination.empty")}
     </p>
 
-    @**<form method="get" class="page-form">
-        @if(page.perPage != Page.defaultPerPage) {
-        <input type=hidden name="n" value="@page.perPage"/>}
-        @if(page.sortParam != page.ordering.default) {
-        <input type=hidden name="sort" value="@page.sortParam.name"/>}
-        <button type=submit name="p" value="@(page.current + 1)"@if(page.current >= page.maxPage){ disabled}>Next</button>
-    </form>**@
-
     <p>
         @if(page.current > 1) {
         <a class="button" href="@page.goToPage(page.current - 1).queryString">Previous</a>
@@ -26,27 +18,19 @@
         }
     </p>
 
-    @**<form method="get" class="page-form">
-        @if(page.perPage != Page.defaultPerPage) {
-        <input type=hidden name="n" value="@page.perPage"/>}
-        @if(page.sortParam != page.ordering.default) {
-        <input type=hidden name="sort" value="@page.sortParam.name"/>}
-        <button type=submit name="p" value="@(page.current - 1)"@if(page.current <= 1) { disabled}>Previous</button>
-    </form>**@
-
-
-
     <form method="get">
         @if(page.perPage != Page.defaultPerPage) {
         <input type=hidden name="n" value="@page.perPage"/>}
         @if(page.sortParam != page.ordering.default) {
         <input type=hidden name="sort" value="@page.sortParam.name"/>}
         <label for="p">Go to page:</label>
-        <select id="p" name="p">
+        <select id="p" name="p"@if(page.maxPage == 0){ disabled}>
+            @if(page.maxPage == 0) {
+            <option>0</option>}
             @for(i <- 1 until page.maxPage + 1) {
             <option@if(page.current == i){ selected}>@i</option>}
         </select>
-        <button type=submit>Go</button>
+        <button type=submit@if(page.maxPage == 0){ disabled}>Go</button>
     </form>
 </nav>
 
