@@ -1,13 +1,14 @@
 package org.w3.vs.view
 
 import org.joda.time._
+import org.joda.time.format._
 import org.w3.util.URL
+import play.api.i18n.Messages
+import java.net.URLEncoder
 
 object Helper {
   
-  val TimeFormatter = org.joda.time.format.DateTimeFormat.forPattern("MM/dd/yy' at 'K:mma")
-  def formatTime(time: DateTime): String = TimeFormatter.print(time).toLowerCase
-  def encode(url: URL): String = java.net.URLEncoder.encode(url.toString, "utf-8")
+  def encode(url: URL): String = URLEncoder.encode(url.toString, "utf-8")
 
   def shorten(string: String, limit: Int): String = {
     if (string.size > limit) {
@@ -21,5 +22,31 @@ object Helper {
   def shorten(url: URL, limit: Int): String = {
     shorten(url.toString.replaceFirst("http://", ""), limit)
   }
+
+  val TimeFormatter = try {
+    DateTimeFormat.forPattern(Messages("time.pattern"))
+  } catch { case _ =>
+    DateTimeFormat.forPattern("MM/dd/yy' at 'K:mma")
+  }
+
+  def formatTime(time: DateTime): String = TimeFormatter.print(time).toLowerCase
+
+  def formatLegendTime(time: DateTime): String = {
+    val diff = DateTime.now(DateTimeZone.UTC).minus(time.getMillis)
+    if (diff.getYear > 1970) {
+      Messages("time.legend.year", diff.getYear)
+    } else if (diff.getMonthOfYear > 1) {
+      Messages("time.legend.month", diff.getMonthOfYear)
+    } else if (diff.getDayOfMonth > 1) {
+      Messages("time.legend.day", diff.getDayOfMonth)
+    } else if (diff.getHourOfDay > 0) {
+      Messages("time.legend.hour", diff.getHourOfDay)
+    } else if (diff.getMinuteOfHour > 0) {
+      Messages("time.legend.minute", diff.getMinuteOfHour)
+    } else /*if (diff.getSecondOfMinute > 0)*/ {
+      Messages("time.legend.second", diff.getSecondOfMinute)
+    }
+  }
+
   
 }

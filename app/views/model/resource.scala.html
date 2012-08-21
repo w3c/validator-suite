@@ -5,7 +5,10 @@
         <dd class="url"><a href="@Helper.encode(resource.url)">@Helper.shorten(resource.url, 80)</a></dd>
 
         <dt>Last validated</dt>
-        <dd class="time"><time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time></dd>
+        <dd class="time">
+            <time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time>
+            <span class="legend">@Helper.formatLegendTime(resource.lastValidated)</span>
+        </dd>
 
         <dt>Warnings</dt>
         <dd class="warnings">@resource.warnings</dd>

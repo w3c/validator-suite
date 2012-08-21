@@ -15,7 +15,10 @@
         <dt>Last Completed</dt>
         <dd class="completed">
         @job.lastCompleted match{
-          case Some(date) => {<time datetime="@date">@Helper.formatTime(date)</time>}
+          case Some(date) => {
+            <time datetime="@date">@Helper.formatTime(date)</time>
+            <span class="legend">@Helper.formatLegendTime(date)</span>
+            }
           case _ => {Never}
         }
         </dd>

@@ -77,3 +77,11 @@ assertor.validator.html=HTML Validator
 
 pagination.legend=Viewing {0}-{1} of {2} results
 pagination.empty=
+
+time.pattern=MM/dd/yy'' at ''K:mma
+time.legend.year={0} years ago
+time.legend.month={0} months ago
+time.legend.day={0} days ago
+time.legend.hour={0} hours ago
+time.legend.minute={0} minute ago
+time.legend.second={0} seconds ago

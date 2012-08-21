@@ -16,7 +16,10 @@
         <dd class="description">@assertion.description</dd>
         }
         <dt>Last validated</dt>
-        <dd class="validated"><time datetime="@assertion.validated">@Helper.formatTime(assertion.validated)</time></dd>
+        <dd class="validated">
+            <time datetime="@assertion.validated">@Helper.formatTime(assertion.validated)</time>
+            <span class="legend">@Helper.formatLegendTime(assertion.validated)</span>
+        </dd>
         <dt>Contexts</dt>
         @assertion.contexts.map { case context =>
         <dd class="context">
