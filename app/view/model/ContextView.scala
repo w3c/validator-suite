@@ -1,7 +1,8 @@
-package org.w3.vs.view
+package org.w3.vs.view.model
 
 import org.w3.vs.model.Context
 import play.api.templates.Html
+import org.w3.vs.view._
 
 case class ContextView(
     line: Option[Int],

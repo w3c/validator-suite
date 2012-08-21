@@ -1,6 +1,7 @@
 package org.w3.vs.exception
 
 import org.w3.vs.view._
+import org.w3.vs.view.form._
 import org.w3.vs.model._
 
 // TODO messages

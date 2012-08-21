@@ -6,16 +6,14 @@
     </p>
 
     <p>
-        @if(page.current > 1) {
+      @if(page.current > 1) {
         <a class="button" href="@page.goToPage(page.current - 1).queryString">Previous</a>
-        } else {
-        <span class="button disabled">Previous</span>
-        }
-        @if(page.current < page.maxPage) {
+      } else {
+        <span class="button disabled">Previous</span>}
+      @if(page.current < page.maxPage) {
         <a class="button" href="@page.goToPage(page.current + 1).queryString">Next</a>
-        } else {
-        <span class="button disabled">Next</span>
-        }
+      } else {
+        <span class="button disabled">Next</span>}
     </p>
 
     <form method="get">

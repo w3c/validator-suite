@@ -9,6 +9,7 @@ import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
 import org.w3.vs.view._
+import org.w3.vs.view.form._
 import scalaz._
 import Scalaz._
 import play.api.cache.Cache
