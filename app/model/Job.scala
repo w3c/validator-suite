@@ -25,7 +25,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
   val jobUri = JobUri(vo.organization, id)
 
-  val ldr: LinkedDataResource[Rdf] = LinkedDataResource(jobUri.fragmentLess, vo.toPG)
+  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(jobUri.fragmentLess, vo.toPG)
 
   val orgUri: Rdf#URI = vo.organization.toUri
   val creatorUri: Rdf#URI = vo.creator.toUri
@@ -58,20 +58,12 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
 
   // Get all runVos for this job, group by id, and for each runId take the latest completed jobData if any
-  def getHistory(): FutureVal[Exception, Iterable[JobData]] = null
-//    Run.getRunVOs(id) map { runVOs => {
-//      runVOs groupBy (_.id) map { case (id, datas) => {
-//        val completed = datas filter ( _.completedAt.isDefined )
-//        completed.isEmpty fold (
-//          None,
-//          Some(completed maxBy ( _.completedAt.get ))
-//        )
-//      }} collect {case Some(runVO) => JobData(runVO)}
-//    }}
+  def getHistory(): FutureVal[Exception, Iterable[JobData]] = {
+    sys.error("")
+  }
 
   def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
-    //getHistory() map { times => times.isEmpty.fold(None, times.maxBy(_.completedAt.get).completedAt) }
-    Job.getLastCompleted(jobUri)
+    sys.error("")
   }
   
   def save(): FutureVal[Exception, Job] = Job.save(this)
@@ -92,6 +84,12 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
   def off(): Unit = 
     PathAware(organizationsRef, path) ! BeLazy
+
+  def resume(): Unit = 
+    PathAware(organizationsRef, path) ! Resume
+
+  def getSnapshot(): FutureVal[Exception, JobData] =
+    (PathAware(organizationsRef, path) ? GetSnapshot).mapTo[JobData]
 
   lazy val enumerator: Enumerator[RunUpdate] = {
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]

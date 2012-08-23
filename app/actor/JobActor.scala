@@ -31,6 +31,8 @@ object JobActor {
   case object NoMorePendingAssertion
   case object GetOrgEnumerator
   case object GetJobEnumerator
+  case object Resume
+  case object GetSnapshot
 
 }
 
@@ -54,6 +56,8 @@ class JobActor(
   implicit val conf: VSConfiguration)
 extends Actor with FSM[JobActorState, Run] with Listeners {
 
+  val logger = Logger.of(classOf[JobActor])
+
   import conf._
 
   val orgId = job.organization
@@ -62,8 +66,6 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
 
   // TODO is it really what we want? I don't think so
-
-  val logger = Logger.of(classOf[JobActor])
 
   val http = system.actorFor(system / "http")
 
@@ -74,7 +76,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   // at instanciation of this actor
 
   def executeCommands(): Unit = {
-    toBeFetched foreach { url => fetch(url, initialRun.id._3) }
+    toBeFetched foreach { url => fetch(url, initialRun) }
     toBeAsserted foreach { call => assertionsActorRef ! call }
   }
 
@@ -110,18 +112,31 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
   whenUnhandled {
 
+    case Event(Resume, run) => {
+      logger.debug("%s: Resume" format run.shortId)
+      stay()
+    }
+
+    case Event(GetSnapshot, run) => {
+      logger.debug("%s: GetSnapshot" format run.shortId)
+      sender ! run.jobData
+      stay()
+    }
+
     case Event(GetRun, run) => {
-      // logger.debug("%s: received a GetRun" format shortId)
+      logger.debug("%s: GetRun" format run.shortId)
       sender ! run
       stay()
     }
 
     case Event(GetJobEnumerator, run) => {
+      logger.debug("%s: GetJobEnumerator" format run.shortId)
       sender ! enumerator
       stay()
     }
 
-    case Event(msg: ListenerMessage, _) => {
+    case Event(msg: ListenerMessage, run) => {
+      logger.debug("%s: ListenerMessage" format run.shortId)
       listenerHandler(msg)
       stay()
     }
@@ -139,7 +154,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event(e, run) => {
-      logger.error("%s: received unexpected event %s" format (run.shortId, e.toString))
+      logger.error("%s: unexpected event %s" format (run.shortId, e.toString))
       stay()
     }
 
@@ -189,7 +204,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       val (newRun, urlsToFetch, assertorCalls) =
         run.withHttpResponse(httpResponse)
       if (! urlsToFetch.isEmpty)
-        urlsToFetch foreach { url => fetch(url, run.id._3) }
+        urlsToFetch foreach { url => fetch(url, run) }
       if (! assertorCalls.isEmpty)
         assertorCalls foreach { call => assertionsActorRef ! call }
       stateOf(newRun)
@@ -210,7 +225,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       logger.debug("%s: received a Refresh" format run.shortId)
       val (freshRun, urlsToBeFetched) = Run.freshRun(orgId, jobId, strategy)
       sender ! freshRun.id
-      urlsToBeFetched foreach { url => fetch(url, freshRun.id._3) }
+      urlsToBeFetched foreach { url => fetch(url, freshRun) }
       stateOf(freshRun)
     }
 
@@ -235,20 +250,19 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
    * The kind of fetch is decided by the strategy (can be no fetch)
    */
   // TODO Run.withHttpResponse should return a List[Fetch] instead of List[URL]
-  private def fetch(url: URL, runId: RunId): Unit = {
-    val currentRun = stateData
-    val action = strategy.getActionFor(url)
+  private def fetch(url: URL, run: Run): Unit = {
+    val action = run.strategy.getActionFor(url)
     action match {
       case GET => {
-        logger.debug("%s: >>> GET %s" format (currentRun.shortId, url))
-        http ! Fetch(url, GET, (job.vo.organization, job.id, runId))
+        logger.debug("%s: >>> GET %s" format (run.shortId, url))
+        http ! Fetch(url, GET, run.id)
       }
       case HEAD => {
-        logger.debug("%s: >>> HEAD %s" format (currentRun.shortId, url))
-        http ! Fetch(url, HEAD, (job.vo.organization, job.id, runId))
+        logger.debug("%s: >>> HEAD %s" format (run.shortId, url))
+        http ! Fetch(url, HEAD, run.id)
       }
       case IGNORE => {
-        logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (currentRun.shortId, url))
+        logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (run.shortId, url))
       }
     }
   }

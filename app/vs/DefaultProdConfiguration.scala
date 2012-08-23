@@ -54,8 +54,9 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs.actorOf(Props(new OrganizationsActor()(this)), "organizations")
     vs.actorOf(Props(new Http()(this)), "http")
     val listener = vs.actorOf(Props(new Actor {
+      val logger = play.Logger.of(classOf[VSConfiguration])
       def receive = {
-        case d: DeadLetter ⇒ println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! DeadLetter: "+d)
+        case d: DeadLetter ⇒ logger.debug("DeadLetter - sender: %s, recipient: %s, message: %s" format(d.sender.toString, d.recipient.toString, d.message.toString))
       }
     }))
     vs.eventStream.subscribe(listener, classOf[DeadLetter])
