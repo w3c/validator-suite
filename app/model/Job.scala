@@ -63,7 +63,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   }
 
   def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
-    sys.error("")
+    Job.getLastCompleted(jobUri)
   }
   
   def save(): FutureVal[Exception, Job] = Job.save(this)
