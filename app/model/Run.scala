@@ -17,44 +17,48 @@ import org.w3.vs.actor.AssertorCall
 
 object Run {
 
-  def bananaGet(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): BananaFuture[Run] =
+  def bananaGet(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): BananaFuture[(Run, Iterable[URL], Iterable[AssertorCall])] =
     bananaGet((orgId, jobId, runId).toUri)
 
-  def get(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, Run] =
+  def get(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, (Run, Iterable[URL], Iterable[AssertorCall])] =
     get((orgId, jobId, runId).toUri)
 
-  def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Run] =
+  def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, (Run, Iterable[URL], Iterable[AssertorCall])] =
     bananaGet(runUri).toFutureVal
 
-  def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Run] = {
+  def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
-    store.get(runUri) flatMap { _.resource.as[Run] }
+    store.get(runUri) flatMap { ldr =>
+      // there is a bug in banana preventing the implicit to be discovered
+      RunFromPG.fromPointedGraph(ldr.resource)
+    }
   }
 
-  def getFor(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Run]] =
-    getFor((orgId, jobId).toUri)
+//  def getFor(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Run]] =
+//    getFor((orgId, jobId).toUri)
     
-  def getFor(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Run]] = {
-    import conf._
-    val query = """
-CONSTRUCT {
-  ?job ont:run ?run .
-  ?s1 ?p1 ?o1 .
-} WHERE {
-  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
-  graph ?jobG { ?job ont:run ?run } .
-  BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
-  graph ?runG { ?s1 ?p1 ?o1 }
-}
-"""
-    val construct = ConstructQuery(query, ont)
-    val r = for {
-      graph <- store.executeConstruct(construct, Map("job" -> jobUri))
-      pointedJob = PointedGraph[Rdf](jobUri, graph)
-      runs <- (pointedJob / ont.run).asSet[Run]
-    } yield runs
-    r.toFutureVal
-  }
+//  def getFor(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Run]] = {
+//    null
+//    import conf._
+//    val query = """
+//CONSTRUCT {
+//  ?job ont:run ?run .
+//  ?s1 ?p1 ?o1 .
+//} WHERE {
+//  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
+//  graph ?jobG { ?job ont:run ?run } .
+//  BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
+//  graph ?runG { ?s1 ?p1 ?o1 }
+//}
+//"""
+//    val construct = ConstructQuery(query, ont)
+//    val r = for {
+//      graph <- store.executeConstruct(construct, Map("job" -> jobUri))
+//      pointedJob = PointedGraph[Rdf](jobUri, graph)
+//      runs <- (pointedJob / ont.run).asSet[Run]
+//    } yield runs
+//    r.toFutureVal
+//  }
 
   def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
@@ -69,30 +73,19 @@ CONSTRUCT {
   def delete(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
     sys.error("")
 
-  /* Assertion */
-
-//  def addAssertion(orgId: OrganizationId, jobId: JobId, runId: RunId, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] =
-//    addAssertion((orgId, jobId, runId).toUri, assertion)
-//
-//  def addAssertion(runUri: Rdf#URI, assertion: Assertion)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
-//    import conf._
-//    store.append(runUri, runUri -- ont.assertion ->- assertion.toPG)
-//  }
-//
-
   def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy): Run =
     new Run(id, strategy)
 
   def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): Run =
     new Run(id, strategy, createdAt)
 
-  def initialRun(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): (Run, List[URL]) = {
+  def initialRun(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): (Run, Iterable[URL]) = {
     new Run(id = id, strategy = strategy, createdAt = createdAt)
       .withNewUrlsToBeExplored(List(strategy.entrypoint))
       .takeAtMost(Strategy.maxUrlsToFetch)
   }
 
-  def freshRun(orgId: OrganizationId, jobId: JobId, strategy: Strategy): (Run, List[URL]) = {
+  def freshRun(orgId: OrganizationId, jobId: JobId, strategy: Strategy): (Run, Iterable[URL]) = {
     new Run(id = (orgId, jobId, RunId()), strategy = strategy)
       .withNewUrlsToBeExplored(List(strategy.entrypoint))
       .takeAtMost(Strategy.maxUrlsToFetch)
@@ -244,7 +237,7 @@ case class Run private (
    *
    * The returned Observation has all the Explores marked as being pending.
    */
-  def takeAtMost(n: Int): (Run, List[URL]) = {
+  def takeAtMost(n: Int): (Run, Iterable[URL]) = {
     var current: Run = this
     var urls: List[URL] = List.empty
     for {
@@ -254,7 +247,7 @@ case class Run private (
       current = run
       urls ::= url
     }
-    (current, urls.reverse)
+    (current, urls)
   }
 
   /**
@@ -279,7 +272,7 @@ case class Run private (
     )      
   }
 
-  def withHttpResponse(httpResponse: HttpResponse): (Run, List[URL], List[AssertorCall]) = {
+  def withHttpResponse(httpResponse: HttpResponse): (Run, Iterable[URL], Iterable[AssertorCall]) = {
     // add the new response
     val runWithResponse = this.runWithResponse(httpResponse)
     // extract the urls to be explored
@@ -287,14 +280,14 @@ case class Run private (
       if (explorationMode === ProActive)
         runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs).takeAtMost(Strategy.maxUrlsToFetch)
       else
-        (runWithResponse, List.empty)
+        (runWithResponse, Set.empty[URL])
     // extract the calls to the assertor to be made
     val assertorCalls =
       if (explorationMode === ProActive && httpResponse.action === GET) {
         val assertors = strategy.getAssertors(httpResponse)
         assertors map { assertor => AssertorCall(this.id, assertor, httpResponse) }
       } else {
-        List.empty
+        Set.empty[AssertorCall]
       }
     val runWithPendingAssertorCalls =
       runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions + assertorCalls.size)

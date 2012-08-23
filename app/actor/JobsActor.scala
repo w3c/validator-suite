@@ -2,15 +2,19 @@ package org.w3.vs.actor
 
 import akka.actor._
 import org.w3.vs.model._
-import org.w3.vs.VSConfiguration
 import scalaz._
-import Scalaz._
-import scalaz._
+import scalaz.Scalaz._
 import org.w3.util.akkaext._
+import org.w3.vs._
+import diesel._
+import org.w3.banana.util._
+import org.w3.util.URL
 
-case class CreateJobAndForward(job: Job, msg: Any)
+case class CreateJobAndForward(job: Job, initialState: JobActorState, run: Run, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall], msg: Any)
 
-class JobsActor()(implicit configuration: VSConfiguration) extends Actor with PathAwareActor {
+class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareActor {
+
+  import conf._
 
   val logger = play.Logger.of(classOf[JobsActor])
 
@@ -20,10 +24,10 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
     OrganizationId(orgIdStr)
   }
 
-  def getJobRefOrCreate(job: Job): ActorRef = {
+  def getJobRefOrCreate(job: Job, initialState: JobActorState, run: Run, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall]): ActorRef = {
     val id = job.id.toString
     try {
-      context.actorOf(Props(new JobActor(job)), name = id)
+      context.actorOf(Props(new JobActor(job, initialState, run, toBeFetched, toBeAsserted)), name = id)
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / id)
     }
@@ -39,20 +43,36 @@ class JobsActor()(implicit configuration: VSConfiguration) extends Actor with Pa
         case None => {
           // should get the relPath and provide the uri to the job in the store
           // later: make the job actor as something backed by a graph in the store!
-          Job.get(orgId, JobId(id)).onComplete {
-            case Success(job) => to.tell(CreateJobAndForward(job, msg), from)
-            case Failure(exception) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)
+          val f: BananaFuture[CreateJobAndForward] =
+            Job.bananaGet(orgId, JobId(id)) flatMap { case (job, runUriOpt) =>
+              runUriOpt match {
+                case None => {
+                  val (run, urls) = Run.freshRun(orgId, job.id, job.strategy)
+                  val noCall: Iterable[AssertorCall] = Set.empty[AssertorCall]
+                  CreateJobAndForward(job, NeverStarted, run, urls, noCall, msg).bf
+                }
+                case Some(runUri) =>
+                  Run.bananaGet(runUri) map { case (run, toBeFetched, toBeAsserted) =>
+                    CreateJobAndForward(job, Started, run, toBeFetched, toBeAsserted, msg)
+                  }
+              }
+            }
+
+          f.inner onComplete {
+            case Right(Success(cjaf)) => to.tell(cjaf, from)
+            case Right(Failure(exception)) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)
+            case Left(exception) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)
           }
         }
       }
     }
 
-    case CreateJobAndForward(job, msg) => {
-      val jobRef = getJobRefOrCreate(job)
+    case CreateJobAndForward(job, initialState, run, toBeFetched, toBeCalled, msg) => {
+      val jobRef = getJobRefOrCreate(job, initialState, run, toBeFetched, toBeCalled)
       jobRef forward msg
     }
     
-    case a => {logger.error("unexpected message: " + a.toString)}
+    case a => logger.error("unexpected message: " + a.toString)
 
   }
 

@@ -264,7 +264,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve Run" in {
-    val run = Run.get(run1.runUri).getOrFail(10.seconds)
+    val run = Run.get(run1.runUri).getOrFail(10.seconds)._1
     run.assertions.size must be(run1.assertions.size)
   }
 

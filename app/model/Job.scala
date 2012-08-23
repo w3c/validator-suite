@@ -126,7 +126,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   private val organizationsRef = system.actorFor(system / "organizations")
 
   private val path = {
-    val relPath = jobUri.relativize(URI("https://validator.w3.org/suite/")).getString
+    /* val relPath = jobUri.relativize(URI("https://validator.w3.org/suite/")).getString */
     system / "organizations" / vo.organization.id / "jobs" / id.id
   }
   
@@ -149,19 +149,23 @@ object Job {
 
   implicit def toVO(job: Job): JobVO = job.vo
 
-  def get(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Job] =
+  def get(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, (Job, Option[Rdf#URI])] =
     get(JobUri(orgId, jobId))
 
-  def bananaGet(jobUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Job] = {
+  def bananaGet(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): BananaFuture[(Job, Option[Rdf#URI])] =
+    bananaGet((orgId, jobId).toUri)
+
+  def bananaGet(jobUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[(Job, Option[Rdf#URI])] = {
     import conf._
     for {
       ids <- JobUri.fromUri(jobUri).bf
       jobLDR <- store.get(jobUri)
+      runUriOpt <- (jobLDR.resource / ont.run).asOption[Rdf#URI]
       jobVO <- jobLDR.resource.as[JobVO]
-    } yield new Job(ids._2, jobVO) { override val ldr = jobLDR } // little optimization :-)
+    } yield (Job(ids._2, jobVO), runUriOpt)
   }
 
-  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Job] =
+  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, (Job, Option[Rdf#URI])] =
     bananaGet(jobUri).toFutureVal
 
   def getFor(userId: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {

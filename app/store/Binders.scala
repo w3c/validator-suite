@@ -9,6 +9,7 @@ import org.w3.vs._
 import diesel._
 import ops._
 import org.w3.vs.actor.JobActor._
+import org.w3.vs.actor.AssertorCall
 
 object Binders extends Binders
 
@@ -162,13 +163,17 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   }
 
-  implicit lazy val RunBinder: PointedGraphBinder[Rdf, Run] = new PointedGraphBinder[Rdf, Run] {
+  implicit lazy val RunToPG: ToPointedGraph[Rdf, Run] = new ToPointedGraph[Rdf, Run] {
+    def toPointedGraph(run: Run): PointedGraph[Rdf] = (
+      ops.makeUri("#thing")
+      -- ont.run ->- run.id.toUri
+      -- ont.strategy ->- run.strategy
+      -- ont.createdAt ->- run.createdAt
+    )
+  }
 
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, Run] = {
-//      println("**********")
-//      println(pointed.pointer)
-//      org.w3.banana.jena.JenaUtil.dump(pointed.graph)
-//      println("**********")
+  implicit lazy val RunFromPG: FromPointedGraph[Rdf, (Run, Iterable[URL], Iterable[AssertorCall])] = new FromPointedGraph[Rdf, (Run, Iterable[URL], Iterable[AssertorCall])] {
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, (Run, Iterable[URL], Iterable[AssertorCall])] = {
       for {
         id <- (pointed / ont.run).as[(OrganizationId, JobId, RunId)]
         strategy <- (pointed / ont.strategy).as[Strategy]
@@ -176,30 +181,42 @@ trait Binders extends UriBuilders with LiteralBinders {
         completedAt <- (pointed / ont.completedAt).asOption[DateTime]
         events <- (pointed / ont.event).asSet[RunEvent]
       } yield {
-        var run = Run.initialRun(id = id, strategy = strategy, createdAt = createdAt)._1
+        // @@
+        var toBeFetched = Set.empty[URL]
+        var toBeAsserted = Map.empty[(URL, AssertorId), AssertorCall]
+        val (initialRun, urls) = Run.initialRun(id = id, strategy = strategy, createdAt = createdAt)
+        var run = initialRun
+        toBeFetched ++= urls
         completedAt foreach { at => run = run.completedAt(at) }
         events.toList.sortBy(_.timestamp) foreach {
-          case AssertorResponseEvent(ar@AssertorResult(_, _, _, _), _) => run = run.withAssertorResult(ar)
-          case AssertorResponseEvent(af@AssertorFailure(_, _, _, _), _) => run = run.withAssertorFailure(af)
-          case ResourceResponseEvent(hr@HttpResponse(_, _, _, _, _), _) => run = run.withHttpResponse(hr)._1
-          case ResourceResponseEvent(er@ErrorResponse(_, _, _), _) => run = run.withErrorResponse(er)
+          case AssertorResponseEvent(ar@AssertorResult(_, assertorId, url, _), _) => {
+            toBeAsserted -= ((url, assertorId))
+            run = run.withAssertorResult(ar)
+          }
+          case AssertorResponseEvent(af@AssertorFailure(_, assertorId, url, _), _) => {
+            toBeAsserted -= ((url, assertorId))
+            run = run.withAssertorFailure(af)
+          }
+          case ResourceResponseEvent(hr@HttpResponse(url, _, _, _, _), _) => {
+            toBeFetched -= url
+            val (newRun, urls, assertorCalls) = run.withHttpResponse(hr)
+            run = newRun
+            toBeFetched ++= urls
+            assertorCalls foreach { ac =>
+              toBeAsserted += ((ac.response.url, ac.assertor.id) -> ac)
+            }
+          }
+          case ResourceResponseEvent(er@ErrorResponse(url, _, _), _) => {
+            toBeFetched -= url
+            run = run.withErrorResponse(er)
+          }
           case BeProactiveEvent(_) => ()
           case BeLazyEvent(_) => ()
         }
-        run
+        (run, toBeFetched, toBeAsserted.values)
       }
     }
-
-    def toPointedGraph(run: Run): PointedGraph[Rdf] = (
-      ops.makeUri("#thing")
-      -- ont.run ->- run.id.toUri
-      -- ont.strategy ->- run.strategy
-      -- ont.createdAt ->- run.createdAt
-    )
-
   }
-
- //pgbWithId[Run]("#thing")(ont.run, ont.strategy, ont.explorationMode, ont.createdAt, ont.assertions, ont.completedAt, ont.timestamp, ont.resources, ont.errors, ont.warnings)(RunVO.apply, RunVO.unapply)
 
   implicit lazy val UserVOBinder = pgbWithId[UserVO]("#me")(ont.name, ont.email, ont.password, ont.organizationOpt)(UserVO.apply, UserVO.unapply)
 
