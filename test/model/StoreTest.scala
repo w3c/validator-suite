@@ -215,8 +215,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val job = job1.copy(id = JobId())
     Job.get(org.id, job.id).result(1.second) must be ('failure)
     Job.save(job).result(1.second) must be ('success)
-    val retrieved = Job.get(org.id, job.id).result(10.second)
-    retrieved must be (Success(job))
+    val retrieved = Job.get(org.id, job.id).getOrFail(10.second)._1
+    retrieved must be (job)
     Job.delete(job).result(1.second) must be ('success)
     Job.get(org.id, job.id).result(1.second) must be ('failure)
   }
