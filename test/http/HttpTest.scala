@@ -9,7 +9,7 @@ import org.w3.util._
 import akka.util.duration._
 import org.w3.util.akkaext._
 
-class HttpTest() extends RunTestHelper(new DefaultProdConfiguration { }) with Inside {
+class HttpTest extends RunTestHelper with Inside {
   
   val servers = Seq(Webserver(9001, Website.cyclic(10).toServlet))
   

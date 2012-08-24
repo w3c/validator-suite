@@ -11,7 +11,7 @@ import org.w3.util.website._
  * helper trait that can be used to test Runs
  * Be careful: all TypedActors are stopped after each test
  */
-abstract class RunTestHelper(configuration: VSConfiguration)
+abstract class RunTestHelper(configuration: VSConfiguration = new DefaultTestConfiguration { })
 extends TestKit(configuration.system) with ImplicitSender
 with WordSpec with MustMatchers with BeforeAndAfterAll {
   

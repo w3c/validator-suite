@@ -5,13 +5,12 @@ import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
 import akka.util.duration._
-import org.w3.vs.DefaultProdConfiguration
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 import akka.actor._
 
-class ResumedRunTest extends RunTestHelper(new DefaultProdConfiguration { }) with TestKitHelper {
+class ResumedRunTest extends RunTestHelper with TestKitHelper {
 
   val strategy =
     Strategy( 

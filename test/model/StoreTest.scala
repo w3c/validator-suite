@@ -9,9 +9,9 @@ import org.w3.vs._
 import org.w3.vs.model._
 import akka.util.duration._
 import org.w3.vs.exception._
-import org.w3.vs.DefaultProdConfiguration
 import org.w3.vs.diesel._
 import org.w3.vs.store.Binders._
+import org.w3.vs.util._
 
 abstract class StoreTest(
   nbUrlsPerAssertions: Int,
@@ -25,7 +25,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   val nbAssertionsPerRun = 2 /* nb of assertors */ * nbAssertionsPerRunPerAssertor
   val nbAssertionsForJob1 = 2 /* runs */ * nbAssertionsPerRun
 
-  implicit val conf: VSConfiguration = new DefaultProdConfiguration { }
+  implicit val conf: VSConfiguration = new DefaultTestConfiguration { }
 
   import conf._
 
