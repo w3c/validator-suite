@@ -81,7 +81,9 @@ object Application extends Controller {
   } 
   
   def redirectWithSlash(a: Any): ActionA = Action { req =>
-    MovedPermanently(req.uri + "/")
+    MovedPermanently(
+      req.path + "/" + Helper.queryString(req.queryString)
+    )
   }
   
 //  def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {

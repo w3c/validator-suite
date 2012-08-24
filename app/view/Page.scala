@@ -9,6 +9,7 @@ case class Page[A <: View] private (
     current: Int = 1,                             // p=
     perPage: Int = Page.defaultPerPage,           // n=
     filter: Option[String] = None,                // filter=
+    search: Option[String] = None,                // search=
     sortParam: SortParam = SortParam("", true)) { // sort=
 
   def totalSize: Int = iterable.size
@@ -20,6 +21,7 @@ case class Page[A <: View] private (
   def iterator: Iterable[A] = {
     iterable.toSeq
       .filter(filtering.filter(filter))
+      .filter(filtering.search(search)) // compose functions instead
       .sorted(ordering.order(sortParam))
       .slice(offset, offset + perPage)
   }
@@ -44,6 +46,8 @@ case class Page[A <: View] private (
   }
 
   def sortBy(sort: SortParam): Page[A] = this.copy(sortParam = ordering.validate(sort))
+
+  def search(search: Option[String]): Page[A] = this.copy(search = search)
 
   def filterBy(filter: Option[String]): Page[A] = this.copy(filter = filtering.validate(filter))
 
@@ -83,6 +87,7 @@ object Page {
     val page    = try { req.getQueryString("p").get.toInt } catch { case _ => 1 }
     val perPage = try { req.getQueryString("n").get.toInt } catch { case _ => Page.defaultPerPage }
     val filter = req.getQueryString("filter")
+    val search = req.getQueryString("search")
     val sort =
       try {
         req.queryString.get("sort").flatten.head match {
@@ -97,6 +102,7 @@ object Page {
       .show(perPage)
       .sortBy(sort)
       .filterBy(filter)
+      .search(search)
       .goToPage(page)
 
   }

@@ -1,4 +1,4 @@
-@(page: Page[JobView])
+@(page: Page[JobView])(implicit req: Request[_])
 
         <aside>
             <h3>Definitions</h3>
@@ -12,4 +12,17 @@
             </dl>
         </aside>
 
-        @page.iterator.map { case job => @models.job(job)}
+    @defining(page.iterator) {case iterator =>
+
+        @iterator.map { case job => @models.job(job) }
+
+        @if(iterator.size < 1) {
+        <article>
+            <p>
+                @Messages("jobs.empty")
+                <a href="">@Messages("jobs.create.first")</a>
+            </p>
+        </article>
+        }
+    }
+

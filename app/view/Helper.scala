@@ -4,6 +4,7 @@ import org.joda.time._
 import org.joda.time.format._
 import org.w3.util.URL
 import play.api.i18n.Messages
+import play.api.mvc.Request
 import java.net.URLEncoder
 
 object Helper {
@@ -48,5 +49,16 @@ object Helper {
     }
   }
 
-  
+  def queryString(parameters: Map[String, Seq[String]]): String = {
+    parameters.flatten{
+      case (param, values) => {
+        values.map(value => "%s=%s" format (param, value))
+      }
+    }.mkString("?", "&", "")
+  }
+
+  def clearParam(param: String)(implicit req: Request[_]): String = {
+    queryString(req.queryString - param)
+  }
+
 }

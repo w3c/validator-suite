@@ -1,4 +1,4 @@
-@(job: JobView)
+@(job: JobView)(implicit req: Request[_])
 
 <article data-id="@job.id">
     @** <h2>Job: @job.name</h2> **@
@@ -52,6 +52,14 @@
                   case "idle" => {<button type="submit" name="action" value="run" class="run">run now</button>}
                 }}**@
                 <button type="submit" name="action" value="delete" class="delete">delete</button>
+            </form>
+            <form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
+                <input name=search type=text placeholder="Search url" required value="@req.getQueryString("search")">
+                <!--<span>✘</span>-->
+                @if(req.getQueryString("search") != None) {
+                <a class="button" href="@Helper.clearParam("search")">Clear</a>}
+                <button type=submit>Search</button>
+
             </form>
         </dd>
     </dl>

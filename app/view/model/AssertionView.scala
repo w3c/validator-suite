@@ -50,6 +50,11 @@ object AssertionView {
 
   val filtering: PageFiltering[AssertionView] = new PageFiltering[AssertionView] {
 
+    def validate(filter: Option[String]): Option[String] = filter match {
+      case Some(a) if Assertor.keys.exists(_ == a)  => Some(a)
+      case _ => None
+    }
+
     def filter(param: Option[String]): (AssertionView) => Boolean = validate(param) match {
       case Some(param) => {
         case assertion if (assertion.assertorName == param) => true
@@ -58,9 +63,15 @@ object AssertionView {
       case None => _ => true
     }
 
-    def validate(filter: Option[String]): Option[String] = filter match {
-      case Some(a) if Assertor.keys.exists(_ == a)  => Some(a)
-      case _ => None
+    def search(search: Option[String]): (AssertionView) => Boolean = {
+      search match {
+        case Some(searchString) => {
+          case assertion
+            if (assertion.message.toString.contains(searchString)) => true
+          case _ => false
+        }
+        case None => _ => true
+      }
     }
 
   }

@@ -58,10 +58,11 @@ object JobView {
 
   val filtering: PageFiltering[JobView] = new PageFiltering[JobView] {
 
-    def filter(param: Option[String]): (JobView) => Boolean = _ => true
-
     def validate(filter: Option[String]): Option[String] = None
 
+    def filter(param: Option[String]): (JobView) => Boolean = _ => true
+
+    def search(search: Option[String]): (JobView) => Boolean = _ => true
   }
 
   val ordering: PageOrdering[JobView] = new PageOrdering[JobView] {

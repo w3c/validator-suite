@@ -58,10 +58,20 @@ object ResourceView {
 
   val filtering: PageFiltering[ResourceView] = new PageFiltering[ResourceView] {
 
-    def filter(param: Option[String]): (ResourceView) => Boolean = _ => true
-
     def validate(filter: Option[String]): Option[String] = None
 
+    def filter(param: Option[String]): (ResourceView) => Boolean = _ => true
+
+    def search(search: Option[String]): (ResourceView) => Boolean = {
+      search match {
+        case Some(searchString) => {
+          case resource
+            if (resource.url.toString.contains(searchString)) => true
+          case _ => false
+        }
+        case None => _ => true
+      }
+    }
   }
 
   val ordering: PageOrdering[ResourceView] = new PageOrdering[ResourceView] {

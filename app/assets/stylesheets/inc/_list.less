@@ -30,7 +30,16 @@
     color:black;
     margin-left: 10px;
 }
-.list article:first-of-type dd {
+.list article > p /* for empty page messages. no class yet*/ {
+    background: #f6f6f6;
+    padding: 17px 10px;
+    position: absolute;
+    width: 100%;
+    .border-sizing;
+    text-align: center;
+}
+.list article:first-of-type dd,
+.list article:first-of-type > p /* for empty page messages. no class yet*/ {
     padding-top: 17px;
     box-shadow:
         inset 0 1px 0 #699FC7,

@@ -1,14 +1,27 @@
-@(page: Page[ResourceView])
+@(page: Page[ResourceView], job: JobView)
 
         <aside>
             <h2>Resources</h2>
             <h3>Definitions</h3>
             <dl>
-                @ResourceView.params.map {param =>
+                @ResourceView.params.map { param =>
                 <dt class="@param"><dfn>@Messages("resource.%s" format param)</dfn> @libs.sort(page, param)</dt>
                 <dd>@Messages("resource.%s.detail" format param)</dd>
                 }
             </dl>
         </aside>
 
-        @page.iterator.map { case resource => @models.resource(resource) }
+    @defining(page.iterator) { case iterator =>
+
+        @iterator.map { case resource => @models.resource(resource) }
+
+        @if(iterator.size < 1) {
+        <article>
+            <p>
+                @Messages("resources.empty")
+                @if(job.status == "idle") { @** TODO type job.status **@
+                <a href="#">@Messages("job.run")</a>}
+            </p>
+        </article>
+        }
+    }

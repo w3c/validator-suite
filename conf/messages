@@ -85,3 +85,10 @@ time.legend.day={0} days ago
 time.legend.hour={0} hours ago
 time.legend.minute={0} minute ago
 time.legend.second={0} seconds ago
+
+job.run=Run this job
+jobs.empty=You haven't set any job yet.
+jobs.create.first=Create your first job.
+resources.empty=No resources to show.
+resources.revalidate=Revalidate this resource.
+assertions.empty=No assertions to show.

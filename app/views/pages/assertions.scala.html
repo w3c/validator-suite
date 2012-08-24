@@ -1,4 +1,4 @@
-@(page: Page[AssertionView])
+@(page: Page[AssertionView], resource: ResourceView)
 
         <aside>
             <h2>Assertions</h2>
@@ -10,5 +10,17 @@
                 }
             </dl>
         </aside>
-        
-        @page.iterator.map { case assertion => @models.assertion(assertion) }
+
+    @defining(page.iterator) {case iterator =>
+
+        @iterator.map { case assertion => @models.assertion(assertion) }
+
+        @if(iterator.size < 1) {
+        <article>
+            <p>
+                @Messages("assertions.empty")
+                <a href=="#">@Messages("resource.revalidate")</a>
+            </p>
+        </article>
+        }
+    }

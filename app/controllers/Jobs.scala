@@ -62,11 +62,12 @@ object Jobs extends Controller {
         user <- getUser
         job <- user.getJob(id)
         assertions <- job.getAssertions().map(_.filter(_.url === url)) // TODO Empty = exception
+        jobView <- JobView.fromJob(job)
         resourceView = ResourceView.fromAssertions(assertions).head
         assertorViews = AssertorView.fromAssertions(assertions)
         assertionViews = AssertionView.fromAssertions(assertions)
       } yield {
-        Ok(views.html.urlReport(job, resourceView, assertorViews, Page(assertionViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.urlReport(jobView, resourceView, assertorViews, Page(assertionViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
