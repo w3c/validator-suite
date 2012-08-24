@@ -5,14 +5,18 @@ import play.api.test.Helpers._
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 
-class FunctionalTest extends WordSpec with MustMatchers {
+class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
+
+  override def beforeAll(configMap: Map[String, Any]): Unit = {
+    org.w3.vs.Main.main(Array())
+  }
 
   "an Application should let a valid user log" in {
   
     running(TestServer(9001), HTMLUNIT) { browser =>
       Thread.sleep(2000)
       import browser._
-        
+      
       goTo("http://localhost:9001/dashboard")
       url must be === ("http://localhost:9001/dashboard")
       fill("#email").`with`("bertails@w3.org")
