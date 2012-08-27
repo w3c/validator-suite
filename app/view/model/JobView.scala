@@ -4,6 +4,7 @@ import org.w3.vs.model.{Job, JobId}
 import org.w3.util.{FutureVal, URL}
 import org.joda.time.DateTime
 import org.w3.vs.view._
+import akka.dispatch.ExecutionContext
 
 case class JobView(
     id: JobId,
@@ -31,9 +32,7 @@ object JobView {
     "health"
   )
 
-  implicit def ec = org.w3.vs.Prod.configuration.webExecutionContext
-
-  def fromJob(job: Job): FutureVal[Exception, JobView] = {
+  def fromJob(job: Job)(implicit ec: ExecutionContext): FutureVal[Exception, JobView] = {
     for {
       activity <- job.getActivity()
       lastCompleted <- job.getLastCompleted()
@@ -52,7 +51,7 @@ object JobView {
     )
   }
 
-  def fromJobs(jobs: Iterable[Job]): FutureVal[Exception, Iterable[JobView]] = {
+  def fromJobs(jobs: Iterable[Job])(implicit ec: ExecutionContext): FutureVal[Exception, Iterable[JobView]] = {
     FutureVal.sequence(jobs.map(fromJob _))
   }
 

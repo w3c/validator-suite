@@ -21,14 +21,14 @@
         <input type=hidden name="n" value="@page.perPage"/>}
         @if(page.sortParam != page.ordering.default) {
         <input type=hidden name="sort" value="@page.sortParam.name"/>}
-        <label for="p">Go to page:</label>
-        <select id="p" name="p"@if(page.maxPage == 0){ disabled}>
+        <label for="p">Page:</label>
+        <select id="p" name="p"@if(page.maxPage == 0 || page.maxPage == 1){ disabled}>
             @if(page.maxPage == 0) {
             <option>0</option>}
             @for(i <- 1 until page.maxPage + 1) {
             <option@if(page.current == i){ selected}>@i</option>}
         </select>
-        <button type=submit@if(page.maxPage == 0){ disabled}>Go</button>
+        <button type=submit@if(page.maxPage == 0 || page.maxPage == 1){ disabled}>Go</button>
     </form>
 </nav>
 
