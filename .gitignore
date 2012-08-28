@@ -16,7 +16,6 @@ project/boot/
 *.class
 *.log
 *\#
-build.properties
 logs
 sbt-launch*.jar
 .target
