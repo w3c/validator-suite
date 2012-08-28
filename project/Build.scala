@@ -12,12 +12,11 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     // runtime dependencies
     "nu.validator.htmlparser" % "htmlparser" % "1.2.1" intransitive(),
-    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT",
-    "net.databinder" %% "dispatch-http" % "0.8.6",
-    "com.novus" %% "salat-core" % "0.0.8-SNAPSHOT",
+    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
+    "net.databinder.dispatch" %% "core" % "0.9.0",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
     //"org.w3" %% "banana-sesame" % "x03-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "x04-SNAPSHOT",
+    "org.w3" %% "banana-jena" % "x07-SNAPSHOT",
     "org.w3" %% "css-validator-standalone" % "1.0-SNAPSHOT" intransitive(),
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
@@ -32,7 +31,7 @@ object ApplicationBuild extends Build {
 //  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-sesame")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-//    scalaVersion := "2.9.1",
+    scalaVersion := "2.9.2",
     testOptions in Test := Nil,
     scalacOptions ++= Seq("-Ydependent-method-types"),
     // activates full stacktrace and durations

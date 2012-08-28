@@ -254,7 +254,7 @@ SELECT ?run ?timestamp WHERE {
       val rds: Iterable[BananaValidation[(RunId, DateTime)]] = rows.toIterable map { row =>
         val runId = row("run").flatMap(_.as[(OrganizationId, JobId, RunId)]).map(_._3)
         val timestamp = row("timestamp").flatMap(_.as[DateTime])
-        (runId |@| timestamp)(Tuple2.apply)
+        ^[BananaValidation, RunId, DateTime, (RunId, DateTime)](runId, timestamp)(Tuple2.apply)
       }
       rds.toList.sequence match {
         case Failure(_) => None
@@ -291,7 +291,7 @@ SELECT ?run ?timestamp WHERE {
     import conf._
     val r = for {
       _ <- store.patch(job.orgUri,
-                       delete = job.orgUri -- ont.job ->- job.jobUri)
+                       delete = List())
       _ <- store.delete(job.jobUri.fragmentLess)
     } yield ()
     r.toFutureVal

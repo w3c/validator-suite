@@ -4,15 +4,7 @@ logLevel := Level.Warn
 // The Typesafe repository
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-addSbtPlugin("play" % "sbt-plugin" % "2.1-SNAPSHOT")
+// Use the Play sbt plugin for Play projects
+addSbtPlugin("play" % "sbt-plugin" % Option(System.getProperty("play.version")).getOrElse("2.0"))
 
-resolvers += "Scala-Tools Maven2 Snapshots Repository" at "http://scala-tools.org/repo-snapshots"
-
-// addSbtPlugin("org.ensime" % "ensime-sbt-cmd" % "0.0.10")
-
-libraryDependencies +=
- Defaults.sbtPluginExtra(
-   "org.ensime" % "ensime-sbt-cmd" % "0.0.10",
-   "0.11.2",
-   "2.9.1"
- )
+addSbtPlugin("org.ensime" % "ensime-sbt-cmd" % "0.1.0")

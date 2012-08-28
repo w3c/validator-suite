@@ -28,16 +28,6 @@ object FutureVal {
     new FutureVal(Promise.successful(fromTryCatch(body)))
   }
   
-  def applyWith[F, S](body: => S)(onThrowable: Throwable => F)(implicit context: ExecutionContext,
-      onTimeout: TimeoutException => F): FutureVal[F, S]  = {
-    new FutureVal(Future(fromTryCatch(body).fail.map(t => onThrowable(t)).validation))
-  }
-  
-  def pureWith[F, S](body: => S)(onThrowable: Throwable => F)(implicit context: ExecutionContext,
-      onTimeout: TimeoutException => F): FutureVal[F, S]  = {
-    new FutureVal(Promise.successful(fromTryCatch(body).fail.map(t => onThrowable(t)).validation))
-  }
-  
   def applyVal[F, S](body: => Validation[F, S])(onThrowable: Throwable => F)(implicit context: ExecutionContext,
       onTimeout: TimeoutException => F): FutureVal[F, S]  = {
     new FutureVal(Future(fromTryCatch(body).fold(t => Failure(onThrowable(t)), s => s)))
@@ -80,8 +70,8 @@ object FutureVal {
     val futures: Iterable[Future[Validation[F, S]]] = iterable.view map { _.future }
     // reduce the Futures to a single one
     val future: Future[Iterable[Validation[F, S]]] = Future.sequence(futures)
-    // for a given F, a Validation[F, X] can be made a monad
-    implicit val validationFMonad = validationMonad[F]
+    // we should move to scalaz's \/ type or just wait for Scala 2.10
+    implicit val semigroup: Semigroup[F] = Semigroup.firstSemigroup[F]
     // there is no Traversable typeclass instance for Iterable made available in scalaz
     // but there is one for List, hence the .toList
     val futureValidation: Future[Validation[F, Iterable[S]]] =
