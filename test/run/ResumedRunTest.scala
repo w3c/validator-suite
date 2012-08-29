@@ -57,8 +57,8 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     fishForMessagePF(3.seconds) { case "got DeadLetter" => () }
 
     // then resume!
-    job.resume()
     job.listen(testActor)
+    job.resume()
     
     // that's the same test as in cyclic
     fishForMessagePF(3.seconds) {
