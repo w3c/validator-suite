@@ -34,37 +34,13 @@ object Run {
     }
   }
 
-//  def getFor(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Run]] =
-//    getFor((orgId, jobId).toUri)
-    
-//  def getFor(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Run]] = {
-//    null
-//    import conf._
-//    val query = """
-//CONSTRUCT {
-//  ?job ont:run ?run .
-//  ?s1 ?p1 ?o1 .
-//} WHERE {
-//  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
-//  graph ?jobG { ?job ont:run ?run } .
-//  BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
-//  graph ?runG { ?s1 ?p1 ?o1 }
-//}
-//"""
-//    val construct = ConstructQuery(query, ont)
-//    val r = for {
-//      graph <- store.executeConstruct(construct, Map("job" -> jobUri))
-//      pointedJob = PointedGraph[Rdf](jobUri, graph)
-//      runs <- (pointedJob / ont.run).asSet[Run]
-//    } yield runs
-//    r.toFutureVal
-//  }
-
   def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
+    import ops._
     val jobUri = (run.id._1, run.id._2).toUri
     val r = for {
       _ <- store.put(run.ldr)
+      _ <- store.patch(jobUri, delete = List((jobUri, ont.run.uri, ANY)))
       _ <- store.append(jobUri, jobUri -- ont.run ->- run.runUri)
     } yield ()
     r.toFutureVal

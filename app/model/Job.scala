@@ -289,9 +289,10 @@ SELECT ?run ?timestamp WHERE {
 
   def delete(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
+    import ops._
     val r = for {
       _ <- store.patch(job.orgUri,
-                       delete = List())
+                       delete = List((job.orgUri, ont.job.uri, job.jobUri))) // <- bug here
       _ <- store.delete(job.jobUri.fragmentLess)
     } yield ()
     r.toFutureVal
