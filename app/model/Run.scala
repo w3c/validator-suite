@@ -108,7 +108,7 @@ case class Run private (
     warnings: Int = 0,
     invalidated: Int = 0,
     // based on scheduled assertions
-    pendingAssertions: Int = 0) {
+    pendingAssertions: Set[(AssertorId, URL)] = Set.empty) {
 
   val logger = play.Logger.of(classOf[Run])
 
@@ -135,7 +135,7 @@ case class Run private (
    */
   def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
 
-  def isIdle = noMoreUrlToExplore && pendingAssertions == 0
+  def isIdle = noMoreUrlToExplore && pendingAssertions.isEmpty
 
   def isRunning = !isIdle
 
@@ -266,7 +266,7 @@ case class Run private (
         Set.empty[AssertorCall]
       }
     val runWithPendingAssertorCalls =
-      runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions + assertorCalls.size)
+      runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.id, ac.response.url)))
     (runWithPendingAssertorCalls, urlsToFetch, assertorCalls)
   }
 
@@ -283,12 +283,11 @@ case class Run private (
       assertions = this.assertions ++ result.assertions,
       errors = this.errors + nbErrors,
       warnings = this.warnings + nbWarnings,
-      pendingAssertions = pendingAssertions - 1) // lower bound is 0
+      pendingAssertions = pendingAssertions - ((result.assertorId, result.sourceUrl)))
   }
 
   def withAssertorFailure(fail: AssertorFailure): Run = {
-    // TODO? should do something about that
-    this.copy(pendingAssertions = pendingAssertions - 1)
+    this.copy(pendingAssertions = pendingAssertions - ((fail.assertorId, fail.sourceUrl)))
   }
 
   def stopMe(): Run =

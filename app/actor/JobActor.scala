@@ -29,8 +29,6 @@ object JobActor {
   /* events internal to the application */
   case object GetRun
   case object NoMorePendingAssertion
-  case object GetOrgEnumerator
-  case object GetJobEnumerator
   case object Resume
   case object GetSnapshot
 
@@ -69,8 +67,6 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
   val http = system.actorFor(system / "http")
 
-  lazy val (enumerator, channel) = Concurrent.broadcast[RunUpdate]
-  
   implicit val strategy = job.strategy
 
   // at instanciation of this actor
@@ -126,12 +122,6 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     case Event(GetRun, run) => {
       logger.debug("%s: GetRun" format run.shortId)
       sender ! run
-      stay()
-    }
-
-    case Event(GetJobEnumerator, run) => {
-      logger.debug("%s: GetJobEnumerator" format run.shortId)
-      sender ! enumerator
       stay()
     }
 
@@ -237,7 +227,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
   }
 
-  private def tellEverybody(msg: Any): Unit = {
+  private def tellEverybody(msg: RunUpdate): Unit = {
     // tell the organization
     context.actorFor("../..") ! msg
     // tell all the listeners
