@@ -97,7 +97,6 @@ case class Run private (
     explorationMode: ExplorationMode = ProActive,
     // based on scheduled fetches
     toBeExplored: List[URL] = List.empty,
-    fetched: Set[URL] = Set.empty,
     pending: Set[URL] = Set.empty,
     // based on added resources
     knownUrls: Set[URL] = Set.empty,
@@ -243,7 +242,6 @@ case class Run private (
   private def runWithResponse(response: ResourceResponse): Run = {
     this.copy(
       pending = pending - response.url,
-      fetched = fetched + response.url,
       resources = resources + 1
     )      
   }
@@ -271,10 +269,7 @@ case class Run private (
   }
 
   def withErrorResponse(errorResponse: ErrorResponse): Run = {
-    this.copy(
-      pending = pending - errorResponse.url,
-      fetched = fetched + errorResponse.url
-    )
+    this.copy(pending = pending - errorResponse.url)
   }
 
   def withAssertorResult(result: AssertorResult): Run = {
