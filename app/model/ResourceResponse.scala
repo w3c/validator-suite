@@ -50,7 +50,7 @@ object HttpResponse {
       headers: Headers,
       body: String): HttpResponse = {
     
-    val extractedURLs = headers.mimetype collect {
+    val extractedURLs: List[URL] = headers.mimetype collect {
       case "text/html" | "application/xhtml+xml" => URLExtractor.fromHtml(url, body).distinct
       case "text/css" => URLExtractor.fromCSS(url, body).distinct
     } getOrElse List.empty

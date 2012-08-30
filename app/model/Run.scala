@@ -99,8 +99,7 @@ case class Run private (
     toBeExplored: List[URL] = List.empty,
     pending: Set[URL] = Set.empty,
     // based on added resources
-    knownUrls: Set[URL] = Set.empty,
-    resources: Int = 0,
+    knownResources: Map[URL, ResourceInfo] = Map.empty,
     // based on added assertions
     assertions: Set[Assertion] = Set.empty,
     errors: Int = 0,
@@ -115,28 +114,45 @@ case class Run private (
 
   val runUri = id.toUri
 
-  def jobData: JobData = JobData(resources, errors, warnings, createdAt, completedAt)
+  def jobData: JobData = JobData(numberOfFetchedResources, errors, warnings, createdAt, completedAt)
   
   def health: Int = jobData.health
 
   /* combinators */
 
-  def completedAt(at: DateTime): Run = copy(completedAt = Some(at))
+  // set the completeAt bit and empty the queue of toBeExplored fetches
+  def completedAt(at: DateTime): Run = this.copy(
+    completedAt = Some(at),
+    toBeExplored = List.empty)
 
   /* methods related to the data */
   
   def ldr: LinkedDataResource[Rdf] = LinkedDataResource(runUri, this.toPG)
 
-  def numberOfKnownUrls: Int = knownUrls.count { _.authority === mainAuthority }
+  // should we also count the errors and redirections?
+  lazy val numberOfFetchedResources: Int = {
+    knownResources.values count {
+      case Fetched(_) => true
+      case _ => false
+    }
+  }
+
+  def knownUrls: Iterable[URL] = pending.toIterable ++ toBeExplored ++ knownResources.keys
+
+  // same question here: what about Errors and Redirects?
+  def numberOfKnownUrls: Int = numberOfFetchedResources + toBeExplored.size + pending.size
 
   /**
    * An exploration is over when there are no more urls to explore and no pending url
    */
-  def noMoreUrlToExplore = pending.isEmpty && toBeExplored.isEmpty
 
-  def isIdle = noMoreUrlToExplore && pendingAssertions.isEmpty
+  def noMoreUrlToExplore: Boolean = (numberOfRemainingAllowedFetches == 0) || (pending.isEmpty && toBeExplored.isEmpty)
 
-  def isRunning = !isIdle
+  def hasNoPendingAction: Boolean = noMoreUrlToExplore && pendingAssertions.isEmpty
+
+  def isIdle: Boolean = completedAt.isDefined
+
+  def isRunning: Boolean = !isIdle
 
   def activity: RunActivity = if (isRunning) Running else Idle
 
@@ -144,11 +160,11 @@ case class Run private (
 
   private def shouldIgnore(url: URL): Boolean = {
     def notToBeFetched = IGNORE === strategy.getActionFor(url)
-    def alreadyKnown = knownUrls contains url
+    def alreadyKnown = knownResources.isDefinedAt(url)
     notToBeFetched || alreadyKnown
   }
 
-  def numberOfRemainingAllowedFetches = strategy.maxResources - numberOfKnownUrls
+  lazy val numberOfRemainingAllowedFetches = strategy.maxResources - numberOfFetchedResources
 
   val mainAuthority: Authority = strategy.mainAuthority
 
@@ -216,7 +232,7 @@ case class Run private (
     var current: Run = this
     var urls: List[URL] = List.empty
     for {
-      i <- 1 to (n - pending.size)
+      i <- 1 to math.min(numberOfRemainingAllowedFetches, n - pending.size)
       (run, url) <- current.take
     } {
       current = run
@@ -229,47 +245,63 @@ case class Run private (
    * Returns an Observation with the new urls to be explored
    */
   private def withNewUrlsToBeExplored(urls: List[URL]): Run = {
-    val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct.take(numberOfRemainingAllowedFetches)
+    val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct // .take(numberOfRemainingAllowedFetches)
     if (! filteredUrls.isEmpty)
       logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, filteredUrls.size, this.numberOfKnownUrls))
-    val run = this.copy(
-      toBeExplored = toBeExplored ++ filteredUrls,
-      knownUrls = knownUrls ++ filteredUrls
-    )
+    val run = this.copy(toBeExplored = toBeExplored ++ filteredUrls)
     run
   }
 
-  private def runWithResponse(response: ResourceResponse): Run = {
-    this.copy(
+  private def withResponse(response: ResourceResponse): (Run, ResourceInfo) = {
+    val resourceInfo = ResourceInfo(response)
+    val run = this.copy(
       pending = pending - response.url,
-      resources = resources + 1
-    )      
+      knownResources = this.knownResources + (response.url -> resourceInfo)
+    )
+    (run, resourceInfo)
+  }
+
+  def withErrorResponse(errorResponse: ErrorResponse): Run = {
+    withResponse(errorResponse)._1
   }
 
   def withHttpResponse(httpResponse: HttpResponse): (Run, Iterable[URL], Iterable[AssertorCall]) = {
     // add the new response
-    val runWithResponse = this.runWithResponse(httpResponse)
-    // extract the urls to be explored
-    val (runWithPendingFetches, urlsToFetch) =
-      if (explorationMode === ProActive)
-        runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs).takeAtMost(Strategy.maxUrlsToFetch)
-      else
-        (runWithResponse, Set.empty[URL])
-    // extract the calls to the assertor to be made
-    val assertorCalls =
-      if (explorationMode === ProActive && httpResponse.action === GET) {
-        val assertors = strategy.getAssertors(httpResponse)
-        assertors map { assertor => AssertorCall(this.id, assertor, httpResponse) }
-      } else {
-        Set.empty[AssertorCall]
+    val (runWithResponse, resourceInfo) = withResponse(httpResponse)
+    resourceInfo match {
+      case Fetched(_) => {
+        // extract the urls to be explored
+        val (runWithPendingFetches, urlsToFetch) =
+          if (explorationMode === ProActive)
+            runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs).takeAtMost(Strategy.maxUrlsToFetch)
+          else
+            (runWithResponse, Set.empty[URL])
+       // extract the calls to the assertor to be made
+       val assertorCalls =
+         if (explorationMode === ProActive && httpResponse.action === GET) {
+           val assertors = strategy.getAssertors(httpResponse)
+           assertors map { assertor => AssertorCall(this.id, assertor, httpResponse) }
+         } else {
+           Set.empty[AssertorCall]
+         }
+        val runWithPendingAssertorCalls =
+          runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.id, ac.response.url)))
+        (runWithPendingAssertorCalls, urlsToFetch, assertorCalls)
       }
-    val runWithPendingAssertorCalls =
-      runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.id, ac.response.url)))
-    (runWithPendingAssertorCalls, urlsToFetch, assertorCalls)
-  }
+      case Redirect(_, url) => {
+        // extract the urls to be explored
+        val (runWithPendingFetches, urlsToFetch) =
+          if (explorationMode === ProActive)
+            runWithResponse.withNewUrlsToBeExplored(List(url)).takeAtMost(Strategy.maxUrlsToFetch)
+          else
+            (runWithResponse, Set.empty[URL])
+        (runWithPendingFetches, urlsToFetch, List.empty)
+      }
+      case InfoError(_) => {
+        (runWithResponse, List.empty, List.empty)
+      }
+    }
 
-  def withErrorResponse(errorResponse: ErrorResponse): Run = {
-    this.copy(pending = pending - errorResponse.url)
   }
 
   def withAssertorResult(result: AssertorResult): Run = {

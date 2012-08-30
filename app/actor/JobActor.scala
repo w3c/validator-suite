@@ -85,7 +85,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
   def stateOf(run: Run): State = {
     val _run =
-      if (run.noMoreUrlToExplore && run.pendingAssertions == 0) {
+      if (run.hasNoPendingAction) {
         val now = DateTime.now(DateTimeZone.UTC)
         Run.completedAt(run.runUri, now)
         run.copy(completedAt = Some(now))
@@ -96,12 +96,10 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       logger.debug("%s: transition to new state %s" format (run.shortId, _run.state.toString))
       val msg = UpdateData(_run.jobData, job.id, _run.activity)
       tellEverybody(msg)
-      if (_run.noMoreUrlToExplore) {
-        logger.info("%s: Exploration phase finished. Fetched %d pages" format (_run.shortId, _run.knownUrls.size))
-        if (_run.pendingAssertions == 0) {
-          logger.info("Assertion phase finished.")
-        }
-      }
+      if (_run.noMoreUrlToExplore)
+        logger.info("%s: Exploration phase finished. Fetched %d pages" format (_run.shortId, _run.numberOfFetchedResources))
+      if (_run.pendingAssertions == 0)
+        logger.info("Assertion phase finished.")
     }
     stay() using _run
   }
@@ -204,7 +202,8 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       logger.debug("%s: <<< error when fetching %s" format (run.shortId, error.url))
       Run.saveEvent(run.runUri, ResourceResponseEvent(error))
       tellEverybody(NewResource(run.id, error))
-      stateOf(run)
+      val runWithErrorResponse = run.withErrorResponse(error)
+      stateOf(runWithErrorResponse)
     }
 
     case Event(BeProactive, run) => stateOf(run.withMode(ProActive))
