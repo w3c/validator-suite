@@ -13,6 +13,8 @@ case class Website(links: Iterable[Link]) {
       val path = req.getRequestURI
       if (path startsWith "/404") {
         resp.sendError(404)
+      } else if (path.endsWith(",redirect")) {
+        resp.sendRedirect(path.substring(0, path.length - 9))
       } else {
         val outLinks = links flatMap { _.outlinksFor(path) }
         val webpage = Webpage(path, outLinks)
@@ -29,6 +31,12 @@ object Website {
   
   def cyclic(size: Int): Website = {
     var links = 1 to (size -1) map { case i => ("/"+i) --> ("/"+(i+1)) }
+    links = ("/" + size.toString --> "/1") +: ("/" --> "/1") +: links
+    Website(links)
+  }
+
+  def cyclicWithRedirects(size: Int): Website = {
+    var links = 1 to (size -1) map { case i => ("/"+i) --> ("/"+(i+1)+",redirect") }
     links = ("/" + size.toString --> "/1") +: ("/" --> "/1") +: links
     Website(links)
   }

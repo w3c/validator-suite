@@ -41,7 +41,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
       builder.setMaximumConnectionsTotal(1000)
       .setMaximumConnectionsPerHost(15)
       .setExecutorService(executor)
-      .setFollowRedirects(true)
+      .setFollowRedirects(false)
       .setConnectionTimeoutInMs(timeout)
       .build
     new AsyncHttpClient(config)
