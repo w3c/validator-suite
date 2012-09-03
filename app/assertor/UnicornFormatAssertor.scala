@@ -42,7 +42,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
         val descriptionOpt = (message \ "description").headOption map { description =>
           description.children.map(removeScope).mkString("").trim
         }
-        Assertion(url, id, contexts.toList, lang, title, severity, descriptionOpt)
+        Assertion(url, name, contexts.toList, lang, title, severity, descriptionOpt)
       }
     events
   }

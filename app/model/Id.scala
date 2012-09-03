@@ -23,7 +23,6 @@ case class UserId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 }
 case class JobDataId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class ContextId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class AssertorId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class StrategyId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class AssertionId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class OrganizationId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
@@ -53,11 +52,6 @@ object JobDataId {
 object ContextId {
   def apply(s: String): ContextId = ContextId(UUID.fromString(s))
   implicit val equal = Equal.equalA[ContextId]
-}
-
-object AssertorId {
-  def apply(s: String): AssertorId = AssertorId(UUID.fromString(s))
-  implicit val equal = Equal.equalA[AssertorId]
 }
 
 object StrategyId {

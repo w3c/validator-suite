@@ -14,7 +14,7 @@ import play.api.templates.HtmlFormat
  */
 object ValidatorNu extends FromHttpResponseAssertor {
 
-  val key = "validator.nu"
+  val name = "validator.nu"
   
   def validatorURL(encodedURL: String) =
     "http://validator.w3.org/nu/?doc=" + encodedURL + "&out=json"
@@ -56,7 +56,7 @@ object ValidatorNu extends FromHttpResponseAssertor {
         case Some(code) => List(Context(code.trim, lastLine, lastCol)) // The model needs to accept a range of lines/column
         case _ => List()
       }
-      Assertion(url, id, contexts, "en", title, severity, None)
+      Assertion(url, name, contexts, "en", title, severity, None)
     }
   }
   

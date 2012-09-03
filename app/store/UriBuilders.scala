@@ -129,12 +129,12 @@ trait UriBuilders {
 //    def toUri(t: AssertorResponseId): Rdf#URI = apply(t)
 //  }
 
-  implicit object AssertorUri
+  /*implicit object AssertorUri
   extends PrefixBuilder("", "https://validator.w3.org/suite/assertor/")(ops)
-  with URIBinder[Rdf, AssertorId] {
-    def apply(id: AssertorId): Rdf#URI = apply(id.toString)
-    def fromUri(uri: Rdf#URI): Validation[BananaException, AssertorId] = getLocalName(uri) map AssertorId.apply
-    def toUri(t: AssertorId): Rdf#URI = apply(t)
-  }
+  with URIBinder[Rdf, String] {
+    def apply(assertor: String): Rdf#URI = apply(assertor)
+    def fromUri(uri: Rdf#URI): Validation[BananaException, String] = getLocalName(uri)
+    def toUri(t: String): Rdf#URI = apply(t)
+  }*/
 
 }

@@ -8,7 +8,7 @@ import org.w3.util._
  */
 object HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  val key = "validator.html"
+  val name = "validator.html"
   
   def validatorURL(encodedURL: String) =
     "http://qa-dev.w3.org/wmvs/HEAD/check?uri=" + encodedURL + "&charset=%28detect+automatically%29&doctype=Inline&group=0&user-agent=W3C_Validator%2F1.2&output=ucn"

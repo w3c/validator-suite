@@ -106,7 +106,7 @@ case class Run private (
     warnings: Int = 0,
     invalidated: Int = 0,
     // based on scheduled assertions
-    pendingAssertions: Set[(AssertorId, URL)] = Set.empty) {
+    pendingAssertions: Set[(String, URL)] = Set.empty) {
 
   val logger = play.Logger.of(classOf[Run])
 
@@ -285,7 +285,7 @@ case class Run private (
            Set.empty[AssertorCall]
          }
         val runWithPendingAssertorCalls =
-          runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.id, ac.response.url)))
+          runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.name, ac.response.url)))
         (runWithPendingAssertorCalls, urlsToFetch, assertorCalls)
       }
       case Redirect(_, url) => {
@@ -310,11 +310,11 @@ case class Run private (
       assertions = this.assertions ++ result.assertions,
       errors = this.errors + nbErrors,
       warnings = this.warnings + nbWarnings,
-      pendingAssertions = pendingAssertions - ((result.assertorId, result.sourceUrl)))
+      pendingAssertions = pendingAssertions - ((result.assertor, result.sourceUrl)))
   }
 
   def withAssertorFailure(fail: AssertorFailure): Run = {
-    this.copy(pendingAssertions = pendingAssertions - ((fail.assertorId, fail.sourceUrl)))
+    this.copy(pendingAssertions = pendingAssertions - ((fail.assertor, fail.sourceUrl)))
   }
 
   def stopMe(): Run =

@@ -38,7 +38,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
     lazy val job = property[(OrganizationId, JobId)](apply("job"))
     lazy val run = property[(OrganizationId, JobId, RunId)](apply("run"))
-    lazy val assertor = property[AssertorId](apply("assertor"))
+    lazy val assertor = property[String](apply("assertor"))
     lazy val createdAt = property[DateTime](apply("createdAt"))
     lazy val timestamp = property[DateTime](apply("timestamp"))
     lazy val user = property[UserVO](apply("user"))
@@ -183,18 +183,18 @@ trait Binders extends UriBuilders with LiteralBinders {
       } yield {
         // @@
         var toBeFetched = Set.empty[URL]
-        var toBeAsserted = Map.empty[(URL, AssertorId), AssertorCall]
+        var toBeAsserted = Map.empty[(URL, String), AssertorCall]
         val (initialRun, urls) = Run.initialRun(id = id, strategy = strategy, createdAt = createdAt)
         var run = initialRun
         toBeFetched ++= urls
         completedAt foreach { at => run = run.completedAt(at) }
         events.toList.sortBy(_.timestamp) foreach {
-          case AssertorResponseEvent(ar@AssertorResult(_, assertorId, url, _), _) => {
-            toBeAsserted -= ((url, assertorId))
+          case AssertorResponseEvent(ar@AssertorResult(_, assertor, url, _), _) => {
+            toBeAsserted -= ((url, assertor))
             run = run.withAssertorResult(ar)
           }
-          case AssertorResponseEvent(af@AssertorFailure(_, assertorId, url, _), _) => {
-            toBeAsserted -= ((url, assertorId))
+          case AssertorResponseEvent(af@AssertorFailure(_, assertor, url, _), _) => {
+            toBeAsserted -= ((url, assertor))
             run = run.withAssertorFailure(af)
           }
           case ResourceResponseEvent(hr@HttpResponse(url, _, _, _, _), _) => {
@@ -203,7 +203,7 @@ trait Binders extends UriBuilders with LiteralBinders {
             run = newRun
             toBeFetched ++= urls
             assertorCalls foreach { ac =>
-              toBeAsserted += ((ac.response.url, ac.assertor.id) -> ac)
+              toBeAsserted += ((ac.response.url, ac.assertor.name) -> ac)
             }
           }
           case ResourceResponseEvent(er@ErrorResponse(url, _, _), _) => {

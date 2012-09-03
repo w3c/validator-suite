@@ -8,7 +8,7 @@ import org.w3.util._
  */
 object I18nChecker extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  val key = "checker.i18n"
+  val name = "checker.i18n"
   
   def validatorURL(encodedURL: String) =
     "http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encodedURL + "&format=xml"

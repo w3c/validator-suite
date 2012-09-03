@@ -5,15 +5,15 @@ import org.w3.vs.assertor.Assertor
 import org.w3.vs.view._
 
 case class AssertorView(
-    key: String,
+    name: String,
     errors: Int,
     warnings: Int) extends View
 
 object AssertorView {
 
   def fromAssertions(assertions: Iterable[Assertion]): Iterable[AssertorView] = {
-    assertions.groupBy(_.assertorId).map {
-       case (id, assertions) => {
+    assertions.groupBy(_.assertor).map {
+       case (assertor, assertions) => {
          val errors = assertions.foldLeft(0) {
            case (count, assertion) =>
              count + (assertion.severity match {
@@ -29,7 +29,7 @@ object AssertorView {
              })
          }
          AssertorView(
-           Assertor.getKey(id),
+           assertor,
            errors,
            warnings
          )

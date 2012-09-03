@@ -22,20 +22,20 @@
         </dl>
         </article>
 
-        @assertors.toSeq.sorted(Ordering[(Int, String)].on[AssertorView](v => (-v.errors, Messages(v.key)))).map { assertor =>
+        @assertors.toSeq.sorted(Ordering[(Int, String)].on[AssertorView](v => (-v.errors, Messages(v.name)))).map { assertor =>
         <hr>
-        <article data-id="@assertor.key"@if(Some(assertor.key) == page.filter){ class=current}>
+        <article data-id="@assertor.name"@if(Some(assertor.name) == page.filter){ class=current}>
             <dl>
                 <dt>Assertor</dt>
-                <dd class="assertor">@Messages("assertor." + assertor.key)</dd>
+                <dd class="assertor">@Messages("assertor." + assertor.name)</dd>
                 <dt>Warnings</dt>
                 <dd class="warnings">@assertor.warnings</dd>
                 <dt>Errors</dt>
                 <dd class="errors">@assertor.errors</dd>
                 <dt>Actions</dt>
                 <dd class="actions">
-                    @if(Some(assertor.key) != page.filter){
-                    <a href="@page.filterBy(Some(assertor.key)).goToPage(1).queryString">filter</a>
+                    @if(Some(assertor.name) != page.filter){
+                    <a href="@page.filterBy(Some(assertor.name)).goToPage(1).queryString">filter</a>
                     } else {
                     [current filter]
                     }

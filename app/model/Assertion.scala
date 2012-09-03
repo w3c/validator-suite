@@ -17,7 +17,7 @@ import org.w3.banana.util._
 
 case class Assertion(
     url: URL,
-    assertorId: AssertorId,
+    assertor: String,
     contexts: List[Context],
     lang: String,
     title: String,
