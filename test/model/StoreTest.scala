@@ -115,13 +115,13 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   var run5 = Run(id = (org.id, job5.id, RunId()), strategy = job5.strategy, createdAt = now)
 
-  val assertorIds = List(AssertorId(), AssertorId())
+  val assertorIds = List("test-assertor-1", "test-assertor-2")
 
-    def newAssertion(url: URL, assertorId: AssertorId, severity: AssertionSeverity): Assertion = {
+    def newAssertion(url: URL, assertor: String, severity: AssertionSeverity): Assertion = {
       val contexts = List(Context("blah", Some(42), None), Context("blarf", None, Some(42)))
       Assertion(
         url = url,
-        assertorId = assertorId,
+        assertor = assertor,
         contexts = contexts,
         lang = "fr",
         title = "some title",
