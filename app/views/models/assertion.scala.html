@@ -15,17 +15,28 @@
         <dt>Description</dt>
         <dd class="description">@assertion.description</dd>
         }
-        <dt>Last validated</dt>
+        @**<dt>Last validated</dt>
         <dd class="validated">
             <time datetime="@assertion.validated">@Helper.formatTime(assertion.validated)</time>
             <span class="legend">@Helper.formatLegendTime(assertion.validated)</span>
-        </dd>
+        </dd>**@
+    @assertion match{
+      case assertion: SingleAssertionView => {
         <dt>Contexts</dt>
         @assertion.contexts.map { case context =>
         <dd class="context">
             Line <span class="line">@context.line</span>, Column <span class="column">@context.column</span>
             <code class="code">@context.content</code>
-        </dd>
-        }
+        </dd>}
+      }
+      case assertion: GroupedAssertionView => {
+        <dt>URLs</dt>
+        @assertion.urls.map { case url =>
+        <dd class="url">
+            @url
+        </dd>}
+      }
+    }
+
     </dl>
 </article>

@@ -1,7 +1,7 @@
 @(job: JobView,
   resource: ResourceView,
   assertors: Iterable[AssertorView],
-  assertionsPage: Page[AssertionView],
+  assertionsPage: Page[SingleAssertionView],
   user: User,
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
@@ -33,7 +33,7 @@
     <hr>
     
     <section id="assertions" class="folds">
-        @pages.assertions(assertionsPage, resource)
+        @pages.singleAssertions(assertionsPage)
     </section>
     
 }{ @***** Footer *****@

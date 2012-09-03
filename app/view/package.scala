@@ -1,7 +1,7 @@
 package org.w3.vs
 
 import org.joda.time.DateTime
-import org.w3.vs.view.model.{ResourceView, JobView, AssertionView}
+import org.w3.vs.view.model._
 
 package object view {
 
@@ -15,8 +15,11 @@ package object view {
     }
   }
 
-  implicit val assertionFiltering = AssertionView.filtering
-  implicit val assertionOrdering = AssertionView.ordering
+  implicit val singleAssertionFiltering = SingleAssertionView.filtering
+  implicit val singleAssertionOrdering = SingleAssertionView.ordering
+
+  implicit val groupedAssertionFiltering = GroupedAssertionView.filtering
+  implicit val groupedAssertionOrdering = GroupedAssertionView.ordering
 
   implicit val jobFiltering = JobView.filtering
   implicit val jobOrdering = JobView.ordering

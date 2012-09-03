@@ -1,13 +1,12 @@
-@(page: Page[AssertionView], resource: ResourceView)
+@(page: Page[GroupedAssertionView])
 
         <aside>
             <h2>Assertions</h2>
             <h3>Definitions</h3>
             <dl>
-                @AssertionView.params.map {param =>
+                @GroupedAssertionView.params.map {param =>
                 <dt class="@param"><dfn>@Messages("assertion.%s" format param)</dfn></dt>
-                <dd>@Messages("assertion.%s.detail" format param)</dd>
-                }
+                <dd>@Messages("assertion.%s.detail" format param)</dd>}
             </dl>
         </aside>
 
@@ -19,7 +18,7 @@
         <article>
             <p>
                 @Messages("assertions.empty")
-                <a href=="#">@Messages("resource.revalidate")</a>
+                <a href="#">@Messages("resource.revalidate")</a>
             </p>
         </article>
         }

@@ -4,13 +4,13 @@ import play.api.mvc.Request
 
 case class Page[A <: View] private (
     iterable: Iterable[A],
-    ordering: PageOrdering[A],
-    filtering: PageFiltering[A],
     current: Int = 1,                             // p=
     perPage: Int = Page.defaultPerPage,           // n=
     filter: Option[String] = None,                // filter=
     search: Option[String] = None,                // search=
-    sortParam: SortParam = SortParam("", true)) { // sort=
+    sortParam: SortParam = SortParam("", true))(  // sort=
+      implicit val ordering: PageOrdering[A],
+      val filtering: PageFiltering[A]) {
 
   def totalSize: Int = iterable.size
 
@@ -98,7 +98,7 @@ object Page {
         case _ => ordering.default
       }
 
-    Page[A](a, ordering, filtering)
+    new Page[A](a)
       .show(perPage)
       .sortBy(sort)
       .filterBy(filter)

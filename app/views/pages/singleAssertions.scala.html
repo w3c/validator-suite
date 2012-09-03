@@ -1,0 +1,25 @@
+@(page: Page[SingleAssertionView])
+
+        <aside>
+            <h2>Assertions</h2>
+            <h3>Definitions</h3>
+            <dl>
+                @SingleAssertionView.params.map {param =>
+                <dt class="@param"><dfn>@Messages("assertion.%s" format param)</dfn></dt>
+                <dd>@Messages("assertion.%s.detail" format param)</dd>}
+            </dl>
+        </aside>
+
+    @defining(page.iterator) {case iterator =>
+
+        @iterator.map { case assertion => @models.assertion(assertion) }
+
+        @if(iterator.size < 1) {
+        <article>
+            <p>
+                @Messages("assertions.empty")
+                <a href="#">@Messages("resource.revalidate")</a>
+            </p>
+        </article>
+        }
+    }

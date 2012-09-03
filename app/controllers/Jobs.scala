@@ -50,8 +50,10 @@ object Jobs extends Controller {
         assertions <- job.getAssertions()
         jobView <- JobView.fromJob(job)
         resourceViews = ResourceView.fromAssertions(assertions)
+        messageViews = GroupedAssertionView.fromAssertions(assertions)
       } yield {
         Ok(views.html.report(jobView, Page(resourceViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        //Ok(views.html.report2(jobView, Page(messageViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
@@ -65,7 +67,7 @@ object Jobs extends Controller {
         jobView <- JobView.fromJob(job)
         resourceView = ResourceView.fromAssertions(assertions).head
         assertorViews = AssertorView.fromAssertions(assertions)
-        assertionViews = AssertionView.fromAssertions(assertions)
+        assertionViews = SingleAssertionView.fromAssertions(assertions)
       } yield {
         Ok(views.html.urlReport(jobView, resourceView, assertorViews, Page(assertionViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
