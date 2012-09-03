@@ -7,7 +7,7 @@ import org.w3.vs.assertor.Assertor
 import org.w3.vs.view.{SortParam, PageOrdering, PageFiltering}
 
 case class GroupedAssertionView(
-  assertorName: String,
+  assertor: String,
   severity: AssertionSeverity,
   message: Html,
   description: Option[Html],
@@ -27,9 +27,9 @@ object GroupedAssertionView {
 
   def fromAssertions(assertions: Iterable[Assertion]): Iterable[GroupedAssertionView] = {
     // group by title + assertorId
-    assertions.groupBy(e => e.title + e.assertorId).map { case (_, assertions) =>
+    assertions.groupBy(e => e.title + e.assertor).map { case (_, assertions) =>
       // /!\ assuming that the severity is the same for all messages sharing the same title.
-      val assertorKey = Assertor.getKey(assertions.head.assertorId)
+      val assertorKey = assertions.head.assertor
       val severity = assertions.head.severity
       val message = Html(assertions.head.title)
       val description = assertions.head.description.map(Html.apply _)
@@ -49,11 +49,29 @@ object GroupedAssertionView {
 
   val filtering: PageFiltering[GroupedAssertionView] = new PageFiltering[GroupedAssertionView] {
 
-    def validate(filter: Option[String]): Option[String] = None
+    def validate(filter: Option[String]): Option[String] = filter match {
+      case Some(a) if Assertor.names.exists(_ == a)  => Some(a)
+      case _ => None
+    }
 
-    def filter(param: Option[String]): (GroupedAssertionView) => Boolean = _ => true
+    def filter(param: Option[String]): (GroupedAssertionView) => Boolean = validate(param) match {
+      case Some(param) => {
+        case assertion if (assertion.assertor == param) => true
+        case _ => false
+      }
+      case None => _ => true
+    }
 
-    def search(search: Option[String]): (GroupedAssertionView) => Boolean = _ => true
+    def search(search: Option[String]): (GroupedAssertionView) => Boolean = {
+      search match {
+        case Some(searchString) => {
+          case assertion
+            if (assertion.message.toString.contains(searchString)) => true
+          case _ => false
+        }
+        case None => _ => true
+      }
+    }
 
   }
 
@@ -71,10 +89,15 @@ object GroupedAssertionView {
     val default: SortParam = SortParam("occurrences", ascending = false)
 
     def order_(safeParam: SortParam): Ordering[GroupedAssertionView] = {
-      val ord = safeParam.name match {
-        case _ => Ordering[Int].on[GroupedAssertionView](_.occurrences)
-      }
-      if (safeParam.ascending) ord else ord.reverse
+      //val ord = safeParam.name match {
+        //case _ => {
+          val a = Ordering[AssertionSeverity].reverse
+          val b = Ordering[Int].reverse
+          val c = Ordering[String]
+          Ordering.Tuple3(a, b, c).on[GroupedAssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.message.text))
+        //}
+      //}
+      //if (safeParam.ascending) ord else ord.reverse
     }
 
   }

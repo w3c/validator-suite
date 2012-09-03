@@ -7,7 +7,7 @@ import org.w3.vs.assertor.Assertor
 import org.w3.vs.view.{SortParam, PageOrdering, PageFiltering}
 
 case class SingleAssertionView(
-  assertorName: String,
+  assertor: String,
   severity: AssertionSeverity,
   message: Html,
   description: Option[Html],
@@ -29,7 +29,7 @@ object SingleAssertionView {
 
   def apply(assertion: Assertion): SingleAssertionView = {
     SingleAssertionView(
-      assertorName = Assertor.getKey(assertion.assertorId),
+      assertor = assertion.assertor,
       severity = assertion.severity,
       message = Html(assertion.title),
       description = assertion.description.map(Html.apply _),
@@ -47,11 +47,29 @@ object SingleAssertionView {
 
   val filtering: PageFiltering[SingleAssertionView] = new PageFiltering[SingleAssertionView] {
 
-    def validate(filter: Option[String]): Option[String] = None
+    def validate(filter: Option[String]): Option[String] = filter match {
+      case Some(a) if Assertor.names.exists(_ == a)  => Some(a)
+      case _ => None
+    }
 
-    def filter(param: Option[String]): (SingleAssertionView) => Boolean = _ => true
+    def filter(param: Option[String]): (SingleAssertionView) => Boolean = validate(param) match {
+      case Some(param) => {
+        case assertion if (assertion.assertor == param) => true
+        case _ => false
+      }
+      case None => _ => true
+    }
 
-    def search(search: Option[String]): (SingleAssertionView) => Boolean = _ => true
+    def search(search: Option[String]): (SingleAssertionView) => Boolean = {
+      search match {
+        case Some(searchString) => {
+          case assertion
+            if (assertion.message.toString.contains(searchString)) => true
+          case _ => false
+        }
+        case None => _ => true
+      }
+    }
 
   }
 
@@ -70,10 +88,15 @@ object SingleAssertionView {
     val default: SortParam = SortParam("occurrences", ascending = false)
 
     def order_(safeParam: SortParam): Ordering[SingleAssertionView] = {
-      val ord = safeParam.name match {
-        case _ => Ordering[Int].on[SingleAssertionView](_.occurrences)
-      }
-      if (safeParam.ascending) ord else ord.reverse
+      //val ord = safeParam.name match {
+        //case _ => {
+          val a = Ordering[AssertionSeverity].reverse
+          val b = Ordering[Int].reverse
+          val c = Ordering[String]
+          Ordering.Tuple3(a, b, c).on[SingleAssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.message.text))
+        //}
+      //}
+      //if (safeParam.ascending) ord else ord.reverse
     }
 
   }
