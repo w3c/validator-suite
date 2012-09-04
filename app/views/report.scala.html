@@ -36,35 +36,6 @@
         @pages.resources(page, job)
     </section>
     
-    @**<section class="controls">
-        <h2>Controls</h2>
-        <h3>Report type</h3>
-        <form class="group">
-            <fieldset>
-                <input name=group type=radio value="url.assertor" id="url.assertor" @if(req.queryString.get("group").flatten.isEmpty || req.queryString.get("group").flatten.exists(_ == "url.assertor")){checked}>
-                <label for="url.assertor">Group by url</label>
-                <input name=group type=radio value="message.url" id="message.url" @if(req.queryString.get("group").flatten.exists(_ == "message.url")){checked}>
-                <label for="message.url">Group by message and url</label>
-                <input name=group type=radio value="message.context" id="message.context" @if(req.queryString.get("group").flatten.exists(_ == "message.context")){checked}>
-                <label for="message.context">Group by message and context</label>
-                @**<input name=flat id=flat type=checkbox @if(req.queryString.get("flat").flatten.exists(_ == "on")){checked}>** @
-                @**<label for="flat">flat</label>** @
-            </fieldset>
-            <button type=submit>Go</button>
-        </form>
-        <form method="post">
-        @**{run.activity match {
-          case Running => {<button type="submit" name="action" value="stop" class="stop">Cancel</button>}
-          case Idle => {<button type="submit" name="action" value="run" class="run">Run</button>}
-        }}** @
-        </form>
-        <h3>Find a url</h3>
-        <form class="search">
-            <input name=url type=text placeholder="Search url" required>
-            <button type=submit>Go</button>
-        </form>
-    </section>**@
-    
 }{ @***** Footer *****@
 
     @libs.footer {

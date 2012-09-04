@@ -68,127 +68,145 @@ form.search input {
 }
 
 /*.controls {
-	//background:@headerBgColor;
-	min-height:26px;
+    //background:@headerBgColor;
+    min-height:26px;
+    overflow: auto;
 }
 .controls button {
-	background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-	background: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-	background: -o-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-	background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-	border: 1px solid #AAA;
-	border-radius: 2px;
-	color: #444;
-	padding: 3px 12px;
-	margin:0;
-	vertical-align: middle;
-	font-size: 0.9em;
+    background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    background: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    background: -o-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    border: 1px solid #AAA;
+    border-radius: 2px;
+    color: #444;
+    padding: 3px 12px;
+    margin:0;
+    vertical-align: middle;
+    font-size: 0.9em;
 }
 .controls input {
-	margin:0;
+    margin:0;
 }
 .controls h2,
 .controls h3 {
-	display: none;
+    display: none;
 }
 .controls form {
-	display: inline;
-	margin-right: 2px;
+    //display: inline;
+    margin-right: 2px;
+    float:left;
 }*/
+
+.actions > form {
+    vertical-align: bottom;
+}
+.actions fieldset {
+    display: inline;
+}
+.actions legend {
+    display: none;
+}
 
 /* Group and search form */
-/*form.group {
-	float:left;
+form.group {
+    //float:left;
 }
 form.group fieldset {
-	border:1px solid #AAA;
-	border-radius:2px;
-	background:white;
-	padding:1px;
-	display:inline;
-	margin-right:2px;
-	line-height:13px;
-	position:relative;
-}
-form.group button {
-	vertical-align:top;
+    border: 1px solid #AAA;
+    border-radius: 2px;
+    background-color: #F0F0F0;
+    background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    background: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    background: -o-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+    background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+
+    display: inline;
+    padding: 1px;
+    font-family: Arial;
+    font-size: 14px;
+    line-height: 13px;
+
+    position: relative;
+    vertical-align:bottom;
+    //top: 40px;
 }
 form.group input {
-	display:none;	
+    display: none;
 }
 form.group label {
-	display:block;
-	padding:4px;
-	color:#777;
+    display: block;
+    padding: 5px;
+    color: #777;
 }
 form.group label:hover {
-	background:@headerBgColor;
+    background: white;
 }
 form.group input:checked + label {
-	color:#444;
+    color: #444;
 }
-form.group:hover {
-	position:absolute;
+form.group:hover ~ * {
+    vertical-align: bottom;
 }
 form.group fieldset:not(:hover) input:not(:checked) + label {
-	display:none;	
-}
-form.group fieldset:not(:hover) {
-	padding-right: 15px;
+    display:none;
 }
 form.group fieldset:hover {
-	min-width: 202px; // XXX: hmmm...
+    //position:absolute;
+
+    //top: 46px;
+    top: 23px;
+    z-index: 100;
 }
+form.group fieldset:not(:hover) {
+    padding-right: 15px;
+}
+/*form.group fieldset:hover {
+    min-width: 202px; // XXX: hmmm...
+}*/
 form.group fieldset:not(:hover):after {
-	content:"";
-	display:block;
-	position:absolute;
-	right:5px;
-	top:10px;
-	width:0px;
-	height:0px;
-	border-right: 4px solid transparent;
-	border-left: 4px solid transparent;
-	border-top: 4px solid #444444;
-	margin-bottom: 3px;
-	margin-left: 3px;
+    content:"";
+    display:block;
+    position:absolute;
+    right:6px;
+    top:10px;
+    width:0px;
+    height:0px;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+    border-top: 4px solid #444444;
+    margin-bottom: 3px;
+    margin-left: 3px;
+}
+form.group button {
+    vertical-align: bottom;
 }
 
-form.search {
-	//float:right;
-}
-form.search input {
-	padding: 5px 5px 4px 5px;
-margin: 0;
-border: 1px solid #AAA;
-border-radius: 2px;
-margin: 0;
-}*/
 
 /* Messages */
 /*.messages {
-	line-height:1.4em;
-	padding:5px 0;
+    line-height:1.4em;
+    padding:5px 0;
 }
 .messages .pos {
-	font-size:12px;
-	margin-right:5px;
+    font-size:12px;
+    margin-right:5px;
 }
 .messages .col {
-	display:inline-block;
-	min-width:3em;
+    display:inline-block;
+    min-width:3em;
 }
 .messages .line {
-	display:inline-block;
-	min-width:2em;
+    display:inline-block;
+    min-width:2em;
 }
 .messages .line {
-	text-align: right;
+    text-align: right;
 }
 .messages .col {
-	text-align: left;
-	margin-left:4px;
+    text-align: left;
+    margin-left:4px;
 }
 .messages .col:before {
-	content:" | ";
+    content:" | ";
 }*/
