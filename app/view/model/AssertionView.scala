@@ -7,7 +7,7 @@ import org.w3.vs.view._
 trait AssertionView extends View {
     val assertor: String
     val severity: AssertionSeverity
-    val message: Html
+    val title: Html
     val description: Option[Html]
     val occurrences: Int
 }

@@ -81,7 +81,7 @@ object Jobs extends Controller {
         job <- user.getJob(id)
         _ <- job.delete()
       } yield {
-        if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("info" -> Messages("jobs.deleted", job.name)))
+        if (isAjax) Ok else SeeOther(routes.Jobs.index.toString).flashing(("success" -> Messages("jobs.deleted", job.name)))
       }) failMap toError toPromise
     }
   } 
@@ -188,9 +188,9 @@ object Jobs extends Controller {
       } yield {
         val (job, msg) = jobM
         if (isAjax) 
-          Created(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
+          Created(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
         else
-          SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
+          SeeOther(routes.Jobs.show(job.id).toString).flashing(("success" -> Messages(msg, job.name)))
       }) failMap {
         case InvalidJobFormException(form, user, idOpt) => BadRequest(views.html.jobForm(form, user, idOpt))
         case t => toError(t)
@@ -205,8 +205,8 @@ object Jobs extends Controller {
         job <- user.getJob(id)
       } yield {
         action(user)(job)
-        if (isAjax) Accepted(views.html.libs.messages(List(("info" -> Messages(msg, job.name))))) 
-        else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("info" -> Messages(msg, job.name)))
+        if (isAjax) Accepted(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
+        else        SeeOther(routes.Jobs.show(job.id).toString).flashing(("success" -> Messages(msg, job.name)))
       }) failMap toError toPromise
     }
   }

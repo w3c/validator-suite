@@ -1,12 +1,10 @@
 @(errors: List[(String, String)] = List.empty)(implicit flash: Flash)
 @if(flash.data.size + errors.size > 0) {
-	<section id="messages">
-		<h1>Messages</h1>
-		@flash.data.map { case (key, message) =>
-		<p class="@key vsmessage">@message</p>
-		}
-		@errors.map { case (key, message) =>
-		<p class="@key vsmessage">@message</p>
-		}
-	</section>
+    <section id="messages">
+        <h1>Messages</h1>
+        @flash.data.map { case (key, message) =>
+        <p class="@key message">@message</p>}
+        @errors.map { case (key, message) =>
+        <p class="@key message">@message</p>}
+    </section>
 }

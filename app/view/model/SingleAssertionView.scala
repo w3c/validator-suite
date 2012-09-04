@@ -9,7 +9,7 @@ import org.w3.vs.view.{SortParam, PageOrdering, PageFiltering}
 case class SingleAssertionView(
   assertor: String,
   severity: AssertionSeverity,
-  message: Html,
+  title: Html,
   description: Option[Html],
   occurrences: Int,
   url: URL,
@@ -20,7 +20,7 @@ object SingleAssertionView {
   val params = Seq[String](
     "assertor",
     "severity",
-    "message",
+    "title",
     "description",
     "occurrences",
     "url",
@@ -31,7 +31,7 @@ object SingleAssertionView {
     SingleAssertionView(
       assertor = assertion.assertor,
       severity = assertion.severity,
-      message = Html(assertion.title),
+      title = Html(assertion.title),
       description = assertion.description.map(Html.apply _),
       occurrences = scala.math.max(1, assertion.contexts.size),
       url = assertion.url,
@@ -64,7 +64,7 @@ object SingleAssertionView {
       search match {
         case Some(searchString) => {
           case assertion
-            if (assertion.message.toString.contains(searchString)) => true
+            if (assertion.title.toString.contains(searchString)) => true
           case _ => false
         }
         case None => _ => true
@@ -78,7 +78,7 @@ object SingleAssertionView {
     val params = Seq[String](
       "assertor",
       "severity",
-      "message",
+      "title",
       "description",
       "occurrences",
       "url",
@@ -93,7 +93,7 @@ object SingleAssertionView {
           val a = Ordering[AssertionSeverity].reverse
           val b = Ordering[Int].reverse
           val c = Ordering[String]
-          Ordering.Tuple3(a, b, c).on[SingleAssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.message.text))
+          Ordering.Tuple3(a, b, c).on[SingleAssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.title.text))
         //}
       //}
       //if (safeParam.ascending) ord else ord.reverse
