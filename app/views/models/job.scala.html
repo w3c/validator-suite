@@ -47,13 +47,13 @@
             <form action="@routes.Jobs.dispatcher(job.id)" method="post">
                 <fieldset>
                     <legend>Job Controls</legend>
-                    <button type="submit" name="action" value="stop" class="stop">cancel</button>
-                    <button type="submit" name="action" value="run" class="run">run now</button>
+                    <button type="submit" name="action" value="stop" class="stop">@Messages("job.button.cancel")</button>
+                    <button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>
                     @**{job.status match {
                       case "running" => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
                       case "idle" => {<button type="submit" name="action" value="run" class="run">run now</button>}
                     }}**@
-                    <button type="submit" name="action" value="delete" class="delete">delete</button>
+                    <button type="submit" name="action" value="delete" class="delete">@Messages("job.button.delete")</button>
                 </fieldset>
             </form>
             <form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
@@ -62,8 +62,8 @@
                     <input name=search type=text placeholder="Search url" required value="@req.getQueryString("search")">
                     <!--<span>✘</span>-->
                     @if(req.getQueryString("search") != None) {
-                    <a class="button" href="@Helper.clearParam("search")">Clear</a>}
-                    <button type=submit>Search</button>
+                    <a class="button clear" href="@Helper.clearParam("search")">@Messages("job.button.clear")</a>}
+                    <button type=submit>@Messages("job.button.search")</button>
                 </fieldset>
             </form>
             @**<form class="group">

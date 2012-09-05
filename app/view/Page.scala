@@ -64,8 +64,9 @@ case class Page[A <: View] private (
         case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
         case _ => ""
       },
-      if (filter!= None) "filter=" + filter.get else "",
-      if (current!= 1) "p=" + current else ""
+      if (filter != None) "filter=" + filter.get else "",
+      if (search != None) "search=" + search.get else "",
+      if (current != 1) "p=" + current else ""
     ).filter(_ != "").mkString("?","&","")
   }
 

@@ -32,7 +32,8 @@ button,
     margin: 0;
     vertical-align: middle;
     text-align: center;
-    font-size: 0.9em;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
     cursor: default;
 
     background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
@@ -53,7 +54,14 @@ button[disabled],
     color: grey !important;
 }
 
-.legend {
+.button.clear {
+    margin-left: -6px;
+    padding: 5px 8px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+span.legend {
     display: block;
     font-size: 0.85em;
     color: #666;

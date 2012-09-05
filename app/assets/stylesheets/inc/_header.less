@@ -3,102 +3,103 @@
 
 body > header {
 
-	background-color: #2571ab;
+    background-color: #2571ab;
 
 
-	box-shadow:
-		0 1px 0 #4e90c2,
-		0 2px 0 #1a4a78;
-	-moz-box-shadow:
-		0 1px 0 #4e90c2,
-		0 2px 0 #1a4a78;
-	-webkit-shadow:
-		0 1px 0 #4e90c2,
-		0 2px 0 #1a4a78;
+    box-shadow:
+        0 1px 0 #4e90c2,
+        0 2px 0 #1a4a78;
+    -moz-box-shadow:
+        0 1px 0 #4e90c2,
+        0 2px 0 #1a4a78;
+    -webkit-shadow:
+        0 1px 0 #4e90c2,
+        0 2px 0 #1a4a78;
 
-	h1 {
-		width: 38px;
-		display:inline-block;
-		padding:12.5px 20px;
+    h1 {
+        //width: 38px;
+        display: inline-block;
+        padding: 8px 10px 7px 10px;
 
-		box-shadow:
-			1px 0 0 #4e90c2,
-			2px 0 0 #1a4a78;
-		-moz-box-shadow:
-			1px 0 0 #4e90c2,
-			2px 0 0 #1a4a78;
-		-webkit-shadow:
-			1px 0 0 #4e90c2,
-			2px 0 0 #1a4a78;
-		
-		a {
-			text-decoration: none;
-			color: @baseFontColor !important;
-			display: block;
-			font-size:0;
-			
-			&:active {
-				outline: none;
-			}
-			&:focus {
-				outline: none;
-			}
-		}
+        box-shadow:
+            1px 0 0 #4e90c2,
+            2px 0 0 #1a4a78;
+        -moz-box-shadow:
+            1px 0 0 #4e90c2,
+            2px 0 0 #1a4a78;
+        -webkit-shadow:
+            1px 0 0 #4e90c2,
+            2px 0 0 #1a4a78;
+        
+        a {
+            text-decoration: none;
+            color: @baseFontColor !important;
+            display: block;
+            //font-size:0;
+            
+            &:active {
+                outline: none;
+            }
+            &:focus {
+                outline: none;
+            }
+        }
 
-		span {
-			display:none;
-		}
+        span {
+            display:none;
+        }
 
-		img {
-			//display:inline-block;
-			/*vertical-align: middle;
-			font-size:18px;*/
-			height: 35px
-		}
-		
-		span:nth-child(2) {
-			font-weight: bold;
-			text-transform: uppercase;
-			position:relative;
-			top:-8px;
-		}
-		
-		span:nth-child(3) {
-			font-family: "Times New Roman", serif;
-			font-style: italic;
-			position: absolute;
-			left:65px;
-			top:36px;
-		}
-	}
-	#admin {
-		position:absolute;
-		bottom:10px;
-		right:10px;
-	}
+        img {
+            //display:inline-block;
+            /*vertical-align: middle;
+            font-size:18px;*/
+            height: 45px;
+            width: 48px;
+        }
+        
+        span:nth-child(2) {
+            font-weight: bold;
+            text-transform: uppercase;
+            position:relative;
+            top:-8px;
+        }
+        
+        span:nth-child(3) {
+            font-family: "Times New Roman", serif;
+            font-style: italic;
+            position: absolute;
+            left:65px;
+            top:36px;
+        }
+    }
+    #admin {
+        position:absolute;
+        bottom:10px;
+        right:10px;
+    }
 }
 
 //.header(@headerH, @spacing);
 
 //.header (@height, @spacing) {
-/* 	body > header { */
-/* 		svg { */
-/* 			width: round((@height - 2 * @spacing) * 1.05); */
-/* 			height: @height - 2 * @spacing; 1.05 because of width/height ratio of the svg: 388 / 370 */
-/* 			margin: @spacing; */
-/* 		} */
-/* 		h1 { */
-/* 			//font-size: round((@height - @spacing) / 3.5px * 10) / 10; */
-/* 			//margin-top: round((@height - @spacing) / 3.5px * 10) / 10 + @spacing/4; */
-/* 			margin:5px; */
-/* 		} */
-/* 		span:nth-child(2) { */
-/* 			//left: round((-@height / 15) * 10) / 10px; */
-/* 			//top: round((-@height / 50) * 10) / 10px; */
-/* 		} */
-/* 		#admin { */
-/* 			//padding-right: @spacing; */
-/* 			//padding-top: @height - @spacing - @baseFontSize; */
-/* 		} */
-/* 	} */
+/*     body > header { */
+/*         svg { */
+/*             width: round((@height - 2 * @spacing) * 1.05); */
+/*             height: @height - 2 * @spacing; 1.05 because of width/height ratio of the svg: 388 / 370 */
+/*             margin: @spacing; */
+/*         } */
+/*         h1 { */
+/*             //font-size: round((@height - @spacing) / 3.5px * 10) / 10; */
+/*             //margin-top: round((@height - @spacing) / 3.5px * 10) / 10 + @spacing/4; */
+/*             margin:5px; */
+/*         } */
+/*         span:nth-child(2) { */
+/*             //left: round((-@height / 15) * 10) / 10px; */
+/*             //top: round((-@height / 50) * 10) / 10px; */
+/*         } */
+/*         #admin { */
+/*             //padding-right: @spacing; */
+/*             //padding-top: @height - @spacing - @baseFontSize; */
+/*         } */
+/*     } */
 //}

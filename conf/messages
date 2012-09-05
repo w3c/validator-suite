@@ -20,6 +20,11 @@ job.health=Health
 job.health.detail=An indicator of the overall quality of the job's resources
 job.actions=Actions
 job.actions.detail=Actions to perform on the job
+job.button.cancel=Cancel
+job.button.run=Run
+job.button.delete=Delete
+job.button.clear=Clear
+job.button.search=Search
 
 # ResourceView
 resource.url=URL
