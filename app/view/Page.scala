@@ -12,21 +12,29 @@ case class Page[A <: View] private (
       implicit val ordering: PageOrdering[A],
       val filtering: PageFiltering[A]) {
 
-  def totalSize: Int = iterable.size
+  private val offset = (current - 1) * perPage
 
-  def size: Int = iterator.size
-
-  def offset = (current - 1) * perPage
-
-  def iterator: Iterable[A] = {
+  private val filtered: Seq[A] = {
     iterable.toSeq
       .filter(filtering.filter(filter))
       .filter(filtering.search(search)) // compose functions instead
+  }
+
+  val iterator: Seq[A] = {
+    filtered
       .sorted(ordering.order(sortParam))
       .slice(offset, offset + perPage)
   }
 
-  def maxPage: Int = scala.math.ceil(iterable.size.toDouble / perPage.toDouble).toInt
+  val size: Int = iterator.size
+
+  val totalSize: Int = filtered.size
+
+  val firstIndex: Int = scala.math.min(offset + 1, totalSize) // if (filtered.isEmpty) 0 else offset + 1
+
+  val lastIndex: Int = scala.math.min(offset + perPage, totalSize)
+
+  val maxPage: Int = scala.math.ceil(filtered.size.toDouble / perPage.toDouble).toInt
 
   def goToPage(page: Int): Page[A] = {
     page match {
@@ -51,11 +59,7 @@ case class Page[A <: View] private (
 
   def filterBy(filter: Option[String]): Page[A] = this.copy(filter = filtering.validate(filter))
 
-  def firstIndex: Int = if (iterable.isEmpty) 0 else offset + 1
-
-  def lastIndex: Int = scala.math.min(offset + perPage, totalSize)
-
-  def queryString: String = {
+  val queryString: String = {
     List(
       if (perPage != Page.defaultPerPage) "n=" + perPage else "",
       sortParam match {
