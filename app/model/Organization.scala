@@ -22,6 +22,8 @@ case class Organization(id: OrganizationId, vo: OrganizationVO)(implicit conf: V
   val orgUri = id.toUri
   val adminUri = vo.admin.toUri
 
+  val name = vo.name
+
   val ldr: LinkedDataResource[Rdf] = LinkedDataResource(orgUri, vo.toPG)
 
   val organizationsRef = system.actorFor(system / "organizations")

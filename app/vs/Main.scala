@@ -28,7 +28,7 @@ object Main {
 
     val bertails = User(userId = UserId(), organization = Some(orgId), email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret")
 
-    val w3c = Organization(orgId = orgId, name = "World Wide Web Consortium", admin = tgambet.id)
+    val w3c = Organization(orgId = orgId, name = "W3C", admin = tgambet.id)
     
     val w3 = Job(
       createdOn = DateTime.now(DateTimeZone.UTC),

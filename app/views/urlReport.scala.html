@@ -3,6 +3,7 @@
   assertors: Iterable[AssertorView],
   assertionsPage: Page[SingleAssertionView],
   user: User,
+  organization: Organization,
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
 @libs.main("Validator Suite",
@@ -16,7 +17,7 @@
 }{ @***** Content *****@
     
     @libs.admin(user)
-    @libs.navigation("Report for \"" + resource.url +"\"", List((job.name, routes.Jobs.show(job.id).toString), (Helper.shorten(resource.url, 50), "")))
+    @libs.navigation("Report for \"" + resource.url +"\"", organization, List((job.name, routes.Jobs.show(job.id).toString), (Helper.shorten(resource.url, 50), "")))
     @libs.messages(messages)
     
     <hr>

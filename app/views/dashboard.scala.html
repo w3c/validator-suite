@@ -1,5 +1,6 @@
 @(page: Page[JobView],
-    user: User)(implicit flash: Flash, req: Request[_])
+    user: User,
+    organization: Organization)(implicit flash: Flash, req: Request[_])
 
 @import org.w3.vs.actor._
 
@@ -20,7 +21,7 @@
 }{ @***** Content *****@ 
 
     @libs.admin(user)
-    @libs.navigation("Dashboard", List())
+    @libs.navigation("Dashboard", organization, List())
     @libs.messages()
 
     <hr>

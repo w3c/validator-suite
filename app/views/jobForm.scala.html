@@ -1,4 +1,7 @@
-@(form: JobForm, user: User, idOpt: Option[JobId] = None)(implicit flash: Flash)
+@(form: JobForm,
+    user: User,
+    organization: Organization,
+    idOpt: Option[JobId] = None)(implicit flash: Flash)
 
 @libs.main("Validator Suite",
   stylesheets = List("dashboard.css")){
@@ -10,7 +13,7 @@
 }{ @***** Content *****@ 
 
 	@libs.admin(user)
-	@libs.navigation("Job", List((form("name").value.getOrElse("New Job"), "")))
+	@libs.navigation("Job", organization, List((form("name").value.getOrElse("New Job"), "")))
 	@libs.messages()
 	
 	<section>

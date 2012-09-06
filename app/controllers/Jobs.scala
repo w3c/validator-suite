@@ -34,10 +34,11 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
+        org <- user.getOrganization() map (_.get)
         jobs <- Job.getFor(user.id) // Job.getAll
         jobViews <- JobView.fromJobs(jobs)
       } yield {
-        Ok(views.html.dashboard(Page(jobViews), user)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.dashboard(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
@@ -46,14 +47,15 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
+        org <- user.getOrganization()
         job <- user.getJob(id)
         assertions <- job.getAssertions()
         jobView <- JobView.fromJob(job)
         resourceViews = ResourceView.fromAssertions(assertions)
         messageViews = GroupedAssertionView.fromAssertions(assertions)
       } yield {
-        Ok(views.html.report(jobView, Page(resourceViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
-        //Ok(views.html.report2(jobView, Page(messageViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.report(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        //Ok(views.html.report2(jobView, Page(messageViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
@@ -62,6 +64,7 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
+        org <- user.getOrganization() map (_.get)
         job <- user.getJob(id)
         assertions <- job.getAssertions().map(_.filter(_.url === url)) // TODO Empty = exception
         jobView <- JobView.fromJob(job)
@@ -69,7 +72,7 @@ object Jobs extends Controller {
         assertorViews = AssertorView.fromAssertions(assertions)
         assertionViews = SingleAssertionView.fromAssertions(assertions)
       } yield {
-        Ok(views.html.urlReport(jobView, resourceView, assertorViews, Page(assertionViews), user, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.urlReport(jobView, resourceView, assertorViews, Page(assertionViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError toPromise
     }
   }
@@ -116,11 +119,11 @@ object Jobs extends Controller {
     val promiseEnumerator: Promise[Enumerator[JsValue]] = (
       for {
         user <- getUser
-        organization <- user.getOrganization
+        org <- user.getOrganization() map (_.get)
       } yield {
         // ready to explode...
         // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
-        organization.get.enumerator &> Enumeratee.collect{
+        org.enumerator &> Enumeratee.collect{
           case a: UpdateData => JobsUpdate.json(a.data, a.jobId, a.activity)
         }
       }
@@ -160,12 +163,13 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
+        org <- user.getOrganization() map (_.get)
         form <- idOpt fold (
             id => user.getJob(id) map JobForm.fill _,
             FutureVal.successful(JobForm.blank)
           )
       } yield {
-        Ok(views.html.jobForm(form, user, idOpt))
+        Ok(views.html.jobForm(form, user, org, idOpt))
       }) failMap toError toPromise
     }
   }
@@ -174,7 +178,8 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        form <- JobForm.bind failMap (form => InvalidJobFormException(form, user, idOpt))
+        org <- user.getOrganization() map (_.get)
+        form <- JobForm.bind failMap (form => InvalidJobFormException(form, user, org, idOpt))
         jobM <- idOpt.fold(
             id => user.getJob(id)
               .flatMap(j => form.update(j)
@@ -192,7 +197,7 @@ object Jobs extends Controller {
         else
           SeeOther(routes.Jobs.show(job.id).toString).flashing(("success" -> Messages(msg, job.name)))
       }) failMap {
-        case InvalidJobFormException(form, user, idOpt) => BadRequest(views.html.jobForm(form, user, idOpt))
+        case InvalidJobFormException(form, user, org, idOpt) => BadRequest(views.html.jobForm(form, user, org, idOpt))
         case t => toError(t)
       } toPromise
     }
