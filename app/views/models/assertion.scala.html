@@ -23,8 +23,9 @@
         <dt>Contexts</dt>
         @assertion.contexts.map { case context =>
         <dd class="context">
-            Line <span class="line">@context.line</span>, Column <span class="column">@context.column</span>
-            <code class="code">@context.content</code>
+            @if(context.line.isDefined){Line <span class="line">@context.line</span>}
+            @if(context.column.isDefined){, Column <span class="column">@context.column</span>}
+            @if(context.content.isDefined){<code class="code">@context.content</code>}
         </dd>}
       }
       case assertion: GroupedAssertionView => {

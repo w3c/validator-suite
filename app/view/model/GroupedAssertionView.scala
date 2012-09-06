@@ -14,7 +14,7 @@ case class GroupedAssertionView(
   occurrences: Int,
   urls: Iterable[URL]) extends AssertionView{
 
-  def isEmpty: Boolean = urls.isEmpty
+  def isEmpty: Boolean = urls.isEmpty && ! description.isDefined
 }
 
 object GroupedAssertionView {

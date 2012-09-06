@@ -15,7 +15,7 @@ case class SingleAssertionView(
   url: URL,
   contexts: Iterable[ContextView]) extends AssertionView{
 
-  def isEmpty: Boolean = contexts.isEmpty
+  def isEmpty: Boolean = contexts.isEmpty && ! description.isDefined
 }
 
 object SingleAssertionView {
