@@ -8,8 +8,8 @@
         @if(assertion.occurrences > 1) {
         <dt>Occurrences</dt>
         <dd class="occurrences">@assertion.occurrences times</dd>}
-        <dt>Message</dt>
-        <dd class="title">@assertion.title</dd>
+        <dt>Title</dt>
+        <dd class="title@if(!assertion.isEmpty){ fold}">@assertion.title</dd>
         @if(assertion.description.isDefined) {
         <dt>Description</dt>
         <dd class="description">@assertion.description</dd>}
@@ -18,7 +18,7 @@
             <time datetime="@assertion.validated">@Helper.formatTime(assertion.validated)</time>
             <span class="legend">@Helper.formatLegendTime(assertion.validated)</span>
         </dd>**@
-    @assertion match{
+    @assertion match {
       case assertion: SingleAssertionView => {
         <dt>Contexts</dt>
         @assertion.contexts.map { case context =>

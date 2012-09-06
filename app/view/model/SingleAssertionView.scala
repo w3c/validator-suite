@@ -13,7 +13,10 @@ case class SingleAssertionView(
   description: Option[Html],
   occurrences: Int,
   url: URL,
-  contexts: Iterable[ContextView]) extends AssertionView
+  contexts: Iterable[ContextView]) extends AssertionView{
+
+  def isEmpty: Boolean = contexts.isEmpty
+}
 
 object SingleAssertionView {
 

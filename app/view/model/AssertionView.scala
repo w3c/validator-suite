@@ -10,4 +10,5 @@ trait AssertionView extends View {
     val title: Html
     val description: Option[Html]
     val occurrences: Int
+    def isEmpty: Boolean
 }

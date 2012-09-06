@@ -8,7 +8,16 @@
 
 @libs.main("Validator Suite",
     stylesheets = List("dashboard.css"),
-    scripts = List("model.js", "vs.js", "report.js", "dashboard.js")){
+    scripts = List("model.js", "vs.js", "report.js", "dashboard.js"),
+    exec = """
+    $(function () {
+        $(".folds article").click(function (event){
+            console.log($(event.target));
+            console.log($(event.target).parent("article"));
+            $(event.target).parents("article").toggleClass("folded");
+        })
+    });
+    """){
    
   @***** Header ******@
     

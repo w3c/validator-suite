@@ -12,7 +12,10 @@ case class GroupedAssertionView(
   title: Html,
   description: Option[Html],
   occurrences: Int,
-  urls: Iterable[URL]) extends AssertionView
+  urls: Iterable[URL]) extends AssertionView{
+
+  def isEmpty: Boolean = urls.isEmpty
+}
 
 object GroupedAssertionView {
 
