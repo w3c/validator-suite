@@ -28,6 +28,10 @@ object Main {
 
     val bertails = User(userId = UserId(), organization = Some(orgId), email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret")
 
+    val ralph = User(userId = UserId(), organization = Some(orgId), email = "swick@w3.org", name = "Ralph R. Swick", password = "secret")
+
+    val w3team = User(userId = UserId(), organization = Some(orgId), email = "w3t@w3.org", name = "W3C Team", password = "w3team")
+
     val w3c = Organization(orgId = orgId, name = "W3C", admin = tgambet.id)
     
     val w3 = Job(
@@ -81,6 +85,8 @@ object Main {
     val script = for {
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
+      _ <- User.save(ralph)
+      _ <- User.save(w3team)
       _ <- Organization.save(w3c)
       _ <- Job.save(w3)
       _ <- Job.save(tr)
