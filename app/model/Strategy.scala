@@ -17,11 +17,13 @@ case class Strategy (
     maxResources: Int,
     filter: Filter = Filter.includeEverything,
     assertorSelector: AssertorSelector = AssertorSelector.simple) {
-  
+
   def mainAuthority: Authority = entrypoint.authority
-  
-  def getActionFor(url: URL): HttpAction =
-    if (filter.passThrough(url)) {
+
+  def getActionFor(url: URL): HttpAction = {
+//  if (filter.passThrough(url)) {
+    // Tom: filters are not persisted and too complicated anyway for our simple single use case
+    if (url.toString.startsWith(entrypoint.toString)) {
       if (url.authority === entrypoint.authority)
         GET
       else if (linkCheck)
@@ -31,6 +33,7 @@ case class Strategy (
     } else {
       IGNORE
     }
+  }
 
   // TODO revise how this is done
   import org.w3.vs.assertor._

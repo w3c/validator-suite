@@ -24,8 +24,7 @@ class SimpleInterWebsiteTest extends RunTestHelper with TestKitHelper {
   val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
 
   val servers = Seq(
-      Webserver(9001, Website(Seq("/" --> "http://localhost:9002/")).toServlet),
-      Webserver(9002, Website(Seq()).toServlet)
+      Webserver(9001, Website(Seq("/" --> "http://localhost:9001/1")).toServlet)
   )
 
   "test simpleInterWebsite" in {

@@ -6,7 +6,7 @@ import play.api.data._
 import play.api.mvc._
 import play.api.i18n.Messages
 import org.w3.util.{FutureVal, URL}
-import org.w3.vs.model.{Strategy, Job, User}
+import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
 import org.w3.vs.controllers._
 import akka.dispatch.ExecutionContext
@@ -74,6 +74,7 @@ class ValidJobForm private[view](
       strategy = Strategy(
         entrypoint = url,
         linkCheck = linkCheck,
+        filter = Filter.includePrefix(url.toString), // Tom: non persisté de toute façon
         maxResources = maxResources))
   }
 

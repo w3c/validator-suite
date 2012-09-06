@@ -28,8 +28,7 @@ class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
   val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
   
   val servers = Seq(
-      Webserver(9001, (Website((1 to j) map { i => "/" --> ("http://localhost:9002/"+i) }).toServlet)),
-      Webserver(9002, Website(Seq()).toServlet)
+      Webserver(9001, (Website((1 to j) map { i => "/" --> ("http://localhost:9001/"+i) }).toServlet))
   )
 
   "test OneGETxHEAD" in {
@@ -39,7 +38,6 @@ class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
     } yield ()).result(1.second)
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
-    PathAware(http, http.path / "localhost_9002") ! SetSleepTime(0)
 
     val (orgId, jobId, runId) = job.run().getOrFail(1.second)
 
@@ -49,7 +47,6 @@ class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
       case UpdateData(_, _, activity) if activity == Idle => {
         val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail(3.seconds)
         rrs must have size (j + 1)
-        rrs.filter( _.url.authority == "localhost:9002" ) must have size (j)
       }
     }
 
