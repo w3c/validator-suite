@@ -27,7 +27,7 @@ job.button.clear=Clear
 job.button.search=Search
 
 # ResourceView
-resource.url=URL
+resource.url=Report for
 resource.url.detail= TODO
 resource.validated=Last validated
 resource.validated.detail= TODO
@@ -84,12 +84,18 @@ pagination.legend=Viewing {0}-{1} of {2} results
 pagination.empty=
 
 time.pattern=MM/dd/yy'' at ''K:mma
-time.legend.year={0} years ago
-time.legend.month={0} months ago
-time.legend.day={0} days ago
-time.legend.hour={0} hours ago
-time.legend.minute={0} minutes ago
-time.legend.second={0} seconds ago
+time.legend.year={0} year ago
+time.legend.year.p={0} years ago
+time.legend.month={0} month ago
+time.legend.month.p={0} months ago
+time.legend.day={0} day ago
+time.legend.day.p={0} days ago
+time.legend.hour={0} hour ago
+time.legend.hour.p={0} hours ago
+time.legend.minute={0} minute ago
+time.legend.minute.p={0} minutes ago
+time.legend.second={0} second ago
+time.legend.second.p={0} seconds ago
 
 job.run=Run this job
 jobs.empty=You haven't set any job yet.

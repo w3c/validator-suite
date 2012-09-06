@@ -35,17 +35,17 @@ object Helper {
   def formatLegendTime(time: DateTime): String = {
     val diff = DateTime.now(DateTimeZone.UTC).minus(time.getMillis)
     if (diff.getYear > 1970) {
-      Messages("time.legend.year", diff.getYear)
+      Messages({if (diff.getYear > 1) "time.legend.year.p" else "time.legend.year"}, diff.getYear)
     } else if (diff.getMonthOfYear > 1) {
-      Messages("time.legend.month", diff.getMonthOfYear)
+      Messages({if (diff.getMonthOfYear > 1) "time.legend.month.p" else "time.legend.month"}, diff.getMonthOfYear)
     } else if (diff.getDayOfMonth > 1) {
-      Messages("time.legend.day", diff.getDayOfMonth)
+      Messages({if (diff.getDayOfMonth > 1) "time.legend.day.p" else "time.legend.day"}, diff.getDayOfMonth)
     } else if (diff.getHourOfDay > 0) {
-      Messages("time.legend.hour", diff.getHourOfDay)
+      Messages({if (diff.getHourOfDay > 1) "time.legend.hour.p" else "time.legend.hour"}, diff.getHourOfDay)
     } else if (diff.getMinuteOfHour > 0) {
-      Messages("time.legend.minute", diff.getMinuteOfHour)
+      Messages({if (diff.getMinuteOfHour > 1) "time.legend.minute.p" else "time.legend.minute"}, diff.getMinuteOfHour)
     } else /*if (diff.getSecondOfMinute > 0)*/ {
-      Messages("time.legend.second", diff.getSecondOfMinute)
+      Messages({if (diff.getSecondOfMinute > 1) "time.legend.second.p" else "time.legend.second"}, diff.getSecondOfMinute)
     }
   }
 
