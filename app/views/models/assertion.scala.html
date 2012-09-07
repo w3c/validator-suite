@@ -32,7 +32,7 @@
         <dt>URLs</dt>
         @assertion.urls.map { case url =>
         <dd class="url">
-            @url
+            <a href="@url">@Helper.shorten(url, 80)</a>
         </dd>}
       }
     }

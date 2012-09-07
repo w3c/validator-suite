@@ -1,5 +1,6 @@
 @(job: JobView,
-    page: Page[GroupedAssertionView],
+    assertors: Iterable[AssertorView],
+    assertionsPage: Page[GroupedAssertionView],
     user: User,
     organization: Organization,
     messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
@@ -12,6 +13,10 @@
             //window.Dashboard = new DashboardView();
             //window.Report = new ReportView();
             //VS.Socket.open({url: "/jobs/ws/""" + job.id + """ "});
+
+            $(".folds article .title").click(function (event){
+                $(event.target).parents("article").toggleClass("folded");
+            })
         });
     """){
    
@@ -30,11 +35,17 @@
     <section id="jobs" class="single">
         @pages.jobs(Page(job))
     </section>
-    
+
+    <hr>
+
+    <section id="assertors" class="tabs">
+        @libs.assertors(assertors, assertionsPage)
+    </section>
+
     <hr>
     
-    <section id="messages" class="folds" data-id="@job.id">
-        @pages.groupedAssertions(page)
+    <section id="assertions" class="folds" data-id="@job.id">
+        @pages.groupedAssertions(assertionsPage)
     </section>
     
     @**<section class="controls">
@@ -69,7 +80,7 @@
 }{ @***** Footer *****@
 
     @libs.footer {
-    @libs.pageCtrl(page)
+    @libs.pageCtrl(assertionsPage)
     }
 
 }

@@ -51,11 +51,22 @@ object Jobs extends Controller {
         job <- user.getJob(id)
         assertions <- job.getAssertions()
         jobView <- JobView.fromJob(job)
-        resourceViews = ResourceView.fromAssertions(assertions)
-        messageViews = GroupedAssertionView.fromAssertions(assertions)
       } yield {
-        Ok(views.html.report(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
-        //Ok(views.html.report2(jobView, Page(messageViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        req.getQueryString("group") match {
+          case Some("message") => {
+            val assertorViews = AssertorView.fromAssertions(assertions)
+            val assertionViews = GroupedAssertionView.fromAssertions(assertions)
+            Ok(views.html.report2(jobView, assertorViews, Page(assertionViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+          }
+          /*case Some("url") => {
+            val resourceViews = ResourceView.fromAssertions(assertions)
+            Ok(views.html.report(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+          }*/
+          case _ => {
+            val resourceViews = ResourceView.fromAssertions(assertions)
+            Ok(views.html.report(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+          }
+        }
       }) failMap toError toPromise
     }
   }

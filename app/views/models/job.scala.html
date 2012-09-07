@@ -66,18 +66,18 @@
                     <button type=submit>@Messages("job.button.search")</button>
                 </fieldset>
             </form>
-            @**<form class="group">
+            <form class="group">
                 <fieldset>
                     <legend>Group</legend>
-                    <input name=group type=radio value="url.assertor" id="url.assertor" @if(req.queryString.get("group").flatten.isEmpty || req.queryString.get("group").flatten.exists(_ == "url.assertor")){checked}>
-                    <label for="url.assertor">Group by url</label>
-                    <input name=group type=radio value="message.url" id="message.url" @if(req.queryString.get("group").flatten.exists(_ == "message.url")){checked}>
-                    <label for="message.url">Group by message</label>
+                    <input name=group type=radio value="url" id="url" @if(req.queryString.get("group").flatten.isEmpty || req.queryString.get("group").flatten.exists(_ == "url")){checked}>
+                    <label for="url">Group by url</label>
+                    <input name=group type=radio value="message" id="message" @if(req.queryString.get("group").flatten.exists(_ == "message")){checked}>
+                    <label for="message">Group by message</label>
                     @**<input name=group type=radio value="message.context" id="message.context" @if(req.queryString.get("group").flatten.exists(_ == "message.context")){checked}>
-                    <label for="message.context">Group by message and context</label>** @
+                    <label for="message.context">Group by message and context</label>**@
                 </fieldset>
                 <button type=submit>Go</button>
-            </form>**@
+            </form>
         </dd>
     </dl>
 </article>

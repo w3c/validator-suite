@@ -8,7 +8,8 @@
     .description,
     .context,
     .validated,
-    .severity {
+    .severity,
+    .url{
         display: none;
     }
 
@@ -42,7 +43,8 @@
     article.folded {
 
         dl {
-            padding-bottom: 10px;
+            //padding-bottom: 10px;
+            overflow: auto;
         }
 
         .context,
@@ -52,6 +54,10 @@
 
         .title.fold:before {
             content: "- ";
+        }
+
+        .url {
+            display: block;
         }
     }
 
@@ -90,6 +96,18 @@
 
     .context {
         padding: 0 10px 10px 20px;
+
+        &:last-child {
+            padding-bottom: 0;
+        }
+    }
+
+    .url {
+        margin: 10px 10px 10px 20px;
+
+        &:last-child {
+            //padding-bottom: 0;
+        }
     }
 
     .description {

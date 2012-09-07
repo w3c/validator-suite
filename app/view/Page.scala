@@ -8,7 +8,8 @@ case class Page[A <: View] private (
     perPage: Int = Page.defaultPerPage,           // n=
     filter: Option[String] = None,                // filter=
     search: Option[String] = None,                // search=
-    sortParam: SortParam = SortParam("", true))(  // sort=
+    sortParam: SortParam = SortParam("", true),   // sort=
+    group: Option[String] = None)(                // group=
       implicit val ordering: PageOrdering[A],
       val filtering: PageFiltering[A]) {
 
@@ -59,6 +60,8 @@ case class Page[A <: View] private (
 
   def filterBy(filter: Option[String]): Page[A] = this.copy(filter = filtering.validate(filter))
 
+  def groupBy(group: Option[String]): Page[A] = this.copy(group = group)
+
   val queryString: String = {
     List(
       if (perPage != Page.defaultPerPage) "n=" + perPage else "",
@@ -70,7 +73,8 @@ case class Page[A <: View] private (
       },
       if (filter != None) "filter=" + filter.get else "",
       if (search != None) "search=" + search.get else "",
-      if (current != 1) "p=" + current else ""
+      if (current != 1) "p=" + current else "",
+      if (group != None && group != Some("url")) "group=" + group.get else ""
     ).filter(_ != "").mkString("?","&","")
   }
 
@@ -93,6 +97,7 @@ object Page {
     val perPage = try { req.getQueryString("n").get.toInt } catch { case _ => Page.defaultPerPage }
     val filter = req.getQueryString("filter")
     val search = req.getQueryString("search")
+    val group = req.getQueryString("group")
     val sort =
       try {
         req.queryString.get("sort").flatten.head match {
@@ -108,6 +113,7 @@ object Page {
       .sortBy(sort)
       .filterBy(filter)
       .search(search)
+      .groupBy(group)
       .goToPage(page)
 
   }
