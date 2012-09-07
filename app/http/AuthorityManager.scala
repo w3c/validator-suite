@@ -23,7 +23,7 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
 
   val logger = Logger.of(classOf[AuthorityManager])
   
-  var sleepTime: Long = 1000L
+  var sleepTime: Long = 500L
   
   val queue = Queue[(ActorRef, Fetch)]()
 

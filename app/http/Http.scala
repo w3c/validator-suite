@@ -20,8 +20,6 @@ class Http()(implicit configuration: VSConfiguration) extends Actor with PathAwa
 
   val httpClient = configuration.httpClient
 
-  // TODO really???
-
   val logger = Logger.of(classOf[Http])
 
   def getAuthorityManagerRefOrCreate(authority: Authority): ActorRef = {
