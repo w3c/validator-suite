@@ -24,7 +24,7 @@
 
         @assertors.toSeq.sorted(Ordering[(Int, String)].on[AssertorView](v => (-v.errors, Messages(v.name)))).map { assertor =>
         <hr>
-        <article data-id="@assertor.name"@if(Some(assertor.name) == page.filter){ class=current}>
+        <article data-id="@assertor.name"  class="@if(Some(assertor.name) == page.filter){current }@if(assertor.warnings + assertor.errors == 0){valid}">
             <dl>
                 <dt>Assertor</dt>
                 <dd class="assertor">@Messages("assertor." + assertor.name)</dd>

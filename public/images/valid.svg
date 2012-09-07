@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    viewBox="-350 50 850 1150"
+    width="100%"
+    height="100%">
+
+    <style type="text/css">
+        .valid > :nth-child(1) {fill: #136c00; stroke: #136c00; stroke-width: 6; stroke-linejoin: bevel;}
+        .valid > :nth-child(2) {fill: #3bbc00; stroke: #3bbc00; stroke-width: 6; stroke-linejoin: bevel;}
+    </style>
+
+    <defs>
+        <polygon id="M16a" points=" 52, -160   172, -528    999, -528   1119, -160                        "/>
+        <polygon id="M16b" points="                                     1119, -160   757, 103   672, -160 "/>
+        <filter id = "shadow">
+            <!--
+            <feMorphology operator="dilate" in="SourceAlpha" radius="100" result="dilated"/>
+            <feFlood flood-color='white' flood-opacity='1' result='color' />
+            <feComposite operator='in' in='color' in2='dilated' result='border' />
+            <feComposite operator='over' in='SourceGraphic' in2='border' result="bordered"/>
+
+            <feOffset in="bordered" dx="15" dy="15" result="offset"/>
+            <feGaussianBlur in="offset" stdDeviation="15" result="blur"/>
+            <feFlood flood-color='black' flood-opacity='1' result='color' />
+            <feComposite operator='in' in='color' in2='blur' result='shadow' />
+            <feComposite operator='over' in='bordered' in2='shadow' />-->
+        </filter>
+    </defs>
+
+    <g class="valid">
+        <use xlink:href="#M16b" transform="rotate(108.00)"/>
+        <use xlink:href="#M16a" transform="rotate(108.05)"/>
+    </g>
+
+</svg>
