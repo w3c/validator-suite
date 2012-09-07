@@ -9,16 +9,14 @@ import org.w3.banana._
 
 trait VSConfiguration {
   
-  val system: ActorSystem
-  
-  val assertorExecutionContext: ExecutionContext
-  
-  val webExecutionContext: ExecutionContext
-
-  val httpClient: AsyncHttpClient
+  implicit val system: ActorSystem
   
   implicit val timeout: Timeout
 
-  val store: AsyncRDFStore[Rdf]
+  val assertorExecutionContext: ExecutionContext
+
+  val httpClient: AsyncHttpClient
+  
+  val store: RDFStore[Rdf, BananaFuture]
 
 }

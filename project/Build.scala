@@ -16,7 +16,7 @@ object ApplicationBuild extends Build {
     "net.databinder.dispatch" %% "core" % "0.9.0",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
     //"org.w3" %% "banana-sesame" % "x03-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "x07-SNAPSHOT",
+    "org.w3" %% "banana-jena" % "x09-SNAPSHOT",
     "org.w3" %% "css-validator-standalone" % "1.0-SNAPSHOT" intransitive(),
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
@@ -45,9 +45,10 @@ object ApplicationBuild extends Build {
     templatesImport += "org.w3.vs.model._",
     templatesImport += "org.w3.vs.exception._",
     templatesImport += "scalaz.{Validation, Failure, Success}",
-    resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
-    resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
+    logLevel := Level.Debug,
+    resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+//    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
+//    resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
     // resolvers += "sesame-repo-releases" at "http://repo.aduna-software.org/maven2/releases/"
 
     // ensimeConfig := sexp(

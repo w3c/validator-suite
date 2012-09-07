@@ -16,13 +16,15 @@ import org.w3.banana.util._
 
 object ResourceResponse {
 
-  def bananaGetFor(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): BananaFuture[Set[ResourceResponse]] =
+  def bananaGetFor(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): BananaFuture[Set[ResourceResponse]] = {
+    import conf._
     bananaGetFor((orgId, jobId, runId).toUri)
+  }
 
   def bananaGetFor(runUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Set[ResourceResponse]] = {
     import conf._
     for {
-      ldr <- store.get(runUri)
+      ldr <- store.GET(runUri)
       events <- (ldr.resource / ont.event).asSet[RunEvent]
     } yield {
       events collect { case ResourceResponseEvent(rr, _) => rr }

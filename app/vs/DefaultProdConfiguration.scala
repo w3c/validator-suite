@@ -14,15 +14,11 @@ import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
 import org.joda.time._
 import org.w3.banana._
 import org.w3.banana.jena._
+import com.hp.hpl.jena.tdb.TDBFactory.createDatasetGraph
 
 trait DefaultProdConfiguration extends VSConfiguration {
   
   val assertorExecutionContext: ExecutionContext = {
-    val executor: ExecutorService = Executors.newFixedThreadPool(10)
-    ExecutionContext.fromExecutorService(executor)
-  }
-  
-  val webExecutionContext: ExecutionContext = {
     val executor: ExecutorService = Executors.newFixedThreadPool(10)
     ExecutionContext.fromExecutorService(executor)
   }
@@ -47,7 +43,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
     new AsyncHttpClient(config)
   }
 
-  val system: ActorSystem = {
+  implicit val system: ActorSystem = {
     val vs = ActorSystem("vs")
     vs.actorOf(Props(new OrganizationsActor()(this)), "organizations")
     vs.actorOf(Props(new Http()(this)), "http")
@@ -65,12 +61,8 @@ trait DefaultProdConfiguration extends VSConfiguration {
 
   val storeDirectory = new java.io.File("./data")
 
-  lazy val blockingStore = JenaStore(com.hp.hpl.jena.tdb.TDBFactory.createDatasetGraph(storeDirectory.getAbsolutePath))
-
-  lazy val store: AsyncRDFStore[Rdf] = {
-    val asyncStore = AsyncRDFStore(blockingStore, system)(timeout)
-    asyncStore
-  }
+  lazy val store: RDFStore[Rdf, BananaFuture] =
+    JenaStore(createDatasetGraph(storeDirectory.getAbsolutePath))
 
 //  val store: AsyncRDFStore[Rdf] = {
 //    import org.openrdf.sail.memory.MemoryStore

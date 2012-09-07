@@ -15,7 +15,7 @@ import java.net.URLEncoder
 
 package object controllers {
   
-  implicit def ec = configuration.webExecutionContext
+  implicit val system = configuration.system
   
   def CloseWebsocket = (Iteratee.ignore[JsValue], Enumerator.eof)
   

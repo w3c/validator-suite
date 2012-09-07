@@ -25,7 +25,7 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
   val logger = play.Logger.of(classOf[AssertionsActor])
 
-  implicit val executionContext = conf.assertorExecutionContext
+  implicit val ec = conf.assertorExecutionContext
 
   var pendingAssertions: Ref[Int] = Ref(0)
 

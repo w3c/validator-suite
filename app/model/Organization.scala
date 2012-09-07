@@ -84,40 +84,45 @@ object Organization {
     import conf._
     for {
       orgId <- OrganizationUri.fromUri(orgUri).bf
-      orgLDR <- store.get(orgUri)
+      orgLDR <- store.GET(orgUri)
       orgVO <- orgLDR.resource.as[OrganizationVO]
     } yield new Organization(orgId, orgVO) { override val ldr = orgLDR }
   }
 
-  def get(orgUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] =
+  def get(orgUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
+    import conf._
     bananaGet(orgUri).toFutureVal
+  }
   
-  def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] =
+  def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
+    import conf._
     get(OrganizationUri(id))
+  }
   
 //  def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = 
 //    sys.error("ni")
 
   def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
-    store.put(organization.ldr).toFutureVal
+    store.PUT(organization.ldr).toFutureVal
   }
 
   def setAdmin(orgUri: Rdf#URI, adminUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
-    store.append(orgUri, orgUri -- ont.admin ->- adminUri).map{ _ => () }.toFutureVal
+    store.POST(orgUri, orgUri -- ont.admin ->- adminUri).map{ _ => () }.toFutureVal
   }
   
   def save(vo: OrganizationVO)(implicit conf: VSConfiguration): FutureVal[Exception, Rdf#URI] = {
     import conf._
-    store.post(organizationContainer, OrganizationVOBinder.toPointedGraph(vo)).toFutureVal
+    store.POSTToCollection(organizationContainer, OrganizationVOBinder.toPointedGraph(vo)).toFutureVal
   }
 
   def addUser(orgUri: Rdf#URI, userUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
+    // TODO make one command
     for {
-      _ <- store.append(orgUri, orgUri -- ont.user ->- userUri)
-      _ <- store.append(userUri, userUri -- ont.organization ->- orgUri)
+      _ <- store.POST(orgUri, orgUri -- ont.user ->- userUri)
+      _ <- store.POST(userUri, userUri -- ont.organization ->- orgUri)
     } yield ()
   }
 

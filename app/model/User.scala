@@ -63,13 +63,15 @@ object User {
     import conf._
     for {
       userId <- userUri.as[UserId].bf
-      userLDR <- store.get(userUri)
+      userLDR <- store.GET(userUri)
       userVO <- userLDR.resource.as[UserVO]
     } yield new User(userId, userVO) { override val ldr = userLDR }
   }
 
-  def get(userUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, User] =
+  def get(userUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, User] = {
+    import conf._
     bananaGet(userUri).toFutureVal
+  }
   
   def get(id: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, User] =
     get(UserUri(id))
@@ -103,12 +105,12 @@ CONSTRUCT {
 
   def save(vo: UserVO)(implicit conf: VSConfiguration): FutureVal[Exception, Rdf#URI] = {
     import conf._
-    store.post(userContainer, vo.toPG).toFutureVal
+    store.POSTToCollection(userContainer, vo.toPG).toFutureVal
   }
   
   def save(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
-    store.put(user.ldr).toFutureVal
+    store.PUT(user.ldr).toFutureVal
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =

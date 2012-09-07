@@ -23,12 +23,14 @@ object Run {
   def get(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, (Run, Iterable[URL], Iterable[AssertorCall])] =
     get((orgId, jobId, runId).toUri)
 
-  def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, (Run, Iterable[URL], Iterable[AssertorCall])] =
+  def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, (Run, Iterable[URL], Iterable[AssertorCall])] = {
+    import conf._
     bananaGet(runUri).toFutureVal
+  }
 
   def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
-    store.get(runUri) flatMap { ldr =>
+    store.GET(runUri) flatMap { ldr =>
       // there is a bug in banana preventing the implicit to be discovered
       RunFromPG.fromPointedGraph(ldr.resource)
     }
@@ -38,10 +40,11 @@ object Run {
     import conf._
     import ops._
     val jobUri = (run.id._1, run.id._2).toUri
+    // TODO make one command
     val r = for {
-      _ <- store.put(run.ldr)
-      _ <- store.patch(jobUri, delete = List((jobUri, ont.run.uri, ANY)))
-      _ <- store.append(jobUri, jobUri -- ont.run ->- run.runUri)
+      _ <- store.PUT(run.ldr)
+      _ <- store.PATCH(jobUri, delete = List((jobUri, ont.run.uri, ANY)))
+      _ <- store.POST(jobUri, jobUri -- ont.run ->- run.runUri)
     } yield ()
     r.toFutureVal
   }
@@ -71,14 +74,14 @@ object Run {
 
   def saveEvent(runUri: Rdf#URI, event: RunEvent)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
-    store.append(runUri, runUri -- ont.event ->- event.toPG)
+    store.POST(runUri, runUri -- ont.event ->- event.toPG)
   }
 
   /* other events */
 
   def completedAt(runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
-    store.append(runUri, runUri -- ont.completedAt ->- at)
+    store.POST(runUri, runUri -- ont.completedAt ->- at)
   }
 
 }

@@ -38,7 +38,6 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   def getOrganization(): FutureVal[Exception, Organization] = Organization.get(orgUri)
     
   def getRun(): FutureVal[Exception, Run] = {
-    implicit def ec = conf.webExecutionContext
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
 
@@ -157,14 +156,16 @@ object Job {
     import conf._
     for {
       ids <- JobUri.fromUri(jobUri).bf
-      jobLDR <- store.get(jobUri)
+      jobLDR <- store.GET(jobUri)
       runUriOpt <- (jobLDR.resource / ont.run).asOption[Rdf#URI]
       jobVO <- jobLDR.resource.as[JobVO]
     } yield (Job(ids._2, jobVO), runUriOpt)
   }
 
-  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, (Job, Option[Rdf#URI])] =
+  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, (Job, Option[Rdf#URI])] = {
+    import conf._
     bananaGet(jobUri).toFutureVal
+  }
 
   def getFor(userId: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
     import conf._
@@ -279,10 +280,11 @@ SELECT ?run ?timestamp WHERE {
     import conf._
     val orgUri = job.vo.organization.toUri
     val creatorUri = job.vo.creator.toUri
+    // TODO make one command
     val r = for {
-      _ <- store.put(job.ldr)
-      _ <- store.append(orgUri, orgUri -- ont.job ->- job.jobUri)
-      _ <- store.append(creatorUri, creatorUri -- ont.job ->- job.jobUri)
+      _ <- store.PUT(job.ldr)
+      _ <- store.POST(orgUri, orgUri -- ont.job ->- job.jobUri)
+      _ <- store.POST(creatorUri, creatorUri -- ont.job ->- job.jobUri)
     } yield job
     r.toFutureVal
   }
@@ -290,10 +292,11 @@ SELECT ?run ?timestamp WHERE {
   def delete(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
     import ops._
+    // TODO make one command
     val r = for {
-      _ <- store.patch(job.orgUri,
+      _ <- store.PATCH(job.orgUri,
                        delete = List((job.orgUri, ont.job.uri, job.jobUri))) // <- bug here
-      _ <- store.delete(job.jobUri.fragmentLess)
+      _ <- store.DELETE(job.jobUri.fragmentLess)
     } yield ()
     r.toFutureVal
   }
