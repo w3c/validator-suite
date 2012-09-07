@@ -2,10 +2,15 @@
 <article>
     <dl>
         <dt>Report for</dt>
-        <dd class="url"><a href="@Helper.encode(resource.url)">@Helper.shorten(resource.url, 80)</a></dd>
+        <dd class="url">
+            <span>
+                <a href="@Helper.encode(resource.url)">@Helper.shorten(resource.url, 80)</a>
+                <a href="@resource.url" class="external" target="_blank" title="Open in a new tab">link</a>
+            </span>
+        </dd>
 
         <dt>Last validated</dt>
-        <dd class="time">
+        <dd class="validated">
             <time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time>
             <span class="legend">@Helper.formatLegendTime(resource.lastValidated)</span>
         </dd>

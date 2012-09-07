@@ -29,9 +29,30 @@
     }
 
     article {
-        .url a {
+        .url span {
+            position: relative;
+            //padding-right: 16px;
+            //background: url("../images/external.png") no-repeat center right;
+
+            &:hover a {
+                text-decoration: underline;
+            }
+        }
+        .url a:first-child {
             font-weight: bold;
             color: black;
+        }
+        .external {
+            position: absolute;
+            display: inline-block;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 0;
+            height: 22px;
+            line-height: 22px;
+            background: none;
+            font-size: 0;
         }
 
         .warnings,

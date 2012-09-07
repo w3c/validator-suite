@@ -9,6 +9,19 @@
 #resources.list article .errors {
 	text-align: right;
 }
-#resources dd {
-	//padding-right: 10px;
+#resources {
+
+    .external {
+        display: none;
+        width: 0;
+        height: 11px;
+        line-height: 11px;
+        overflow: hidden;
+        padding-left: 11px;
+        background: url("../images/external.png") no-repeat;
+    }
+
+    article:hover .external {
+        display: inline-block;
+    }
 }
