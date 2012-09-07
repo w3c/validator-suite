@@ -11,9 +11,7 @@
     scripts = List("model.js", "vs.js", "report.js", "dashboard.js"),
     exec = """
     $(function () {
-        $(".folds article").click(function (event){
-            console.log($(event.target));
-            console.log($(event.target).parent("article"));
+        $(".folds article .title").click(function (event){
             $(event.target).parents("article").toggleClass("folded");
         })
     });

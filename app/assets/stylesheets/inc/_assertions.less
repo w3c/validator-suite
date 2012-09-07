@@ -14,15 +14,22 @@
 
     article {
 
-        padding: 10px;
+        //padding: 10px;
 
         &:nth-of-type(2n) {
             background: #f5f5f5;
         }
+
     }
     .title {
 
+        padding: 10px;
         font-weight: bold;
+        cursor: pointer;
+
+        &:hover {
+            background: #E9F0F5;
+        }
 
         &.fold:before {
             content: "+ ";
@@ -45,34 +52,44 @@
     }
 
     .occurrences {
-        float:right;
+        float: right;
+        margin-top: 10px;
+        margin-right: 10px;
     }
 
     .severity {
         display: none;
     }
 
+    .warning,
+    .error,
+    .info {
+        border-left: 10px solid;
+        margin-top: 1px;
+
+        &:last-child {
+            margin-bottom: 1px;
+        }
+    }
+
     .warning {
-        border-left: 10px solid #be6e00;
-        margin-bottom: 1px;
+        border-color: #be6e00;
     }
 
     .error {
-        border-left: 10px solid #bf170c;
-        margin-bottom: 1px;
+        border-color: #bf170c;
     }
 
     .info {
-        border-left: 10px solid #2274B3;
-        margin-bottom: 1px;
+        border-color: #2274B3;
     }
 
     .context {
-        padding: 10px 0 0 10px;
+        padding: 0 10px 10px 20px;
     }
 
     .description {
-        margin-top: 10px;
+        margin: 0 10px 10px 10px;
         //padding-left:10px;
         //border-left: 1px solid #C8C8C8;
         line-height: 1.5em;
@@ -84,5 +101,12 @@
         border: 1px solid #cbcdca;
         padding: 4px;
         margin-top: 5px;
+
+        strong {
+            font-weight: bold;
+            color: red;
+            cursor: pointer;
+            border-bottom: 1px dotted black;
+        }
     }
 }
