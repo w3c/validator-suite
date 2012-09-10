@@ -58,16 +58,8 @@ object Run {
   def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): Run =
     new Run(id, strategy, createdAt)
 
-  def initialRun(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): (Run, Iterable[URL]) = {
-    new Run(id = id, strategy = strategy, createdAt = createdAt)
-      .withNewUrlsToBeExplored(List(strategy.entrypoint))
-      .takeAtMost(Strategy.maxUrlsToFetch)
-  }
-
-  def freshRun(orgId: OrganizationId, jobId: JobId, strategy: Strategy): (Run, Iterable[URL]) = {
+  def freshRun(orgId: OrganizationId, jobId: JobId, strategy: Strategy): Run = {
     new Run(id = (orgId, jobId, RunId()), strategy = strategy)
-      .withNewUrlsToBeExplored(List(strategy.entrypoint))
-      .takeAtMost(Strategy.maxUrlsToFetch)
   }
 
   /* addResourceResponse */
@@ -153,7 +145,7 @@ case class Run private (
 
   def hasNoPendingAction: Boolean = noMoreUrlToExplore && pendingAssertions.isEmpty
 
-  def isIdle: Boolean = completedAt.isDefined
+  def isIdle: Boolean = (noMoreUrlToExplore && hasNoPendingAction) || completedAt.isDefined
 
   def isRunning: Boolean = !isIdle
 
@@ -231,7 +223,7 @@ case class Run private (
    *
    * The returned Observation has all the Explores marked as being pending.
    */
-  def takeAtMost(n: Int): (Run, Iterable[URL]) = {
+  private def takeAtMost(n: Int): (Run, Iterable[URL]) = {
     var current: Run = this
     var urls: List[URL] = List.empty
     for {
@@ -248,7 +240,7 @@ case class Run private (
    * Returns an Observation with the new urls to be explored
    */
   private def withNewUrlsToBeExplored(urls: List[URL]): Run = {
-    val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct // .take(numberOfRemainingAllowedFetches)
+    val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct
     if (! filteredUrls.isEmpty)
       logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, filteredUrls.size, this.numberOfKnownUrls))
     val run = this.copy(toBeExplored = toBeExplored ++ filteredUrls)
@@ -263,6 +255,9 @@ case class Run private (
     )
     (run, resourceInfo)
   }
+
+  def newlyStartedRun: (Run, Iterable[URL]) =
+    this.withNewUrlsToBeExplored(List(strategy.entrypoint)).takeAtMost(Strategy.maxUrlsToFetch)
 
   def withErrorResponse(errorResponse: ErrorResponse): Run = {
     withResponse(errorResponse)._1

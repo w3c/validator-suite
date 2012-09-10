@@ -48,9 +48,8 @@ class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareAc
             Job.bananaGet(orgId, JobId(id)) flatMap { case (job, runUriOpt) =>
               runUriOpt match {
                 case None => {
-                  val (run, urls) = Run.freshRun(orgId, job.id, job.strategy)
-                  val noCall: Iterable[AssertorCall] = Set.empty[AssertorCall]
-                  CreateJobAndForward(job, NeverStarted, run, urls, noCall, msg).bf
+                  val run = Run.freshRun(orgId, job.id, job.strategy)
+                  CreateJobAndForward(job, NeverStarted, run, List.empty, List.empty, msg).bf
                 }
                 case Some(runUri) =>
                   Run.bananaGet(runUri) map { case (run, toBeFetched, toBeAsserted) =>

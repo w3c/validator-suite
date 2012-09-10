@@ -32,6 +32,35 @@ object JobActor {
   case object Resume
   case object GetSnapshot
 
+  val logger = Logger.of(classOf[JobActor])
+
+  def executeCommands(run: Run, runActor: ActorRef, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall], http: ActorRef, assertionsActorRef: ActorRef)(implicit sender: ActorRef): Unit = {
+    
+    def fetch(url: URL): Unit = {
+      val action = run.strategy.getActionFor(url)
+      action match {
+        case GET => {
+          logger.debug("%s: >>> GET %s" format (run.shortId, url))
+          http ! Fetch(url, GET, run.id)
+        }
+        case HEAD => {
+          logger.debug("%s: >>> HEAD %s" format (run.shortId, url))
+          http ! Fetch(url, HEAD, run.id)
+        }
+        case IGNORE => {
+          logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (run.shortId, url))
+        }
+      }
+    }
+
+    if (! toBeFetched.isEmpty)
+      toBeFetched foreach { url => fetch(url) }
+
+    if (! toBeAsserted.isEmpty)
+      toBeAsserted foreach { call => assertionsActorRef ! call }
+
+  }
+
 }
 
 import JobActor._
@@ -54,8 +83,6 @@ class JobActor(
   implicit val conf: VSConfiguration)
 extends Actor with FSM[JobActorState, Run] with Listeners {
 
-  val logger = Logger.of(classOf[JobActor])
-
   import conf._
 
   val orgId = job.organization
@@ -65,18 +92,13 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
   // TODO is it really what we want? I don't think so
 
-  val http = system.actorFor(system / "http")
+  val http: ActorRef = system.actorFor(system / "http")
 
   implicit val strategy = job.strategy
 
   // at instanciation of this actor
 
-  def executeCommands(): Unit = {
-    toBeFetched foreach { url => fetch(url, initialRun) }
-    toBeAsserted foreach { call => assertionsActorRef ! call }
-  }
-
-  if (initialState === Started) executeCommands()
+  if (initialState === Started) executeCommands(initialRun, self, toBeFetched, toBeAsserted, http, assertionsActorRef)
 
   // TODO
   conf.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
@@ -152,9 +174,10 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     case Event(Refresh, run) => {
       Run.save(run)
-      executeCommands()
       sender ! run.id
-      goto(Started)
+      val (startedRun, toBeFetched) = run.newlyStartedRun
+      executeCommands(startedRun, self, toBeFetched, List.empty, http, assertionsActorRef)
+      goto(Started) using startedRun
     }
 
   }
@@ -191,10 +214,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       tellEverybody(NewResource(run.id, httpResponse))
       val (newRun, urlsToFetch, assertorCalls) =
         run.withHttpResponse(httpResponse)
-      if (! urlsToFetch.isEmpty)
-        urlsToFetch foreach { url => fetch(url, run) }
-      if (! assertorCalls.isEmpty)
-        assertorCalls foreach { call => assertionsActorRef ! call }
+      executeCommands(newRun, self, urlsToFetch, assertorCalls, http, assertionsActorRef)
       stateOf(newRun)
     }
 
@@ -212,10 +232,10 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     case Event(Refresh, run) => {
       logger.debug("%s: received a Refresh" format run.shortId)
-      val (freshRun, urlsToBeFetched) = Run.freshRun(orgId, jobId, strategy)
-      sender ! freshRun.id
-      urlsToBeFetched foreach { url => fetch(url, freshRun) }
-      stateOf(freshRun)
+      val (startedRun, urlsToBeFetched) = Run.freshRun(orgId, jobId, strategy).newlyStartedRun
+      sender ! startedRun.id
+      executeCommands(startedRun, self, urlsToBeFetched, List.empty, http, assertionsActorRef)
+      stateOf(startedRun)
     }
 
     case Event(Stop, run) => {
@@ -231,29 +251,6 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     context.actorFor("../..") ! msg
     // tell all the listeners
     tellListeners(msg)
-  }
-
-  /**
-   * Fetch one URL
-   *
-   * The kind of fetch is decided by the strategy (can be no fetch)
-   */
-  // TODO Run.withHttpResponse should return a List[Fetch] instead of List[URL]
-  private def fetch(url: URL, run: Run): Unit = {
-    val action = run.strategy.getActionFor(url)
-    action match {
-      case GET => {
-        logger.debug("%s: >>> GET %s" format (run.shortId, url))
-        http ! Fetch(url, GET, run.id)
-      }
-      case HEAD => {
-        logger.debug("%s: >>> HEAD %s" format (run.shortId, url))
-        http ! Fetch(url, HEAD, run.id)
-      }
-      case IGNORE => {
-        logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (run.shortId, url))
-      }
-    }
   }
 
 }

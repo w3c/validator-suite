@@ -184,7 +184,7 @@ trait Binders extends UriBuilders with LiteralBinders {
         // @@
         var toBeFetched = Set.empty[URL]
         var toBeAsserted = Map.empty[(URL, String), AssertorCall]
-        val (initialRun, urls) = Run.initialRun(id = id, strategy = strategy, createdAt = createdAt)
+        val (initialRun, urls) = Run(id, strategy, createdAt).newlyStartedRun
         var run = initialRun
         toBeFetched ++= urls
         completedAt foreach { at => run = run.completedAt(at) }
