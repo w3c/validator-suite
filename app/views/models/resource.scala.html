@@ -1,24 +1,24 @@
 @(resource: ResourceView)
 <article>
     <dl>
-        <dt>Report for</dt>
+        <dt>@Messages("resource.url")</dt>
         <dd class="url">
             <span>
                 <a href="@Helper.encode(resource.url)">@Helper.shorten(resource.url, 80)</a>
-                <a href="@resource.url" class="external" target="_blank" title="Open in a new tab">link</a>
+                <a href="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">link</a>
             </span>
         </dd>
 
-        <dt>Last validated</dt>
+        <dt>@Messages("resource.validated")</dt>
         <dd class="validated">
             <time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time>
             <span class="legend">@Helper.formatLegendTime(resource.lastValidated)</span>
         </dd>
 
-        <dt>Warnings</dt>
+        <dt>@Messages("resource.warnings")</dt>
         <dd class="warnings">@resource.warnings</dd>
 
-        <dt>Errors</dt>
+        <dt>@Messages("resource.errors")</dt>
         <dd class="errors">@resource.errors</dd>
     </dl>
 </article>

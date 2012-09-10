@@ -35,6 +35,7 @@ resource.warnings=Warnings
 resource.warnings.detail= TODO
 resource.errors=Errors
 resource.errors.detail= TODO
+resource.external.link=Open resource in a new tab
 
 # AssertionView
 assertion.assertor=Assertor
@@ -99,7 +100,7 @@ time.legend.second={0} second ago
 time.legend.second.p={0} seconds ago
 
 job.run=Run this job
-jobs.empty=You haven't set any job yet.
+jobs.empty=You have not set any job yet.
 jobs.create.first=Create your first job.
 resources.empty=No resources to show.
 resources.revalidate=Revalidate this resource.
