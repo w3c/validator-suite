@@ -27,7 +27,8 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       $("#admin .name").first().getText() must include ("Alexandre Bertails")       
       
       // and log out
-      goTo("http://localhost:9001/logout")
+      click("#admin form button")
+      //goTo("http://localhost:9001/logout")
       url must be === ("http://localhost:9001/login")
       goTo("http://localhost:9001/dashboard")
       $("form[action='/login']").isEmpty must be (false)
