@@ -23,6 +23,8 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
   import conf._
 
+  val creatorId = vo.creator
+
   val jobUri = JobUri(vo.organization, id)
 
   def ldr: LinkedDataResource[Rdf] = LinkedDataResource(jobUri.fragmentLess, vo.toPG)
