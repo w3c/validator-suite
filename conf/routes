@@ -22,7 +22,7 @@ GET     /jobs/:id/:url              controllers.Jobs.report(id: JobId, url: org.
 # Application
 GET     /login                      controllers.Application.login
 POST    /login                      controllers.Application.authenticate
-GET     /logout                     controllers.Application.logout
+POST    /logout                     controllers.Application.logout
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /public/*file               controllers.Assets.at(path="/public", file)

@@ -1,12 +1,14 @@
 @(user: User)
-	<section id="admin">
-		<h1>Administration</h1>
-		<a class="support" href="mailto:">Email Support</a>
-		<dl>
-			<dt>User name:</dt>
-			<dd class="name">@user.vo.name</dd>
-			@**<dt>Account type:</dt>
-			<dd class="type">admin</dd>**@
-		</dl>
-		<a class="logout" href="@routes.Application.logout">Logout</a>
-	</section>
+    <section id="admin">
+        <h1>Administration</h1>
+        <a class="support" href="mailto:">Email Support</a>
+        <dl>
+            <dt>User name:</dt>
+            <dd class="name">@user.vo.name</dd>
+            @**<dt>Account type:</dt>
+            <dd class="type">admin</dd>**@
+        </dl>
+        <form action="@routes.Application.logout" method="post">
+            <button type=submit>Logout</button>
+        </form>
+    </section>
