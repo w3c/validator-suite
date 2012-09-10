@@ -70,6 +70,7 @@ jobs.deleted=Job {0} deleted
 
 # Exceptions
 exceptions.store=Store Exception: {0}
+exceptions.job.unknown=Unknown job with id: {0}
 exceptions.unexpected=Unexpected Exception: {0}
 error.timeout=Request timed out
 debug.unexpected=Unexpected: {0}

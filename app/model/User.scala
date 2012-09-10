@@ -36,7 +36,7 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
     Job.getFor(id) map {
       jobs => jobs.filter(_.id === jobId).headOption
     } discard {
-      case None => UnknownJob
+      case None => UnknownJob(jobId)
     } map { _.get }
   }
   

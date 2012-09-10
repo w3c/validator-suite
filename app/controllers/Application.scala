@@ -25,6 +25,13 @@ object Application extends Controller {
   implicit def toError(t: Throwable)(implicit req: Request[_]): Result = {
     t match {
       // TODO timeout, store exception, etc...
+      case UnknownJob(id) => {
+        if (isAjax) {
+          NotFound(Messages("exceptions.job.unknown", id))
+        } else {
+          SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("exceptions.job.unknown", id)))
+        }
+      }
       case _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.unauthorized"))))).withNewSession
       case t: Throwable => {
         logger.error("Unexpected exception: " + t.getMessage, t)

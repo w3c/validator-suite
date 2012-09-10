@@ -8,7 +8,7 @@ import org.w3.vs.model._
 
 //sealed trait SuiteException extends Exception
 //case object Unknown extends Exception //with SuiteException
-case object UnknownJob extends Exception("UnknownJob") //with SuiteException
+case class UnknownJob(id: JobId) extends Exception("UnknownJob") //with SuiteException
 case object UnauthorizedJob extends Exception("UnauthorizedJob") //with SuiteException
 
 
