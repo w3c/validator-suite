@@ -103,6 +103,7 @@ object Main {
 //      println(">>> "+conf.blockingStore.dg.size())
 //    }
     
+    conf.store.shutdown()
     conf.system.shutdown()
     conf.system.awaitTermination()
 
