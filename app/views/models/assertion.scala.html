@@ -1,26 +1,26 @@
 @(assertion: AssertionView)
 <article class="@assertion.severity" tabindex="1">
     <dl>
-        <dt>Assertor</dt>
+        <dt>@Messages("assertion.assertor")</dt>
         <dd class="assertor">@assertion.assertor</dd>
-        <dt>Severity</dt>
+        <dt>@Messages("assertion.severity")</dt>
         <dd class="severity">@assertion.severity</dd>
         @if(assertion.occurrences > 1) {
-        <dt>Occurrences</dt>
+        <dt>@Messages("assertion.occurrences")</dt>
         <dd class="occurrences">@assertion.occurrences times</dd>}
-        <dt>Title</dt>
+        <dt>@Messages("assertion.message")</dt>
         <dd class="title@if(!assertion.isEmpty){ fold}">@assertion.title</dd>
         @if(assertion.description.isDefined) {
-        <dt>Description</dt>
+        <dt>@Messages("assertion.description")</dt>
         <dd class="description">@assertion.description</dd>}
-        @**<dt>Last validated</dt>
+        @**<dt>@Messages("assertion.validated")</dt>
         <dd class="validated">
             <time datetime="@assertion.validated">@Helper.formatTime(assertion.validated)</time>
             <span class="legend">@Helper.formatLegendTime(assertion.validated)</span>
         </dd>**@
     @assertion match {
       case assertion: SingleAssertionView => {
-        <dt>Contexts</dt>
+        <dt>@Messages("assertion.context")</dt>
         @assertion.contexts.map { case context =>
         <dd class="context">
             @if(context.line.isDefined){Line <span class="line">@context.line</span>}
@@ -29,10 +29,13 @@
         </dd>}
       }
       case assertion: GroupedAssertionView => {
-        <dt>URLs</dt>
-        @assertion.urls.map { case url =>
+        <dt class="url">@Messages("assertion.resources.detail")</dt>
+        @assertion.resources.map { case url =>
         <dd class="url">
-            <a href="@url">@Helper.shorten(url, 80)</a>
+            <span>
+                <a href="@Helper.encode(url)">@Helper.shorten(url, 80)</a>
+                <a href="@url" class="external" target="_blank" title="@Messages("resource.external.link")">link</a>
+            </span>
         </dd>}
       }
     }

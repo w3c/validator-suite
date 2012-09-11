@@ -52,6 +52,8 @@ assertion.validated=Validated on
 assertion.validated.detail= TODO
 assertion.context=Contexts
 assertion.context.detail= TODO
+assertion.resources=Resources
+assertion.resources.detail=Resources where this message appears
 
 
 # Application

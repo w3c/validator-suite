@@ -10,18 +10,21 @@
 	text-align: right;
 }
 #resources {
-
-    .external {
-        display: none;
-        width: 0;
-        height: 11px;
-        line-height: 11px;
-        overflow: hidden;
-        padding-left: 11px;
-        background: url("../images/external.png") no-repeat;
-    }
-
     article:hover .external {
         display: inline-block;
     }
+}
+dd.url:hover .external {
+    display: inline-block;
+}
+
+
+.url .external {
+    display: none;
+    width: 0;
+    height: 11px;
+    line-height: 11px;
+    overflow: hidden;
+    padding-left: 11px;
+    background: url("../images/external.png") no-repeat;
 }

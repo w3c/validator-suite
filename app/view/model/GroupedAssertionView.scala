@@ -12,9 +12,9 @@ case class GroupedAssertionView(
   title: Html,
   description: Option[Html],
   occurrences: Int,
-  urls: Iterable[URL]) extends AssertionView{
+  resources: Iterable[URL]) extends AssertionView{
 
-  def isEmpty: Boolean = urls.isEmpty && ! description.isDefined
+  def isEmpty: Boolean = resources.isEmpty && ! description.isDefined
 }
 
 object GroupedAssertionView {
@@ -25,7 +25,7 @@ object GroupedAssertionView {
     "title",
     "description",
     "occurrences",
-    "urls"
+    "resources"
   )
 
   def fromAssertions(assertions: Iterable[Assertion]): Iterable[GroupedAssertionView] = {
@@ -37,7 +37,7 @@ object GroupedAssertionView {
       val title = Html(assertions.head.title)
       val description = assertions.head.description.map(Html.apply _)
       val occurrences = assertions.size
-      val urls = assertions.map(_.url).toSeq.sortBy(_.toString)
+      val resources = assertions.map(_.url).toSeq.sortBy(_.toString)
 
       GroupedAssertionView(
         assertorKey,
@@ -45,7 +45,7 @@ object GroupedAssertionView {
         title,
         description,
         occurrences,
-        urls
+        resources
       )
     }
   }
@@ -86,7 +86,7 @@ object GroupedAssertionView {
       "title",
       "description",
       "occurrences",
-      "urls"
+      "resources"
     )
 
     val default: SortParam = SortParam("occurrences", ascending = false)
