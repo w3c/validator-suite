@@ -5,9 +5,9 @@ package org.w3.vs.assertor
  * http://www.w3.org/TR/EARL10/#Assertor
  */
 trait Assertor {
-  // TODO Fix this.
-  implicit lazy val conf = org.w3.vs.Prod.configuration
-  implicit lazy val executionContext = conf.assertorExecutionContext  
+  // // TODO Fix this.
+  // implicit lazy val conf = org.w3.vs.Prod.configuration
+  // implicit lazy val executionContext = conf.assertorExecutionContext  
 
   val name: String
 }

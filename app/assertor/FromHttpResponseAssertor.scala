@@ -5,8 +5,8 @@ import org.w3.vs.model._
 
 trait FromHttpResponseAssertor extends FromURLAssertor {
   
-  def assert(context: (OrganizationId, JobId, RunId), response: HttpResponse): FutureVal[AssertorFailure, AssertorResult] = 
-    FutureVal {
+  def assert(context: (OrganizationId, JobId, RunId), response: HttpResponse): AssertorResponse = 
+    try {
       val assertions = assert(response.url)
           .groupBy{case a => a.url.toString + a.title}
           .map(_._2)
@@ -15,8 +15,8 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
             assertions.head.copy(contexts = contexts.toList)
           }
       AssertorResult(context = context, assertor = name, sourceUrl = response.url, assertions = assertions.toList)
-    } failMap { throwable =>
-      AssertorFailure(context = context, assertor = name, sourceUrl = response.url, why = throwable.getMessage)
+    } catch { case t =>
+      AssertorFailure(context = context, assertor = name, sourceUrl = response.url, why = t.getMessage)
     }
 
 }

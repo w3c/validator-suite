@@ -12,7 +12,7 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
   
   var cssval: CSSVal = null
 
-  val port = 9001
+  val port = 10001
   val checkUri = "http://localhost:" + port + "/validator?uri="
 
   def start(): Unit = if (cssval == null) {

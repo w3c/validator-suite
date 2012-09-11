@@ -53,11 +53,13 @@ object JobActor {
       }
     }
 
-    if (! toBeFetched.isEmpty)
+    if (! toBeFetched.isEmpty) {
       toBeFetched foreach { url => fetch(url) }
+    }
 
-    if (! toBeAsserted.isEmpty)
+    if (! toBeAsserted.isEmpty) {
       toBeAsserted foreach { call => assertionsActorRef ! call }
+    }
 
   }
 
@@ -187,10 +189,13 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     // just ignore this event if from a previous Run
     case Event(ar: AssertorResponse, run) if ar.context /== run.id => {
       logger.debug("%s (previous run): received assertor response" format (run.shortId))
+      logger.debug("assertorResponse.context = "+ar.context)
+      logger.debug("run.id =                   "+run.id)
       stay()
     }
 
     case Event(result: AssertorResult, run) => {
+      logger.debug("%s: %s produced AssertorResult for %s" format (run.shortId, result.assertor, result.sourceUrl.toString))
       val now = DateTime.now(DateTimeZone.UTC)
       Run.saveEvent(run.runUri, AssertorResponseEvent(result, now))
       tellEverybody(NewAssertorResult(result, now))
@@ -198,6 +203,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event(failure: AssertorFailure, run) => {
+      logger.debug("%s: %s failed to assert %s because [%s]" format (run.shortId, failure.assertor, failure.sourceUrl.toString, failure.why))
       Run.saveEvent(run.runUri, AssertorResponseEvent(failure))
       stateOf(run.withAssertorFailure(failure))
     }

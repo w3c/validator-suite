@@ -4,14 +4,16 @@ import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
 import akka.actor._
-import System.{ currentTimeMillis => now }
+import akka.dispatch._
 import scalaz._
 import scala.collection.mutable.Queue
 import scala.concurrent.stm._
 import org.w3.util._
 import JobActor._
 
-case class AssertorCall(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse)
+case class AssertorCall(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse) {
+  override def toString = "AssertorCall[%s/%s assertor." format (context._2.shortId, context._3.shortId, assertor.name, response.url)
+}
 
 object AssertionsActor {
 
@@ -27,19 +29,25 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
   implicit val ec = conf.assertorExecutionContext
 
-  var pendingAssertions: Ref[Int] = Ref(0)
+  val pendingAssertions: Ref[Int] = Ref(0)
 
   val queue = Queue[AssertorCall]()
 
   private def scheduleAssertion(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
 
-    pendingAssertions.single() += 1
+    val start = System.currentTimeMillis()
+    atomic { implicit txn => pendingAssertions += 1 }
+    val sender = self
     
-    assertor.assert(context, response) onComplete {
-      case _ => pendingAssertions.single() -= 1
+    Future {
+      assertor.assert(context, response)
+    } onComplete { case _ =>
+      val end = System.currentTimeMillis()
+      logger.debug("%s took %dms to assert %s" format (assertor.name, end - start, response.url))
+      atomic { implicit txn => pendingAssertions -= 1 }
     } onComplete {
-      case Failure(f: AssertorFailure) => self ! f
-      case Success(result: AssertorResult) => self ! result
+      case Left(t) => sender ! AssertorFailure(context, assertor.name, response.url, why = t.getMessage)
+      case Right(assertorResponse) => sender ! assertorResponse
     }
     
   }
@@ -68,6 +76,7 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
     }
 
     case call @ AssertorCall(context, assertorId, response) => {
+      
       if (pendingAssertions.single() > MAX_PENDING_ASSERTION) {
         queue.enqueue(call)
       } else {
