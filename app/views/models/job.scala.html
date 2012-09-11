@@ -49,12 +49,11 @@
             <form action="@routes.Jobs.dispatcher(job.id)" method="post">
                 <fieldset>
                     <legend>Job Controls</legend>
-                    <button type="submit" name="action" value="stop" class="stop">@Messages("job.button.cancel")</button>
-                    <button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>
-                    @**{job.status match {
-                      case "running" => {<button type="submit" name="action" value="stop" class="stop">cancel</button>}
-                      case "idle" => {<button type="submit" name="action" value="run" class="run">run now</button>}
-                    }}**@
+                    @defining(job.status){case status =>
+                    @status match {
+                        case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.cancel")</button>}
+                        case "idle" => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
+                    }}
                     <button type="submit" name="action" value="delete" class="delete">@Messages("job.button.delete")</button>
                 </fieldset>
             </form>
