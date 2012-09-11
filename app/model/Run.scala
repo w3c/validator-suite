@@ -241,8 +241,8 @@ case class Run private (
    */
   private def withNewUrlsToBeExplored(urls: List[URL]): Run = {
     val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct
-    if (! filteredUrls.isEmpty)
-      logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, filteredUrls.size, this.numberOfKnownUrls))
+    // if (! filteredUrls.isEmpty)
+    //   logger.debug("%s: Found %d new urls to explore. Total: %d" format (shortId, filteredUrls.size, this.numberOfKnownUrls))
     val run = this.copy(toBeExplored = toBeExplored ++ filteredUrls)
     run
   }

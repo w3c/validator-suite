@@ -15,6 +15,8 @@ object Binders extends Binders
 
 trait Binders extends UriBuilders with LiteralBinders {
 
+  val logger = play.Logger.of(classOf[Binders])
+
   val anyURI = xsd("anyURI")
 
   /* ontology definition */
@@ -182,6 +184,7 @@ trait Binders extends UriBuilders with LiteralBinders {
         events <- (pointed / ont.event).asSet[RunEvent]
       } yield {
         // @@
+        val start = System.currentTimeMillis()
         var toBeFetched = Set.empty[URL]
         var toBeAsserted = Map.empty[(URL, String), AssertorCall]
         val (initialRun, urls) = Run(id, strategy, createdAt).newlyStartedRun
@@ -213,7 +216,10 @@ trait Binders extends UriBuilders with LiteralBinders {
           case BeProactiveEvent(_) => ()
           case BeLazyEvent(_) => ()
         }
-        (run, toBeFetched, toBeAsserted.values)
+        val result = (run, toBeFetched, toBeAsserted.values)
+        val end = System.currentTimeMillis()
+        logger.debug("Run deserialized in %dms (found %d events)" format (end - start, events.size))
+        result
       }
     }
   }

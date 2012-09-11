@@ -5,8 +5,11 @@ import org.w3.vs.model._
 
 trait FromHttpResponseAssertor extends FromURLAssertor {
   
-  def assert(context: (OrganizationId, JobId, RunId), response: HttpResponse): AssertorResponse = 
-    try {
+  val logger = play.Logger.of(classOf[Assertor])
+
+  def assert(context: (OrganizationId, JobId, RunId), response: HttpResponse): AssertorResponse = {
+    val start = System.currentTimeMillis()
+    val result = try {
       val assertions = assert(response.url)
           .groupBy{case a => a.url.toString + a.title}
           .map(_._2)
@@ -18,5 +21,9 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
     } catch { case t =>
       AssertorFailure(context = context, assertor = name, sourceUrl = response.url, why = t.getMessage)
     }
+    val end = System.currentTimeMillis()
+    logger.debug("%s took %dms to assert %s" format (this.name, end - start, response.url))
+    result
+  }
 
 }

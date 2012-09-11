@@ -25,7 +25,7 @@ import AssertionsActor._
 
 class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
-  val logger = play.Logger.of(classOf[AssertionsActor])
+  lazy val logger = play.Logger.of(classOf[AssertionsActor])
 
   implicit val ec = conf.assertorExecutionContext
 
@@ -35,15 +35,12 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
   private def scheduleAssertion(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
 
-    val start = System.currentTimeMillis()
     atomic { implicit txn => pendingAssertions += 1 }
     val sender = self
     
     Future {
       assertor.assert(context, response)
     } onComplete { case _ =>
-      val end = System.currentTimeMillis()
-      logger.debug("%s took %dms to assert %s" format (assertor.name, end - start, response.url))
       atomic { implicit txn => pendingAssertions -= 1 }
     } onComplete {
       case Left(t) => sender ! AssertorFailure(context, assertor.name, response.url, why = t.getMessage)
