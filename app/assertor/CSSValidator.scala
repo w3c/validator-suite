@@ -26,6 +26,7 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
 
   def stop(): Unit = if (cssval != null) {
     cssval.stop()
+    cssval = null
   }
 
   def validatorURL(encodedURL: String) =

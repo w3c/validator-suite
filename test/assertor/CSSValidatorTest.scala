@@ -29,11 +29,11 @@ trait ErrorMatchers {
 
 class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll with ErrorMatchers {
 
-  override def beforeAll: Unit = {
+  override def beforeAll(): Unit = {
     org.w3.vs.assertor.CSSValidator.start()
   }
   
-  override def afterAll: Unit = {
+  override def afterAll(): Unit = {
     org.w3.vs.assertor.CSSValidator.stop()
   }
 
