@@ -17,7 +17,7 @@ object ApplicationBuild extends Build {
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
     //"org.w3" %% "banana-sesame" % "x03-SNAPSHOT",
     "org.w3" %% "banana-jena" % "x09-SNAPSHOT",
-    "org.w3" %% "css-validator-standalone" % "1.0-SNAPSHOT" intransitive(),
+    "org.w3" %% "css-validator-standalone" % "1.1-SNAPSHOT" intransitive(),
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
     // test dependencies
