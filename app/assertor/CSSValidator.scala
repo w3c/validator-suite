@@ -10,7 +10,7 @@ import com.typesafe.config.ConfigFactory
 object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   /* doc at http://typesafehub.github.com/config/latest/api/ */
-  val configuration = ConfigFactory.load()
+  val configuration = ConfigFactory.load(Option(System.getProperty("config.file")).getOrElse("application.conf"))
 
   val name = "validator.css"
   
