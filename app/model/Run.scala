@@ -308,9 +308,17 @@ case class Run private (
   }
 
   def withAssertorResult(result: AssertorResult): Run = {
-    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions)
+    // Tom: Ignore assertions for documents that were already validated by the same assertor. This supposes that
+    // there cannot be any partial validations, which is true for all W3C assertors. XXX
+    val filteredAssertions = result.assertions.groupBy(_.url).filter{case (url, _) =>
+      ! assertions.exists{case assertion =>
+        assertion.assertor == result.assertor && assertion.url == url
+      }
+    }.map(_._2).flatten
+
+    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(filteredAssertions)
     this.copy(
-      assertions = this.assertions ++ result.assertions,
+      assertions = this.assertions ++ filteredAssertions,
       errors = this.errors + nbErrors,
       warnings = this.warnings + nbWarnings,
       pendingAssertions = pendingAssertions - ((result.assertor, result.sourceUrl)))
