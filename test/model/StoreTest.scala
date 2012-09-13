@@ -254,13 +254,13 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     jobs must contain (job4)
   }
 
-  "get all Jobs a user can access through all the organizations he belongs to" in {
+  "a user can only access the jobs that he created" in {
     val jobs = Job.getFor(user1.id).getOrFail(3.seconds)
     jobs must have size(4)
     jobs must contain (job1)
     jobs must contain (job2)
     jobs must contain (job3)
-    jobs must contain (job4)
+    jobs must contain (job5)
   }
 
   "retrieve Run" in {

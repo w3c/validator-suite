@@ -173,17 +173,12 @@ object Job {
     import conf._
     val query = """
 CONSTRUCT {
-  ?user ont:organization ?org .
-  ?org ont:job ?job .
+  ?user ont:job ?job .
   ?s2 ?p2 ?o2
 } WHERE {
   BIND (iri(strbefore(str(?user), "#")) AS ?userG) .
   graph ?userG {
-    ?user ont:organization ?org .
-  } .
-  BIND (iri(strbefore(str(?org), "#")) AS ?orgG) .
-  graph ?orgG {
-    ?org ont:job ?job .
+    ?user ont:job ?job .
   } .
   BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
   graph ?jobG {
@@ -195,7 +190,7 @@ CONSTRUCT {
     val r = for {
       graph <- store.executeConstruct(construct, Map("user" -> userId.toUri))
       pointedOrg = PointedGraph[Rdf](userId.toUri, graph)
-      it <- (pointedOrg / ont.organization / ont.job).asSet2[(OrganizationId, JobId), JobVO]
+      it <- (pointedOrg / ont.job).asSet2[(OrganizationId, JobId), JobVO]
     } yield {
       it map { case (ids, jobVO) => Job(ids._2, jobVO) }
     }

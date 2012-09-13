@@ -35,8 +35,7 @@ object Jobs extends Controller {
       (for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
-        // TODO remove filter once #59 is closed
-        jobs <- Job.getFor(user.id).map(_.filter(_.creatorId == user.id)) // Job.getAll
+        jobs <- Job.getFor(user.id)
         jobViews <- JobView.fromJobs(jobs)
       } yield {
         Ok(views.html.dashboard(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
