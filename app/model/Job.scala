@@ -282,25 +282,23 @@ SELECT ?run ?timestamp WHERE {
     import conf._
     val orgUri = job.vo.organization.toUri
     val creatorUri = job.vo.creator.toUri
-    // TODO make one command
-    val r = for {
-      _ <- store.PUT(job.ldr)
-      _ <- store.POST(orgUri, orgUri -- ont.job ->- job.jobUri)
-      _ <- store.POST(creatorUri, creatorUri -- ont.job ->- job.jobUri)
-    } yield job
-    r.toFutureVal
+    val script = for {
+      _ <- Command.PUT[Rdf](job.ldr)
+      _ <- Command.POST[Rdf](orgUri, orgUri -- ont.job ->- job.jobUri)
+      _ <- Command.POST[Rdf](creatorUri, creatorUri -- ont.job ->- job.jobUri)
+    } yield ()
+    store.execute(script).map(_ => job).toFutureVal
   }
 
   def delete(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
     import conf._
     import ops._
-    // TODO make one command
-    val r = for {
-      _ <- store.PATCH(job.orgUri,
-                       delete = List((job.orgUri, ont.job.uri, job.jobUri))) // <- bug here
-      _ <- store.DELETE(job.jobUri.fragmentLess)
+    val script = for {
+      _ <- Command.PATCH[Rdf](job.orgUri,
+                              tripleMatches = List((job.orgUri, ont.job.uri, job.jobUri))) // <- bug here
+      _ <- Command.DELETE[Rdf](job.jobUri.fragmentLess)
     } yield ()
-    r.toFutureVal
+    store.execute(script).toFutureVal
   }
 
 }

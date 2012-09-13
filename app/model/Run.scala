@@ -40,13 +40,12 @@ object Run {
     import conf._
     import ops._
     val jobUri = (run.id._1, run.id._2).toUri
-    // TODO make one command
-    val r = for {
-      _ <- store.PUT(run.ldr)
-      _ <- store.PATCH(jobUri, delete = List((jobUri, ont.run.uri, ANY)))
-      _ <- store.POST(jobUri, jobUri -- ont.run ->- run.runUri)
+    val script = for {
+      _ <- Command.PUT[Rdf](run.ldr)
+      _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.run.uri, ANY)))
+      _ <- Command.POST[Rdf](jobUri, jobUri -- ont.run ->- run.runUri)
     } yield ()
-    r.toFutureVal
+    store.execute(script).toFutureVal
   }
 
   def delete(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =

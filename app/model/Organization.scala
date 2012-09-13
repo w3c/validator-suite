@@ -119,11 +119,11 @@ object Organization {
 
   def addUser(orgUri: Rdf#URI, userUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
-    // TODO make one command
-    for {
-      _ <- store.POST(orgUri, orgUri -- ont.user ->- userUri)
-      _ <- store.POST(userUri, userUri -- ont.organization ->- orgUri)
+    val script = for {
+      _ <- Command.POST[Rdf](orgUri, orgUri -- ont.user ->- userUri)
+      _ <- Command.POST[Rdf](userUri, userUri -- ont.organization ->- orgUri)
     } yield ()
+    store.execute(script)
   }
 
 }
