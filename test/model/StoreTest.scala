@@ -142,12 +142,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       val url = URL("http://example.com/foo/"+i)
       val assertion = newAssertion(url, assertorId, severity)
       val assertorResult = AssertorResult(run1.id, assertorId, url, List(assertion))
-      /* println("addAssertions(): http://example.com/foo/"+i) */
       Run.saveEvent(run1.runUri, AssertorResponseEvent(assertorResult)).await(3.seconds)
       run1 = run1.copy(assertions = run1.assertions + assertion)
     }
-    Run.completedAt(run2.runUri, now.plusMinutes(7)).await(3.seconds)
-    Run.completedAt(run3.runUri, now.plusMinutes(12)).await(3.seconds)
+    Run.completedAt(job1.jobUri, run2.runUri, run2.completedAt.get).await(3.seconds)
+    Run.completedAt(job1.jobUri, run3.runUri, run3.completedAt.get).await(3.seconds)
   }
 
 //   val resourceResponses: Vector[ResourceResponse] = {
@@ -268,24 +267,19 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     run.assertions.size must be(run1.assertions.size)
   }
 
-//  "get all Runs given a JobId" in {
-//    val runs = Run.getFor(job1.jobUri).getOrFail(30.second).toSet
-//    runs must be(Set(run1, run2, run3, run4))
-//  }
-
 //  "get history of JobDatas for a given jobId" in {
 //    // define test logic
 //  }
-//
-//  "get timestamp of latest completed Run for given jobId" in {
-//    val retrieved = job1.getLastCompleted().result(1.second) getOrElse sys.error("test Job.getLastCompleted")
-//    retrieved must be === (run3.completedAt)
-//  }
-//
-//  "get timestamp of latest completed Run for given jobId that has never been completed once" in {
-//    val retrieved = job2.getLastCompleted().result(1.second) getOrElse sys.error("test Job.getLastCompleted")
-//    retrieved must be === (None)
-//  }
+
+  "get timestamp of latest completed Run for a given job" in {
+    val latestCompleted = job1.getLastCompleted().getOrFail(3.seconds)
+    latestCompleted must be (run3.completedAt)
+  }
+
+  "get timestamp for a job that has never been completed once" in {
+    val neverCompleted = job2.getLastCompleted().getOrFail(3.seconds)
+    neverCompleted must be(None)
+  }
 
 }
 

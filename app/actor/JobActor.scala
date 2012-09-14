@@ -111,7 +111,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     val _run =
       if (run.hasNoPendingAction) {
         val now = DateTime.now(DateTimeZone.UTC)
-        Run.completedAt(run.runUri, now)
+        Run.completedAt(job.jobUri, run.runUri, now)
         run.copy(completedAt = Some(now))
       } else {
         run

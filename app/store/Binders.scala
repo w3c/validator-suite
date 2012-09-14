@@ -65,6 +65,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
     lazy val explorationMode = property[ExplorationMode](apply("explorationMode"))
     lazy val completedAt = property[Option[DateTime]](apply("completedAt"))
+    lazy val lastCompleted = optional[Rdf#URI](apply("lastCompleted"))
 
     lazy val linkCheck = property[Boolean](apply("linkCheck"))
     lazy val maxResources = property[Int](apply("maxResources"))

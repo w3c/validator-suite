@@ -233,44 +233,29 @@ CONSTRUCT {
     sys.error("to be implemented?")
   }
 
-  def getLast(jobUri: Rdf#URI, property: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[(RunId, DateTime)]] = {
+  def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
     import conf._
     val query = """
-SELECT ?run ?timestamp WHERE {
+SELECT ?timestamp WHERE {
   BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
   graph ?jobG {
-    ?job ont:run ?run
-  }
+    ?job ont:lastCompleted ?run
+  } .
   BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
   graph ?runG {
-    ?run ?prop ?timestamp
+    ?run ont:completedAt ?timestamp
   }
 }
 """
     val select = SelectQuery(query, ont)
-    val r = store.executeSelect(select, Map("job" -> jobUri, "prop" -> property)) map { rows =>
-      val rds: Iterable[BananaValidation[(RunId, DateTime)]] = rows.toIterable map { row =>
-        val runId = row("run").flatMap(_.as[(OrganizationId, JobId, RunId)]).map(_._3)
+    val r = store.executeSelect(select, Map("job" -> jobUri)) flatMap { rows =>
+      val rds: Iterable[BananaValidation[DateTime]] = rows.toIterable map { row =>
         val timestamp = row("timestamp").flatMap(_.as[DateTime])
-        ^[BananaValidation, RunId, DateTime, (RunId, DateTime)](runId, timestamp)(Tuple2.apply)
+        timestamp
       }
-      rds.toList.sequence match {
-        case Failure(_) => None
-        case Success(it) if it.isEmpty => None
-        case Success(it) => Some(it.maxBy(_._2))
-      }
+      rds.headOption.sequence.bf
     }
     r.toFutureVal
-  }
-
-  def getLastCreated(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[(RunId, DateTime)]] = {
-    import conf._
-    getLast(jobUri, ont.createdAt.uri)
-  }
-
-  def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
-    import conf._
-    getLast(jobUri, ont.completedAt.uri) map { _.map { _._2 } }
   }
 
   def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {

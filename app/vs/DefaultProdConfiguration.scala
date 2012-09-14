@@ -63,20 +63,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
   lazy val store: RDFStore[Rdf, BananaFuture] =
     JenaStore(createDatasetGraph(storeDirectory.getAbsolutePath))
 
-//  val store: AsyncRDFStore[Rdf] = {
-//    import org.openrdf.sail.memory.MemoryStore
-//    import org.openrdf.sail.nativerdf.NativeStore
-//    import org.openrdf.repository.sail.SailRepository
-//    val blockingStore = SesameStore {
-//      val nativeStore = new NativeStore(new java.io.File("/tmp/foo"), "spoc,posc")
-//      val repo = new SailRepository(nativeStore)
-//      repo.initialize()
-//      repo
-//    }
-//    val asyncStore = AsyncRDFStore(blockingStore, system)(timeout)
-//    asyncStore
-//  }
-
   // ouch :-)
 //  http.authorityManagerFor("w3.org").sleepTime = 0
   

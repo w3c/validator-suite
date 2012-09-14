@@ -70,9 +70,15 @@ object Run {
 
   /* other events */
 
-  def completedAt(runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+  def completedAt(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
-    store.POST(runUri, runUri -- ont.completedAt ->- at)
+    import ops._
+    val script = for {
+      _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.lastCompleted.uri, ANY)))
+      _ <- Command.POST[Rdf](jobUri, jobUri -- ont.lastCompleted ->- runUri)
+      _ <- Command.POST[Rdf](runUri, runUri -- ont.completedAt ->- at)
+    } yield ()
+    store.execute(script)
   }
 
 }
