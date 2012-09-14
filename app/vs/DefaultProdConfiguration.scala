@@ -10,11 +10,12 @@ import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
 import org.w3.banana._
 import org.w3.banana.jena._
 import com.hp.hpl.jena.tdb.TDBFactory.createDatasetGraph
-import com.typesafe.config.ConfigFactory
+import play.api.Configuration
+import java.io.File
 
 trait DefaultProdConfiguration extends VSConfiguration {
 
-  val configuration = ConfigFactory.load()
+  val configuration = Configuration.load(new File("."))
   
   val assertorExecutionContext: ExecutionContext = {
     val executor: ExecutorService = Executors.newFixedThreadPool(10)
@@ -28,15 +29,15 @@ trait DefaultProdConfiguration extends VSConfiguration {
    */
   val httpClient = {
     // in future version of Typesafe's Config: s/getConfig/atPath/
-    val httpClientConf = configuration.getConfig("application.http-client")
+    val httpClientConf = configuration.getConfig("application.http-client") getOrElse sys.error("application.http-client")
     val executor = Executors.newCachedThreadPool()
     val builder = new AsyncHttpClientConfig.Builder()
     val config =
-      builder.setMaximumConnectionsTotal(httpClientConf.getInt("maximum-connections-total"))
-      .setMaximumConnectionsPerHost(httpClientConf.getInt("maximum-connectionsper-host"))
+      builder.setMaximumConnectionsTotal(httpClientConf.getInt("maximum-connections-total") getOrElse sys.error("maximum-connections-total"))
+      .setMaximumConnectionsPerHost(httpClientConf.getInt("maximum-connectionsper-host") getOrElse sys.error("maximum-connectionsper-host"))
       .setExecutorService(executor)
       .setFollowRedirects(false)
-      .setConnectionTimeoutInMs(httpClientConf.getInt("timeout"))
+      .setConnectionTimeoutInMs(httpClientConf.getInt("timeout") getOrElse sys.error("timeout"))
       .build
     new AsyncHttpClient(config)
   }
@@ -55,9 +56,9 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs
   }
   
-  implicit val timeout: Timeout = Timeout(Duration(configuration.getString("application.timeout")))
+  implicit val timeout: Timeout = Timeout(Duration(configuration.getString("application.timeout") getOrElse sys.error("application.timeout")))
 
-  val storeDirectory = new java.io.File(configuration.getString("application.store.directory"))
+  val storeDirectory = new File(configuration.getString("application.store.directory") getOrElse sys.error("application.store.directory"))
 
   lazy val store: RDFStore[Rdf, BananaFuture] =
     JenaStore(createDatasetGraph(storeDirectory.getAbsolutePath))

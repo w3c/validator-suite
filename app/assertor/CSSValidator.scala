@@ -2,29 +2,34 @@ package org.w3.vs.assertor
 
 import org.w3.util._
 import org.w3.cssvalidator.{ CSSValidator => CSSVal }
-import com.typesafe.config.ConfigFactory
+import play.api.{ Logger, Configuration }
+import java.io.File
 
 /** An instance of the CSSValidator
  *
  */
 object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
-  /* doc at http://typesafehub.github.com/config/latest/api/ */
-  val configuration = ConfigFactory.load(Option(System.getProperty("config.file")).getOrElse("application.conf"))
+  val cssvalLogger = Logger("org.w3.vs.assertor.CSSValidator")
+
+  val configuration = Configuration.load(new File("."))
 
   val name = "validator.css"
   
   var cssval: CSSVal = null
 
-  val port = configuration.getInt("application.css-validator.port")
-  val checkUri = "http://localhost:" + port + "/validator?uri="
+  lazy val port = configuration.getInt("application.css-validator.port") getOrElse 2719
+
+  lazy val checkUri = "http://localhost:" + port + "/validator?uri="
 
   def start(): Unit = if (cssval == null) {
+    cssvalLogger.debug("starting on port " + port)
     cssval = new CSSVal(port)
     cssval.start()
   }
 
   def stop(): Unit = if (cssval != null) {
+    cssvalLogger.debug("stopping")
     cssval.stop()
     cssval = null
   }
