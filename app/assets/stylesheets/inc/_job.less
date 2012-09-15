@@ -1,12 +1,11 @@
-
 @rb-width: 70px;
 @rb-padding: 20px;
-@rb-border: 1px solid #C8C8C8;
+@rb-border-color: #C8C8C8;
 @rb-background: #F6F7F9;
 
 #jobs.single {
 
-    padding-bottom: 15px;
+    padding-bottom: 25px;
 
     aside {
         dt {
@@ -15,30 +14,6 @@
             &.maxResources {
                 display: none;
             }
-        }
-        .warnings,
-        .errors,
-        .resources {
-            width: @rb-width;
-            background: @rb-background;
-            border-top: @rb-border;
-            //position: relative;
-            //top: -20px;
-            //right: -10px;
-        }
-        .warnings {
-            border-left: @rb-border;
-            -webkit-border-top-left-radius: 5px;
-            -moz-border-radius-topleft: 5px;
-            border-top-left-radius: 5px;
-            padding-left: @rb-padding;
-        }
-        .resources {
-            border-right: @rb-border;
-            -webkit-border-top-right-radius: 5px;
-            -moz-border-radius-topright: 5px;
-            border-top-right-radius: 5px;
-            padding-right: @rb-padding;
         }
     }
 
@@ -57,14 +32,18 @@
             }
             &.health {
                 right: 20px;
-                bottom: 25px;
+                bottom: 21px;
             }
             &.actions {
                 left: 10px;
-                bottom:10px;
+                bottom: 10px;
+                height: 27px;
 
-                form {
+                legend {display: none;}
+
+                form, fieldset {
                     display: inline;
+                    vertical-align: top;
                 }
 
                 .delete {
@@ -73,30 +52,6 @@
 
             }
         }
-        .warnings,
-        .errors,
-        .resources {
-            background: @rb-background;
-            padding-bottom: 30px;
-            border-bottom: @rb-border;
-            //position: relative; // ff does not allow relative positioning of table displayed elements
-            //top: -20px;
-            //right: -10px;
-        }
-        .warnings {
-            border-left: @rb-border;
-            padding-left: @rb-padding;
-            -webkit-border-bottom-left-radius: 5px;
-            -moz-border-radius-bottomleft: 5px;
-            border-bottom-left-radius: 5px;
-        }
-        .resources {
-            border-right: @rb-border;
-            padding-right: @rb-padding;
-            -webkit-border-bottom-right-radius: 5px;
-            -moz-border-radius-bottomright: 5px;
-            border-bottom-right-radius: 5px;
-        }
         .health {
             progress {
                 -moz-box-sizing: border-box;
@@ -104,6 +59,77 @@
                 width: 3 * @rb-width + 2 * @rb-padding - 18px;
                 height: 15px;
             }
+        }
+    }
+
+    .warnings,
+    .errors,
+    .resources {
+
+        width: @rb-width;
+
+        dfn {
+            padding-top: 10px;
+            padding-bottom: 5px;
+        }
+
+        span {
+            padding-bottom: 30px;
+        }
+
+        span, dfn {
+            display: inline-block;
+            .border-sizing();
+            width: 100%;
+            background: @rb-background;
+            border-color: @rb-border-color;
+            border-style: solid;
+            line-height: 1.1em;
+
+            position: relative;
+            top: 14px;
+            right: 0px;
+        }
+    }
+    .warnings {
+        dfn, span {
+            padding-left: @rb-padding;
+
+        }
+        dfn  {
+            border-width: 1px 0 0   1px;
+            -webkit-border-top-left-radius: 5px;
+            -moz-border-radius-topleft: 5px;
+            border-top-left-radius: 5px;
+        }
+        span {
+            border-width: 0   0 1px 1px;
+            -webkit-border-bottom-left-radius: 5px;
+            -moz-border-radius-bottomleft: 5px;
+            border-bottom-left-radius: 5px;
+        }
+    }
+    .errors {
+        width: 90px;
+        dfn  {border-width: 1px 0 0   0;}
+        span {border-width: 0   0 1px 0;}
+    }
+    .resources {
+        dfn, span {
+            padding-right: @rb-padding;
+
+        }
+        dfn  {
+            border-width: 1px 1px 0   0;
+            -webkit-border-top-right-radius: 5px;
+            -moz-border-radius-topright: 5px;
+            border-top-right-radius: 5px;
+        }
+        span {
+            border-width: 0   1px 1px 0;
+            -webkit-border-bottom-right-radius: 5px;
+            -moz-border-radius-bottomright: 5px;
+            border-bottom-right-radius: 5px;
         }
     }
 }

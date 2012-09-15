@@ -22,6 +22,15 @@
 @import 'inc/_pagination.less';
 @import 'inc/_footer.less';
 
+input[type="reset"]::-moz-focus-inner,
+input[type="button"]::-moz-focus-inner,
+input[type="submit"]::-moz-focus-inner,
+input[type="file"] > input[type="button"]::-moz-focus-inner {
+    padding: 0;
+    border: 0;
+}
+/*input:focus, button:focus {-moz-box-shadow:0 0px 3px #C80 !important;}*/
+
 button,
 .button {
     color: #444 !important;
@@ -48,6 +57,11 @@ button,
     &:hover {
         text-decoration: none !important;
     }
+}
+
+button::-moz-focus-inner {
+    padding: 0;
+    border: 0;
 }
 
 button[disabled],
@@ -108,7 +122,7 @@ form.search input {
     float:left;
 }*/
 
-.actions > form {
+/*.actions > form {
     vertical-align: bottom;
 }
 .actions fieldset {
@@ -116,79 +130,94 @@ form.search input {
 }
 .actions legend {
     display: none;
-}
+}*/
 
 /* Group and search form */
 form.group {
-    //float:left;
-}
-form.group fieldset {
-    border: 1px solid #AAA;
-    border-radius: 2px;
-    background-color: #F0F0F0;
-    background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-    background: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-    background: -o-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
-    background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
 
-    display: inline;
-    padding: 1px;
-    font-family: Arial;
-    font-size: 14px;
-    line-height: 13px;
+    legend, input {display: none}
 
-    position: relative;
-    vertical-align:bottom;
-    //top: 40px;
-}
-form.group input {
-    display: none;
-}
-form.group label {
-    display: block;
-    padding: 5px;
-    color: #777;
-}
-form.group label:hover {
-    background: white;
-}
-form.group input:checked + label {
-    color: #444;
-}
-form.group:hover ~ * {
-    vertical-align: bottom;
-}
-form.group fieldset:not(:hover) input:not(:checked) + label {
-    display:none;
-}
-form.group fieldset:hover {
-    //position:absolute;
+    fieldset {
+        border: 1px solid #AAA;
+        border-radius: 2px;
+        background-color: #F0F0F0;
+        background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+        background: -moz-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+        background: -o-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+        background: linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);
+        display: inline;
+        padding: 1px;
+        font-family: Arial;
+        font-size: 14px;
+        line-height: 13px;
+        position: relative;
+    }
+    label {
+        display: block;
+        padding: 5px;
+        color: #777;
+        padding-right: 18px;
+        position: relative;
 
-    //top: 46px;
-    top: 23px;
-    z-index: 100;
-}
-form.group fieldset label {
-    padding-right: 18px;
-}
-/*form.group fieldset:hover {
-    min-width: 202px; // XXX: hmmm...
-}*/
-form.group fieldset:not(:hover):after {
-    content:"";
-    display:block;
-    position:absolute;
-    right:6px;
-    top:10px;
-    width:0px;
-    height:0px;
-    border-right: 4px solid transparent;
-    border-left: 4px solid transparent;
-    border-top: 4px solid #444444;
-    margin-bottom: 3px;
-    margin-left: 3px;
-}
-form.group button {
-    vertical-align: bottom;
+        &:hover {
+            color: #444;
+            background: #EFEFEF;
+        }
+    }
+    input:checked + label {
+        color: #444;
+    }
+    /*:hover ~ * {
+        vertical-align: bottom;
+    }*/
+    fieldset:not(:hover) input:not(:checked) + label {
+        //display:none;
+        visibility: hidden;
+        height: 0;
+        padding: 0 18px 0 5px;
+    }
+    fieldset:hover {
+        //top: 23px;
+        z-index: 10;
+        background: white;
+
+        input:checked + label:after {
+            content: "";
+            display: block;
+            position: absolute;
+            right: 6px;
+            top: 7px;
+            width: 0px;
+            height: 0px;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            border-right: 4px solid #444444;
+            margin-bottom: 3px;
+            margin-left: 3px;
+        }
+    }
+    /* fieldset:hover {
+        min-width: 202px; // XXX: hmmm...
+    }*/
+    fieldset:not(:hover):after {
+        content:"";
+        display:block;
+        position:absolute;
+        right:6px;
+        top:10px;
+        width:0px;
+        height:0px;
+        border-right: 4px solid transparent;
+        border-left: 4px solid transparent;
+        border-top: 4px solid #444444;
+        margin-bottom: 3px;
+        margin-left: 3px;
+    }
+    button {
+        //vertical-align: bottom;
+        position: absolute;
+        top: -1px;
+        right: -51px;
+    }
 }
 

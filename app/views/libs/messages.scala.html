@@ -1,5 +1,5 @@
 @(errors: List[(String, String)] = List.empty)(implicit flash: Flash)
-@if(flash.data.size + errors.size > 0) {
+@if(errors.size > 0 || flash.data.filter(_._2 != "").size > 0) {
     <section id="messages">
         <h1>Messages</h1>
         @flash.data.map { case (key, message) =>

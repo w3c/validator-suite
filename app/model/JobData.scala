@@ -19,7 +19,7 @@ case class JobData (
 object JobData {
 
   def health(resources: Int, errors: Int, warnings: Int): Int = {
-    if (resources == 0) 0
+    if (resources == 0) -1
     else {
       val errorAverage = errors.toDouble / resources.toDouble
       val h = (exp(log(0.5) / 10 * errorAverage) * 100).toInt

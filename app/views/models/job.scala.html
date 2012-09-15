@@ -26,16 +26,16 @@
         </dd>
 
         <dt>Warnings</dt>
-        <dd class="warnings">@job.warnings</dd>
+        <dd class="warnings"><span>@job.warnings</span></dd>
 
         <dt>Errors</dt>
-        <dd class="errors">@job.errors</dd>
+        <dd class="errors"><span>@job.errors</span></dd>
 
         <dt>Resources</dt>
-        <dd class="resources">@job.resources</dd>
+        <dd class="resources"><span>@job.resources</span></dd>
 
         <dt>Max resources</dt>
-        <dd class="maxResources">@job.maxResources</dd>
+        <dd class="maxResources"><span>@job.maxResources</span></dd>
 
         <dt>Health</dt>
         <dd class="health">
@@ -76,8 +76,8 @@
                     <label for="message">Group by message</label>
                     @**<input name=group type=radio value="message.context" id="message.context" @if(req.queryString.get("group").flatten.exists(_ == "message.context")){checked}>
                     <label for="message.context">Group by message and context</label>**@
+                    <button type=submit>Go</button>
                 </fieldset>
-                <button type=submit>Go</button>
             </form>
         </dd>
     </dl>

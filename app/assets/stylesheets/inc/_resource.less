@@ -6,36 +6,16 @@
 
 #resources.single {
 
-    aside {
-        .warnings, .errors {
-            width: @rb-width;
-            background: @rb-background;
-            border-top: @rb-border;
-        }
-        .warnings {
-            border-left: @rb-border;
-            -webkit-border-top-left-radius: 5px;
-            -moz-border-radius-topleft: 5px;
-            border-top-left-radius: 5px;
-            padding-left: @rb-padding;
-        }
-        .errors {
-            border-right: @rb-border;
-            -webkit-border-top-right-radius: 5px;
-            -moz-border-radius-topright: 5px;
-            border-top-right-radius: 5px;
-            padding-right: @rb-padding;
-        }
-    }
+    padding-bottom: 0;
 
     article {
         .url span {
             position: relative;
-            //padding-right: 16px;
-            //background: url("../images/external.png") no-repeat center right;
+        //padding-right: 16px;
+        //background: url("../images/external.png") no-repeat center right;
 
             &:hover a {
-                //text-decoration: underline;
+            //text-decoration: underline;
             }
         }
         .url a:first-child {
@@ -44,39 +24,155 @@
         }
         .external {
             display: inline-block;
-            /*position: absolute;
-            display: inline-block;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 0;
-            height: 22px;
-            line-height: 22px;
-            background: none;
-            font-size: 0;*/
-        }
-
-        .warnings,
-        .errors,
-        .resources {
-            background: @rb-background;
-            padding-bottom: 10px;
-            border-bottom: @rb-border;
-        }
-        .warnings {
-            border-left: @rb-border;
-            padding-left: @rb-padding;
-            -webkit-border-bottom-left-radius: 5px;
-            -moz-border-radius-bottomleft: 5px;
-            border-bottom-left-radius: 5px;
-        }
-        .errors {
-            border-right: @rb-border;
-            padding-right: @rb-padding;
-            -webkit-border-bottom-right-radius: 5px;
-            -moz-border-radius-bottomright: 5px;
-            border-bottom-right-radius: 5px;
+        /*position: absolute;
+               display: inline-block;
+               top: 0;
+               left: 0;
+               width: 100%;
+               padding: 0;
+               height: 22px;
+               line-height: 22px;
+               background: none;
+               font-size: 0;*/
         }
     }
+    .warnings, .errors {
+
+       width: @rb-width;
+
+       dfn {
+           padding-top: 10px;
+           padding-bottom: 5px;
+       }
+
+       span {
+           padding-bottom: 10px;
+       }
+
+       span, dfn {
+           display: inline-block;
+           .border-sizing();
+           width: 100%;
+           background: @rb-background;
+           border-color: @rb-border-color;
+           border-style: solid;
+           line-height: 1.1em;
+
+           position: relative;
+           top: 14px;
+           right: 0px;
+       }
+
+    }
+    .warnings {
+       dfn, span {
+           padding-left: @rb-padding;
+
+       }
+       dfn  {
+           border-width: 1px 0 0   1px;
+           -webkit-border-top-left-radius: 5px;
+           -moz-border-radius-topleft: 5px;
+           border-top-left-radius: 5px;
+       }
+       span {
+           border-width: 0   0 1px 1px;
+           -webkit-border-bottom-left-radius: 5px;
+           -moz-border-radius-bottomleft: 5px;
+           border-bottom-left-radius: 5px;
+       }
+    }
+    .errors {
+       dfn, span {
+           padding-right: @rb-padding;
+
+       }
+       dfn  {
+           border-width: 1px 1px 0   0;
+           -webkit-border-top-right-radius: 5px;
+           -moz-border-radius-topright: 5px;
+           border-top-right-radius: 5px;
+       }
+       span {
+           border-width: 0   1px 1px 0;
+           -webkit-border-bottom-right-radius: 5px;
+           -moz-border-radius-bottomright: 5px;
+           border-bottom-right-radius: 5px;
+       }
+    }
+
+       /*aside {
+           .warnings, .errors {
+               width: @rb-width;
+               background: @rb-background;
+               border-top: @rb-border;
+               padding: 10px 0 5px 0;
+           }
+           .warnings {
+               border-left: @rb-border;
+               -webkit-border-top-left-radius: 5px;
+               -moz-border-radius-topleft: 5px;
+               border-top-left-radius: 5px;
+               padding-left: @rb-padding;
+           }
+           .errors {
+               border-right: @rb-border;
+               -webkit-border-top-right-radius: 5px;
+               -moz-border-radius-topright: 5px;
+               border-top-right-radius: 5px;
+               padding-right: @rb-padding;
+           }
+       }
+
+       article {
+           .url span {
+               position: relative;
+               //padding-right: 16px;
+               //background: url("../images/external.png") no-repeat center right;
+
+               &:hover a {
+                   //text-decoration: underline;
+               }
+           }
+           .url a:first-child {
+               font-weight: bold;
+               color: black;
+           }
+           .external {
+               display: inline-block;
+               /*position: absolute;
+               display: inline-block;
+               top: 0;
+               left: 0;
+               width: 100%;
+               padding: 0;
+               height: 22px;
+               line-height: 22px;
+               background: none;
+               font-size: 0;* /
+           }
+
+           .warnings,
+           .errors,
+           .resources {
+               background: @rb-background;
+               padding-bottom: 10px;
+               border-bottom: @rb-border;
+           }
+           .warnings {
+               border-left: @rb-border;
+               padding-left: @rb-padding;
+               -webkit-border-bottom-left-radius: 5px;
+               -moz-border-radius-bottomleft: 5px;
+               border-bottom-left-radius: 5px;
+           }
+           .errors {
+               border-right: @rb-border;
+               padding-right: @rb-padding;
+               -webkit-border-bottom-right-radius: 5px;
+               -moz-border-radius-bottomright: 5px;
+               border-bottom-right-radius: 5px;
+           }
+       } */
 
 }

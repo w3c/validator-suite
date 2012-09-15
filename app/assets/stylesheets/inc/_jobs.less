@@ -1,12 +1,12 @@
 
 
 #jobs article .name a {
-	//color: black;
-	font-weight: bold;
-	//text-decoration: underline;
+    //color: black;
+    font-weight: bold;
+    //text-decoration: underline;
 }
 #jobs article .status {
-	text-transform: capitalize;
+    text-transform: capitalize;
 }
 
 #jobs.list {
@@ -20,67 +20,102 @@
 /* job meta on report page */
 /*.job {}
 .job {
-	display:table;
-	width:100%;
-	border-bottom:0 !important;
-	padding-bottom:0 !important;
+    display:table;
+    width:100%;
+    border-bottom:0 !important;
+    padding-bottom:0 !important;
     border-collapse:collapse;
 }
 .job div {
-	display:table-cell;
-	padding:0 5px;
+    display:table-cell;
+    padding:0 5px;
 }
 .job div:first-child {
-	padding-left:0;
+    padding-left:0;
 }
 .job div:last-child {
-	padding-right:0;
+    padding-right:0;
 }
 .job h2 {
-	color:grey;
-	font-size:0.90em;
-	margin-bottom: 5px;
+    color:grey;
+    font-size:0.90em;
+    margin-bottom: 5px;
 }
 .job div span {
-	font-size:1.1em;
+    font-size:1.1em;
 }
 .job .errorsC,
 .job .warningsC,
 .job .resourcesC {
-	text-align: center;
+    text-align: center;
 }
 .job form {
-	display:inline;
+    display:inline;
 }*/
 
 /*#jobs {*/
 /* http://www.useragentman.com/blog/2012/01/03/cross-browser-html5-progress-bars-in-depth/ */
-progress{
-	appearance: none;
-	-moz-appearance: none;
-	-webkit-appearance: none;
-	width: 50px;
-	height: 13px;
-	border: 1px solid black;
-	border-radius: 2px;
-	color: #00B05B; //3bbc00; // IE10? TODO Remove styles for IE9-
-	background: #bb1e17;
-	//margin-bottom: 0px;
 
-	&::-webkit-progress-bar {
-		background: #bb1e17;
-	}
-	&[value="0"] {
-		background: #d2d2d2;
-	}
-	&[value="0"]::-webkit-progress-bar {
-		background: #d2d2d2;
-	}
-	&::-moz-progress-bar {
-		background: #00B05B; //3bbc00;
-	}
-	&::-webkit-progress-value {
-		background: #00B05B; //3bbc00;
-	}
+@progress-green: #00b05b;
+@progress-red: #bb1e17;
+@progress-undef: #d2d2d2;
+
+progress {
+    appearance: none;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    .border-sizing();
+    width: 50px;
+    height: 13px;
+    border: 1px solid #777;
+    border-radius: 2px;
+    color: @progress-green;
+    background: @progress-red;
+
+    &::-webkit-progress-bar {
+       background: @progress-red;
+    }
+    &[value="-1"] {
+       background: @progress-undef;
+    }
+    &[value="-1"]::-webkit-progress-bar {
+       background: @progress-undef;
+    }
+    &::-moz-progress-bar {
+       background: @progress-green;
+    }
+    &::-webkit-progress-value {
+       background: @progress-green;
+    }
+    &[role] {
+       display: inline-block;
+       position: relative;
+       width: 10em;
+       overflow: hidden;
+       height: 1em;
+       vertical-align: -.2em;
+       -moz-box-sizing: border-box;
+       box-sizing: border-box;
+    }
+    &[role],
+    &[aria-valuenow]:before {
+       background-color: @progress-green;
+    }
+    &[role],
+    &[role]:after {
+       background-repeat:repeat-x;
+       background-position: 0 0;
+       -moz-background-size: auto 100%;
+       -webkit-background-size: auto 100%;
+       background-size: auto 100%;
+    }
+    &[aria-valuenow] {
+       background: @progress-red;
+    }
+    &[aria-valuenow]:before {
+       content: "";
+       display: block;
+       height: 100%;
+    }
 }
-/*}*/
+
