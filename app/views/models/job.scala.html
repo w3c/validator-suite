@@ -80,8 +80,9 @@
                     <label for="message">Group by message</label>
                     @**<input name=group type=radio value="message.context" id="message.context" @if(req.queryString.get("group").flatten.exists(_ == "message.context")){checked}>
                     <label for="message.context">Group by message and context</label>**@
-                    <button type=submit>Go</button>
+
                 </fieldset>
+                <button type=submit>Go</button>
             </form>
         </dd>
     </dl>

@@ -21,22 +21,32 @@
     @assertion match {
       case assertion: SingleAssertionView => {
         <dt>@Messages("assertion.context")</dt>
-        @assertion.contexts.map { case context =>
+        @assertion.contexts.take(50).map { case context =>
         <dd class="context">
             @if(context.line.isDefined){Line <span class="line">@context.line</span>}
             @if(context.column.isDefined){, Column <span class="column">@context.column</span>}
             @if(context.content.isDefined){<code class="code">@context.content</code>}
         </dd>}
+        @if(assertion.contexts.size > 50){
+        <dd class="more">
+            <p>And @{assertion.contexts.size - 50} more</p>
+        </dd>
+        }
       }
       case assertion: GroupedAssertionView => {
         <dt class="url">@Messages("assertion.resources.detail")</dt>
-        @assertion.resources.map { case url =>
+        @assertion.resources.take(50).map { case url =>
         <dd class="url">
             <span>
                 <a href="@Helper.encode(url)">@Helper.shorten(url, 80)</a>
                 <a href="@url" class="external" target="_blank" title="@Messages("resource.external.link")">link</a>
             </span>
         </dd>}
+        @if(assertion.resources.size > 50){
+        <dd class="more">
+            <p>And @{assertion.resources.size - 50} more</p>
+        </dd>
+        }
       }
     }
 
