@@ -132,18 +132,22 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   // these assertions are for job1, in run1
   def addAssertions(): Unit = {
     for {
-//      runId <- List(run1.id, run2.id)
       assertorId <- assertorIds
       i <- 1 to nbUrlsPerAssertions
-      severity <- List(Error, Warning, Info)
-      nb = severities(severity)
-      j <- 1 to nb
     } {
+      // Only one AssertorResult for every unique (assertor, url). No partial validations.
       val url = URL("http://example.com/foo/"+i)
-      val assertion = newAssertion(url, assertorId, severity)
-      val assertorResult = AssertorResult(run1.id, assertorId, url, List(assertion))
+      val assertions = for {
+        severity <- List(Error, Warning, Info)
+        nb = severities(severity)
+        j <- 1 to nb
+      } yield {
+        val assertion = newAssertion(url, assertorId, severity)
+        run1 = run1.copy(assertions = run1.assertions + assertion)
+        assertion
+      }
+      val assertorResult = AssertorResult(run1.id, assertorId, url, assertions)
       Run.saveEvent(run1.runUri, AssertorResponseEvent(assertorResult)).await(3.seconds)
-      run1 = run1.copy(assertions = run1.assertions + assertion)
     }
     Run.completedAt(job1.jobUri, run2.runUri, run2.completedAt.get).await(3.seconds)
     Run.completedAt(job1.jobUri, run3.runUri, run3.completedAt.get).await(3.seconds)
