@@ -17,6 +17,22 @@
 
 }
 
+#jobs .status.running span {
+
+    padding-left: 20px;
+    position: relative;
+
+    &:before {
+        content: "";
+        background: url('../images/loader.gif') no-repeat;
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        left: 0;
+    }
+}
+
+
 /* job meta on report page */
 /*.job {}
 .job {
