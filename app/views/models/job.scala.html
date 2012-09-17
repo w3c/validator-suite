@@ -3,13 +3,17 @@
 <hr />
 
 <article data-id="@job.id">
-    @** <h2>Job: @job.name</h2> **@
     <dl>
         <dt>Job Name</dt>
         <dd class="name"><a href="@routes.Jobs.show(job.id)">@job.name</a></dd>
 
         <dt>URL</dt>
-        <dd class="url">@job.url</dd>
+        <dd class="url">
+            <span>
+                <span>@Helper.shorten(job.url, 100)</span>
+                <a href="@job.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.shorten(job.url, 100)</a>
+             </span>
+        </dd>
 
         <dt>Status</dt>
         <dd class="status @job.status"><span>@job.status</span></dd>
