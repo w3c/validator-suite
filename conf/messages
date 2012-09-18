@@ -79,10 +79,10 @@ error.timeout=Request timed out
 debug.unexpected=Unexpected: {0}
 
 #assertors
-assertor.checker.i18n=I18n Checker
-assertor.validator.nu=Validator.nu
-assertor.validator.css=CSS Validator
-assertor.validator.html=HTML Validator
+assertor.checker_i18n=I18n Checker
+assertor.validator_nu=Validator.nu
+assertor.validator_css=CSS Validator
+assertor.validator_html=HTML Validator
 
 assertor.noissues=The {0} found no issues to report
 assertor.externalResourcesWarning=However this document points to the following invalid resources:

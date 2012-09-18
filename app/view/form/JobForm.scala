@@ -12,18 +12,61 @@ import org.w3.vs.controllers._
 import akka.dispatch.ExecutionContext
 import java.util.concurrent.TimeoutException
 import scalaz._
+import org.w3.vs.assertor.Assertor
 
 object JobForm {
 
-  def bind()(implicit req: Request[_], context: ExecutionContext): FutureVal[JobForm, ValidJobForm] = {
-    val form = playForm.bindFromRequest
-    implicit def onTo(to: TimeoutException): JobForm = new JobForm(form.withError("key", Messages("error.timeout")))
-    FutureVal.validated[JobForm, ValidJobForm](
-      form.fold(
-        f => Failure(new JobForm(f)),
-        s => Success(new ValidJobForm(form, s))
-      )
+  def assertors()(implicit req: Request[AnyContent]): Seq[String] = try {
+    req.body.asFormUrlEncoded.get.get("assertor").get
+  } catch { case _ =>
+    Seq.empty
+  }
+
+  def assertorParameters()(implicit req: Request[AnyContent]): Map[Assertor, Map[String, Seq[String]]] = {
+    assertors().toList.map(s => Assertor.get(s)).foldLeft(Map[Assertor, Map[String, Seq[String]]]()){ (m, assertor) => m.+(
+      (assertor -> req.body.asFormUrlEncoded.flatten.collect{
+        case a if (a._1.startsWith(assertor.name + "-")) => a.copy(_1 = a._1.replaceFirst("^" + assertor.name + "-", ""))
+      }.toMap[String, Seq[String]]))
+    }
+  }
+
+  def hasAssertor(assertor: String)(implicit req: Request[AnyContent]): Boolean = assertors().contains(assertor)
+
+  def hasParam(param: String)(implicit req: Request[AnyContent]): Boolean = {
+    try {
+      req.body.asFormUrlEncoded.get.get(param).get
+      true
+    } catch { case _ =>
+      false
+    }
+  }
+
+  def hasParam(param: String, value: String)(implicit req: Request[AnyContent]): Boolean = {
+    try {
+      req.body.asFormUrlEncoded.get.get(param).get.contains(value)
+    } catch { case _ =>
+      false
+    }
+  }
+
+  def bind()(implicit req: Request[AnyContent], context: ExecutionContext): FutureVal[JobForm, ValidJobForm] = {
+
+    println(assertorParameters())
+
+    val form: Form[(String, URL, Boolean, Int)] = playForm.bindFromRequest
+
+    val vsform = form.fold(
+      f => Failure(new JobForm(f)),
+      s => {
+        if (assertors().isEmpty)
+          Failure(new JobForm(form.withError("assertor", "No assertor selected", "error"))) // TODO
+        else
+          Success(new ValidJobForm(form, s))
+      }
     )
+
+    implicit def onTo(to: TimeoutException): JobForm = new JobForm(form.withError("key", Messages("error.timeout")))
+    FutureVal.validated[JobForm, ValidJobForm](vsform)
   }
 
   def blank: JobForm = new JobForm(playForm)
@@ -45,6 +88,7 @@ object JobForm {
   private def playForm: Form[(String, URL, Boolean, Int)] = Form(
     tuple(
       "name" -> nonEmptyText,
+      //"assertor" -> of[Seq[String]].verifying("Choose an assertor", ! _.isEmpty),
       "url" -> of[URL],
       "linkCheck" -> of[Boolean](booleanFormatter),
       "maxResources" -> number(min=1, max=500)
@@ -53,12 +97,12 @@ object JobForm {
 
 }
 
-class JobForm private[view](
-    form: Form[(String, URL, Boolean, Int)]) extends VSForm {
+class JobForm private[view](form: Form[(String, URL, Boolean, Int)]) extends VSForm {
+
   def apply(s: String) = form(s)
 
-  //def globalError: Option[FormError] = form.globalError
-  def errors: Seq[(String, String)] = form.errors.map{case error => ("error", error.key + error.message)}
+  def errors: Seq[(String, String)] = form.errors.map{case error => ("error", /*error.key + */error.message)}
+
 }
 
 class ValidJobForm private[view](

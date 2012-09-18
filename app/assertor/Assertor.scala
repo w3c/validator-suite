@@ -21,6 +21,13 @@ object Assertor {
     I18nChecker.name
   )
 
+  val all: Iterable[Assertor] = Iterable(
+    CSSValidator,
+    HTMLValidator,
+    ValidatorNu,
+    I18nChecker
+  )
+
   val get: PartialFunction[String, FromHttpResponseAssertor] = Map[String, FromHttpResponseAssertor](
     ValidatorNu.name -> ValidatorNu,
     HTMLValidator.name -> HTMLValidator,

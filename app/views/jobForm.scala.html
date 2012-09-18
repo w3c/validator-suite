@@ -1,7 +1,7 @@
 @(form: JobForm,
     user: User,
     organization: Organization,
-    idOpt: Option[JobId] = None)(implicit flash: Flash)
+    idOpt: Option[JobId] = None)(implicit req: Request[AnyContent], flash: Flash)
 
 @libs.main("Validator Suite",
   stylesheets = List("dashboard.css"),
@@ -32,7 +32,7 @@ $(function (){
 
     <h1>Create a new job</h1>
 
-    <form method="post">
+    <form method="post" action="@if(idOpt.isDefined){@routes.Jobs.dispatcher(idOpt.get)}else{@routes.Jobs.create}">
         <label for="name">Name</label>
         <input id="name" name="name" type="text" value="@form("name").value" required>
 
@@ -50,17 +50,18 @@ $(function (){
 
         <h2>Choose the assertors to run</h2>
 
-        <fieldset data-assertor="validator.html">
+        <fieldset class="validator_html">
             <legend>HTML Validator</legend>
 
-            <label for="validator.html" data-name="HTML Validator" title="Add the Markup Validator to this job">Add the Markup Validator to this job</label>
-            <input type=checkbox name=assertor value="validator.html" id="validator.html" checked>
+            <label for="validator_html" data-name="HTML Validator" title="Add the Markup Validator to this job">Add the Markup Validator to this job</label>
+            <input type=checkbox name=assertor value="validator_html" id="validator_html" @if(JobForm.hasAssertor("validator_html")){checked}>
 
             <br>
-            <label for="uri-charset">Character Encoding</label>
-            <select id="uri-charset" name="charset">
-                <option value="(detect automatically)" selected="selected">(detect automatically)</option>
-                <option value="utf-8">utf-8 (Unicode, worldwide)</option>
+            @defining("validator_html-charset"){case name =>
+            <label for="validator_html-charset">Character Encoding</label>
+            <select id="validator_html-charset" name="validator_html-charset">
+                <option value="(detect automatically)" @if(!JobForm.hasParam(name) || JobForm.hasParam(name,"(detect automatically)")){selected}>(detect automatically)</option>
+                <option value="utf-8" @if(JobForm.hasParam(name,"utf-8")){selected}>utf-8 (Unicode, worldwide)</option>
                 <option value="utf-16">utf-16 (Unicode, worldwide)</option>
                 <option value="iso-8859-1">iso-8859-1 (Western Europe)</option>
                 <option value="iso-8859-2">iso-8859-2 (Central Europe)</option>
@@ -102,12 +103,13 @@ $(function (){
                 <option value="windows-1256">windows-1256 (Arabic)</option>
                 <option value="windows-1257">windows-1257 (Baltic Rim)</option>
             </select>
-            <input id="uri-fbc" name="fbc" type="checkbox" value="1">
-            <label for="uri-fbc" title="Use selected Character encoding only if missing in the document">Only if missing</label>
+            }
+            <input id="validator_html-fbc" name="validator_html-fbc" type="checkbox" value="1">
+            <label for="validator_html-fbc" title="Use selected Character encoding only if missing in the document">Only if missing</label>
 
             <br>
-            <label for="uri-doctype">Document Type</label>
-            <select id="uri-doctype" name="doctype">
+            <label for="validator_html-doctype">Document Type</label>
+            <select id="validator_html-doctype" name="validator_html-doctype">
                 <option value="Inline" selected="selected">(detect automatically)</option>
                 <option value="HTML5">HTML5 (experimental)</option>
                 <option value="XHTML 1.0 Strict">XHTML 1.0 Strict</option>
@@ -136,10 +138,10 @@ $(function (){
                 <option value="SMIL 1.0">SMIL 1.0</option>
                 <option value="SMIL 2.0">SMIL 2.0</option>
             </select>
-            <input id="uri-fbd" name="fbd" type="checkbox" value="1" title="Use selected Document Type only if missing in the document">
-            <label for="uri-fbd">Only if missing</label>
+            <input id="validator_html-fbd" name="validator_html-fbd" type="checkbox" value="1" title="Use selected Document Type only if missing in the document">
+            <label for="validator_html-fbd">Only if missing</label>
 
-            <br>
+            <!--<br>
             <input type="radio" name="group" id="urigroup_no" value="0" checked="checked">
             <label for="urigroup_no">List Messages Sequentially</label>
 
@@ -159,24 +161,27 @@ $(function (){
             <input id="uri-outline" name="outline" type="checkbox" value="1">
             <label title="Show an Outline of the document" for="uri-outline">Show Outline</label>
 
-            <br>
+            <br>-->
+            <input name="validator_html-No200" type="hidden" value="1">
+            <!--
             <input id="uri-No200" name="No200" type="checkbox" value="1">
             <label title="Validate also pages for which the HTTP status code indicates an error" for="uri-No200">Validate error pages</label>
 
             <br>
             <input id="uri-verbose" name="verbose" type="checkbox" value="1">
-            <label title="Verbose Output" for="uri-verbose">Verbose Output</label>
+            <label title="Verbose Output" for="uri-verbose">Verbose Output</label>-->
         </fieldset>
 
-        <fieldset data-assertor="validator.nu">
+        <fieldset class="validator_nu">
             <legend>Validator.nu</legend>
 
-            <label for="validator.nu" data-name="Validator.nu" title="Add Validator.nu to this job">Add Validator.nu to this job</label>
-            <input type=checkbox name=assertor value="validator.nu" id="validator.nu">
+            <label for="validator_nu" data-name="Validator.nu" title="Add Validator.nu to this job">Add Validator.nu to this job</label>
+            <input type=checkbox name=assertor value="validator_nu" id="validator_nu" @if(JobForm.hasAssertor("validator_nu")){checked}>
 
             <br>
-            <label for="charset">Encoding</label>
-            <select id="charset" name="charset"><option value="">As set by the server/page</option>
+            <label for="validator_nu-charset">Encoding</label>
+            <select id="validator_nu-charset" name="validator_nu-charset">
+                <option value="">As set by the server/page</option>
                 <option value="UTF-8">UTF-8 (Global)</option>
                 <option value="UTF-16">UTF-16 (Global)</option>
                 <option value="Windows-1250">Windows-1250 (Central European)</option>
@@ -213,12 +218,13 @@ $(function (){
             </select>
 
             <br>
-            <label for="schema">Schemas</label>
-            <input name="schema" id="schema" pattern="(?:(?:(?:https?://\S+)|(?:data:\S+))(?:\s+(?:(?:https?://\S+)|(?:data:\S+)))*)?" title="Space-separated list of schema IRIs. (Leave blank to let the service guess.)" value="">
+            <label for="validator_nu-schema">Schemas</label>
+            <input name="validator_nu-schema" id="validator_nu-schema" pattern="(?:(?:(?:https?://\S+)|(?:data:\S+))(?:\s+(?:(?:https?://\S+)|(?:data:\S+)))*)?" title="Space-separated list of schema IRIs. (Leave blank to let the service guess.)" value="">
 
             <br>
-            <label for="preset">Preset</label>
-            <select id="preset" name="preset"><option value="">None</option>
+            <label for="validator_nu-preset">Preset</label>
+            <select id="validator_nu-preset" name="validator_nu-preset">
+                <option value="">None</option>
                 <option value="http://s.validator.nu/w3c-html5-microdata-rdfalite.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/ http://c.validator.nu/rdfalite/">HTML5 + SVG 1.1 + MathML 3.0 + RDFa Lite 1.1 + Microdata</option>
                 <option value="http://s.validator.nu/w3c-html5-microdata-rdfa.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/">HTML5 + SVG 1.1 + MathML 3.0 + RDFa 1.1 + Microdata</option>
                 <option value="http://s.validator.nu/w3c-html5.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/">HTML5 + SVG 1.1 + MathML 3.0</option>
@@ -233,8 +239,9 @@ $(function (){
             </select>
 
             <br>
-            <label for="parser">Parser</label>
-            <select id="parser" name="parser"><option value="" selected="selected">Automatically from Content-Type</option>
+            <label for="validator_nu-parser">Parser</label>
+            <select id="validator_nu-parser" name="validator_nu-parser">
+                <option value="" selected="selected">Automatically from Content-Type</option>
                 <option value="xml">XML; don’t load external entities</option>
                 <option value="xmldtd">XML; load external entities</option>
                 <option value="html">HTML; flavor from doctype</option>
@@ -244,31 +251,31 @@ $(function (){
             </select>
 
             <br>
-            <label for="nsfilter"><abbr title="XML namespace">XMLNS</abbr>&nbsp;Filter</label>
-            <input name="nsfilter" id="nsfilter" pattern="(?:.+:.+(?:\s+.+:.+)*)?" title="Space-separated namespace URIs for vocabularies to be filtered out.">
+            <label for="validator_nu-nsfilter"><abbr title="XML namespace">XMLNS</abbr>&nbsp;Filter</label>
+            <input name="validator_nu-nsfilter" id="validator_nu-nsfilter" pattern="(?:.+:.+(?:\s+.+:.+)*)?" title="Space-separated namespace URIs for vocabularies to be filtered out.">
 
             <br>
-            <input type="checkbox" name="laxtype" id="laxtype" value="yes">
-            <label for="laxtype">Be lax about HTTP Content-Type</label>
+            <input type="checkbox" name="validator_nu-laxtype" id="validator_nu-laxtype" value="yes">
+            <label for="validator_nu-laxtype">Be lax about HTTP Content-Type</label>
+
+            <!--<br>
+            <input type="checkbox" name="validator_nu-showimagereport" id="validator_nu-showimagereport" value="yes">
+            <label for="validator_nu-showimagereport">Show Image Report</label>
 
             <br>
-            <input type="checkbox" name="showimagereport" id="showimagereport" value="yes">
-            <label for="showimagereport">Show Image Report</label>
-
-            <br>
-            <input type="checkbox" name="showsource" id="showsource" value="yes" checked="checked">
-            <label for="showsource">Show Source</label>
+            <input type="checkbox" name="validator_nu-showsource" id="validator_nu-showsource" value="yes" checked="checked">
+            <label for="validator_nu-showsource">Show Source</label>-->
         </fieldset>
 
-        <fieldset data-assertor="validator.css">
+        <fieldset class="validator_css">
             <legend>CSS Validator</legend>
 
-            <label for="validator.css" data-name="CSS Validator" title="Add the CSS Validator to this job">Add the CSS Validator to this job</label>
-            <input type=checkbox name=assertor value="validator.css" id="validator.css" checked>
+            <label for="validator_css" data-name="CSS Validator" title="Add the CSS Validator to this job">Add the CSS Validator to this job</label>
+            <input type=checkbox name=assertor value="validator_css" id="validator_css"  @if(JobForm.hasAssertor("validator_css")){checked}>
 
             <br>
-            <label for="profile_uri">Profile</label>
-            <select id="profile_uri" name="profile">
+            <label for="validator_css-profile">Profile</label>
+            <select id="validator_css-profile" name="validator_css-profile">
                 <option value="none">No special profile</option>
                 <option value="css1">CSS level 1</option>
                 <option value="css2">CSS level 2</option>
@@ -283,8 +290,8 @@ $(function (){
             </select>
 
             <br>
-            <label for="medium_uri">Medium</label>
-            <select id="medium_uri" name="usermedium">
+            <label for="validator_css-usermedium">Medium</label>
+            <select id="validator_css-usermedium" name="validator_css-usermedium">
                 <option selected="selected" value="all">All</option>
                 <option value="aural">aural</option>
                 <option value="braille">braille</option>
@@ -299,8 +306,8 @@ $(function (){
             </select>
 
             <br>
-            <label for="warning_uri">Warnings</label>
-            <select id="warning_uri" name="warning">
+            <label for="validator_css-warning">Warnings</label>
+            <select id="validator_css-warning" name="validator_css-warning">
                 <option value="2">All</option>
                 <option selected="selected" value="1">Normal report</option>
                 <option value="0">Most important</option>
@@ -308,24 +315,25 @@ $(function (){
             </select>
 
             <br>
-            <label id="vext_warning_input">Vendor Extensions</label>
-            <select id="vext_warning_uri" name="vextwarning">
+            <label for="validator_css-vextwarning">Vendor Extensions</label>
+            <select id="validator_css-vextwarning" name="validator_css-vextwarning">
                 <option value="">Default</option>
                 <option value="true">Warnings</option>
                 <option value="false">Errors</option>
             </select>
         </fieldset>
 
-        <fieldset data-assertor="checker.i18n">
+        <fieldset class="checker_i18n">
             <legend>I18n Checker</legend>
 
-            <label for="checker.i18n" data-name="I18n Checker" title="Add the I18n Checker to this job">Add the I18n Checker to this job</label>
-            <input type=checkbox name=assertor value="checker.i18n" id="checker.i18n" checked>
+            <label for="checker_i18n" data-name="I18n Checker" title="Add the I18n Checker to this job">Add the I18n Checker to this job</label>
+            <input type=checkbox name=assertor value="checker_i18n" id="checker_i18n"  @if(JobForm.hasAssertor("checker_i18n")){checked}>
         </fieldset>
 
         @if(idOpt.isDefined) {
         <input type=submit name=action value=Update formaction="@routes.Jobs.dispatcher(idOpt.get)">
         } else {
+        @**<input type=submit name=action value=Create formaction="@routes.Jobs.create">**@
         <button type=submit name=action value=create formaction="@routes.Jobs.create">Create</button>
         }
 
