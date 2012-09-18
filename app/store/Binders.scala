@@ -80,7 +80,7 @@ trait Binders extends UriBuilders with LiteralBinders {
     lazy val resourceResponse = property[ResourceResponse](apply("resourceResponse"))    
     lazy val assertorResponse = property[AssertorResponse](apply("assertorResponse"))
     lazy val event = set[RunEvent](apply("event"))
-    lazy val assertorConfiguration = property[AssertorConfiguration](apply("assertorConfiguration"))
+    lazy val assertorsConfiguration = property[AssertorsConfiguration](apply("assertorsConfiguration"))
 
   }
 
@@ -146,7 +146,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val AssertionBinder: PointedGraphBinder[Rdf, Assertion] = pgb[Assertion](ont.url, ont.assertor, ont.contexts, ont.lang, ont.title, ont.severity, ont.description, ont.timestamp)(Assertion.apply, Assertion.unapply)
 
-  implicit lazy val JobVOBinder = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.assertorConfiguration, ont.creator, ont.organization)(JobVO.apply, JobVO.unapply)
+  implicit lazy val JobVOBinder = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.assertorsConfiguration, ont.creator, ont.organization)(JobVO.apply, JobVO.unapply)
 
   implicit lazy val OrganizationVOBinder = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
 

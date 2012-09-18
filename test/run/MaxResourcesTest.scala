@@ -21,7 +21,7 @@ class MaxResourcesTest extends RunTestHelper with TestKitHelper {
       filter=Filter(include=Everything, exclude=Nothing),
       assertorSelector = AssertorSelector.noAssertor)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id, assertorConfiguration = AssertorConfiguration.default)
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id, assertorsConfiguration = AssertorsConfiguration.default)
   
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 

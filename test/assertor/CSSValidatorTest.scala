@@ -39,7 +39,7 @@ class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll
 
   "there should be no CSS error in http://www.w3.org/2011/08/validator-test/no-error.css" in {
     val url = URL("http://www.w3.org/2011/08/validator-test/no-error.css")
-    val assertion: Iterable[Assertion] = CSSValidator.assert(url, AssertorConfiguration.default)
+    val assertion: Iterable[Assertion] = CSSValidator.assert(url, Map.empty)
     assertion must not (haveError)
   }
 

@@ -4,11 +4,13 @@ import org.w3.vs.model._
 
 package object model {
 
-  type AssertorConfiguration = Map[AssertorId, Map[String, List[String]]]
+  type AssertorsConfiguration = Map[AssertorId, AssertorConfiguration]
 
-  object AssertorConfiguration {
+  type AssertorConfiguration = Map[String, List[String]]
+
+  object AssertorsConfiguration {
     import org.w3.vs.assertor._
-    val default: AssertorConfiguration =
+    val default: AssertorsConfiguration =
       Map(
         CSSValidator.id -> Map.empty,
         HTMLValidator.id -> Map.empty,

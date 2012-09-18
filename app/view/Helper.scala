@@ -6,6 +6,7 @@ import org.w3.util.URL
 import play.api.i18n.Messages
 import play.api.mvc.Request
 import java.net.URLEncoder
+import collection.immutable.Iterable
 
 object Helper {
   
@@ -50,11 +51,9 @@ object Helper {
   }
 
   def queryString(parameters: Map[String, Seq[String]]): String = {
-    parameters.flatten{
-      case (param, values) => {
-        values.map(value => "%s=%s" format (param, value))
-      }
-    }.mkString("?", "&", "")
+    parameters.map { case (param, values) =>
+        values.map(value => param + "=" + value)
+    }.flatten.mkString("?", "&", "")
   }
 
   def clearParam(param: String)(implicit req: Request[_]): String = {

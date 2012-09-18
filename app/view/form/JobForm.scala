@@ -22,7 +22,7 @@ object JobForm {
     Seq.empty
   }
 
-  def assertorParameters()(implicit req: Request[AnyContent]): AssertorConfiguration = {
+  def assertorParameters()(implicit req: Request[AnyContent]): AssertorsConfiguration = {
     assertors().map { assertor =>
       val k = assertor.id
       val v = req.body.asFormUrlEncoded.flatten.collect{
@@ -92,7 +92,7 @@ object JobForm {
       job.strategy.entrypoint,
       job.strategy.linkCheck,
       job.strategy.maxResources
-    ), job.vo.assertorConfiguration
+    ), job.vo.assertorsConfiguration
   )
 
   private def playForm: Form[(String, URL, Boolean, Int)] = Form(
@@ -118,7 +118,7 @@ class JobForm private[view](form: Form[(String, URL, Boolean, Int)]) extends VSF
 class ValidJobForm private[view](
     form: Form[(String, URL, Boolean, Int)],
     bind: (String, URL, Boolean, Int),
-    assertorConfiguration: AssertorConfiguration) extends JobForm(form) with VSForm {
+    assertorsConfiguration: AssertorsConfiguration) extends JobForm(form) with VSForm {
 
   val (name, url, linkCheck, maxResources) = bind
 
@@ -132,7 +132,7 @@ class ValidJobForm private[view](
         linkCheck = linkCheck,
         filter = Filter.includePrefix(url.toString), // Tom: non persisté de toute façon
         maxResources = maxResources),
-      assertorConfiguration = assertorConfiguration
+      assertorsConfiguration = assertorsConfiguration
 )
   }
 

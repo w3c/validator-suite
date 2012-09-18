@@ -64,7 +64,7 @@ class BindersTest extends WordSpec with MustMatchers {
         strategy = strategy,
         creator = UserId(),
         organization = OrganizationId(),
-        assertorConfiguration = AssertorConfiguration.default)
+        assertorsConfiguration = AssertorsConfiguration.default)
     }
   }
 
