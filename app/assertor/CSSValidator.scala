@@ -45,13 +45,13 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
     }
   }
 
-  def validatorURL(encodedURL: String) =
+  def validatorURL(encodedURL: String, assertorConfiguration: AssertorConfiguration) =
     checkUri + encodedURL + "&output=ucn&vextwarning=true&profile=css3"
+
+  def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL =
+    URL(validatorURL(encodedURL(url), assertorConfiguration))
   
-  def validatorURLForMachine(url: URL): URL =
-    URL(validatorURL(encodedURL(url)))
-  
-  override def validatorURLForHuman(url: URL): URL = {
+  override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = encodedURL(url)
     val validatorURL = URL(checkUri + encoded)
     validatorURL

@@ -9,7 +9,7 @@ object HTMLValidatorTest extends Specification with AssertionResultMatcher {
 
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
-    val assertion: Iterable[Assertion] = HTMLValidator.assert(url)
+    val assertion: Iterable[Assertion] = HTMLValidator.assert(url, AssertorConfiguration.default)
     assertion must (haveErrorz)
   }
 

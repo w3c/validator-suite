@@ -11,13 +11,13 @@ object HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor
 
   val id = AssertorId("validator_html")
   
-  def validatorURL(encodedURL: String) =
+  def validatorURL(encodedURL: String, assertorConfiguration: AssertorConfiguration) =
     "http://qa-dev.w3.org/wmvs/HEAD/check?uri=" + encodedURL + "&charset=%28detect+automatically%29&doctype=Inline&group=0&user-agent=W3C_Validator%2F1.2&output=ucn"
   
-  def validatorURLForMachine(url: URL): URL =
-    URL(validatorURL(encodedURL(url)))
+  def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL =
+    URL(validatorURL(encodedURL(url), assertorConfiguration))
   
-  override def validatorURLForHuman(url: URL): URL = {
+  override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = encodedURL(url)
     val validatorURL = URL("http://qa-dev.w3.org/wmvs/HEAD/check?uri=" + encoded + "&charset=%28detect+automatically%29&doctype=Inline&group=0&user-agent=W3C_Validator%2F1.2")
     validatorURL

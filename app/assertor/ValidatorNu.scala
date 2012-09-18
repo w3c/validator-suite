@@ -16,13 +16,13 @@ object ValidatorNu extends FromHttpResponseAssertor {
 
   val id = AssertorId("validator_nu")
   
-  def validatorURL(encodedURL: String) =
+  def validatorURL(encodedURL: String, assertorConfiguration: AssertorConfiguration) =
     "http://validator.w3.org/nu/?doc=" + encodedURL + "&out=json"
   
-  def validatorURLForMachine(url: URL): URL =
-    URL(validatorURL(encodedURL(url)))
+  def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL =
+    URL(validatorURL(encodedURL(url), assertorConfiguration))
   
-  override def validatorURLForHuman(url: URL): URL = {
+  override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = encodedURL(url)
     val validatorURL = URL("http://validator.w3.org/nu/?doc=" + encoded)
     validatorURL

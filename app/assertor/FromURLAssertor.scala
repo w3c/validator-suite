@@ -20,21 +20,21 @@ trait FromURLAssertor extends FromSourceAssertor {
    * returns the URL to be used by a machine to validate
    * the given URL against this assertor
    */
-  def validatorURLForMachine(url: URL): URL
+  def validatorURLForMachine(url: URL, configuration: AssertorConfiguration): URL
   
   /**
    * returns the URL to be used by a human to validate
    * the given URL against this assertor
    * The default is validatorURLForMachine and you can override it
    */
-  def validatorURLForHuman(url: URL): URL = validatorURLForMachine(url)
+  def validatorURLForHuman(url: URL, configuration: AssertorConfiguration): URL = validatorURLForMachine(url, configuration)
   
   /** 
    *  @param url a pointer to the document
    *  @return the assertion
    */
-  def assert(url: URL): Iterable[Assertion] = {
-    val source = Source.fromURL(validatorURLForMachine(url))
+  def assert(url: URL, configuration: AssertorConfiguration): Iterable[Assertion] = {
+    val source = Source.fromURL(validatorURLForMachine(url, configuration))
     assert(source)
   }
   

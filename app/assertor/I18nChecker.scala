@@ -11,13 +11,13 @@ object I18nChecker extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   val id = AssertorId("checker_i18n")
   
-  def validatorURL(encodedURL: String) =
+  def validatorURL(encodedURL: String, assertorConfiguration: AssertorConfiguration) =
     "http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encodedURL + "&format=xml"
   
-  def validatorURLForMachine(url: URL): URL =
-    URL(validatorURL(encodedURL(url)))
+  def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL =
+    URL(validatorURL(encodedURL(url), assertorConfiguration))
   
-  override def validatorURLForHuman(url: URL): URL = {
+  override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = encodedURL(url)
     val validatorURL = URL("http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encoded)
     validatorURL

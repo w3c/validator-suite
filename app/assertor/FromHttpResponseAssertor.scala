@@ -7,10 +7,10 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
   
   val logger = play.Logger.of(classOf[Assertor])
 
-  def assert(context: (OrganizationId, JobId, RunId), response: HttpResponse): AssertorResponse = {
+  def assert(context: (OrganizationId, JobId, RunId), response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
     val start = System.currentTimeMillis()
     val result = try {
-      val assertions = assert(response.url)
+      val assertions = assert(response.url, configuration)
           .groupBy{case a => a.url.toString + a.title}
           .map(_._2)
           .map {case assertions =>
