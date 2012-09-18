@@ -6,6 +6,7 @@ import play.api._
 import java.io.File
 import org.w3.vs.model._
 import org.w3.vs.view.Helper
+import scala.Some
 
 /** An instance of the CSSValidator
  *
@@ -22,7 +23,7 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
 
   lazy val port = configuration.getInt("application.css-validator.port") getOrElse 2719
 
-  lazy val checkUri = "http://localhost:" + port + "/validator?uri="
+  lazy val serviceUrl = "http://localhost:" + port + "/validator"
 
   def start(): Unit = if (cssval == null) {
     try {
@@ -46,15 +47,14 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
     }
   }
 
-  def validatorURL(encodedURL: String, assertorConfiguration: AssertorConfiguration) =
-    checkUri + encodedURL + "&output=ucn&vextwarning=true&profile=css3"
-
-  def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL =
-    URL(validatorURL(Helper.encode(url), assertorConfiguration))
+  def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
+    validatorURLForHuman(url, assertorConfiguration + ("output" -> List("ucn")))
+  }
   
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = Helper.encode(url)
-    val validatorURL = URL(checkUri + encoded)
+    val query = Helper.queryString(assertorConfiguration + ("uri" -> Seq(encoded)))
+    val validatorURL = URL(serviceUrl + query)
     validatorURL
   }
   

@@ -1,6 +1,7 @@
 package org.w3.vs.assertor
 
 import org.w3.util.URL
+import org.w3.vs.view.Helper
 import akka.util.duration._
 import org.scalatest._
 import org.scalatest.matchers._
@@ -41,6 +42,23 @@ class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll
     val url = URL("http://www.w3.org/2011/08/validator-test/no-error.css")
     val assertion: Iterable[Assertion] = CSSValidator.assert(url, Map.empty)
     assertion must not (haveError)
+  }
+
+  "CSSValidator must accept optional parameters" in {
+    val url = URL("http://www.google.com")
+    val assertorConfiguration: AssertorConfiguration = Map.empty
+
+    val urlForMachine = CSSValidator.validatorURLForMachine(url, assertorConfiguration).toString
+
+    urlForMachine must startWith(CSSValidator.serviceUrl)
+
+    val queryString: String = urlForMachine.substring(CSSValidator.serviceUrl.length)
+
+    Helper.parseQueryString(queryString) must be (assertorConfiguration
+      + ("output" -> List("ucn"))
+      + ("uri" -> List(Helper.encode(url)))
+    )
+
   }
 
 }

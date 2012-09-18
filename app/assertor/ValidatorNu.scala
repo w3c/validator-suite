@@ -6,6 +6,11 @@ import scala.io.Source
 import play.api.libs.json._
 import play.api.templates.HtmlFormat
 import org.w3.vs.view.Helper
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsString
+import play.api.libs.json.JsNumber
+import scala.Some
+import org.w3.vs.model.Context
 
 
 /**
@@ -16,16 +21,17 @@ import org.w3.vs.view.Helper
 object ValidatorNu extends FromHttpResponseAssertor {
 
   val id = AssertorId("validator_nu")
+
+  val serviceUrl = "http://validator.w3.org/nu/"
   
-  def validatorURL(encodedURL: String, assertorConfiguration: AssertorConfiguration) =
-    "http://validator.w3.org/nu/?doc=" + encodedURL + "&out=json"
-  
-  def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL =
-    URL(validatorURL(Helper.encode(url), assertorConfiguration))
+  def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
+    validatorURLForHuman(url, assertorConfiguration + ("out" -> List("json")))
+  }
   
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = Helper.encode(url)
-    val validatorURL = URL("http://validator.w3.org/nu/?doc=" + encoded)
+    val query = Helper.queryString(assertorConfiguration + ("doc" -> Seq(encoded)))
+    val validatorURL = URL(serviceUrl + query)
     validatorURL
   }
 
