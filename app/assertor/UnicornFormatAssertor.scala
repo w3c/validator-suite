@@ -59,9 +59,9 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
             """<li>
               |  <span>
               |    <a href="%s">%s</a>
-              |    <a href="%s">[external link]</a>
+              |    <a href="%s" class="external">[external link]</a>
               |  </span>
-              |</li>""".stripMargin.format(Helper.encode(url), url, url)
+              |</li>""".stripMargin.format(Helper.encode(url), Helper.shorten(url, 100), url)
           }.mkString("<ul>", " ", "</ul>")}),
           Warning)
       }
