@@ -44,10 +44,10 @@ object JobForm {
 
   private def playForm: Form[(String, URL, Boolean, Int)] = Form(
     tuple(
-      "name" -> text,
+      "name" -> nonEmptyText,
       "url" -> of[URL],
       "linkCheck" -> of[Boolean](booleanFormatter),
-      "maxResources" -> of[Int]
+      "maxResources" -> number(min=1, max=500)
     )
   )
 
@@ -57,7 +57,8 @@ class JobForm private[view](
     form: Form[(String, URL, Boolean, Int)]) extends VSForm {
   def apply(s: String) = form(s)
 
-  def globalError = form.globalError
+  //def globalError: Option[FormError] = form.globalError
+  def errors: Seq[(String, String)] = form.errors.map{case error => ("error", error.key + error.message)}
 }
 
 class ValidJobForm private[view](

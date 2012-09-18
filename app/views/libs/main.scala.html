@@ -5,8 +5,7 @@
     <title>@title</title>
     <meta charset="utf-8" />
     <link rel="icon" type="image/svg" href="@routes.Assets.at("images/vsLogo.svg")">
-    <link href="@{routes.Assets.at("stylesheets/progress-polyfill.css")}" rel="stylesheet" />
-    @stylesheets.map { stylesheet => 
+    @stylesheets.map { stylesheet =>
     <link href="@{routes.Assets.at("stylesheets/"+stylesheet)}" rel="stylesheet" />
     }
     <!--[if lt IE 9]>

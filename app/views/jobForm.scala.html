@@ -4,47 +4,337 @@
     idOpt: Option[JobId] = None)(implicit flash: Flash)
 
 @libs.main("Validator Suite",
-  stylesheets = List("dashboard.css")){
+  stylesheets = List("dashboard.css"),
+  exec="""
+$(function (){
+    var slider = $("input#maxResources");
+    var output = $("output.maxResources");
+    slider.change(function (){
+       output.html(slider.attr("value"));
+    });
+    slider.change();
+})
+
+
+"""){
    
    @***** Header ******@
    
-	@libs.header()
-	
+    @libs.header()
+    
 }{ @***** Content *****@ 
 
-	@libs.admin(user)
-	@libs.navigation("Job", organization, List((form("name").value.getOrElse("New Job"), "")))
-	@libs.messages()
-	
-	<section>
-	
-	@** TODO **@
-	<script type="text/javascript">
-	function showValue(newValue) {
-		document.getElementById("dist").innerHTML=newValue;
-	}
-	</script>
+    @libs.admin(user)
+    @libs.navigation("Job", organization, List((form("name").value.getOrElse("New Job"), "")))
+    @libs.messages(form.errors.toList)
+    
+    <section id="jobForm">
 
-	<form method="post">
-		<label for="name">Name: </label>
-		<input id="name" name="name" type="text" value="@form("name").value" required></input><br>
-		<label for="url">URL: </label>
-		<input id="url" name="url" type="url" value="@form("url").value" required></input><br>
-		<label for="maxResources">Number of resources: </label>
-		<input id="maxResources" name="maxResources" type="text" value="@form("maxResources").value.getOrElse(100)"</input><br>
-		<!-- <label for="linkCheck">Check external links: </label>
-		<input type=checkbox id=linkCheck name=linkCheck @**if(form("linkCheck").value == Some("on")) {checked}**@ checked/><br> -->
-		@if(idOpt.isDefined) {
-		<input type=submit name=action value=Update formaction="@routes.Jobs.dispatcher(idOpt.get)">
-		} else {
-		<input type=submit name=action value=Create formaction="@routes.Jobs.create">
-		}
-	</form>
-	
-	</section>
-	
+    <h1>Create a new job</h1>
+
+    <form method="post">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" value="@form("name").value" required>
+
+        <br>
+        <label for="url">Start URL</label>
+        <input id="url" name="url" type="url" value="@form("url").value" required>
+
+        <br>
+        <label for="maxResources">Max resources</label>
+        <input id="maxResources" name="maxResources" type="range" min="0" max="500" step="10" value="@form("maxResources").value.getOrElse(100)">
+        <output class="maxResources"></output>
+
+        <!-- <label for="linkCheck">Check external links: </label>
+        <input type=checkbox id=linkCheck name=linkCheck @**if(form("linkCheck").value == Some("on")) {checked}**@ checked/><br> -->
+
+        <h2>Choose the assertors to run</h2>
+
+        <fieldset data-assertor="validator.html">
+            <legend>HTML Validator</legend>
+
+            <label for="validator.html" data-name="HTML Validator" title="Add the Markup Validator to this job">Add the Markup Validator to this job</label>
+            <input type=checkbox name=assertor value="validator.html" id="validator.html" checked>
+
+            <br>
+            <label for="uri-charset">Character Encoding</label>
+            <select id="uri-charset" name="charset">
+                <option value="(detect automatically)" selected="selected">(detect automatically)</option>
+                <option value="utf-8">utf-8 (Unicode, worldwide)</option>
+                <option value="utf-16">utf-16 (Unicode, worldwide)</option>
+                <option value="iso-8859-1">iso-8859-1 (Western Europe)</option>
+                <option value="iso-8859-2">iso-8859-2 (Central Europe)</option>
+                <option value="iso-8859-3">iso-8859-3 (Southern Europe)</option>
+                <option value="iso-8859-4">iso-8859-4 (North European)</option>
+                <option value="iso-8859-5">iso-8859-5 (Cyrillic)</option>
+                <option value="iso-8859-6-i">iso-8859-6-i (Arabic)</option>
+                <option value="iso-8859-7">iso-8859-7 (Greek)</option>
+                <option value="iso-8859-8">iso-8859-8 (Hebrew, visual)</option>
+                <option value="iso-8859-8-i">iso-8859-8-i (Hebrew, logical)</option>
+                <option value="iso-8859-9">iso-8859-9 (Turkish)</option>
+                <option value="iso-8859-10">iso-8859-10 (Latin 6)</option>
+                <option value="iso-8859-11">iso-8859-11 (Latin/Thai)</option>
+                <option value="iso-8859-13">iso-8859-13 (Latin 7, Baltic Rim)</option>
+                <option value="iso-8859-14">iso-8859-14 (Latin 8, Celtic)</option>
+                <option value="iso-8859-15">iso-8859-15 (Latin 9)</option>
+                <option value="iso-8859-16">iso-8859-16 (Latin 10)</option>
+                <option value="us-ascii">us-ascii (basic English)</option>
+                <option value="euc-jp">euc-jp (Japanese, Unix)</option>
+                <option value="shift_jis">shift_jis (Japanese, Win/Mac)</option>
+                <option value="iso-2022-jp">iso-2022-jp (Japanese, email)</option>
+                <option value="euc-kr">euc-kr (Korean)</option>
+                <option value="ksc_5601">ksc_5601 (Korean)</option>
+                <option value="gb2312">gb2312 (Chinese, simplified)</option>
+                <option value="gb18030">gb18030 (Chinese, simplified)</option>
+                <option value="big5">big5 (Chinese, traditional)</option>
+                <option value="big5-HKSCS">Big5-HKSCS (Chinese, Hong Kong)</option>
+                <option value="tis-620">tis-620 (Thai)</option>
+                <option value="koi8-r">koi8-r (Russian)</option>
+                <option value="koi8-u">koi8-u (Ukrainian)</option>
+                <option value="iso-ir-111">iso-ir-111 (Cyrillic KOI-8)</option>
+                <option value="macintosh">macintosh (MacRoman)</option>
+                <option value="windows-1250">windows-1250 (Central Europe)</option>
+                <option value="windows-1251">windows-1251 (Cyrillic)</option>
+                <option value="windows-1252">windows-1252 (Western Europe)</option>
+                <option value="windows-1253">windows-1253 (Greek)</option>
+                <option value="windows-1254">windows-1254 (Turkish)</option>
+                <option value="windows-1255">windows-1255 (Hebrew)</option>
+                <option value="windows-1256">windows-1256 (Arabic)</option>
+                <option value="windows-1257">windows-1257 (Baltic Rim)</option>
+            </select>
+            <input id="uri-fbc" name="fbc" type="checkbox" value="1">
+            <label for="uri-fbc" title="Use selected Character encoding only if missing in the document">Only if missing</label>
+
+            <br>
+            <label for="uri-doctype">Document Type</label>
+            <select id="uri-doctype" name="doctype">
+                <option value="Inline" selected="selected">(detect automatically)</option>
+                <option value="HTML5">HTML5 (experimental)</option>
+                <option value="XHTML 1.0 Strict">XHTML 1.0 Strict</option>
+                <option value="XHTML 1.0 Transitional">XHTML 1.0 Transitional</option>
+                <option value="XHTML 1.0 Frameset">XHTML 1.0 Frameset</option>
+                <option value="HTML 4.01 Strict">HTML 4.01 Strict</option>
+                <option value="HTML 4.01 Transitional">HTML 4.01 Transitional</option>
+                <option value="HTML 4.01 Frameset">HTML 4.01 Frameset</option>
+                <option value="HTML 4.01 + RDFa 1.1">HTML 4.01 + RDFa 1.1</option>
+                <option value="HTML 3.2">HTML 3.2</option>
+                <option value="HTML 2.0">HTML 2.0</option>
+                <option value="ISO/IEC 15445:2000 (&quot;ISO HTML&quot;)">ISO/IEC 15445:2000 ("ISO HTML")</option>
+                <option value="XHTML 1.1">XHTML 1.1</option>
+                <option value="XHTML + RDFa">XHTML + RDFa</option>
+                <option value="XHTML Basic 1.0">XHTML Basic 1.0</option>
+                <option value="XHTML Basic 1.1">XHTML Basic 1.1</option>
+                <option value="XHTML Mobile Profile 1.2">XHTML Mobile Profile 1.2</option>
+                <option value="XHTML-Print 1.0">XHTML-Print 1.0</option>
+                <option value="XHTML 1.1 plus MathML 2.0">XHTML 1.1 plus MathML 2.0</option>
+                <option value="XHTML 1.1 plus MathML 2.0 plus SVG 1.1">XHTML 1.1 plus MathML 2.0 plus SVG 1.1</option>
+                <option value="MathML 2.0">MathML 2.0</option>
+                <option value="SVG 1.0">SVG 1.0</option>
+                <option value="SVG 1.1">SVG 1.1</option>
+                <option value="SVG 1.1 Tiny">SVG 1.1 Tiny</option>
+                <option value="SVG 1.1 Basic">SVG 1.1 Basic</option>
+                <option value="SMIL 1.0">SMIL 1.0</option>
+                <option value="SMIL 2.0">SMIL 2.0</option>
+            </select>
+            <input id="uri-fbd" name="fbd" type="checkbox" value="1" title="Use selected Document Type only if missing in the document">
+            <label for="uri-fbd">Only if missing</label>
+
+            <br>
+            <input type="radio" name="group" id="urigroup_no" value="0" checked="checked">
+            <label for="urigroup_no">List Messages Sequentially</label>
+
+            <br>
+            <input type="radio" name="group" id="urigroup_yes" value="1">
+            <label for="urigroup_yes">Group Error Messages by Type</label>
+
+            <br>
+            <input id="uri-ss" name="ss" type="checkbox" value="1">
+            <label title="Show Page Source" for="uri-ss">Show Source</label>
+
+            <br>
+            <input id="uri-st" name="st" type="checkbox" value="1">
+            <label for="uri-st">Clean up Markup with HTML-Tidy</label>
+
+            <br>
+            <input id="uri-outline" name="outline" type="checkbox" value="1">
+            <label title="Show an Outline of the document" for="uri-outline">Show Outline</label>
+
+            <br>
+            <input id="uri-No200" name="No200" type="checkbox" value="1">
+            <label title="Validate also pages for which the HTTP status code indicates an error" for="uri-No200">Validate error pages</label>
+
+            <br>
+            <input id="uri-verbose" name="verbose" type="checkbox" value="1">
+            <label title="Verbose Output" for="uri-verbose">Verbose Output</label>
+        </fieldset>
+
+        <fieldset data-assertor="validator.nu">
+            <legend>Validator.nu</legend>
+
+            <label for="validator.nu" data-name="Validator.nu" title="Add Validator.nu to this job">Add Validator.nu to this job</label>
+            <input type=checkbox name=assertor value="validator.nu" id="validator.nu">
+
+            <br>
+            <label for="charset">Encoding</label>
+            <select id="charset" name="charset"><option value="">As set by the server/page</option>
+                <option value="UTF-8">UTF-8 (Global)</option>
+                <option value="UTF-16">UTF-16 (Global)</option>
+                <option value="Windows-1250">Windows-1250 (Central European)</option>
+                <option value="Windows-1251">Windows-1251 (Cyrillic)</option>
+                <option value="Windows-1252">Windows-1252 (Western)</option>
+                <option value="Windows-1253">Windows-1253 (Greek)</option>
+                <option value="Windows-1254">Windows-1254 (Turkish)</option>
+                <option value="Windows-1255">Windows-1255 (Hebrew)</option>
+                <option value="Windows-1256">Windows-1256 (Arabic)</option>
+                <option value="Windows-1257">Windows-1257 (Baltic)</option>
+                <option value="Windows-1258">Windows-1258 (Vietnamese)</option>
+                <option value="ISO-8859-1">ISO-8859-1 (Western)</option>
+                <option value="ISO-8859-2">ISO-8859-2 (Central European)</option>
+                <option value="ISO-8859-3">ISO-8859-3 (South European)</option>
+                <option value="ISO-8859-4">ISO-8859-4 (Baltic)</option>
+                <option value="ISO-8859-5">ISO-8859-5 (Cyrillic)</option>
+                <option value="ISO-8859-6">ISO-8859-6 (Arabic)</option>
+                <option value="ISO-8859-7">ISO-8859-7 (Greek)</option>
+                <option value="ISO-8859-8">ISO-8859-8 (Hebrew)</option>
+                <option value="ISO-8859-9">ISO-8859-9 (Turkish)</option>
+                <option value="ISO-8859-13">ISO-8859-13 (Baltic)</option>
+                <option value="ISO-8859-15">ISO-8859-15 (Western)</option>
+                <option value="KOI8-R">KOI8-R (Russian)</option>
+                <option value="TIS-620">TIS-620 (Thai)</option>
+                <option value="GBK">GBK (Chinese, simplified)</option>
+                <option value="GB18030">GB18030 (Chinese, simplified)</option>
+                <option value="Big5">Big5 (Chinese, traditional)</option>
+                <option value="Big5-HKSCS">Big5-HKSCS (Chinese, traditional)</option>
+                <option value="Shift_JIS">Shift_JIS (Japanese)</option>
+                <option value="ISO-2022-JP">ISO-2022-JP (Japanese)</option>
+                <option value="EUC-JP">EUC-JP (Japanese)</option>
+                <option value="ISO-2022-KR">ISO-2022-KR (Korean)</option>
+                <option value="EUC-KR">EUC-KR (Korean)</option>
+            </select>
+
+            <br>
+            <label for="schema">Schemas</label>
+            <input name="schema" id="schema" pattern="(?:(?:(?:https?://\S+)|(?:data:\S+))(?:\s+(?:(?:https?://\S+)|(?:data:\S+)))*)?" title="Space-separated list of schema IRIs. (Leave blank to let the service guess.)" value="">
+
+            <br>
+            <label for="preset">Preset</label>
+            <select id="preset" name="preset"><option value="">None</option>
+                <option value="http://s.validator.nu/w3c-html5-microdata-rdfalite.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/ http://c.validator.nu/rdfalite/">HTML5 + SVG 1.1 + MathML 3.0 + RDFa Lite 1.1 + Microdata</option>
+                <option value="http://s.validator.nu/w3c-html5-microdata-rdfa.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/">HTML5 + SVG 1.1 + MathML 3.0 + RDFa 1.1 + Microdata</option>
+                <option value="http://s.validator.nu/w3c-html5.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/">HTML5 + SVG 1.1 + MathML 3.0</option>
+                <option value="http://s.validator.nu/xhtml10/xhtml-strict.rnc http://s.validator.nu/xhtml10/xhtml.sch http://c.validator.nu/all-html4/">HTML 4.01 Strict (not parsed as SGML) + IRI / XHTML 1.0 Strict + IRI</option>
+                <option value="http://s.validator.nu/xhtml10/xhtml-transitional.rnc http://s.validator.nu/xhtml10/xhtml.sch  http://c.validator.nu/all-html4/">HTML 4.01 Transitional (not parsed as SGML) + IRI / XHTML 1.0 Transitional + IRI</option>
+                <option value="http://s.validator.nu/xhtml10/xhtml-frameset.rnc http://s.validator.nu/xhtml10/xhtml.sch http://c.validator.nu/all-html4/">HTML 4.01 Frameset (not parsed as SGML) + IRI / XHTML 1.0 Frameset + IRI</option>
+                <option value="http://s.validator.nu/w3c-xhtml5-microdata-rdfalite.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/  http://c.validator.nu/rdfalite/">XHTML5 + SVG 1.1 + MathML 3.0 + RDFa Lite 1.1 + Microdata</option>
+                <option value="http://s.validator.nu/w3c-xhtml5-microdata-rdfa.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/">XHTML5 + SVG 1.1 + MathML 3.0 + RDFa 1.1 + Microdata</option>
+                <option value="http://s.validator.nu/w3c-xhtml5.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/">XHTML5 + SVG 1.1 + MathML 3.0</option>
+                <option value="http://s.validator.nu/xhtml1-ruby-rdf-svg-mathml.rnc http://s.validator.nu/xhtml10/xhtml.sch http://c.validator.nu/all-html4/">XHTML 1.0 Strict + IRI + Ruby + SVG 1.1 + MathML 3.0</option>
+                <option value="http://s.validator.nu/svg-xhtml5-rdf-mathml.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/">SVG 1.1 + IRI + XHTML5 + MathML 3.0</option>
+            </select>
+
+            <br>
+            <label for="parser">Parser</label>
+            <select id="parser" name="parser"><option value="" selected="selected">Automatically from Content-Type</option>
+                <option value="xml">XML; don’t load external entities</option>
+                <option value="xmldtd">XML; load external entities</option>
+                <option value="html">HTML; flavor from doctype</option>
+                <option value="html5">HTML5</option>
+                <option value="html4">HTML 4.01 Strict</option>
+                <option value="html4tr">HTML 4.01 Transitional</option>
+            </select>
+
+            <br>
+            <label for="nsfilter"><abbr title="XML namespace">XMLNS</abbr>&nbsp;Filter</label>
+            <input name="nsfilter" id="nsfilter" pattern="(?:.+:.+(?:\s+.+:.+)*)?" title="Space-separated namespace URIs for vocabularies to be filtered out.">
+
+            <br>
+            <input type="checkbox" name="laxtype" id="laxtype" value="yes">
+            <label for="laxtype">Be lax about HTTP Content-Type</label>
+
+            <br>
+            <input type="checkbox" name="showimagereport" id="showimagereport" value="yes">
+            <label for="showimagereport">Show Image Report</label>
+
+            <br>
+            <input type="checkbox" name="showsource" id="showsource" value="yes" checked="checked">
+            <label for="showsource">Show Source</label>
+        </fieldset>
+
+        <fieldset data-assertor="validator.css">
+            <legend>CSS Validator</legend>
+
+            <label for="validator.css" data-name="CSS Validator" title="Add the CSS Validator to this job">Add the CSS Validator to this job</label>
+            <input type=checkbox name=assertor value="validator.css" id="validator.css" checked>
+
+            <br>
+            <label for="profile_uri">Profile</label>
+            <select id="profile_uri" name="profile">
+                <option value="none">No special profile</option>
+                <option value="css1">CSS level 1</option>
+                <option value="css2">CSS level 2</option>
+                <option value="css21">CSS level 2.1</option>
+                <option selected="selected" value="css3">CSS level 3</option>
+                <option value="svg">SVG</option>
+                <option value="svgbasic">SVG Basic</option>
+                <option value="svgtiny">SVG tiny</option>
+                <option value="mobile">Mobile</option>
+                <option value="atsc-tv">ATSC TV profile</option>
+                <option value="tv">TV profile</option>
+            </select>
+
+            <br>
+            <label for="medium_uri">Medium</label>
+            <select id="medium_uri" name="usermedium">
+                <option selected="selected" value="all">All</option>
+                <option value="aural">aural</option>
+                <option value="braille">braille</option>
+                <option value="embossed">embossed</option>
+                <option value="handheld">handheld</option>
+                <option value="print">print</option>
+                <option value="projection">projection</option>
+                <option value="screen">screen</option>
+                <option value="tty">TTY</option>
+                <option value="tv">TV</option>
+                <option value="presentation">presentation</option>
+            </select>
+
+            <br>
+            <label for="warning_uri">Warnings</label>
+            <select id="warning_uri" name="warning">
+                <option value="2">All</option>
+                <option selected="selected" value="1">Normal report</option>
+                <option value="0">Most important</option>
+                <option value="no">No warnings</option>
+            </select>
+
+            <br>
+            <label id="vext_warning_input">Vendor Extensions</label>
+            <select id="vext_warning_uri" name="vextwarning">
+                <option value="">Default</option>
+                <option value="true">Warnings</option>
+                <option value="false">Errors</option>
+            </select>
+        </fieldset>
+
+        <fieldset data-assertor="checker.i18n">
+            <legend>I18n Checker</legend>
+
+            <label for="checker.i18n" data-name="I18n Checker" title="Add the I18n Checker to this job">Add the I18n Checker to this job</label>
+            <input type=checkbox name=assertor value="checker.i18n" id="checker.i18n" checked>
+        </fieldset>
+
+        @if(idOpt.isDefined) {
+        <input type=submit name=action value=Update formaction="@routes.Jobs.dispatcher(idOpt.get)">
+        } else {
+        <button type=submit name=action value=create formaction="@routes.Jobs.create">Create</button>
+        }
+
+    </form>
+
+    </section>
+    
 }{ @***** Footer *****@
 
-	@libs.footer()
+    @libs.footer()
 
 }

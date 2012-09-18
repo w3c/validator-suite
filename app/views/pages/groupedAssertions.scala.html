@@ -15,11 +15,11 @@
         @iterator.map { case assertion => @models.assertion(assertion) }
 
         @if(iterator.size < 1) {
-        <!--<article>
+        <article>
             <p>
                 @Messages("assertions.empty")
-                <a href="#">@Messages("resource.revalidate")</a>
+                <!--<a href="#">@Messages("resource.revalidate")</a>-->
             </p>
-        </article>-->
+        </article>
         }
     }
