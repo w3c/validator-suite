@@ -11,10 +11,6 @@ import scala.concurrent.stm._
 import org.w3.util._
 import JobActor._
 
-case class AssertorCall(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse) {
-  override def toString = "AssertorCall[%s/%s assertor." format (context._2.shortId, context._3.shortId, assertor.name, response.url)
-}
-
 object AssertionsActor {
 
   val MAX_PENDING_ASSERTION = 2
