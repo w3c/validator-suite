@@ -21,8 +21,6 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
       val baseUrl = "http://localhost:9001" + current.configuration.getString("application.context").get
 
-      println(baseUrl)
-
       goTo(baseUrl + "/dashboard")
       url must be === (baseUrl + "/dashboard")
       fill("#email").`with`("bertails@w3.org")

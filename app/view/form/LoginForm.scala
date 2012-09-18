@@ -35,9 +35,10 @@ object LoginForm {
 }
 
 class LoginForm private[view](form: Form[(String, String)]) extends VSForm {
+
   def apply(s: String) = form(s)
 
-  def globalError = form.globalError
+  def errors: Seq[(String, String)] = form.errors.map{case error => ("error", /*error.key + */error.message)}
 }
 
 class ValidLoginForm private[view](form: Form[(String, String)], bind: (String, String)) extends LoginForm(form) with VSForm {

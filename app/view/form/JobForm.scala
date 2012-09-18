@@ -51,7 +51,7 @@ object JobForm {
 
   def bind()(implicit req: Request[AnyContent], context: ExecutionContext): FutureVal[JobForm, ValidJobForm] = {
 
-    println(assertorParameters())
+    //println(assertorParameters())
 
     val form: Form[(String, URL, Boolean, Int)] = playForm.bindFromRequest
 
