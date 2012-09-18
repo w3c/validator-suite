@@ -9,12 +9,6 @@ import scalaz.Validation
  * An assertor that returns assertions about a document pointed by a URL
  */
 trait FromURLAssertor extends FromSourceAssertor {
-
-  /**
-   * utility method to encode a URL
-   */
-  def encodedURL(url: URL): String =
-    java.net.URLEncoder.encode(url.toString, "UTF-8")
   
   /**
    * returns the URL to be used by a machine to validate

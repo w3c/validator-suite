@@ -2,6 +2,7 @@ package org.w3.vs.assertor
 
 import org.w3.util._
 import org.w3.vs.model._
+import org.w3.vs.view.Helper
 
 /** An instance of the HTMLValidator
  *
@@ -15,10 +16,10 @@ object I18nChecker extends FromHttpResponseAssertor with UnicornFormatAssertor {
     "http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encodedURL + "&format=xml"
   
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL =
-    URL(validatorURL(encodedURL(url), assertorConfiguration))
+    URL(validatorURL(Helper.encode(url), assertorConfiguration))
   
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
-    val encoded = encodedURL(url)
+    val encoded = Helper.encode(url)
     val validatorURL = URL("http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encoded)
     validatorURL
   }

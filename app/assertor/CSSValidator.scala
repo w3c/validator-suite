@@ -5,6 +5,7 @@ import org.w3.cssvalidator.{ CSSValidator => CSSVal }
 import play.api._
 import java.io.File
 import org.w3.vs.model._
+import org.w3.vs.view.Helper
 
 /** An instance of the CSSValidator
  *
@@ -49,10 +50,10 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
     checkUri + encodedURL + "&output=ucn&vextwarning=true&profile=css3"
 
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL =
-    URL(validatorURL(encodedURL(url), assertorConfiguration))
+    URL(validatorURL(Helper.encode(url), assertorConfiguration))
   
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
-    val encoded = encodedURL(url)
+    val encoded = Helper.encode(url)
     val validatorURL = URL(checkUri + encoded)
     validatorURL
   }

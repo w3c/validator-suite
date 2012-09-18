@@ -56,6 +56,14 @@ object Helper {
     }.flatten.mkString("?", "&", "")
   }
 
+  def parseQueryString(queryString: String): Map[String, Seq[String]] = {
+    val a: Seq[(String, String)] = queryString.replaceFirst("^\\?", "").split("&").toSeq.map{a =>
+      val Array(k, v) = a.split("=")
+      (k, v)
+    }
+    a.groupBy(_._1).map{case (k, v) => (k, v.map(_._2))}.toMap
+  }
+
   def clearParam(param: String)(implicit req: Request[_]): String = {
     queryString(req.queryString - param)
   }
