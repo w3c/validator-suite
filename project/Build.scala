@@ -12,7 +12,7 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     // runtime dependencies
     "nu.validator.htmlparser" % "htmlparser" % "1.2.1" intransitive(),
-    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
+    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/scala-tools-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
     "net.databinder.dispatch" %% "core" % "0.9.0",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
     //"org.w3" %% "banana-sesame" % "x03-SNAPSHOT",
