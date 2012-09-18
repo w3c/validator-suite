@@ -11,6 +11,8 @@ import org.w3.vs.view.Helper
 object HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   val id = AssertorId("validator_html")
+
+  val supportedMimeTypes = List("text/html", "application/xhtml+xml", "application/xml", "image/svg+xml", "application/mathml+xml", "application/smil+xml")
   
   val serviceUrl = "http://qa-dev.w3.org/wmvs/HEAD/check"
   

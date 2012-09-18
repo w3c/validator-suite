@@ -92,7 +92,7 @@ object JobForm {
       job.strategy.entrypoint,
       job.strategy.linkCheck,
       job.strategy.maxResources
-    ), job.vo.assertorsConfiguration
+    ), job.vo.strategy.assertorsConfiguration
   )
 
   private def playForm: Form[(String, URL, Boolean, Int)] = Form(
@@ -131,8 +131,8 @@ class ValidJobForm private[view](
         entrypoint = url,
         linkCheck = linkCheck,
         filter = Filter.includePrefix(url.toString), // Tom: non persisté de toute façon
-        maxResources = maxResources),
-      assertorsConfiguration = assertorsConfiguration
+        maxResources = maxResources,
+        assertorsConfiguration = assertorsConfiguration)
 )
   }
 

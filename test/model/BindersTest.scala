@@ -44,7 +44,7 @@ class BindersTest extends WordSpec with MustMatchers {
         linkCheck = true,
         maxResources = 100,
         filter = Filter.includeEverything,
-        assertorSelector = AssertorSelector("custom-assertor-selector", Map("nawak" -> List("cssval", "valnu"))))
+        assertorsConfiguration = AssertorsConfiguration.default)
     }
   }
 
@@ -54,7 +54,7 @@ class BindersTest extends WordSpec with MustMatchers {
       linkCheck = true,
       maxResources = 100,
       filter = Filter.includeEverything,
-      assertorSelector = AssertorSelector("custom-assertor-selector", Map("nawak" -> List("cssval", "valnu"))))
+      assertorsConfiguration = AssertorsConfiguration.default)
 
   "JobVO" in {
     testSerializeDeserialize(JobVOBinder) {
@@ -63,8 +63,7 @@ class BindersTest extends WordSpec with MustMatchers {
         createdOn = DateTime.now(DateTimeZone.UTC),
         strategy = strategy,
         creator = UserId(),
-        organization = OrganizationId(),
-        assertorsConfiguration = AssertorsConfiguration.default)
+        organization = OrganizationId())
     }
   }
 

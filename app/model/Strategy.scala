@@ -16,7 +16,7 @@ case class Strategy (
     linkCheck: Boolean,
     maxResources: Int,
     filter: Filter = Filter.includeEverything,
-    assertorSelector: AssertorSelector = AssertorSelector.simple) {
+    assertorsConfiguration: AssertorsConfiguration) {
 
   def mainAuthority: Authority = entrypoint.authority
 
@@ -40,8 +40,8 @@ case class Strategy (
   def getAssertors(httpResponse: HttpResponse): List[FromHttpResponseAssertor] = {
     for {
       mimetype <- httpResponse.headers.mimetype.toList if httpResponse.action === GET
-      assertorName <- assertorSelector.get(mimetype).flatten
-    } yield Assertor.get(assertorName)
+      assertors <- assertorsConfiguration.keys.map(Assertor.getById).filter(_.supportedMimeTypes.contains(mimetype))
+    } yield assertors
   }
 
 }

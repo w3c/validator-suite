@@ -51,14 +51,16 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       entrypoint=URL("http://localhost:9001/"),
       linkCheck=true,
       maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing))
+      filter=Filter(include=Everything, exclude=Nothing),
+      assertorsConfiguration = AssertorsConfiguration.default)
 
   val strategy2 =
     Strategy( 
       entrypoint=URL("http://localhost:9001/foo"),
       linkCheck=true,
       maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing))
+      filter=Filter(include=Everything, exclude=Nothing),
+      assertorsConfiguration = AssertorsConfiguration.default)
   
   val now = DateTime.now(DateTimeZone.UTC)
 
@@ -68,8 +70,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creator = user1.id,
-    organization = org.id,
-    assertorsConfiguration = AssertorsConfiguration.default)
+    organization = org.id)
 
   val job2 = Job(
     id = JobId(),
@@ -77,8 +78,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creator = user1.id,
-    organization = org.id,
-    assertorsConfiguration = AssertorsConfiguration.default)
+    organization = org.id)
 
   val job3 = Job(
     id = JobId(),
@@ -86,8 +86,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creator = user1.id,
-    organization = org.id,
-    assertorsConfiguration = AssertorsConfiguration.default)
+    organization = org.id)
 
   val job4 = Job(
     id = JobId(),
@@ -95,8 +94,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy2,
     creator = user2.id,
-    organization = org.id,
-    assertorsConfiguration = AssertorsConfiguration.default)
+    organization = org.id)
 
   val job5 = Job(
     id = JobId(),
@@ -104,8 +102,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creator = user1.id,
-    organization = OrganizationId(),
-    assertorsConfiguration = AssertorsConfiguration.default)
+    organization = OrganizationId())
 
   // a job may have never completed, for example if the user has forced a new run
   // is this assumption ok? -> yes

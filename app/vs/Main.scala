@@ -43,8 +43,8 @@ object Main {
         entrypoint = URL("http://www.w3.org/"),
         linkCheck = false,
         maxResources = 2,
-        filter = Filter(include = Everything, exclude = Nothing)),
-      assertorsConfiguration = AssertorsConfiguration.default)
+        filter = Filter(include = Everything, exclude = Nothing),
+        assertorsConfiguration = AssertorsConfiguration.default))
         
     val tr = Job(
       createdOn = DateTime.now.plus(1000),
@@ -55,8 +55,8 @@ object Main {
         entrypoint = URL("http://www.w3.org/TR"),
         linkCheck = false,
         maxResources = 10,
-        filter=Filter.includePrefixes("http://www.w3.org/TR")),
-      assertorsConfiguration = AssertorsConfiguration.default)
+        filter=Filter.includePrefixes("http://www.w3.org/TR"),
+        assertorsConfiguration = AssertorsConfiguration.default))
           
     val ibm = Job(
       createdOn = DateTime.now.plus(2000),
@@ -67,8 +67,8 @@ object Main {
         entrypoint = URL("http://www.ibm.com"),
         linkCheck = false,
         maxResources = 20,
-        filter = Filter(include=Everything, exclude=Nothing)),
-      assertorsConfiguration = AssertorsConfiguration.default)
+        filter = Filter(include=Everything, exclude=Nothing),
+        assertorsConfiguration = AssertorsConfiguration.default))
       
     val lemonde = Job(
       createdOn = DateTime.now.plus(3000),
@@ -79,8 +79,8 @@ object Main {
         entrypoint = URL("http://www.lemonde.fr"),
         linkCheck = false,
         maxResources = 30,
-        filter = Filter(include = Everything, exclude = Nothing)),
-      assertorsConfiguration = AssertorsConfiguration.default)
+        filter = Filter(include = Everything, exclude = Nothing),
+        assertorsConfiguration = AssertorsConfiguration.default))
 
 //    conf.blockingStore.readTransaction {
 //      println("<<< "+conf.blockingStore.dg.size())

@@ -22,6 +22,8 @@ object ValidatorNu extends FromHttpResponseAssertor {
 
   val id = AssertorId("validator_nu")
 
+  val supportedMimeTypes = List("text/html", "application/xhtml+xml", "application/xml", "image/svg+xml", "application/mathml+xml", "application/smil+xml")
+
   val serviceUrl = "http://validator.w3.org/nu/"
   
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {

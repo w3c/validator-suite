@@ -11,6 +11,8 @@ import org.w3.vs.view.Helper
 object I18nChecker extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   val id = AssertorId("checker_i18n")
+
+  val supportedMimeTypes = List("text/html", "application/xhtml+xml", "application/xml")
   
   def validatorURL(encodedURL: String, assertorConfiguration: AssertorConfiguration) =
     "http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encodedURL + "&format=xml"

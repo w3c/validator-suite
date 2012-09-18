@@ -39,4 +39,11 @@ object Assertor {
     I18nChecker.name -> I18nChecker,
     CSSValidator.name -> CSSValidator)
 
+  val getById: PartialFunction[AssertorId, FromHttpResponseAssertor] = Map[AssertorId, FromHttpResponseAssertor](
+    ValidatorNu.id -> ValidatorNu,
+    HTMLValidator.id -> HTMLValidator,
+    I18nChecker.id -> I18nChecker,
+    CSSValidator.id -> CSSValidator)
+
+
 }

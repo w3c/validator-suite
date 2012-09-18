@@ -19,9 +19,9 @@ class SimpleInterWebsiteTest extends RunTestHelper with TestKitHelper {
       linkCheck=true,
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing),
-      assertorSelector = AssertorSelector.noAssertor)
+      assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id, assertorsConfiguration = AssertorsConfiguration.default)
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
 
   val servers = Seq(
       Webserver(9001, Website(Seq("/" --> "http://localhost:9001/1")).toServlet)

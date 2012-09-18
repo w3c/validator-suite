@@ -69,7 +69,6 @@ trait Binders extends UriBuilders with LiteralBinders {
 
     lazy val linkCheck = property[Boolean](apply("linkCheck"))
     lazy val maxResources = property[Int](apply("maxResources"))
-    lazy val assertorSelector = property[AssertorSelector](apply("assertorSelector"))
     
     lazy val email = property[String](apply("email"))
     lazy val password = property[String](apply("password"))
@@ -146,7 +145,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val AssertionBinder: PointedGraphBinder[Rdf, Assertion] = pgb[Assertion](ont.url, ont.assertor, ont.contexts, ont.lang, ont.title, ont.severity, ont.description, ont.timestamp)(Assertion.apply, Assertion.unapply)
 
-  implicit lazy val JobVOBinder = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.assertorsConfiguration, ont.creator, ont.organization)(JobVO.apply, JobVO.unapply)
+  implicit lazy val JobVOBinder = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.creator, ont.organization)(JobVO.apply, JobVO.unapply)
 
   implicit lazy val OrganizationVOBinder = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
 
@@ -229,12 +228,10 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val UserVOBinder = pgbWithId[UserVO]("#me")(ont.name, ont.email, ont.password, ont.organizationOpt)(UserVO.apply, UserVO.unapply)
 
-  implicit lazy val AssertorSelectorBinder = pgb[AssertorSelector](ont.name, ont.map)(AssertorSelector.apply, AssertorSelector.unapply)
-
   // works only for Filter(include = Everything, exclude = Nothing) for the moment
   implicit lazy val StrategyBinder: PointedGraphBinder[Rdf, Strategy] =
-    pgb[Strategy](ont.url, ont.linkCheck, ont.maxResources, ont.assertorSelector)(
-      { (url, lc, maxR, as) => Strategy(url, lc, maxR, Filter.includeEverything, as) },
-      { s => Some((s.entrypoint, s.linkCheck, s.maxResources, s.assertorSelector)) })
+    pgb[Strategy](ont.url, ont.linkCheck, ont.maxResources, ont.assertorsConfiguration)(
+      { (url, lc, maxR, ac) => Strategy(url, lc, maxR, Filter.includeEverything, ac) },
+      { s => Some((s.entrypoint, s.linkCheck, s.maxResources, s.assertorsConfiguration)) })
 
 }

@@ -18,6 +18,8 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
   val configuration = Configuration.load(new File("."))
 
   val id = AssertorId("validator_css")
+
+  val supportedMimeTypes = List("text/css", "text/html", "application/xhtml+xml", "image/svg+xml")
   
   var cssval: CSSVal = null
 

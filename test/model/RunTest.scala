@@ -17,7 +17,7 @@ class RunTest extends WordSpec with MustMatchers {
       linkCheck = true,
       maxResources = 100,
       filter = Filter(include = Everything, exclude = Nothing),
-      assertorSelector = AssertorSelector.noAssertor)
+      assertorsConfiguration = Map.empty)
 
   "A fresh run" must {
 

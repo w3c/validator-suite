@@ -7,6 +7,8 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
   
   val logger = play.Logger.of(classOf[Assertor])
 
+  def supportedMimeTypes: List[String]
+
   def assert(context: (OrganizationId, JobId, RunId), response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
     val start = System.currentTimeMillis()
     val result = try {
