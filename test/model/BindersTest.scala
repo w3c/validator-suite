@@ -63,7 +63,8 @@ class BindersTest extends WordSpec with MustMatchers {
         createdOn = DateTime.now(DateTimeZone.UTC),
         strategy = strategy,
         creator = UserId(),
-        organization = OrganizationId())
+        organization = OrganizationId(),
+        assertorConfiguration = AssertorConfiguration.default)
     }
   }
 

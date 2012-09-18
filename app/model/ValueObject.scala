@@ -10,6 +10,7 @@ case class JobVO (
     name: String,
     createdOn: DateTime,
     strategy: Strategy,
+    assertorConfiguration: AssertorConfiguration,
     creator: UserId,
     organization: OrganizationId) extends ValueObject
     

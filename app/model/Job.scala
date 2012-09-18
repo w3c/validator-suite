@@ -141,10 +141,11 @@ object Job {
     name: String,
     createdOn: DateTime = DateTime.now(DateTimeZone.UTC),
     strategy: Strategy,
+    assertorConfiguration: AssertorConfiguration,
     creator: UserId,
     organization: OrganizationId)(
     implicit conf: VSConfiguration): Job =
-      Job(id, JobVO(name, createdOn, strategy, creator, organization))
+      Job(id, JobVO(name, createdOn, strategy, assertorConfiguration, creator, organization))
 
   implicit def toVO(job: Job): JobVO = job.vo
 

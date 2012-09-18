@@ -29,6 +29,18 @@ case class OrganizationId (override val uuid: UUID = UUID.randomUUID()) extends 
 case class ResourceResponseId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class AssertorResponseId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 
+object AssertorId {
+
+  val regex = "^[a-zA-Z][_a-zA-Z0-9]*$".r
+
+}
+
+case class AssertorId(id: String) {
+
+  assert(AssertorId.regex.findFirstMatchIn(id).isDefined)
+
+}
+
 object JobId {
   def apply(s: String): JobId = JobId(UUID.fromString(s))
   implicit val equal = Equal.equalA[JobId]

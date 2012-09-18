@@ -4,6 +4,7 @@ import org.w3.util._
 import org.w3.cssvalidator.{ CSSValidator => CSSVal }
 import play.api._
 import java.io.File
+import org.w3.vs.model._
 
 /** An instance of the CSSValidator
  *
@@ -14,7 +15,7 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
 
   val configuration = Configuration.load(new File("."))
 
-  val name = "validator_css"
+  val id = AssertorId("validator_css")
   
   var cssval: CSSVal = null
 

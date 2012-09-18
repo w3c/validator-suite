@@ -6,7 +6,7 @@ import scala.io.Source
 
 object FromFileAssertor extends FromSourceAssertor with UnicornFormatAssertor {
   
-  val name = "from-file-assertor"
+  val id = AssertorId("from_file_assertor")
 
   def assert(file: java.io.File): Iterable[Assertion] = {
     val source = Source.fromFile(file)

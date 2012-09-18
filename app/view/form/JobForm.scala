@@ -16,19 +16,29 @@ import org.w3.vs.assertor.Assertor
 
 object JobForm {
 
-  def assertors()(implicit req: Request[AnyContent]): Seq[String] = try {
-    req.body.asFormUrlEncoded.get.get("assertor").get
+  def assertors()(implicit req: Request[AnyContent]): Seq[Assertor] = try {
+    req.body.asFormUrlEncoded.get.get("assertor").get.map(Assertor.get)
   } catch { case _ =>
     Seq.empty
   }
 
-  def assertorParameters()(implicit req: Request[AnyContent]): Map[Assertor, Map[String, Seq[String]]] = {
-    assertors().toList.map(s => Assertor.get(s)).foldLeft(Map[Assertor, Map[String, Seq[String]]]()){ (m, assertor) => m.+(
-      (assertor -> req.body.asFormUrlEncoded.flatten.collect{
-        case a if (a._1.startsWith(assertor.name + "-")) => a.copy(_1 = a._1.replaceFirst("^" + assertor.name + "-", ""))
-      }.toMap[String, Seq[String]]))
-    }
+  def assertorParameters()(implicit req: Request[AnyContent]): AssertorConfiguration = {
+    assertors().map { assertor =>
+      val k = assertor.id
+      val v = req.body.asFormUrlEncoded.flatten.collect{
+        case (param, values) if (param.startsWith(assertor.id + "-")) =>
+          (param.replaceFirst("^" + assertor.id + "-", ""), values.toList)
+      }.toMap
+      (k -> v)
+    }.toMap
   }
+
+//    assertors().toList.map(s => Assertor.get(s).id).foldLeft(Map[AssertorId, Map[String, List[String]]]()){ (m, assertor) => m.+(
+//      (assertor -> req.body.asFormUrlEncoded.flatten.collect{
+//        case a if (a._1.startsWith(assertor.id + "-")) => a.copy(_1 = a._1.replaceFirst("^" + assertor.id + "-", ""))
+//      }.toMap))
+//    }
+//  }
 
   def hasAssertor(assertor: String)(implicit req: Request[AnyContent]): Boolean = assertors().contains(assertor)
 
@@ -61,7 +71,7 @@ object JobForm {
         if (assertors().isEmpty)
           Failure(new JobForm(form.withError("assertor", "No assertor selected", "error"))) // TODO
         else
-          Success(new ValidJobForm(form, s))
+          Success(new ValidJobForm(form, s, assertorParameters()))
       }
     )
 
@@ -77,12 +87,12 @@ object JobForm {
       job.strategy.entrypoint,
       job.strategy.linkCheck,
       job.strategy.maxResources
-      ), (
+    ), (
       job.name,
       job.strategy.entrypoint,
       job.strategy.linkCheck,
       job.strategy.maxResources
-      )
+    ), job.vo.assertorConfiguration
   )
 
   private def playForm: Form[(String, URL, Boolean, Int)] = Form(
@@ -107,7 +117,8 @@ class JobForm private[view](form: Form[(String, URL, Boolean, Int)]) extends VSF
 
 class ValidJobForm private[view](
     form: Form[(String, URL, Boolean, Int)],
-    bind: (String, URL, Boolean, Int)) extends JobForm(form) with VSForm {
+    bind: (String, URL, Boolean, Int),
+    assertorConfiguration: AssertorConfiguration) extends JobForm(form) with VSForm {
 
   val (name, url, linkCheck, maxResources) = bind
 
@@ -120,7 +131,9 @@ class ValidJobForm private[view](
         entrypoint = url,
         linkCheck = linkCheck,
         filter = Filter.includePrefix(url.toString), // Tom: non persisté de toute façon
-        maxResources = maxResources))
+        maxResources = maxResources),
+      assertorConfiguration = assertorConfiguration
+)
   }
 
   def update(job: Job)(implicit conf: VSConfiguration): Job = {

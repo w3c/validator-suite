@@ -11,6 +11,24 @@ import ops._
 trait LiteralBinders {
 self: Binders =>
 
+  implicit val assertorIdBinder: TypedLiteralBinder[Rdf, AssertorId] = new TypedLiteralBinder[Rdf, AssertorId] {
+
+    def fromTypedLiteral(literal: Rdf#TypedLiteral): Validation[BananaException, AssertorId] = {
+      val TypedLiteral(lexicalForm, datatype) = literal
+      if (datatype == xsd.string)
+        try {
+          Success(AssertorId(lexicalForm))
+        } catch {
+          case t => Failure(FailedConversion(literal.toString() + " is of type xsd:string but its lexicalForm could not be made a AssertorId: " + lexicalForm))
+        }
+      else
+        Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
+    }
+
+    def toTypedLiteral(t: AssertorId): Rdf#TypedLiteral = StringLiteralBinder.toTypedLiteral(t.id)
+
+  }
+
   implicit val urlBinder: TypedLiteralBinder[Rdf, URL] = new TypedLiteralBinder[Rdf, URL] {
 
     def fromTypedLiteral(literal: Rdf#TypedLiteral): Validation[BananaException, URL] = {

@@ -1,5 +1,7 @@
 package org.w3.vs.assertor
 
+import org.w3.vs.model._
+
 /**
  * An assertor as defined in EARL
  * http://www.w3.org/TR/EARL10/#Assertor
@@ -9,7 +11,10 @@ trait Assertor {
   // implicit lazy val conf = org.w3.vs.Prod.configuration
   // implicit lazy val executionContext = conf.assertorExecutionContext  
 
-  val name: String
+  def id: AssertorId
+
+  def name: String = id.id
+
 }
 
 object Assertor {

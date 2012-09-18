@@ -68,7 +68,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creator = user1.id,
-    organization = org.id)
+    organization = org.id,
+    assertorConfiguration = AssertorConfiguration.default)
 
   val job2 = Job(
     id = JobId(),
@@ -76,7 +77,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creator = user1.id,
-    organization = org.id)
+    organization = org.id,
+    assertorConfiguration = AssertorConfiguration.default)
 
   val job3 = Job(
     id = JobId(),
@@ -84,7 +86,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creator = user1.id,
-    organization = org.id)
+    organization = org.id,
+    assertorConfiguration = AssertorConfiguration.default)
 
   val job4 = Job(
     id = JobId(),
@@ -92,7 +95,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy2,
     creator = user2.id,
-    organization = org.id)
+    organization = org.id,
+    assertorConfiguration = AssertorConfiguration.default)
 
   val job5 = Job(
     id = JobId(),
@@ -100,7 +104,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creator = user1.id,
-    organization = OrganizationId())
+    organization = OrganizationId(),
+    assertorConfiguration = AssertorConfiguration.default)
 
   // a job may have never completed, for example if the user has forced a new run
   // is this assumption ok? -> yes

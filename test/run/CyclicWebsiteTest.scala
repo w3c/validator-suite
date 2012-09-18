@@ -19,7 +19,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper {
       filter=Filter(include=Everything, exclude=Nothing),
       assertorSelector = AssertorSelector.noAssertor)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id, assertorConfiguration = AssertorConfiguration.default)
 
   val circumference = 10
   
