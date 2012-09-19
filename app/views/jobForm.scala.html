@@ -42,7 +42,7 @@ $(function (){
 
         <br>
         <label for="maxResources">Max resources</label>
-        <input id="maxResources" name="maxResources" type="range" min="0" max="500" step="10" value="@form("maxResources").value.getOrElse(100)">
+        <input id="maxResources" name="maxResources" type="range" min="1" max="500" value="@form("maxResources").value.getOrElse(100)">
         <output class="maxResources"></output>
 
         <!-- <label for="linkCheck">Check external links: </label>
@@ -54,14 +54,14 @@ $(function (){
             <legend>HTML Validator</legend>
 
             <label for="validator_html" data-name="HTML Validator" title="Add the Markup Validator to this job">Add the Markup Validator to this job</label>
-            <input type=checkbox name=assertor value="validator_html" id="validator_html" @if(JobForm.hasAssertor("validator_html")){checked}>
+            <input type=checkbox name=assertor value="validator_html" id="validator_html" @if(form.hasAssertor("validator_html")){checked}>
 
             <br>
             @defining("validator_html-charset"){case name =>
             <label for="validator_html-charset">Character Encoding</label>
             <select id="validator_html-charset" name="validator_html-charset">
-                <option value="(detect automatically)" @if(!JobForm.hasParam(name) || JobForm.hasParam(name,"(detect automatically)")){selected}>(detect automatically)</option>
-                <option value="utf-8" @if(JobForm.hasParam(name,"utf-8")){selected}>utf-8 (Unicode, worldwide)</option>
+                <option value="(detect automatically)" @**if(!form.assertorsConfiguration.contains(("charset" -> List("(detect automatically)")))){selected}**@ selected>(detect automatically)</option>
+                <option value="utf-8" @**if(JobForm.hasParam(name,"utf-8")){selected}}**@>utf-8 (Unicode, worldwide)</option>
                 <option value="utf-16">utf-16 (Unicode, worldwide)</option>
                 <option value="iso-8859-1">iso-8859-1 (Western Europe)</option>
                 <option value="iso-8859-2">iso-8859-2 (Central Europe)</option>
@@ -176,7 +176,7 @@ $(function (){
             <legend>Validator.nu</legend>
 
             <label for="validator_nu" data-name="Validator.nu" title="Add Validator.nu to this job">Add Validator.nu to this job</label>
-            <input type=checkbox name=assertor value="validator_nu" id="validator_nu" @if(JobForm.hasAssertor("validator_nu")){checked}>
+            <input type=checkbox name=assertor value="validator_nu" id="validator_nu" @if(form.hasAssertor("validator_nu")){checked}>
 
             <br>
             <label for="validator_nu-charset">Encoding</label>
@@ -271,7 +271,7 @@ $(function (){
             <legend>CSS Validator</legend>
 
             <label for="validator_css" data-name="CSS Validator" title="Add the CSS Validator to this job">Add the CSS Validator to this job</label>
-            <input type=checkbox name=assertor value="validator_css" id="validator_css"  @if(JobForm.hasAssertor("validator_css")){checked}>
+            <input type=checkbox name=assertor value="validator_css" id="validator_css"  @if(form.hasAssertor("validator_css")){checked}>
 
             <br>
             <label for="validator_css-profile">Profile</label>
@@ -327,7 +327,7 @@ $(function (){
             <legend>I18n Checker</legend>
 
             <label for="checker_i18n" data-name="I18n Checker" title="Add the I18n Checker to this job">Add the I18n Checker to this job</label>
-            <input type=checkbox name=assertor value="checker_i18n" id="checker_i18n"  @if(JobForm.hasAssertor("checker_i18n")){checked}>
+            <input type=checkbox name=assertor value="checker_i18n" id="checker_i18n"  @if(form.hasAssertor("checker_i18n")){checked}>
         </fieldset>
 
         @if(idOpt.isDefined) {

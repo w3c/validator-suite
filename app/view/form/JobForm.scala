@@ -40,9 +40,9 @@ object JobForm {
 //    }
 //  }
 
-  def hasAssertor(assertor: String)(implicit req: Request[AnyContent]): Boolean = assertors().contains(assertor)
 
-  def hasParam(param: String)(implicit req: Request[AnyContent]): Boolean = {
+
+  /*def hasParam(param: String)(implicit req: Request[AnyContent]): Boolean = {
     try {
       req.body.asFormUrlEncoded.get.get(param).get
       true
@@ -57,7 +57,7 @@ object JobForm {
     } catch { case _ =>
       false
     }
-  }
+  }*/
 
   def bind()(implicit req: Request[AnyContent], context: ExecutionContext): FutureVal[JobForm, ValidJobForm] = {
 
@@ -66,20 +66,21 @@ object JobForm {
     val form: Form[(String, URL, Boolean, Int)] = playForm.bindFromRequest
 
     val vsform = form.fold(
-      f => Failure(new JobForm(f)),
+      f => Failure(new JobForm(f, assertorParameters())),
       s => {
         if (assertors().isEmpty)
-          Failure(new JobForm(form.withError("assertor", "No assertor selected", "error"))) // TODO
+          Failure(new JobForm(form.withError("assertor", "No assertor selected", "error"), assertorParameters())) // TODO
         else
           Success(new ValidJobForm(form, s, assertorParameters()))
       }
     )
 
-    implicit def onTo(to: TimeoutException): JobForm = new JobForm(form.withError("key", Messages("error.timeout")))
+    // There probably shouldn't be a future here
+    implicit def onTo(to: TimeoutException): JobForm = new JobForm(form.withError("key", Messages("error.timeout")), assertorParameters())
     FutureVal.validated[JobForm, ValidJobForm](vsform)
   }
 
-  def blank: JobForm = new JobForm(playForm)
+  def blank: JobForm = new JobForm(playForm, AssertorsConfiguration.default)
 
   def fill(job: Job) = new ValidJobForm(
     playForm fill(
@@ -107,18 +108,26 @@ object JobForm {
 
 }
 
-class JobForm private[view](form: Form[(String, URL, Boolean, Int)]) extends VSForm {
+class JobForm private[view](
+    form: Form[(String, URL, Boolean, Int)],
+    val assertorsConfiguration: AssertorsConfiguration) extends VSForm {
 
   def apply(s: String) = form(s)
 
   def errors: Seq[(String, String)] = form.errors.map{case error => ("error", /*error.key + */error.message)}
+
+  def hasAssertor(assertor: String)(implicit req: Request[AnyContent]): Boolean = try {
+    assertorsConfiguration.contains(AssertorId(assertor))
+  } catch { case _: Exception =>
+    false
+  }
 
 }
 
 class ValidJobForm private[view](
     form: Form[(String, URL, Boolean, Int)],
     bind: (String, URL, Boolean, Int),
-    assertorsConfiguration: AssertorsConfiguration) extends JobForm(form) with VSForm {
+    assertorsConfiguration: AssertorsConfiguration) extends JobForm(form, assertorsConfiguration) with VSForm {
 
   val (name, url, linkCheck, maxResources) = bind
 
