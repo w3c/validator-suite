@@ -7,14 +7,14 @@
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
 @libs.main("Validator Suite",
-    stylesheets = List("dashboard.css"),
+    stylesheets = List("dashboard.min.css"),
     scripts = List("model.js", "vs.js", "report.js", "dashboard.js"),
     exec = """
-    $(function () {
-        $(".folds article .title").click(function (event){
-            $(event.target).parents("article").toggleClass("folded");
-        })
-    });
+        $(function () {
+            $(".folds article .title").click(function (event){
+                $(this).parents("article").toggleClass("folded");
+            })
+        });
     """){
    
   @***** Header ******@
