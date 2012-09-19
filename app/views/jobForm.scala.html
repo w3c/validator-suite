@@ -333,7 +333,6 @@ $(function (){
         @if(idOpt.isDefined) {
         <input type=submit name=action value=Update formaction="@routes.Jobs.dispatcher(idOpt.get)">
         } else {
-        @**<input type=submit name=action value=Create formaction="@routes.Jobs.create">**@
         <button type=submit name=action value=create formaction="@routes.Jobs.create">Create</button>
         }
 

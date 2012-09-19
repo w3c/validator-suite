@@ -221,8 +221,18 @@ object Jobs extends Controller {
         job <- user.getJob(id)
       } yield {
         action(user)(job)
-        if (isAjax) Accepted(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
-        else        SeeOther(routes.Jobs.show(job.id).toString) /*.flashing(("success" -> Messages(msg, job.name))*/
+        if (isAjax)
+          Accepted(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
+        else
+          (for {
+            body <- req.body.asFormUrlEncoded
+            param <- body.get("uri")
+            uri <- param.headOption
+          } yield uri) fold (
+            uri => SeeOther(uri) /*.flashing(("success" -> Messages(msg, job.name))*/, // Redirect to "uri" param if specified
+            SeeOther(routes.Jobs.show(job.id).toString)
+          )
+
       }) failMap toError toPromise
     }
   }
