@@ -25,23 +25,23 @@
         width: 55px;
         dfn, button[value="run"] {display: none;}
     }
-    .status {
-        width: 75px;
-        &.idle span {vertical-align: middle;}
-        form {display: inline;}
-        button {
-            font-size: 0.85em;
-            padding: 3px 7px;
-            float: right;
-        }
-    }
     .status,
     .warnings,
     .errors,
     .resources {
         width: 75px;
     }
-
+    .status {
+        width: 90px;
+        &.idle span {vertical-align: middle; line-height: 22px;}
+        form {display: inline;}
+        button {
+            font-size: 0.85em;
+            padding: 3px 7px;
+            float: left;
+            margin-right: 5px;
+        }
+    }
 }
 
 #jobs .status.running span {
@@ -108,7 +108,7 @@ progress {
     -moz-appearance: none;
     -webkit-appearance: none;
     .border-sizing();
-    width: 50px;
+    width: 70px;
     height: 13px;
     border: 1px solid #777;
     border-radius: 2px;
@@ -133,7 +133,7 @@ progress {
     &[role] {
        display: inline-block;
        position: relative;
-       width: 10em;
+       //width: 10em;
        overflow: hidden;
        height: 1em;
        vertical-align: -.2em;
