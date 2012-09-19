@@ -232,7 +232,6 @@ object Jobs extends Controller {
             uri => SeeOther(uri) /*.flashing(("success" -> Messages(msg, job.name))*/, // Redirect to "uri" param if specified
             SeeOther(routes.Jobs.show(job.id).toString)
           )
-
       }) failMap toError toPromise
     }
   }

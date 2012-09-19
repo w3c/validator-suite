@@ -21,6 +21,26 @@
     .search, .maxResources {display: none;}
     .name {min-width: 75px;}
     .group {display: none;}
+    .actions {
+        width: 55px;
+        dfn, button[value="run"] {display: none;}
+    }
+    .status {
+        width: 75px;
+        &.idle span {vertical-align: middle;}
+        form {display: inline;}
+        button {
+            font-size: 0.85em;
+            padding: 3px 7px;
+            float: right;
+        }
+    }
+    .status,
+    .warnings,
+    .errors,
+    .resources {
+        width: 75px;
+    }
 
 }
 

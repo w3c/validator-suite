@@ -77,21 +77,36 @@
 }
 
 
-.list .run,
-.list .stop,
-.list .delete {
-    display:block;
-    font-size:0.85em;
+
+
+.list {
+    .actions {
+        .run,
+        .stop,
+        .delete {
+            display:block;
+            font-size:0.85em;
+            float:right;
+            clear:right;
+        }
+        button {
+            font-family: "Trebuchet MS",sans-serif;
+            border:none;
+            background:none;
+            cursor:pointer;
+            margin:0;
+            padding:0;
+            text-decoration:underline;
+            color:#0066CC;
+            line-height:1em;
+            font-size:0.85em;
+        }
+    }
 }
-.list button.delete,
-.list button.run,
-.list button.stop {
-    float:right;
-    clear:right;
-}
+
 .list article button,
 .job button {
-    font-family: "Trebuchet MS",sans-serif;
+    /*font-family: "Trebuchet MS",sans-serif;
     border:none;
     background:none;
     cursor:pointer;
@@ -100,7 +115,7 @@
     text-decoration:underline;
     color:#0066CC;
     line-height:1em;
-    font-size:0.85em;
+    font-size:0.85em;*/
 }
 
 .list .sort a.ascend {

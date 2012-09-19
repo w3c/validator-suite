@@ -16,7 +16,14 @@
         </dd>
 
         <dt>Status</dt>
-        <dd class="status @job.status"><span>@job.status</span></dd>
+        <dd class="status @job.status">
+            <span>@job.status</span>
+            @if(job.status == "idle"){
+            <form action="@routes.Jobs.dispatcher(job.id)" method="post">
+                <input type="hidden" name="uri" value="@{req.uri}">
+                <button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>
+            </form>}
+        </dd>
 
         <dt>Last Completed</dt>
         <dd class="completed">
