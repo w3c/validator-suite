@@ -189,48 +189,12 @@ CONSTRUCT {
     val construct = ConstructQuery(query, ont)
     val r = for {
       graph <- store.executeConstruct(construct, Map("user" -> userId.toUri))
-      pointedOrg = PointedGraph[Rdf](userId.toUri, graph)
-      it <- (pointedOrg / ont.job).asSet2[(OrganizationId, JobId), JobVO]
+      pointedUser = PointedGraph[Rdf](userId.toUri, graph)
+      it <- (pointedUser / ont.job).asSet2[(OrganizationId, JobId), JobVO]
     } yield {
       it map { case (ids, jobVO) => Job(ids._2, jobVO) }
     }
     r.toFutureVal
-  }
-
-  
-  def getFor(orgUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
-    import conf._
-    val query = """
-CONSTRUCT {
-  ?org ont:job ?job .
-  ?s2 ?p2 ?o2
-} WHERE {
-  BIND (iri(strbefore(str(?org), "#")) AS ?orgG) .
-  graph ?orgG {
-    ?org ont:job ?job .
-  } .
-  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
-  graph ?jobG {
-    ?s2 ?p2 ?o2
-  }
-}
-"""
-    val construct = ConstructQuery(query, ont)
-    val r = for {
-      graph <- store.executeConstruct(construct, Map("org" -> orgUri))
-      pointedOrg = PointedGraph[Rdf](orgUri, graph)
-      it <- (pointedOrg / ont.job).asSet2[(OrganizationId, JobId), JobVO]
-    } yield {
-      it map { case (ids, jobVO) => Job(ids._2, jobVO) }
-    }
-    r.toFutureVal
-  }
-
-  def getFor(organizationId: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] =
-    getFor(organizationId.toUri)
-  
-  def getCreatedBy(creator: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
-    sys.error("to be implemented?")
   }
 
   def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
@@ -274,8 +238,10 @@ SELECT ?timestamp WHERE {
     import conf._
     import ops._
     val script = for {
+      _ <- Command.PATCH[Rdf](job.vo.creator.toUri,
+                              tripleMatches = List((job.vo.creator.toUri, ont.job.uri, job.jobUri)))
       _ <- Command.PATCH[Rdf](job.orgUri,
-                              tripleMatches = List((job.orgUri, ont.job.uri, job.jobUri))) // <- bug here
+                              tripleMatches = List((job.orgUri, ont.job.uri, job.jobUri)))
       _ <- Command.DELETE[Rdf](job.jobUri.fragmentLess)
     } yield ()
     store.execute(script).toFutureVal

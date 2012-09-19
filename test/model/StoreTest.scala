@@ -45,6 +45,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   val user1: User = User(user1Id, "foo", "foo@example.com", "secret", Some(orgId))
 
   val user2 = User(UserId(), "bar", "bar@example.com", "secret", Some(org.id))
+
+  val user3 = User(UserId(), "baz", "baz@example.com", "secret", Some(org.id))
   
   val strategy =
     Strategy( 
@@ -187,6 +189,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       _ <- Organization.save(org)
       _ <- User.save(user1)
       _ <- User.save(user2)
+      _ <- User.save(user3)
       _ <- Job.save(job1)
       _ <- Job.save(job2)
       _ <- Job.save(job3)
@@ -250,14 +253,14 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     User.authenticate("unknown@example.com", "bouleshit").result(1.second) must be === (Failure(UnknownUser))
   }
 
-  "get all Jobs that belong to the same organization" in {
-    val jobs = Job.getFor(org.id).getOrFail(3.seconds)
-    jobs must have size(4)
-    jobs must contain (job1)
-    jobs must contain (job2)
-    jobs must contain (job3)
-    jobs must contain (job4)
-  }
+//  "get all Jobs that belong to the same organization" in {
+//    val jobs = Job.getFor(org.id).getOrFail(3.seconds)
+//    jobs must have size(4)
+//    jobs must contain (job1)
+//    jobs must contain (job2)
+//    jobs must contain (job3)
+//    jobs must contain (job4)
+//  }
 
   "a user can only access the jobs that he created" in {
     val jobs = Job.getFor(user1.id).getOrFail(3.seconds)
@@ -266,6 +269,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     jobs must contain (job2)
     jobs must contain (job3)
     jobs must contain (job5)
+  }
+
+  "a user with no job should still be able to list his empty list of jobs" in {
+    val jobs = Job.getFor(user3.id).getOrFail(3.seconds)
+    jobs must be ('empty)
   }
 
   "retrieve Run" in {
