@@ -2,7 +2,7 @@ package org.w3.vs.view.model
 
 import org.w3.util.URL
 import org.w3.vs.model.{Context, Assertion, AssertionSeverity}
-import play.api.templates.Html
+import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.assertor.Assertor
 import org.w3.vs.view.{SortParam, PageOrdering, PageFiltering}
 
@@ -34,8 +34,8 @@ object GroupedAssertionView {
       // /!\ assuming that the severity is the same for all assertions sharing the same title.
       val assertorKey = assertions.head.assertor
       val severity = assertions.head.severity
-      val title = Html(assertions.head.title)
-      val description = assertions.head.description.map(Html.apply _)
+      val title = HtmlFormat.raw(assertions.head.title)
+      val description = assertions.head.description.map(HtmlFormat.raw)
       val occurrences = assertions.size
       val resources = assertions.map(_.url).toSeq.sortBy(_.toString)
 

@@ -2,7 +2,7 @@ package org.w3.vs.view.model
 
 import org.w3.util.URL
 import org.w3.vs.model._
-import play.api.templates.Html
+import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.assertor.Assertor
 import org.w3.vs.view.{SortParam, PageOrdering, PageFiltering}
 
@@ -34,8 +34,8 @@ object SingleAssertionView {
     SingleAssertionView(
       assertor = assertion.assertor,
       severity = assertion.severity,
-      title = Html(assertion.title),
-      description = assertion.description.map(Html.apply _),
+      title = HtmlFormat.raw(assertion.title),
+      description = assertion.description.map(HtmlFormat.raw),
       occurrences = scala.math.max(1, assertion.contexts.size),
       url = assertion.url,
       contexts = assertion.contexts.toSeq.sorted(

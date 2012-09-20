@@ -8,6 +8,7 @@ import scalaz.Validation
 import scalaz.Validation._
 import play.api.i18n.Messages
 import org.w3.vs.view.Helper
+import org.apache.commons.lang3.StringEscapeUtils
 
 /** An Assertor that reads [[http://code.w3.org/unicorn/wiki/Documentation/Run/Response ObservationResponse]]s from [[scala.io.Source]]s
  */
@@ -27,7 +28,8 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
         message <- response \ "message"
       } yield {
         val severity = AssertionSeverity(message.attrs get "type" get)
-        val title = (message \ "title").headOption map (htmlString _) getOrElse ("-") // TODO Log messages with empty titles. This shouldn't happen.
+        // TODO Log messages with empty titles. This shouldn't happen.
+        val title = (message \ "title").headOption map (htmlString) getOrElse ("-")
         /*val id = message.attrs get "id" match {
           case Some(id) if id != "html5" => id
           case _ => title.hashCode.toString
@@ -44,7 +46,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
             val column = context.attrs get "column" map (_.toInt)
             Context(content, line, column)
           }
-        val descriptionOpt = (message \ "description").headOption map (htmlString _)
+        val descriptionOpt = (message \ "description").headOption map (htmlString)
         Assertion(url, name, contexts.toList, lang, title, severity, descriptionOpt)
       }
     if (!assertions.exists(_.url.toString == obversationRef) && status != Some("undef")) {
@@ -71,12 +73,13 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
   }
 
   private def htmlString(node: Node): String = {
-    removeScope(node).children.mkString.trim
+    removeScope(node).children.mkString(" ").trim
   }
 
   private def removeScope(node: Node): Node = {
     node match {
       case e: Elem => e.copy(scope = Map.empty, children = e.children.map(removeScope))
+      case e: Text => e.copy(text = StringEscapeUtils.unescapeXml(e.text).trim)
       case e => e
     }
   }
