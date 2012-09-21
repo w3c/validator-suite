@@ -1,37 +1,62 @@
-#resources .warnings,
-#resources .errors {
-    //width: 80px;
-}
-#resources .time {
-    //min-width: 150px;
-}
-#resources.list article .warnings,
-#resources.list article .errors {
-	text-align: right;
-}
-#resources {
+
+#resources.list {
+
+    article {
+        .warnings, .errors {text-align: right;}
+    }
+
+    .url {
+
+        br {display: none;}
+
+        .report {
+
+            &:hover {text-decoration: none;}
+
+            span:first-child {
+                background: url("../images/magnify.svg") no-repeat 0 0;
+                background-size: 13px 16px;
+                padding: 0 14px 0 0;
+                display: inline-block;
+                vertical-align: middle;
+                width: 0;
+                height: 16px;
+                font-size: 0;
+                overflow: hidden;
+                margin-right: 3px;
+            }
+
+            span:last-child {
+                color: black;
+                font-weight: bold;
+                //text-decoration: underline;
+            }
+
+            &:hover {
+                span:first-child {
+                    //text-decoration: none;
+                }
+                span:last-child {
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+
+    .external {
+        display: none;
+        width: 0;
+        height: 13px;
+        line-height: 11px;
+        padding: 0 0 0 11px;
+        overflow: hidden;
+        margin-left: 5px;
+        vertical-align: middle;
+        background-position: 0 0;
+    }
+
     article:hover .external {
         display: inline-block;
     }
-}
-
-#resources {
-
-    .external {display: none;}
-    dl:hover .external {display: inline-block;}
 
 }
-/*dd.url:hover .external {
-    display: inline-block;
-}
-
-
-.url .external {
-    display: none;
-    width: 0;
-    height: 11px;
-    line-height: 11px;
-    overflow: hidden;
-    padding-left: 11px;
-    background: url("../images/external.png") no-repeat;
-}*/

@@ -32,20 +32,20 @@ object Jobs extends Controller {
   
   def index: ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
+      ((for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
         jobs <- Job.getFor(user.id)
         jobViews <- JobView.fromJobs(jobs)
       } yield {
         Ok(views.html.dashboard(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
-      }) failMap toError toPromise
+      }) failMap toError).toPromise
     }
   }
   
   def show(id: JobId, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
+      ((for {
         user <- getUser
         org <- user.getOrganization()
         job <- user.getJob(id)
@@ -67,13 +67,13 @@ object Jobs extends Controller {
             Ok(views.html.report(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
           }
         }
-      }) failMap toError toPromise
+      }) failMap toError).toPromise
     }
   }
   
   def report(id: JobId, url: URL, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
+      ((for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
         job <- user.getJob(id)
@@ -84,19 +84,19 @@ object Jobs extends Controller {
         assertionViews = SingleAssertionView.fromAssertions(assertions)
       } yield {
         Ok(views.html.urlReport(jobView, resourceView, assertorViews, Page(assertionViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
-      }) failMap toError toPromise
+      }) failMap toError).toPromise
     }
   }
     
   def delete(id: JobId): ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
+      ((for {
         user <- getUser
         job <- user.getJob(id)
         _ <- job.delete()
       } yield {
         if (isAjax) Ok else SeeOther(routes.Jobs.index.toString) /*.flashing(("success" -> Messages("jobs.deleted", job.name)))*/
-      }) failMap toError toPromise
+      }) failMap toError).toPromise
     }
   } 
     
@@ -127,18 +127,18 @@ object Jobs extends Controller {
   }
   
   def dashboardSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
-    val promiseEnumerator: Promise[Enumerator[JsValue]] = (
+    val promiseEnumerator: Promise[Enumerator[JsValue]] = ((
       for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
       } yield {
         // ready to explode...
         // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
-        org.enumerator &> Enumeratee.collect{
+        org.enumerator &> Enumeratee.collect {
           case a: UpdateData => JobsUpdate.json(a.data, a.jobId, a.activity)
         }
       }
-    ) failMap (_ => Enumerator.eof[JsValue]) toPromise
+    ).failMap(_ => Enumerator.eof[JsValue])).toPromise
     
     val iteratee = Iteratee.ignore[JsValue]
     val enumerator =  Enumerator.flatten(promiseEnumerator)
@@ -147,19 +147,19 @@ object Jobs extends Controller {
   }
   
   def reportSocket(id: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
-    val promiseEnumerator: Promise[Enumerator[JsValue]] = (
+    val promiseEnumerator: Promise[Enumerator[JsValue]] = ((
       for {
         user <- getUser
         job <- user.getJob(id)
       } yield {
-        job.enumerator &> Enumeratee.collect{
+        job.enumerator &> Enumeratee.collect {
           case a: UpdateData => JobsUpdate.json(a.data, a.jobId, a.activity)
           //case NewResource(resource) => ResourceUpdate.json(resource)
           //case NewAssertions(assertionsC) if (assertionsC.count(_.assertion.severity == Warning) != 0 || assertionsC.count(_.assertion.severity == Error) != 0) => AssertorUpdate.json(assertionsC)
           case NewAssertorResult(result, datetime) if (!result.isValid) => AssertorUpdate.json(result, datetime)
         }
       }
-    ) failMap (_ => Enumerator.eof[JsValue]) toPromise
+      ) failMap (_ => Enumerator.eof[JsValue])).toPromise
     
     val iteratee = Iteratee.ignore[JsValue]
     val enumerator =  Enumerator.flatten(promiseEnumerator)
@@ -172,51 +172,51 @@ object Jobs extends Controller {
    */
   private def newOrEditJob(implicit idOpt: Option[JobId]): ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
+      ((for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
-        form <- idOpt fold (
-            id => user.getJob(id) map JobForm.fill _,
-            FutureVal.successful(JobForm.blank)
-          )
+        form <- idOpt fold(
+          id => user.getJob(id) map JobForm.fill _,
+          FutureVal.successful(JobForm.blank)
+        )
       } yield {
         Ok(views.html.jobForm(form, user, org, idOpt))
-      }) failMap toError toPromise
+      }) failMap toError).toPromise
     }
   }
   
   private def createOrUpdateJob(implicit idOpt: Option[JobId]): ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
+      ((for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
         form <- JobForm.bind failMap (form => InvalidJobFormException(form, user, org, idOpt))
         jobM <- idOpt.fold(
-            id => user.getJob(id)
-              .flatMap(j => form.update(j)
-              .save()
-              .map(job => (job, "jobs.updated"))),
-            form
-              .createJob(user)
-              .save()
-              .map(job => (job, "jobs.created"))
-          )
+          id => user.getJob(id)
+            .flatMap(j => form.update(j)
+            .save()
+            .map(job => (job, "jobs.updated"))),
+          form
+            .createJob(user)
+            .save()
+            .map(job => (job, "jobs.created"))
+        )
       } yield {
         val (job, msg) = jobM
-        if (isAjax) 
+        if (isAjax)
           Created(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
         else
-          SeeOther(routes.Jobs.index.toString/*show(job.id)*/) /*.flashing(("success" -> Messages(msg, job.name))*/
+          SeeOther(routes.Jobs.index.toString /*show(job.id)*/) /*.flashing(("success" -> Messages(msg, job.name))*/
       }) failMap {
         case InvalidJobFormException(form, user, org, idOpt) => BadRequest(views.html.jobForm(form, user, org, idOpt))
         case t => toError(t)
-      } toPromise
+      }).toPromise
     }
   }
   
   private def simpleJobAction(id: JobId)(action: User => Job => Any)(msg: String): ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
+      ((for {
         user <- getUser
         job <- user.getJob(id)
       } yield {
@@ -228,11 +228,11 @@ object Jobs extends Controller {
             body <- req.body.asFormUrlEncoded
             param <- body.get("uri")
             uri <- param.headOption
-          } yield uri) fold (
-            uri => SeeOther(uri) /*.flashing(("success" -> Messages(msg, job.name))*/, // Redirect to "uri" param if specified
+          } yield uri) fold(
+            uri => SeeOther(uri) /*.flashing(("success" -> Messages(msg, job.name))*/ , // Redirect to "uri" param if specified
             SeeOther(routes.Jobs.show(job.id).toString)
-          )
-      }) failMap toError toPromise
+            )
+      }) failMap toError).toPromise
     }
   }
   

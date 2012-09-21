@@ -12,15 +12,19 @@
 
     aside {display: none;}
 
+    article:not(.current) {
+        //box-shadow: inset 0px -1px 5px #AAA;
+    }
+
     article {
         display: inline-block;
         background: #f5f5f5;
         margin-right: 2px;
-        border: 1px solid transparent;
-        border-top:0;
+        border: 1px solid #BBB;
+        //border-top:0;
         border-bottom:0;
-        border-top-left-radius: 2px;
-        border-top-right-radius: 2px;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
 
         dl {padding: 10px; position:relative;}
         dt {display: none;}
@@ -51,7 +55,7 @@
         }
 
         &:first-of-type {
-            border-left: none;
+            //border-left: none;
             padding-left: 5px;
             padding-right: 5px;
         }
@@ -65,9 +69,9 @@
             border: 1px solid #104176;
             border-bottom: none;
 
-            &:first-of-type {
-                margin-left: -1px;
-            }
+        }
+        &:first-of-type {
+            margin-left: -1px;
         }
 
         &.valid {
@@ -84,6 +88,8 @@
         }
 
     }
+
+    .assertor.all {font-weight: bold;}
 
 
 }

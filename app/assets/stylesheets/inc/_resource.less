@@ -8,32 +8,60 @@
 
     padding-bottom: 0;
 
-    article {
-        .url span {
-            position: relative;
-        //padding-right: 16px;
-        //background: url("../images/external.png") no-repeat center right;
+    aside {
+        .url {color: transparent;}
+    }
 
-            &:hover a {
-            //text-decoration: underline;
+    article {
+
+        .url {
+
+            br {display: none}
+
+            .report {
+
+                &:hover {text-decoration: none;}
+
+                position: relative;
+
+                span:first-child {
+                    font-weight: bold;
+                    font-size: 12px;
+                    position: absolute;
+                    left: 0;
+                    top: -17px;
+                }
+
+                span:last-child {
+                    color: black;
+                    font-weight: bold;
+                    //text-decoration: underline;
+                    background: url("../images/magnify.svg") no-repeat 0 3px;
+                    background-size: 15px 19px;
+                    padding-left: 22px;
+                }
+
+                &:hover {
+                    span:first-child {
+
+                    }
+                    span:last-child {
+
+                    }
+                }
             }
-        }
-        .url a:first-child {
-            font-weight: bold;
-            color: black;
-        }
-        .external {
-            display: inline-block;
-        /*position: absolute;
-               display: inline-block;
-               top: 0;
-               left: 0;
-               width: 100%;
-               padding: 0;
-               height: 22px;
-               line-height: 22px;
-               background: none;
-               font-size: 0;*/
+
+            .external {
+                display: inline-block;
+                width: 0;
+                height: 13px;
+                line-height: 11px;
+                padding: 0 0 0 11px;
+                overflow: hidden;
+                margin-left: 5px;
+                vertical-align: middle;
+                background-position: 0 0;
+            }
         }
     }
     .warnings, .errors {
@@ -50,6 +78,7 @@
        }
 
        span, dfn {
+           box-shadow: 1px 1px 1px #AAA;
            display: inline-block;
            .border-sizing();
            width: 100%;
@@ -100,79 +129,5 @@
            border-bottom-right-radius: 5px;
        }
     }
-
-       /*aside {
-           .warnings, .errors {
-               width: @rb-width;
-               background: @rb-background;
-               border-top: @rb-border;
-               padding: 10px 0 5px 0;
-           }
-           .warnings {
-               border-left: @rb-border;
-               -webkit-border-top-left-radius: 5px;
-               -moz-border-radius-topleft: 5px;
-               border-top-left-radius: 5px;
-               padding-left: @rb-padding;
-           }
-           .errors {
-               border-right: @rb-border;
-               -webkit-border-top-right-radius: 5px;
-               -moz-border-radius-topright: 5px;
-               border-top-right-radius: 5px;
-               padding-right: @rb-padding;
-           }
-       }
-
-       article {
-           .url span {
-               position: relative;
-               //padding-right: 16px;
-               //background: url("../images/external.png") no-repeat center right;
-
-               &:hover a {
-                   //text-decoration: underline;
-               }
-           }
-           .url a:first-child {
-               font-weight: bold;
-               color: black;
-           }
-           .external {
-               display: inline-block;
-               /*position: absolute;
-               display: inline-block;
-               top: 0;
-               left: 0;
-               width: 100%;
-               padding: 0;
-               height: 22px;
-               line-height: 22px;
-               background: none;
-               font-size: 0;* /
-           }
-
-           .warnings,
-           .errors,
-           .resources {
-               background: @rb-background;
-               padding-bottom: 10px;
-               border-bottom: @rb-border;
-           }
-           .warnings {
-               border-left: @rb-border;
-               padding-left: @rb-padding;
-               -webkit-border-bottom-left-radius: 5px;
-               -moz-border-radius-bottomleft: 5px;
-               border-bottom-left-radius: 5px;
-           }
-           .errors {
-               border-right: @rb-border;
-               padding-right: @rb-padding;
-               -webkit-border-bottom-right-radius: 5px;
-               -moz-border-radius-bottomright: 5px;
-               border-bottom-right-radius: 5px;
-           }
-       } */
 
 }

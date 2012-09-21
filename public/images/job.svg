@@ -1,0 +1,22 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0px" y="0px" width="500px" height="400px" viewBox="0 0 500 400"
+     xml:space="preserve">
+<style type="text/css">
+    .r1, .r2 {
+        fill: rgba(0,0,0,0);
+        stroke: #333;
+        stroke-width: 40;
+    }
+</style>
+<defs>
+    <mask id="mask" maskUnits="userSpaceOnUse"
+          x="0" y="0" width="500" height="400">
+      <rect x="0" y="0" width="500" height="400" fill="white"  />
+      <rect x="13" y="13" width="400" height="280" fill="black"  />
+    </mask>
+</defs>
+<rect x="87" y="97" width="400" height="280" class="r2" mask="url(#mask)"/>
+<rect x="13" y="13" width="400" height="280" class="r1" />
+</svg>

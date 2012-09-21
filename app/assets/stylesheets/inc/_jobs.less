@@ -1,19 +1,10 @@
 
 
 #jobs article .name a {
-    //color: black;
     font-weight: bold;
-    //text-decoration: underline;
 }
 #jobs article .status {
     text-transform: capitalize;
-}
-
-#jobs article {
-    .external {
-        display: inline-block;
-        margin-left: 5px;
-    }
 }
 
 #jobs.list {
@@ -42,6 +33,26 @@
             margin-right: 5px;
         }
     }
+    article {
+        .name a {
+            line-height: 15px;
+            vertical-align: top;
+            color: black;
+            //text-decoration: underline;
+        }
+
+        .name a:before {
+            content: "";
+            display: inline-block;
+            vertical-align: top;
+            width: 19px;
+            height: 15px;
+            background: url("../images/job.svg") no-repeat 0 0;
+            background-size: 19px 15px;
+            padding-left: 7px;
+        }
+    }
+
 }
 
 #jobs .status.running span {
@@ -59,44 +70,6 @@
     }
 }
 
-
-/* job meta on report page */
-/*.job {}
-.job {
-    display:table;
-    width:100%;
-    border-bottom:0 !important;
-    padding-bottom:0 !important;
-    border-collapse:collapse;
-}
-.job div {
-    display:table-cell;
-    padding:0 5px;
-}
-.job div:first-child {
-    padding-left:0;
-}
-.job div:last-child {
-    padding-right:0;
-}
-.job h2 {
-    color:grey;
-    font-size:0.90em;
-    margin-bottom: 5px;
-}
-.job div span {
-    font-size:1.1em;
-}
-.job .errorsC,
-.job .warningsC,
-.job .resourcesC {
-    text-align: center;
-}
-.job form {
-    display:inline;
-}*/
-
-/*#jobs {*/
 /* http://www.useragentman.com/blog/2012/01/03/cross-browser-html5-progress-bars-in-depth/ */
 
 @progress-green: #00b05b;

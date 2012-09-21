@@ -6,10 +6,12 @@
     <dl>
         <dt>@Messages("resource.url")</dt>
         <dd class="url">
-            <span>
-                <a href="@Helper.encode(resource.url)">@Helper.shorten(resource.url, 80)</a>
-                <a href="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">link</a>
-            </span>
+            <a href="@Helper.encode(resource.url)" class="report" title="@Messages("report.link")">
+                <span>@Messages("resource.report.for")</span>
+                <span>@Helper.shorten(resource.url, 80)</span>
+            </a>
+            <br>
+            <a href="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.shorten(resource.url, 80)</a>
         </dd>
 
         <dt>@Messages("resource.validated")</dt>

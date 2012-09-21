@@ -22,15 +22,25 @@
             width: 130px;
         }
     }
-
     article {
         .name a {
-            color:black;
+            line-height: 15px;
+            vertical-align: top;
+            color: black;
+            //text-decoration: underline;
         }
-        .external {
+
+        .name a:before {
+            content: "";
             display: inline-block;
-            margin-left: 5px;
+            vertical-align: top;
+            width: 19px;
+            height: 15px;
+            background: url("../images/job.svg") no-repeat 0 0;
+            background-size: 19px 15px;
+            padding-left: 7px;
         }
+
         dd {
             &.maxResources {
                 display: none
@@ -91,6 +101,7 @@
         }
 
         span, dfn {
+            box-shadow: 1px 1px 1px #AAA;
             display: inline-block;
             .border-sizing();
             width: 100%;

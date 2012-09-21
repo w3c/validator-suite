@@ -1,0 +1,18 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0px" y="0px" width="400px" height="500px" viewBox="0 0 400 500" style="enable-background:new 0 0 400 500;"
+     xml:space="preserve">
+<style type="text/css">
+    .magnify{
+        fill-rule: evenodd;
+        clip-rule: evenodd;
+        fill:#333;
+    }
+</style>
+<defs>
+</defs>
+<path class="magnify" d="M185.5,0C287.9,0,371,82.7,371,184.7c0,50.8-21.4,95.9-53.9,130.2c-16.4,17.3,127.6,136.7,68.6,178.9
+    c-58.8,42-113.7-143.9-137.9-135c-19.4,7.2-40.5,10.7-62.3,10.7C83,369.5,0,286.8,0,184.7C0,82.7,83,0,185.5,0z M185.5,58.7
+    c67.5,0,122.2,54.5,122.2,121.7S253,302.1,185.5,302.1c-67.5,0-122.2-54.5-122.2-121.7S118,58.7,185.5,58.7z"/>
+</svg>
