@@ -30,7 +30,7 @@
     <hr>
     
     <section id="resources" class="single" data-id="@job.id">
-        @pages.resources(Page(resource), job)
+        @pages.resources(Page(resource).copy(search = None), job)
     </section>
 
     <hr>

@@ -76,11 +76,7 @@ object ResourceView {
 
   val ordering: PageOrdering[ResourceView] = new PageOrdering[ResourceView] {
 
-    val params: Iterable[String] = Iterable(
-      "url",
-      "validated",
-      "warnings",
-      "errors")
+    val orderParams = params
 
     val default: SortParam = SortParam("errors", ascending = false)
 

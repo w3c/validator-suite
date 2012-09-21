@@ -80,14 +80,7 @@ object GroupedAssertionView {
 
   val ordering: PageOrdering[GroupedAssertionView] = new PageOrdering[GroupedAssertionView] {
 
-    val params = Seq[String](
-      "assertor",
-      "severity",
-      "title",
-      "description",
-      "occurrences",
-      "resources"
-    )
+    val orderParams = params
 
     val default: SortParam = SortParam("occurrences", ascending = false)
 

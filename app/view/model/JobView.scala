@@ -66,16 +66,7 @@ object JobView {
 
   val ordering: PageOrdering[JobView] = new PageOrdering[JobView] {
 
-    val params: Iterable[String] = Iterable(
-      "name",
-      "url",
-      "status",
-      "completed",
-      "warnings",
-      "errors",
-      "resources",
-      "maxResources",
-      "health")
+    val orderParams = params
 
     val default: SortParam = SortParam("name", ascending = true)
 

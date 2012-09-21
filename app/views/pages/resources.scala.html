@@ -1,4 +1,4 @@
-@(page: Page[ResourceView], job: JobView)
+@(page: Page[ResourceView], job: JobView)(implicit req: Request[_])
 
         <aside>
             <h2>Resources</h2>
@@ -6,14 +6,15 @@
             <dl>
                 @ResourceView.params.map { param =>
                 <dt class="@param"><dfn>@Messages("resource.%s" format param)</dfn> @libs.sort(page, param)</dt>
-                <dd>@Messages("resource.%s.detail" format param)</dd>
-                }
+                <dd>@Messages("resource.%s.detail" format param)</dd>}
+                <dt class="actions"><dfn>@Messages("resources.actions")</dfn></dt>
+                <dd>@Messages("resources.actions.detail")</dd>
             </dl>
         </aside>
 
     @defining(page.iterator) { case iterator =>
 
-        @iterator.map { case resource => @models.resource(resource) }
+        @iterator.map { case resource => @models.resource(resource, job.id) }
 
         @if(iterator.size < 1) {
         <article>

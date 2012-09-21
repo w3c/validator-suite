@@ -5,10 +5,10 @@ import org.w3.vs.model._
 import org.w3.vs.view._
 
 trait AssertionView extends View {
-    val assertor: String
-    val severity: AssertionSeverity
-    val title: Html
-    val description: Option[Html]
-    val occurrences: Int
+    def assertor: String
+    def severity: AssertionSeverity
+    def title: Html
+    def description: Option[Html]
+    def occurrences: Int
     def isEmpty: Boolean
 }

@@ -9,13 +9,13 @@ case class SortParam(name: String, ascending: Boolean) {val descending = !ascend
 
 trait PageOrdering[A] {
 
-  def params: Iterable[String]
+  def orderParams: Iterable[String]
   def default: SortParam
 
   protected def order_(safeParam: SortParam): Ordering[A]
 
   final def order(param: SortParam): Ordering[A] = order_(validate(param))
-  final def validate(param: SortParam): SortParam = if (params.exists(_ == param.name)) param else default
+  final def validate(param: SortParam): SortParam = if (orderParams.exists(_ == param.name)) param else default
 }
 
 object PageOrdering {

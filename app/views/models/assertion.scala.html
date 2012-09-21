@@ -30,8 +30,7 @@
         @if(assertion.contexts.size > 50){
         <dd class="more">
             <p>And @{assertion.contexts.size - 50} more</p>
-        </dd>
-        }
+        </dd>}
       }
       case assertion: GroupedAssertionView => {
         <dt class="url">@Messages("assertion.resources.detail")</dt>

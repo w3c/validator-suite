@@ -78,15 +78,7 @@ object SingleAssertionView {
 
   val ordering: PageOrdering[SingleAssertionView] = new PageOrdering[SingleAssertionView] {
 
-    val params = Seq[String](
-      "assertor",
-      "severity",
-      "title",
-      "description",
-      "occurrences",
-      "url",
-      "contexts"
-    )
+    val orderParams = params
 
     val default: SortParam = SortParam("occurrences", ascending = false)
 
