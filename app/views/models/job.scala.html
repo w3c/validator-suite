@@ -69,10 +69,16 @@
             <form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
                 <fieldset>
                     <legend>Search</legend>
-                    <input name=search type=text placeholder="Search url" required value="@req.getQueryString("search")">
+                    <input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>
                     <!--<span>✘</span>-->
                     @if(req.getQueryString("search") != None) {
                     <a class="button clear" href="@Helper.clearParam("search")">@Messages("job.button.clear")</a>}
+                    @if(req.getQueryString("group") != None) {
+                    <input name=group type=hidden value="@req.getQueryString("group")">}
+                    @if(req.getQueryString("filter") != None) {
+                    <input name=filter type=hidden value="@req.getQueryString("filter")">}
+                    @if(req.getQueryString("sort") != None) {
+                    <input name=sort type=hidden value="@req.getQueryString("sort")">}
                     <button type=submit>@Messages("job.button.search")</button>
                 </fieldset>
             </form>

@@ -37,10 +37,12 @@
         <dt class="url">@Messages("assertion.resources.detail")</dt>
         @assertion.resources.take(50).map { case url =>
         <dd class="url">
-            <span>
-                <a href="@Helper.encode(url)">@Helper.shorten(url, 80)</a>
-                <a href="@url" class="external" target="_blank" title="@Messages("resource.external.link")">link</a>
-            </span>
+            <a href="@Helper.encode(url)" class="report" title="@Messages("report.link")">
+                <span>@Messages("resource.report.for")</span>
+                <span>@Helper.shorten(url, 80)</span>
+            </a>
+            <br>
+            <a href="@url.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.encode(url)</a>
         </dd>}
         @if(assertion.resources.size > 50){
         <dd class="more">

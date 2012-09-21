@@ -11,7 +11,7 @@
                 <span>@Helper.shorten(resource.url, 80)</span>
             </a>
             <br>
-            <a href="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.shorten(resource.url, 80)</a>
+            <a href="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.encode(resource.url)</a>
         </dd>
 
         <dt>@Messages("resource.validated")</dt>
