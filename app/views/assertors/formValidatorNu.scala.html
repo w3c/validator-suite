@@ -1,0 +1,90 @@
+@(form: JobForm)
+@defining("validator_nu"){case name =>
+
+<label for="@name" title="Add Validator.nu to this job">Validator.nu</label>
+<input  id="@name" name=assertor value="@name" type=checkbox @if(form.hasAssertor(name)){checked}>
+
+<fieldset class="@name assertor">
+    <legend>Validator.nu options</legend>
+
+    <label for="@name-charset">Encoding</label>
+    <select id="@name-charset" name="@name-charset">
+        <option value="">As set by the server/page</option>
+        <option value="UTF-8">UTF-8 (Global)</option>
+        <option value="UTF-16">UTF-16 (Global)</option>
+        <option value="Windows-1250">Windows-1250 (Central European)</option>
+        <option value="Windows-1251">Windows-1251 (Cyrillic)</option>
+        <option value="Windows-1252">Windows-1252 (Western)</option>
+        <option value="Windows-1253">Windows-1253 (Greek)</option>
+        <option value="Windows-1254">Windows-1254 (Turkish)</option>
+        <option value="Windows-1255">Windows-1255 (Hebrew)</option>
+        <option value="Windows-1256">Windows-1256 (Arabic)</option>
+        <option value="Windows-1257">Windows-1257 (Baltic)</option>
+        <option value="Windows-1258">Windows-1258 (Vietnamese)</option>
+        <option value="ISO-8859-1">ISO-8859-1 (Western)</option>
+        <option value="ISO-8859-2">ISO-8859-2 (Central European)</option>
+        <option value="ISO-8859-3">ISO-8859-3 (South European)</option>
+        <option value="ISO-8859-4">ISO-8859-4 (Baltic)</option>
+        <option value="ISO-8859-5">ISO-8859-5 (Cyrillic)</option>
+        <option value="ISO-8859-6">ISO-8859-6 (Arabic)</option>
+        <option value="ISO-8859-7">ISO-8859-7 (Greek)</option>
+        <option value="ISO-8859-8">ISO-8859-8 (Hebrew)</option>
+        <option value="ISO-8859-9">ISO-8859-9 (Turkish)</option>
+        <option value="ISO-8859-13">ISO-8859-13 (Baltic)</option>
+        <option value="ISO-8859-15">ISO-8859-15 (Western)</option>
+        <option value="KOI8-R">KOI8-R (Russian)</option>
+        <option value="TIS-620">TIS-620 (Thai)</option>
+        <option value="GBK">GBK (Chinese, simplified)</option>
+        <option value="GB18030">GB18030 (Chinese, simplified)</option>
+        <option value="Big5">Big5 (Chinese, traditional)</option>
+        <option value="Big5-HKSCS">Big5-HKSCS (Chinese, traditional)</option>
+        <option value="Shift_JIS">Shift_JIS (Japanese)</option>
+        <option value="ISO-2022-JP">ISO-2022-JP (Japanese)</option>
+        <option value="EUC-JP">EUC-JP (Japanese)</option>
+        <option value="ISO-2022-KR">ISO-2022-KR (Korean)</option>
+        <option value="EUC-KR">EUC-KR (Korean)</option>
+    </select>
+
+    <br>
+    <label for="@name-schema">Schemas</label>
+    <input name="@name-schema" id="@name-schema" pattern="(?:(?:(?:https?://\S+)|(?:data:\S+))(?:\s+(?:(?:https?://\S+)|(?:data:\S+)))*)?" title="Space-separated list of schema IRIs. (Leave blank to let the service guess.)" value="">
+
+    <br>
+    <label for="@name-preset">Preset</label>
+    <select id="@name-preset" name="@name-preset">
+        <option value="">None</option>
+        <option value="http://s.validator.nu/w3c-html5-microdata-rdfalite.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/ http://c.validator.nu/rdfalite/">HTML5 + SVG 1.1 + MathML 3.0 + RDFa Lite 1.1 + Microdata</option>
+        <option value="http://s.validator.nu/w3c-html5-microdata-rdfa.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/">HTML5 + SVG 1.1 + MathML 3.0 + RDFa 1.1 + Microdata</option>
+        <option value="http://s.validator.nu/w3c-html5.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/">HTML5 + SVG 1.1 + MathML 3.0</option>
+        <option value="http://s.validator.nu/xhtml10/xhtml-strict.rnc http://s.validator.nu/xhtml10/xhtml.sch http://c.validator.nu/all-html4/">HTML 4.01 Strict (not parsed as SGML) + IRI / XHTML 1.0 Strict + IRI</option>
+        <option value="http://s.validator.nu/xhtml10/xhtml-transitional.rnc http://s.validator.nu/xhtml10/xhtml.sch  http://c.validator.nu/all-html4/">HTML 4.01 Transitional (not parsed as SGML) + IRI / XHTML 1.0 Transitional + IRI</option>
+        <option value="http://s.validator.nu/xhtml10/xhtml-frameset.rnc http://s.validator.nu/xhtml10/xhtml.sch http://c.validator.nu/all-html4/">HTML 4.01 Frameset (not parsed as SGML) + IRI / XHTML 1.0 Frameset + IRI</option>
+        <option value="http://s.validator.nu/w3c-xhtml5-microdata-rdfalite.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/  http://c.validator.nu/rdfalite/">XHTML5 + SVG 1.1 + MathML 3.0 + RDFa Lite 1.1 + Microdata</option>
+        <option value="http://s.validator.nu/w3c-xhtml5-microdata-rdfa.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/ http://c.validator.nu/microdata/">XHTML5 + SVG 1.1 + MathML 3.0 + RDFa 1.1 + Microdata</option>
+        <option value="http://s.validator.nu/w3c-xhtml5.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/">XHTML5 + SVG 1.1 + MathML 3.0</option>
+        <option value="http://s.validator.nu/xhtml1-ruby-rdf-svg-mathml.rnc http://s.validator.nu/xhtml10/xhtml.sch http://c.validator.nu/all-html4/">XHTML 1.0 Strict + IRI + Ruby + SVG 1.1 + MathML 3.0</option>
+        <option value="http://s.validator.nu/svg-xhtml5-rdf-mathml.rnc http://s.validator.nu/html5/assertions.sch http://c.validator.nu/base/">SVG 1.1 + IRI + XHTML5 + MathML 3.0</option>
+    </select>
+
+    <br>
+    <label for="@name-parser">Parser</label>
+    <select id="@name-parser" name="@name-parser">
+        <option value="" selected="selected">Automatically from Content-Type</option>
+        <option value="xml">XML; don’t load external entities</option>
+        <option value="xmldtd">XML; load external entities</option>
+        <option value="html">HTML; flavor from doctype</option>
+        <option value="html5">HTML5</option>
+        <option value="html4">HTML 4.01 Strict</option>
+        <option value="html4tr">HTML 4.01 Transitional</option>
+    </select>
+
+    <br>
+    <label for="@name-nsfilter"><abbr title="XML namespace">XMLNS</abbr>&nbsp;Filter</label>
+    <input name="@name-nsfilter" id="@name-nsfilter" pattern="(?:.+:.+(?:\s+.+:.+)*)?" title="Space-separated namespace URIs for vocabularies to be filtered out.">
+
+    <br>
+    <input type="checkbox" name="@name-laxtype" id="@name-laxtype" value="yes">
+    <label for="@name-laxtype">Be lax about HTTP Content-Type</label>
+
+</fieldset>
+}

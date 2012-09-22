@@ -1,0 +1,54 @@
+@(form: JobForm)
+@defining("validator_css"){case name =>
+
+<label for="@name" class="tab" title="Add the CSS Validator to this job">CSS Validator</label>
+<input  id="@name" name=assertor value="@name" type=checkbox @if(form.hasAssertor(name)){checked}>
+
+<fieldset class="@name assertor">
+    <legend>CSS Validator</legend>
+
+    <label for="@name-profile">Profile</label>
+    <select id="@name-profile" name="@name-profile">
+        <option value="none">No special profile</option>
+        <option value="css1">CSS level 1</option>
+        <option value="css2">CSS level 2</option>
+        <option value="css21">CSS level 2.1</option>
+        <option selected="selected" value="css3">CSS level 3</option>
+        <option value="svg">SVG</option>
+        <option value="svgbasic">SVG Basic</option>
+        <option value="svgtiny">SVG tiny</option>
+        <option value="mobile">Mobile</option>
+        <option value="atsc-tv">ATSC TV profile</option>
+        <option value="tv">TV profile</option>
+    </select>
+    <label for="@name-warning">Warnings</label>
+    <select id="@name-warning" name="@name-warning">
+        <option value="2">All</option>
+        <option selected="selected" value="1">Normal report</option>
+        <option value="0">Most important</option>
+        <option value="no">No warnings</option>
+    </select>
+
+    <br>
+    <label for="@name-usermedium">Medium</label>
+    <select id="@name-usermedium" name="@name-usermedium">
+        <option selected="selected" value="all">All</option>
+        <option value="aural">aural</option>
+        <option value="braille">braille</option>
+        <option value="embossed">embossed</option>
+        <option value="handheld">handheld</option>
+        <option value="print">print</option>
+        <option value="projection">projection</option>
+        <option value="screen">screen</option>
+        <option value="tty">TTY</option>
+        <option value="tv">TV</option>
+        <option value="presentation">presentation</option>
+    </select>
+    <label for="@name-vextwarning">Vendor Extensions</label>
+    <select id="@name-vextwarning" name="@name-vextwarning">
+        <option value="">Default</option>
+        <option value="true">Warnings</option>
+        <option value="false">Errors</option>
+    </select>
+</fieldset>
+}

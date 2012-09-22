@@ -116,7 +116,7 @@ class JobForm private[view](
 
   def errors: Seq[(String, String)] = form.errors.map{case error => ("error", /*error.key + */error.message)}
 
-  def hasAssertor(assertor: String)(implicit req: Request[AnyContent]): Boolean = try {
+  def hasAssertor(assertor: String): Boolean = try {
     assertorsConfiguration.contains(AssertorId(assertor))
   } catch { case _: Exception =>
     false

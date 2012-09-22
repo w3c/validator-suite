@@ -6,18 +6,15 @@
 
 @libs.main("Validator Suite", 
     stylesheets = List("dashboard.min.css"),
-    scripts = List("model.js", "vs.js", "dashboard.js")){
+    scripts = List("model.j", "vs.j", "dashboard.j"),
+    exec = """
+    $(function(){
+        //window.Dashboard = new DashboardView();
+        //window.VS.Socket.open();
+    });
+    """){
 
-    @***** Header
-
-exec = """
-$(function(){
-//window.Dashboard = new DashboardView();
-//window.VS.Socket.open();
-});
-"""
-
-******@
+    @***** Header ******@
 
     @libs.header()
 

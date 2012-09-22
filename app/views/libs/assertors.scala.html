@@ -22,7 +22,7 @@
         </dl>
         </article>
 
-        @assertors.toSeq.sorted(Ordering[(Int, String)].on[AssertorView](v => (-v.errors, Messages(v.name)))).map { assertor =>
+        @assertors.toSeq.sorted(Ordering[(Int, Int, String)].on[AssertorView](v => (-v.errors, -v.warnings, Messages(v.name)))).map { assertor =>
         <hr>
         <article data-id="@assertor.name"  class="@if(Some(assertor.name) == page.filter){current }@if(assertor.warnings + assertor.errors == 0){valid}">
             <dl>

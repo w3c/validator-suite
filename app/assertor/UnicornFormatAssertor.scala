@@ -18,7 +18,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
     val response: Elem = XML.fromSource(source)
 
     val obversationRef: String = response.attrs get "ref" get
-    val obversationLang: String = response.attrs get QName(Some("xml"), "lang") get
+    val obversationLang: String = response.attrs get QName(Some("xml"), "lang") getOrElse "en"
 
     // can be passed, failed, undef
     val status: Option[String] = (response \ "status").headOption.map(_.attrs.get("value").get)
@@ -28,20 +28,25 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
         message <- response \ "message"
       } yield {
         val severity = AssertionSeverity(message.attrs get "type" get)
-        // TODO Log messages with empty titles. This shouldn't happen.
         val title = (message \ "title").headOption map (htmlString) getOrElse ("-")
-        /*val id = message.attrs get "id" match {
-          case Some(id) if id != "html5" => id
-          case _ => title.hashCode.toString
-        }*/
         val url = URL(message.attrs get "ref" getOrElse obversationRef)
-        val lang: String = message.attrs get "lang" getOrElse obversationLang
+        val lang = message.attrs get "lang" getOrElse obversationLang
+        val group = message.attrs get "group" getOrElse ""
+
+        import scalaz._
+        import scalaz.Scalaz._
+
         val contexts =
           for {
             context <- message \ "context"
           } yield {
-            val content = htmlString(context)
-            //val contextRef = context.attrs get "ref" getOrElse eventRef
+            val contextRef: Option[String] = context.attrs get "ref"
+            val content = contextRef.fold(
+              url => """<a href="%s" target="_blank" class="external">%s</a> """ format (url, url),
+              htmlString(context)
+            )
+            //val content = htmlString(context)
+
             val line = context.attrs get "line" map (_.toInt)
             val column = context.attrs get "column" map (_.toInt)
             Context(content, line, column)
@@ -58,12 +63,24 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
         case false => (Some({
           """<p>%s</p>""".format(Messages("assertor.externalResourcesWarning")) +
           linkedResources.map{ case url =>
-            """<li>
-              |  <span>
-              |    <a href="%s">%s</a>
-              |    <a href="%s" class="external">[external link]</a>
-              |  </span>
-              |</li>""".stripMargin.format(Helper.encode(url), Helper.shorten(url, 100), url)
+            """<li class="url">
+              |    <a href="%s" class="report" title="%s">
+              |      <span>%s</span>
+              |      <span>%s</span>
+              |    </a>
+              |    <br>
+              |    <a href="%s" class="external" target="_blank" title="%s">%s</a>
+              |</li>"""
+            .stripMargin
+            .format(
+              Helper.encode(url),
+              Messages("report.link"),
+              Messages("resource.report.for"),
+              Helper.shorten(url, 100),
+              url,
+              Messages("resource.external.link"),
+              Helper.shorten(url, 100)
+            )
           }.mkString("<ul>", " ", "</ul>")}),
           Warning)
       }
@@ -79,7 +96,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
   private def removeScope(node: Node): Node = {
     node match {
       case e: Elem => e.copy(scope = Map.empty, children = e.children.map(removeScope))
-      case e: Text => e.copy(text = StringEscapeUtils.unescapeXml(e.text).trim)
+      case e: Text => e.copy(text = StringEscapeUtils.unescapeXml(e.text))
       case e => e
     }
   }

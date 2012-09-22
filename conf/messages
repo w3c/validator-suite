@@ -27,7 +27,8 @@ job.button.clear=Clear
 job.button.search=Search
 
 # ResourceView
-resource.url=Report for
+resource.report.for=Report for
+resource.url=Resource
 resource.url.detail=The resource to which the report refers
 resource.validated=Last validated
 resource.validated.detail= TODO
@@ -36,6 +37,7 @@ resource.warnings.detail= TODO
 resource.errors=Errors
 resource.errors.detail= TODO
 resource.external.link=Open resource in a new tab
+resource.button.revalidate=Revalidate
 
 # AssertionView
 assertion.assertor=Assertor
@@ -80,6 +82,7 @@ debug.unexpected=Unexpected: {0}
 
 #assertors
 assertor.checker_i18n=I18n Checker
+assertor.checker_mobile=MobileOk Checker
 assertor.validator_nu=Validator.nu
 assertor.validator_css=CSS Validator
 assertor.validator_html=HTML Validator
