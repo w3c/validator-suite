@@ -1,103 +1,105 @@
+$(function () {
 
-window.JobView = Backbone.View.extend({
-	
-	tagName : "article",
-	template: _.template($('#job-template').html()), // check presence first
-	
-	attributes: {
-		//"class": "job",
-		"data-id": "0"
-	},
-	
-	events: {
-		"click .edit"	 : "edit",
-		"click .on"		 : "putOn",
-		"click .off"	 : "putOff",
-		"click .stop"	 : "stop",
-		"click .run"     : "run",
-		"click .delete"	 : "_delete"
-	},
-	
-	initialize: function () {
-		if(this.model !== undefined) {
-			this.attributes["data-id"] = this.model.id;
-			this.model.on('change', this.render, this);
-			this.model.on('destroy', this.remove, this);
-			//this.model.on('run', function () {alert("run");}, this);
-			//this.model.on('stop', function () {alert("run");}, this);
-		}
-	},
-	
-	render: function () {
-		this.$el.html(this.template(_.extend(this.model.toJSON(), {url : this.model.url()})));
-		return this;
-	},
-	edit: function () {
-		window.location = this.model.url() + "/edit";
-		return false;
-	},
-	putOn: function () {
-		this.model.putOn({wait:true});
-		return false;
-	},
-	putOff: function () {
-		this.model.putOff({wait:true});
-		return false;
-	},
-	stop: function () {
-		this.model.stop({wait:true});
-		return false;
-	},
-	run: function () {
-		this.model.run({wait:true});
-		try { window.Report.articles.reset(); } catch(ex) { }
-		return false;
-	},
-	_delete: function () {
-		this.model.destroy({wait:true});
-		return false;
-	},
-	remove: function () {
-		$(this.el).remove();
-	}
-	
+    var htmlToJob = function (elem) {
+
+        var $elem = $(elem);
+
+        var _value = function (attribute) {
+            var tag = $elem.find('[' + attribute + ']');
+            var attr = tag.attr(attribute);
+            if (attr !== "") {
+                return attr;
+            } else {
+                return tag.text();
+            }
+        };
+
+        return new W3.Job({
+            id: $elem.attr("data-id"),
+            name: _value('data-job-name'),
+            entrypoint: _value('data-job-entrypoint'),
+            status: _value('data-job-status'),
+            completedOn: {
+                timestamp: _value('data-job-completed'),
+                legend1: _value('data-job-completed-legend1'),
+                legend2: _value('data-job-completed-legend2')},
+            warnings: parseInt(_value('data-job-warnings')),
+            errors: parseInt(_value('data-job-errors')),
+            resources: parseInt(_value('data-job-resources')),
+            maxResources: parseInt(_value('data-job-maxResources')),
+            health: {
+                value: parseInt(_value('data-job-health')),
+                legend: _value('data-job-health-legend')}
+        });
+    };
+
+    var dashboard = new W3.JobsView({
+        el: document.getElementById("jobs"),
+        jobTemplate: _.template(document.getElementById("job-template").text)
+    });
+
+    dashboard.jobs.reset(_.map($("#jobs .job").get(), htmlToJob));
+
+    var _callback = function (event) {
+        try {
+            var json = $.parseJSON(event.data);
+
+            //console.log(event.data);
+
+            if (json[0] != "Job") {
+                console.log("Not a job update message: " + json[0]);
+                return;
+            }
+
+            var jobUpdate = {id: json[1]};
+
+            var addParam = function (name, value) {
+                var b = {};
+                b[name] = value;
+                if (value !== null) _.extend(jobUpdate, b);
+            }
+
+            addParam("name", json[2]);
+            addParam("entrypoint", json[3]);
+            addParam("status", json[4]);
+
+            if (json[5] !== null) {
+                jobUpdate["completedOn"] = {
+                    timestamp: json[5],
+                    legend1: json[6],
+                    legend2: json[7]
+                };
+            }
+
+            addParam("warnings", json[8]);
+            addParam("errors", json[9]);
+            addParam("resources", json[10]);
+            addParam("maxResources", json[11]);
+
+            if (json[12] != null) {
+                jobUpdate["health"] = {
+                    value: json[12],
+                    legend: json[12] + "%"
+                };
+            }
+
+            var job = dashboard.jobs.get(jobUpdate.id);
+            if (!_.isUndefined(job)) {
+                job.set(jobUpdate);
+            } else {
+                console.log("unknown job with id: " + jobUpdate.id);
+                console.log(jobUpdate);
+            }
+
+        } catch(ex) {
+            console.log(ex);
+        }
+
+    };
+
+    W3.Socket.open({
+        url: "/suite/jobs/ws",
+        onmessage: _.bind(_callback, this)
+    });
+
 });
-
-window.DashboardView = Backbone.View.extend({
-	el: $("#jobs"),
-	jobs: new JobList(),
-	initialize: function () {
-		// Bind events
-		this.jobs.on('add', this.addOne, this);
-		this.jobs.on('reset', this.addAll, this);
-		// XXX bug server-side
-		//var onmessage = _.bind(this._messageCallback, this);
-		// Parse the HTML to get initial data as an array of (model, view)
-		_.each($("#jobs article").toArray(), function(jobElem) { 
-			this.jobs.add(Job.fromHTML(jobElem));
-			$(jobElem).remove();
-		}, this);
-		// Subscribe to job updates through a WebSocket
-		//this.subscribe();
-	},
-	addOne: function(job) {
-		var view = new JobView({model: job});
-		this.$el.append(view.render().el);
-	},
-	addAll: function(j) {
-		this.$el.empty();
-		this.jobs.each(this.addOne, this);
-	},
-//	subscribe: function () {
-//		VS.Socket.open().onmessage = _.bind(this._messageCallback, this);
-//	},
-//	_messageCallback: function (event) {
-//		console.log(event.data);
-//		var data = DashboardUpdate.fromJSON(event.data);
-//		var job = this.jobs.get(data.get("jobId"));
-//		if (!_.isUndefined(job))
-//			job.syncData(data);
-//	}
-});
-
-//$(function(){window.Dashboard = new DashboardView();});

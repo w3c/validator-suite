@@ -1,91 +1,22 @@
-window.VS = {
-	
-	Socket: {
-		
-		url: "ws://" + window.location.host + "/jobs/ws",
-		type: window['MozWebSocket'] ? MozWebSocket : WebSocket,
-		
-		open: function (options) {
-			if (typeof this.ws != 'object'
-				|| this.ws.readyState === this.type.CLOSING 
-				|| this.ws.readyState === this.type.CLOSED) {
-				var url = options && options.url ?
-						"ws://" + window.location.host + options.url
-						: this.url;
-				this.ws = new this.type(url);
-			}
-			this.ws.onmessage = this._onmessage;
-			return this.ws;
-		},
-		
-		reset: function (options) {
-			if (typeof this.ws != 'object')
-				return;
-			this.ws.close();
-			return this.open(options);
-		},
-		
-		_onmessage: function(event) {
-			console.log(event.data);
-			//try {
-				var json = $.parseJSON(event.data);
-				var type = json[0];
-				if (type === "Dashboard" && Dashboard !== undefined) {
-					var data = DashboardUpdate.fromJSON(json);
-					var job = Dashboard.jobs.get(data.get("jobId"));
-					if (!_.isUndefined(job)) {
-						job.syncData(data);
-					} else {
-						console.log("error - unknown JobId");
-					}
-				} /*else if (type === "Resource" && Report !== undefined) {
-					var data = {
-						resourceId: json[1],
-						url: json[2]
-					};
-					if (Report.articles.where({url: data.url}).length < 1) {
-						Report.articles.add(new URLArticle({
-							url: data.url,
-							timestamp: "Never",
-						}));
-					} else {
-						console.log("Resource already present on the page: " + data.url);
-					}
-				}*/ else if (type === "AssertorResult" && Report !== undefined) {
-					//var assertions = json[1];
-					//_.each(assertions, function (assertion) {
-						var url = json[1];
-						var timestamp = json[2];
-						var warnings = json[3];
-						var errors = json[4];
-						var current = Report.articles.where({url: url});
-						if (current.length < 1) {
-							Report.articles.add(new URLArticle({
-								url: url,
-								timestamp: timestamp,
-								warnings: warnings,
-								errors: errors,
-							}), true); // silent
-						} else {
-							_.map(current, function (article) {
-								article.set({
-									timestamp: timestamp,
-									warnings: article.get("warnings") + warnings,
-									errors: article.get("errors") + errors,
-								});
-							});
-						}
-						Report.articles.sort();
-					//});
-				}
-//			} catch(ex) {
-//				console.log(ex);
-//				return null;
-//			}
-		}
-	},
+(function (){
 
-	exception: function(msg) {
-		throw new Error(msg);
-	}
-};
+    var W3 = window.W3 = (window.W3 || {});
+
+    var Socket = W3.Socket = {
+
+        open: function (options) {
+            var url, onmessage, ws;
+            url = options && options.url ? "ws://" + window.location.host + options.url : "ws://" + window.location;
+            onmessage = options && options.onmessage ? options.onmessage : undefined;
+            ws = WebSocket ? new WebSocket(url) : {
+                send: function (m){return false;},
+                close: function (){}
+            };
+            if (_.isFunction(options.onmessage))
+                ws.onmessage = options.onmessage;
+            return ws;
+        }
+
+    };
+
+})();

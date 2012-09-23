@@ -6,31 +6,26 @@
 
 @libs.main("Validator Suite", 
     stylesheets = List("dashboard.min.css"),
-    scripts = List("model.j", "vs.j", "dashboard.j"),
-    exec = """
-    $(function(){
-        //window.Dashboard = new DashboardView();
-        //window.VS.Socket.open();
-    });
-    """){
+    scripts = List("model/job.js", "vs.js", "dashboard.js"),
+    exec = """"""){
 
     @***** Header ******@
 
     @libs.header()
 
-}{ @***** Content *****@ 
+}{  @***** Content *****@
 
     @libs.admin(user)
-    @libs.navigation("Dashboard", organization, List())
-    @libs.messages()
 
-    <hr>
+    @libs.navigation("Dashboard", organization, List())
+
+    @libs.messages()
 
     <section id="jobs" class="list">
         @pages.jobs(page)
     </section>
 
-}{ @***** Footer *****@
+}{  @***** Footer *****@
 
     @libs.footer {
     @libs.pageCtrl(page)
