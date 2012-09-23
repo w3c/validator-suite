@@ -63,7 +63,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
     sys.error("")
   }
 
-  def getLastCompleted(): FutureVal[Exception, Option[DateTime]] = {
+  def getCompletedOn(): FutureVal[Exception, Option[DateTime]] = {
     Job.getLastCompleted(jobUri)
   }
   
@@ -203,11 +203,11 @@ CONSTRUCT {
 SELECT ?timestamp WHERE {
   BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
   graph ?jobG {
-    ?job ont:lastCompleted ?run
+    ?job ont:lastRun ?run
   } .
   BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
   graph ?runG {
-    ?run ont:completedAt ?timestamp
+    ?run ont:completedOn ?timestamp
   }
 }
 """

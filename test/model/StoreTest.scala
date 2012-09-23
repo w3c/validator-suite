@@ -108,12 +108,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   // a job may have never completed, for example if the user has forced a new run
   // is this assumption ok? -> yes
-  // or do we want to force a completedAt before switching to the new Job? this would be weird
+  // or do we want to force a completeOn before switching to the new Job? this would be weird
   var run1 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now)
 
-  var run2 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(5)).completedAt(now.plusMinutes(7))
+  var run2 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(5)).completeOn(now.plusMinutes(7))
 
-  var run3 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(10)).completedAt(now.plusMinutes(12))
+  var run3 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(10)).completeOn(now.plusMinutes(12))
 
   var run4 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(15))
 
@@ -153,8 +153,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       val assertorResult = AssertorResult(run1.id, assertorId, url, assertions)
       Run.saveEvent(run1.runUri, AssertorResponseEvent(assertorResult)).await(3.seconds)
     }
-    Run.completedAt(job1.jobUri, run2.runUri, run2.completedAt.get).await(3.seconds)
-    Run.completedAt(job1.jobUri, run3.runUri, run3.completedAt.get).await(3.seconds)
+    Run.complete(job1.jobUri, run2.runUri, run2.completedOn.get).await(3.seconds)
+    Run.complete(job1.jobUri, run3.runUri, run3.completedOn.get).await(3.seconds)
   }
 
 //   val resourceResponses: Vector[ResourceResponse] = {
@@ -286,12 +286,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 //  }
 
   "get timestamp of latest completed Run for a given job" in {
-    val latestCompleted = job1.getLastCompleted().getOrFail(3.seconds)
-    latestCompleted must be (run3.completedAt)
+    val latestCompleted = job1.getCompletedOn().getOrFail(3.seconds)
+    latestCompleted must be (run3.completedOn)
   }
 
   "get timestamp for a job that has never been completed once" in {
-    val neverCompleted = job2.getLastCompleted().getOrFail(3.seconds)
+    val neverCompleted = job2.getCompletedOn().getOrFail(3.seconds)
     neverCompleted must be(None)
   }
 

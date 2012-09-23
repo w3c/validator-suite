@@ -64,8 +64,8 @@ trait Binders extends UriBuilders with LiteralBinders {
     lazy val urls = property[List[URL]](apply("urls"))
 
     lazy val explorationMode = property[ExplorationMode](apply("explorationMode"))
-    lazy val completedAt = property[Option[DateTime]](apply("completedAt"))
-    lazy val lastCompleted = optional[Rdf#URI](apply("lastCompleted"))
+    lazy val completedOn = property[Option[DateTime]](apply("completedOn"))
+    lazy val lastRun = optional[Rdf#URI](apply("lastRun"))
 
     lazy val linkCheck = property[Boolean](apply("linkCheck"))
     lazy val maxResources = property[Int](apply("maxResources"))
@@ -182,7 +182,7 @@ trait Binders extends UriBuilders with LiteralBinders {
         id <- (pointed / ont.run).as[(OrganizationId, JobId, RunId)]
         strategy <- (pointed / ont.strategy).as[Strategy]
         createdAt <- (pointed / ont.createdAt).as[DateTime]
-        completedAt <- (pointed / ont.completedAt).asOption[DateTime]
+        completedOn <- (pointed / ont.completedOn).asOption[DateTime]
         events <- (pointed / ont.event).asSet[RunEvent]
       } yield {
         // @@
@@ -192,7 +192,7 @@ trait Binders extends UriBuilders with LiteralBinders {
         val (initialRun, urls) = Run(id, strategy, createdAt).newlyStartedRun
         var run = initialRun
         toBeFetched ++= urls
-        completedAt foreach { at => run = run.completedAt(at) }
+        completedOn foreach { at => run = run.completeOn(at) }
         events.toList.sortBy(_.timestamp) foreach {
           case AssertorResponseEvent(ar@AssertorResult(_, assertor, url, _), _) => {
             toBeAsserted -= ((url, assertor))

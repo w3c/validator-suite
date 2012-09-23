@@ -9,9 +9,9 @@ import akka.dispatch.ExecutionContext
 case class JobView(
     id: JobId,
     name: String,
-    url: URL,
+    entrypoint: URL,
     status: String,
-    lastCompleted: Option[DateTime],
+    completedOn: Option[DateTime],
     warnings: Int,
     errors: Int,
     resources: Int,
@@ -22,9 +22,9 @@ object JobView {
 
   val params = Seq[String](
     "name",
-    "url",
+    "entrypoint",
     "status",
-    "completed",
+    "completedOn",
     "warnings",
     "errors",
     "resources",
@@ -35,14 +35,14 @@ object JobView {
   def fromJob(job: Job)(implicit ec: ExecutionContext): FutureVal[Exception, JobView] = {
     for {
       activity <- job.getActivity()
-      lastCompleted <- job.getLastCompleted()
+      completedOn <- job.getCompletedOn()
       data <- job.getData()
     } yield JobView(
       job.id,
       job.name,
       job.strategy.entrypoint,
       activity.toString,
-      lastCompleted,
+      completedOn,
       data.warnings,
       data.errors,
       data.resources,
@@ -73,9 +73,9 @@ object JobView {
     def order_(safeParam: SortParam): Ordering[JobView] = {
       val ord = safeParam.name match {
         case "name"         => Ordering[String].on[JobView](_.name)
-        case "url"          => Ordering[(String, String)].on[JobView](job => (job.url.toString, job.name))
+        case "entrypoint"   => Ordering[(String, String)].on[JobView](job => (job.entrypoint.toString, job.name))
         case "status"       => Ordering[(String, String)].on[JobView](job => (job.status, job.name))
-        case "completed"    => Ordering[(Option[DateTime], String)].on[JobView](job => (job.lastCompleted, job.name))
+        case "completedOn"  => Ordering[(Option[DateTime], String)].on[JobView](job => (job.completedOn, job.name))
         case "warnings"     => Ordering[(Int, String)].on[JobView](job => (job.warnings, job.name))
         case "errors"       => Ordering[(Int, String)].on[JobView](job => (job.errors, job.name))
         case "resources"    => Ordering[(Int, String)].on[JobView](job => (job.resources, job.name))

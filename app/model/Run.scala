@@ -70,13 +70,13 @@ object Run {
 
   /* other events */
 
-  def completedAt(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+  def complete(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
     import conf._
     import ops._
     val script = for {
-      _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.lastCompleted.uri, ANY)))
-      _ <- Command.POST[Rdf](jobUri, jobUri -- ont.lastCompleted ->- runUri)
-      _ <- Command.POST[Rdf](runUri, runUri -- ont.completedAt ->- at)
+      _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.lastRun.uri, ANY)))
+      _ <- Command.POST[Rdf](jobUri, jobUri -- ont.lastRun ->- runUri)
+      _ <- Command.POST[Rdf](runUri, runUri -- ont.completedOn ->- at)
     } yield ()
     store.execute(script)
   }
@@ -92,7 +92,7 @@ case class Run private (
     strategy: Strategy,
     createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
     // from completion event, None at creation
-    completedAt: Option[DateTime] = None,
+    completedOn: Option[DateTime] = None,
     // from user event, ProActive by default at creation
     explorationMode: ExplorationMode = ProActive,
     // based on scheduled fetches
@@ -114,15 +114,15 @@ case class Run private (
 
   val runUri = id.toUri
 
-  def jobData: JobData = JobData(numberOfFetchedResources, errors, warnings, createdAt, completedAt)
+  def jobData: JobData = JobData(numberOfFetchedResources, errors, warnings, createdAt, completedOn)
   
   def health: Int = jobData.health
 
   /* combinators */
 
   // set the completeAt bit and empty the queue of toBeExplored fetches
-  def completedAt(at: DateTime): Run = this.copy(
-    completedAt = Some(at),
+  def completeOn(at: DateTime): Run = this.copy(
+    completedOn = Some(at),
     toBeExplored = List.empty)
 
   /* methods related to the data */
@@ -150,7 +150,7 @@ case class Run private (
 
   def hasNoPendingAction: Boolean = noMoreUrlToExplore && pendingAssertions.isEmpty
 
-  def isIdle: Boolean = (noMoreUrlToExplore && hasNoPendingAction) || completedAt.isDefined
+  def isIdle: Boolean = (noMoreUrlToExplore && hasNoPendingAction) || completedOn.isDefined
 
   def isRunning: Boolean = !isIdle
 

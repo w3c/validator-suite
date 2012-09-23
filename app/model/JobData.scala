@@ -8,11 +8,17 @@ case class JobData (
     errors: Int,
     warnings: Int,
     createdAt: DateTime,
-    completedAt: Option[DateTime]) {
+    completedOn: Option[DateTime]) {
   
   def health: Int = JobData.health(resources, errors, warnings)
   
-  def isCompleted: Boolean = completedAt.isDefined
+  def isCompleted: Boolean = completedOn.isDefined
+
+  def sameAs(data: JobData): Boolean = {
+    errors == data.errors &&
+    warnings == data.warnings &&
+    resources == data.resources
+  }
 
 }
 

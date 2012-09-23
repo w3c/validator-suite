@@ -100,7 +100,7 @@ object JobForm {
     tuple(
       "name" -> nonEmptyText,
       //"assertor" -> of[Seq[String]].verifying("Choose an assertor", ! _.isEmpty),
-      "url" -> of[URL],
+      "entrypoint" -> of[URL],
       "linkCheck" -> of[Boolean](booleanFormatter),
       "maxResources" -> number(min=1, max=500)
     )
@@ -129,7 +129,7 @@ class ValidJobForm private[view](
     bind: (String, URL, Boolean, Int),
     assertorsConfiguration: AssertorsConfiguration) extends JobForm(form, assertorsConfiguration) with VSForm {
 
-  val (name, url, linkCheck, maxResources) = bind
+  val (name, entrypoint, linkCheck, maxResources) = bind
 
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
     Job(
@@ -137,9 +137,9 @@ class ValidJobForm private[view](
       organization = user.vo.organization.get, // TODO what if organization = None?
       creator = user.id,
       strategy = Strategy(
-        entrypoint = url,
+        entrypoint = entrypoint,
         linkCheck = linkCheck,
-        filter = Filter.includePrefix(url.toString), // Tom: non persisté de toute façon
+        filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
         maxResources = maxResources,
         assertorsConfiguration = assertorsConfiguration)
 )

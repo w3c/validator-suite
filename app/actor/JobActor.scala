@@ -111,11 +111,12 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     val _run =
       if (run.hasNoPendingAction) {
         val now = DateTime.now(DateTimeZone.UTC)
-        Run.completedAt(job.jobUri, run.runUri, now)
-        run.copy(completedAt = Some(now))
+        Run.complete(job.jobUri, run.runUri, now)
+        run.copy(completedOn = Some(now))
       } else {
         run
       }
+
     if (stateData.state /== _run.state) {
       logger.debug("%s: transition to new state %s" format (run.shortId, _run.state.toString))
       val msg = UpdateData(_run.jobData, job.id, _run.activity)
