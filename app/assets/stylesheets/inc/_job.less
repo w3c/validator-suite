@@ -15,7 +15,7 @@
                 display: none;
             }
         }
-        .completed {
+        .completedOn {
             width: 180px;
         }
         .status {
@@ -71,8 +71,10 @@
                 }
 
             }
-            &.status form {
-                display: none;
+            &.status {
+                form, a:not(:link) {
+                    display: none;
+                }
             }
         }
         .health {

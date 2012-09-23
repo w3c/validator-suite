@@ -90,7 +90,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
   }
 
   private def htmlString(node: Node): String = {
-    removeScope(node).children.mkString(" ").trim
+    removeScope(node).children.mkString("").trim
   }
 
   private def removeScope(node: Node): Node = {

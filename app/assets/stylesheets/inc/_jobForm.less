@@ -65,7 +65,7 @@
     }
 
     input[name="name"],
-    input[name="url"] {
+    input[name="entrypoint"] {
         width: 280px;
     }
 
@@ -112,6 +112,10 @@
         height: 0;
         padding: 0;
         overflow: hidden;
+    }
+
+    input[name="assertor"]:not(:checked) + fieldset * {
+        display: none; // Firefox doesn't hide inside elements with the fieldset overflow:hidden alone
     }
 
     button {

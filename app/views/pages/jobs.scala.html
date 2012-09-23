@@ -12,17 +12,14 @@
             </dl>
         </aside>
 
-    @defining(page.iterator) {case iterator =>
+        @page.iterator.map { case job => @models.job(job) }
 
-        @iterator.map { case job => @models.job(job) }
-
-        @if(iterator.size < 1) {
+        @if(page.iterator.size < 1) {
         <article>
             <p>
                 @Messages("jobs.empty")
                 <a href="@routes.Jobs.new1">@Messages("jobs.create.first")</a>
             </p>
-        </article>
-        }
-    }
+        </article>}
 
+        @models.template_job()

@@ -33,7 +33,7 @@
         </dd>}
       }
       case assertion: GroupedAssertionView => {
-        <dt class="url">@Messages("assertion.resources.detail")</dt>
+        <dt>@Messages("assertion.resources.detail")</dt>
         @assertion.resources.take(50).map { case url =>
         <dd class="url">
             <a href="@Helper.encode(url)" class="report" title="@Messages("report.link")">

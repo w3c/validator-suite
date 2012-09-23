@@ -1,9 +1,9 @@
 
 
-#jobs article .name a {
+#jobs .job .name a {
     font-weight: bold;
 }
-#jobs article .status {
+#jobs .job .status {
     text-transform: capitalize;
 }
 
@@ -16,26 +16,34 @@
     .group {display: none;}
     .actions {
         width: 55px;
-        dfn, button[value="run"] {display: none;}
+        dfn,
+        button[value="run"],
+        .button.run,
+        legend {display: none;}
     }
     .status,
     .warnings,
     .errors,
-    .resources {
+    .resources,
+    .health {
         width: 75px;
+    }
+    .completedOn {
+        width: 150px;
     }
     .status {
         width: 90px;
         &.idle span {vertical-align: middle; line-height: 22px;}
         form {display: inline;}
-        button {
+        button,
+        .button {
             font-size: 0.85em;
             padding: 3px 7px;
             float: left;
             margin-right: 5px;
         }
     }
-    article {
+    .job {
         .name a {
             line-height: 15px;
             vertical-align: top;

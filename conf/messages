@@ -2,12 +2,12 @@
 # JobView
 job.name=Job Name
 job.name.detail=The name of the job
-job.url=URL
-job.url.detail=The seed URL for this job, entry point of the crawler
+job.entrypoint=Start URL
+job.entrypoint.detail=The start URL for this job, entry point of the crawler
 job.status=Status
 job.status.detail=The current status of the job, either Idle or Running.
-job.completed=Last completed
-job.completed.detail=The date the job was last completed
+job.completedOn=Last completed
+job.completedOn.detail=The date the job was last completed
 job.warnings=Warnings
 job.warnings.detail=The total number or warnings reported by the job's assertors
 job.errors=Errors
@@ -20,7 +20,7 @@ job.health=Health
 job.health.detail=An indicator of the overall quality of the job's resources
 job.actions=Actions
 job.actions.detail=Actions to perform on the job
-job.button.cancel=Cancel
+job.button.stop=Cancel
 job.button.run=Run
 job.button.delete=Delete
 job.button.clear=Clear

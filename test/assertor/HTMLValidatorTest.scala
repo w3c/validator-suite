@@ -26,6 +26,7 @@ object HTMLValidatorTest extends Specification with AssertionResultMatcher {
 
     Helper.parseQueryString(queryString) must beEqualTo (assertorConfiguration
       + ("output" -> List("ucn"))
+      + ("No200" -> List("1"))
       + ("uri" -> List(Helper.encode(url)))
     )
 

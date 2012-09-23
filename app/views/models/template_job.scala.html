@@ -1,80 +1,71 @@
-@(job: JobView)(implicit req: Request[_])
+@()(implicit req: Request[_]) @** Remove implicit once fully implemented **@
 
-        <article data-id="@job.id" class="job">
+        <script type="text/template" id="job-template">
             <dl>
                 <dt>Job Name</dt>
                 <dd class="name">
-                    <a href="@routes.Jobs.show(job.id)" data-job-name>@job.name</a>
+                    <a href="<%= url %>"><%= name %></a>
                 </dd>
 
                 <dt>URL</dt>
                 <dd class="entrypoint">
-                   <a href="@job.entrypoint" class="external" target="_blank" title="@Messages("resource.external.link")" data-job-entrypoint>@Helper.shorten(job.entrypoint, 100)</a>
+                    <a href="<%= entrypoint %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= entrypoint %></a>
                 </dd>
 
                 <dt>Status</dt>
-                <dd class="status @job.status">
-                    <span data-job-status>@job.status</span>
-                    @if(job.status == "idle"){
-                    <form action="@routes.Jobs.dispatcher(job.id)" method="post">
-                        <input type="hidden" name="uri" value="@{req.uri}">
-                        <button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>
-                    </form>}
+                <dd class="status <%= status %>">
+                    <span><%= status %></span>
+                    <% if (isIdle) { %>
+                    <a class="button run">@Messages("job.button.run")</a>
+                    <% } %>
                 </dd>
 
                 <dt>Last Completed</dt>
                 <dd class="completedOn">
-                @job.completedOn match{
-                  case Some(date) => {
-                    <time datetime="@date" data-job-completed="@date" data-job-completed-legend1>@Helper.formatTime(date)</time>
-                    <span class="legend" data-job-completed-legend2>@Helper.formatLegendTime(date)</span>
-                    }
-                  case _ => {Never}
-                }
+                    <% if (isCompleted) { %>
+                    <time datetime="<%= completedOn.timestamp %>"><%= completedOn.legend1 %></time>
+                    <span class="legend"><%= completedOn.legend2 %></span>
+                    <% } else { %>
+                    Never
+                    <% } %>
                 </dd>
 
                 <dt>Warnings</dt>
                 <dd class="warnings">
-                    <span data-job-warnings>@job.warnings</span>
+                    <span><%= warnings %></span>
                 </dd>
 
                 <dt>Errors</dt>
                 <dd class="errors">
-                    <span data-job-errors>@job.errors</span>
+                    <span><%= errors %></span>
                 </dd>
 
                 <dt>Resources</dt>
                 <dd class="resources">
-                    <span data-job-resources>@job.resources</span>
+                    <span><%= resources %></span>
                 </dd>
 
                 <dt>Max resources</dt>
                 <dd class="maxResources">
-                    <span data-job-maxResources>@job.maxResources</span>
+                    <span><%= maxResources %></span>
                 </dd>
 
                 <dt>Health</dt>
                 <dd class="health">
-                    <progress max=100 value=@job.health data-job-health=@job.health title="@job.health%" data-job-health-legend>
-                        @job.health%
+                    <progress max=100 value=<%= health.value %> title="<%= health.legend %>">
+                        <%= health.legend %>
                     </progress>
                 </dd>
 
                 <dt>Actions</dt>
                 <dd class="actions">
-                    <form action="@routes.Jobs.dispatcher(job.id)" method="post">
-                        <input type="hidden" name="uri" value="@{req.uri}">
-                        <fieldset>
-                            <legend>Job Controls</legend>
-                            @defining(job.status){case status =>
-                            @status match {
-                                case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
-                                case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
-                            }}
-                            <button type="submit" name="action" value="delete" class="delete">@Messages("job.button.delete")</button>
-                        </fieldset>
-                    </form>
-                    <form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
+                    <% if(isIdle) { %>
+                    <a class="button run">@Messages("job.button.run")</a>
+                    <% } else { %>
+                    <a class="button stop">@Messages("job.button.stop")</a>
+                    <% } %>
+                    <a class="button delete">@Messages("job.button.delete")</a>
+                    <form class="search" action="<%= url %>" method=get>
                         <fieldset>
                             <legend>Search</legend>
                             <input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>
@@ -90,7 +81,7 @@
                             <button type=submit>@Messages("job.button.search")</button>
                         </fieldset>
                     </form>
-                    <form class="group" action="@routes.Jobs.dispatcher(job.id)" method=get>
+                    <form class="group" action="<%= url %>" method=get>
                         <fieldset class="dropdown">
                             <legend>Report by</legend>
                             <input name=group type=radio value="url" id="url" @if(req.queryString.get("group").flatten.isEmpty || req.queryString.get("group").flatten.exists(_ == "url")){checked}>
@@ -102,4 +93,4 @@
                     </form>
                 </dd>
             </dl>
-        </article>
+        </script>
