@@ -10,7 +10,8 @@ import org.joda.time._
  */
 sealed trait RunUpdate 
 
-case class UpdateData(data: JobData, jobId: JobId, activity: RunActivity) extends RunUpdate
+case class UpdateData(jobId: JobId, data: JobData, activity: RunActivity) extends RunUpdate
+case class RunCompleted(jobId: JobId, completedOn: DateTime) extends RunUpdate
 
 /**
  * A new Response was received during the exploration

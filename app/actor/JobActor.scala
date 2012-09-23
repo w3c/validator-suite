@@ -103,24 +103,35 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   if (initialState === Started) executeCommands(initialRun, self, toBeFetched, toBeAsserted, http, assertionsActorRef)
 
   // TODO
-  conf.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
+  //conf.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
 
   startWith(initialState, initialRun)
 
   def stateOf(run: Run): State = {
+
+    // T: Should completedOn really be overidden on each call of stateOf?
     val _run =
-      if (run.hasNoPendingAction) {
+      if (run.hasNoPendingAction && !run.completedOn.isDefined) {
         val now = DateTime.now(DateTimeZone.UTC)
         Run.complete(job.jobUri, run.runUri, now)
+        val msg = RunCompleted(job.id, now)
+        tellEverybody(msg)
         run.copy(completedOn = Some(now))
       } else {
         run
       }
 
+    // Compare the state data and not the state of the fsm to tell if we must broadcast
+    // sameAs() compares jobData objects ignoring createdAt
+    if (!_run.jobData.sameAs(stateData.jobData)) {
+      val msg = UpdateData(job.id, _run.jobData, _run.activity)
+      tellEverybody(msg)
+    }
+
     if (stateData.state /== _run.state) {
       logger.debug("%s: transition to new state %s" format (run.shortId, _run.state.toString))
-      val msg = UpdateData(_run.jobData, job.id, _run.activity)
-      tellEverybody(msg)
+      //val msg = UpdateData(_run.jobData, job.id, _run.activity)
+      //tellEverybody(msg)
       if (_run.noMoreUrlToExplore)
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (_run.shortId, _run.numberOfFetchedResources))
       if (_run.pendingAssertions == 0)
@@ -155,7 +166,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     // this may not be needed
-    case Event('Tick, run) => {
+    /*case Event('Tick, run) => {
       // do it only if necessary (ie. something has changed since last time)
       if (run ne stateData) {
         // save jobData?
@@ -164,7 +175,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
         tellEverybody(msg)
       }
       stay()
-    }
+    }*/
 
     case Event(e, run) => {
       logger.error("%s: unexpected event %s" format (run.shortId, e.toString))
