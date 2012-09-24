@@ -2,6 +2,36 @@
     overflow: auto;
 }
 
+.no-js .folds {
+
+    article:focus {
+
+        dl {
+            overflow: auto;
+        }
+
+        .context,
+        .description,
+        .more {
+            display: block;
+        }
+
+        .title.fold:before {
+            content: "- ";
+        }
+
+        .url {
+            display: block;
+        }
+
+        .context {
+            display: table;
+            > * {display: table-cell;}
+            .line, .column {width: 5em;}
+        }
+    }
+}
+
 .folds {
 
     padding: 0 !important;

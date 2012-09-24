@@ -1,0 +1,55 @@
+.js {
+
+    #jobForm {
+
+        .jsFold {
+
+            /*&:before{
+                content: "+";
+                margin: 0 0.5em 0 0;
+                font-size: 1.5em;
+                line-height: 0.9em;
+                font-weight: bold;
+            }*/
+
+            cursor: pointer;
+
+            display: inline-block;
+            vertical-align: middle;
+
+            height:0;
+            width:0;
+            overflow: hidden;
+
+            &:not(.folded) {
+                border-top: 4px solid transparent;
+                border-bottom: 4px solid transparent;
+                border-right: 7px solid #222;
+            }
+
+            &.folded {
+                //content: "-";
+
+                border-left: 4px solid transparent;
+                border-right: 4px solid transparent;
+                border-top: 7px solid #222;
+            }
+
+        }
+
+        .jsFold + fieldset {
+            height: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .jsFold.folded + fieldset {
+            height: auto;
+            padding: 5px 0;
+        }
+
+
+
+    }
+
+}

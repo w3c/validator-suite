@@ -26,8 +26,10 @@
     <script src='@routes.Assets.at("javascripts/" + script)'></script>}
     <script src='@routes.Assets.at("javascripts/libs/progress-polyfill.js")'></script>
     @if(exec != "") {
-    <script>@Html(exec)</script>
-    }
+    <script>
+        $(function (){$('body').removeClass('no-js').addClass('js');});
+        @Html(exec)
+    </script>}
     @**<script src='@routes.Assets.at("javascripts/libs/prism.js")'></script>**@
 </body>
 </html>

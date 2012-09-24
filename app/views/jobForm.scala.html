@@ -13,7 +13,15 @@
            output.html(slider.attr("value"));
         });
         slider.change();
-    })
+
+        $('input[name=assertor] + fieldset').each(function (){
+            var fold = $('<a class="jsFold"></a>');
+            fold.click(function (){
+                $(this).toggleClass('folded');
+            });
+            $(this).before(fold);
+        });
+    });
   """){
    
    @***** Header ******@
