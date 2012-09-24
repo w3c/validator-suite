@@ -24,7 +24,7 @@
             &:not(.folded) {
                 border-top: 4px solid transparent;
                 border-bottom: 4px solid transparent;
-                border-right: 7px solid #222;
+                border-left: 7px solid #222;
             }
 
             &.folded {
@@ -41,6 +41,11 @@
             height: 0;
             padding: 0;
             overflow: hidden;
+        }
+
+
+        .jsFold:not(.folded) + fieldset > * {
+            display: none;
         }
 
         .jsFold.folded + fieldset {

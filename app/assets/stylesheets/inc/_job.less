@@ -82,6 +82,17 @@
                     display: none;
                 }
 
+                button, .button, input {vertical-align: top;}
+
+                // refactor
+                input,
+                select,
+                input[type="text"],
+                input[type="url"],
+                input[type="range"],
+                input[pattern] {
+                    font-size: 13px;
+                }
             }
             &.status {
                 form, a:not(:link) {

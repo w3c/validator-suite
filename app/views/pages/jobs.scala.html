@@ -17,8 +17,13 @@
         @if(page.iterator.size < 1) {
         <article>
             <p>
+            @if(req.getQueryString("search") != None) {
+                @Messages("search.empty.jobs")
+                <a href="@Helper.clearParam("search")">@Messages("search.clear")</a>
+            } else {
                 @Messages("jobs.empty")
                 <a href="@routes.Jobs.new1">@Messages("jobs.create.first")</a>
+            }
             </p>
         </article>}
 

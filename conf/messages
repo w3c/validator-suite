@@ -114,3 +114,6 @@ resources.empty=No resources to show.
 resources.revalidate=Revalidate this resource.
 assertions.empty=No assertions to show.
 
+report.link=Go to the report
+search.empty.jobs=No search result.
+search.clear=Clear search.
