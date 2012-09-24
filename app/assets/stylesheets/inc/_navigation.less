@@ -35,15 +35,20 @@
 
 /* Crumb nav */
 #crumbs {
-    font-size:0.9em;
-    padding:15px 10px;
-}
-#crumbs li {
-    display:inline;
-    //text-transform: capitalize;
+    font-size: 0.9em;
+    padding: 15px 10px 0 10px;
+
+    ul {
+        border-bottom: 1px solid #C8C8C8;
+        padding-bottom: 13px;
+    }
+
+    li {
+        display:inline;
+    }
 }
 #crumbs li:not(:last-child):after {content: " > "}
 #crumbs a {
-    color:black;
+    color: #222;
     text-decoration: underline;
 }

@@ -15,9 +15,9 @@ object Helper {
   def shorten(string: String, limit: Int): String = {
     if (string.size > limit) {
       val dif = string.size - limit
-      string.substring(0, (string.size - dif)/2) +
+      string.substring(0, limit/2) +
         """…""" +
-        string.substring((string.size + dif)/2)
+        string.substring(string.size - limit/2)
     } else string
   }
 

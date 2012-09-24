@@ -15,6 +15,12 @@
                 display: none;
             }
         }
+        /*.health {
+            font-size: 0;
+            width: 1px;
+            overflow: hidden;
+            visibility: none;
+        }*/
         .completedOn {
             width: 180px;
         }
@@ -26,7 +32,7 @@
         .name a {
             line-height: 15px;
             vertical-align: top;
-            color: black;
+            color: #222;
             //text-decoration: underline;
         }
 
@@ -51,8 +57,14 @@
                 position: absolute;
             }
             &.health {
-                right: 20px;
-                bottom: 21px;
+                //progress {
+                    position: absolute;
+                    right: 20px;
+                    bottom: 21px;
+                //}
+
+                progress[role] { width: 228px !important; }
+
             }
             &.actions {
                 left: 10px;

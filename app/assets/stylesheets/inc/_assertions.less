@@ -74,6 +74,12 @@
         .url {
             display: block;
         }
+
+        .context {
+            display: table;
+            > * {display: table-cell;}
+            .line, .column {width: 5em;}
+        }
     }
 
     .occurrences {
@@ -152,11 +158,28 @@
     }
 
     .code {
+        color: black;
+        text-shadow: 0 1px white;
+        font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        direction: ltr;
+        text-align: left;
+        white-space: pre;
+        word-spacing: normal;
+
+        -moz-tab-size: 4;
+        -o-tab-size: 4;
+        tab-size: 4;
+
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        -ms-hyphens: none;
+        hyphens: none;
+
+
         display: block;
-        background-color: #f7edec;
+        background-color: #F5F2F0;
         border: 1px solid #cbcdca;
-        padding: 4px;
-        margin-top: 5px;
+        padding: 0.5em;
         word-wrap: break-word;
 
         strong {

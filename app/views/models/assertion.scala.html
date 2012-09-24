@@ -23,9 +23,12 @@
         <dt>@Messages("assertion.context")</dt>
         @assertion.contexts.take(50).map { case context =>
         <dd class="context">
-            @if(context.line.isDefined){Line <span class="line">@context.line</span>}
-            @if(context.column.isDefined){, Column <span class="column">@context.column</span>}
-            @if(context.content.isDefined){<code class="code">@context.content</code>}
+            @if(context.line.isDefined){
+            <span class="line">Line <span>@context.line</span></span>}
+            @if(context.column.isDefined){
+            <span class="column">Column <span>@context.column</span></span>}
+            @if(context.content.isDefined){
+            <code class="code language-">@context.content</code>}
         </dd>}
         @if(assertion.contexts.size > 50){
         <dd class="more">

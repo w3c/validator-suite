@@ -1,5 +1,4 @@
 @(html: Html = Html(""))
-    <hr>
 
     <footer>
 		@html
@@ -7,7 +6,7 @@
 	
 
 	
-	<script type="text/template" id="urlArticle-template">
+@**	<script type="text/template" id="urlArticle-template">
 		<dl>
 			<dt>URL</dt>
 			<dd class="url"><a href="<%= encodeURIComponent(url) %>"><%= url %></a></dd>
@@ -21,4 +20,4 @@
 			<dt>Errors</dt>
 			<dd class="errors"><% if (timestamp === "") { %><%= "-" %><% } else { %><%= errors %><% } %></dd>
 		</dl>
-	</script>
+	</script>**@

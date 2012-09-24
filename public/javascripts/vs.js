@@ -19,4 +19,16 @@
 
     };
 
+    var shorten = W3.shorten = function (string, limit) {
+        var _string, dif;
+        _string = string.replace("http://", "");
+        if (_string.length > limit) {
+            dif = _string.length - limit
+            return _string.substring(0, limit/2) + "…" +
+                   _string.substring(string.length - limit/2)
+        } else {
+            return _string
+        }
+    }
+
 })();

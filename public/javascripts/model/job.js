@@ -169,7 +169,7 @@
             return false;
         },
         remove: function () {
-            $el.remove();
+            this.$el.remove();
         }
 
     });

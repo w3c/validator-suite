@@ -28,13 +28,9 @@ $(function () {
     @libs.navigation("Report for job \"" + job.name +"\"", organization, List((job.name ,"")))
     @libs.messages(messages)
     
-    <hr>
-    
     <section id="jobs" class="single">
         @pages.jobs(Page(job))
     </section>
-    
-    <hr>
     
     <section id="resources" class="list" data-id="@job.id">
         @pages.resources(page, job)

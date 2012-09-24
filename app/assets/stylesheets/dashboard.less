@@ -11,6 +11,7 @@
 @import 'inc/_admin.less';
 @import 'inc/_navigation.less';
 @import 'inc/_messages.less';
+@import 'inc/_actions.less';
 @import 'inc/_list.less';
 @import 'inc/_single.less';
 @import 'inc/_jobs.less';
@@ -23,6 +24,8 @@
 @import 'inc/_footer.less';
 @import 'inc/_jobForm.less';
 @import 'inc/_loginForm.less';
+
+@import 'libs/prism.less';
 
 a.external {
     //display: inline-block;
@@ -85,6 +88,10 @@ button,
     }
 }
 
+a.button {
+    color: #333;
+}
+
 button::-moz-focus-inner {
     padding: 0;
     border: 0;
@@ -100,6 +107,10 @@ button[disabled],
     padding: 5px 8px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+}
+
+input:focus + .button.clear {
+    //box-shadow: 0 0px 3px #C80;
 }
 
 span.legend {

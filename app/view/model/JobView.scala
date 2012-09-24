@@ -61,7 +61,17 @@ object JobView {
 
     def filter(param: Option[String]): (JobView) => Boolean = _ => true
 
-    def search(search: Option[String]): (JobView) => Boolean = _ => true
+    def search(search: Option[String]): (JobView) => Boolean = {
+      search match {
+        case Some(searchString) => {
+          case job if (job.name.contains(searchString) || job.entrypoint.toString.contains(searchString))
+            => true
+          case _
+            => false
+        }
+        case None => _ => true
+      }
+    }
   }
 
   val ordering: PageOrdering[JobView] = new PageOrdering[JobView] {

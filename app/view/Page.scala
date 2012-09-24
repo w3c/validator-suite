@@ -84,8 +84,9 @@ object Page {
   val defaultPerPage = 30
   val maxPerPage = 1000
 
-  def apply[A <: View](a: A)(implicit req: Request[_], ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = {
-    apply(Iterable(a))
+  def apply[A <: View](a: A)(implicit ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = {
+    //apply(Iterable(a))
+    new Page[A](Iterable(a))
   }
 
   def apply[A <: View](a: Iterable[A])(
