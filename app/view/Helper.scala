@@ -5,11 +5,13 @@ import org.joda.time.format._
 import org.w3.util.URL
 import play.api.i18n.Messages
 import play.api.mvc.Request
+import play.api.Play._
 import java.net.URLEncoder
-import collection.immutable.Iterable
 
 object Helper {
-  
+
+  def config = current.configuration
+
   def encode(url: URL): String = URLEncoder.encode(url.toString, "utf-8")
 
   def shorten(string: String, limit: Int): String = {

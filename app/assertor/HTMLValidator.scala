@@ -14,7 +14,7 @@ object HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor
 
   val supportedMimeTypes = List("text/html", "application/xhtml+xml", "application/xml", "image/svg+xml", "application/mathml+xml", "application/smil+xml")
   
-  val serviceUrl = "http://qa-dev.w3.org/wmvs/HEAD/check"
+  val serviceUrl = "http://validator.w3.org/check"
   
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     validatorURLForHuman(url, assertorConfiguration + ("output" -> List("ucn"), "No200" -> List("1")))
