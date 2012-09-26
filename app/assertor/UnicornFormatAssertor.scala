@@ -42,7 +42,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
           } yield {
             val contextRef: Option[String] = context.attrs get "ref"
             val content = contextRef.fold(
-              url => """<a href="%s" target="_blank" class="external">%s</a> """ format (url, url),
+              url => """<a href="%s" target="_blank" class="external">%s</a> %s""" format (url, Helper.shorten(url, 100), htmlString(context)),
               htmlString(context)
             )
             //val content = htmlString(context)

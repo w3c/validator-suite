@@ -106,11 +106,12 @@
         }
 
         .context {
-            display: table;
-            min-width: 50%;
+            //display: table;
+            //min-width: 50%;
             .border-sizing();
+            width:100%;
 
-            > * {display: table-cell; vertical-align: middle;}
+            //> * {display: table-cell; vertical-align: middle;}
             //.line, .column {width: 5em;}
         }
     }
@@ -211,7 +212,7 @@
         hyphens: none;
 
 
-        display: block;
+        display: inline-block;
         background-color: #F5F2F0;
         border: 1px solid #cbcdca;
         padding: 0.5em;
@@ -260,5 +261,10 @@
             font-weight: bold;
             margin-right: 2px;
         }
+    }
+    .code {
+        min-width: 50%;
+        max-width: 95%;
+        vertical-align: top;
     }
 }
