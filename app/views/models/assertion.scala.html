@@ -5,9 +5,34 @@
         <dd class="assertor">@assertion.assertor</dd>
         <dt>@Messages("assertion.severity")</dt>
         <dd class="severity">@assertion.severity</dd>
-        @if(assertion.occurrences > 1) {
+
         <dt>@Messages("assertion.occurrences")</dt>
-        <dd class="occurrences">@assertion.occurrences times</dd>}
+        <dd class="occurrences">
+        @assertion match {
+          case assertion: SingleAssertionView => {
+            @if(assertion.occurrences > 1) {
+            @Messages("assertion.occurrences.count", assertion.occurrences)
+            } else {
+            @Messages("assertion.occurrences.count.one")
+            }
+          }
+          case assertion: GroupedAssertionView => {
+            @if(assertion.resources.size > 1) {
+              @if(assertion.occurrences > 1) {
+              @Messages("assertion.occurrences.count.resources", Messages("assertion.occurrences.count", assertion.occurrences), assertion.resources.size)
+              } else {
+              @Messages("assertion.occurrences.count.resources", Messages("assertion.occurrences.count.one"), assertion.resources.size)
+              }
+            } else {
+              @if(assertion.occurrences > 1) {
+              @Messages("assertion.occurrences.count", assertion.occurrences)
+              } else {
+              @Messages("assertion.occurrences.count.one")
+              }
+            }
+          }
+        }
+        </dd>
         <dt>@Messages("assertion.message")</dt>
         <dd class="title@if(!assertion.isEmpty){ fold}">@assertion.title</dd>
         @if(assertion.description.isDefined) {
@@ -24,9 +49,9 @@
         @assertion.contexts.take(50).map { case context =>
         <dd class="context">
             @if(context.line.isDefined){
-            <span class="line">Line <span>@context.line</span></span>}
+            <span class="line">Line <span title="Line @context.line">@context.line</span></span>}
             @if(context.column.isDefined){
-            <span class="column">Column <span>@context.column</span></span>}
+            <span class="column">Column <span title="Column @context.column">@context.column</span></span>}
             @if(context.content.isDefined){
             <code class="code language-">@context.content</code>}
         </dd>}
@@ -36,7 +61,7 @@
         </dd>}
       }
       case assertion: GroupedAssertionView => {
-        <dt>@Messages("assertion.resources.detail")</dt>
+        <dt class="url">@Messages("assertion.resources.detail")</dt>
         @assertion.resources.take(50).map { case url =>
         <dd class="url">
             <a href="@Helper.encode(url)" class="report" title="@Messages("report.link")">

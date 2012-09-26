@@ -1,3 +1,17 @@
+(function($) {
+    $.QueryString = (function(a) {
+        if (a == "") return {};
+        var b = {};
+        for (var i = 0; i < a.length; ++i)
+        {
+            var p=a[i].split('=');
+            if (p.length != 2) continue;
+            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+        }
+        return b;
+    })(window.location.search.substr(1).split('&'))
+})(jQuery);
+
 (function (){
 
     var W3 = window.W3 = (window.W3 || {});
@@ -115,7 +129,13 @@
             //"click .off"    : "putOff",
             "click .stop"   : "stop",
             "click .run"    : "run",
-            "click .delete" : "_delete"
+            "click .delete" : "_delete",
+            "change [name=group]" : "group"
+            //"keyup [name=search]": "search"
+        },
+
+        group: function (event) {
+            $(event.target).parents('form').submit();
         },
 
         initialize: function () {
@@ -128,8 +148,17 @@
             }
         },
 
-        render: function () {
+        /*search: function (event) {
+            console.log(event);
+            console.log(event.target.value);
+            this.formOptions.search = event.target.value;
+            this.formOptions.searchPosition = event.target.selectionStart;
+            console.log(this.formOptions.searchPosition);
+            this.render();
+            return;
+        },*/
 
+        render: function () {
             this.$el.html(this.options.template(
                 _.extend(
                     this.model.toJSON(),
@@ -137,6 +166,8 @@
                         url : this.model.url(),
                         isIdle: this.model.isIdle(),
                         isCompleted: this.model.get("completedOn").timestamp != undefined
+                        //search: this.formOptions.search,
+                        //group: this.formOptions.group
                     }
                 )
             ));

@@ -4,17 +4,56 @@
 
     var Socket = W3.Socket = {
 
+        socketProtocol: {
+            "http:": "ws://",
+            "https:": "wss://"
+        },
+
+        callback: function(e) {
+            console.log(e);
+        },
+
         open: function (options) {
-            var url, onmessage, ws;
-            url = options && options.url ? "ws://" + window.location.host + options.url : "ws://" + window.location;
-            onmessage = options && options.onmessage ? options.onmessage : undefined;
-            ws = WebSocket ? new WebSocket(url) : {
-                send: function (m){return false;},
-                close: function (){}
+
+            var url, onmessage, socket, cometsocket;
+
+            //this.socketProtocol[location.protocol] + location.host +
+
+            url = options && options.url ? options.url : "";
+
+            onmessage = options && _.isFunction(options.onmessage) ? options.onmessage : function () {};
+
+            cometsocket = function (url) {
+
+                $(function () {
+                    var iframe = $('<iframe src="' + url + '"></iframe>');
+                    setTimeout(function () {
+                        $('body').append(iframe);
+                    }, 10);
+                });
+
+                return {
+
+                };
             };
-            if (_.isFunction(options.onmessage))
-                ws.onmessage = options.onmessage;
-            return ws;
+
+            window.W3.Socket.callback = onmessage;
+
+            if (WebSocket) {
+                socket = new WebSocket(this.socketProtocol[location.protocol] + location.host + url + '/ws');
+                socket.onmessage = function (event) {
+                    return onmessage($.parseJSON(event.data));
+                };
+                socket.onerror = function (e) {
+                    console.log(e);
+                    new cometsocket(url + '/comet');
+                };
+            } else {
+                console.log("falling back to comet");
+                socket = new cometsocket(url + '/comet');
+            }
+
+            return socket;
         }
 
     };

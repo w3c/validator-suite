@@ -35,8 +35,8 @@ object GroupedAssertionView {
       val assertorKey = assertions.head.assertor
       val severity = assertions.head.severity
       val title = HtmlFormat.raw(assertions.head.title)
-      val description = assertions.head.description.map(HtmlFormat.raw)
-      val occurrences = assertions.size
+      val description = None //assertions.head.description.map(HtmlFormat.raw)
+      val occurrences = assertions.foldLeft(0)((count, assertion) => count + scala.math.max(1, assertion.contexts.size))
       val resources = assertions.map(_.url).toSeq.sortBy(_.toString)
 
       GroupedAssertionView(

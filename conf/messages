@@ -57,6 +57,10 @@ assertion.context.detail= TODO
 assertion.resources=Resources
 assertion.resources.detail=Resources where this message appears
 
+assertion.occurrences.count={0} times
+assertion.occurrences.count.one=1 time
+assertion.occurrences.count.resources={0} in {1} resources
+
 
 # Application
 application.loggedOut=You have been logged out

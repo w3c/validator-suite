@@ -40,9 +40,10 @@ $(function () {
 
     dashboard.jobs.reset(_.map($("#jobs .job").get(), htmlToJob));
 
-    var _callback = function (event) {
-        try {
-            var json = $.parseJSON(event.data);
+    var onmessage = function (json) {
+        //console.log(data);
+        try { // useful?
+            //var json = $.parseJSON(data);
 
             //console.log(event.data);
 
@@ -98,8 +99,15 @@ $(function () {
     };
 
     W3.Socket.open({
-        url: "/suite/jobs/ws",
-        onmessage: _.bind(_callback, this)
+        url: "/suite/jobs",
+        onmessage: _.bind(onmessage, this)
+    });
+
+    $('.pagination form button').css('display', 'none');
+
+    var pageSelect = $('.pagination select');
+    pageSelect.change(function () {
+        pageSelect.parents('form').submit()
     });
 
 });

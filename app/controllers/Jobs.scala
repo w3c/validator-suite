@@ -14,9 +14,10 @@ import play.api.libs.concurrent.Promise
 import play.api.libs.iteratee.Enumeratee
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Iteratee
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsString, JsValue}
 import play.api.mvc._
 import scalaz.Scalaz._
+import play.api.libs.Comet
 
 object Jobs extends Controller {
   
@@ -145,6 +146,25 @@ object Jobs extends Controller {
     val enumerator =  Enumerator.flatten(promiseEnumerator)
 
     (iteratee, enumerator)
+  }
+
+  def cometSocket: ActionA = Action { implicit req =>
+    val promiseEnumerator: Promise[Enumerator[JsValue]] = ((
+      for {
+        user <- getUser
+        org <- user.getOrganization() map (_.get)
+      } yield {
+        // ready to explode...
+        // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
+        org.enumerator &> Enumeratee.collect {
+          case a: UpdateData => JobsUpdate.json(a.jobId, a.data, a.activity)
+          case a: RunCompleted => JobsUpdate.json(a.jobId, a.completedOn)
+        }
+      }).failMap(_ => Enumerator.eof[JsValue])).toPromise
+
+    val enumerator: Enumerator[JsValue] =  Enumerator.flatten(promiseEnumerator)
+
+    Ok.stream(Enumerator[JsValue](JsString("hello")).>>>(enumerator) &> Comet(callback = "parent.W3.Socket.callback"))
   }
   
   def reportSocket(id: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
