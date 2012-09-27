@@ -26,9 +26,8 @@
             cometsocket = function (url) {
 
                 $(function () {
-                    var iframe = $('<iframe src="' + url + '"></iframe>');
                     setTimeout(function () {
-                        $('body').append(iframe);
+                        $('body').append($('<iframe src="' + url + '"></iframe>'));
                     }, 10);
                 });
 
@@ -39,7 +38,7 @@
 
             window.W3.Socket.callback = onmessage;
 
-            if (WebSocket) {
+            if (false){ //WebSocket) {
                 socket = new WebSocket(this.socketProtocol[location.protocol] + location.host + url + '/ws');
                 socket.onmessage = function (event) {
                     return onmessage($.parseJSON(event.data));
