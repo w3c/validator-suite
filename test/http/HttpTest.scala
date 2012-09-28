@@ -8,6 +8,7 @@ import org.w3.vs.model._
 import org.w3.util._
 import akka.util.duration._
 import org.w3.util.akkaext._
+import Http._
 
 class HttpTest extends RunTestHelper with Inside {
   

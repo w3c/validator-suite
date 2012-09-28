@@ -8,6 +8,7 @@ import akka.util.duration._
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
+import org.w3.vs.http.Http._
 import akka.actor._
 
 class ResumedRunTest extends RunTestHelper with TestKitHelper {

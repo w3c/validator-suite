@@ -41,11 +41,11 @@ object JobActor {
       action match {
         case GET => {
           logger.debug("%s: >>> GET %s" format (run.shortId, url))
-          http ! Fetch(url, GET, run.id)
+          http ! Http.Fetch(url, GET, run.id)
         }
         case HEAD => {
           logger.debug("%s: >>> HEAD %s" format (run.shortId, url))
-          http ! Fetch(url, HEAD, run.id)
+          http ! Http.Fetch(url, HEAD, run.id)
         }
         case IGNORE => {
           logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (run.shortId, url))

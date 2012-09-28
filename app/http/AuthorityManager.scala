@@ -9,6 +9,7 @@ import play.Logger
 import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
 import scala.collection.mutable.Queue
+import Http._
 
 object AuthorityManager {
 

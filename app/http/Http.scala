@@ -9,9 +9,19 @@ import scalaz.Scalaz._
 import org.w3.util.akkaext._
 import AuthorityManager.encode
 
-case class Fetch(url: URL, action: HttpAction, context: (OrganizationId, JobId, RunId))
-case class SetSleepTime(value: Long)
-case object HowManyPendingRequests
+object Http {
+
+  case class Fetch(url: URL, action: HttpAction, context: (OrganizationId, JobId, RunId))
+  case class SetSleepTime(value: Long)
+  case object HowManyPendingRequests
+  case object GetOn
+  case object GetOff
+  case object PutOn
+  case object PutOff
+
+}
+
+import Http._
 
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
