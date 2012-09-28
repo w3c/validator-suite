@@ -4,7 +4,7 @@ import akka.actor._
 import org.w3.util._
 import play.Logger
 import org.w3.vs.model._
-import org.w3.vs.VSConfiguration
+import com.ning.http.client._
 import scalaz.Scalaz._
 import org.w3.util.akkaext._
 import AuthorityManager.encode
@@ -26,9 +26,7 @@ import Http._
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
  */
-class Http()(implicit configuration: VSConfiguration) extends Actor with PathAwareActor {
-
-  val httpClient = configuration.httpClient
+class Http(httpClient: AsyncHttpClient, scheduler: Scheduler) extends Actor with PathAwareActor {
 
   val logger = Logger.of(classOf[Http])
 
@@ -36,7 +34,7 @@ class Http()(implicit configuration: VSConfiguration) extends Actor with PathAwa
     val encoded = encode(authority)
     try {
       context.children.find(_.path.name === encoded) getOrElse {
-        context.actorOf(Props(new AuthorityManager(authority, httpClient, configuration.system.scheduler)), name = encoded)
+        context.actorOf(Props(new AuthorityManager(authority, httpClient, scheduler)), name = encoded)
       }
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / encoded)

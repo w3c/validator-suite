@@ -10,6 +10,7 @@ import akka.util.duration._
 import org.w3.util.akkaext._
 import Http._
 
+// the test would be better without extending RunTestHelper...
 class HttpTest extends RunTestHelper with Inside {
   
   val servers = Seq(Webserver(9001, Website.cyclic(10).toServlet))

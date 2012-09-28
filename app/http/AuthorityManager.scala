@@ -5,9 +5,7 @@ import akka.actor._
 import org.w3.util._
 import akka.util.duration._
 import java.lang.System.currentTimeMillis
-import play.Logger
 import org.w3.vs.model._
-import org.w3.vs.VSConfiguration
 import scala.collection.mutable.Queue
 import Http._
 
@@ -20,7 +18,7 @@ object AuthorityManager {
 
 class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, scheduler: Scheduler) extends Actor {
   
-  val logger = Logger.of(classOf[AuthorityManager])
+  val logger = play.Logger.of(classOf[AuthorityManager])
   
   var sleepTime: Long = 500L
   
