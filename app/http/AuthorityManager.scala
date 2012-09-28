@@ -62,8 +62,8 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
       scheduleTick()
     }
 
-    case fetch @ Fetch(url, action, context) => {
-      doFetch(sender, url, action, context)
+    case fetch @ Fetch(url, action, token) => {
+      doFetch(sender, url, action, token)
     }
 
     case 'Tick if queue.isEmpty => {
@@ -71,8 +71,8 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
     }
 
     case 'Tick => {
-      val (thesender, Fetch(url, action, context)) = queue.dequeue()
-      doFetch(thesender, url, action, context)
+      val (thesender, Fetch(url, action, token)) = queue.dequeue()
+      doFetch(thesender, url, action, token)
       if (queue.nonEmpty)
         scheduleTick()
       else
@@ -86,7 +86,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
   }
 
 
-  final def doFetch(to: ActorRef, url: URL, action: HttpAction, context: (OrganizationId, JobId, RunId)): Unit = {
+  final def doFetch(to: ActorRef, url: URL, action: HttpAction, token: Any): Unit = {
 
     lastFetchTimestamp = current()
     
@@ -105,7 +105,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
             body
           } catch {
             case t: Throwable => {
-              to ! (context._3, ErrorResponse(url = url, action = action, why = t.getMessage))
+              to ! (token, ErrorResponse(url = url, action = action, why = t.getMessage))
               throw t // rethrow for benefit of AsyncHttpClient
             }
           } finally {
@@ -146,7 +146,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
             (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
           val body = response.getResponseBody()
           val fetchResponse = HttpResponse(url = url, action = action, status = status, headers = headers, body = body)
-          to ! (context._3, fetchResponse)
+          to ! (token, fetchResponse)
         }
       }
     }
