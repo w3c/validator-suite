@@ -18,10 +18,8 @@ object AuthorityManager {
 
 }
 
-final class AuthorityManager(authority: Authority)(implicit configuration: VSConfiguration) extends Actor {
+class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, scheduler: Scheduler) extends Actor {
   
-  val httpClient = configuration.httpClient
-
   val logger = Logger.of(classOf[AuthorityManager])
   
   var sleepTime: Long = 500L
@@ -42,7 +40,8 @@ final class AuthorityManager(authority: Authority)(implicit configuration: VSCon
 
   def scheduleTick(): Unit =
     if (sleepTime > 0 && needsToSleep() > 0) {
-      configuration.system.scheduler.scheduleOnce(needsToSleep().millis, self, 'Tick)
+      //configuration.system.scheduler.scheduleOnce(needsToSleep().millis, self, 'Tick)
+      scheduler.scheduleOnce(needsToSleep().millis, self, 'Tick)
       pendingTick = true
     }
 

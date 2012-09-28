@@ -36,7 +36,7 @@ class Http()(implicit configuration: VSConfiguration) extends Actor with PathAwa
     val encoded = encode(authority)
     try {
       context.children.find(_.path.name === encoded) getOrElse {
-        context.actorOf(Props(new AuthorityManager(authority)), name = encoded)
+        context.actorOf(Props(new AuthorityManager(authority, httpClient, configuration.system.scheduler)), name = encoded)
       }
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / encoded)
