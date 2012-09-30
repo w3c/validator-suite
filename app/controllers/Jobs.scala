@@ -14,10 +14,10 @@ import play.api.libs.concurrent.Promise
 import play.api.libs.iteratee.Enumeratee
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Iteratee
-import play.api.libs.json.{JsString, JsValue}
+import play.api.libs.json.{JsArray, JsString, Json, JsValue}
 import play.api.mvc._
 import scalaz.Scalaz._
-import play.api.libs.Comet
+import play.api.libs.{EventSource, Comet}
 
 object Jobs extends Controller {
   
@@ -28,7 +28,9 @@ object Jobs extends Controller {
   implicit def configuration = org.w3.vs.Prod.configuration
   
   import Application._
-  
+
+  import org.w3.vs.view._
+
   def redirect: ActionA = Action { implicit req => Redirect(routes.Jobs.index) }
   
   def index: ActionA = Action { implicit req =>
@@ -39,7 +41,13 @@ object Jobs extends Controller {
         jobs <- Job.getFor(user.id)
         jobViews <- JobView.fromJobs(jobs)
       } yield {
-        Ok(views.html.dashboard(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
+
+
+
+        if (!isAjax)
+          Ok(views.html.dashboard(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        else
+          Ok(JsArray(jobViews.map(_.toJson()).toSeq))
       }) failMap toError).toPromise
     }
   }
@@ -53,6 +61,9 @@ object Jobs extends Controller {
         assertions <- job.getAssertions()
         jobView <- JobView.fromJob(job)
       } yield {
+
+        println(play.api.libs.json.Json.toJson(jobView)(JobView.writes))
+
         req.getQueryString("group") match {
           case Some("message") => {
             val assertorViews = AssertorView.fromAssertions(assertions)
@@ -126,45 +137,31 @@ object Jobs extends Controller {
       case a => BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "unknown action " + a))))) // TODO Logging
     }).getOrElse(BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
   }
-  
-  def dashboardSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
-    val promiseEnumerator: Promise[Enumerator[JsValue]] = ((
-      for {
-        user <- getUser
-        org <- user.getOrganization() map (_.get)
-      } yield {
-        // ready to explode...
-        // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
-        org.enumerator &> Enumeratee.collect {
-          case a: UpdateData => JobsUpdate.json(a.jobId, a.data, a.activity)
-          case a: RunCompleted => JobsUpdate.json(a.jobId, a.completedOn)
-        }
-      }
-    ).failMap(_ => Enumerator.eof[JsValue])).toPromise
-    
-    val iteratee = Iteratee.ignore[JsValue]
-    val enumerator =  Enumerator.flatten(promiseEnumerator)
 
+  private def enumerator(implicit session: Session): Enumerator[JsValue] = Enumerator.flatten(((
+    for {
+      user <- getUser
+      org <- user.getOrganization() map (_.get)
+    } yield {
+      // ready to explode...
+      // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
+      org.enumerator &> Enumeratee.collect {
+        case a: UpdateData => JobView.toJobMessage(a.jobId, a.data, a.activity)
+        case a: RunCompleted => JobView.toJobMessage(a.jobId, a.completedOn)
+      }
+    }).failMap(_ => Enumerator.eof[JsValue])).toPromise)
+
+  def dashboardSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
+    val iteratee = Iteratee.ignore[JsValue]
     (iteratee, enumerator)
   }
 
   def cometSocket: ActionA = Action { implicit req =>
-    val promiseEnumerator: Promise[Enumerator[JsValue]] = ((
-      for {
-        user <- getUser
-        org <- user.getOrganization() map (_.get)
-      } yield {
-        // ready to explode...
-        // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
-        org.enumerator &> Enumeratee.collect {
-          case a: UpdateData => JobsUpdate.json(a.jobId, a.data, a.activity)
-          case a: RunCompleted => JobsUpdate.json(a.jobId, a.completedOn)
-        }
-      }).failMap(_ => Enumerator.eof[JsValue])).toPromise
+    Ok.stream(enumerator &> Comet(callback = "parent.VS.jobupdate"))
+  }
 
-    val enumerator: Enumerator[JsValue] =  Enumerator.flatten(promiseEnumerator)
-
-    Ok.stream(Enumerator[JsValue](JsString("hello")).>>>(enumerator) &> Comet(callback = "parent.W3.Socket.callback"))
+  def eventsSocket: ActionA = Action { implicit req =>
+    Ok.stream(enumerator &> EventSource()).as("text/event-stream")
   }
   
   def reportSocket(id: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
@@ -174,8 +171,8 @@ object Jobs extends Controller {
         job <- user.getJob(id)
       } yield {
         job.enumerator &> Enumeratee.collect {
-          case a: UpdateData => JobsUpdate.json(a.jobId, a.data, a.activity)
-          case a: RunCompleted => JobsUpdate.json(a.jobId, a.completedOn)
+          case a: UpdateData => JobView.toJobMessage(a.jobId, a.data, a.activity)
+          case a: RunCompleted => JobView.toJobMessage(a.jobId, a.completedOn)
           //case NewResource(resource) => ResourceUpdate.json(resource)
           //case NewAssertions(assertionsC) if (assertionsC.count(_.assertion.severity == Warning) != 0 || assertionsC.count(_.assertion.severity == Error) != 0) => AssertorUpdate.json(assertionsC)
           //case NewAssertorResult(result, datetime) if (!result.isValid) => AssertorUpdate.json(result, datetime)

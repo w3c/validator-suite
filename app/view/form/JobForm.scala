@@ -17,7 +17,7 @@ import org.w3.vs.assertor.Assertor
 object JobForm {
 
   def assertors()(implicit req: Request[AnyContent]): Seq[Assertor] = try {
-    req.body.asFormUrlEncoded.get.get("assertor").get.map(Assertor.get)
+    req.body.asFormUrlEncoded.get.get("assertor[]").get.map(Assertor.get)
   } catch { case _ =>
     Seq.empty
   }

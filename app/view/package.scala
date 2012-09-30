@@ -2,6 +2,7 @@ package org.w3.vs
 
 import org.joda.time.DateTime
 import org.w3.vs.view.model._
+import play.api.libs.json.Writes
 
 package object view {
 
@@ -26,5 +27,7 @@ package object view {
 
   implicit val resourceFiltering = ResourceView.filtering
   implicit val resourceOrdering = ResourceView.ordering
+
+  implicit val jobToJson: Writes[JobView] = JobView.writes
 
 }

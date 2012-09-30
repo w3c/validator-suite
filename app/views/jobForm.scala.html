@@ -14,7 +14,7 @@
         });
         slider.change();
 
-        $('input[name=assertor] + fieldset').each(function (){
+        $('input[name=assertor[]] + fieldset').each(function (){
             var fold = $('<a class="jsFold"></a>');
             fold.click(function (){
                 $(this).toggleClass('folded');

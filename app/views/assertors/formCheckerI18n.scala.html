@@ -1,5 +1,5 @@
 @(form: JobForm)
 
 <label for="checker_i18n" title="Add the I18n Checker to this job">I18n Checker</label>
-<input name=assertor value="checker_i18n" id="checker_i18n" type=checkbox  @if(form.hasAssertor("checker_i18n")){checked}>
+<input name=assertor[] value="checker_i18n" id="checker_i18n" type=checkbox  @if(form.hasAssertor("checker_i18n")){checked}>
 <br>

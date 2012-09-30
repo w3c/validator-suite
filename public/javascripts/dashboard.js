@@ -1,5 +1,5 @@
 $(function () {
-
+/*
     var htmlToJob = function (elem) {
 
         var $elem = $(elem);
@@ -32,82 +32,57 @@ $(function () {
                 legend: _value('data-job-health-legend')}
         });
     };
+*/
 
-    var dashboard = new W3.JobsView({
-        el: document.getElementById("jobs"),
-        jobTemplate: _.template(document.getElementById("job-template").text)
-    });
+    //Backbone.emulateJSON = true;
 
-    dashboard.jobs.reset(_.map($("#jobs .job").get(), htmlToJob));
+    var VS = window.VS = {
 
-    var onmessage = function (json) {
-        //console.log(data);
-        try { // useful?
-            //var json = $.parseJSON(data);
+        dashboard: new W3.JobsView({
+            el: document.getElementById("jobs"),
+            url: "/suite/jobs",
+            jobTemplate: _.template(document.getElementById("job-template").text)
+        }),
 
-            //console.log(event.data);
+        jobupdate: function (job) {
+            this.socket.trigger("jobupdate", job);
+        },
 
-            if (json[0] != "Job") {
-                console.log("Not a job update message: " + json[0]);
-                return;
-            }
-
-            var jobUpdate = {id: json[1]};
-
-            var addParam = function (name, value) {
-                var b = {};
-                b[name] = value;
-                if (value !== null) _.extend(jobUpdate, b);
-            }
-
-            addParam("name", json[2]);
-            addParam("entrypoint", json[3]);
-            addParam("status", json[4]);
-
-            if (json[5] !== null) {
-                jobUpdate["completedOn"] = {
-                    timestamp: json[5],
-                    legend1: json[6],
-                    legend2: json[7]
-                };
-            }
-
-            addParam("warnings", json[8]);
-            addParam("errors", json[9]);
-            addParam("resources", json[10]);
-            addParam("maxResources", json[11]);
-
-            if (json[12] != null) {
-                jobUpdate["health"] = {
-                    value: json[12],
-                    legend: json[12] + "%"
-                };
-            }
-
-            var job = dashboard.jobs.get(jobUpdate.id);
-            if (!_.isUndefined(job)) {
-                job.set(jobUpdate);
-            } else {
-                console.log("unknown job with id: " + jobUpdate.id);
-                console.log(jobUpdate);
-            }
-
-        } catch(ex) {
-            console.log(ex);
-        }
+        socket: (function () {
+            var socket = new W3.Socket("/suite/jobs");
+            //socket.on("open", function () {console.log("open")});
+            //socket.on("close", function () {console.log("close")});
+            socket.on("jobupdate", function (data) {
+                var job = VS.dashboard.collection.get(data.id);
+                if (!_.isUndefined(job)) {
+                    job.set(data);
+                } else {
+                    console.log("unknown job with id: " + data.id);
+                    console.log(data);
+                }
+            });
+            //socket.on("error", function () {console.log("error")});
+            //socket.onmessage = _.bind(onmessage, this);
+            return socket;
+        })()
 
     };
 
-    W3.Socket.open({
-        url: "/suite/jobs",
-        onmessage: _.bind(onmessage, this)
-    });
-
     $('.pagination form button').css('display', 'none');
-
     var pageSelect = $('.pagination select');
     pageSelect.change(function () {
-        pageSelect.parents('form').submit()
+        pageSelect.parents('form').submit();
     });
+
+    VS.dashboard.fetch();
+
+/*    $.ajax({
+        url: "/suite/jobs",
+        success: function (json) {
+            VS.dashboard.collection.reset(
+                _.map(json, function (job) { return new W3.Job(job); })
+            );
+        }
+    });*/
 
 });

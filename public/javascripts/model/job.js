@@ -1,4 +1,4 @@
-(function($) {
+/*(function($) {
     $.QueryString = (function(a) {
         if (a == "") return {};
         var b = {};
@@ -10,69 +10,90 @@
         }
         return b;
     })(window.location.search.substr(1).split('&'))
-})(jQuery);
+})(jQuery);*/
 
-(function (){
+(function () {
 
-    var W3 = window.W3 = (window.W3 || {});
+    "use strict";
 
-    var Job = W3.Job = Backbone.Model.extend({
+    var W3, Job, JobView, Jobs, JobsView;
+
+    W3 = window.W3 = (window.W3 || {});
+
+    Job = W3.Job = Backbone.Model.extend({
+
+        logger: new W3.Logger("Job"),
 
         defaults: {
-            id: 0,
-            name: "",
-            entrypoint: "",
+            name: "New Job",
+            //entrypoint: "",
             status: "idle",
             completedOn: {
-                timestamp: "",
-                legend1: "",
-                legend2: ""
+                timestamp: null,
+                legend1: "Never",
+                legend2: null
             },
             warnings: 0,
             errors: 0,
             resources: 0,
             maxResources: 0,
-            health: {
-                value: -1,
-                legend: ""
-            }
+            health: -1
         },
 
         methodMap: {
-            'on':'POST',
-            'off':'POST',
-            'stop':'POST',
-            'run':'POST',
-            'create':'POST',
-            'read':'GET',
-            'update':'POST',
-            'delete':'POST'
+            run:    'POST',
+            stop:   'POST',
+            create: 'POST',
+            read:   'GET',
+            update: 'POST',
+            delete: 'POST'
         },
 
         isIdle: function () {
-            return this.get("status") == "idle";
+            return this.get("status") === "idle";
         },
 
-        //putOn: function(options) {this._serverEvent('on', options);},
+        isCompleted: function () {
+            return this.get("completedOn").timestamp !== null;
+        },
 
-        //putOff: function(options) {this._serverEvent('off', options);},
+        run: function (options) {
+            this.logger.info(this.get("name") + ": run");
+            var action = this._serverEvent('run', options);
+            this.logger.debug(action);
+        },
 
-        stop: function (options) {this._serverEvent('stop', options);},
+        stop: function (options) { this._serverEvent('stop', options); },
 
-        run: function (options) {this._serverEvent('run', options);},
+        validate: function(attrs) {
+            if (!attrs.name || attrs.name.length < 1) {
+                this.logger.warn("Name required");
+                return "Name required";
+            }
+            if (!attrs.entrypoint || attrs.entrypoint.length < 1) {
+                this.logger.warn("Start URL required");
+                return "Start URL required";
+            }
+            if (!attrs.maxResources || attrs.maxResources < 1 || attrs.maxResources > 500) {
+                this.logger.warn("Max resources must be between 1 and 500");
+                return "Max resources must be between 1 and 500";
+            }
+        },
 
         _serverEvent: function (event, options) {
-            options = options ? _.clone(options) : {};
-            var model = this;
-            var success = options.success;
+            var model, success, trigger, xhr;
 
-            var trigger = function () {
+            if (this.isNew()) { throw new Error("can't run actions on a new job"); }
+
+            options = options ? _.clone(options) : {};
+            model = this;
+            success = options.success;
+            trigger = function () {
                 model.trigger(event, model, model.collection, options);
             };
 
-            if (this.isNew()) return trigger();
-            options.success = function(resp) {
-                if (options.wait) trigger();
+            options.success = function (resp) {
+                if (options.wait) { trigger(); }
                 if (success) {
                     success(model, resp);
                 } else {
@@ -80,53 +101,54 @@
                 }
             };
             options.error = Backbone.wrapError(options.error, model, options);
-            var xhr = (this.sync || Backbone.sync).call(this, event, this, options);
-            if (!options.wait) trigger();
+            xhr = (this.sync || Backbone.sync).call(this, event, this, options);
+            if (!options.wait) { trigger(); }
             return xhr;
         },
 
         sync: function (method, model, options) {
-            var type = this.methodMap[method];
-            var params = {type: type};
-            if (!options.url)
-                params.url = model.url() || exception("A 'url' property or function must be specified");
-            if (method != 'read')
-                params.data = {action: method};
-            // Don't process data on a non-GET request.
-            //if (params.type !== 'GET')
-            //params.processData = false;
+            var type, params;
+            type = this.methodMap[method];
+            params = { type: type };
+            if (!options.url) {
+                params.url = model.url() || W3.exception("A 'url' property or function must be specified");
+            }
+            if (method !== 'read') {
+                params.data = { action: method };
+            }
+            if (!options.data && model && (method == 'create' || method == 'update')) {
+                params.data = _.extend(
+                    params.data,
+                    {
+                        id: model.id,
+                        name: model.attributes.name, //; model.attributes
+                        entrypoint: model.attributes.entrypoint,
+                        maxResources: model.attributes.maxResources,
+                        assertor: model.attributes.assertor
+                    }
+                );
+            }
+
+            this.logger.info("Sending request: ");
+            this.logger.debug(_.extend(params, options));
+
             return $.ajax(_.extend(params, options));
         },
 
-        /*syncData: function(jobData) {
-         //if (jobData.get("lastCompleted") == "Never")
-         //    jobData.set("lastCompleted", this.get("data").get("lastCompleted"));
-         this.set({data: jobData});
-         },*/
-
-        log: function () {console.log(JSON.stringify(this.toJSON()));}
+        log: function () { console.log(JSON.stringify(this.toJSON())); }
     });
 
-    var Jobs = W3.Jobs = Backbone.Collection.extend({
-        url: '/suite/jobs',
-        model: this.Job
-    });
-
-    var JobView = W3.JobView = Backbone.View.extend({
+    JobView = W3.JobView = Backbone.View.extend({
 
         // requires template option
 
-        tagName : "article",
+        logger: new W3.Logger("JobView"),
 
-        attributes: {
-            "data-id": "0",
-            "class": "job"
-        },
+        model: new Job(),
+
+        tagName: "article",
 
         events: {
-            //"click .edit"   : "edit",
-            //"click .on"     : "putOn",
-            //"click .off"    : "putOff",
             "click .stop"   : "stop",
             "click .run"    : "run",
             "click .delete" : "_delete",
@@ -139,13 +161,9 @@
         },
 
         initialize: function () {
-            if(this.model !== undefined) {
-                this.attributes["data-id"] = this.model.id;
-                this.model.on('change', this.render, this);
-                this.model.on('destroy', this.remove, this);
-                //this.model.on('run', function () {alert("run");}, this);
-                //this.model.on('stop', function () {alert("run");}, this);
-            }
+            this.el.setAttribute("data-id", this.model.id);
+            this.model.on('change', this.render, this);
+            this.model.on('destroy', this.remove, this);
         },
 
         /*search: function (event) {
@@ -165,7 +183,7 @@
                     {
                         url : this.model.url(),
                         isIdle: this.model.isIdle(),
-                        isCompleted: this.model.get("completedOn").timestamp != undefined
+                        isCompleted: this.model.get("completedOn").timestamp !== undefined
                         //search: this.formOptions.search,
                         //group: this.formOptions.group
                     }
@@ -173,30 +191,16 @@
             ));
             return this;
         },
-        /*edit: function () {
-            window.location = this.model.url() + "/edit";
-            return false;
-        },
-        putOn: function () {
-            this.model.putOn({wait:true});
-            return false;
-        },
-        putOff: function () {
-            this.model.putOff({wait:true});
-            return false;
-        },*/
         stop: function () {
-            this.model.stop({wait:true});
-            //console.log("stop");
+            this.model.stop({ wait: true });
             return false;
         },
         run: function () {
-            this.model.run({wait:true});
-            //try { window.Report.articles.reset(); } catch(ex) { }
+            this.model.run({ wait: true });
             return false;
         },
         _delete: function () {
-            this.model.destroy({wait:true});
+            this.model.destroy({ wait: true });
             return false;
         },
         remove: function () {
@@ -205,24 +209,44 @@
 
     });
 
-    var JobsView = W3.JobsView = Backbone.View.extend({
+    Jobs = W3.Jobs = Backbone.Collection.extend({
+        url: '/suite/jobs',
+        model: Job
+        /*comparator: function (job1, job2) {
+         if (job1.get("errors") > job2.get("errors")) {
+         return -1;
+         } else if (job1.get("errors") === job2.get("errors")) {
+         if (job1.get("url") < job2.get("url"))
+         return -1;
+         else
+         return +1;
+         } else {
+         return +1;
+         }
+         }*/
+    });
+
+    JobsView = W3.JobsView = Backbone.View.extend({
+
+        logger: new W3.Logger("JobView"),
+
+        collection: new Jobs(),
 
         initialize: function () {
-            this.jobs = new Jobs();
-            this.jobs.on('add', this.addOne, this);
-            this.jobs.on('reset', this.addAll, this);
+            this.collection.on('add', this.addOne, this);
+            this.collection.on('reset', this.addAll, this);
         },
 
-        addOne: function(job) {
-            var view = new JobView({model: job, template: this.options.jobTemplate});
+        addOne: function (job) {
+            var view = new JobView({ model: job, template: this.options.jobTemplate });
             this.$el.append(view.render().el);
         },
 
-        addAll: function() {
-            this.$el.children('.job').remove();
-            this.jobs.each(this.addOne, this);
+        addAll: function () {
+            this.$el.children('article').remove();
+            this.collection.each(this.addOne, this);
         }
 
     });
 
-})();
+}());

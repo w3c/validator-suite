@@ -13,6 +13,7 @@ GET     /jobs/new                   controllers.Jobs.new1
 GET     /jobs/ws                    controllers.Jobs.dashboardSocket()
 GET     /jobs/ws/:id                controllers.Jobs.reportSocket(id: JobId)
 GET     /jobs/comet                 controllers.Jobs.cometSocket
+GET     /jobs/events                controllers.Jobs.eventsSocket
 GET     /jobs/:id                   controllers.Application.redirectWithSlash(id: JobId)
 GET     /jobs/:id/                  controllers.Jobs.show(id: JobId)
 POST    /jobs/:id                   controllers.Jobs.dispatcher(id: JobId)

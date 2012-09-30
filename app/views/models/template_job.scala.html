@@ -9,7 +9,7 @@
 
                 <dt>URL</dt>
                 <dd class="entrypoint">
-                    <a href="<%= entrypoint %>" class="external" target="_blank" title="@Messages("resource.external.link")"><% print(W3.shorten(entrypoint, 100)) %></a>
+                    <a href="<%= entrypoint %>" class="external" target="_blank" title="@Messages("resource.external.link")"><% print(W3.Util.shortenUrl(entrypoint, 100)) %></a>
                 </dd>
 
                 <dt>Status</dt>
@@ -52,8 +52,8 @@
 
                 <dt>Health</dt>
                 <dd class="health">
-                    <progress max=100 value=<%= health.value %> title="<%= health.legend %>">
-                        <%= health.legend %>
+                    <progress max=100 value=<%= health %> title="<%= health %>%">
+                        <%= health %>%
                     </progress>
                 </dd>
 

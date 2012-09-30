@@ -108,13 +108,13 @@
         select {min-width: 150px;}
     }
 
-    input[name="assertor"]:not(:checked) + fieldset {
+    input[name="assertor[]"]:not(:checked) + fieldset {
         height: 0;
         padding: 0;
         overflow: hidden;
     }
 
-    input[name="assertor"]:not(:checked) + fieldset * {
+    input[name="assertor[]"]:not(:checked) + fieldset * {
         display: none; // Firefox doesn't hide inside elements with the fieldset overflow:hidden alone
     }
 

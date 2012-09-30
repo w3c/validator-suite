@@ -1,4 +1,4 @@
-package org.w3.vs.view
+/*package org.w3.vs.view
 
 import org.w3.vs.model._
 import play.api.libs.json._
@@ -7,6 +7,8 @@ import org.joda.time._
 import org.w3.vs.view.model.JobView
 
 case object JobsUpdate {
+
+
 
   def json(job: JobView) = {
     JsArray(List(
@@ -50,7 +52,7 @@ case object JobsUpdate {
       JsString(jobId.toString),
       JsNull,
       JsNull,
-      JsNull,
+      JsString(Idle.toString),
       JsString(completedOn.toString),
       JsString(Helper.formatTime(completedOn)),
       JsString(Helper.formatLegendTime(completedOn)),
@@ -98,3 +100,4 @@ case object AssertorUpdate {
 
 }
 
+*/

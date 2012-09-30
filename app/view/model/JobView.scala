@@ -1,10 +1,16 @@
 package org.w3.vs.view.model
 
-import org.w3.vs.model.{Job, JobId}
+import org.w3.vs.model._
 import org.w3.util.{FutureVal, URL}
 import org.joda.time.DateTime
 import org.w3.vs.view._
 import akka.dispatch.ExecutionContext
+import play.api.libs.json._
+import play.api.libs.json.JsString
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsNumber
+import scala.Some
+import org.w3.vs.view.SortParam
 
 case class JobView(
     id: JobId,
@@ -16,7 +22,13 @@ case class JobView(
     errors: Int,
     resources: Int,
     maxResources: Int,
-    health: Int) extends View
+    health: Int) extends View {
+
+  def toJson(): JsValue = {
+    Json.toJson(this)(JobView.writes)
+  }
+
+}
 
 object JobView {
 
@@ -96,5 +108,48 @@ object JobView {
     }
   }
 
+  import scalaz.Scalaz._
+
+  val writes: Writes[JobView] = new Writes[JobView] {
+    def writes(job: JobView): JsValue = {
+      JsObject(Seq(
+        ("id"           -> JsString(job.id.toString)),
+        ("name"         -> JsString(job.name)),
+        ("entrypoint"   -> JsString(job.entrypoint.toString)),
+        ("status"       -> JsString(job.status)),
+        ("completedOn"  -> JsObject(Seq(
+            ("timestamp"    -> job.completedOn.fold(d => JsString(d.toString), JsNull)),
+            ("legend1"      -> job.completedOn.fold(d => JsString(Helper.formatTime(d)), JsString("Never"))),
+            ("legend2"      -> job.completedOn.fold(d => JsString(Helper.formatLegendTime(d)), JsNull))))),
+        ("warnings"     -> JsNumber(job.warnings)),
+        ("errors"       -> JsNumber(job.errors)),
+        ("resources"    -> JsNumber(job.resources)),
+        ("maxResources" -> JsNumber(job.maxResources)),
+        ("health"       -> JsNumber(job.health))
+      ))
+    }
+  }
+
+  def toJobMessage(jobId: JobId, data: JobData, activity: RunActivity): JsValue = {
+    JsObject(Seq(
+      ("id"           -> JsString(jobId.toString)),
+      ("status"       -> JsString(activity.toString)),
+      ("warnings"     -> JsNumber(data.warnings)),
+      ("errors"       -> JsNumber(data.errors)),
+      ("resources"    -> JsNumber(data.resources)),
+      ("health"       -> JsNumber(data.health))
+    ))
+  }
+
+  def toJobMessage(jobId: JobId, completedOn: DateTime): JsValue = {
+    JsObject(Seq(
+      ("id"           -> JsString(jobId.toString)),
+      ("status"       -> JsString(Idle.toString)),
+      ("completedOn"  -> JsObject(Seq(
+        ("timestamp"    -> JsString(completedOn.toString)),
+        ("legend1"      -> JsString(Helper.formatTime(completedOn))),
+        ("legend2"      -> JsString(Helper.formatLegendTime(completedOn))))))
+    ))
+  }
 
 }
