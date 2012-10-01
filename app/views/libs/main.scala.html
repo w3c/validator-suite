@@ -11,6 +11,7 @@
 
     <script src='@routes.Assets.at("/app/assets/scripts", "libs/require.js")'></script>
 
+    @if(script != "") {
     <script>
         require.config({
             baseUrl: '@routes.Assets.at("/app/assets/scripts", "app")',
@@ -19,9 +20,8 @@
                 "libs/jquery": "../libs/jquery-1.7.1"
             }
         });
-        require(["dashboard"]);
-        //require(['@routes.Assets.at("/public", "scripts/libs/less.js")']);
-    </script>
+        require(["@script"]);
+    </script>}
 </head>
 
 <body class="no-js">
