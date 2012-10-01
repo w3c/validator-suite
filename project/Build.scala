@@ -40,6 +40,9 @@ object ApplicationBuild extends Build {
     testOptions in Test += Tests.Argument("-l", "org.w3.vs.util.SlowTest"),
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
+    playAssetsDirectories <+= baseDirectory / "app/assets/scripts",
+    coffeescriptEntryPoints := Seq.empty[File],
+    javascriptEntryPoints := Seq.empty[File],
     templatesImport += "org.w3.vs.view._",
     templatesImport += "org.w3.vs.view.form._",
     templatesImport += "org.w3.vs.view.model._",
@@ -60,5 +63,5 @@ object ApplicationBuild extends Build {
     //   )
     // )
   ) //dependsOn (bananaRdf)
-  
+
 }

@@ -4,25 +4,26 @@
 <head>
     <title>@title</title>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/vsLogo.svg")'>
+    <link rel="icon" type="image/svg" href='@routes.Assets.at("/public", "images/vsLogo.svg")'>
     @stylesheets.map { stylesheet =>
-    <link href='@routes.Assets.at("stylesheets/" + stylesheet)' rel="stylesheet" />}
+    <link href='@routes.Assets.at("/public", "stylesheets/" + stylesheet + ".min.css")' rel="stylesheet">
+    @** <link href='@routes.Assets.at("/public", "stylesheets/" + stylesheet + ".css")' rel="stylesheet/less"> **@}
 
-    @** if(script != "") {
-    <script data-main='@routes.Assets.at("scripts/app/" + script)' src='@routes.Assets.at("scripts/libs/require.js")'></script>}**@
+    <script src='@routes.Assets.at("/app/assets/scripts", "libs/require.js")'></script>
 
-    <script src='@routes.Assets.at("scripts/libs/require.js")'></script>
     <script>
         require.config({
-            baseUrl: '@routes.Assets.at("scripts/app")',
+            baseUrl: '@routes.Assets.at("/app/assets/scripts", "app")',
             paths: {
                 "libs": "../libs",
-                "libs/jquery": "../libs/jquery-1.7.1",
+                "libs/jquery": "../libs/jquery-1.7.1"
             }
         });
         require(["dashboard"]);
+        //require(['@routes.Assets.at("/public", "scripts/libs/less.js")']);
     </script>
 </head>
+
 <body class="no-js">
     @header
     <div id="main">

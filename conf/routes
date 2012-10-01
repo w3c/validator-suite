@@ -28,3 +28,9 @@ POST    /logout                     controllers.Application.logout
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /public/*file               controllers.Assets.at(path="/public", file)
+
+# Adds an Assets controller to expose javascript sources directly during development
+# Because Play changes the signature of routes.Assets.at() depending on whether there is a single assets controller or
+# more i added a dummy controller that serves files from nowhere. The switch has to be done manually.
+#GET     /no_folder/*file            controllers.Assets.at(path="/no_folder", file)
+GET     /dev/scripts/*file         controllers.Assets.at(path="/app/assets/scripts", file)

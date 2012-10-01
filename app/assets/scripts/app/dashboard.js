@@ -1,6 +1,6 @@
 require(["vs", "model/job", "model/jobs"], function (W3, Job, Jobs) {
 
-/*
+
 $(function () {
     var htmlToJob = function (elem) {
 
@@ -84,9 +84,9 @@ $(function () {
                 _.map(json, function (job) { return new W3.Job(job); })
             );
         }
-    });* /
+    });*/
 
 });
-*/
+
 
 });

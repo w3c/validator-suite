@@ -3,7 +3,9 @@
     appDir: "./scripts",
     baseUrl: "./app",
     dir: "../../public/scripts", // /!\ Directory purged on each build
-    optimize: "none",
+    //optimize: "none",
+    //optimize: "closure",
+    optimize: "closure.keeplines",
     paths: {
         "libs": "../libs",
         "libs/jquery": "../libs/jquery-1.7.1"
