@@ -41,13 +41,10 @@ object Jobs extends Controller {
         jobs <- Job.getFor(user.id)
         jobViews <- JobView.fromJobs(jobs)
       } yield {
-
-
-
         if (!isAjax)
           Ok(views.html.dashboard(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
         else
-          Ok(JsArray(jobViews.map(_.toJson()).toSeq))
+          Ok(JsArray(Page(jobViews).iterator.map(_.toJson()).toSeq))
       }) failMap toError).toPromise
     }
   }

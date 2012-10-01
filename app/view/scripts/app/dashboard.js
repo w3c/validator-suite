@@ -1,5 +1,7 @@
-$(function () {
+require(["vs", "model/job", "model/jobs"], function (W3, Job, Jobs) {
+
 /*
+$(function () {
     var htmlToJob = function (elem) {
 
         var $elem = $(elem);
@@ -32,13 +34,12 @@ $(function () {
                 legend: _value('data-job-health-legend')}
         });
     };
-*/
 
     //Backbone.emulateJSON = true;
 
     var VS = window.VS = {
 
-        dashboard: new W3.JobsView({
+        dashboard: new Jobs.View({
             el: document.getElementById("jobs"),
             url: "/suite/jobs",
             jobTemplate: _.template(document.getElementById("job-template").text)
@@ -74,7 +75,7 @@ $(function () {
         pageSelect.parents('form').submit();
     });
 
-    VS.dashboard.fetch();
+    VS.dashboard.collection.fetch({data: {sort: 'warnings'}});
 
 /*    $.ajax({
         url: "/suite/jobs",
@@ -83,6 +84,9 @@ $(function () {
                 _.map(json, function (job) { return new W3.Job(job); })
             );
         }
-    });*/
+    });* /
+
+});
+*/
 
 });

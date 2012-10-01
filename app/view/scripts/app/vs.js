@@ -1,12 +1,10 @@
-(function () {
+define([], function () {
 
     "use strict";
 
-    var W3, Logger, Socket, Util, exception;
+    var W3 = {};
 
-    W3 = window.W3 = (window.W3 || {});
-
-    Logger = W3.Logger = function (name) {
+    W3.Logger = function (name) {
 
         return {
             info: function (msg) {
@@ -28,11 +26,29 @@
 
     };
 
-    Socket = W3.Socket = function (url, type) {
+    W3.Util = {
+
+        shortenUrl: function (url, limit) {
+            var shortUrl;
+            shortUrl = url.replace("http://", "");
+            return (shortUrl.length > limit ?
+                    shortUrl.substring(0, limit / 2) + "…" + shortUrl.substring(shortUrl.length - limit / 2) :
+                    shortUrl);
+        },
+
+        resolveUrl: function (url) {
+            var a = document.createElement('a');
+            a.setAttribute("href", url);
+            return a.href;
+        }
+
+    };
+
+    W3.Socket = function (url, type) {
 
         var logger, websocketProtocol, types, socket, implementations, i;
 
-        logger = new Logger("Socket");
+        logger = new W3.Logger("Socket");
 
         websocketProtocol = {
             "http://": "ws://",
@@ -45,7 +61,7 @@
             2: "comet"
         };
 
-        socket = _.extend({ url: Util.resolveUrl(url) }, Backbone.Events);
+        socket = _.extend({ url: W3.Util.resolveUrl(url) }, Backbone.Events);
 
         implementations = {
 
@@ -149,25 +165,16 @@
         return socket;
     };
 
-    Util = W3.Util = {
+    W3.Messages = function (msg) {
 
-        shortenUrl: function (url, limit) {
-            var short = url.replace("http://", "");
-            return short.length > limit ?
-                    short.substring(0, limit / 2) + "…" + short.substring(short.length - limit / 2) :
-                    short;
-        },
 
-        resolveUrl: function (url) {
-            var a = document.createElement('a');
-            a.setAttribute("href", url);
-            return a.href;
-        }
 
     };
 
-    exception = W3.exception = function(msg) {
+    W3.exception = function (msg) {
         throw new Error(msg);
     };
 
-}());
+    return W3;
+
+});

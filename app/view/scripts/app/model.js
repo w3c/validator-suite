@@ -1,4 +1,4 @@
-window.Message = Backbone.Model.extend({
+/*window.Message = Backbone.Model.extend({
 	url: "",
 	defaults: {
 		type: 0,
@@ -175,4 +175,4 @@ window.URLArticle.fromHTML = function(elem) {
 		warnings: parseInt($(".warnings", elem).text()),
 		errors: parseInt($(".errors", elem).text())
 	});
-};
+};*/

@@ -5,27 +5,29 @@
 
 @libs.main("Validator Suite",
   stylesheets = List("dashboard.css"),
-  exec = """
-    $(function (){
-        var slider = $("input#maxResources");
-        var output = $("output.maxResources");
-        slider.change(function (){
-           output.html(slider.attr("value"));
-        });
-        slider.change();
+  script = ""){
 
-        $('input[name=assertor[]] + fieldset').each(function (){
-            var fold = $('<a class="jsFold"></a>');
-            fold.click(function (){
-                $(this).toggleClass('folded');
-            });
-            $(this).before(fold);
-        });
-    });
-  """){
-   
+@**"""
+$(function (){
+var slider = $("input#maxResources");
+var output = $("output.maxResources");
+slider.change(function (){
+output.html(slider.attr("value"));
+});
+slider.change();
+
+$('input[name=assertor[]] + fieldset').each(function (){
+var fold = $('<a class="jsFold"></a>');
+fold.click(function (){
+$(this).toggleClass('folded');
+});
+$(this).before(fold);
+});
+});
+"""**@
+
    @***** Header ******@
-   
+
     @libs.header()
     
 }{ @***** Content *****@ 

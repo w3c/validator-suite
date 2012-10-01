@@ -7,16 +7,20 @@
 
 @libs.main("Validator Suite",
     stylesheets = List("dashboard.min.css"),
-    scripts = List("model/job.js", "vs.js", "dashboard.js"),
-    exec = """
-        $(function () {
-            $(".folds article .title").click(function (event){
-                $(this).parents("article").toggleClass("folded");
-            })
-        });
-    """){
+    script = "dashboard"){
    
-   @***** Header ******@
+   @***** Header
+
+"""
+$(function () {
+$(".folds article .title").click(function (event){
+$(this).parents("article").toggleClass("folded");
+})
+});
+"""
+
+
+******@
     
     @libs.header()
     

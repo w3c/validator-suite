@@ -1,22 +1,25 @@
-//     Backbone.js 0.9.2
+define(["libs/underscore", "libs/jquery"], function () {
 
+
+//     Backbone.js 0.9.2
 //     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Backbone may be freely distributed under the MIT license.
 //     For all details and documentation:
 //     http://backbonejs.org
 
-(function(){
+
+//(function(){
 
   // Initial Setup
   // -------------
 
   // Save a reference to the global object (`window` in the browser, `global`
   // on the server).
-  var root = this;
+  //var root = this;
 
   // Save the previous value of the `Backbone` variable, so that it can be
   // restored later on, if `noConflict` is used.
-  var previousBackbone = root.Backbone;
+  //var previousBackbone = root.Backbone;
 
   // Create a local reference to slice/splice.
   var slice = Array.prototype.slice;
@@ -24,22 +27,23 @@
 
   // The top-level namespace. All public Backbone classes and modules will
   // be attached to this. Exported for both CommonJS and the browser.
-  var Backbone;
+  /*var Backbone;
   if (typeof exports !== 'undefined') {
     Backbone = exports;
   } else {
     Backbone = root.Backbone = {};
-  }
+  }*/
+  var Backbone = {};
 
   // Current version of the library. Keep in sync with `package.json`.
   Backbone.VERSION = '0.9.2';
 
   // Require Underscore, if we're on the server, and it's not already present.
-  var _ = root._;
-  if (!_ && (typeof require !== 'undefined')) _ = require('underscore');
+  //var _ = root._;
+  //if (!_ && (typeof require !== 'undefined')) _ = require('underscore');
 
   // For Backbone's purposes, jQuery, Zepto, or Ender owns the `$` variable.
-  var $ = root.jQuery || root.Zepto || root.ender;
+  //var $ = root.jQuery || root.Zepto || root.ender;
 
   // Set the JavaScript library that will be used for DOM manipulation and
   // Ajax calls (a.k.a. the `$` variable). By default Backbone will use: jQuery,
@@ -52,10 +56,10 @@
 
   // Runs Backbone.js in *noConflict* mode, returning the `Backbone` variable
   // to its previous owner. Returns a reference to this Backbone object.
-  Backbone.noConflict = function() {
+  /*Backbone.noConflict = function() {
     root.Backbone = previousBackbone;
     return this;
-  };
+  };*/
 
   // Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
   // will fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and
@@ -1428,4 +1432,9 @@
     throw new Error('A "url" property or function must be specified');
   };
 
-}).call(this);
+//}).call(this);
+
+  return Backbone;
+
+
+});

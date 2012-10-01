@@ -7,17 +7,20 @@
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
 @libs.main("Validator Suite",
-    stylesheets = List("dashboard.min.css"),
-    scripts = List(),
-    exec = """
-        $(function () {
-            $(".folds article .title").click(function (event){
-                $(this).parents("article").toggleClass("folded");
-            })
-        });
-    """){
+    stylesheets = List("dashboard.min.css")){
    
-  @***** Header ******@
+  @***** Header
+
+"""
+$(function () {
+$(".folds article .title").click(function (event){
+$(this).parents("article").toggleClass("folded");
+})
+});
+"""
+
+
+******@
     
     @libs.header()
     

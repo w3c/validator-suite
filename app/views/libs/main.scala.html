@@ -1,16 +1,27 @@
-@(title: String, stylesheets: Iterable[String] = List(), scripts: Iterable[String] = List(), exec: String = "")(header: Html)(content: Html)(footer: Html)
+@(title: String, stylesheets: Iterable[String] = List(), script: String = "")(header: Html)(content: Html)(footer: Html)
 <!DOCTYPE html>
 <html>
 <head>
     <title>@title</title>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg" href="@routes.Assets.at("images/vsLogo.svg")">
+    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/vsLogo.svg")'>
     @stylesheets.map { stylesheet =>
-    <link href="@{routes.Assets.at("stylesheets/"+stylesheet)}" rel="stylesheet" />
-    }
-    <!--[if lt IE 9]>
-    <script src="@routes.Assets.at("javascripts/libs/html5.js")"></script>
-    <![endif]-->
+    <link href='@routes.Assets.at("stylesheets/" + stylesheet)' rel="stylesheet" />}
+
+    @** if(script != "") {
+    <script data-main='@routes.Assets.at("scripts/app/" + script)' src='@routes.Assets.at("scripts/libs/require.js")'></script>}**@
+
+    <script src='@routes.Assets.at("scripts/libs/require.js")'></script>
+    <script>
+        require.config({
+            baseUrl: '@routes.Assets.at("scripts/app")',
+            paths: {
+                "libs": "../libs",
+                "libs/jquery": "../libs/jquery-1.7.1",
+            }
+        });
+        require(["dashboard"]);
+    </script>
 </head>
 <body class="no-js">
     @header
@@ -18,17 +29,18 @@
     @content
     </div>
     @footer
-    <script src='@routes.Assets.at("javascripts/libs/jquery-1.7.1.js")'></script>
-    <script src='@routes.Assets.at("javascripts/libs/underscore.js")'></script>
-    <script src='@routes.Assets.at("javascripts/libs/backbone.js")'></script>
-    <script src='@routes.Assets.at("javascripts/libs/json2.js")'></script>
-    @scripts.map { script =>
-    <script src='@routes.Assets.at("javascripts/" + script)'></script>}
-    <script>
-        $('body').removeClass('no-js').addClass('js');
-        @Html(exec)
-    </script>
+
+    @**<script>
+        /*requirejs.config({
+            baseUrl: '@routes.Assets.at("javascripts")'
+        });*/
+        //$('body').removeClass('no-js').addClass('js');
+        //@Html(exec)
+    </script>**@
+
+    @**
     <script src='@routes.Assets.at("javascripts/libs/progress-polyfill.js")'></script>
-    @**<script src='@routes.Assets.at("javascripts/libs/prism.js")'></script>**@
+    <script src='@routes.Assets.at("javascripts/libs/prism.js")'></script>
+    **@
 </body>
 </html>

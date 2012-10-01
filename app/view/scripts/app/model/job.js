@@ -1,26 +1,10 @@
-/*(function($) {
-    $.QueryString = (function(a) {
-        if (a == "") return {};
-        var b = {};
-        for (var i = 0; i < a.length; ++i)
-        {
-            var p=a[i].split('=');
-            if (p.length != 2) continue;
-            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
-        }
-        return b;
-    })(window.location.search.substr(1).split('&'))
-})(jQuery);*/
-
-(function () {
+define(["vs", "libs/backbone"], function (W3, Backbone) {
 
     "use strict";
 
-    var W3, Job, JobView, Jobs, JobsView;
+    var Job = {};
 
-    W3 = window.W3 = (window.W3 || {});
-
-    Job = W3.Job = Backbone.Model.extend({
+    Job.Model = Backbone.Model.extend({
 
         logger: new W3.Logger("Job"),
 
@@ -41,12 +25,12 @@
         },
 
         methodMap: {
-            run:    'POST',
-            stop:   'POST',
-            create: 'POST',
-            read:   'GET',
-            update: 'POST',
-            delete: 'POST'
+            'run':    'POST',
+            'stop':   'POST',
+            'create': 'POST',
+            'read':   'GET',
+            'update': 'POST',
+            'delete': 'POST'
         },
 
         isIdle: function () {
@@ -65,7 +49,7 @@
 
         stop: function (options) { this._serverEvent('stop', options); },
 
-        validate: function(attrs) {
+        validate: function (attrs) {
             if (!attrs.name || attrs.name.length < 1) {
                 this.logger.warn("Name required");
                 return "Name required";
@@ -116,7 +100,7 @@
             if (method !== 'read') {
                 params.data = { action: method };
             }
-            if (!options.data && model && (method == 'create' || method == 'update')) {
+            if (!options.data && model && (method === 'create' || method === 'update')) {
                 params.data = _.extend(
                     params.data,
                     {
@@ -138,13 +122,13 @@
         log: function () { console.log(JSON.stringify(this.toJSON())); }
     });
 
-    JobView = W3.JobView = Backbone.View.extend({
+    Job.View = Backbone.View.extend({
 
         // requires template option
 
         logger: new W3.Logger("JobView"),
 
-        model: new Job(),
+        model: new Job.Model(),
 
         tagName: "article",
 
@@ -183,7 +167,8 @@
                     {
                         url : this.model.url(),
                         isIdle: this.model.isIdle(),
-                        isCompleted: this.model.get("completedOn").timestamp !== undefined
+                        isCompleted: this.model.get("completedOn").timestamp !== undefined,
+                        W3: W3
                         //search: this.formOptions.search,
                         //group: this.formOptions.group
                     }
@@ -209,44 +194,6 @@
 
     });
 
-    Jobs = W3.Jobs = Backbone.Collection.extend({
-        url: '/suite/jobs',
-        model: Job
-        /*comparator: function (job1, job2) {
-         if (job1.get("errors") > job2.get("errors")) {
-         return -1;
-         } else if (job1.get("errors") === job2.get("errors")) {
-         if (job1.get("url") < job2.get("url"))
-         return -1;
-         else
-         return +1;
-         } else {
-         return +1;
-         }
-         }*/
-    });
+    return Job;
 
-    JobsView = W3.JobsView = Backbone.View.extend({
-
-        logger: new W3.Logger("JobView"),
-
-        collection: new Jobs(),
-
-        initialize: function () {
-            this.collection.on('add', this.addOne, this);
-            this.collection.on('reset', this.addAll, this);
-        },
-
-        addOne: function (job) {
-            var view = new JobView({ model: job, template: this.options.jobTemplate });
-            this.$el.append(view.render().el);
-        },
-
-        addAll: function () {
-            this.$el.children('article').remove();
-            this.collection.each(this.addOne, this);
-        }
-
-    });
-
-}());
+});
