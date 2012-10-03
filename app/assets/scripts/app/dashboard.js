@@ -5,14 +5,22 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
     window.Job = Job;
     window.Jobs = Jobs;
 
-    $((function (root) {
+    $(function () {
 
-        var jobs, socket, VS;
+        var root, template, jobs, socket, VS;
+
+        root = window;
+
+        try {
+            template = _.template(document.getElementById("job-template").text);
+        } catch(ex) {
+            template = _.template("");
+        }
 
         jobs = root.jobs = new Jobs.View({
             el: document.getElementById("jobs"),
             url: "/suite/jobs",
-            jobTemplate: _.template(document.getElementById("job-template").text)
+            jobTemplate: template
         });
         jobs.collection.fetch();
 
@@ -35,6 +43,6 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
 
         //VS.dashboard.collection.fetch({data: {sort: 'warnings'}});
 
-    })(window));
+    });
 
 });

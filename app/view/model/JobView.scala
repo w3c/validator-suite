@@ -117,10 +117,10 @@ object JobView {
         ("name"         -> JsString(job.name)),
         ("entrypoint"   -> JsString(job.entrypoint.toString)),
         ("status"       -> JsString(job.status)),
-        ("completedOn"  -> JsObject(Seq(
-            ("timestamp"    -> job.completedOn.fold(d => JsString(d.toString), JsNull)),
-            ("legend1"      -> job.completedOn.fold(d => JsString(Helper.formatTime(d)), JsString("Never"))),
-            ("legend2"      -> job.completedOn.fold(d => JsString(Helper.formatLegendTime(d)), JsNull))))),
+        ("completedOn"  -> job.completedOn.fold[JsValue](d => JsObject(Seq(
+            ("timestamp"    -> JsString(d.toString)),
+            ("legend1"      -> JsString(Helper.formatTime(d))),
+            ("legend2"      -> JsString(Helper.formatLegendTime(d))))), JsNull)),
         ("warnings"     -> JsNumber(job.warnings)),
         ("errors"       -> JsNumber(job.errors)),
         ("resources"    -> JsNumber(job.resources)),

@@ -82,8 +82,8 @@ define(["libs/backbone"], function (Backbone) {
         };
 
         types = {
-            1: "eventsource",
-            0: "websocket",
+            0: "eventsource",
+            1: "websocket",
             2: "comet"
         };
 

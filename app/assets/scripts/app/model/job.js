@@ -38,7 +38,7 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
         },
 
         isCompleted: function () {
-            return this.get("completedOn").timestamp !== null;
+            return this.get("completedOn") !== null;
         },
 
         run: function (options) {
@@ -167,7 +167,7 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
                     {
                         url : this.model.url(),
                         isIdle: this.model.isIdle(),
-                        isCompleted: this.model.get("completedOn").timestamp !== undefined,
+                        isCompleted: this.model.get("completedOn") !== null,
                         W3: W3
                         //search: this.formOptions.search,
                         //group: this.formOptions.group

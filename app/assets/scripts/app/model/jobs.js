@@ -4,38 +4,32 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
 
     var Jobs = {};
 
-    var getComparatorBy = function (param1, param2) {
-        var comparator = function (o1, o2) {
-            if (o1.get(param1) > o2.get(param1)) {
-                console.log(o1.get(param1) + " | " + o2.get(param1));
-                return +1;
-            } else if (o1.get(param1) === o2.get(param1) && o1.get(param2) > o2.get(param2)) {
-                console.log(o1.get(param1) + " | " + o2.get(param1) + " | " + o1.get(param2) + " | " + o2.get(param2));
-                return +1;
-            } else if (o1.get(param1) === o2.get(param1) && o1.get(param2) === o2.get(param2)) {
-                console.log(o1.get(param1) + " | " + o2.get(param1) + " | " + o1.get(param2) + " | " + o2.get(param2));
+    Jobs.getComparatorBy = function (param, reverse) {
+
+        // TODO Job.dummyJob
+        var job = new Job.Model({name: "job", entrypoint: "http://www.example.com", maxResources: 1, completedOn: {}});
+        if (!_.isNumber(job.get(param)) && !_.isString(job.get(param)))
+            throw new Error("Cannot sort by \"" + param + "\", not a string or a number. " + job.get(param));
+
+        var reverse = reverse ? reverse : false;
+        return function (o1, o2) {
+            if (o1.get(param) > o2.get(param)) {
+                return reverse ? -1 : +1;
+            } else if (o1.get(param) === o2.get(param)) {
                 return 0;
             } else {
-                return -1;
+                return reverse ? +1 : -1;
             }
-        }
-        return comparator;
+        };
     };
-
-    var j4 = new Job.Model({name: "job2", entrypoint: "http://www.w3.org", warnings: 1, errors: 1});
-    var j3 = new Job.Model({name: "job1", entrypoint: "http://www.w3.org", warnings: 1, errors: 2});
-    var j2 = new Job.Model({name: "job3", entrypoint: "http://www.w3.org", warnings: 2, errors: 2});
-    var j1 = new Job.Model({name: "job4", entrypoint: "http://www.w3.org", warnings: 3, errors: 2});
-
-    var c = getComparatorBy("errors", "name");
-    c(j1, j2);
-    /*console.log(c(j1, j3));
-    console.log(c(j2, j3));
-    console.log(c(j2, j4));*/
 
     Jobs.Collection = Backbone.Collection.extend({
         model: Job.Model,
-        comparator: getComparatorBy("errors", "warnings")
+        comparator: Jobs.getComparatorBy("name"),
+        sortByParam: function (param, reverse) {
+            this.comparator = Jobs.getComparatorBy(param, reverse);
+            this.sort();
+        }
     });
 
     Jobs.View = Backbone.View.extend({
@@ -55,14 +49,50 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
         },
 
         initialize: function () {
-            if (this.options.url)
-                this.collection.url = this.options.url;
-            this.collection.on('add', this.add, this);
-            this.collection.on('reset', this.render, this);
+
+            var logger = this.logger;
             var jobs = this.collection;
-            this.$('.name .ascend').click(function () {
-                jobs.sortBy("name");
+
+            if (this.options.url)
+                jobs.url = this.options.url;
+            jobs.on('add', this.add, this);
+            jobs.on('reset', this.render, this);
+
+            // Sorting
+            var sortParams = ["name", "entrypoint", "status", "completedOn", "errors", "warnings", "resources", "maxResources", "health"];
+            var sortLinks = this.$(".sort a");
+            _.each(sortParams, function (param) {
+                this.$("." + param + " .ascend").click(function (event) {
+                    event.preventDefault();
+                    sortLinks.removeClass("current");
+                    $(this).addClass("current");
+                    jobs.sortByParam(param);
+                    return false;
+                });
+                this.$("." + param + " .descend").click(function (event) {
+                    event.preventDefault();
+                    sortLinks.removeClass("current");
+                    $(this).addClass("current");
+                    jobs.sortByParam(param, true);
+                    return false;
+                });
+            }, this);
+
+            // Search
+            var jobsView = this;
+            $("#actions form.search input").keyup(function (event) {
+                var search = this.value;
+                jobsView.filter = function (job) {
+                    if (job.get("name").indexOf(search) > -1 || job.get("entrypoint").indexOf(search) > -1) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                };
+                jobsView.render();
             });
+            $("#actions form.search button").remove();
+
         },
 
         add: function (job) {
@@ -77,13 +107,23 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
 
         render: function () {
             this.$el.children('article').remove();
-            console.log(this.collection);
-            var elements = this.collection.map(function (job) {
+
+//          Filter before rendering
+
+            var jobs = this.collection;
+            if (_.isFunction(this.filter)) {
+                jobs = jobs.filter(this.filter, this);
+            }
+
+//          Create job views and render
+
+            var elements = jobs.map(function (job) {
                 if (!job.view) {
                     job.view = new Job.View({ model: job, template: this.options.jobTemplate });
                 }
                 return job.view.render().el;
             }, this);
+
             this.$el.append(elements);
         }
 
