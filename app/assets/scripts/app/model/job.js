@@ -1,4 +1,4 @@
-define(["vs", "libs/backbone"], function (W3, Backbone) {
+define(["w3", "libs/backbone"], function (W3, Backbone) {
 
     "use strict";
 

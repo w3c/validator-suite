@@ -4,24 +4,25 @@
 
 @if(!isAjax) {
 
-	@libs.main("Validator Suite", stylesheets = List("dashboard")){
-	   
-	   @***** Header ******@
-	   
-		@libs.header()
-		
-	}{ @***** Content *****@ 
-		
-		@libs.messages(messages)
-		
-	}{ @***** Footer *****@
-	
-		@libs.footer()
-	
-	}
+    @libs.main("Validator Suite", 
+        style = "dashboard"){
+       
+       @***** Header ******@
+       
+        @libs.header()
+        
+    }{ @***** Content *****@ 
+        
+        @libs.messages(messages)
+        
+    }{ @***** Footer *****@
+    
+        @libs.footer()
+    
+    }
 
 } else { @***** Ajax *****@ 
 
-	@libs.messages(messages)
+    @libs.messages(messages)
 
 }

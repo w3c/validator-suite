@@ -5,7 +5,7 @@
 @import org.w3.vs.actor._
 
 @libs.main("Validator Suite", 
-    stylesheets = List("dashboard"),
+    style = "dashboard",
     script = "dashboard"){
 
     @***** Header ******@
@@ -40,7 +40,8 @@
         </form>
     </section>
 
-    <section id="jobs" class="list">
+    @** TODO: Fix: Can't use routes.Jobs.index because of the /dashboard alias. **@
+    <section id="jobs" class="list" data-url="/suite/jobs">
         @pages.jobs(page)
     </section>
 

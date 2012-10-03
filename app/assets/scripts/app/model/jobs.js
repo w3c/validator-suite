@@ -1,24 +1,41 @@
-define(["model/job", "vs", "libs/backbone"], function (Job, W3, Backbone) {
+define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
 
     "use strict";
 
     var Jobs = {};
 
+    var getComparatorBy = function (param1, param2) {
+        var comparator = function (o1, o2) {
+            if (o1.get(param1) > o2.get(param1)) {
+                console.log(o1.get(param1) + " | " + o2.get(param1));
+                return +1;
+            } else if (o1.get(param1) === o2.get(param1) && o1.get(param2) > o2.get(param2)) {
+                console.log(o1.get(param1) + " | " + o2.get(param1) + " | " + o1.get(param2) + " | " + o2.get(param2));
+                return +1;
+            } else if (o1.get(param1) === o2.get(param1) && o1.get(param2) === o2.get(param2)) {
+                console.log(o1.get(param1) + " | " + o2.get(param1) + " | " + o1.get(param2) + " | " + o2.get(param2));
+                return 0;
+            } else {
+                return -1;
+            }
+        }
+        return comparator;
+    };
+
+    var j4 = new Job.Model({name: "job2", entrypoint: "http://www.w3.org", warnings: 1, errors: 1});
+    var j3 = new Job.Model({name: "job1", entrypoint: "http://www.w3.org", warnings: 1, errors: 2});
+    var j2 = new Job.Model({name: "job3", entrypoint: "http://www.w3.org", warnings: 2, errors: 2});
+    var j1 = new Job.Model({name: "job4", entrypoint: "http://www.w3.org", warnings: 3, errors: 2});
+
+    var c = getComparatorBy("errors", "name");
+    c(j1, j2);
+    /*console.log(c(j1, j3));
+    console.log(c(j2, j3));
+    console.log(c(j2, j4));*/
+
     Jobs.Collection = Backbone.Collection.extend({
-        url: '/suite/jobs',
-        model: Job.Model
-        /*comparator: function (job1, job2) {
-         if (job1.get("errors") > job2.get("errors")) {
-         return -1;
-         } else if (job1.get("errors") === job2.get("errors")) {
-         if (job1.get("url") < job2.get("url"))
-         return -1;
-         else
-         return +1;
-         } else {
-         return +1;
-         }
-         }*/
+        model: Job.Model,
+        comparator: getComparatorBy("errors", "warnings")
     });
 
     Jobs.View = Backbone.View.extend({
@@ -38,22 +55,34 @@ define(["model/job", "vs", "libs/backbone"], function (Job, W3, Backbone) {
         },
 
         initialize: function () {
+            if (this.options.url)
+                this.collection.url = this.options.url;
             this.collection.on('add', this.add, this);
             this.collection.on('reset', this.render, this);
+            var jobs = this.collection;
+            this.$('.name .ascend').click(function () {
+                jobs.sortBy("name");
+            });
         },
 
         add: function (job) {
-            var view = new Job.View({ model: job, template: this.options.jobTemplate });
-            this.$el.append(view.render().el);
+            if (!job.collection) {
+                this.collection.add(job, {silent: true});
+            }
+            if (!job.view) {
+                job.view = new Job.View({ model: job, template: this.options.jobTemplate });
+            }
+            this.$el.append(job.view.render().el);
         },
 
         render: function () {
             this.$el.children('article').remove();
+            console.log(this.collection);
             var elements = this.collection.map(function (job) {
-                //this.addOne
-                this.logger.debug(job);
-                var view = new Job.View({ model: job, template: this.options.jobTemplate });
-                return view.render().el;
+                if (!job.view) {
+                    job.view = new Job.View({ model: job, template: this.options.jobTemplate });
+                }
+                return job.view.render().el;
             }, this);
             this.$el.append(elements);
         }
