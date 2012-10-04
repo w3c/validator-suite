@@ -1,84 +1,82 @@
 @(assertion: AssertionView)
-<article class="@assertion.severity" tabindex="1">
-    <dl>
-        <dt>@Messages("assertion.assertor")</dt>
-        <dd class="assertor">@assertion.assertor</dd>
-        <dt>@Messages("assertion.severity")</dt>
-        <dd class="severity">@assertion.severity</dd>
-
-        <dt>@Messages("assertion.occurrences")</dt>
-        <dd class="occurrences">
-        @assertion match {
-          case assertion: SingleAssertionView => {
-            @if(assertion.occurrences > 1) {
-            @Messages("assertion.occurrences.count", assertion.occurrences)
-            } else {
-            @Messages("assertion.occurrences.count.one")
-            }
-          }
-          case assertion: GroupedAssertionView => {
-            @if(assertion.resources.size > 1) {
-              @if(assertion.occurrences > 1) {
-              @Messages("assertion.occurrences.count.resources", Messages("assertion.occurrences.count", assertion.occurrences), assertion.resources.size)
-              } else {
-              @Messages("assertion.occurrences.count.resources", Messages("assertion.occurrences.count.one"), assertion.resources.size)
+        <article class="@assertion.severity" tabindex="1">
+            <dl>
+                <dt>@Messages("assertion.assertor")</dt>
+                <dd class="assertor">@assertion.assertor</dd>
+                <dt>@Messages("assertion.severity")</dt>
+                <dd class="severity">@assertion.severity</dd>
+                <dt>@Messages("assertion.occurrences")</dt>
+                <dd class="occurrences">
+                @assertion match {
+                  case assertion: SingleAssertionView => {
+                    @if(assertion.occurrences > 1) {
+                    @Messages("assertion.occurrences.count", assertion.occurrences)
+                    } else {
+                    @Messages("assertion.occurrences.count.one")
+                    }
+                  }
+                  case assertion: GroupedAssertionView => {
+                    @if(assertion.resources.size > 1) {
+                      @if(assertion.occurrences > 1) {
+                      @Messages("assertion.occurrences.count.resources", Messages("assertion.occurrences.count", assertion.occurrences), assertion.resources.size)
+                      } else {
+                      @Messages("assertion.occurrences.count.resources", Messages("assertion.occurrences.count.one"), assertion.resources.size)
+                      }
+                    } else {
+                      @if(assertion.occurrences > 1) {
+                      @Messages("assertion.occurrences.count", assertion.occurrences)
+                      } else {
+                      @Messages("assertion.occurrences.count.one")
+                      }
+                    }
+                  }
+                }
+                </dd>
+                <dt>@Messages("assertion.message")</dt>
+                <dd class="title@if(!assertion.isEmpty){ fold}">@assertion.title</dd>
+                @if(assertion.description.isDefined) {
+                <dt>@Messages("assertion.description")</dt>
+                <dd class="description">@assertion.description</dd>}
+                @**<dt>@Messages("assertion.validated")</dt>
+                <dd class="validated">
+                    <time datetime="@assertion.validated">@Helper.formatTime(assertion.validated)</time>
+                    <span class="legend">@Helper.formatLegendTime(assertion.validated)</span>
+                </dd>**@
+            @assertion match {
+              case assertion: SingleAssertionView => {
+                <dt>@Messages("assertion.context")</dt>
+                @assertion.contexts.take(50).map { case context =>
+                <dd class="context">
+                    @if(context.line.isDefined){
+                    <span class="line">Line <span title="Line @context.line">@context.line</span></span>}
+                    @if(context.column.isDefined){
+                    <span class="column">Column <span title="Column @context.column">@context.column</span></span>}
+                    @if(context.content.isDefined){
+                    <code class="code language-">@context.content</code>}
+                </dd>}
+                @if(assertion.contexts.size > 50){
+                <dd class="more">
+                    <p>And @{assertion.contexts.size - 50} more</p>
+                </dd>}
               }
-            } else {
-              @if(assertion.occurrences > 1) {
-              @Messages("assertion.occurrences.count", assertion.occurrences)
-              } else {
-              @Messages("assertion.occurrences.count.one")
+              case assertion: GroupedAssertionView => {
+                <dt class="url">@Messages("assertion.resources.detail")</dt>
+                @assertion.resources.take(50).map { case url =>
+                <dd class="url">
+                    <a href="@Helper.encode(url)" class="report" title="@Messages("report.link")">
+                        <span>@Messages("resource.report.for")</span>
+                        <span>@Helper.shorten(url, 80)</span>
+                    </a>
+                    <br>
+                    <a href="@url.url" class="external" target="_blank" title="@Messages("resource.external.link")">@url</a>
+                </dd>}
+                @if(assertion.resources.size > 50){
+                <dd class="more">
+                    <p>And @{assertion.resources.size - 50} more</p>
+                </dd>
+                }
               }
             }
-          }
-        }
-        </dd>
-        <dt>@Messages("assertion.message")</dt>
-        <dd class="title@if(!assertion.isEmpty){ fold}">@assertion.title</dd>
-        @if(assertion.description.isDefined) {
-        <dt>@Messages("assertion.description")</dt>
-        <dd class="description">@assertion.description</dd>}
-        @**<dt>@Messages("assertion.validated")</dt>
-        <dd class="validated">
-            <time datetime="@assertion.validated">@Helper.formatTime(assertion.validated)</time>
-            <span class="legend">@Helper.formatLegendTime(assertion.validated)</span>
-        </dd>**@
-    @assertion match {
-      case assertion: SingleAssertionView => {
-        <dt>@Messages("assertion.context")</dt>
-        @assertion.contexts.take(50).map { case context =>
-        <dd class="context">
-            @if(context.line.isDefined){
-            <span class="line">Line <span title="Line @context.line">@context.line</span></span>}
-            @if(context.column.isDefined){
-            <span class="column">Column <span title="Column @context.column">@context.column</span></span>}
-            @if(context.content.isDefined){
-            <code class="code language-">@context.content</code>}
-        </dd>}
-        @if(assertion.contexts.size > 50){
-        <dd class="more">
-            <p>And @{assertion.contexts.size - 50} more</p>
-        </dd>}
-      }
-      case assertion: GroupedAssertionView => {
-        <dt class="url">@Messages("assertion.resources.detail")</dt>
-        @assertion.resources.take(50).map { case url =>
-        <dd class="url">
-            <a href="@Helper.encode(url)" class="report" title="@Messages("report.link")">
-                <span>@Messages("resource.report.for")</span>
-                <span>@Helper.shorten(url, 80)</span>
-            </a>
-            <br>
-            <a href="@url.url" class="external" target="_blank" title="@Messages("resource.external.link")">@url</a>
-        </dd>}
-        @if(assertion.resources.size > 50){
-        <dd class="more">
-            <p>And @{assertion.resources.size - 50} more</p>
-        </dd>
-        }
-      }
-    }
-
-    </dl>
-    <hr>
-</article>
+            </dl>
+            <hr>
+        </article>

@@ -1,7 +1,6 @@
 @(page: Page[ResourceView], job: JobView)(implicit req: Request[_])
 
         <aside>
-            <h2>Resources</h2>
             <h3>Definitions</h3>
             <dl>
                 @ResourceView.params.map { param =>
@@ -10,6 +9,7 @@
                 <dt class="actions"><dfn>@Messages("resources.actions")</dfn></dt>
                 <dd>@Messages("resources.actions.detail")</dd>
             </dl>
+            <hr>
         </aside>
 
     @defining(page.iterator) { case iterator =>

@@ -60,27 +60,12 @@
                 <dt>Actions</dt>
                 <dd class="actions">
                     <% if(isIdle) { %>
-                    <a class="button run">@Messages("job.button.run")</a>
+                    <button class="run">@Messages("job.button.run")</button>
                     <% } else { %>
-                    <a class="button stop">@Messages("job.button.stop")</a>
+                    <button class="button stop">@Messages("job.button.stop")</button>
                     <% } %>
-                    <a class="button delete">@Messages("job.button.delete")</a>
-                    <form class="search" action="<%= url %>" method=get>
-                        <fieldset>
-                            <legend>Search</legend>
-                            <input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>
-                            <!--<span>✘</span>-->
-                            @if(req.getQueryString("search") != None) {
-                            <a class="button clear" href="@Helper.clearParam("search")">@Messages("job.button.clear")</a>}
-                            @if(req.getQueryString("group") != None) {
-                            <input name=group type=hidden value="@req.getQueryString("group")">}
-                            @if(req.getQueryString("filter") != None) {
-                            <input name=filter type=hidden value="@req.getQueryString("filter")">}
-                            @if(req.getQueryString("sort") != None) {
-                            <input name=sort type=hidden value="@req.getQueryString("sort")">}
-                            <button type=submit>@Messages("job.button.search")</button>
-                        </fieldset>
-                    </form>
+                    <button class="button delete">@Messages("job.button.delete")</button>
+                    <input name=search class=search type=text placeholder="Search" required value="">
                     <form class="group" action="<%= url %>" method=get>
                         <fieldset class="dropdown">
                             <legend>Report by</legend>
@@ -89,7 +74,6 @@
                             <input name=group type=radio value="message" id="message" @if(req.queryString.get("group").flatten.exists(_ == "message")){checked}>
                             <label for="message">Group by message</label>
                         </fieldset>
-                        <button type=submit>Go</button>
                     </form>
                 </dd>
             </dl>

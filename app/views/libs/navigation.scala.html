@@ -8,7 +8,8 @@
     </nav>**@
     
     <nav id="crumbs">
-        <h1>Current page: @title</h1>
+        @**<h1>Current page: @title</h1>**@
+        <h1>Breadcrumb</h1>
         <ul>
             <li>@organization.name</li>
             <li><a href="@routes.Jobs.index">Dashboard</a></li>
@@ -19,4 +20,5 @@
             <li><a href="@crumb._2">@crumb._1</a></li>
             }}
         </ul>
+        <hr>
     </nav>

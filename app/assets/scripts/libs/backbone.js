@@ -1,3 +1,6 @@
+/**
+ * /!\ Updated to make backbone an amd module
+ */
 define(["libs/underscore", "libs/jquery"], function () {
 
 

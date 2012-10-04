@@ -8,12 +8,6 @@
     style = "dashboard",
     script = "dashboard"){
 
-    @***** Header ******@
-
-    @libs.header()
-
-}{  @***** Content *****@
-
     @libs.admin(user)
 
     @libs.navigation("Dashboard", organization, List())
@@ -41,7 +35,8 @@
     </section>
 
     @** TODO: Fix: Can't use routes.Jobs.index because of the /dashboard alias. **@
-    <section id="jobs" class="list" data-url="/suite/jobs">
+    <section id="jobs" class="list" data-url="/suite/jobs" data-count="@page.iterable.size">
+        <h2>Jobs</h2>
         @pages.jobs(page)
     </section>
 

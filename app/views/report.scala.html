@@ -7,32 +7,18 @@
 @libs.main("Validator Suite",
     style = "dashboard",
     script = ""){
-   
-   @***** Header
-
-exec = """
-$(function () {
-//window.Dashboard = new DashboardView();
-//window.Report = new ReportView();
-//VS.Socket.open({url: "/jobs/ws/""" + job.id + """ "});
-});
-"""
-
-******@
-    
-    @libs.header()
-    
-}{ @***** Content *****@ 
     
     @libs.admin(user)
     @libs.navigation("Report for job \"" + job.name +"\"", organization, List((job.name ,"")))
     @libs.messages(messages)
     
     <section id="jobs" class="single">
+        <h2>Job: @job.name</h2>
         @pages.jobs(Page(job))
     </section>
     
     <section id="resources" class="list" data-id="@job.id">
+        <h2>Resources</h2>
         @pages.resources(page, job)
     </section>
     

@@ -25,12 +25,6 @@ $(this).before(fold);
 });
 """**@
 
-   @***** Header ******@
-
-    @libs.header()
-    
-}{ @***** Content *****@ 
-
     @libs.admin(user)
     @libs.navigation("Job", organization, List((form("name").value.getOrElse("New Job"), "")))
     @libs.messages(form.errors.toList)

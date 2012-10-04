@@ -19,12 +19,11 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
 
         jobs = root.jobs = new Jobs.View({
             el: document.getElementById("jobs"),
-            url: "/suite/jobs",
             jobTemplate: template
         });
-        jobs.collection.fetch();
+        //jobs.collection.fetch();
 
-        socket = root.socket = new W3.Socket(document.getElementById("jobs").getAttribute("data-url"));
+        /*socket = root.socket = new W3.Socket(document.getElementById("jobs").getAttribute("data-url"));
         socket.on("jobupdate", function (data) {
             var job = jobs.collection.get(data.id);
             if (!_.isUndefined(job)) {
@@ -33,7 +32,21 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
                 console.log("unknown job with id: " + data.id);
                 console.log(data);
             }
-        });
+        });*/
+
+        /*function checkvisible( elm ) {
+            var vpH = $(window).height(), // Viewport Height
+                st = $(window).scrollTop(), // Scroll Top
+                y = elm.offset().top;
+
+            return (y < (vpH + st));
+        }
+
+        $(window).scroll(function (event) {
+            if(checkvisible($("#jobs article:last-of-type"))) {
+                jobs.collection.fetch({data: {p: 2, n: 1}});
+            }
+        });*/
 
         // for comet, deprecated
         VS = root.VS = {};

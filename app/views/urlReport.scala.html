@@ -9,7 +9,7 @@
 @libs.main("Validator Suite",
     style = "dashboard"){
    
-  @***** Header
+  @*****
 
 """
 $(function () {
@@ -22,10 +22,6 @@ $(this).parents("article").toggleClass("folded");
 
 ******@
     
-    @libs.header()
-    
-}{ @***** Content *****@
-    
     @libs.admin(user)
     @libs.navigation("Report for \"" + resource.url +"\"", organization, List((job.name, routes.Jobs.show(job.id).toString), (Helper.shorten(resource.url, 50), "")))
     @libs.messages(messages)
@@ -33,17 +29,20 @@ $(this).parents("article").toggleClass("folded");
     <hr>
     
     <section id="resources" class="single" data-id="@job.id">
+        <h2>Resource: @resource.url</h2>
         @pages.resources(Page(resource), job)
     </section>
 
     <hr>
     <section id="assertors" class="tabs">
+        <h2>Assertors</h2>
         @libs.assertors(assertors, assertionsPage)
     </section>
     
     <hr>
     
     <section id="assertions" class="folds">
+        <h2>Assertions</h2>
         @pages.singleAssertions(assertionsPage)
     </section>
     

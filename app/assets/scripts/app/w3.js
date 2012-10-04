@@ -99,7 +99,6 @@ define(["libs/backbone"], function (Backbone) {
                 for (protocol in websocketProtocol) {
                     socket.url = socket.url.replace(protocol, websocketProtocol[protocol]);
                 }
-                logger.info("opening websocket: " + socket.url);
                 websocket = new window.WebSocket(socket.url + '/ws');
                 websocket.onmessage = function (event) {
                     var job = JSON.parse(event.data);
@@ -108,7 +107,7 @@ define(["libs/backbone"], function (Backbone) {
                     socket.trigger("jobupdate", job);
                 };
                 websocket.onopen = function (event) {
-                    logger.info("websocket opened");
+                    logger.info("websocket opened: " + socket.url + '/ws');
                     socket.trigger("open", event);
                 };
                 websocket.onerror = function (event) {
@@ -129,7 +128,6 @@ define(["libs/backbone"], function (Backbone) {
                 if (!window.EventSource) {
                     throw new Error("EventSource is not supported");
                 }
-                logger.info("opening server events socket");
                 eventsource = new window.EventSource(socket.url + '/events');
                 eventsource.onmessage = function (event) {
                     var job = JSON.parse(event.data);
@@ -138,7 +136,7 @@ define(["libs/backbone"], function (Backbone) {
                     socket.trigger("jobupdate", job);
                 };
                 eventsource.onopen = function (event) {
-                    logger.info("eventsource connection opened");
+                    logger.info("eventsource connection opened: " + socket.url + '/events');
                     socket.trigger("open", event);
                 };
                 eventsource.onerror = function (event) {
@@ -149,7 +147,7 @@ define(["libs/backbone"], function (Backbone) {
                 socket.close = function () {
                     eventsource.close();
                     logger.info("eventsource closed");
-                    socket.trigger("close", new window.Event("close"));
+                    socket.trigger("close");
                 };
                 socket.type = "eventsource";
             },
@@ -161,12 +159,12 @@ define(["libs/backbone"], function (Backbone) {
                 $(function () {
                     setTimeout(function () {
                         $('body').append(iframe);
-                        socket.trigger("open", new window.Event("open"));
+                        socket.trigger("open");
                     }, 0);
                 });
                 socket.close = function () {
                     iframe.remove();
-                    socket.trigger("close", new window.Event("close"));
+                    socket.trigger("close");
                 };
                 socket.type = "comet";
             }

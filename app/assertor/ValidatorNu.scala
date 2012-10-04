@@ -4,7 +4,7 @@ import org.w3.util._
 import org.w3.vs.model._
 import scala.io.Source
 import play.api.libs.json._
-import play.api.templates.HtmlFormat
+import play.api.templates.{Html, HtmlFormat}
 import org.w3.vs.view.Helper
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsString
@@ -57,7 +57,7 @@ object ValidatorNu extends FromHttpResponseAssertor {
         case JsString(s) => s
         case _ => throw new Exception("malformed json") // TODO
       })
-      val title = (obj \ "message") match {case JsString(s) => HtmlFormat.escape(s).text; case _ => throw new Exception("malformed json")}
+      val title = (obj \ "message") match {case JsString(s) => Html(s).text; case _ => throw new Exception("malformed json")}
       val lastLine = (obj \ "lastLine") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
       val lastCol = (obj \ "lastColumn") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
       val extract = (obj \ "extract") match {case JsString(s) => Some(HtmlFormat.escape(s).text); case _ => None}

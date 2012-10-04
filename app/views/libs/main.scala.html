@@ -1,4 +1,4 @@
-@(title: String, style: String = "", script: String = "")(header: Html)(content: Html)(footer: Html)
+@(title: String, style: String = "", script: String = "")(content: Html)(footer: Html)
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,19 +23,19 @@
 </head>
 
 <body class="no-js">
-    @header
+    <script>document.body.setAttribute("class", "js");</script>
+    <header>
+        <h1>
+            <a href="@routes.Jobs.index" tabindex="-1">
+                <img alt="Validator Suite Logo" src='@routes.Assets.at("/public", "images/vsLogo.svg")' height="60">
+                <span>Validator</span> <span>Suite</span>
+            </a>
+        </h1>
+    </header>
     <div id="main">
     @content
     </div>
     @footer
-
-    @**<script>
-        /*requirejs.config({
-            baseUrl: '@routes.Assets.at("javascripts")'
-        });*/
-        //$('body').removeClass('no-js').addClass('js');
-        //@Html(exec)
-    </script>**@
 
     @**
     <script src='@routes.Assets.at("javascripts/libs/progress-polyfill.js")'></script>

@@ -1,13 +1,13 @@
 @(page: Page[SingleAssertionView])
 
         <aside>
-            <h2>Assertions</h2>
             <h3>Definitions</h3>
             <dl>
                 @SingleAssertionView.params.map {param =>
                 <dt class="@param"><dfn>@Messages("assertion.%s" format param)</dfn></dt>
                 <dd>@Messages("assertion.%s.detail" format param)</dd>}
             </dl>
+            <hr>
         </aside>
 
     @defining(page.iterator) {case iterator =>

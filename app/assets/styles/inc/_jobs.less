@@ -1,3 +1,7 @@
+#jobs > h2 { display: none; }
+
+
+
 #jobs article .name a {
     font-weight: bold;
 }
@@ -7,33 +11,53 @@
 
 #jobs.list {
 
+    aside{
+        background-image: url('../images/texture.gif');
+
+        &.jsFixed {
+            min-width: @bodyW;
+            //top: 0;
+            //position: fixed;
+            display: table !important;
+            //table-layout: fixed;
+            width: 100%;
+            position: fixed;
+            top: 0;
+        }
+    }
+
     button, .button {box-shadow: none;}
 
-    .search, .maxResources {display: none;}
-    .name {min-width: 75px;}
-    .group {display: none;}
+    .search, .maxResources, .group { display: none; }
     .actions {
-        width: 55px;
         dfn,
-        button[value="run"],
+        button.run,
         .button.run,
-        legend {display: none;}
+        legend { display: none; }
     }
+    .name { width: 15%; }
+    .entrypoint { width: 23%; }
     .status,
     .warnings,
     .errors,
     .resources,
     .health,
     .actions {
-        width: 75px;
+       width: 80px;
+    }
+    .actions {
+        display: none;
     }
     .completedOn {
-        width: 150px;
+        width: 15%;
     }
     .status {
-        width: 90px;
-        &.idle span {vertical-align: middle; line-height: 22px;}
-        form {display: inline;}
+        width: 10%;
+        &.idle span {
+            vertical-align: middle;
+            line-height: 22px;
+        }
+        form { display: inline; }
         button,
         .button {
             font-size: 0.85em;
@@ -41,6 +65,9 @@
             float: left;
             margin-right: 5px;
         }
+    }
+    aside dfn {
+        padding-right: 15px;
     }
     article {
         .name a {

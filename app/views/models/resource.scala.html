@@ -1,57 +1,54 @@
 @(resource: ResourceView, jobId: JobId)(implicit req: Request[_])
+        <article>
+            <dl>
+                <dt>@Messages("resource.url")</dt>
+                <dd class="url">
+                    <a href="@Helper.encode(resource.url)" class="report" title="@Messages("report.link")">
+                        <span>@Messages("resource.report.for")</span>
+                        <span>@Helper.shorten(resource.url, 80)</span>
+                    </a>
+                    <br>
+                    <a href="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.encode(resource.url)</a>
+                </dd>
 
-<hr />
+                <dt>@Messages("resource.validated")</dt>
+                <dd class="validated">
+                    <time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time>
+                    <span class="legend">@Helper.formatLegendTime(resource.lastValidated)</span>
+                </dd>
 
-<article>
-    <dl>
-        <dt>@Messages("resource.url")</dt>
-        <dd class="url">
-            <a href="@Helper.encode(resource.url)" class="report" title="@Messages("report.link")">
-                <span>@Messages("resource.report.for")</span>
-                <span>@Helper.shorten(resource.url, 80)</span>
-            </a>
-            <br>
-            <a href="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.encode(resource.url)</a>
-        </dd>
+                <dt>@Messages("resource.warnings")</dt>
+                <dd class="warnings"><span>@resource.warnings</span></dd>
 
-        <dt>@Messages("resource.validated")</dt>
-        <dd class="validated">
-            <time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time>
-            <span class="legend">@Helper.formatLegendTime(resource.lastValidated)</span>
-        </dd>
+                <dt>@Messages("resource.errors")</dt>
+                <dd class="errors"><span>@resource.errors</span></dd>
 
-        <dt>@Messages("resource.warnings")</dt>
-        <dd class="warnings"><span>@resource.warnings</span></dd>
-
-        <dt>@Messages("resource.errors")</dt>
-        <dd class="errors"><span>@resource.errors</span></dd>
-
-        <dt>Actions</dt>
-        <dd class="actions">
-            @**<form action="@routes.Jobs.report(jobId, resource.url)" method="post">
-                <input type="hidden" name="uri" value="@{req.uri}">
-                <fieldset>
-                    <legend>Controls</legend>
-                    <button type="submit" name="action" value="revalidate" class="delete">@Messages("resource.button.revalidate")</button>
-                </fieldset>
-            </form>**@
-            <form class="search" action="@routes.Jobs.report(jobId, resource.url)" method=get>
-                <fieldset>
-                    <legend>Search</legend>
-                    <input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>
-                    <!--<span>✘</span>-->
-                    @if(req.getQueryString("search") != None) {
-                    <a class="button clear" href="@Helper.clearParam("search")">@Messages("job.button.clear")</a>}
-                    @if(req.getQueryString("group") != None) {
-                    <input name=group type=hidden value="@req.getQueryString("group")">}
-                    @if(req.getQueryString("filter") != None) {
-                    <input name=filter type=hidden value="@req.getQueryString("filter")">}
-                    @if(req.getQueryString("sort") != None) {
-                    <input name=sort type=hidden value="@req.getQueryString("sort")">}
-                    <button type=submit>@Messages("job.button.search")</button>
-                </fieldset>
-            </form>
-        </dd>
-    </dl>
-    <hr>
-</article>
+                <dt>Actions</dt>
+                <dd class="actions">
+                    @**<form action="@routes.Jobs.report(jobId, resource.url)" method="post">
+                        <input type="hidden" name="uri" value="@{req.uri}">
+                        <fieldset>
+                            <legend>Controls</legend>
+                            <button type="submit" name="action" value="revalidate" class="delete">@Messages("resource.button.revalidate")</button>
+                        </fieldset>
+                    </form>**@
+                    <form class="search" action="@routes.Jobs.report(jobId, resource.url)" method=get>
+                        <fieldset>
+                            <legend>Search</legend>
+                            <input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>
+                            <!--<span>✘</span>-->
+                            @if(req.getQueryString("search") != None) {
+                            <a class="button clear" href="@Helper.clearParam("search")">@Messages("job.button.clear")</a>}
+                            @if(req.getQueryString("group") != None) {
+                            <input name=group type=hidden value="@req.getQueryString("group")">}
+                            @if(req.getQueryString("filter") != None) {
+                            <input name=filter type=hidden value="@req.getQueryString("filter")">}
+                            @if(req.getQueryString("sort") != None) {
+                            <input name=sort type=hidden value="@req.getQueryString("sort")">}
+                            <button type=submit>@Messages("job.button.search")</button>
+                        </fieldset>
+                    </form>
+                </dd>
+            </dl>
+            <hr>
+        </article>
