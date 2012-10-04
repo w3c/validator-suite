@@ -86,7 +86,7 @@ class BindersTest extends WordSpec with MustMatchers {
   val errorResponse =
     ErrorResponse(
       url = URL("http://example.com/foo"),
-      action = GET,
+      method = GET,
       why = "just because")
 
   "ErrorResponse" in {
@@ -96,7 +96,7 @@ class BindersTest extends WordSpec with MustMatchers {
   val httpResponse =
     HttpResponse(
       url = URL("http://example.com/foo"),
-      action = GET,
+      method = GET,
       status = 200,
       headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
       extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))

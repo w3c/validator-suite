@@ -27,7 +27,7 @@ class HttpTest extends RunTestHelper with Inside {
 
     inside (fetchResponse) { case (tok, response: HttpResponse) =>
       response.url must be(URL("http://localhost:9001/"))
-      response.action must be(HEAD)
+      response.method must be(HEAD)
       response.status must be(200)
       //body must be === ""
       tok must be(token)
@@ -47,7 +47,7 @@ class HttpTest extends RunTestHelper with Inside {
 
     inside (fetchResponse) { case (tok, response: HttpResponse) =>
       response.url must be(URL("http://localhost:9001/"))
-      response.action must be(GET)
+      response.method must be(GET)
       response.status must be(200)
       //body must not be ('empty)
       tok must be(token)
@@ -66,7 +66,7 @@ class HttpTest extends RunTestHelper with Inside {
 
     inside (fetchResponse) { case (tok, response: HttpResponse) =>
       response.url must be(URL("http://localhost:9001/404/foo"))
-      response.action must be(HEAD)
+      response.method must be(HEAD)
       response.status must be(404)
       tok must be(token)
     }
@@ -86,7 +86,7 @@ class HttpTest extends RunTestHelper with Inside {
       
       inside (fetchResponse) { case (tok, response: ErrorResponse) =>
         response.url must be(URL("http://foo.localhost/bar"))
-        response.action must be(HEAD)
+        response.method must be(HEAD)
         tok must be(token)
       }
 

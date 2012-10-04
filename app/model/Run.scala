@@ -281,7 +281,7 @@ case class Run private (
             (runWithResponse, Set.empty[URL])
        // extract the calls to the assertor to be made
        val assertorCalls =
-         if (explorationMode === ProActive && httpResponse.action === GET) {
+         if (explorationMode === ProActive && httpResponse.method === GET) {
            val assertors = strategy.getAssertors(httpResponse)
            assertors map { assertor => AssertorCall(this.id, assertor, httpResponse) }
          } else {

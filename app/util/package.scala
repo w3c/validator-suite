@@ -10,6 +10,7 @@ package object util extends HeadersImplicits {
   type Port = Int
   type File = String
   
+  // should be collection.immutable.ListMap to preserver order insertion
   type Headers = Map[String, List[String]]
   type ContentType = String
   

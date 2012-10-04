@@ -57,7 +57,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
     lazy val admin = property[UserId](apply("admin"))
 
-    lazy val action = property[HttpAction](apply("action"))
+    lazy val method = property[HttpMethod](apply("method"))
     lazy val why = property[String](apply("why"))
     lazy val status = property[Int](apply("status"))
     lazy val headers = property[Headers](apply("headers"))
@@ -149,9 +149,9 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val OrganizationVOBinder = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
 
-  implicit lazy val ErrorResponseBinder = pgb[ErrorResponse](ont.url, ont.action, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
+  implicit lazy val ErrorResponseBinder = pgb[ErrorResponse](ont.url, ont.method, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
 
-  implicit lazy val HttpResponseBinder = pgb[HttpResponse](ont.url, ont.action, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
+  implicit lazy val HttpResponseBinder = pgb[HttpResponse](ont.url, ont.method, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
 
 
   implicit lazy val ResourceResponseBinder = new PointedGraphBinder[Rdf, ResourceResponse] {

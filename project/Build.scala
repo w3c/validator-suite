@@ -21,6 +21,8 @@ object ApplicationBuild extends Build {
     "org.w3" %% "css-validator-standalone" % "1.1-SNAPSHOT" intransitive(),
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
     "javax.servlet" % "servlet-api" % "2.5" % "provided",
+    // "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.1-seq",
+    // "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.1-seq",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0.2" % "test",
     "org.scalatest" %% "scalatest" % "1.7.1" % "test"

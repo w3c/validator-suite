@@ -86,7 +86,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
   }
 
 
-  final def doFetch(to: ActorRef, url: URL, action: HttpAction, token: Any): Unit = {
+  final def doFetch(to: ActorRef, url: URL, method: HttpMethod, token: Any): Unit = {
 
     lastFetchTimestamp = current()
     
@@ -105,7 +105,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
             body
           } catch {
             case t: Throwable => {
-              to ! (token, ErrorResponse(url = url, action = action, why = t.getMessage))
+              to ! (token, ErrorResponse(url = url, method = method, why = t.getMessage))
               throw t // rethrow for benefit of AsyncHttpClient
             }
           } finally {
@@ -145,16 +145,15 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
           val headers: Headers =
             (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
           val body = response.getResponseBody()
-          val fetchResponse = HttpResponse(url = url, action = action, status = status, headers = headers, body = body)
+          val fetchResponse = HttpResponse(url = url, method = method, status = status, headers = headers, body = body)
           to ! (token, fetchResponse)
         }
       }
     }
       
-    action match {
+    method match {
       case GET => httpClient.prepareGet(url.externalForm).execute(httpHandler)
       case HEAD => httpClient.prepareHead(url.externalForm).execute(httpHandler)
-      case IGNORE => ()
     }
 
   }

@@ -21,7 +21,7 @@ object Http {
    * @param action the kind of HTTP action
    * @token a token that will be included in the response from the actor
    */
-  case class Fetch(url: URL, action: HttpAction, token: RunId)
+  case class Fetch(url: URL, method: HttpMethod, token: RunId)
 
   case class SetSleepTime(value: Long)
 

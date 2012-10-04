@@ -39,7 +39,7 @@ case class Strategy (
   import org.w3.vs.assertor._
   def getAssertors(httpResponse: HttpResponse): List[FromHttpResponseAssertor] = {
     for {
-      mimetype <- httpResponse.headers.mimetype.toList if httpResponse.action === GET
+      mimetype <- httpResponse.headers.mimetype.toList if httpResponse.method === GET
       assertors <- assertorsConfiguration.keys.map(Assertor.getById).filter(_.supportedMimeTypes.contains(mimetype))
     } yield assertors
   }

@@ -35,19 +35,19 @@ object ResourceResponse {
 
 sealed trait ResourceResponse {
   val url: URL
-  val action: HttpAction
+  val method: HttpMethod
 }
 
 case class ErrorResponse(
     url: URL,
-    action: HttpAction,
+    method: HttpMethod,
     why: String) extends ResourceResponse
 
 object HttpResponse {
 
   def apply(
       url: URL,
-      action: HttpAction,
+      method: HttpMethod,
       status: Int,
       headers: Headers,
       body: String): HttpResponse = {
@@ -57,14 +57,14 @@ object HttpResponse {
       case "text/css" => URLExtractor.fromCSS(url, body).distinct
     } getOrElse List.empty
     
-    HttpResponse(url = url, action = action, status = status, headers = headers, extractedURLs = extractedURLs)
+    HttpResponse(url = url, method = method, status = status, headers = headers, extractedURLs = extractedURLs)
   }
 
 }
 
 case class HttpResponse(
     url: URL,
-    action: HttpAction,
+    method: HttpMethod,
     status: Int,
     headers: Headers,
     extractedURLs: List[URL]) extends ResourceResponse

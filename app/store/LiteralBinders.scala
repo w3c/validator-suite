@@ -74,21 +74,21 @@ self: Binders =>
   }
 
 
-  implicit val httpActionBinder: TypedLiteralBinder[Rdf, HttpAction] = new TypedLiteralBinder[Rdf, HttpAction] {
+  implicit val httpMethodBinder: TypedLiteralBinder[Rdf, HttpMethod] = new TypedLiteralBinder[Rdf, HttpMethod] {
 
-    def fromTypedLiteral(literal: Rdf#TypedLiteral): Validation[BananaException, HttpAction] = {
+    def fromTypedLiteral(literal: Rdf#TypedLiteral): Validation[BananaException, HttpMethod] = {
       val TypedLiteral(lexicalForm, datatype) = literal
       if (datatype == xsd.string)
         try {
-          Success(HttpAction(lexicalForm))
+          Success(HttpMethod(lexicalForm))
         } catch {
-          case t => Failure(FailedConversion(literal.toString() + " is of type xsd:string but its lexicalForm could not be made a HttpAction: " + lexicalForm))
+          case t => Failure(FailedConversion(literal.toString() + " is of type xsd:string but its lexicalForm could not be made a HttpMethod: " + lexicalForm))
         }
       else
         Failure(FailedConversion(lexicalForm + " has datatype " + datatype))
     }
 
-    def toTypedLiteral(t: HttpAction): Rdf#TypedLiteral = StringLiteralBinder.toTypedLiteral(t.toString)
+    def toTypedLiteral(t: HttpMethod): Rdf#TypedLiteral = StringLiteralBinder.toTypedLiteral(t.toString)
 
   }
 
