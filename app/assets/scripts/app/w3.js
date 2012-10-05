@@ -140,13 +140,13 @@ define(["libs/backbone"], function (Backbone) {
                     socket.trigger("open", event);
                 };
                 eventsource.onerror = function (event) {
-                    logger.info("eventsource error");
+                    logger.info("eventsource connection error");
                     logger.debug(event);
                     socket.trigger("error", event);
                 };
                 socket.close = function () {
                     eventsource.close();
-                    logger.info("eventsource closed");
+                    logger.info("eventsource connection closed");
                     socket.trigger("close");
                 };
                 socket.type = "eventsource";

@@ -14,11 +14,14 @@
                 <dt>Status</dt>
                 <dd class="status @job.status">
                     <span>@job.status</span>
-                    @if(job.status == "idle"){
+
                     <form action="@routes.Jobs.dispatcher(job.id)" method="post">
                         <input type="hidden" name="uri" value="@{req.uri}">
-                        <button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>
-                    </form>}
+                        @job.status match {
+                        case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
+                        case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
+                        }
+                    </form>
                 </dd>
 
                 <dt>Last Completed</dt>
@@ -70,7 +73,7 @@
                                 case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
                                 case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
                             }}
-                            <button type="submit" name="action" value="delete" class="delete">@Messages("job.button.delete")</button>
+                            <button type="submit" name="action" value="delete" class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
                         </fieldset>
                     </form>
                     <form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>

@@ -53,7 +53,7 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
 
         screenCount: 0,
 
-        currentCount: function () { return this.collection.size(); },
+        currentCount: function () { return this.collection.length; },
 
         initialize: function () {
 
@@ -105,12 +105,36 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
 
 //          Fetch the initial elements
 
+            var xhr, xhrCounter = 0, lastOptions;
             var fetch = function (options) {
+                logger.debug(options);
                 var options = options ? options : {};
                 if (!jobs.complete) {
+                    lastOptions = options;
+                    // 0: aborted, 4: finished. others mean pending
+                    if (xhr && xhr.readyState != 0 && xhr.readyState != 4) {
+                        if (lastOptions && _.isEqual(lastOptions.data, options.data)) {
+                            logger.info('same as pending request, ignoring');
+                            return;
+                        }
+                        if (options && options.data.offset) {
+                            logger.info("can't fetch more elements during a pending sort/search, ignoring");
+                            return;
+                        }
+                        logger.debug(xhr);
+                        logger.info('aborting previous request');
+                        xhr.abort();
+                    }
+                    var token = ++xhrCounter;
                     options.silent = true;
                     options.success = _.bind(function (jobs_) {
                         //setTimeout(function () {
+
+                            if (token != xhrCounter) {
+                                logger.warn("old xhr request");
+                                return;
+                            }
+
                             if (jobs_.size() >= expectedCount) {
                                 expectedCount = jobs_.size();
                                 jobs.complete = true;
@@ -123,10 +147,14 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
                         //}, 0);
                         //_.bind(jobsView.render(), jobsView);
                     }, jobsView);
-                    return jobs.fetch(options);
+
+                    //_.extends(options.data, {timestamp: (new Date())}
+
+                    xhr = jobs.fetch(options);
+                    return xhr;
+                } else {
+                    return false;
                 }
-                logger.info("collection is complete: " + jobs.size() + "/" + expectedCount);
-                return false;
             };
 
             // TODO only if .list
@@ -169,12 +197,15 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
 //          Add search handler
 
             $("#actions input[name=search]").bind("keyup change", function (event) {
-                var search = this.value;
-                jobsView.filter = function (job) {
-                    return job.get("name").indexOf(search) > -1 || job.get("entrypoint").indexOf(search) > -1;
-                };
-                fetch({data: { search: search, sort: getSortParam() }});
-                jobsView.render();
+                var input = this;
+                setTimeout(function () {
+                    var search = input.value;
+                    jobsView.filter = function (job) {
+                        return job.get("name").indexOf(search) > -1 || job.get("entrypoint").indexOf(search) > -1;
+                    };
+                    fetch({data: { search: search, sort: getSortParam() }});
+                    jobsView.render();
+                }, 0);
                 return;
             });
 
@@ -196,21 +227,25 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
 
             }
 
-            win.bind("scroll resize", function (event) {
+            var asideClone = aside.clone();
 
+            win.bind("scroll resize", function (event) {
+                setTimeout(function () {
 //              Set the headers to a fixed position if above the viewport.
 
                 if (jobsSection.offset().top > win.scrollTop()) {
                     aside.removeClass('jsFixed');
-                    jobsSection.find('h2').css({
+                    asideClone.remove();
+                    /*jobsSection.find('h2').css({
                         display: "none"
-                    });
+                    });*/
                 } else {
+                    aside.before(asideClone);
                     aside.addClass('jsFixed');
-                    jobsSection.find('h2').css({
+                    /*jobsSection.find('h2').css({
                         display: "block",
                         height: aside.height()
-                    });
+                    });*/
                 }
 
 //              Fetch new elements if end of page
@@ -218,7 +253,6 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
                 //var lastArticle = $('#jobs article:nth-last-of-type(2)');
                 var lastArticle = $('#jobs article:last-of-type');
                 if (isVisible(lastArticle)) {
-                    logger.info("last article is visible, fetching");
                     fetch({
                         add: true,
                         data: {
@@ -229,12 +263,11 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
                     });
                 }
 
-                _.bind(updateLegend, jobsView)();
+                jobsView.updateLegend();
+                }, 0);
 
             });
             win.scroll();
-
-//          Update pagination legend on scroll/resize
 
             $('nav.pagination :not(p.legend)').hide();
             footer.addClass('jsFixed');
@@ -278,20 +311,22 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
                 jobs = jobs.filter(this.filter, this);
             }
 
-            this.countOnScreen = jobs.size();
+//          Set the current count on screen
 
-            //this.logger.info(count);
+            this.countOnScreen = jobs.length;
 
 //          Create job views and render
 
             var elements = jobs.map(function (job) {
-                if (!job.view) {
-                    job.view = new Job.View({ model: job, template: this.options.jobTemplate });
-                }
+                job.view = new Job.View({ model: job, template: this.options.jobTemplate });
                 return job.view.render().el;
             }, this);
 
             this.$el.append(elements);
+
+            //var a = this.$el.append;
+
+            //_.each(elements, a);
 
             this.updateLegend();
         },

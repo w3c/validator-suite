@@ -23,6 +23,7 @@ job.actions.detail=Actions to perform on the job
 job.button.stop=Cancel
 job.button.run=Run
 job.button.delete=Delete
+job.button.delete.title=Delete this job
 job.button.clear=Clear
 job.button.search=Search
 

@@ -15,8 +15,10 @@
                 <dt>Status</dt>
                 <dd class="status <%= status %>">
                     <span><%= status %></span>
-                    <% if (isIdle) { %>
-                    <a class="button run">@Messages("job.button.run")</a>
+                    <% if(isIdle) { %>
+                    <button class="run">@Messages("job.button.run")</button>
+                    <% } else { %>
+                    <button class="stop">@Messages("job.button.stop")</button>
                     <% } %>
                 </dd>
 
@@ -62,9 +64,9 @@
                     <% if(isIdle) { %>
                     <button class="run">@Messages("job.button.run")</button>
                     <% } else { %>
-                    <button class="button stop">@Messages("job.button.stop")</button>
+                    <button class="stop">@Messages("job.button.stop")</button>
                     <% } %>
-                    <button class="button delete">@Messages("job.button.delete")</button>
+                    <button class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
                     <input name=search class=search type=text placeholder="Search" required value="">
                     <form class="group" action="<%= url %>" method=get>
                         <fieldset class="dropdown">
