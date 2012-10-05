@@ -17,7 +17,15 @@ case class CachedResource(cache: Cache, url: URL) {
   def metaFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString)
   def responseHeadersFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".respHeaders")
   def errorFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".error")
-  def bodyFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".error")
+  def bodyFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".body")
+
+  def deleteAll(method: HttpMethod): Unit = {
+    import java.nio.file.Files.{ deleteIfExists => delete }
+    delete(metaFile(method).toPath)
+    delete(errorFile(method).toPath)
+    delete(responseHeadersFile(method).toPath)
+    delete(bodyFile(method).toPath)
+  }
   
   def getCachedResourceState(method: HttpMethod): CachedResourceState = {
     val line = metaFile(method).asBinaryReadChars(Codec.UTF8).lines().head
@@ -46,18 +54,23 @@ case class CachedResource(cache: Cache, url: URL) {
     (status, headers)
   }
 
-  def save(rr: ResourceResponse): Unit = rr match {
-    case ErrorResponse(url, method, why) => {
-      metaFile(method).asBinaryWriteChars(Codec.UTF8).write("ERROR " + System.currentTimeMillis() + " " + url)
-      errorFile(method).asBinaryWriteChars(Codec.UTF8).write(why)
-    }
-    case HttpResponse(url, method, status, headers, body) => {
-      metaFile(method).asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + url)
-      bodyFile(method).asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.acquireAndGet { wc =>
-        wc.write("null: " + status + "\n")
-        headers foreach { case (header, values) =>
-          wc.write(header + ": " + values.mkString(",") + "\n")
+  def save(rr: ResourceResponse): Unit = {
+    deleteAll(rr.method)
+    rr match {
+      case ErrorResponse(url, method, why) => {
+        metaFile(method).asBinaryWriteChars(Codec.UTF8).write("ERROR " + System.currentTimeMillis() + " " + url)
+        errorFile(method).asBinaryWriteChars(Codec.UTF8).write(why)
+      }
+      case HttpResponse(url, method, status, headers, body) => {
+        metaFile(method).asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + url)
+        responseHeadersFile(method).asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>
+          val wc = owc.asWriteChars
+          wc.write("null: " + status + "\n")
+          headers foreach { case (header, values) =>
+            wc.write(header + ": " + values.mkString(",") + "\n")
+          }
         }
+        bodyFile(method).asBinaryWriteChars(Codec.UTF8).write(body)
       }
     }
   }
