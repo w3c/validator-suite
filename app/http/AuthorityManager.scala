@@ -7,6 +7,8 @@ import akka.util.duration._
 import java.lang.System.currentTimeMillis
 import org.w3.vs.model._
 import scala.collection.mutable.Queue
+import scalax.io._
+import java.io._
 import Http._
 
 object AuthorityManager {
@@ -146,9 +148,10 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
           val status = response.getStatusCode()
           val headers: Headers =
             (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
-          val body = response.getResponseBody()
-          val httpResponse = HttpResponse(url = url, method = method, status = status, headers = headers, body = body)
-          cache.resource(url).foreach(_.save(httpResponse))
+          val bodyAsBytes = response.getResponseBodyAsBytes()
+          def resource = Resource.fromInputStream(new ByteArrayInputStream(bodyAsBytes))
+          val httpResponse = HttpResponse(url, method, status, headers, resource)
+          cache.resource(url).foreach(_.save(httpResponse, resource))
           to ! (token, httpResponse)
         }
       }

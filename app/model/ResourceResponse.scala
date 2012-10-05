@@ -13,6 +13,8 @@ import diesel._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
 import org.w3.banana.util._
+import java.io._
+import scalax.io._
 
 object ResourceResponse {
 
@@ -50,11 +52,11 @@ object HttpResponse {
       method: HttpMethod,
       status: Int,
       headers: Headers,
-      body: String): HttpResponse = {
+      resource: InputResource[InputStream]): HttpResponse = {
     
     val extractedURLs: List[URL] = headers.mimetype collect {
-      case "text/html" | "application/xhtml+xml" => URLExtractor.fromHtml(url, body).distinct
-      case "text/css" => URLExtractor.fromCSS(url, body).distinct
+      case "text/html" | "application/xhtml+xml" => html.HtmlParser.parse(url, resource, headers.charset).map(URL.clearHash).distinct
+      case "text/css" => List.empty // TODO
     } getOrElse List.empty
     
     HttpResponse(url = url, method = method, status = status, headers = headers, extractedURLs = extractedURLs)

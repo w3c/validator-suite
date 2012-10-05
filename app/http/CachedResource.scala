@@ -1,7 +1,7 @@
 package org.w3.vs.http
 
 import org.w3.vs.model._
-import java.io.{ File, BufferedInputStream, FileInputStream, InputStream }
+import java.io._
 import scalax.io._
 import scalax.io.JavaConverters._
 import java.net._
@@ -54,25 +54,23 @@ case class CachedResource(cache: Cache, url: URL) {
     (status, headers)
   }
 
-  def save(rr: ResourceResponse): Unit = {
-    deleteAll(rr.method)
-    rr match {
-      case ErrorResponse(url, method, why) => {
-        metaFile(method).asBinaryWriteChars(Codec.UTF8).write("ERROR " + System.currentTimeMillis() + " " + url)
-        errorFile(method).asBinaryWriteChars(Codec.UTF8).write(why)
-      }
-      case HttpResponse(url, method, status, headers, body) => {
-        metaFile(method).asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + url)
-        responseHeadersFile(method).asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>
-          val wc = owc.asWriteChars
-          wc.write("null: " + status + "\n")
-          headers foreach { case (header, values) =>
-            wc.write(header + ": " + values.mkString(",") + "\n")
-          }
-        }
-        bodyFile(method).asBinaryWriteChars(Codec.UTF8).write(body)
+  def save(er: ErrorResponse): Unit = {
+    deleteAll(er.method)
+    metaFile(er.method).asBinaryWriteChars(Codec.UTF8).write("ERROR " + System.currentTimeMillis() + " " + er.url)
+    errorFile(er.method).asBinaryWriteChars(Codec.UTF8).write(er.why)
+  }
+
+  def save(hr: HttpResponse, bodyContent: InputResource[InputStream]): Unit = {
+    deleteAll(hr.method)
+    metaFile(hr.method).asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + hr.url)
+    responseHeadersFile(hr.method).asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>
+      val wc = owc.asWriteChars
+      wc.write("null: " + hr.status + "\n")
+      hr.headers foreach { case (header, values) =>
+        wc.write(header + ": " + values.mkString(",") + "\n")
       }
     }
+    bodyContent.copyDataTo(bodyFile(hr.method).asOutput)
   }
 
   def get(method: HttpMethod): Option[ResourceResponse] =
@@ -82,11 +80,11 @@ case class CachedResource(cache: Cache, url: URL) {
         Some(ErrorResponse(url, method, errorMessage))
       } else {
         val (status, headers) = getStatusHeaders(method)
-        val body = method match {
-          case HEAD => ""
-          case GET => bodyFile(method).asBinaryReadChars(Codec.UTF8).slurpString
+        val bodyContent: InputResource[InputStream] = method match {
+          case HEAD => Resource.fromInputStream(new ByteArrayInputStream(Array.empty[Byte]))
+          case GET => Resource.fromInputStream(new FileInputStream(bodyFile(method)))
         }
-        Some(HttpResponse(url, method, status, headers, body))
+        Some(HttpResponse(url, method, status, headers, bodyContent))
       }
     } catch { case e =>
       cache.logger.error(method.toString + " " + url.toString + ": " + e.getMessage)
