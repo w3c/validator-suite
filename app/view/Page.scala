@@ -4,6 +4,7 @@ import play.api.mvc.Request
 
 case class Page[A <: View] private (
     iterable: Iterable[A],
+    offset: Int = 0,
     current: Int = 1,                             // p=
     perPage: Int = Page.defaultPerPage,           // n=
     filter: Option[String] = None,                // filter=
@@ -13,7 +14,7 @@ case class Page[A <: View] private (
       implicit val ordering: PageOrdering[A],
       val filtering: PageFiltering[A]) {
 
-  private val offset = (current - 1) * perPage
+  //private val offset = (current - 1) * perPage
 
   private val filtered: Seq[A] = {
     iterable.toSeq
@@ -62,6 +63,8 @@ case class Page[A <: View] private (
 
   def groupBy(group: Option[String]): Page[A] = this.copy(group = group)
 
+  def offsetBy(offset: Option[Int]): Page[A] = this.copy(group = group)
+
   val queryString: String = {
     List(
       if (perPage != Page.defaultPerPage) "n=" + perPage else "",
@@ -85,7 +88,6 @@ object Page {
   val maxPerPage = 1000
 
   def apply[A <: View](a: A)(implicit ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = {
-    //apply(Iterable(a))
     new Page[A](Iterable(a))
   }
 
@@ -94,6 +96,7 @@ object Page {
       ordering: PageOrdering[A],
       filtering: PageFiltering[A]): Page[A] = {
 
+    val offset  = try { Some(req.getQueryString("offset").get.toInt) } catch { case _ => None }
     val page    = try { req.getQueryString("p").get.toInt } catch { case _ => 1 }
     val perPage = try { req.getQueryString("n").get.toInt } catch { case _ => Page.defaultPerPage }
     val filter = req.getQueryString("filter")
@@ -109,13 +112,18 @@ object Page {
         case _ => ordering.default
       }
 
-    new Page[A](a)
-      .show(perPage)
-      .sortBy(sort)
-      .filterBy(filter)
-      .search(search)
-      .groupBy(group)
-      .goToPage(page)
+    import scalaz.Scalaz._
+
+    return new Page[A](
+      iterable = a,
+      offset = offset.fold(offset => offset, (page - 1) * perPage),
+      current = offset.fold(offset => (offset / perPage).toInt + 1, page),
+      perPage = perPage,
+      filter = filtering.validate(filter),
+      search = search,
+      sortParam = ordering.validate(sort),
+      group = group
+    )
 
   }
 }

@@ -94,15 +94,15 @@ object JobView {
 
     def order_(safeParam: SortParam): Ordering[JobView] = {
       val ord = safeParam.name match {
-        case "name"         => Ordering[String].on[JobView](_.name)
-        case "entrypoint"   => Ordering[(String, String)].on[JobView](job => (job.entrypoint.toString, job.name))
-        case "status"       => Ordering[(String, String)].on[JobView](job => (job.status, job.name))
-        case "completedOn"  => Ordering[(Option[DateTime], String)].on[JobView](job => (job.completedOn, job.name))
-        case "warnings"     => Ordering[(Int, String)].on[JobView](job => (job.warnings, job.name))
-        case "errors"       => Ordering[(Int, String)].on[JobView](job => (job.errors, job.name))
-        case "resources"    => Ordering[(Int, String)].on[JobView](job => (job.resources, job.name))
-        case "maxResources" => Ordering[(Int, String)].on[JobView](job => (job.maxResources, job.name))
-        case "health"       => Ordering[(Int, String)].on[JobView](job => (job.health, job.name))
+        case "name"         => Ordering[(String, String)].on[JobView](job => (job.name, job.id.toString))
+        case "entrypoint"   => Ordering[(String, String, String)].on[JobView](job => (job.entrypoint.toString, job.name, job.id.toString))
+        case "status"       => Ordering[(String, String, String)].on[JobView](job => (job.status, job.name, job.id.toString))
+        case "completedOn"  => Ordering[(Option[DateTime], String, String)].on[JobView](job => (job.completedOn, job.name, job.id.toString))
+        case "warnings"     => Ordering[(Int, String, String)].on[JobView](job => (job.warnings, job.name, job.id.toString))
+        case "errors"       => Ordering[(Int, String, String)].on[JobView](job => (job.errors, job.name, job.id.toString))
+        case "resources"    => Ordering[(Int, String, String)].on[JobView](job => (job.resources, job.name, job.id.toString))
+        case "maxResources" => Ordering[(Int, String, String)].on[JobView](job => (job.maxResources, job.name, job.id.toString))
+        case "health"       => Ordering[(Int, String, String)].on[JobView](job => (job.health, job.name, job.id.toString))
       }
       if (safeParam.ascending) ord else ord.reverse
     }
