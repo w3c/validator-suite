@@ -176,23 +176,88 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
             ));
             return this;
         },
+
+        isVisible: (function () {
+
+            // cache those vars
+            var footer = $('body > footer');
+            var win = $(window);
+            var aside = $('#jobs aside');
+
+            return function () {
+                var top = this.$el.offset().top;
+                var bottom = this.$el.offset().top + this.$el.height();
+
+                return (top > win.scrollTop() + aside.height() &&
+                //      top < win.scrollTop() + win.height() - footer.height());
+                        bottom <= win.scrollTop() + win.height() - footer.height());
+
+            }
+        })(),
+
+        isScrolledUp: (function () {
+
+            // cache those vars
+            var footer = $('body > footer');
+            var win = $(window);
+
+            return function () {
+                var top = this.$el.offset().top;
+                return (top <= win.scrollTop() + win.height() - footer.height());
+            }
+        })(),
+
         stop: function () {
             this.model.stop({ wait: true });
             return false;
         },
+
         run: function () {
             this.model.run({ wait: true });
             return false;
         },
+
         _delete: function () {
             this.model.destroy({ wait: true });
             return false;
         },
+
         remove: function () {
             this.$el.remove();
         }
 
     });
+
+    Job.fromHtml = function (elem) {
+        var $elem = $(elem);
+        var _value = function (attribute) {
+            var tag = $elem.find('[' + attribute + ']');
+            var attr = tag.attr(attribute);
+            if (attr !== "") {
+                return attr;
+            } else {
+                return tag.text();
+            }
+        };
+
+        var jobObj = {
+            id: $elem.attr("data-id"),
+            name: _value('data-name'),
+            entrypoint: _value('data-entrypoint'),
+            status: _value('data-status'),
+            completedOn:_.isUndefined(_value('data-completed')) ? null : {
+                timestamp: _value('data-completed'),
+                legend1: _value('data-completed-legend1'),
+                legend2: _value('data-completed-legend2')},
+            warnings: parseInt(_value('data-warnings')),
+            errors: parseInt(_value('data-errors')),
+            resources: parseInt(_value('data-resources')),
+            maxResources: parseInt(_value('data-maxResources')),
+            health: parseInt(_value('data-health'))
+        };
+
+        return new Job.Model(jobObj);
+    };
 
     return Job;
 

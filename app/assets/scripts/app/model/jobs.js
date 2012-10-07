@@ -1,4 +1,4 @@
-define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
+define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Loader, Backbone) {
 
     "use strict";
 
@@ -24,13 +24,27 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
     };
 
     Jobs.Collection = Backbone.Collection.extend({
+
         model: Job.Model,
+
         comparator: Jobs.getComparatorBy("name"),
+
         sortByParam: function (param, reverse) {
             this.comparator = Jobs.getComparatorBy(param, reverse);
             this.sort();
         },
-        complete: false
+
+        isComplete: function () {
+            return this.expected && this.length < this.expected ? false : true;
+        },
+
+        initialize: function () {
+            this.on('add reset', function () {
+                if (this.expected && this.expected < this.length) {
+                    this.expected = this.length;
+                }
+            });
+        }
     });
 
     Jobs.View = Backbone.View.extend({
@@ -49,19 +63,18 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
 
         collection: new Jobs.Collection(),
 
-        expectedCount: 0,
+        displayedJobs: [],
 
-        screenCount: 0,
+        maxOnScreen: 20,
 
-        currentCount: function () { return this.collection.length; },
+        filteredCount: 0,
 
         initialize: function () {
 
             var logger = this.logger,
-                jobs = this.collection,
+                collection = this.collection,
                 jobsSection = this.$el,
-                jobsView = this,
-                sortLinks = this.$(".sort a"),
+                self = this,
                 sortParams = [
                     "name",
                     "entrypoint",
@@ -73,98 +86,52 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
                     "maxResources",
                     "health"
                 ],
-                getSortParam = this.getSortParam,
-                getSearchParam = this.getSearchParam,
-                updateLegend = this.updateLegend,
-                expectedCount = this.expectedCount = this.$el.attr('data-count'),
+                sortLinks = this.$(".sort a"),
                 win = $(window),
                 aside = this.$('aside'),
                 header = $('body > header'),
                 footer = $('body > footer');
 
+            collection.expected = this.$el.attr('data-count');
 
 //          Use the url parameter provided as an option or get it in the data-url attribute of this element.
 
             if (this.options.url) {
-                jobs.url = this.options.url;
+                collection.url = this.options.url;
             } else if (this.$el.attr('data-url')) {
-                jobs.url = this.$el.attr('data-url');
+                collection.url = this.$el.attr('data-url');
             } else {
                 W3.exception('No url parameter was specified');
             }
 
 //          Listen on collection events
 
-            jobs.on('add', this.add, this);
-            jobs.on('reset', this.render, this);
+            collection.on('add', this.render, this);
+            collection.on('reset', this.render, this);
+            collection.on('destroy', this.render, this);
 
-            //jobs.on('add', function (job) {console.log(job)}, this);
+//          Parse the jobs already on the page if our collection is new
 
-//          Get the total expected number of elements from the data-count attribute
-
-
-//          Fetch the initial elements
-
-            var xhr, xhrCounter = 0, lastOptions;
-            var fetch = function (options) {
-                logger.debug(options);
-                var options = options ? options : {};
-                if (!jobs.complete) {
-                    lastOptions = options;
-                    // 0: aborted, 4: finished. others mean pending
-                    if (xhr && xhr.readyState != 0 && xhr.readyState != 4) {
-                        if (lastOptions && _.isEqual(lastOptions.data, options.data)) {
-                            logger.info('same as pending request, ignoring');
-                            return;
-                        }
-                        if (options && options.data.offset) {
-                            logger.info("can't fetch more elements during a pending sort/search, ignoring");
-                            return;
-                        }
-                        logger.debug(xhr);
-                        logger.info('aborting previous request');
-                        xhr.abort();
-                    }
-                    var token = ++xhrCounter;
-                    options.silent = true;
-                    options.success = _.bind(function (jobs_) {
-                        //setTimeout(function () {
-
-                            if (token != xhrCounter) {
-                                logger.warn("old xhr request");
-                                return;
-                            }
-
-                            if (jobs_.size() >= expectedCount) {
-                                expectedCount = jobs_.size();
-                                jobs.complete = true;
-                                logger.info("Collection completed: " + jobs.size() + "/" + expectedCount);
-                            } else {
-                                jobs.complete = false;
-                                logger.info("Collection completion: " + jobs.size() + "/" + expectedCount);
-                            }
-                            jobsView.render();
-                        //}, 0);
-                        //_.bind(jobsView.render(), jobsView);
-                    }, jobsView);
-
-                    //_.extends(options.data, {timestamp: (new Date())}
-
-                    xhr = jobs.fetch(options);
-                    return xhr;
-                } else {
-                    return false;
+            if (collection.length == 0 && this.$('article').size() > 0) {
+                try {
+                    collection.reset(this.$('article').map(function (i, article) {
+                        return Job.fromHtml(article);
+                    }).toArray());
+                } catch (ex) {
+                    logger.error(ex);
                 }
-            };
+            }
 
-            // TODO only if .list
-            fetch();
+//          Start the loader
+
+            var loader = this.loader = new Loader(collection);
+            loader.start({ sort: this.getSortParam(), search: this.getSearchParam() });
 
 //          Open a socket and listen on jobupdate events
 
-            this.socket = new W3.Socket(jobs.url);
+            this.socket = new W3.Socket(collection.url);
             this.socket.on("jobupdate", function (data) {
-                var job = jobs.get(data.id);
+                var job = collection.get(data.id);
                 if (!_.isUndefined(job)) {
                     job.set(data);
                 } else {
@@ -180,16 +147,16 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
                     event.preventDefault();
                     sortLinks.removeClass("current");
                     $(this).addClass("current");
-                    fetch({data: { sort: "-" + param, search: getSearchParam() }});
-                    jobs.sortByParam(param);
+                    loader.setData({ sort: "-" + param, search: self.getSearchParam() });
+                    collection.sortByParam(param);
                     return false;
                 });
                 this.$("." + param + " .descend").click(function (event) {
                     event.preventDefault();
                     sortLinks.removeClass("current");
                     $(this).addClass("current");
-                    fetch({data: { sort: param, search: getSearchParam() }});
-                    jobs.sortByParam(param, true);
+                    loader.setData({ sort: param, search: self.getSearchParam() });
+                    collection.sortByParam(param, true);
                     return false;
                 });
             }, this);
@@ -200,75 +167,34 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
                 var input = this;
                 setTimeout(function () {
                     var search = input.value;
-                    jobsView.filter = function (job) {
+                    self.filter = function (job) {
                         return job.get("name").indexOf(search) > -1 || job.get("entrypoint").indexOf(search) > -1;
                     };
-                    fetch({data: { search: search, sort: getSortParam() }});
-                    jobsView.render();
+                    loader.setData({ sort: self.getSortParam(), search: search });
+                    self.render();
                 }, 0);
-                return;
             });
 
 //          Add scroll handler
 
-            function isVisible (elm) {
-                var header = $('body > header'),
-                    footer = $('body > footer');
-
-                if (elm.offset() == null)
-                    return false;
-
-                var top = elm.offset().top;
-                //var bottom = elm.offset().top + elm.height();
-
-                return (top > $(window).scrollTop() + header.height() &&
-                        top < $(window).scrollTop() + $(window).height() - footer.height());
-                        //bottom < $(window).scrollTop() + $(window).height() - footer.height());
-
-            }
-
             var asideClone = aside.clone();
-
             win.bind("scroll resize", function (event) {
                 setTimeout(function () {
-//              Set the headers to a fixed position if above the viewport.
-
-                if (jobsSection.offset().top > win.scrollTop()) {
-                    aside.removeClass('jsFixed');
-                    asideClone.remove();
-                    /*jobsSection.find('h2').css({
-                        display: "none"
-                    });*/
-                } else {
-                    aside.before(asideClone);
-                    aside.addClass('jsFixed');
-                    /*jobsSection.find('h2').css({
-                        display: "block",
-                        height: aside.height()
-                    });*/
-                }
-
-//              Fetch new elements if end of page
-
-                //var lastArticle = $('#jobs article:nth-last-of-type(2)');
-                var lastArticle = $('#jobs article:last-of-type');
-                if (isVisible(lastArticle)) {
-                    fetch({
-                        add: true,
-                        data: {
-                            search: getSearchParam(),
-                            sort: getSortParam(),
-                            offset: $('#jobs article').size() // jobs.size()
-                        }
-                    });
-                }
-
-                jobsView.updateLegend();
+                    if (jobsSection.offset().top > win.scrollTop()) {
+                        aside.removeClass('jsFixed');
+                        asideClone.remove();
+                    } else {
+                        aside.before(asideClone);
+                        aside.addClass('jsFixed');
+                    }
+                    self.updateLegend();
                 }, 0);
-
             });
             win.scroll();
 
+
+
+            $("#actions .search button").hide();
             $('nav.pagination :not(p.legend)').hide();
             footer.addClass('jsFixed');
             // TODO height + padding-top + padding-bottom
@@ -288,90 +214,93 @@ define(["w3", "libs/backbone", "model/job"], function (W3, Backbone, Job) {
            return $("input[name=search]").val();
         },
 
-        add: function (job) {
-            if (!job.collection) {
-                this.collection.add(job, { silent: true });
-            }
-            /*if (!job.view) {
-                job.view = new Job.View({ model: job, template: this.options.jobTemplate });
-            }*/
-            //this.$el.append(job.view.render().el);
-            this.render();
-        },
-
         render: function () {
-            this.logger.log("render");
 
-            this.$el.children('article').remove();
+            this.logger.log("render");
 
 //          Filter before rendering
 
-            var jobs = this.collection;
+            //this.collection.sort();
+
+            var models = this.collection.models;
+
             if (_.isFunction(this.filter)) {
-                jobs = jobs.filter(this.filter, this);
+                models = _.filter(models, this.filter, this);
             }
 
-//          Set the current count on screen
+            this.filteredCount = models.length;
 
-            this.countOnScreen = jobs.length;
+
+
+            models = this.displayedJobs = models.slice(0, this.maxOnScreen);
+
+            //this.displayedJobs = models;
 
 //          Create job views and render
 
-            var elements = jobs.map(function (job) {
+            var elements = models.map(function (job, index) {
                 job.view = new Job.View({ model: job, template: this.options.jobTemplate });
                 return job.view.render().el;
             }, this);
 
-            this.$el.append(elements);
+            this.$el.children('article').remove();
 
-            //var a = this.$el.append;
-
-            //_.each(elements, a);
+            this.$('.empty').remove();
+            if (elements.length > 0) {
+                this.$el.append(elements);
+            } else {
+                var empty = $('<p class="empty"></p>');
+                if (this.getSearchParam() != "" && this.collection.expected != 0) {
+                    empty.text("No search results");
+                } else {
+                    empty.html("No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>");
+                }
+                this.$el.append(empty);
+            }
 
             this.updateLegend();
         },
 
         updateLegend: function () {
 
-            var aside = this.$('aside');
-
-            function isVisible (elm) {
-                var footer = $('body > footer');
-
-                if (elm.offset() == null)
-                    return false;
-
-                var top = elm.offset().top;
-                //var bottom = elm.offset().top + elm.height();
-
-                return (top > $(window).scrollTop() + aside.height() &&
-                    top < $(window).scrollTop() + $(window).height() - footer.height());
-                    // bottom < $(window).scrollTop() + $(window).height() - footer.height());
+            var views = _.pluck(this.displayedJobs, 'view');
+            var visibles = { first: null, last: null };
+            var i = 0;
+            for (i; i < views.length; i++) {
+                var isVisible = views[i].isVisible();
+                if (visibles.first == null) {
+                    visibles.first = isVisible ? (i + 1) : null;
+                }
+                visibles.last = isVisible ? (i + 1) : visibles.last;
+                if (!isVisible && visibles.first != null && visibles.last != null) {
+                    break;
+                }
             }
 
-            var visibles = _.reduce(this.$('article').toArray(), function (memo, article, index) {
-                    var index = index + 1;
-                    var visible = isVisible($(article));
-                    if (memo.first == null) {
-                        memo.first = visible ? index : null;
-                    }
-                    memo.last = visible ? index : memo.last;
-                    return memo;
-                },
-                {
-                    first: null,
-                    last: null
-                }
-            );
+            var o = this.maxOnScreen;
+            this.maxOnScreen = visibles.last && visibles.last >= 20 ? visibles.last + 5 : 20;
+
+            if (this.maxOnScreen != o) {
+                this.render();
+            }
+
+            var total = this.getSearchParam() != "" ? this.filteredCount : this.collection.expected;
 
             var legend = $('.pagination .legend');
 
-            legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + this.expectedCount + " results");
+            if (visibles.first != null && visibles.last != null) {
+                /*legend.text("Viewing " + visibles.first + "-" + visibles.last +
+                    " of " + total + " results (" + this.collection.length + "/" + this.collection.expected + " - " + this.maxOnScreen + ")");*/
+                legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results");
+            } else {
+                legend.text("No results");
+            }
+
+
 
         }
 
     });
-
 
     return Jobs;
 

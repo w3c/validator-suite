@@ -5,6 +5,10 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
     window.Job = Job;
     window.Jobs = Jobs;
 
+    if(!('position' in document.createElement('progress'))) {
+        require(["libs/progress-polyfill"]);
+    }
+
     $(function () {
 
         var root, template, jobs, socket, VS;
@@ -21,6 +25,9 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
             el: document.getElementById("jobs"),
             jobTemplate: template
         });
+
+
+
         //jobs.collection.fetch();
 
         /*socket = root.socket = new W3.Socket(document.getElementById("jobs").getAttribute("data-url"));

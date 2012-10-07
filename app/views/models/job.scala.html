@@ -3,17 +3,17 @@
             <dl>
                 <dt>Job Name</dt>
                 <dd class="name">
-                    <a href="@routes.Jobs.show(job.id)">@job.name</a>
+                    <a href="@routes.Jobs.show(job.id)" data-name>@job.name</a>
                 </dd>
 
                 <dt>URL</dt>
                 <dd class="entrypoint">
-                   <a href="@job.entrypoint" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.shorten(job.entrypoint, 100)</a>
+                   <a href="@job.entrypoint" data-entrypoint="@job.entrypoint" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.shorten(job.entrypoint, 100)</a>
                 </dd>
 
                 <dt>Status</dt>
                 <dd class="status @job.status">
-                    <span>@job.status</span>
+                    <span data-status>@job.status</span>
 
                     <form action="@routes.Jobs.dispatcher(job.id)" method="post">
                         <input type="hidden" name="uri" value="@{req.uri}">
@@ -28,8 +28,8 @@
                 <dd class="completedOn">
                 @job.completedOn match{
                   case Some(date) => {
-                    <time datetime="@date">@Helper.formatTime(date)</time>
-                    <span class="legend">@Helper.formatLegendTime(date)</span>
+                    <time datetime="@date" data-completed="@date" data-completed-legend1>@Helper.formatTime(date)</time>
+                    <span class="legend" data-completed-legend2>@Helper.formatLegendTime(date)</span>
                     }
                   case _ => {<span class="never">Never</span>}
                 }
@@ -37,27 +37,27 @@
 
                 <dt>Warnings</dt>
                 <dd class="warnings">
-                    <span>@job.warnings</span>
+                    <span data-warnings>@job.warnings</span>
                 </dd>
 
                 <dt>Errors</dt>
                 <dd class="errors">
-                    <span>@job.errors</span>
+                    <span data-errors>@job.errors</span>
                 </dd>
 
                 <dt>Resources</dt>
                 <dd class="resources">
-                    <span>@job.resources</span>
+                    <span data-resources>@job.resources</span>
                 </dd>
 
                 <dt>Max resources</dt>
                 <dd class="maxResources">
-                    <span>@job.maxResources</span>
+                    <span data-maxResources>@job.maxResources</span>
                 </dd>
 
                 <dt>Health</dt>
                 <dd class="health">
-                    <progress max=100 value=@job.health title="@job.health%">
+                    <progress max=100 value=@job.health title="@job.health%" data-health="@job.health">
                         @job.health%
                     </progress>
                 </dd>
