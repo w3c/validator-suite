@@ -1,4 +1,4 @@
-define(["w3"], function (W3) {
+define(["w3", "libs/backbone"], function (W3, Backbone) {
 
     var logger = new W3.Logger("Loader");
 
@@ -15,73 +15,51 @@ define(["w3"], function (W3) {
      * @param initial
      * @constructor
      */
-    var Loader = function (collection, initial) {
+    var Loader = function (collection, options) {
+
+        this.options = _.extend({ silent: true, add: true, cache: false }, options);
 
         if (!collection || !collection.expected)
             W3.exception("collection not provided or does not have an expected count");
 
         this.collection = collection;
 
+        logger.info("Created loader with options: " + JSON.stringify(options));
+
     };
 
-    Loader.defaultParams = {
-        silent: true,
-        add: true,
-        cache: false,
-        data: {
-            offset: 0,
-            n: 50
-        }
-    };
+    _.extend(Loader.prototype, Backbone.Events, {
 
-    _.extend(Loader.prototype, {
-
-        start: function (initial) {
+        start: function (data) {
             if (this.xhr) { this.stop(); }
 
-            var params = this.params = _.extend({}, Loader.defaultParams, (initial || {})),
-                self = this;
+            var params = _.clone(this.options);
+            params.data = _.extend({ offset: 0, n: 50 }, data);
 
-            // make sure we have offset and n
-            params.data = _.extend({}, Loader.defaultParams.data, this.params.data);
+            logger.info("Started with initial data: " + JSON.stringify(params.data));
 
-            console.log(Loader.defaultParams.data.offset);
-            console.log(params.data.offset);
+            this.xhr = this.request(params);
+            return this.xhr;
+        },
 
-            params.success = function (all, models) {
-                logger.info("request complete");
+        request: function (params, force) {
 
-                if (models.length == 0) {
-                    if (params.data["search"] && params.data["search"] != "") {
-                        logger.info("no more search results. proceeding without search param");
-                        params.data.search = "";
-                        params.data.offset = 0 - params.data.n;
-                    } else {
-                        logger.warn("empty result. collection size: " + self.collection.size() + "/" + self.collection.expected);
-                        return;
-                    }
+            force = (force || false);
+
+            if (this.xhr && this.xhr.readyState !== 4 && this.xhr.readyState !== 0) {
+                if (!force) {
+                    this.xhr.nextData = params.data;
+                    logger.info("Set data for next call: " + JSON.stringify(params.data));
+                    return this.xhr;
                 }
+                this.xhr.abort();
+                logger.info("Previous request aborted");
+            }
 
-                self.collection.trigger('reset'); // trigger own event
-
-                setTimeout(function () {
-                    if (!self.collection.isComplete()) {
-
-                        if (!_.isNumber(params.data.n) || !_.isNumber(params.data.offset)) {
-                            W3.exception("offset or n is not a number");
-                        }
-                        params.data.offset = params.data.offset + params.data.n;
-                        self.xhr = self.collection.fetch(params);
-                        logger.info("sent next request with offset: " + params.data.offset);
-                    } else {
-                        logger.info("collection complete");
-                    }
-                }, 0);
-            };
-
-            logger.info("loader started with params:");
-            logger.debug(params.data);
-            this.xhr = this.collection.fetch(this.params);
+            logger.info("New request: " + JSON.stringify(params.data));
+            params.success = this.getSuccess(params);
+            this.xhr = this.collection.fetch(params);
+            this.xhr.params = params;
             return this.xhr;
         },
 
@@ -96,18 +74,89 @@ define(["w3"], function (W3) {
             return false;
         },
 
-        setData: function (data) {
-            this.params.data = _.extend({}, Loader.defaultParams.data, data);
-            logger.info("data set to:");
-            console.log(this.params.data);
-
-
+        setData: function (data, force) {
             if (this.collection.isComplete()) return false;
 
-            var params = this.params;
-            delete params.success;
-            return this.collection.fetch(params); // next loader request will be for offset + n
+            var params = _.clone(this.options);
+            params.data = _.extend({ offset: 0, n: 50 }, data);
+
+            return this.request(params, force);
+        },
+
+        getSuccess: function (params) {
+
+            if (!_.isNumber(params.data.n) || !_.isNumber(params.data.offset)) {
+                W3.exception("offset or n is not a number");
+            }
+
+            var self = this;
+
+            return function (collection, models) {
+
+                if (!self.xhr.nextData) {
+
+                    if (models.length < params.data.n && _.isString(params.data["search"])
+                            && params.data["search"] !== "") {
+                        logger.info("No more search results. Proceeding without search param.");
+                        params.data.search = "";
+                        params.data.offset = 0;
+                        self.setData(params.data);
+                        return;
+                    }
+
+                    if (models.length == 0 && (!params.data["search"] || params.data["search"] == "")) {
+                        logger.error("empty result. collection size: " + self.collection.size() + "/" + self.collection.expected);
+                        self.stop();
+                        return;
+                    }
+
+                }
+
+                setTimeout(function () {
+
+                    self.trigger('update');
+
+                    if (!self.collection.isComplete()) {
+                        if (self.xhr.nextData) {
+
+                            // if only offset differs use the previous one, review
+                            var diff = false;
+                            for (v in self.xhr.nextData) {
+                                if (v !== "offset" && self.xhr.nextData[v] != params.data[v]) {
+                                    diff = true;
+                                    break;
+                                }
+                            }
+
+                            if (diff) {
+                                params.data = self.xhr.nextData;
+                            } else {
+                                logger.info("keeping previous data");
+                                params.data.offset = params.data.offset + params.data.n;
+                            }
+
+                        } else {
+                            params.data.offset = params.data.offset + params.data.n;
+                        }
+                        _.bind(self.request, self)(params);
+                    } else {
+                        logger.info("collection complete");
+                        self.stop();
+                    }
+                }, 0);
+            };
+        },
+
+        isSearching: function () {
+            return this.xhr && _.isString(this.xhr.params.data.search)
+                    &&this.xhr.params.data.search !== "" ? true : false;
+        },
+
+
+        isLoading: function () {
+            return this.xhr ? true : false;
         }
+
 
     });
 

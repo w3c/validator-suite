@@ -149,7 +149,11 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
             if (this.options.load) {
                 var loader = this.loader = new Loader(collection);
-                loader.start({ data: { sort: this.getSortParam(), search: this.getSearchParam() }});
+                loader.start({ sort: this.getSortParam(), search: this.getSearchParam() });
+                loader.on('update', _.bind(this.render, this));
+
+                // debug
+                window.loader = loader;
             }
 
 //          Open a socket and listen on jobupdate events
@@ -172,7 +176,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                     event.preventDefault();
                     sortLinks.removeClass("current");
                     $(this).addClass("current");
-                    loader.setData({ sort: "-" + param, search: self.getSearchParam() });
+                    loader.setData({ sort: "-" + param, search: self.getSearchParam() }, true);
                     collection.sortByParam(param);
                     return false;
                 });
@@ -180,7 +184,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                     event.preventDefault();
                     sortLinks.removeClass("current");
                     $(this).addClass("current");
-                    loader.setData({ sort: param, search: self.getSearchParam() });
+                    loader.setData({ sort: param, search: self.getSearchParam() }, true);
                     collection.sortByParam(param, true);
                     return false;
                 });
@@ -228,7 +232,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
         render: function () {
 
-            this.logger.log("render");
+            //this.logger.log("render");
 
 //          Filter before rendering
 
@@ -267,10 +271,12 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                 this.$el.append(elements);
             } else {
                 var empty = $('<p class="empty"></p>');
-                if (this.getSearchParam() != "" && this.collection.expected != 0) {
+                if (this.getSearchParam() != "" && this.loader && !this.loader.isSearching()) {
                     empty.text("No search result.");
-                } else {
+                } else if (this.collection.expected == 0) {
                     empty.html("No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>");
+                } else {
+                    empty.html("<span class='loader'></span>");
                 }
                 this.$el.append(empty);
             }
@@ -306,9 +312,9 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             var legend = $('.pagination .legend');
 
             if (visibles.first != null && visibles.last != null) {
-                /*legend.text("Viewing " + visibles.first + "-" + visibles.last +
-                    " of " + total + " results (" + this.collection.length + "/" + this.collection.expected + " - " + this.maxOnScreen + ")");*/
-                legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results");
+                legend.text("Viewing " + visibles.first + "-" + visibles.last +
+                    " of " + total + " results (" + this.collection.length + "/" + this.collection.expected + " - " + this.maxOnScreen + ")");
+                //legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results");
             } else {
                 legend.text("");
             }

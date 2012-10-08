@@ -37,7 +37,11 @@
 }
 
 .list {
+
+    h2 { display: none; }
+
     aside {
+
         hr {
             display: table-row;
             height: 5px;
@@ -81,6 +85,21 @@
 }
 
 .list {
+
+    .empty {
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        padding: 1.5em 0;
+
+        .loader {
+            background: url("../images/loader.gif") no-repeat 50% 50%;
+            display: inline-block;
+            height: 16px;
+            width: 16px;
+        }
+    }
+
     .actions {
         .run,
         .stop,
