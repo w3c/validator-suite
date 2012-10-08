@@ -22,40 +22,6 @@ define(["w3"], function (W3) {
 
         this.collection = collection;
 
-        var params = this.params = _.extend(Loader.defaultParams, (initial || {})),
-            self = this;
-
-        params.success = function (all, models) {
-            logger.info("request complete");
-
-            if (models.length == 0) {
-                if (params.data["search"] && params.data["search"] != "") {
-                    logger.info("no more search results. proceeding without search param");
-                    params.data.search = "";
-                    params.data.offset = 0 - params.data.n;
-                } else {
-                    logger.warn("empty result. collection size: " + collection.size() + "/" + collection.expected);
-                    return;
-                }
-            }
-            collection.trigger('reset');
-
-            setTimeout(function () {
-                if (!collection.isComplete()) {
-                    params.data.offset = params.data.offset + params.data.n;
-                    self.xhr = collection.fetch(params);
-                    logger.info("sent next request with offset: " + params.data.offset);
-                } else {
-                    logger.info("collection complete");
-                }
-            }, 0);
-        };
-
-        /*params.error = function (models) {
-            logger.error("http error, retrying");
-            self.xhr = collection.fetch(params);
-        };*/
-
     };
 
     Loader.defaultParams = {
@@ -70,11 +36,52 @@ define(["w3"], function (W3) {
 
     _.extend(Loader.prototype, {
 
-        start: function () {
+        start: function (initial) {
             if (this.xhr) { this.stop(); }
-            this.xhr = this.collection.fetch(this.params);
+
+            var params = this.params = _.extend({}, Loader.defaultParams, (initial || {})),
+                self = this;
+
+            // make sure we have offset and n
+            params.data = _.extend({}, Loader.defaultParams.data, this.params.data);
+
+            console.log(Loader.defaultParams.data.offset);
+            console.log(params.data.offset);
+
+            params.success = function (all, models) {
+                logger.info("request complete");
+
+                if (models.length == 0) {
+                    if (params.data["search"] && params.data["search"] != "") {
+                        logger.info("no more search results. proceeding without search param");
+                        params.data.search = "";
+                        params.data.offset = 0 - params.data.n;
+                    } else {
+                        logger.warn("empty result. collection size: " + self.collection.size() + "/" + self.collection.expected);
+                        return;
+                    }
+                }
+
+                self.collection.trigger('reset'); // trigger own event
+
+                setTimeout(function () {
+                    if (!self.collection.isComplete()) {
+
+                        if (!_.isNumber(params.data.n) || !_.isNumber(params.data.offset)) {
+                            W3.exception("offset or n is not a number");
+                        }
+                        params.data.offset = params.data.offset + params.data.n;
+                        self.xhr = self.collection.fetch(params);
+                        logger.info("sent next request with offset: " + params.data.offset);
+                    } else {
+                        logger.info("collection complete");
+                    }
+                }, 0);
+            };
+
             logger.info("loader started with params:");
-            logger.debug(this.params);
+            logger.debug(params.data);
+            this.xhr = this.collection.fetch(this.params);
             return this.xhr;
         },
 
@@ -90,12 +97,16 @@ define(["w3"], function (W3) {
         },
 
         setData: function (data) {
-            var n = this.params.data.n;
-            data = _.extend({ offset: -n, n: n }, data);
-            this.params.data = data;
-            logger.info("data changed");
-            logger.debug(data);
-            return data;
+            this.params.data = _.extend({}, Loader.defaultParams.data, data);
+            logger.info("data set to:");
+            console.log(this.params.data);
+
+
+            if (this.collection.isComplete()) return false;
+
+            var params = this.params;
+            delete params.success;
+            return this.collection.fetch(params); // next loader request will be for offset + n
         }
 
     });

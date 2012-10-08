@@ -15,6 +15,19 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
 
         root = window;
 
+        //header = $('body > header'),
+        //footer = $('body > footer');
+
+        $("#actions .search button").hide();
+        $("#actions .search input").addClass("cleared");
+        $("#actions .clear").remove();
+        $('nav.pagination :not(p.legend)').hide();
+        $('body > footer').addClass('jsFixed');
+        // TODO height + padding-top + padding-bottom
+        //$('#main').css("padding-bottom", footer.height() + "px");
+        $('#main').css("padding-bottom", "50px");
+
+
         try {
             template = _.template(document.getElementById("job-template").text);
         } catch(ex) {
@@ -23,45 +36,15 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
 
         jobs = root.jobs = new Jobs.View({
             el: document.getElementById("jobs"),
-            jobTemplate: template
+            jobTemplate: template,
+            load: true
         });
-
-
-
-        //jobs.collection.fetch();
-
-        /*socket = root.socket = new W3.Socket(document.getElementById("jobs").getAttribute("data-url"));
-        socket.on("jobupdate", function (data) {
-            var job = jobs.collection.get(data.id);
-            if (!_.isUndefined(job)) {
-                job.set(data);
-            } else {
-                console.log("unknown job with id: " + data.id);
-                console.log(data);
-            }
-        });*/
-
-        /*function checkvisible( elm ) {
-            var vpH = $(window).height(), // Viewport Height
-                st = $(window).scrollTop(), // Scroll Top
-                y = elm.offset().top;
-
-            return (y < (vpH + st));
-        }
-
-        $(window).scroll(function (event) {
-            if(checkvisible($("#jobs article:last-of-type"))) {
-                jobs.collection.fetch({data: {p: 2, n: 1}});
-            }
-        });*/
 
         // for comet, deprecated
         VS = root.VS = {};
         VS.jobupdate = function (job) {
             socket.trigger("jobupdate", job);
         };
-
-        //VS.dashboard.collection.fetch({data: {sort: 'warnings'}});
 
     });
 

@@ -6,16 +6,39 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
     Jobs.getComparatorBy = function (param, reverse) {
 
+        reverse = (reverse || false);
+
+        if (param == "completedOn") {
+            var co = "completedOn";
+            return function (o1, o2) {
+                var p1 = o1.get(co);
+                var p2 = o2.get(co);
+                if (p1 == null && p2 == null) {
+                    return 0;
+                } else if (p2 == null) {
+                    return reverse ? -1 : +1;
+                } else if (p1 == null) {
+                    return reverse ? +1 : -1;
+                } else if (p1.timestamp > p2.timestamp) {
+                    return reverse ? -1 : +1;
+                } else if (p1.timestamp == p2.timestamp) {
+                    return 0;
+                } else {
+                    return reverse ? +1 : -1;
+                }
+            };
+        }
+
         // TODO Job.dummyJob
         var job = new Job.Model({name: "job", entrypoint: "http://www.example.com", maxResources: 1, completedOn: {}});
         if (!_.isNumber(job.get(param)) && !_.isString(job.get(param)))
             throw new Error("Cannot sort by \"" + param + "\", not a string or a number. " + job.get(param));
 
-        var reverse = reverse ? reverse : false;
+
         return function (o1, o2) {
-            if (o1.get(param) > o2.get(param)) {
+            if (o1.get(param) > o2.get(param) || (o1.get(param) === o2.get(param) && o1.id > o2.id)) {
                 return reverse ? -1 : +1;
-            } else if (o1.get(param) === o2.get(param)) {
+            } else if (o1.get(param) === o2.get(param) && o1.id === o2.id) {
                 return 0;
             } else {
                 return reverse ? +1 : -1;
@@ -65,7 +88,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
         displayedJobs: [],
 
-        maxOnScreen: 20,
+        maxOnScreen: 30,
 
         filteredCount: 0,
 
@@ -89,8 +112,8 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                 sortLinks = this.$(".sort a"),
                 win = $(window),
                 aside = this.$('aside'),
-                header = $('body > header'),
-                footer = $('body > footer');
+                asideClone = aside.clone(),
+                searchInput = this.searchInput = $("#actions input[name=search]");
 
             collection.expected = this.$el.attr('data-count');
 
@@ -124,8 +147,10 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
 //          Start the loader
 
-            var loader = this.loader = new Loader(collection);
-            loader.start({ sort: this.getSortParam(), search: this.getSearchParam() });
+            if (this.options.load) {
+                var loader = this.loader = new Loader(collection);
+                loader.start({ data: { sort: this.getSortParam(), search: this.getSearchParam() }});
+            }
 
 //          Open a socket and listen on jobupdate events
 
@@ -163,21 +188,17 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
 //          Add search handler
 
-            $("#actions input[name=search]").bind("keyup change", function (event) {
+            searchInput.bind("keyup change", function (event) {
                 var input = this;
                 setTimeout(function () {
-                    var search = input.value;
-                    self.filter = function (job) {
-                        return job.get("name").indexOf(search) > -1 || job.get("entrypoint").indexOf(search) > -1;
-                    };
-                    loader.setData({ sort: self.getSortParam(), search: search });
+                    loader.setData({ sort: self.getSortParam(), search: input.value });
                     self.render();
                 }, 0);
             });
 
 //          Add scroll handler
 
-            var asideClone = aside.clone();
+            //var asideClone = aside.clone();
             win.bind("scroll resize", function (event) {
                 setTimeout(function () {
                     if (jobsSection.offset().top > win.scrollTop()) {
@@ -192,26 +213,17 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             });
             win.scroll();
 
-
-
-            $("#actions .search button").hide();
-            $('nav.pagination :not(p.legend)').hide();
-            footer.addClass('jsFixed');
-            // TODO height + padding-top + padding-bottom
-            //$('#main').css("padding-bottom", footer.height() + "px");
-            $('#main').css("padding-bottom", "50px");
-
         },
 
         getSortParam: function () {
-            var current = $(".sort .current");
+            var current = this.$(".sort .current");
             var param = current.parents("dt").attr("class");
             param = current.hasClass("ascend") ? "-" + param : param;
             return param;
         },
 
         getSearchParam: function () {
-           return $("input[name=search]").val();
+            return this.searchInput.length > 0 ? this.searchInput.val() : "";
         },
 
         render: function () {
@@ -224,13 +236,18 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
             var models = this.collection.models;
 
-            if (_.isFunction(this.filter)) {
+            /*if (_.isFunction(this.filter)) {
                 models = _.filter(models, this.filter, this);
+            } */
+
+            var search = this.getSearchParam();
+            if (_.isString(search) && search != "") {
+                models = _.filter(models, function (job) {
+                    return job.get("name").indexOf(search) > -1 || job.get("entrypoint").indexOf(search) > -1;
+                });
             }
 
             this.filteredCount = models.length;
-
-
 
             models = this.displayedJobs = models.slice(0, this.maxOnScreen);
 
@@ -251,7 +268,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             } else {
                 var empty = $('<p class="empty"></p>');
                 if (this.getSearchParam() != "" && this.collection.expected != 0) {
-                    empty.text("No search results");
+                    empty.text("No search result.");
                 } else {
                     empty.html("No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>");
                 }
@@ -278,7 +295,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             }
 
             var o = this.maxOnScreen;
-            this.maxOnScreen = visibles.last && visibles.last >= 20 ? visibles.last + 5 : 20;
+            this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 5 : 30;
 
             if (this.maxOnScreen != o) {
                 this.render();
@@ -293,10 +310,8 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                     " of " + total + " results (" + this.collection.length + "/" + this.collection.expected + " - " + this.maxOnScreen + ")");*/
                 legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results");
             } else {
-                legend.text("No results");
+                legend.text("");
             }
-
-
 
         }
 

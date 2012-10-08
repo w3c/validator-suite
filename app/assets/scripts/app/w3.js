@@ -4,7 +4,9 @@ define(["libs/backbone"], function (Backbone) {
 
     var W3 = {};
 
-    W3.Logger = function (name) {
+    W3.Logger = function (name, active) {
+
+
 
         return {
             log: function (msg) {

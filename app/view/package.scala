@@ -10,8 +10,8 @@ package object view {
     // TODO check this (tom)
     def compare(x: Option[DateTime], y: Option[DateTime]): Int = (x, y) match {
       case (Some(date1), Some(date2)) => date1.compareTo(date2)
-      case (None, Some(_)) => +1
-      case (Some(_), None) => -1
+      case (None, Some(_)) => -1
+      case (Some(_), None) => +1
       case (None, None) => 0
     }
   }

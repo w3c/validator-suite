@@ -58,14 +58,11 @@ object Jobs extends Controller {
         assertions <- job.getAssertions()
         jobView <- JobView.fromJob(job)
       } yield {
-
-        println(play.api.libs.json.Json.toJson(jobView)(JobView.writes))
-
         req.getQueryString("group") match {
           case Some("message") => {
             val assertorViews = AssertorView.fromAssertions(assertions)
             val assertionViews = GroupedAssertionView.fromAssertions(assertions)
-            Ok(views.html.report2(jobView, assertorViews, Page(assertionViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+            Ok(views.html.job_assertions(jobView, assertorViews, Page(assertionViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
           }
           /*case Some("url") => {
             val resourceViews = ResourceView.fromAssertions(assertions)
@@ -73,7 +70,7 @@ object Jobs extends Controller {
           }*/
           case _ => {
             val resourceViews = ResourceView.fromAssertions(assertions)
-            Ok(views.html.report(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+            Ok(views.html.job_resources(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
           }
         }
       }) failMap toError).toPromise
@@ -92,7 +89,7 @@ object Jobs extends Controller {
         assertorViews = AssertorView.fromAssertions(assertions)
         assertionViews = SingleAssertionView.fromAssertions(assertions)
       } yield {
-        Ok(views.html.urlReport(jobView, resourceView, assertorViews, Page(assertionViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.resource(jobView, resourceView, assertorViews, Page(assertionViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) failMap toError).toPromise
     }
   }
