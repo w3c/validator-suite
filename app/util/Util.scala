@@ -8,12 +8,10 @@ object Util {
    * deletes all the files in a directory (only first level, not recursive)
    */
   def delete(f: File): Unit = {
-    if (f.isDirectory) {
+    if (f.isDirectory)
       f.listFiles foreach delete
-    } else {
-      if (!f.delete())
-        throw new FileNotFoundException("Failed to delete file: " + f)
-    }
+    if (!f.delete())
+      throw new FileNotFoundException("Failed to delete file: " + f)
   }
 
 
