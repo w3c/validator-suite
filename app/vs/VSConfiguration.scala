@@ -16,7 +16,7 @@ trait VSConfiguration {
   val assertorExecutionContext: ExecutionContext
 
   val httpClient: AsyncHttpClient
-  
+
   val store: RDFStore[Rdf, BananaFuture]
 
 }

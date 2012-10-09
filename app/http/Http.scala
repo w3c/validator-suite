@@ -42,17 +42,15 @@ import Http._
 /**
  * This is an actor which encapsulates the AsyncHttpClient library.
  */
-class Http(httpClient: AsyncHttpClient, scheduler: Scheduler) extends Actor with PathAwareActor {
+class Http(httpClient: AsyncHttpClient, scheduler: Scheduler, cacheOpt: Option[Cache]) extends Actor with PathAwareActor {
 
   val logger = Logger.of(classOf[Http])
-
-  val cache = Cache(new java.io.File("/tmp/http-cache"))
 
   def getAuthorityManagerRefOrCreate(authority: Authority): ActorRef = {
     val encoded = encode(authority)
     try {
       context.children.find(_.path.name === encoded) getOrElse {
-        context.actorOf(Props(new AuthorityManager(authority, httpClient, scheduler, cache)), name = encoded)
+        context.actorOf(Props(new AuthorityManager(authority, httpClient, scheduler, cacheOpt)), name = encoded)
       }
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / encoded)

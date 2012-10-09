@@ -27,7 +27,7 @@ case class Cache(directory: File) extends ResponseCache {
   def reset: Unit = {
     directory.listFiles foreach { file =>
       val r = file.delete()
-      if (!r) logger.error("couldn't delete " + file.getAbsolutePath)
+      if (!r) sys.error("couldn't delete " + file.getAbsolutePath)
     }
   }
 

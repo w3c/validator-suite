@@ -13,7 +13,7 @@ case class URL(url: String) {
   def protocol: Protocol = underlying.getProtocol
   def authority: Authority = underlying.getAuthority
   def port: Port = underlying.getPort
-  def file: File = underlying.getFile
+  def file: FileName = underlying.getFile
 
   def domain: String = {
     val a = host.split("\\.")

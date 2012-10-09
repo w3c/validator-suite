@@ -8,7 +8,7 @@ package object util extends HeadersImplicits {
   type Protocol = String
   type Authority = String
   type Port = Int
-  type File = String
+  type FileName = String
   
   // should be collection.immutable.ListMap to preserver order insertion
   type Headers = Map[String, List[String]]

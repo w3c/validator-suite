@@ -18,7 +18,7 @@ object AuthorityManager {
 
 }
 
-class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, scheduler: Scheduler, cache: Cache) extends Actor {
+class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, scheduler: Scheduler, cacheOpt: Option[Cache]) extends Actor {
   
   val logger = play.Logger.of(classOf[AuthorityManager])
   
@@ -108,8 +108,8 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
           } catch {
             case t: Throwable => {
               val errorResponse = ErrorResponse(url = url, method = method, why = t.getMessage)
-              cache.resource(url).foreach(_.save(errorResponse))
               to ! (token, errorResponse)
+              cacheOpt.foreach { _.resource(url).foreach(_.save(errorResponse)) }
               throw t // rethrow for benefit of AsyncHttpClient
             }
           } finally {
@@ -151,8 +151,8 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
           val bodyAsBytes = response.getResponseBodyAsBytes()
           def resource = Resource.fromInputStream(new ByteArrayInputStream(bodyAsBytes))
           val httpResponse = HttpResponse(url, method, status, headers, resource)
-          cache.resource(url).foreach(_.save(httpResponse, resource))
           to ! (token, httpResponse)
+          cacheOpt foreach { _.resource(url).foreach(_.save(httpResponse, resource)) }
         }
       }
     }

@@ -2,25 +2,18 @@ package org.w3.vs
 
 import org.w3.vs.model._
 import org.joda.time._
-import org.w3.util.URL
+import org.w3.util.{ URL, Util }
 import akka.util.Duration
 import java.io._
 
 object Main {
   
-  def delete(f: File): Unit = {
-    if (f.isDirectory)
-      f.listFiles foreach delete
-    if (!f.delete())
-      throw new FileNotFoundException("Failed to delete file: " + f)
-  }
-
   def main(args: Array[String]): Unit = {
     
     implicit val conf = new DefaultProdConfiguration { }
 
     if (conf.storeDirectory.exists)
-      delete(conf.storeDirectory)
+      Util.delete(conf.storeDirectory)
 
     val orgId = OrganizationId()
 

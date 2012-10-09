@@ -3,6 +3,7 @@ package org.w3.vs
 import akka.actor._
 import org.w3.vs.http._
 import org.w3.vs.actor._
+import org.w3.util.Util
 import akka.util.{ Duration, Timeout }
 import akka.dispatch.ExecutionContext
 import java.util.concurrent._
@@ -42,10 +43,24 @@ trait DefaultProdConfiguration extends VSConfiguration {
     new AsyncHttpClient(config)
   }
 
+  val httpCacheOpt: Option[Cache] = {
+    val httpCacheConf = configuration.getConfig("application.http-cache") getOrElse sys.error("application.http-cache")
+    if (httpCacheConf.getBoolean("enable") getOrElse sys.error("enable")) {
+      val directory = new File(httpCacheConf.getString("directory") getOrElse sys.error("directory"))
+      assert(directory.exists, "directory for the HTTP Cache must exist")
+      if (httpCacheConf.getBoolean("clean-at-startup") getOrElse sys.error("clean-at-startup"))
+        Util.delete(directory)
+      val cache = Cache(directory)
+      Some(cache)
+    } else {
+      None
+    }
+  }
+
   implicit val system: ActorSystem = {
     val vs = ActorSystem("vs")
     vs.actorOf(Props(new OrganizationsActor()(this)), "organizations")
-    vs.actorOf(Props(new Http(httpClient, vs.scheduler)), "http")
+    vs.actorOf(Props(new Http(httpClient, vs.scheduler, httpCacheOpt)), "http")
     val listener = vs.actorOf(Props(new Actor {
       val logger = play.Logger.of(classOf[VSConfiguration])
       def receive = {

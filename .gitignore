@@ -31,3 +31,4 @@ test/observer/TempTest.scala
 *.orig
 occupop
 data
+http-cache

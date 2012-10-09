@@ -10,6 +10,16 @@ import scala.collection.JavaConverters._
 import org.w3.util.{ URL, Headers }
 import Cache._
 
+/**
+ * a cached resource from the cache
+ *
+ * the url by itself is not enough to get what's cached,
+ * so you'll need to provide the method that was used when caching
+ *
+ * this implementation also caches the errors (basically just the error message)
+ * - a 404 is not an error because the server could be reached
+ * - a failed connection, or a DNS issue, are the typical errors
+ */
 case class CachedResource(cache: Cache, url: URL) {
 
   val filename = math.abs(url.toString.hashCode).toString
@@ -19,14 +29,20 @@ case class CachedResource(cache: Cache, url: URL) {
   def errorFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".error")
   def bodyFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".body")
 
-  def deleteAll(method: HttpMethod): Unit = {
+  /**
+   * remove the informations for this url/method from the cache
+   */
+  def remove(method: HttpMethod): Unit = {
     import java.nio.file.Files.{ deleteIfExists => delete }
     delete(metaFile(method).toPath)
     delete(errorFile(method).toPath)
     delete(responseHeadersFile(method).toPath)
     delete(bodyFile(method).toPath)
   }
-  
+
+  /**
+   * get the state for this url/method
+   */  
   def getCachedResourceState(method: HttpMethod): CachedResourceState = {
     val line = metaFile(method).asBinaryReadChars(Codec.UTF8).lines().head
     val metaRegex(responseStateS, timestamp, reqUrl) = line
@@ -40,6 +56,9 @@ case class CachedResource(cache: Cache, url: URL) {
 
   def isError(method: HttpMethod): Boolean = errorFile(method).exists
 
+  /**
+   * get the status+headers
+   */  
   def getStatusHeaders(method: HttpMethod): (Int, Headers) = {
     val lines = responseHeadersFile(method).asBinaryReadChars(Codec.UTF8).lines()
     val status = {
@@ -55,13 +74,13 @@ case class CachedResource(cache: Cache, url: URL) {
   }
 
   def save(er: ErrorResponse): Unit = {
-    deleteAll(er.method)
+    remove(er.method)
     metaFile(er.method).asBinaryWriteChars(Codec.UTF8).write("ERROR " + System.currentTimeMillis() + " " + er.url)
     errorFile(er.method).asBinaryWriteChars(Codec.UTF8).write(er.why)
   }
 
   def save(hr: HttpResponse, bodyContent: InputResource[InputStream]): Unit = {
-    deleteAll(hr.method)
+    remove(hr.method)
     metaFile(hr.method).asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + hr.url)
     responseHeadersFile(hr.method).asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>
       val wc = owc.asWriteChars
