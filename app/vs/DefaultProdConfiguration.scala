@@ -47,7 +47,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
     val httpCacheConf = configuration.getConfig("application.http-cache") getOrElse sys.error("application.http-cache")
     if (httpCacheConf.getBoolean("enable") getOrElse sys.error("enable")) {
       val directory = new File(httpCacheConf.getString("directory") getOrElse sys.error("directory"))
-      assert(directory.exists, "directory [" + directory.getAbsolutePath + "] for the HTTP Cache must exist")
       if (httpCacheConf.getBoolean("clean-at-startup") getOrElse sys.error("clean-at-startup")) {
         Util.delete(directory)
         if (! directory.mkdir()) sys.error("could not create HTTP Cache directory " + directory.getAbsolutePath)
