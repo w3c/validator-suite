@@ -18,14 +18,12 @@ import org.w3.vs.model.Context
  * 
  *  http://wiki.whatwg.org/wiki/Validator.nu_Web_Service_Interface
  */
-object ValidatorNu extends FromHttpResponseAssertor {
+class ValidatorNu(serviceUrl: String) extends FromHttpResponseAssertor {
 
   val id = AssertorId("validator_nu")
 
   val supportedMimeTypes = List("text/html", "application/xhtml+xml", "application/xml", "image/svg+xml", "application/mathml+xml", "application/smil+xml")
 
-  val serviceUrl = "http://validator.w3.org/nu/"
-  
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     validatorURLForHuman(url, assertorConfiguration + ("out" -> List("json")))
   }

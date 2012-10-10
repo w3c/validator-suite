@@ -1,53 +1,14 @@
 package org.w3.vs.assertor
 
-import org.w3.util._
-import org.w3.cssvalidator.{ CSSValidator => CSSVal }
-import play.api._
-import java.io.File
+import org.w3.util.URL
 import org.w3.vs.model._
 import org.w3.vs.view.Helper
-import scala.Some
 
-/** An instance of the CSSValidator
- *
- */
-object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
-
-  val cssvalLogger = Logger("org.w3.vs.assertor.CSSValidator")
-
-  val configuration = Configuration.load(new File("."))
+class CSSValidator(val serviceUrl: String) extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   val id = AssertorId("validator_css")
 
   val supportedMimeTypes = List("text/css", "text/html", "application/xhtml+xml", "image/svg+xml")
-  
-  var cssval: CSSVal = null
-
-  lazy val port = configuration.getInt("application.css-validator.port") getOrElse 2719
-
-  lazy val serviceUrl = "http://localhost:" + port + "/validator"
-
-  def start(): Unit = if (cssval == null) {
-    try {
-      cssvalLogger.debug("starting on port " + port)
-      cssval = new CSSVal(port)
-      cssval.start()
-    } catch { case be: java.net.BindException =>
-      cssvalLogger.debug("already started on port " + port)
-    }
-  }
-
-  def stop(): Unit = {
-    if (cssval != null) {
-      if (Play.maybeApplication.map(_.mode) == Some(Mode.Prod)) {
-        cssvalLogger.debug("stopping")
-        cssval.stop()
-        cssval = null
-      } else {
-        cssvalLogger.debug("only stops when in Prod mode")
-      }
-    }
-  }
 
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     validatorURLForHuman(url, assertorConfiguration + ("output" -> List("ucn")))
@@ -59,5 +20,5 @@ object CSSValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
     val validatorURL = URL(serviceUrl + query)
     validatorURL
   }
-  
+
 }

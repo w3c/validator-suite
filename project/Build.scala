@@ -16,13 +16,8 @@ object ApplicationBuild extends Build {
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/scala-tools-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
     "net.databinder.dispatch" %% "core" % "0.9.0",
     "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    //"org.w3" %% "banana-sesame" % "x03-SNAPSHOT",
     "org.w3" %% "banana-jena" % "x09-SNAPSHOT",
-    "org.w3" %% "css-validator-standalone" % "1.1-SNAPSHOT" intransitive(),
-    "org.eclipse.jetty" % "jetty-webapp" % "8.0.1.v20110908" % "compile",
-    "javax.servlet" % "servlet-api" % "2.5" % "provided",
-    // "com.github.scala-incubator.io" %% "scala-io-core" % "0.4.1-seq",
-    // "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.1-seq",
+    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121010.jar",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0.2" % "test",
     "org.scalatest" %% "scalatest" % "1.7.1" % "test"
@@ -31,12 +26,11 @@ object ApplicationBuild extends Build {
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
 //  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-jena")
-//  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-sesame")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
     scalaVersion := "2.9.2",
     testOptions in Test := Nil,
-    scalacOptions ++= Seq("-Ydependent-method-types"),
+//    scalacOptions ++= Seq("-Ydependent-method-types"),
     // activates full stacktrace and durations
     testOptions in Test += Tests.Argument("-oDF"),
     testOptions in Test += Tests.Argument("-l", "org.w3.vs.util.SlowTest"),

@@ -10,6 +10,7 @@ package object model {
 
   object AssertorsConfiguration {
     import org.w3.vs.assertor._
+    import LocalValidators.{ ValidatorNu, CSSValidator }
     val default: AssertorsConfiguration =
       Map(
         CSSValidator.id -> Map.empty,

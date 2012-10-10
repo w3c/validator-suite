@@ -6,11 +6,11 @@ object Global extends GlobalSettings {
   import conf._
 
   override def onStart(app: Application): Unit = {
-    org.w3.vs.assertor.CSSValidator.start()
+    org.w3.vs.assertor.LocalValidators.start()
   }
   
   override def onStop(app: Application): Unit = {
-    org.w3.vs.assertor.CSSValidator.stop()
+    org.w3.vs.assertor.LocalValidators.stop()
     store.shutdown()
     system.shutdown()
   }

@@ -1,15 +1,13 @@
 package org.w3.vs.assertor
 
 import org.w3.vs.model._
+import LocalValidators.{ ValidatorNu, CSSValidator }
 
 /**
  * An assertor as defined in EARL
  * http://www.w3.org/TR/EARL10/#Assertor
  */
 trait Assertor {
-  // // TODO Fix this.
-  // implicit lazy val conf = org.w3.vs.Prod.configuration
-  // implicit lazy val executionContext = conf.assertorExecutionContext  
 
   def id: AssertorId
 

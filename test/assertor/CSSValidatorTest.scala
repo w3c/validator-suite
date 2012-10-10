@@ -5,7 +5,6 @@ import org.w3.vs.view.Helper
 import akka.util.duration._
 import org.scalatest._
 import org.scalatest.matchers._
-
 import org.w3.vs.model._
 
 trait ErrorMatchers {
@@ -30,12 +29,16 @@ trait ErrorMatchers {
 
 class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll with ErrorMatchers {
 
+  val localValidators = new LocalValidators(2719)
+
+  import localValidators.CSSValidator
+
   override def beforeAll(): Unit = {
-    org.w3.vs.assertor.CSSValidator.start()
+    localValidators.start()
   }
   
   override def afterAll(): Unit = {
-    org.w3.vs.assertor.CSSValidator.stop()
+    localValidators.stop()
   }
 
   "there should be no CSS error in http://www.w3.org/2011/08/validator-test/no-error.css" in {
