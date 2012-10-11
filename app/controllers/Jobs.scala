@@ -70,7 +70,11 @@ object Jobs extends Controller {
           }*/
           case _ => {
             val resourceViews = ResourceView.fromAssertions(assertions)
-            Ok(views.html.job_resources(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+            if (!isAjax)
+              Ok(views.html.job_resources(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+            else
+              Ok(JsArray(Page(resourceViews).iterator.map(_.toJson()).toSeq))
+
           }
         }
       }) failMap toError).toPromise

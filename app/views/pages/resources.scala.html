@@ -12,17 +12,17 @@
             <hr>
         </aside>
 
-    @defining(page.iterator) { case iterator =>
 
-        @iterator.map { case resource => @models.resource(resource, job.id) }
+    @page.iterator.map { case resource => @models.resource(resource, job.id) }
 
-        @if(iterator.size < 1) {
-        <article>
-            <p>
-                @Messages("resources.empty")
-                @if(job.status == "idle") { @** TODO type job.status **@
-                <!--<a href="#">@Messages("job.run")</a>-->}
-            </p>
-        </article>
-        }
+    @if(page.iterator.size < 1) {
+    <article>
+        <p>
+            @Messages("resources.empty")
+            @if(job.status == "idle") { @** TODO type job.status **@
+            <!--<a href="#">@Messages("job.run")</a>-->}
+        </p>
+    </article>
     }
+
+    @models.template_resource()

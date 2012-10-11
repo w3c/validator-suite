@@ -127,25 +127,24 @@ span.legend {
     margin-top: 4px;
 }
 
-form.search {
-    input[type="text"] {
-        padding: 5px 5px 4px 5px;
-        margin: 0;
+form.search input[type="text"],
+input.search {
+    padding: 5px 5px 4px 5px;
+    margin: 0;
 
-        .button-border();
-        .button-shadow();
+    .button-border();
+    .button-shadow();
 
-        &.cleared {
-            width: 208px;
-        }
-
-        &:not(.cleared) {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-            width: 160px;
-        }
-
+    &.cleared {
+        width: 208px;
     }
+
+    &:not(.cleared) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        width: 160px;
+    }
+
 }
 
 /* Group and search form */

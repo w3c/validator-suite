@@ -28,13 +28,15 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
 
     };
 
+    Loader.perPage = 2;
+
     _.extend(Loader.prototype, Backbone.Events, {
 
         start: function (data) {
             if (this.xhr) { this.stop(); }
 
             var params = _.clone(this.options);
-            params.data = _.extend({ offset: 0, n: 50 }, data);
+            params.data = _.extend({ offset: 0, n: Loader.perPage }, data);
 
             logger.info("Started with initial data: " + JSON.stringify(params.data));
 
@@ -78,7 +80,7 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
             if (this.collection.isComplete()) return false;
 
             var params = _.clone(this.options);
-            params.data = _.extend({ offset: 0, n: 50 }, data);
+            params.data = _.extend({ offset: 0, n: Loader.perPage }, data);
 
             return this.request(params, force);
         },

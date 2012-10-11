@@ -25,8 +25,9 @@ $(this).parents("article").toggleClass("folded");
     @libs.admin(user)
     @libs.navigation("Report for job \"" + job.name +"\"", organization, List((job.name ,"")))
     @libs.messages(messages)
-    
-    <section id="jobs" class="single">
+
+    @** TODO: Fix: Can't use routes.Jobs.index because of the /dashboard alias. **@
+    <section id="jobs" class="single" data-url="/suite/jobs">
         <h2>Job: @job.name</h2>
         @pages.jobs(Page(job))
     </section>

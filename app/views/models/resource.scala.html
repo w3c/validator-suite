@@ -8,20 +8,20 @@
                         <span>@Helper.shorten(resource.url, 80)</span>
                     </a>
                     <br>
-                    <a href="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.encode(resource.url)</a>
+                    <a href="@resource.url" data-resourceUrl="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.encode(resource.url)</a>
                 </dd>
 
                 <dt>@Messages("resource.validated")</dt>
                 <dd class="validated">
-                    <time datetime="@resource.lastValidated">@Helper.formatTime(resource.lastValidated)</time>
-                    <span class="legend">@Helper.formatLegendTime(resource.lastValidated)</span>
+                    <time datetime="@resource.lastValidated" data-lastValidated="@resource.lastValidated" data-lastValidated-legend1>@Helper.formatTime(resource.lastValidated)</time>
+                    <span class="legend" data-lastValidated-legend2>@Helper.formatLegendTime(resource.lastValidated)</span>
                 </dd>
 
                 <dt>@Messages("resource.warnings")</dt>
-                <dd class="warnings"><span>@resource.warnings</span></dd>
+                <dd class="warnings"><span data-warnings>@resource.warnings</span></dd>
 
                 <dt>@Messages("resource.errors")</dt>
-                <dd class="errors"><span>@resource.errors</span></dd>
+                <dd class="errors"><span data-errors>@resource.errors</span></dd>
 
                 <dt>Actions</dt>
                 <dd class="actions">

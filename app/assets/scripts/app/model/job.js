@@ -12,11 +12,12 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
             name: "New Job",
             //entrypoint: "",
             status: "idle",
-            completedOn: {
+            /*completedOn: {
                 timestamp: null,
                 legend1: "Never",
                 legend2: null
-            },
+            },*/
+            completedOn: null,
             warnings: 0,
             errors: 0,
             resources: 0,

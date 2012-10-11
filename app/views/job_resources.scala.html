@@ -6,18 +6,18 @@
 
 @libs.main("Validator Suite",
     style = "dashboard",
-    script = "job"){
+    script = "job_resources"){
     
     @libs.admin(user)
     @libs.navigation("Report for job \"" + job.name +"\"", organization, List((job.name ,"")))
     @libs.messages(messages)
     
-    <section id="jobs" class="single">
+    <section id="jobs" class="single" data-url="/suite/jobs" data-count="1">
         <h2>Job: @job.name</h2>
         @pages.jobs(Page(job))
     </section>
     
-    <section id="resources" class="list" data-id="@job.id">
+    <section id="resources" class="list" data-id="@job.id" data-url="@routes.Jobs.show(job.id)" data-count="@page.iterable.size">
         <h2>Resources</h2>
         @pages.resources(page, job)
     </section>

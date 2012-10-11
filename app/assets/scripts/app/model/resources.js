@@ -1,15 +1,15 @@
-define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Loader, Backbone) {
+define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Resource, Loader, Backbone) {
 
     "use strict";
 
-    var Jobs = {};
+    var Resources = {};
 
-    Jobs.getComparatorBy = function (param, reverse) {
+    Resources.getComparatorBy = function (param, reverse) {
 
         reverse = (reverse || false);
 
-        if (param == "completedOn") {
-            var co = "completedOn";
+        if (param == "lastValidated") {
+            var co = "lastValidated";
             return function (o1, o2) {
                 var p1 = o1.get(co);
                 var p2 = o2.get(co);
@@ -29,12 +29,6 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             };
         }
 
-        // TODO Job.dummyJob
-        var job = new Job.Model({name: "job", entrypoint: "http://www.example.com", maxResources: 1, completedOn: {}});
-        if (!_.isNumber(job.get(param)) && !_.isString(job.get(param)))
-            throw new Error("Cannot sort by \"" + param + "\", not a string or a number. " + job.get(param));
-
-
         return function (o1, o2) {
             if (o1.get(param) > o2.get(param) || (o1.get(param) === o2.get(param) && o1.id > o2.id)) {
                 return reverse ? -1 : +1;
@@ -46,14 +40,14 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
         };
     };
 
-    Jobs.Collection = Backbone.Collection.extend({
+    Resources.Collection = Backbone.Collection.extend({
 
-        model: Job.Model,
+        model: Resource.Model,
 
-        comparator: Jobs.getComparatorBy("name"),
+        comparator: Resources.getComparatorBy("name"),
 
         sortByParam: function (param, reverse) {
-            this.comparator = Jobs.getComparatorBy(param, reverse);
+            this.comparator = Resources.getComparatorBy(param, reverse);
             this.sort();
         },
 
@@ -70,9 +64,9 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
         }
     });
 
-    Jobs.View = Backbone.View.extend({
+    Resources.View = Backbone.View.extend({
 
-        logger: new W3.Logger("JobView"),
+        logger: new W3.Logger("ResourcesView"),
 
         tagName: "section",
 
@@ -84,9 +78,9 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
         },
 
-        collection: new Jobs.Collection(),
+        collection: new Resources.Collection(),
 
-        displayedJobs: [],
+        displayed: [],
 
         maxOnScreen: 30,
 
@@ -96,24 +90,19 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
             var logger = this.logger,
                 collection = this.collection,
-                jobsSection = this.$el,
+                resourcesSection = this.$el,
                 self = this,
                 sortParams = [
-                    "name",
-                    "entrypoint",
-                    "status",
-                    "completedOn",
+                    "url",
+                    "validated",
                     "errors",
-                    "warnings",
-                    "resources",
-                    "maxResources",
-                    "health"
+                    "warnings"
                 ],
                 sortLinks = this.$(".sort a"),
                 win = $(window),
                 aside = this.$('aside'),
-                asideClone = aside.clone(),
-                searchInput = this.searchInput = $("#actions input[name=search]");
+                asideClone = aside.clone();
+                //searchInput = this.searchInput = $("#actions input[name=search]");
 
             collection.expected = this.$el.attr('data-count');
 
@@ -133,16 +122,32 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             collection.on('reset', this.render, this);
             collection.on('destroy', this.render, this);
 
-//          Parse the jobs already on the page if our collection is new
+//          Parse the resources already on the page if our collection is new
 
             if (collection.length == 0 && this.$('article').size() > 0) {
                 try {
                     collection.reset(this.$('article').map(function (i, article) {
-                        return Job.fromHtml(article);
+                        return Resource.fromHtml(article);
                     }).toArray());
                 } catch (ex) {
                     logger.error(ex);
                 }
+            }
+
+//          Add search handler
+
+            if (this.options.searchInput) {
+
+                console.log(this.options.searchInput);
+
+                this.searchInput = this.options.searchInput;
+                this.searchInput.bind("keyup change", function (event) {
+                    var input = this;
+                    setTimeout(function () {
+                        if (loader) loader.setData({ sort: self.getSortParam(), search: input.value });
+                        self.render();
+                    }, 0);
+                });
             }
 
 //          Start the loader
@@ -158,7 +163,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
 //          Open a socket and listen on jobupdate events
 
-            this.socket = new W3.Socket(collection.url);
+            /*this.socket = new W3.Socket(collection.url);
             this.socket.on("jobupdate", function (data) {
                 var job = collection.get(data.id);
                 if (!_.isUndefined(job)) {
@@ -167,8 +172,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                     logger.warn("unknown job with id: " + data.id);
                     logger.debug(data);
                 }
-            });
-
+            });*/
 
             var initial_sort = this.getSortParam2();
             if (initial_sort.param) collection.sortByParam(initial_sort.param, initial_sort.reverse);
@@ -194,22 +198,12 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                 });
             }, this);
 
-//          Add search handler
-
-            searchInput.bind("keyup change", function (event) {
-                var input = this;
-                setTimeout(function () {
-                    loader.setData({ sort: self.getSortParam(), search: input.value });
-                    self.render();
-                }, 0);
-            });
-
 //          Add scroll handler
 
             //var asideClone = aside.clone();
             win.bind("scroll resize", function (event) {
                 setTimeout(function () {
-                    if (jobsSection.offset().top > win.scrollTop()) {
+                    if (resourcesSection.offset().top > win.scrollTop()) {
                         aside.removeClass('jsFixed');
                         asideClone.remove();
                     } else {
@@ -239,6 +233,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
         },
 
         getSearchParam: function () {
+            //console.log(this.searchInput.val());
             return this.searchInput ? this.searchInput.val() : "";
         },
 
@@ -257,23 +252,24 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             } */
 
             var search = this.getSearchParam();
+            console.log(search);
             if (_.isString(search) && search != "") {
-                models = _.filter(models, function (job) {
-                    return job.get("name").indexOf(search) > -1 || job.get("entrypoint").indexOf(search) > -1;
+                models = _.filter(models, function (resource) {
+                    return resource.get("resourceUrl").indexOf(search) > -1;
                 });
             }
 
             this.filteredCount = models.length;
 
-            models = this.displayedJobs = models.slice(0, this.maxOnScreen);
+            models = this.displayed = models.slice(0, this.maxOnScreen);
 
-            //this.displayedJobs = models;
+            //this.displayed = models;
 
-//          Create job views and render
+//          Create resource views and render
 
-            var elements = models.map(function (job, index) {
-                job.view = new Job.View({ model: job, template: this.options.jobTemplate });
-                return job.view.render().el;
+            var elements = models.map(function (resource, index) {
+                resource.view = new Resource.View({ model: resource, template: this.options.template });
+                return resource.view.render().el;
             }, this);
 
             this.$el.children('article').remove();
@@ -286,7 +282,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                 if (this.getSearchParam() != "" && this.loader && !this.loader.isSearching()) {
                     empty.text("No search result.");
                 } else if (this.collection.expected == 0) {
-                    empty.html("No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>");
+                    empty.html("No resources to show");
                 } else {
                     empty.html("<span class='loader'></span>");
                 }
@@ -298,7 +294,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
         updateLegend: function () {
 
-            var views = _.pluck(this.displayedJobs, 'view');
+            var views = _.pluck(this.displayed, 'view');
             var visibles = { first: null, last: null };
             var i = 0;
             for (i; i < views.length; i++) {
@@ -335,6 +331,6 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
     });
 
-    return Jobs;
+    return Resources;
 
 });
