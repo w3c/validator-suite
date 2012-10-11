@@ -5,6 +5,7 @@ import akka.dispatch.ExecutionContext
 import com.ning.http.client.AsyncHttpClient
 import akka.util.Timeout
 import org.w3.vs.store.Binders
+import org.w3.vs.http.Cache
 import org.w3.banana._
 
 trait VSConfiguration {
@@ -14,6 +15,8 @@ trait VSConfiguration {
   implicit val timeout: Timeout
 
   val assertorExecutionContext: ExecutionContext
+
+  val httpCacheOpt: Option[Cache]
 
   val httpClient: AsyncHttpClient
 

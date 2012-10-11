@@ -110,33 +110,33 @@ case class CachedResource(cache: Cache, url: URL) {
       None
     }
 
-  def asCacheResponse(method: HttpMethod): Option[CacheResponse] = {
-    if (isError(method))
-      None
-    else {
+  def asCacheResponse(method: HttpMethod): Option[CacheResponse] =
+    try {
+      val headers: jMap[String, jList[String]] = {
+        val (status, headers) = getStatusHeaders(method)
+        val map = new LinkedHashMap[String, jList[String]](headers.size + 1)
+        val statusSingletonList = {
+          val l = new ArrayList[String](1)
+          l.add(status.toString)
+          l
+        }
+        map.put(null, statusSingletonList)
+        headers foreach { case (header, values) =>
+          map.put(header, values.asJava)
+        }
+        map
+      }
+
       val cr = new CacheResponse {
 
         def getBody(): InputStream = new BufferedInputStream(new FileInputStream(bodyFile(method)))
         
-        def getHeaders(): jMap[String, jList[String]] = {
-          val (status, headers) = getStatusHeaders(method)
-          val map = new LinkedHashMap[String, jList[String]](headers.size + 1)
-          val statusSingletonList = {
-            val l = new ArrayList[String](1)
-            l.add(status.toString)
-            l
-          }
-          map.put(null, statusSingletonList)
-          headers foreach { case (header, values) =>
-            map.put(header, values.asJava)
-          }
-          map
-        }
+        def getHeaders(): jMap[String, jList[String]] = headers
 
       }
       Some(cr)
+    } catch { case e: Exception =>
+      None
     }
-
-  }
 
 }

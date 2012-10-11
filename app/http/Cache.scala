@@ -48,7 +48,10 @@ case class Cache(directory: File) extends ResponseCache {
       url = URL(uri.toURL)
       cachedResource <- resource(url)
       cacheResponse <- cachedResource.asCacheResponse(method)
-    } yield cacheResponse
+    } yield {
+      logger.debug(rqstMethod + " " + uri)
+      cacheResponse
+    }
     cacheResponseOpt getOrElse null
   }
 
