@@ -17,7 +17,7 @@ object HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor
   val serviceUrl = "http://validator.w3.org/check"
   
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
-    validatorURLForHuman(url, assertorConfiguration + ("output" -> List("ucn"), "No200" -> List("1")))
+    validatorURLForHuman(url, assertorConfiguration + ("output" -> List("ucn")))
   }
 
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
