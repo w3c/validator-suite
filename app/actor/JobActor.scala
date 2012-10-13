@@ -17,8 +17,18 @@ import scalaz.Scalaz._
 import org.joda.time.DateTime
 import org.w3.util.akkaext._
 import org.joda.time.DateTimeZone
+import com.yammer.metrics._
+import com.yammer.metrics.core._
 
 object JobActor {
+
+  val runningJobs: Counter = Metrics.newCounter(classOf[JobActor], "running-jobs")
+
+  val extractedUrls: Histogram = Metrics.newHistogram(classOf[JobActor], "extracted-urls")
+
+  val fetchesPerRun: Histogram = Metrics.newHistogram(classOf[JobActor], "fetches-per-run")
+
+  val assertionsPerRun: Histogram = Metrics.newHistogram(classOf[JobActor], "assertions-per-run")
 
   /* user generated events */
   case object Refresh
@@ -100,7 +110,9 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
   // at instanciation of this actor
 
-  if (initialState === Started) executeCommands(initialRun, self, toBeFetched, toBeAsserted, http, assertionsActorRef)
+  if (initialState === Started) {
+    executeCommands(initialRun, self, toBeFetched, toBeAsserted, http, assertionsActorRef)
+  }
 
   // TODO
   //conf.system.scheduler.schedule(2 seconds, 2 seconds, self, 'Tick)
@@ -128,14 +140,26 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       tellEverybody(msg)
     }
 
+    if (stateData.activity /== _run.activity) {
+      _run.activity match {
+        case Running => runningJobs.inc()
+        case Idle => {
+          runningJobs.dec()
+          fetchesPerRun.update(_run.numberOfFetchedResources)
+          assertionsPerRun.update(_run.assertions.size)
+        }
+      }
+    }
+
     if (stateData.state /== _run.state) {
       logger.debug("%s: transition to new state %s" format (run.shortId, _run.state.toString))
       //val msg = UpdateData(_run.jobData, job.id, _run.activity)
       //tellEverybody(msg)
       if (_run.noMoreUrlToExplore)
         logger.info("%s: Exploration phase finished. Fetched %d pages" format (_run.shortId, _run.numberOfFetchedResources))
-      if (_run.pendingAssertions == 0)
+      if (_run.pendingAssertions.isEmpty) {
         logger.info("Assertion phase finished.")
+      }
     }
     stay() using _run
   }
@@ -191,6 +215,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       sender ! run.id
       val (startedRun, toBeFetched) = run.newlyStartedRun
       executeCommands(startedRun, self, toBeFetched, List.empty, http, assertionsActorRef)
+      runningJobs.inc()
       goto(Started) using startedRun
     }
 
@@ -228,6 +253,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     case Event((_: RunId, httpResponse: HttpResponse), run) => {
       logger.debug("%s: <<< %s" format (run.shortId, httpResponse.url))
+      extractedUrls.update(httpResponse.extractedURLs.size)
       Run.saveEvent(run.runUri, ResourceResponseEvent(httpResponse))
       tellEverybody(NewResource(run.id, httpResponse))
       val (newRun, urlsToFetch, assertorCalls) =

@@ -40,7 +40,6 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
 
   def scheduleTick(): Unit =
     if (sleepTime > 0 && needsToSleep() > 0) {
-      //configuration.system.scheduler.scheduleOnce(needsToSleep().millis, self, 'Tick)
       scheduler.scheduleOnce(needsToSleep().millis, self, 'Tick)
       pendingTick = true
     }
@@ -88,7 +87,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
   }
 
 
-  final def doFetch(to: ActorRef, url: URL, method: HttpMethod, token: Any): Unit = {
+  def doFetch(to: ActorRef, url: URL, method: HttpMethod, token: Any): Unit = {
 
     lastFetchTimestamp = current()
     
@@ -140,7 +139,6 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
       }
         
       def onCompleted(): Unit = {
-
         finish {
           val response = builder.build()
           import java.util.{Map => jMap, List => jList}
