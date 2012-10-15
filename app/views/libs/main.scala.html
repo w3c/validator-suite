@@ -8,7 +8,7 @@
     @if(style != "") {
     <link href='@routes.Assets.at("/public", "styles/" + style + ".min.css")' rel="stylesheet">}
 
-    @if(script != "") {
+
     <script src='@routes.Assets.at("/app/assets/scripts", "libs/require.js")'></script>
     <script>
         require.config({
@@ -18,8 +18,8 @@
                 "libs/jquery": "../libs/jquery-1.7.1"
             }
         });
-        require(["@script"]);
-    </script>}
+        @if(script != "") {require(["@script"]);}
+    </script>
 </head>
 
 <body class="no-js">

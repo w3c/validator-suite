@@ -28,7 +28,7 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
 
     };
 
-    Loader.perPage = 2;
+    Loader.perPage = 30;
 
     _.extend(Loader.prototype, Backbone.Events, {
 

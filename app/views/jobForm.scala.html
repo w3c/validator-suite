@@ -6,25 +6,6 @@
 @libs.main("Validator Suite",
   style = "dashboard"){
 
-@**"""
-$(function (){
-var slider = $("input#maxResources");
-var output = $("output.maxResources");
-slider.change(function (){
-output.html(slider.attr("value"));
-});
-slider.change();
-
-$('input[name=assertor[]] + fieldset').each(function (){
-var fold = $('<a class="jsFold"></a>');
-fold.click(function (){
-$(this).toggleClass('folded');
-});
-$(this).before(fold);
-});
-});
-"""**@
-
     @libs.admin(user)
     @libs.navigation("Job", organization, List((form("name").value.getOrElse("New Job"), "")))
     @libs.messages(form.errors.toList)
@@ -62,6 +43,27 @@ $(this).before(fold);
         }**@
 
     </form>
+
+    <script>
+        require(["libs/jquery"], function () {
+        $(function (){
+            var slider = $("input#maxResources");
+            var output = $("output.maxResources");
+            slider.change(function (){
+                output.html(slider.attr("value"));
+            });
+            slider.change();
+
+            $('input[name=assertor[]] + fieldset').each(function (){
+                var fold = $('<a class="jsFold"></a>');
+                fold.click(function (){
+                    $(this).toggleClass('folded');
+                });
+                $(this).before(fold);
+            });
+        });
+        });
+    </script>
 
     </section>
     

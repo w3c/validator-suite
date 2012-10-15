@@ -233,7 +233,6 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
         },
 
         getSearchParam: function () {
-            //console.log(this.searchInput.val());
             return this.searchInput ? this.searchInput.val() : "";
         },
 
@@ -252,7 +251,6 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
             } */
 
             var search = this.getSearchParam();
-            console.log(search);
             if (_.isString(search) && search != "") {
                 models = _.filter(models, function (resource) {
                     return resource.get("resourceUrl").indexOf(search) > -1;
