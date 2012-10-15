@@ -20,7 +20,7 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
             assertions.head.copy(contexts = contexts.toList)
           }
       AssertorResult(context = context, assertor = name, sourceUrl = response.url, assertions = assertions.toList)
-    } catch { case t =>
+    } catch { case t: Throwable =>
       AssertorFailure(context = context, assertor = name, sourceUrl = response.url, why = t.getMessage)
     }
     val end = System.currentTimeMillis()

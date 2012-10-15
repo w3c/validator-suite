@@ -7,28 +7,27 @@ import scalaz.Scalaz._
 import scalaz._
 import org.joda.time._
 import org.w3.banana._
-import org.w3.banana.util._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs.store.Binders._
 import org.w3.vs.diesel._
 import org.w3.vs.sparql._
-import org.w3.banana.util._
 import org.w3.vs.actor.AssertorCall
+import scala.concurrent._
 
 object Run {
 
-  def bananaGet(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): BananaFuture[(Run, Iterable[URL], Iterable[AssertorCall])] =
+  def bananaGet(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
     bananaGet((orgId, jobId, runId).toUri)
 
-  def get(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): FutureVal[Exception, (Run, Iterable[URL], Iterable[AssertorCall])] =
+  def get(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
     get((orgId, jobId, runId).toUri)
 
-  def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, (Run, Iterable[URL], Iterable[AssertorCall])] = {
+  def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
     bananaGet(runUri).toFutureVal
   }
 
-  def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[(Run, Iterable[URL], Iterable[AssertorCall])] = {
+  def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
     store.GET(runUri) flatMap { ldr =>
       // there is a bug in banana preventing the implicit to be discovered
@@ -36,7 +35,7 @@ object Run {
     }
   }
 
-  def save(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+  def save(run: Run)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     import ops._
     val jobUri = (run.id._1, run.id._2).toUri
@@ -48,7 +47,7 @@ object Run {
     store.execute(script).toFutureVal
   }
 
-  def delete(run: Run)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] =
+  def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
     sys.error("")
 
   def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy): Run =
@@ -63,14 +62,14 @@ object Run {
 
   /* addResourceResponse */
 
-  def saveEvent(runUri: Rdf#URI, event: RunEvent)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+  def saveEvent(runUri: Rdf#URI, event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     store.POST(runUri, runUri -- ont.event ->- event.toPG)
   }
 
   /* other events */
 
-  def complete(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+  def complete(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     import ops._
     val script = for {

@@ -7,13 +7,11 @@ import org.w3.banana._
 import scalaz.Scalaz._
 import scalaz._
 import org.w3.banana._
-import org.w3.banana.util._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
 import diesel._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
-import org.w3.banana.util._
 
 case class Assertion(
     url: URL,

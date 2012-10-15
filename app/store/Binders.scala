@@ -2,7 +2,6 @@ package org.w3.vs.store
 
 import org.w3.vs.model._
 import org.w3.banana._
-import scalaz._
 import org.joda.time.DateTime
 import org.w3.util._
 import org.w3.vs._
@@ -10,6 +9,7 @@ import diesel._
 import ops._
 import org.w3.vs.actor.JobActor._
 import org.w3.vs.actor.AssertorCall
+import scala.util._
 
 object Binders extends Binders
 
@@ -94,7 +94,7 @@ trait Binders extends UriBuilders with LiteralBinders {
   implicit lazy val AssertorResultBinder = pgb[AssertorResult](ont.run, ont.assertor, ont.url, ont.assertions)(AssertorResult.apply, AssertorResult.unapply)
 
   implicit lazy val AssertorResponseBinder = new PointedGraphBinder[Rdf, AssertorResponse] {
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, AssertorResponse] =
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Try[AssertorResponse] =
       AssertorResultBinder.fromPointedGraph(pointed) orElse AssertorFailureBinder.fromPointedGraph(pointed)
     def toPointedGraph(ar: AssertorResponse): PointedGraph[Rdf] = ar match {
       case result: AssertorResult => AssertorResultBinder.toPointedGraph(result)
@@ -110,7 +110,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val BeProactiveEventBinder = new PointedGraphBinder[Rdf, BeProactiveEvent] {
     val binder = PointedGraphBinder[Rdf, (BeProactive.type, DateTime)]
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, BeProactiveEvent] =
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Try[BeProactiveEvent] =
       binder.fromPointedGraph(pointed) map { case (_, timestamp) => BeProactiveEvent(timestamp) }
     def toPointedGraph(event: BeProactiveEvent): PointedGraph[Rdf] =
       binder.toPointedGraph((BeProactive, event.timestamp))
@@ -118,7 +118,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val BeLazyEventBinder = new PointedGraphBinder[Rdf, BeLazyEvent] {
     val binder = PointedGraphBinder[Rdf, (BeLazy.type, DateTime)]
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, BeLazyEvent] =
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Try[BeLazyEvent] =
       binder.fromPointedGraph(pointed) map { case (_, timestamp) => BeLazyEvent(timestamp) }
     def toPointedGraph(event: BeLazyEvent): PointedGraph[Rdf] =
       binder.toPointedGraph((BeLazy, event.timestamp))
@@ -126,7 +126,7 @@ trait Binders extends UriBuilders with LiteralBinders {
   }
 
   implicit lazy val RunEventBinder: PointedGraphBinder[Rdf, RunEvent] = new PointedGraphBinder[Rdf, RunEvent] {
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, RunEvent] =
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Try[RunEvent] =
       AssertorResponseEventBinder.fromPointedGraph(pointed) orElse
         ResourceResponseEventBinder.fromPointedGraph(pointed) orElse
         BeProactiveEventBinder.fromPointedGraph(pointed) orElse
@@ -161,7 +161,7 @@ trait Binders extends UriBuilders with LiteralBinders {
       case h @ HttpResponse(_, _, _, _, _) => HttpResponseBinder.toPointedGraph(h)
     }
 
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, ResourceResponse] = {
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Try[ResourceResponse] = {
       ErrorResponseBinder.fromPointedGraph(pointed) orElse HttpResponseBinder.fromPointedGraph(pointed)
     }
 
@@ -177,7 +177,7 @@ trait Binders extends UriBuilders with LiteralBinders {
   }
 
   implicit lazy val RunFromPG: FromPointedGraph[Rdf, (Run, Iterable[URL], Iterable[AssertorCall])] = new FromPointedGraph[Rdf, (Run, Iterable[URL], Iterable[AssertorCall])] {
-    def fromPointedGraph(pointed: PointedGraph[Rdf]): Validation[BananaException, (Run, Iterable[URL], Iterable[AssertorCall])] = {
+    def fromPointedGraph(pointed: PointedGraph[Rdf]): Try[(Run, Iterable[URL], Iterable[AssertorCall])] = {
       for {
         id <- (pointed / ont.run).as[(OrganizationId, JobId, RunId)]
         strategy <- (pointed / ont.strategy).as[Strategy]

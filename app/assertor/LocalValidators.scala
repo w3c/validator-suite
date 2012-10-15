@@ -34,7 +34,7 @@ class LocalValidators(port: Int) {
     if (validators == null) {
       try {
         logger.debug("starting on port " + port)
-        validators = new Validators(port, new nu.ValidatorNu, new css.CSSValidator)
+        validators = new Validators(port, new nu.ValidatorNu("/nu"), new org.w3.validator.css.CSSValidator("/css"))
         validators.start()
       } catch { case be: java.net.BindException =>
         logger.debug("already started on port " + port)

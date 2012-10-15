@@ -4,7 +4,6 @@ import play.api.mvc._
 import play.api.i18n._
 import play.api.Play.current
 import org.w3.util._
-import org.w3.util.FutureVal._
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
@@ -13,6 +12,7 @@ import org.w3.vs.view.form._
 import scalaz._
 import Scalaz._
 import play.api.cache.Cache
+import scala.concurrent._
 
 object Application extends Controller {
   
@@ -42,12 +42,13 @@ object Application extends Controller {
   
   def login: ActionA = Action { implicit req =>
     AsyncResult {
+      import scala.concurrent.ExecutionContext.Implicits.global
       getUser map {
-        _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
-      } failMap {
+        case _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
+      } recover {
         case _: UnauthorizedException => Ok(views.html.login(LoginForm.blank)).withNewSession
         case t => toError(t)
-      } toPromise 
+      }
     }
   }
   
@@ -57,9 +58,13 @@ object Application extends Controller {
   
   def authenticate: ActionA = Action { implicit req =>
     AsyncResult {
+      import scala.concurrent.ExecutionContext.Implicits.global
       (for {
-        form <- LoginForm.bind() failMap (form => BadRequest(views.html.login(form)))
-        user <- User.authenticate(form.email, form.password) failMap {
+        form <- LoginForm.bind() map {
+          case Left(form) => BadRequest(views.html.login(form))
+          case Right(validForm) => validForm
+        }
+        user <- User.authenticate(form.email, form.password) recover {
           case _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession
           case t => toError(t)
         }
@@ -76,11 +81,10 @@ object Application extends Controller {
     }
   }
   
-  def getUser()(implicit session: Session): FutureVal[Exception, User] = {
+  def getUser()(implicit session: Session): Future[User] = {
     for {
-      email <- FutureVal.pure(session.get("email").get).failWith(Unauthenticated)
-      user <- FutureVal.pure(Cache.getAs[User](email).get)
-                .flatMapFail(_ => User.getByEmail(email))
+      email <- session.get("email").get.asFuture recover { case _ => Unauthenticated }
+      user <- Cache.getAs[User](email).get.asFuture recoverWith { case _ => User.getByEmail(email) }
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
       user

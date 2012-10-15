@@ -4,8 +4,9 @@ import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
 import akka.actor._
-import akka.dispatch._
-import scalaz._
+import scala.concurrent._
+import scala.util._
+//import scalaz._
 import scala.collection.mutable.Queue
 import scala.concurrent.stm._
 import org.w3.util._
@@ -36,11 +37,11 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
     
     Future {
       assertor.assert(context, response, job.vo.strategy.assertorsConfiguration(assertor.id))
-    } onComplete { case _ =>
+    } andThen { case _ =>
       atomic { implicit txn => pendingAssertions -= 1 }
-    } onComplete {
-      case Left(t) => sender ! AssertorFailure(context, assertor.name, response.url, why = t.getMessage)
-      case Right(assertorResponse) => sender ! assertorResponse
+    } andThen {
+      case Failure(t) => sender ! AssertorFailure(context, assertor.name, response.url, why = t.getMessage)
+      case Success(assertorResponse) => sender ! assertorResponse
     }
     
   }

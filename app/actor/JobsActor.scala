@@ -2,14 +2,15 @@ package org.w3.vs.actor
 
 import akka.actor._
 import org.w3.vs.model._
-import scalaz._
+import scalaz.Equal
 import scalaz.Scalaz._
 import org.w3.util.akkaext._
 import org.w3.vs._
 import diesel._
 import org.w3.banana._
-import org.w3.banana.util._
 import org.w3.util.URL
+import scala.concurrent._
+import scala.util._
 
 case class CreateJobAndForward(job: Job, initialState: JobActorState, run: Run, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall], msg: Any)
 
@@ -42,26 +43,27 @@ class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareAc
       context.children.find(_.path.name === id) match {
         case Some(jobRef) => jobRef forward msg
         case None => {
+          import scala.concurrent.ExecutionContext.Implicits.global
           // should get the relPath and provide the uri to the job in the store
           // later: make the job actor as something backed by a graph in the store!
-          val f: BananaFuture[CreateJobAndForward] =
+          val f: Future[CreateJobAndForward] =
             Job.bananaGet(orgId, JobId(id)) flatMap { case (job, runUriOpt) =>
               runUriOpt match {
                 case None => {
                   val run = Run.freshRun(orgId, job.id, job.strategy)
-                  CreateJobAndForward(job, NeverStarted, run, List.empty, List.empty, msg).bf
+                  CreateJobAndForward(job, NeverStarted, run, List.empty, List.empty, msg).asFuture
                 }
                 case Some(runUri) =>
+                  import scala.concurrent.ExecutionContext.Implicits.global
                   Run.bananaGet(runUri) map { case (run, toBeFetched, toBeAsserted) =>
                     CreateJobAndForward(job, Started, run, toBeFetched, toBeAsserted, msg)
                   }
               }
             }
 
-          f.inner onComplete {
-            case Right(Success(cjaf)) => to.tell(cjaf, from)
-            case Right(Failure(exception)) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)
-            case Left(exception) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)
+          f onComplete {
+            case Success(cjaf) => to.tell(cjaf, from)
+            case Failure(exception) => logger.error("Couldn't find job with id: " + id + " ; " + msg, exception)
           }
         }
       }

@@ -10,7 +10,7 @@ import play.api.libs.iteratee._
 import play.Logger
 import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
-import akka.util.duration._
+import scala.concurrent.util.duration._
 import org.w3.util.Headers.wrapHeaders
 import scalaz._
 import scalaz.Scalaz._

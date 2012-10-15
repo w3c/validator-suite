@@ -44,7 +44,7 @@ object JobView {
     "health"
   )
 
-  def fromJob(job: Job)(implicit ec: ExecutionContext): FutureVal[Exception, JobView] = {
+  def fromJob(job: Job)(implicit ec: ExecutionContext): Future[JobView] = {
     for {
       activity <- job.getActivity()
       completedOn <- job.getCompletedOn()
@@ -63,7 +63,7 @@ object JobView {
     )
   }
 
-  def fromJobs(jobs: Iterable[Job])(implicit ec: ExecutionContext): FutureVal[Exception, Iterable[JobView]] = {
+  def fromJobs(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[Iterable[JobView]] = {
     FutureVal.sequence(jobs.map(fromJob _))
   }
 

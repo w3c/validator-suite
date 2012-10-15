@@ -13,23 +13,21 @@ object ApplicationBuild extends Build {
     // runtime dependencies
     "org.apache.commons" % "commons-lang3" % "3.1" intransitive(), // For StringUtils escaping functions
     "nu.validator.htmlparser" % "htmlparser" % "1.2.1" intransitive(),
-    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/scala-tools-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
+//    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/scala-tools-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
+    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10-0.4-SNAPSHOT.jar",
     "com.yammer.metrics" % "metrics-core" % "2.1.3",
-    "net.databinder.dispatch" %% "core" % "0.9.0",
-    "org.scalaz" %% "scalaz-core" % "7.0-SNAPSHOT",
-    "org.w3" %% "banana-jena" % "x10-SNAPSHOT",
-    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121012.jar",
+    "org.w3" %% "banana-jena" % "x11-SNAPSHOT",
+    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121014.jar",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit" % "2.0.2" % "test",
-    "org.scalatest" %% "scalatest" % "1.7.1" % "test"
+    "org.scalatest" % "scalatest_2.10.0-M7" % "2.0.M4-2.10.0-M7-B1"
   )
 
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
 //  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-jena")
 
-  val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-    scalaVersion := "2.9.2",
+  val main = PlayProject(appName, appVersion, appDependencies).settings(
     testOptions in Test := Nil,
 //    scalacOptions ++= Seq("-Ydependent-method-types"),
     // activates full stacktrace and durations

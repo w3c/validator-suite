@@ -11,13 +11,13 @@ import org.w3.util._
 import scalaz.Scalaz._
 import scalaz._
 import org.w3.banana._
-import org.w3.banana.util._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
 import diesel._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
 import org.w3.vs.actor.JobActor._
+import scala.concurrent._
 
 case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
@@ -34,47 +34,47 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
   private val logger = Logger.of(classOf[Job])
   
-  def getCreator(): FutureVal[Exception, User] =
+  def getCreator(): Future[User] =
     User.bananaGet(creatorUri).toFutureVal
 
-  def getOrganization(): FutureVal[Exception, Organization] = Organization.get(orgUri)
+  def getOrganization(): Future[Organization] = Organization.get(orgUri)
     
-  def getRun(): FutureVal[Exception, Run] = {
+  def getRun(): Future[Run] = {
     (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
   }
 
-  def getAssertions(): FutureVal[Exception, Iterable[Assertion]] = {
+  def getAssertions(): Future[Iterable[Assertion]] = {
     getRun() map {
       run => run.assertions.toIterable
     }
   }
 
-  def getActivity(): FutureVal[Exception, RunActivity] = {
+  def getActivity(): Future[RunActivity] = {
     getRun().map(_.activity)
   }
 
-  def getData(): FutureVal[Exception, JobData] = {
+  def getData(): Future[JobData] = {
     getRun().map(_.jobData)
   }
 
 
   // Get all runVos for this job, group by id, and for each runId take the latest completed jobData if any
-  def getHistory(): FutureVal[Exception, Iterable[JobData]] = {
+  def getHistory(): Future[Iterable[JobData]] = {
     sys.error("")
   }
 
-  def getCompletedOn(): FutureVal[Exception, Option[DateTime]] = {
+  def getCompletedOn(): Future[Option[DateTime]] = {
     Job.getLastCompleted(jobUri)
   }
   
-  def save(): FutureVal[Exception, Job] = Job.save(this)
+  def save(): Future[Job] = Job.save(this)
   
-  def delete(): FutureVal[Exception, Unit] = {
+  def delete(): Future[Unit] = {
     cancel()
     Job.delete(this)
   }
   
-  def run(): FutureVal[Exception, (OrganizationId, JobId, RunId)] = 
+  def run(): Future[(OrganizationId, JobId, RunId)] = 
     (PathAware(organizationsRef, path) ? Refresh).mapTo[(OrganizationId, JobId, RunId)]
   
   def cancel(): Unit = 
@@ -89,7 +89,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   def resume(): Unit = 
     PathAware(organizationsRef, path) ! Resume
 
-  def getSnapshot(): FutureVal[Exception, JobData] =
+  def getSnapshot(): Future[JobData] =
     (PathAware(organizationsRef, path) ? GetSnapshot).mapTo[JobData]
 
   lazy val enumerator: Enumerator[RunUpdate] = {
@@ -148,28 +148,28 @@ object Job {
 
   implicit def toVO(job: Job): JobVO = job.vo
 
-  def get(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): FutureVal[Exception, (Job, Option[Rdf#URI])] =
+  def get(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
     get(JobUri(orgId, jobId))
 
-  def bananaGet(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): BananaFuture[(Job, Option[Rdf#URI])] =
+  def bananaGet(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
     bananaGet((orgId, jobId).toUri)
 
-  def bananaGet(jobUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[(Job, Option[Rdf#URI])] = {
+  def bananaGet(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
     import conf._
     for {
-      ids <- JobUri.fromUri(jobUri).bf
+      ids <- JobUri.fromUri(jobUri).asFuture
       jobLDR <- store.GET(jobUri)
       runUriOpt <- (jobLDR.resource / ont.run).asOption[Rdf#URI]
       jobVO <- jobLDR.resource.as[JobVO]
     } yield (Job(ids._2, jobVO), runUriOpt)
   }
 
-  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, (Job, Option[Rdf#URI])] = {
+  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
     import conf._
     bananaGet(jobUri).toFutureVal
   }
 
-  def getFor(userId: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Job]] = {
+  def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
     import conf._
     val query = """
 CONSTRUCT {
@@ -197,7 +197,7 @@ CONSTRUCT {
     r.toFutureVal
   }
 
-  def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Option[DateTime]] = {
+  def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Option[DateTime]] = {
     import conf._
     val query = """
 SELECT ?timestamp WHERE {
@@ -217,12 +217,12 @@ SELECT ?timestamp WHERE {
         val timestamp = row("timestamp").flatMap(_.as[DateTime])
         timestamp
       }
-      rds.headOption.sequence.bf
+      rds.headOption.sequence.asFuture
     }
     r.toFutureVal
   }
 
-  def save(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Job] = {
+  def save(job: Job)(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
     val orgUri = job.vo.organization.toUri
     val creatorUri = job.vo.creator.toUri
@@ -234,7 +234,7 @@ SELECT ?timestamp WHERE {
     store.execute(script).map(_ => job).toFutureVal
   }
 
-  def delete(job: Job)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+  def delete(job: Job)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     import ops._
     val script = for {

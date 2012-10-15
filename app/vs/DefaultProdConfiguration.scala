@@ -77,7 +77,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
 
   val storeDirectory = new File(configuration.getString("application.store.directory") getOrElse sys.error("application.store.directory"))
 
-  lazy val store: RDFStore[Rdf, BananaFuture] =
+  lazy val store: RDFStore[Rdf, Future] =
     JenaStore(createDatasetGraph(storeDirectory.getAbsolutePath))
 
   // ouch :-)

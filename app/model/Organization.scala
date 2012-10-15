@@ -8,12 +8,11 @@ import org.w3.vs.actor.message._
 import org.w3.util._
 import org.w3.util.akkaext._
 import org.w3.banana._
-import org.w3.banana.util._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
 import diesel._
 import org.w3.vs.store.Binders._
-import org.w3.banana.util._
+import scala.concurrent._
 
 case class Organization(id: OrganizationId, vo: OrganizationVO)(implicit conf: VSConfiguration) {
   
@@ -32,10 +31,10 @@ case class Organization(id: OrganizationId, vo: OrganizationVO)(implicit conf: V
 
   val logger = play.Logger.of(classOf[Organization])
   
-  def getAdmin(): FutureVal[Exception, User] =
+  def getAdmin(): Future[User] =
     User.bananaGet(adminUri).toFutureVal
   
-  def save(): FutureVal[Exception, Unit] = Organization.save(this)
+  def save(): Future[Unit] = Organization.save(this)
 
   lazy val enumerator: Enumerator[RunUpdate] = {
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
@@ -80,44 +79,44 @@ object Organization {
 
   def extractId(uri: Rdf#URI): String = uri.getString substring organizationContainer.getString.length
   
-  def bananaGet(orgUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Organization] = {
+  def bananaGet(orgUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Organization] = {
     import conf._
     for {
-      orgId <- OrganizationUri.fromUri(orgUri).bf
+      orgId <- OrganizationUri.fromUri(orgUri).asFuture
       orgLDR <- store.GET(orgUri)
       orgVO <- orgLDR.resource.as[OrganizationVO]
     } yield new Organization(orgId, orgVO) { override val ldr = orgLDR }
   }
 
-  def get(orgUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
+  def get(orgUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Organization] = {
     import conf._
     bananaGet(orgUri).toFutureVal
   }
   
-  def get(id: OrganizationId)(implicit conf: VSConfiguration): FutureVal[Exception, Organization] = {
+  def get(id: OrganizationId)(implicit conf: VSConfiguration): Future[Organization] = {
     import conf._
     get(OrganizationUri(id))
   }
   
-//  def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): FutureVal[Exception, Iterable[Organization]] = 
+//  def getForAdmin(admin: UserId)(implicit conf: VSConfiguration): Future[Iterable[Organization]] = 
 //    sys.error("ni")
 
-  def save(organization: Organization)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+  def save(organization: Organization)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     store.PUT(organization.ldr).toFutureVal
   }
 
-  def setAdmin(orgUri: Rdf#URI, adminUri: Rdf#URI)(implicit conf: VSConfiguration): FutureVal[Exception, Unit] = {
+  def setAdmin(orgUri: Rdf#URI, adminUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     store.POST(orgUri, orgUri -- ont.admin ->- adminUri).map{ _ => () }.toFutureVal
   }
   
-  def save(vo: OrganizationVO)(implicit conf: VSConfiguration): FutureVal[Exception, Rdf#URI] = {
+  def save(vo: OrganizationVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
     import conf._
     store.POSTToCollection(organizationContainer, OrganizationVOBinder.toPointedGraph(vo)).toFutureVal
   }
 
-  def addUser(orgUri: Rdf#URI, userUri: Rdf#URI)(implicit conf: VSConfiguration): BananaFuture[Unit] = {
+  def addUser(orgUri: Rdf#URI, userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     val script = for {
       _ <- Command.POST[Rdf](orgUri, orgUri -- ont.user ->- userUri)

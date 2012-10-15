@@ -7,9 +7,11 @@ package object vs  {
 
   type Rdf = Jena
 
+//  implicit val ops: RDFOps[Rdf] = JenaOperations
+
   implicit val diesel: Diesel[Rdf] = JenaDiesel
 
-  implicit val sparql: SPARQLOperations[Rdf] = JenaSPARQLOperations
+  implicit val sparql: SparqlOps[Rdf] = JenaSparqlOps
 
 }
 

@@ -3,9 +3,10 @@ package org.w3.vs.actor
 import akka.actor._
 import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
-import scalaz._
-import Scalaz._
+import scalaz.Equal
+import scalaz.Scalaz._
 import org.w3.util.akkaext._
+import scala.util._
 
 case class CreateOrganizationAndForward(organization: Organization, tell: Tell)
 
@@ -31,6 +32,7 @@ class OrganizationsActor()(implicit conf: VSConfiguration) extends Actor with Pa
       context.children.find(_.path.name === id) match {
         case Some(organizationRef) => organizationRef forward tell
         case None => {
+          import scala.concurrent.ExecutionContext.Implicits.global
           Organization.get(OrganizationId(id)) onComplete {
             case Success(organization) => to.tell(CreateOrganizationAndForward(organization, tell), from)
             case Failure(exception) => logger.error("Couldn't find organization with id: " + id, exception)

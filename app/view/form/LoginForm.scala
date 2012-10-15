@@ -5,22 +5,19 @@ import play.api.data.format.Formats._
 import play.api.data._
 import play.api.mvc._
 import play.api.i18n.Messages
-import akka.dispatch.ExecutionContext
-import org.w3.util.FutureVal
 import java.util.concurrent.TimeoutException
 import scalaz._
+import scala.concurrent._
 
 object LoginForm {
 
-  def bind()(implicit req: Request[_], context: ExecutionContext): FutureVal[LoginForm, ValidLoginForm] = {
+  def bind()(implicit req: Request[_], context: ExecutionContext): Future[Either[LoginForm, ValidLoginForm]] = {
     val form = playForm.bindFromRequest
     implicit def onTo(to: TimeoutException): LoginForm = new LoginForm(form.withError("key", Messages("error.timeout")))
-    FutureVal.validated[LoginForm, ValidLoginForm](
-      form.fold(
-        f => Failure(new LoginForm(f)),
-        s => Success(new ValidLoginForm(form, s))
-      )
-    )
+    form.fold(
+      f => Left(new LoginForm(f)),
+      s => Right(new ValidLoginForm(form, s))
+    ).asFuture
   }
 
   def blank: LoginForm = new LoginForm(playForm)
