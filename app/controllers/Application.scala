@@ -80,7 +80,7 @@ object Application extends Controller {
 
   def getUser()(implicit /*req: Request[_], */ session: Session): Future[User] = {
     for {
-      email <- session.get("email").get.asFuture /* this requires Request ->   recover { case _ => throw ForceResult(Unauthenticated) } */
+      email <- session.get("email").get.asFuture recoverWith { case _ => Future { throw Unauthenticated } }
       user <- Cache.getAs[User](email).get.asFuture recoverWith { case _ => User.getByEmail(email) }
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))

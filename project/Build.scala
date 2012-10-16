@@ -1,8 +1,8 @@
 import sbt._
 import Keys._
 import play.Project._
-import org.ensime.sbt.Plugin.Settings.ensimeConfig
-import org.ensime.sbt.util.SExp._
+//import org.ensime.sbt.Plugin.Settings.ensimeConfig
+//import org.ensime.sbt.util.SExp._
 
 object ApplicationBuild extends Build {
 
