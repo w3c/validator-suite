@@ -5,30 +5,33 @@ import play.api.data.format.Formats._
 import play.api.data._
 import play.api.mvc._
 import play.api.i18n.Messages
-import org.w3.util.{FutureVal, URL}
+import org.w3.util.URL
 import org.w3.vs.model._
 import org.w3.vs.VSConfiguration
 import org.w3.vs.controllers._
-import akka.dispatch.ExecutionContext
+import scala.concurrent._
 import java.util.concurrent.TimeoutException
-import scalaz._
 import org.w3.vs.assertor.Assertor
+import org.w3.banana._
 
 object JobForm {
 
   def assertors()(implicit req: Request[AnyContent]): Seq[Assertor] = try {
     req.body.asFormUrlEncoded.get.get("assertor[]").get.map(Assertor.get)
-  } catch { case _ =>
+  } catch { case _: Exception =>
     Seq.empty
   }
 
   def assertorParameters()(implicit req: Request[AnyContent]): AssertorsConfiguration = {
     assertors().map { assertor =>
       val k = assertor.id
-      val v = req.body.asFormUrlEncoded.flatten.collect{
-        case (param, values) if (param.startsWith(assertor.id + "-")) =>
-          (param.replaceFirst("^" + assertor.id + "-", ""), values.toList)
-      }.toMap
+      val v: Map[String, List[String]] = req.body.asFormUrlEncoded match {
+        case Some(foo) => foo.collect {
+          case (param, values) if (param.startsWith(assertor.id + "-")) =>
+            (param.replaceFirst("^" + assertor.id + "-", ""), values.toList)
+        }.toMap
+        case None => Map.empty
+      }
       (k -> v)
     }.toMap
   }
@@ -59,25 +62,23 @@ object JobForm {
     }
   }*/
 
-  def bind()(implicit req: Request[AnyContent], context: ExecutionContext): FutureVal[JobForm, ValidJobForm] = {
+  def bind()(implicit req: Request[AnyContent], context: ExecutionContext): Future[Either[JobForm, ValidJobForm]] = {
 
     //println(assertorParameters())
 
     val form: Form[(String, URL, Boolean, Int)] = playForm.bindFromRequest
 
-    val vsform = form.fold(
-      f => Failure(new JobForm(f, assertorParameters())),
+    val vsform: Either[JobForm, ValidJobForm] = form.fold(
+      f => Left(new JobForm(f, assertorParameters())),
       s => {
         if (assertors().isEmpty)
-          Failure(new JobForm(form.withError("assertor", "No assertor selected", "error"), assertorParameters())) // TODO
+          Left(new JobForm(form.withError("assertor", "No assertor selected", "error"), assertorParameters())) // TODO
         else
-          Success(new ValidJobForm(form, s, assertorParameters()))
+          Right(new ValidJobForm(form, s, assertorParameters()))
       }
     )
 
-    // There probably shouldn't be a future here
-    implicit def onTo(to: TimeoutException): JobForm = new JobForm(form.withError("key", Messages("error.timeout")), assertorParameters())
-    FutureVal.validated[JobForm, ValidJobForm](vsform)
+    vsform.asFuture
   }
 
   def blank: JobForm = new JobForm(playForm, AssertorsConfiguration.default)

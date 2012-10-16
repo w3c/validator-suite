@@ -39,7 +39,7 @@ case class Cache(directory: File) extends ResponseCache {
     try {
       Some(CachedResource(this, url))
     } catch {
-      case e => None
+      case e: Exception => None
     }
 
   def get(uri: URI, rqstMethod: String, rqstHeaders: jMap[String, jList[String]]): CacheResponse = {

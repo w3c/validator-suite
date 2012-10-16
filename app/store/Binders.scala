@@ -1,12 +1,12 @@
 package org.w3.vs.store
 
 import org.w3.vs.model._
-import org.w3.banana._
 import org.joda.time.DateTime
 import org.w3.util._
 import org.w3.vs._
 import diesel._
 import ops._
+import org.w3.banana._
 import org.w3.vs.actor.JobActor._
 import org.w3.vs.actor.AssertorCall
 import scala.util._
@@ -47,7 +47,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
     lazy val name = property[String](apply("name"))
     lazy val creator = property[UserId](apply("creator"))
-    lazy val organization = property[OrganizationId](apply("organization"))
+    lazy val organization/*: Property[Rdf, OrganizationId]*/ = property[OrganizationId](apply("organization"))
     lazy val organizationOpt = optional[OrganizationId](apply("organization"))
     lazy val strategy = property[Strategy](apply("strategy"))(StrategyBinder)
 

@@ -1,16 +1,16 @@
 package org.w3.vs.view.model
 
 import org.w3.vs.model._
-import org.w3.util.{FutureVal, URL}
+import org.w3.util.URL
 import org.joda.time.DateTime
 import org.w3.vs.view._
-import akka.dispatch.ExecutionContext
 import play.api.libs.json._
 import play.api.libs.json.JsString
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsNumber
-import scala.Some
 import org.w3.vs.view.SortParam
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
 
 case class JobView(
     id: JobId,
@@ -64,7 +64,7 @@ object JobView {
   }
 
   def fromJobs(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[Iterable[JobView]] = {
-    FutureVal.sequence(jobs.map(fromJob _))
+    Future.sequence(jobs.map(fromJob _))
   }
 
   val filtering: PageFiltering[JobView] = new PageFiltering[JobView] {
@@ -108,8 +108,6 @@ object JobView {
     }
   }
 
-  import scalaz.Scalaz._
-
   val writes: Writes[JobView] = new Writes[JobView] {
     def writes(job: JobView): JsValue = {
       JsObject(Seq(
@@ -117,10 +115,17 @@ object JobView {
         ("name"         -> JsString(job.name)),
         ("entrypoint"   -> JsString(job.entrypoint.toString)),
         ("status"       -> JsString(job.status)),
-        ("completedOn"  -> job.completedOn.fold[JsValue](d => JsObject(Seq(
-            ("timestamp"    -> JsString(d.toString)),
-            ("legend1"      -> JsString(Helper.formatTime(d))),
-            ("legend2"      -> JsString(Helper.formatLegendTime(d))))), JsNull)),
+        ("completedOn"  -> {
+          job.completedOn match {
+            case Some(d) =>
+              JsObject(
+                Seq(
+                  ("timestamp"    -> JsString(d.toString)),
+                  ("legend1"      -> JsString(Helper.formatTime(d))),
+                  ("legend2"      -> JsString(Helper.formatLegendTime(d)))))
+            case None => JsNull
+          }
+        }),
         ("warnings"     -> JsNumber(job.warnings)),
         ("errors"       -> JsNumber(job.errors)),
         ("resources"    -> JsNumber(job.resources)),

@@ -1,9 +1,10 @@
 package org.w3.util.akkaext
 
 import akka.actor._
-import akka.dispatch._
+import scala.concurrent._
 import java.net.URI
 import org.w3.util._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object PathAware {
 
@@ -24,9 +25,10 @@ class PathAware(root: ActorRef, path: ActorPath) {
 
   import akka.pattern.ask
 
+  // @@@@@@@@@@@@@
   def ?(message: Any)(implicit timeout: akka.util.Timeout, context: ExecutionContext) /*: FutureVal[Throwable, A]*/ = {
     new Object {
-      def mapTo[A](implicit m: Manifest[A]) = FutureVal((root ? Tell(jpath, message)).mapTo[A]) 
+      def mapTo[A](implicit m: Manifest[A]) = (root ? Tell(jpath, message)).mapTo[A]
     }
   }
   

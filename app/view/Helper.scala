@@ -29,7 +29,7 @@ object Helper {
 
   val TimeFormatter = try {
     DateTimeFormat.forPattern(Messages("time.pattern"))
-  } catch { case _ =>
+  } catch { case _: Exception =>
     DateTimeFormat.forPattern("MM/dd/yy' at 'K:mma")
   }
 

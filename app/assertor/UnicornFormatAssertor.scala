@@ -17,7 +17,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
   def assert(source: Source): Iterable[Assertion] = {
     val response: Elem = XML.fromSource(source)
 
-    val obversationRef: String = response.attrs get "ref" get
+    val obversationRef: String = response.attrs.get("ref").get
     val obversationLang: String = response.attrs get QName(Some("xml"), "lang") getOrElse "en"
 
     // can be passed, failed, undef
@@ -27,7 +27,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
       for {
         message <- response \ "message"
       } yield {
-        val severity = AssertionSeverity(message.attrs get "type" get)
+        val severity = AssertionSeverity(message.attrs.get("type").get)
         val title = (message \ "title").headOption map (htmlString) getOrElse ("-")
         val url = URL(message.attrs get "ref" getOrElse obversationRef)
         val lang = message.attrs get "lang" getOrElse obversationLang

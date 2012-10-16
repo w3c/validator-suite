@@ -4,9 +4,11 @@ import akka.actor._
 import org.w3.vs.http._
 import org.w3.vs.actor._
 import org.w3.util.Util
-import akka.util.{ Duration, Timeout }
-import akka.dispatch.ExecutionContext
-import java.util.concurrent._
+import scala.concurrent._
+import scala.concurrent.util._
+import akka.util._
+import java.util.concurrent.{ Executors, ExecutorService }
+import scala.concurrent.ExecutionContext.Implicits.global
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
 import org.w3.banana._
 import org.w3.banana.jena._

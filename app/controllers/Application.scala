@@ -13,6 +13,8 @@ import scalaz._
 import Scalaz._
 import play.api.cache.Cache
 import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
+import org.w3.banana._
 
 object Application extends Controller {
   
@@ -20,35 +22,31 @@ object Application extends Controller {
   
   val logger = play.Logger.of("org.w3.vs.controllers.Application")
   
-  implicit def configuration = org.w3.vs.Prod.configuration
+  implicit private def configuration = org.w3.vs.Prod.configuration
   
-  implicit def toError(t: Throwable)(implicit req: Request[_]): Result = {
-    t match {
-      // TODO timeout, store exception, etc...
-      case UnknownJob(id) => {
-        if (isAjax) {
-          NotFound(Messages("exceptions.job.unknown", id))
-        } else {
-          SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("exceptions.job.unknown", id)))
-        }
+  implicit def toError(implicit req: Request[_]): PartialFunction[Throwable, Result] = {
+    // TODO timeout, store exception, etc...
+    case ForceResult(result) => result
+    case UnknownJob(id) => {
+      if (isAjax) {
+        NotFound(Messages("exceptions.job.unknown", id))
+      } else {
+        SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("exceptions.job.unknown", id)))
       }
-      case _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.unauthorized"))))).withNewSession
-      case t: Throwable => {
-        logger.error("Unexpected exception: " + t.getMessage, t)
-        InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage)))))
-      }
+    }
+    case _: UnauthorizedException =>
+      Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.unauthorized"))))).withNewSession
+    case t: Throwable => {
+      logger.error("Unexpected exception: " + t.getMessage, t)
+      InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage)))))
     }
   }
   
   def login: ActionA = Action { implicit req =>
     AsyncResult {
-      import scala.concurrent.ExecutionContext.Implicits.global
       getUser map {
         case _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
-      } recover {
-        case _: UnauthorizedException => Ok(views.html.login(LoginForm.blank)).withNewSession
-        case t => toError(t)
-      }
+      } recover toError
     }
   }
   
@@ -58,32 +56,31 @@ object Application extends Controller {
   
   def authenticate: ActionA = Action { implicit req =>
     AsyncResult {
-      import scala.concurrent.ExecutionContext.Implicits.global
-      (for {
+      val f = for {
         form <- LoginForm.bind() map {
-          case Left(form) => BadRequest(views.html.login(form))
+          case Left(form) => throw ForceResult(BadRequest(views.html.login(form)))
           case Right(validForm) => validForm
         }
         user <- User.authenticate(form.email, form.password) recover {
-          case _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession
-          case t => toError(t)
+          case _: UnauthorizedException => throw ForceResult(Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession)
         }
       } yield {
         (for {
           body <- req.body.asFormUrlEncoded
           param <- body.get("uri")
           uri <- param.headOption
-        } yield uri) fold (
-          uri => SeeOther(uri).withSession("email" -> user.vo.email), // Redirect to "uri" param if specified
-          SeeOther(routes.Jobs.index.toString).withSession("email" -> user.vo.email)
-        )
-      }) toPromise
+        } yield uri) match {
+          case Some(uri) => SeeOther(uri).withSession("email" -> user.vo.email) // Redirect to "uri" param if specified
+          case None => SeeOther(routes.Jobs.index.toString).withSession("email" -> user.vo.email)
+        }
+      }
+      f recover toError
     }
   }
-  
-  def getUser()(implicit session: Session): Future[User] = {
+
+  def getUser()(implicit /*req: Request[_], */ session: Session): Future[User] = {
     for {
-      email <- session.get("email").get.asFuture recover { case _ => Unauthenticated }
+      email <- session.get("email").get.asFuture /* this requires Request ->   recover { case _ => throw ForceResult(Unauthenticated) } */
       user <- Cache.getAs[User](email).get.asFuture recoverWith { case _ => User.getByEmail(email) }
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))

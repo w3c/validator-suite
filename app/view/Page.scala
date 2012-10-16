@@ -72,7 +72,7 @@ case class Page[A <: View] private (
         case a if (a == ordering.default) => ""
         case SortParam(a, true) if (a != "") => "sort=-" + sortParam.name
         case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
-        case _ => ""
+        case _: Exception => ""
       },
       if (filter != None) "filter=" + filter.get else "",
       if (search != None) "search=" + search.get else "",
@@ -96,28 +96,31 @@ object Page {
       ordering: PageOrdering[A],
       filtering: PageFiltering[A]): Page[A] = {
 
-    val offset  = try { Some(req.getQueryString("offset").get.toInt) } catch { case _ => None }
-    val page    = try { req.getQueryString("p").get.toInt } catch { case _ => 1 }
-    val perPage = try { req.getQueryString("n").get.toInt } catch { case _ => Page.defaultPerPage }
+    val offset  = try { Some(req.getQueryString("offset").get.toInt) } catch { case _: Exception => None }
+    val page    = try { req.getQueryString("p").get.toInt } catch { case _: Exception => 1 }
+    val perPage = try { req.getQueryString("n").get.toInt } catch { case _: Exception => Page.defaultPerPage }
     val filter = req.getQueryString("filter")
     val search = req.getQueryString("search")
     val group = req.getQueryString("group")
     val sort =
       try {
-        req.queryString.get("sort").flatten.head match {
+        req.queryString.get("sort").toSeq.flatten.head match {
           case param if (param.startsWith("-")) => SortParam(param.replaceFirst("-",""), true)
           case param => SortParam(param, false)
         }
       } catch {
-        case _ => ordering.default
+        case _: Exception => ordering.default
       }
 
     import scalaz.Scalaz._
 
     return new Page[A](
       iterable = a,
-      offset = offset.fold(offset => offset, (page - 1) * perPage),
-      current = offset.fold(offset => (offset / perPage).toInt + 1, page),
+      offset = offset.getOrElse((page - 1) * perPage),
+      current = offset match {
+        case Some(offset) => (offset / perPage).toInt + 1
+        case None =>page
+      },
       perPage = perPage,
       filter = filtering.validate(filter),
       search = search,

@@ -1,6 +1,6 @@
 package org.w3.vs.model
 
-import scalaz._
+import scalaz.Equal
 
 object ExplorationMode {
   implicit val equalExplorationMode: Equal[ExplorationMode] = Equal.equalA[ExplorationMode]

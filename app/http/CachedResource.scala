@@ -95,7 +95,7 @@ case class CachedResource(cache: Cache, url: URL) {
   def get(method: HttpMethod): Option[ResourceResponse] =
     try {
       if (isError(method)) {
-        val errorMessage = errorFile(method).asBinaryReadChars(Codec.UTF8).slurpString
+        val errorMessage = errorFile(method).asBinaryReadChars(Codec.UTF8).string
         Some(ErrorResponse(url, method, errorMessage))
       } else {
         val (status, headers) = getStatusHeaders(method)
@@ -105,7 +105,7 @@ case class CachedResource(cache: Cache, url: URL) {
         }
         Some(HttpResponse(url, method, status, headers, bodyContent))
       }
-    } catch { case e =>
+    } catch { case e: Exception =>
       cache.logger.error(method.toString + " " + url.toString + ": " + e.getMessage)
       None
     }

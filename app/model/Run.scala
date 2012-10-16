@@ -3,8 +3,8 @@ package org.w3.vs.model
 import org.w3.vs._
 import org.w3.util._
 import org.w3.vs.assertor._
+import scalaz.Equal
 import scalaz.Scalaz._
-import scalaz._
 import org.joda.time._
 import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
@@ -12,7 +12,8 @@ import org.w3.vs.store.Binders._
 import org.w3.vs.diesel._
 import org.w3.vs.sparql._
 import org.w3.vs.actor.AssertorCall
-import scala.concurrent._
+import scala.concurrent.{ ops => _, _ }
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Run {
 
@@ -24,7 +25,7 @@ object Run {
 
   def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
-    bananaGet(runUri).toFutureVal
+    bananaGet(runUri)
   }
 
   def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
@@ -44,7 +45,7 @@ object Run {
       _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.run.uri, ANY)))
       _ <- Command.POST[Rdf](jobUri, jobUri -- ont.run ->- run.runUri)
     } yield ()
-    store.execute(script).toFutureVal
+    store.execute(script)
   }
 
   def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =

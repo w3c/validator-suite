@@ -3,6 +3,7 @@ package org.w3.vs.exception
 import org.w3.vs.view._
 import org.w3.vs.view.form._
 import org.w3.vs.model._
+import play.api.mvc.Result
 
 // TODO messages
 
@@ -22,3 +23,5 @@ case class Unexpected(t: Throwable) extends Exception(t) //with SuiteException
 
 case class InvalidJobFormException(form: JobForm, user: User, org: Organization, idO: Option[JobId]) extends Exception("InvalidJobFormException")
 //case class InvalidFormException(form: VSForm) extends Exception("InvalidFormException")
+
+case class ForceResult(result: Result) extends Exception("ForceResult carries a Result that can be used by Play")

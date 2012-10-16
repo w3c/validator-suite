@@ -3,8 +3,6 @@ package org.w3.vs.model
 import org.w3.util._
 import org.w3.util.Headers.wrapHeaders
 import org.joda.time._
-import scalaz.Scalaz._
-import scalaz._
 import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
@@ -13,6 +11,7 @@ import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
 import java.io._
 import scalax.io._
+import scala.concurrent._
 
 object ResourceResponse {
 

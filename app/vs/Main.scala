@@ -1,10 +1,12 @@
 package org.w3.vs
 
 import org.w3.vs.model._
-import org.joda.time._
+import org.joda.time.{ Duration => _, _ }
 import org.w3.util.{ URL, Util }
-import akka.util.Duration
+import scala.concurrent.util._
 import java.io._
+import scala.concurrent.ExecutionContext.Implicits.global
+import org.w3.banana._
 
 object Main {
   
@@ -91,10 +93,12 @@ object Main {
       _ <- Job.save(lemonde)
     } yield ()
 
-    script.result(Duration(3, "seconds")) fold (
-      t => throw t,
-      _ => println("loaded data successfully")
-    )
+    script.getOrFail()
+
+//    script.result(Duration(3, "seconds")) fold (
+//      t => throw t,
+//      _ => println("loaded data successfully")
+//    )
 
 //    conf.blockingStore.readTransaction {
 //      println(">>> "+conf.blockingStore.dg.size())

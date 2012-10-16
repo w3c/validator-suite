@@ -44,7 +44,7 @@ class LocalCache(base: File, mode: CacheMode) extends ResponseCache {
       try {
         cachedResponseFor(uri, rqstMethod)
       } catch {
-        case e => println("$$$ "+e.getMessage()); throw e
+        case e: Exception => println("$$$ "+e.getMessage()); throw e
       }
     } else {
       null
@@ -91,7 +91,7 @@ object LocalCache {
       ResponseCache.setDefault(localCache)
       t
     } catch {
-      case e => println(e.getStackTraceString)
+      case e: Exception => println(e.getStackTraceString)
     } finally {
       ResponseCache.setDefault(null)
     }

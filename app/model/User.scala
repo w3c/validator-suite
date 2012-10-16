@@ -1,8 +1,8 @@
 package org.w3.vs.model
 
 import org.w3.util._
-import scalaz._
-import Scalaz._
+import scalaz.Equal
+import scalaz.Scalaz._
 import org.w3.vs.exception._
 import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
@@ -11,6 +11,7 @@ import diesel._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
 import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   
@@ -23,20 +24,17 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   val orgUriOpt = vo.organization map (_.toUri)
 
   def getOrganization(): Future[Option[Organization]] = {
-    val r: Future[Option[Organization]] = orgUriOpt match {
+    orgUriOpt match {
       case Some(orgUri) => Organization.bananaGet(orgUri) map (Some(_))
       case None => none[Organization].asFuture
     }
-    r.toFutureVal
   }
 
   // getJob with id only if owned by user. should probably be a db request directly.
   def getJob(jobId: JobId): Future[Job] = {
     Job.getFor(id) map {
-      jobs => jobs.filter(_.id === jobId).headOption
-    } discard {
-      case None => UnknownJob(jobId)
-    } map { _.get }
+      jobs => jobs.filter(_.id === jobId).headOption.getOrElse { throw UnknownJob(jobId) }
+    }
   }
   
   def save(): Future[Unit] = User.save(this)
@@ -69,15 +67,15 @@ object User {
 
   def get(userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
-    bananaGet(userUri).toFutureVal
+    bananaGet(userUri)
   }
   
   def get(id: UserId)(implicit conf: VSConfiguration): Future[User] =
     get(UserUri(id))
 
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
-    getByEmail(email) discard { 
-      case user if (user.vo.password /== password) => Unauthenticated
+    getByEmail(email) map { 
+      case user if (user.vo.password /== password) => throw Unauthenticated
     }
   }
   
@@ -99,17 +97,17 @@ CONSTRUCT {
       graph <- store.executeConstruct(construct, Map("email" -> email.toNode))
       as <- (PointedGraph[Rdf](URI("local:user"), graph) / URI("local:hasUri")).as2[UserId, UserVO].asFuture
     } yield User(as._1, as._2)
-    r.toFutureVal failMap { _ => UnknownUser }
+    r recover { case _: Exception => throw UnknownUser }
   }
 
   def save(vo: UserVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
     import conf._
-    store.POSTToCollection(userContainer, vo.toPG).toFutureVal
+    store.POSTToCollection(userContainer, vo.toPG)
   }
   
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.PUT(user.ldr).toFutureVal
+    store.PUT(user.ldr)
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): Future[Unit] =

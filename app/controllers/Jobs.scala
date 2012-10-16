@@ -18,6 +18,9 @@ import play.api.libs.json.{JsArray, JsString, Json, JsValue}
 import play.api.mvc._
 import scalaz.Scalaz._
 import play.api.libs.{EventSource, Comet}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
+import org.w3.banana._
 
 object Jobs extends Controller {
   
@@ -25,7 +28,7 @@ object Jobs extends Controller {
   
   val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
   // TODO: make the implicit explicit!!!
-  implicit def configuration = org.w3.vs.Prod.configuration
+  implicit val conf: org.w3.vs.VSConfiguration = org.w3.vs.Prod.configuration
   
   import Application._
 
@@ -35,23 +38,23 @@ object Jobs extends Controller {
   
   def index: ActionA = Action { implicit req =>
     AsyncResult {
-      ((for {
+      (for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
-        jobs <- Job.getFor(user.id)
+        jobs <- Job.getFor(user.id)(conf)
         jobViews <- JobView.fromJobs(jobs)
       } yield {
         if (!isAjax)
           Ok(views.html.dashboard(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
         else
           Ok(JsArray(Page(jobViews).iterator.map(_.toJson()).toSeq))
-      }) failMap toError).toPromise
+      }) recover toError
     }
   }
   
   def show(id: JobId, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
     AsyncResult {
-      ((for {
+      (for {
         user <- getUser
         org <- user.getOrganization()
         job <- user.getJob(id)
@@ -77,13 +80,13 @@ object Jobs extends Controller {
 
           }
         }
-      }) failMap toError).toPromise
+      }) recover toError
     }
   }
   
   def report(id: JobId, url: URL, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
     AsyncResult {
-      ((for {
+      (for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
         job <- user.getJob(id)
@@ -94,19 +97,19 @@ object Jobs extends Controller {
         assertionViews = SingleAssertionView.fromAssertions(assertions)
       } yield {
         Ok(views.html.resource(jobView, resourceView, assertorViews, Page(assertionViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
-      }) failMap toError).toPromise
+      }) recover toError
     }
   }
     
   def delete(id: JobId): ActionA = Action { implicit req =>
     AsyncResult {
-      ((for {
+      (for {
         user <- getUser
         job <- user.getJob(id)
         _ <- job.delete()
       } yield {
         if (isAjax) Ok else SeeOther(routes.Jobs.index.toString) /*.flashing(("success" -> Messages("jobs.deleted", job.name)))*/
-      }) failMap toError).toPromise
+      }) recover toError
     }
   } 
     
@@ -136,20 +139,23 @@ object Jobs extends Controller {
     }).getOrElse(BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
   }
 
-  private def enumerator(implicit session: Session): Enumerator[JsValue] = Enumerator.flatten(((
-    for {
-      user <- getUser
-      org <- user.getOrganization() map (_.get)
-    } yield {
-      // ready to explode...
-      // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
-      org.enumerator &> Enumeratee.collect {
-        case a: UpdateData => JobView.toJobMessage(a.jobId, a.data, a.activity)
-        case a: RunCompleted => JobView.toJobMessage(a.jobId, a.completedOn)
-      }
-    }).failMap(_ => Enumerator.eof[JsValue])).toPromise)
+  private def enumerator(implicit req: Request[_]): Enumerator[JsValue] = {
+    implicit val session: Session = req.session // may not be needed anymore?
+    Enumerator.flatten((
+      for {
+        user <- getUser
+        org <- user.getOrganization() map (_.get)
+      } yield {
+        // ready to explode...
+        // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
+        org.enumerator &> Enumeratee.collect {
+          case a: UpdateData => JobView.toJobMessage(a.jobId, a.data, a.activity)
+          case a: RunCompleted => JobView.toJobMessage(a.jobId, a.completedOn)
+        }
+      }).recover{ case _ => Enumerator.eof[JsValue] })
+  }
 
-  def dashboardSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
+  def dashboardSocket()(implicit req: Request[_]): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
     (iteratee, enumerator)
   }
@@ -163,8 +169,8 @@ object Jobs extends Controller {
   }
   
   def reportSocket(id: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
-    val promiseEnumerator: Promise[Enumerator[JsValue]] = ((
-      for {
+    val promiseEnumerator: Future[Enumerator[JsValue]] =
+      (for {
         user <- getUser
         job <- user.getJob(id)
       } yield {
@@ -175,8 +181,7 @@ object Jobs extends Controller {
           //case NewAssertions(assertionsC) if (assertionsC.count(_.assertion.severity == Warning) != 0 || assertionsC.count(_.assertion.severity == Error) != 0) => AssertorUpdate.json(assertionsC)
           //case NewAssertorResult(result, datetime) if (!result.isValid) => AssertorUpdate.json(result, datetime)
         }
-      }
-      ) failMap (_ => Enumerator.eof[JsValue])).toPromise
+      }) recover { case __ => Enumerator.eof[JsValue] }
     
     val iteratee = Iteratee.ignore[JsValue]
     val enumerator =  Enumerator.flatten(promiseEnumerator)
@@ -189,51 +194,53 @@ object Jobs extends Controller {
    */
   private def newOrEditJob(implicit idOpt: Option[JobId]): ActionA = Action { implicit req =>
     AsyncResult {
-      ((for {
+      (for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
-        form <- idOpt fold(
-          id => user.getJob(id) map JobForm.fill _,
-          FutureVal.successful(JobForm.blank)
-        )
+        form <- idOpt match {
+          case Some(id) => user.getJob(id) map JobForm.fill _
+          case None => JobForm.blank.asFuture
+        }
       } yield {
         Ok(views.html.jobForm(form, user, org, idOpt))
-      }) failMap toError).toPromise
+      }) recover toError
     }
   }
   
   private def createOrUpdateJob(implicit idOpt: Option[JobId]): ActionA = Action { implicit req =>
     AsyncResult {
-      ((for {
+      (for {
         user <- getUser
         org <- user.getOrganization() map (_.get)
-        form <- JobForm.bind failMap (form => InvalidJobFormException(form, user, org, idOpt))
-        jobM <- idOpt.fold(
-          id => user.getJob(id)
+        form <- JobForm.bind map {
+          case Left(form) => throw new InvalidJobFormException(form, user, org, idOpt)
+          case Right(validJobForm) => validJobForm
+        }
+        jobM <- idOpt match {
+          case Some(id) => user.getJob(id)
             .flatMap(j => form.update(j)
             .save()
-            .map(job => (job, "jobs.updated"))),
-          form
+            .map(job => (job, "jobs.updated")))
+          case None => form
             .createJob(user)
             .save()
             .map(job => (job, "jobs.created"))
-        )
+        }
       } yield {
         val (job, msg) = jobM
         if (isAjax)
           Created(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
         else
-          SeeOther(routes.Jobs.index.toString /*show(job.id)*/) /*.flashing(("success" -> Messages(msg, job.name))*/
-      }) failMap {
+          SeeOther(routes.Jobs.index.toString /*show(job.id)*/) /*.flashing(("success" -> Messages(msg, job.name)))*/
+      }) recover {
         case InvalidJobFormException(form, user, org, idOpt) => BadRequest(views.html.jobForm(form, user, org, idOpt))
-        case t => toError(t)
-      }).toPromise
+      } recover toError
     }
   }
   
   private def simpleJobAction(id: JobId)(action: User => Job => Any)(msg: String): ActionA = Action { implicit req =>
     AsyncResult {
-      ((for {
+      (for {
         user <- getUser
         job <- user.getJob(id)
       } yield {
@@ -245,11 +252,11 @@ object Jobs extends Controller {
             body <- req.body.asFormUrlEncoded
             param <- body.get("uri")
             uri <- param.headOption
-          } yield uri) fold(
-            uri => SeeOther(uri) /*.flashing(("success" -> Messages(msg, job.name))*/ , // Redirect to "uri" param if specified
-            SeeOther(routes.Jobs.show(job.id).toString)
-            )
-      }) failMap toError).toPromise
+          } yield uri) match {
+            case Some(uri) => SeeOther(uri) /*.flashing(("success" -> Messages(msg, job.name)))*/ // Redirect to "uri" param if specified
+            case None =>SeeOther(routes.Jobs.show(job.id).toString)
+          }
+      }) recover toError
     }
   }
   

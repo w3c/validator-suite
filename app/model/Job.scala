@@ -9,15 +9,16 @@ import play.api.libs.iteratee._
 import play.Logger
 import org.w3.util._
 import scalaz.Scalaz._
-import scalaz._
-import org.w3.banana._
-import org.w3.banana.LinkedDataStore._
+import scalaz.Equal
 import org.w3.vs._
 import diesel._
+import org.w3.banana._
+import org.w3.banana.LinkedDataStore._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
 import org.w3.vs.actor.JobActor._
-import scala.concurrent._
+import scala.concurrent.{ ops => _, _ }
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
@@ -25,8 +26,9 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
   val creatorId = vo.creator
 
-  val jobUri = JobUri(vo.organization, id)
+  val jobUri: Rdf#URI = JobUri(vo.organization, id)
 
+//  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(uriSyntax[Rdf](jobUri).fragmentLess, vo.toPG)
   def ldr: LinkedDataResource[Rdf] = LinkedDataResource(jobUri.fragmentLess, vo.toPG)
 
   val orgUri: Rdf#URI = vo.organization.toUri
@@ -35,7 +37,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   private val logger = Logger.of(classOf[Job])
   
   def getCreator(): Future[User] =
-    User.bananaGet(creatorUri).toFutureVal
+    User.bananaGet(creatorUri)
 
   def getOrganization(): Future[Organization] = Organization.get(orgUri)
     
@@ -166,7 +168,7 @@ object Job {
 
   def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
     import conf._
-    bananaGet(jobUri).toFutureVal
+    bananaGet(jobUri)
   }
 
   def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
@@ -187,14 +189,13 @@ CONSTRUCT {
 }
 """
     val construct = ConstructQuery(query, ont)
-    val r = for {
+    for {
       graph <- store.executeConstruct(construct, Map("user" -> userId.toUri))
       pointedUser = PointedGraph[Rdf](userId.toUri, graph)
-      it <- (pointedUser / ont.job).asSet2[(OrganizationId, JobId), JobVO]
+      it <- (pointedUser / ont.job).asSet2[(OrganizationId, JobId), JobVO].asFuture
     } yield {
       it map { case (ids, jobVO) => Job(ids._2, jobVO) }
     }
-    r.toFutureVal
   }
 
   def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Option[DateTime]] = {
@@ -212,14 +213,13 @@ SELECT ?timestamp WHERE {
 }
 """
     val select = SelectQuery(query, ont)
-    val r = store.executeSelect(select, Map("job" -> jobUri)) flatMap { rows =>
-      val rds: Iterable[BananaValidation[DateTime]] = rows.toIterable map { row =>
-        val timestamp = row("timestamp").flatMap(_.as[DateTime])
+    store.executeSelect(select, Map("job" -> jobUri)) flatMap { rows =>
+      val rds: Iterable[DateTime] = rows.toIterable map { row =>
+        val timestamp = row("timestamp").flatMap(_.as[DateTime]).get
         timestamp
       }
-      rds.headOption.sequence.asFuture
+      rds.headOption.asFuture
     }
-    r.toFutureVal
   }
 
   def save(job: Job)(implicit conf: VSConfiguration): Future[Job] = {
@@ -231,7 +231,7 @@ SELECT ?timestamp WHERE {
       _ <- Command.POST[Rdf](orgUri, orgUri -- ont.job ->- job.jobUri)
       _ <- Command.POST[Rdf](creatorUri, creatorUri -- ont.job ->- job.jobUri)
     } yield ()
-    store.execute(script).map(_ => job).toFutureVal
+    store.execute(script).map(_ => job)
   }
 
   def delete(job: Job)(implicit conf: VSConfiguration): Future[Unit] = {
@@ -244,7 +244,7 @@ SELECT ?timestamp WHERE {
                               tripleMatches = List((job.orgUri, ont.job.uri, job.jobUri)))
       _ <- Command.DELETE[Rdf](job.jobUri.fragmentLess)
     } yield ()
-    store.execute(script).toFutureVal
+    store.execute(script)
   }
 
 }

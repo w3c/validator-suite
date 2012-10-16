@@ -32,7 +32,7 @@ case class Organization(id: OrganizationId, vo: OrganizationVO)(implicit conf: V
   val logger = play.Logger.of(classOf[Organization])
   
   def getAdmin(): Future[User] =
-    User.bananaGet(adminUri).toFutureVal
+    User.bananaGet(adminUri)
   
   def save(): Future[Unit] = Organization.save(this)
 
@@ -90,7 +90,7 @@ object Organization {
 
   def get(orgUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Organization] = {
     import conf._
-    bananaGet(orgUri).toFutureVal
+    bananaGet(orgUri)
   }
   
   def get(id: OrganizationId)(implicit conf: VSConfiguration): Future[Organization] = {
@@ -103,17 +103,17 @@ object Organization {
 
   def save(organization: Organization)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.PUT(organization.ldr).toFutureVal
+    store.PUT(organization.ldr)
   }
 
   def setAdmin(orgUri: Rdf#URI, adminUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.POST(orgUri, orgUri -- ont.admin ->- adminUri).map{ _ => () }.toFutureVal
+    store.POST(orgUri, orgUri -- ont.admin ->- adminUri).map{ _ => () }
   }
   
   def save(vo: OrganizationVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
     import conf._
-    store.POSTToCollection(organizationContainer, OrganizationVOBinder.toPointedGraph(vo)).toFutureVal
+    store.POSTToCollection(organizationContainer, OrganizationVOBinder.toPointedGraph(vo))
   }
 
   def addUser(orgUri: Rdf#URI, userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Unit] = {

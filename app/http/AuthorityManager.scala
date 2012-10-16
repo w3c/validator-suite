@@ -3,13 +3,15 @@ package org.w3.vs.http
 import com.ning.http.client._
 import akka.actor._
 import org.w3.util._
-import akka.util.duration._
+import scala.concurrent.util._
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.lang.System.currentTimeMillis
 import org.w3.vs.model._
 import scala.collection.mutable.Queue
 import scalax.io._
 import java.io._
 import Http._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object AuthorityManager {
 
@@ -40,7 +42,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
 
   def scheduleTick(): Unit =
     if (sleepTime > 0 && needsToSleep() > 0) {
-      scheduler.scheduleOnce(needsToSleep().millis, self, 'Tick)
+      scheduler.scheduleOnce(Duration(needsToSleep(), MILLISECONDS), self, 'Tick)
       pendingTick = true
     }
 

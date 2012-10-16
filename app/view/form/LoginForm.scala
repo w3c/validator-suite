@@ -8,6 +8,7 @@ import play.api.i18n.Messages
 import java.util.concurrent.TimeoutException
 import scalaz._
 import scala.concurrent._
+import org.w3.banana._
 
 object LoginForm {
 

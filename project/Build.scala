@@ -28,8 +28,9 @@ object ApplicationBuild extends Build {
 //  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-jena")
 
   val main = PlayProject(appName, appVersion, appDependencies).settings(
+//    scalaVersion := "2.10.0-RC1",
     testOptions in Test := Nil,
-//    scalacOptions ++= Seq("-Ydependent-method-types"),
+    scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimize", "-feature", "-language:implicitConversions", "-language:higherKinds", "-language:reflectiveCalls"),
     // activates full stacktrace and durations
     testOptions in Test += Tests.Argument("-oDF"),
     testOptions in Test += Tests.Argument("-l", "org.w3.vs.util.SlowTest"),

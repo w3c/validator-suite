@@ -1,6 +1,6 @@
 package org.w3.util
 
-import java.net.{URL => jURL}
+import java.net.{ URL => jURL }
 import scalaz.Equal
 
 case class URL(url: String) {
@@ -28,7 +28,7 @@ case class URL(url: String) {
       val url2 = URL(new jURL(underlying, spec))
       if ("http" == url2.protocol || "https" == url2.protocol) Some(url2) else None
     } catch {
-      case e => None
+      case e: Exception => None
     }
 
   def externalForm = underlying.toExternalForm
