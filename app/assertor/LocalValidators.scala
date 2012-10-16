@@ -10,17 +10,17 @@ object LocalValidators extends LocalValidators({
   port
 }) {
 
-  override def stop(): Unit = {
-    if (validators != null) {
-      if (Play.maybeApplication.map(_.mode) == Some(Mode.Prod)) {
-        logger.debug("stopping")
-        validators.stop()
-        validators = null
-      } else {
-        logger.debug("only stops when in Prod mode")
-      }
-    }
-  }
+//  override def stop(): Unit = {
+//    if (validators != null) {
+//      if (Play.maybeApplication.map(_.mode) == Some(Mode.Prod)) {
+//        logger.debug("stopping")
+//        validators.stop()
+//        validators = null
+//      } else {
+//        logger.debug("only stops when in Prod mode")
+//      }
+//    }
+//  }
 
 }
 

@@ -77,6 +77,7 @@ object User {
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
     getByEmail(email) map { 
       case user if (user.vo.password /== password) => throw Unauthenticated
+      case user => user
     }
   }
   

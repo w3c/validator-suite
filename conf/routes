@@ -3,34 +3,34 @@
 # ~~~~
 
 # Indexes
-GET     /                           controllers.Jobs.redirect
-GET     /dashboard                  controllers.Jobs.index
+GET     /suite/                           controllers.Jobs.redirect
+GET     /suite/dashboard                  controllers.Jobs.index
 
 # Jobs
-GET     /jobs                       controllers.Jobs.index
-POST    /jobs                       controllers.Jobs.create
-GET     /jobs/new                   controllers.Jobs.new1
-GET     /jobs/ws                    controllers.Jobs.dashboardSocket
-GET     /jobs/ws/:id                controllers.Jobs.reportSocket(id: JobId)
-GET     /jobs/comet                 controllers.Jobs.cometSocket
-GET     /jobs/events                controllers.Jobs.eventsSocket
-GET     /jobs/:id                   controllers.Application.redirectWithSlash(id: JobId)
-GET     /jobs/:id/                  controllers.Jobs.show(id: JobId)
-POST    /jobs/:id                   controllers.Jobs.dispatcher(id: JobId)
-POST    /jobs/:id/                  controllers.Jobs.dispatcher(id: JobId)
-GET     /jobs/:id/edit              controllers.Jobs.edit(id: JobId)
-GET     /jobs/:id/:url              controllers.Jobs.report(id: JobId, url: org.w3.util.URL)
+GET     /suite/jobs                       controllers.Jobs.index
+POST    /suite/jobs                       controllers.Jobs.create
+GET     /suite/jobs/new                   controllers.Jobs.new1
+GET     /suite/jobs/ws                    controllers.Jobs.dashboardSocket
+GET     /suite/jobs/ws/:id                controllers.Jobs.reportSocket(id: JobId)
+GET     /suite/jobs/comet                 controllers.Jobs.cometSocket
+GET     /suite/jobs/events                controllers.Jobs.eventsSocket
+GET     /suite/jobs/:id                   controllers.Application.redirectWithSlash(id: JobId)
+GET     /suite/jobs/:id/                  controllers.Jobs.show(id: JobId)
+POST    /suite/jobs/:id                   controllers.Jobs.dispatcher(id: JobId)
+POST    /suite/jobs/:id/                  controllers.Jobs.dispatcher(id: JobId)
+GET     /suite/jobs/:id/edit              controllers.Jobs.edit(id: JobId)
+GET     /suite/jobs/:id/:url              controllers.Jobs.report(id: JobId, url: org.w3.util.URL)
 
 # Application
-GET     /login                      controllers.Application.login
-POST    /login                      controllers.Application.authenticate
-POST    /logout                     controllers.Application.logout
+GET     /suite/login                      controllers.Application.login
+POST    /suite/login                      controllers.Application.authenticate
+POST    /suite/logout                     controllers.Application.logout
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /public/*file               controllers.Assets.at(path="/public", file)
+GET     /suite/public/*file               controllers.Assets.at(path="/public", file)
 
 # Adds an Assets controller to expose javascript sources directly during development
 # Because Play changes the signature of routes.Assets.at() depending on whether there is a single assets controller or
 # more i added a dummy controller that serves files from nowhere. The switch has to be done manually.
 #GET     /no_folder/*file            controllers.Assets.at(path="/no_folder", file)
-GET     /dev/scripts/*file         controllers.Assets.at(path="/app/assets/scripts", file)
+GET     /suite/dev/scripts/*file         controllers.Assets.at(path="/app/assets/scripts", file)
