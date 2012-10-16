@@ -74,7 +74,7 @@ trait Binders extends UriBuilders with LiteralBinders {
     lazy val password = property[String](apply("password"))
 
     lazy val map = property[Map[String, List[String]]](apply("map"))
-    lazy val runUri = property[Rdf#URI](apply("run"))
+    lazy val runUri: Property[Rdf, Rdf#URI] = null //property[Rdf#URI](apply("run"))
     lazy val contexts = property[List[Context]](apply("contexts"))
     lazy val resourceResponse = property[ResourceResponse](apply("resourceResponse"))    
     lazy val assertorResponse = property[AssertorResponse](apply("assertorResponse"))

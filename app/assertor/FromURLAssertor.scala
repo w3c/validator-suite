@@ -3,7 +3,6 @@ package org.w3.vs.assertor
 import org.w3.util._
 import org.w3.vs.model._
 import scala.io.Source
-import scalaz.Validation
 
 /**
  * An assertor that returns assertions about a document pointed by a URL

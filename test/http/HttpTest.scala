@@ -6,9 +6,11 @@ import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
 import org.w3.util._
-import akka.util.duration._
 import org.w3.util.akkaext._
 import Http._
+import scala.concurrent.ExecutionContext.Implicits.global
+import org.w3.banana._
+import org.w3.vs.util.Util._
 
 // the test would be better without extending RunTestHelper...
 class HttpTest extends RunTestHelper with Inside {
@@ -104,11 +106,11 @@ class HttpTest extends RunTestHelper with Inside {
     }
 
     val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
-    
-    implicit val timeout: akka.util.Timeout = 3.seconds
+
+    implicit val timeout = akka.util.Timeout(3, java.util.concurrent.TimeUnit.SECONDS)
 
     def pendingFetches(): Int =
-      (PathAware(http, http.path / "localhost_9001") ? HowManyPendingRequests).mapTo[Int].result(3.seconds).fold(f => throw f, s => s)
+      (PathAware(http, http.path / "localhost_9001") ? HowManyPendingRequests).mapTo[Int].getOrFail()
 
     pendingFetches() must be(99)
 

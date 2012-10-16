@@ -11,8 +11,10 @@ import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
 import diesel._
+import ops._
 import org.w3.vs.store.Binders._
 import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class Organization(id: OrganizationId, vo: OrganizationVO)(implicit conf: VSConfiguration) {
   
@@ -83,8 +85,8 @@ object Organization {
     import conf._
     for {
       orgId <- OrganizationUri.fromUri(orgUri).asFuture
-      orgLDR <- store.GET(orgUri)
-      orgVO <- orgLDR.resource.as[OrganizationVO]
+      orgLDR <- store.asLDStore.GET(orgUri)
+      orgVO <- orgLDR.resource.as[OrganizationVO].asFuture
     } yield new Organization(orgId, orgVO) { override val ldr = orgLDR }
   }
 
@@ -103,17 +105,17 @@ object Organization {
 
   def save(organization: Organization)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.PUT(organization.ldr)
+    store.asLDStore.PUT(organization.ldr)
   }
 
   def setAdmin(orgUri: Rdf#URI, adminUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.POST(orgUri, orgUri -- ont.admin ->- adminUri).map{ _ => () }
+    store.asLDStore.POST(orgUri, orgUri -- ont.admin ->- adminUri).map{ _ => () }
   }
   
   def save(vo: OrganizationVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
     import conf._
-    store.POSTToCollection(organizationContainer, OrganizationVOBinder.toPointedGraph(vo))
+    store.asLDStore.POSTToCollection(organizationContainer, OrganizationVOBinder.toPointedGraph(vo))
   }
 
   def addUser(orgUri: Rdf#URI, userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Unit] = {

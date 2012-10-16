@@ -2,16 +2,20 @@ package org.w3.vs.store
 
 import org.scalatest.{Filter => ScalaTestFilter, _}
 import org.scalatest.matchers._
-import scalaz._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util._
 import org.w3.vs._
 import org.w3.vs.model._
-import akka.util.duration._
 import org.w3.vs.exception._
 import org.w3.vs.diesel._
+import ops._
 import org.w3.vs.store.Binders._
 import org.w3.vs.util._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util._
+import org.w3.banana._
+import scala.concurrent.util.Duration
+import org.w3.vs.util.Util._
 
 abstract class StoreTest(
   nbUrlsPerAssertions: Int,
@@ -151,10 +155,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         assertion
       }
       val assertorResult = AssertorResult(run1.id, assertorId, url, assertions)
-      Run.saveEvent(run1.runUri, AssertorResponseEvent(assertorResult)).await(3.seconds)
+      Run.saveEvent(run1.runUri, AssertorResponseEvent(assertorResult)).getOrFail()
     }
-    Run.complete(job1.jobUri, run2.runUri, run2.completedOn.get).await(3.seconds)
-    Run.complete(job1.jobUri, run3.runUri, run3.completedOn.get).await(3.seconds)
+    Run.complete(job1.jobUri, run2.runUri, run2.completedOn.get).getOrFail()
+    Run.complete(job1.jobUri, run3.runUri, run3.completedOn.get).getOrFail()
   }
 
 //   val resourceResponses: Vector[ResourceResponse] = {
@@ -201,7 +205,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       _ <- Run.save(run4)
       _ <- Run.save(run5)
     } yield ()
-    r.await(10.second)
+    r.getOrFail(10.seconds)
     addAssertions() // <- already blocking
 
     val end = System.currentTimeMillis
@@ -210,23 +214,23 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve unknown Job" in {
-    val retrieved = Job.get(OrganizationId(), JobId()).result(1.second)
+    val retrieved = Try { Job.get(OrganizationId(), JobId()).getOrFail() }
     retrieved must be ('Failure) // TODO test exception type (UnknownJob)
   }
   
   "retrieve unknown Organization" in {
-    val retrieved = Organization.get(organizationContainer / "foo").result(1.second)
+    val retrieved = Try { Organization.get(organizationContainer / "foo").getOrFail() }
     retrieved must be ('Failure) // TODO test exception type (UnknownOrganization)
   }
  
   "create, put, retrieve, delete Job" in {
     val job = job1.copy(id = JobId())
-    Job.get(org.id, job.id).result(1.second) must be ('failure)
-    Job.save(job).result(1.second) must be ('success)
-    val retrieved = Job.get(org.id, job.id).getOrFail(10.second)._1
+    Try { Job.get(org.id, job.id).getOrFail() } must be ('failure)
+    Try { Job.save(job).getOrFail() } must be ('success)
+    val retrieved = Job.get(org.id, job.id).getOrFail(10.seconds)._1
     retrieved must be (job)
-    Job.delete(job).result(1.second) must be ('success)
-    Job.get(org.id, job.id).result(1.second) must be ('failure)
+    Try { Job.delete(job).getOrFail() } must be ('success)
+    Try { Job.get(org.id, job.id) } must be ('failure)
   }
 
   "retrieve Organization" in {
@@ -242,15 +246,15 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   "retrieve User by email" in {
     User.getByEmail("foo@example.com").getOrFail(3.seconds) must be(user1)
 
-    User.getByEmail("unknown@example.com").result(1.second) must be === (Failure(UnknownUser))
+    Try { User.getByEmail("unknown@example.com").getOrFail() } must be (Failure(UnknownUser))
   }
 
   "authenticate a user" in {
-    User.authenticate("foo@example.com", "secret").result(1.second) must be === (Success(user1))
+    Try { User.authenticate("foo@example.com", "secret").getOrFail() } must be (Success(user1))
 
-    User.authenticate("foo@example.com", "bouleshit").result(1.second) must be === (Failure(Unauthenticated))
+    Try { User.authenticate("foo@example.com", "bouleshit").getOrFail() } must be (Failure(Unauthenticated))
 
-    User.authenticate("unknown@example.com", "bouleshit").result(1.second) must be === (Failure(UnknownUser))
+    Try {User.authenticate("unknown@example.com", "bouleshit").getOrFail() } must be (Failure(UnknownUser))
   }
 
 //  "get all Jobs that belong to the same organization" in {

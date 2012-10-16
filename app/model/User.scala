@@ -1,13 +1,14 @@
 package org.w3.vs.model
 
 import org.w3.util._
-import scalaz.Equal
-import scalaz.Scalaz._
+import scalaz.std.string._
+import scalaz.Scalaz.ToEqualOps
 import org.w3.vs.exception._
 import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
 import diesel._
+import ops._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
 import scala.concurrent._
@@ -26,7 +27,7 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   def getOrganization(): Future[Option[Organization]] = {
     orgUriOpt match {
       case Some(orgUri) => Organization.bananaGet(orgUri) map (Some(_))
-      case None => none[Organization].asFuture
+      case None => (None: Option[Organization]).asFuture
     }
   }
 
@@ -60,8 +61,8 @@ object User {
     import conf._
     for {
       userId <- userUri.as[UserId].asFuture
-      userLDR <- store.GET(userUri)
-      userVO <- userLDR.resource.as[UserVO]
+      userLDR <- store.asLDStore.GET(userUri)
+      userVO <- userLDR.resource.as[UserVO].asFuture
     } yield new User(userId, userVO) { override val ldr = userLDR }
   }
 
@@ -102,12 +103,12 @@ CONSTRUCT {
 
   def save(vo: UserVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
     import conf._
-    store.POSTToCollection(userContainer, vo.toPG)
+    store.asLDStore.POSTToCollection(userContainer, vo.toPG)
   }
   
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.PUT(user.ldr)
+    store.asLDStore.PUT(user.ldr)
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): Future[Unit] =

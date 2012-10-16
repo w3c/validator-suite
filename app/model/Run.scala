@@ -10,6 +10,7 @@ import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs.store.Binders._
 import org.w3.vs.diesel._
+import org.w3.vs.diesel.ops._
 import org.w3.vs.sparql._
 import org.w3.vs.actor.AssertorCall
 import scala.concurrent.{ ops => _, _ }
@@ -30,15 +31,14 @@ object Run {
 
   def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
-    store.GET(runUri) flatMap { ldr =>
+    store.asLDStore.GET(runUri) flatMap { ldr =>
       // there is a bug in banana preventing the implicit to be discovered
-      RunFromPG.fromPointedGraph(ldr.resource)
+      RunFromPG.fromPointedGraph(ldr.resource).asFuture
     }
   }
 
   def save(run: Run)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    import ops._
     val jobUri = (run.id._1, run.id._2).toUri
     val script = for {
       _ <- Command.PUT[Rdf](run.ldr)
@@ -65,14 +65,13 @@ object Run {
 
   def saveEvent(runUri: Rdf#URI, event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.POST(runUri, runUri -- ont.event ->- event.toPG)
+    store.asLDStore.POST(runUri, runUri -- ont.event ->- event.toPG)
   }
 
   /* other events */
 
   def complete(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    import ops._
     val script = for {
       _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.lastRun.uri, ANY)))
       _ <- Command.POST[Rdf](jobUri, jobUri -- ont.lastRun ->- runUri)
@@ -199,7 +198,7 @@ case class Run private (
    */
   private def takeFromOtherAuthorities: Option[(Run, URL)] = {
     val pendingToConsiderer =
-      toBeExplored.view filterNot { url => url.authority == mainAuthority || (pendingAuthorities contains url.authority) }
+      toBeExplored filterNot { url => url.authority == mainAuthority || (pendingAuthorities contains url.authority) }
     pendingToConsiderer.headOption map { url =>
       (this.copy(
         pending = pending + url,

@@ -1,7 +1,7 @@
 package org.w3.vs.util
 
 import akka.testkit.TestKit
-import akka.util.Duration
+import scala.concurrent.util.Duration
 
 trait TestKitHelper { this: TestKit =>
 

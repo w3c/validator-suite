@@ -4,8 +4,6 @@ import org.w3.util._
 import org.w3.vs.model._
 import com.codecommit.antixml._
 import scala.io.Source
-import scalaz.Validation
-import scalaz.Validation._
 import play.api.i18n.Messages
 import org.w3.vs.view.Helper
 import org.apache.commons.lang3.StringEscapeUtils

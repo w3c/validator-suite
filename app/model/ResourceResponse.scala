@@ -7,11 +7,13 @@ import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
 import diesel._
+import ops._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
 import java.io._
 import scalax.io._
 import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ResourceResponse {
 
@@ -23,8 +25,8 @@ object ResourceResponse {
   def bananaGetFor(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
     import conf._
     for {
-      ldr <- store.GET(runUri)
-      events <- (ldr.resource / ont.event).asSet[RunEvent]
+      ldr <- store.asLDStore.GET(runUri)
+      events <- (ldr.resource / ont.event).asSet[RunEvent].asFuture
     } yield {
       events collect { case ResourceResponseEvent(rr, _) => rr }
     }

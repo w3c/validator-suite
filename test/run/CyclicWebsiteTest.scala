@@ -4,11 +4,14 @@ import org.w3.util._
 import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
-import akka.util.duration._
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 import org.w3.vs.http.Http._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.util.Duration
+import org.w3.vs.util.Util._
+import org.w3.banana._
 
 class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper {
 
@@ -31,7 +34,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper {
     (for {
       _ <- Organization.save(organizationTest)
       _ <- Job.save(job)
-    } yield ()).result(1.second)
+    } yield ()).getOrFail()
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 

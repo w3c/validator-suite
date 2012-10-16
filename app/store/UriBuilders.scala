@@ -2,11 +2,10 @@ package org.w3.vs.store
 
 import org.w3.vs.model._
 import org.w3.banana._
-import scalaz._
-import scalaz.Scalaz._
 import org.w3.vs._
 import diesel._
 import ops._
+import scala.util._
 
 trait UriBuilders {
 
@@ -46,7 +45,7 @@ trait UriBuilders {
     def apply(orgId: OrganizationId, jobId: JobId): Rdf#URI =
       jobContainer(orgId).fragmentLess / jobId.id fragment "thing"
 
-    def fromUri(uri: Rdf#URI): Validation[BananaException, (OrganizationId, JobId)] =
+    def fromUri(uri: Rdf#URI): Try[(OrganizationId, JobId)] =
       r findFirstIn uri.getString match {
         case Some(r(orgId, jobId)) => Success(OrganizationId(orgId), JobId(jobId))
         case None => Failure(FailedConversion("JobUri.fromUri: " + uri.getString))
@@ -59,7 +58,7 @@ trait UriBuilders {
 //  extends PrefixBuilder("", "https://validator.w3.org/suite/jobData/")(ops)
 //  with URIBinder[Rdf, JobDataId] {
 //    def apply(id: JobDataId): Rdf#URI = apply(id.toString)
-//    def fromUri(uri: Rdf#URI): Validation[BananaException, JobDataId] = getLocalName(uri) map JobDataId.apply
+//    def fromUri(uri: Rdf#URI): Try[JobDataId] = getLocalName(uri) map JobDataId.apply
 //    def toUri(t: JobDataId): Rdf#URI = apply(t)
 //  }
 
@@ -67,7 +66,7 @@ trait UriBuilders {
 
   implicit object OrganizationUri extends URIBinder[Rdf, OrganizationId] {
     def apply(orgId: OrganizationId): Rdf#URI = organizationContainer / orgId.id fragment "thing"
-    def fromUri(uri: Rdf#URI): Validation[BananaException, OrganizationId] = {
+    def fromUri(uri: Rdf#URI): Try[OrganizationId] = {
       val str = uri.getString
       if (str.startsWith(organizationContainer.getString) && str.endsWith("#thing"))
         Success(OrganizationId(str.substring(str.lastIndexOf('/') + 1, str.lastIndexOf('#'))))
@@ -79,7 +78,7 @@ trait UriBuilders {
 
 //  implicit object ResourceResponseUri {
 //
-//    def fromUri(uri: Rdf#URI): Validation[BananaException, ResourceResponseId] =
+//    def fromUri(uri: Rdf#URI): Try[ResourceResponseId] =
 //      for {
 //        fragment <- uri.fragment toSuccess WrongExpectation(uri + " has no fragment")
 //      } yield ResourceResponseId(fragment)
@@ -97,7 +96,7 @@ trait UriBuilders {
     def apply(orgId: OrganizationId, jobId: JobId, runId: RunId): Rdf#URI =
       runContainer(orgId, jobId).fragmentLess / runId.id fragment "thing"
 
-    def fromUri(uri: Rdf#URI): Validation[BananaException, (OrganizationId, JobId, RunId)] =
+    def fromUri(uri: Rdf#URI): Try[(OrganizationId, JobId, RunId)] =
       r findFirstIn uri.getString match {
         case Some(r(orgId, jobId, runId)) => Success(OrganizationId(orgId), JobId(jobId), RunId(runId))
         case None => Failure(FailedConversion("RunUri.fromUri: " + uri.getString))
@@ -110,7 +109,7 @@ trait UriBuilders {
 
   implicit object UserUri extends URIBinder[Rdf, UserId] {
     def apply(userId: UserId): Rdf#URI = userContainer / userId.id fragment "me"
-    def fromUri(uri: Rdf#URI): Validation[BananaException, UserId] = {
+    def fromUri(uri: Rdf#URI): Try[UserId] = {
       val str = uri.getString
       if (str.startsWith(userContainer.getString) && str.endsWith("#me"))
         Success(UserId(str.substring(str.lastIndexOf('/') + 1, str.lastIndexOf('#'))))

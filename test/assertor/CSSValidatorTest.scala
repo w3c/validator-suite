@@ -2,7 +2,6 @@ package org.w3.vs.assertor
 
 import org.w3.util.URL
 import org.w3.vs.view.Helper
-import akka.util.duration._
 import org.scalatest._
 import org.scalatest.matchers._
 import org.w3.vs.model._

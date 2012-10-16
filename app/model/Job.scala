@@ -8,10 +8,11 @@ import akka.actor._
 import play.api.libs.iteratee._
 import play.Logger
 import org.w3.util._
-import scalaz.Scalaz._
 import scalaz.Equal
+import scalaz.Equal._
 import org.w3.vs._
 import diesel._
+import ops._
 import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs.store.Binders._
@@ -31,7 +32,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 //  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(uriSyntax[Rdf](jobUri).fragmentLess, vo.toPG)
   def ldr: LinkedDataResource[Rdf] = LinkedDataResource(jobUri.fragmentLess, vo.toPG)
 
-  val orgUri: Rdf#URI = vo.organization.toUri
+  val orgUri: Rdf#URI = anySyntax(vo.organization).toUri
   val creatorUri: Rdf#URI = vo.creator.toUri
 
   private val logger = Logger.of(classOf[Job])
@@ -160,9 +161,9 @@ object Job {
     import conf._
     for {
       ids <- JobUri.fromUri(jobUri).asFuture
-      jobLDR <- store.GET(jobUri)
-      runUriOpt <- (jobLDR.resource / ont.run).asOption[Rdf#URI]
-      jobVO <- jobLDR.resource.as[JobVO]
+      jobLDR <- store.asLDStore.GET(jobUri)
+      runUriOpt <- (jobLDR.resource / ont.run).asOption[Rdf#URI].asFuture
+      jobVO <- jobLDR.resource.as[JobVO].asFuture
     } yield (Job(ids._2, jobVO), runUriOpt)
   }
 
@@ -236,7 +237,6 @@ SELECT ?timestamp WHERE {
 
   def delete(job: Job)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    import ops._
     val script = for {
       _ <- Command.PATCH[Rdf](job.vo.creator.toUri,
                               tripleMatches = List((job.vo.creator.toUri, ont.job.uri, job.jobUri)))

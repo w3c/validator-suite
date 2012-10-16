@@ -139,8 +139,8 @@ object Jobs extends Controller {
     }).getOrElse(BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
   }
 
-  private def enumerator(implicit req: Request[_]): Enumerator[JsValue] = {
-    implicit val session: Session = req.session // may not be needed anymore?
+  private def enumerator(implicit reqHeader: RequestHeader): Enumerator[JsValue] = {
+    implicit val session: Session = reqHeader.session // may not be needed anymore?
     Enumerator.flatten((
       for {
         user <- getUser
@@ -155,10 +155,15 @@ object Jobs extends Controller {
       }).recover{ case _ => Enumerator.eof[JsValue] })
   }
 
-  def dashboardSocket()(implicit req: Request[_]): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
+  def dashboardSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
     (iteratee, enumerator)
   }
+
+//  def dashboardSocket()(implicit req: Request[_]): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
+//    val iteratee = Iteratee.ignore[JsValue]
+//    (iteratee, enumerator)
+//  }
 
   def cometSocket: ActionA = Action { implicit req =>
     Ok.stream(enumerator &> Comet(callback = "parent.VS.jobupdate"))

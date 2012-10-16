@@ -4,11 +4,14 @@ import org.w3.util._
 import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
-import akka.util.duration._
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 import org.w3.vs.http.Http._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.util.Duration
+import org.w3.vs.util.Util._
+import org.w3.banana._
 
 class StopActionTest extends RunTestHelper with TestKitHelper {
 
@@ -29,11 +32,11 @@ class StopActionTest extends RunTestHelper with TestKitHelper {
     (for {
       a <- Organization.save(organizationTest)
       _ <- Job.save(job)
-    } yield ()).await(1.second)
+    } yield ()).getOrFail()
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
-    val (orgId, jobId, runId) = job.run().getOrFail(1.second)
+    val (orgId, jobId, runId) = job.run().getOrFail()
 
     job.listen(testActor)
 
@@ -45,7 +48,7 @@ class StopActionTest extends RunTestHelper with TestKitHelper {
 
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData, _, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail(3.seconds)
+        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail()
         rrs.size must be < (100)
       }
     }
