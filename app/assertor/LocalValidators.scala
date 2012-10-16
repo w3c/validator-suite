@@ -48,7 +48,7 @@ class LocalValidators(port: Int) {
       validators = null
     }
 
-  object CSSValidator extends CSSValidator("http://localhost:" + port + "/css")
+  object CSSValidator extends CSSValidator("http://localhost:" + port + "/css/validator")
 
   object ValidatorNu extends ValidatorNu("http://localhost:" + port + "/nu")
   

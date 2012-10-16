@@ -230,7 +230,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val retrieved = Job.get(org.id, job.id).getOrFail(10.seconds)._1
     retrieved must be (job)
     Try { Job.delete(job).getOrFail() } must be ('success)
-    Try { Job.get(org.id, job.id) } must be ('failure)
+    Try { Job.get(org.id, job.id).getOrFail() } must be ('failure)
   }
 
   "retrieve Organization" in {
