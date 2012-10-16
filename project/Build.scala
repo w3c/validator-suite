@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import PlayProject._
+import play.Project._
 import org.ensime.sbt.Plugin.Settings.ensimeConfig
 import org.ensime.sbt.util.SExp._
 
@@ -17,7 +17,7 @@ object ApplicationBuild extends Build {
 //    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/scala-tools-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10-0.4-SNAPSHOT.jar",
     "com.yammer.metrics" % "metrics-core" % "2.1.3",
-    "org.w3" %% "banana-jena" % "x12-SNAPSHOT",
+    //"org.w3" %% "banana-jena" % "x12-SNAPSHOT",
     "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121014.jar",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit_2.10.0-M7" % "2.1-M2" % "test",
@@ -28,12 +28,13 @@ object ApplicationBuild extends Build {
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
 //  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-jena")
+  lazy val bananaRdf = ProjectRef(uri("https://github.com/w3c/banana-rdf.git"), "banana-jena")
 
-  val main = PlayProject(appName, appVersion, appDependencies).settings(
+  val main = play.Project(appName, appVersion, appDependencies).settings(
 //    scalaVersion := "2.10.0-RC1",
     testOptions in Test := Nil,
     testOptions in Test += Tests.Argument("""stdout(config="durations")"""),
-    scalacOptions ++= Seq("-deprecation", "-unchecked", "-optimize", "-feature", "-language:implicitConversions", "-language:higherKinds", "-language:reflectiveCalls"),
+    scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
     // activates full stacktrace and durations
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
@@ -60,6 +61,6 @@ object ApplicationBuild extends Build {
     //     key(":doubleIndentClassDeclaration"), true
     //   )
     // )
-  ) //dependsOn (bananaRdf)
+  ) dependsOn (bananaRdf)
 
 }
