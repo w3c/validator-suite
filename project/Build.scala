@@ -18,7 +18,7 @@ object ApplicationBuild extends Build {
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10-0.4-SNAPSHOT.jar",
     "com.yammer.metrics" % "metrics-core" % "2.1.3",
     //"org.w3" %% "banana-jena" % "x12-SNAPSHOT",
-    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121014.jar",
+    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121016.jar",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit_2.10.0-M7" % "2.1-M2" % "test",
 //    "com.typesafe.akka" % "akka-testkit" % "2.0.2" % "test",
