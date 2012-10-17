@@ -11,8 +11,8 @@
         @**<h1>Current page: @title</h1>**@
         <h1>Breadcrumb</h1>
         <ul>
-            <li>@organization.name</li>
-            <li><a href="@routes.Jobs.index">Dashboard</a></li>
+            @**<li>@organization.name</li>**@
+            <li><a href="@routes.Jobs.index">Jobs</a></li>
             @crumbs.map { crumb =>
             @if(crumb._2 == "") {
             <li>@crumb._1</li>

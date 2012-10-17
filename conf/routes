@@ -4,7 +4,7 @@
 
 # Indexes
 GET     /suite/                           controllers.Jobs.redirect
-GET     /suite/dashboard                  controllers.Jobs.index
+GET     /suite/dashboard                  controllers.Jobs.redirect
 
 # Jobs
 GET     /suite/jobs                       controllers.Jobs.index

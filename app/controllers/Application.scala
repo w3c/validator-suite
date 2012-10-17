@@ -15,6 +15,11 @@ import play.api.cache.Cache
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.banana._
+import org.w3.vs.model.Redirect
+import org.w3.vs.exception.ForceResult
+import org.w3.vs.exception.UnknownJob
+import play.api.mvc.AsyncResult
+import scala.Some
 
 object Application extends Controller {
   
@@ -26,7 +31,6 @@ object Application extends Controller {
   
   implicit def toError(implicit req: Request[_]): PartialFunction[Throwable, Result] = {
     // TODO timeout, store exception, etc...
-    case ForceResult(result) => result
     case UnknownJob(id) => {
       if (isAjax) {
         NotFound(Messages("exceptions.job.unknown", id))
@@ -46,6 +50,8 @@ object Application extends Controller {
     AsyncResult {
       getUser map {
         case _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
+      } recover {
+        case  _: UnauthorizedException => Ok(views.html.login(LoginForm.blank)).withNewSession
       } recover toError
     }
   }

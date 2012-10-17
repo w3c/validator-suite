@@ -5,6 +5,7 @@ import scala.concurrent._
 import java.net.URI
 import org.w3.util._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.reflect.ClassTag
 
 object PathAware {
 
@@ -28,7 +29,7 @@ class PathAware(root: ActorRef, path: ActorPath) {
   // @@@@@@@@@@@@@
   def ?(message: Any)(implicit timeout: akka.util.Timeout, context: ExecutionContext) /*: FutureVal[Throwable, A]*/ = {
     new Object {
-      def mapTo[A](implicit m: Manifest[A]) = (root ? Tell(jpath, message)).mapTo[A]
+      def mapTo[A](implicit m: ClassTag[A]) = (root ? Tell(jpath, message)).mapTo[A]
     }
   }
   

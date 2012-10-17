@@ -178,7 +178,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event(GetRun, run) => {
-      logger.debug("%s: GetRun" format run.shortId)
+      //logger.debug("%s: GetRun" format run.shortId)
       sender ! run
       stay()
     }

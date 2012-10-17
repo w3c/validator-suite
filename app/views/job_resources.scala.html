@@ -12,7 +12,7 @@
     @libs.navigation("Report for job \"" + job.name +"\"", organization, List((job.name ,"")))
     @libs.messages(messages)
     
-    <section id="jobs" class="single" data-url="/suite/jobs" data-count="1">
+    <section id="jobs" class="single" data-url="@routes.Jobs.index" data-count="1">
         <h2>Job: @job.name</h2>
         @pages.jobs(Page(job))
     </section>

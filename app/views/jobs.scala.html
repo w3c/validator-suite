@@ -4,13 +4,13 @@
 
 @import org.w3.vs.actor._
 
-@libs.main("Validator Suite", 
+@libs.main("Validator Suite - Jobs",
     style = "dashboard",
     script = "dashboard"){
 
     @libs.admin(user)
 
-    @libs.navigation("Dashboard", organization, List())
+    @libs.navigation("Jobs", organization, List())
 
     @libs.messages()
 
@@ -34,8 +34,7 @@
         </form>
     </section>
 
-    @** TODO: Fix: Can't use routes.Jobs.index because of the /dashboard alias. **@
-    <section id="jobs" class="list" data-url="/suite/jobs" data-count="@page.iterable.size">
+    <section id="jobs" class="list" data-url="@routes.Jobs.index" data-count="@page.iterable.size">
         <h2>Jobs</h2>
         @pages.jobs(page)
     </section>

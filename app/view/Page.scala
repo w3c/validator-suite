@@ -69,10 +69,10 @@ case class Page[A <: View] private (
     List(
       if (perPage != Page.defaultPerPage) "n=" + perPage else "",
       sortParam match {
-        case a if (a == ordering.default) => ""
+        //case a if (a == ordering.default) => ""
         case SortParam(a, true) if (a != "") => "sort=-" + sortParam.name
         case SortParam(a, false) if (a != "") => "sort=" + sortParam.name
-        case _: Exception => ""
+        case _ => ""
       },
       if (filter != None) "filter=" + filter.get else "",
       if (search != None) "search=" + search.get else "",
