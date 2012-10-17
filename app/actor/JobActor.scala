@@ -12,13 +12,13 @@ import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
 import scala.concurrent.util.duration._
 import org.w3.util.Headers.wrapHeaders
-import scalaz._
-import scalaz.Scalaz._
 import org.joda.time.DateTime
 import org.w3.util.akkaext._
 import org.joda.time.DateTimeZone
 import com.yammer.metrics._
 import com.yammer.metrics.core._
+import scalaz.Equal
+import scalaz.Scalaz._
 
 object JobActor {
 
