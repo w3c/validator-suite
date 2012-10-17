@@ -1,17 +1,17 @@
-@(title: String, organization: Organization, crumbs: Iterable[(String, String)] = List())
-@**<nav id="nav">
+@(crumbs: Iterable[(String, String)] = List())
+@**
+    <!--<nav id="nav">
         <h1>Main navigation</h1>
         <ul>
-            <!--<li><a href="@routes.Jobs.index">Dashboard</a></li>-->
+            <li><a href="@routes.Jobs.index">Dashboard</a></li>
             <li><a href="@routes.Jobs.new1">New job</a></li>
         </ul>
-    </nav>**@
+    </nav>-->
+**@
     
     <nav id="crumbs">
-        @**<h1>Current page: @title</h1>**@
-        <h1>Breadcrumb</h1>
+        <h1>Breadcrumbs</h1>
         <ul>
-            @**<li>@organization.name</li>**@
             <li><a href="@routes.Jobs.index">Jobs</a></li>
             @crumbs.map { crumb =>
             @if(crumb._2 == "") {

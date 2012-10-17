@@ -10,7 +10,7 @@ GET     /suite/dashboard                  controllers.Jobs.redirect
 GET     /suite/jobs                       controllers.Jobs.index
 POST    /suite/jobs                       controllers.Jobs.create
 GET     /suite/jobs/new                   controllers.Jobs.new1
-GET     /suite/jobs/ws                    controllers.Jobs.dashboardSocket
+GET     /suite/jobs/ws                    controllers.Jobs.webSocket
 GET     /suite/jobs/ws/:id                controllers.Jobs.reportSocket(id: JobId)
 GET     /suite/jobs/comet                 controllers.Jobs.cometSocket
 GET     /suite/jobs/events                controllers.Jobs.eventsSocket

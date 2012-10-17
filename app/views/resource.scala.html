@@ -6,8 +6,7 @@
   organization: Organization,
   messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
-@libs.main("Validator Suite",
-    style = "dashboard"){
+@libs.main(s"Report for ${Helper.shorten(resource.url, 50)} - Validator Suite"){
    
   @*****
 
@@ -22,7 +21,10 @@ $(this).parents("article").toggleClass("folded");
 ******@
     
     @libs.admin(user)
-    @libs.navigation("Report for \"" + resource.url +"\"", organization, List((job.name, routes.Jobs.show(job.id).toString), (Helper.shorten(resource.url, 50), "")))
+    @libs.navigation(List(
+        (job.name, routes.Jobs.show(job.id).toString),
+        (Helper.shorten(resource.url, 50), "")
+    ))
     @libs.messages(messages)
     
     <hr>
@@ -33,6 +35,7 @@ $(this).parents("article").toggleClass("folded");
     </section>
 
     <hr>
+
     <section id="assertors" class="tabs">
         <h2>Assertors</h2>
         @libs.assertors(assertors, assertionsPage)

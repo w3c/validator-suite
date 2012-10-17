@@ -4,13 +4,11 @@
 
 @import org.w3.vs.actor._
 
-@libs.main("Validator Suite - Jobs",
-    style = "dashboard",
-    script = "dashboard"){
+@libs.main("Jobs - Validator Suite", script = "dashboard"){
 
     @libs.admin(user)
 
-    @libs.navigation("Jobs", organization, List())
+    @libs.navigation()
 
     @libs.messages()
 

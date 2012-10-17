@@ -5,9 +5,7 @@
     organization: Organization,
     messages: List[(String, String)] = List.empty)(implicit flash: Flash, req: Request[_])
 
-@libs.main("Validator Suite",
-    style = "dashboard",
-    script = ""){
+@libs.main(s"""Report for job "${job.name}" - By messages - Validator Suite"""){
    
    @*****
 
@@ -23,7 +21,7 @@ $(this).parents("article").toggleClass("folded");
 
     
     @libs.admin(user)
-    @libs.navigation("Report for job \"" + job.name +"\"", organization, List((job.name ,"")))
+    @libs.navigation(List((job.name ,"")))
     @libs.messages(messages)
 
     <section id="jobs" class="single" data-url="@routes.Jobs.index">

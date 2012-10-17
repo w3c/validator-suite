@@ -45,7 +45,7 @@ object Jobs extends Controller {
         jobViews <- JobView.fromJobs(jobs)
       } yield {
         if (!isAjax)
-          Ok(views.html.dashboard(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
+          Ok(views.html.jobs(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
         else
           Ok(JsArray(Page(jobViews).iterator.map(_.toJson()).toSeq))
       }) recover toError
@@ -155,15 +155,10 @@ object Jobs extends Controller {
       }).recover{ case _ => Enumerator.eof[JsValue] })
   }
 
-  def dashboardSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
+  def webSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
     (iteratee, enumerator)
   }
-
-//  def dashboardSocket()(implicit req: Request[_]): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
-//    val iteratee = Iteratee.ignore[JsValue]
-//    (iteratee, enumerator)
-//  }
 
   def cometSocket: ActionA = Action { implicit req =>
     Ok.stream(enumerator &> Comet(callback = "parent.VS.jobupdate"))
