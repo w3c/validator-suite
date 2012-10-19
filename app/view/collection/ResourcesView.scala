@@ -6,8 +6,14 @@ import org.w3.vs.view._
 import org.w3.vs.view.model.ResourceView
 import play.api.templates.Html
 import org.joda.time.DateTime
+import Collection._
 
-class ResourcesView (val source: Iterable[ResourceView], val classe: String = "list") extends CollectionImpl[ResourceView] {
+case class ResourcesView (
+  source: Iterable[ResourceView],
+  classe: String = "list",
+  params: Parameters = Parameters()) extends CollectionImpl[ResourceView] {
+
+  def copyWith(params: Parameters) = copy(params = params)
 
   def id: String = "resources"
 
@@ -23,7 +29,9 @@ class ResourcesView (val source: Iterable[ResourceView], val classe: String = "l
 
   def filter(filter: Option[String]): (ResourceView => Boolean) = _ => true
 
-  def order(sort: Option[SortParam]): Ordering[ResourceView] = {
+  def defaultSortParam = SortParam("errors", ascending = false)
+
+  def order(sort: SortParam): Ordering[ResourceView] = {
     val params = List(
       "url",
       "validated",
@@ -31,7 +39,7 @@ class ResourcesView (val source: Iterable[ResourceView], val classe: String = "l
       "errors"
     )
     sort match {
-      case Some(SortParam(param, ascending)) if params.contains(param) => {
+      case SortParam(param, ascending) if params.contains(param) => {
         val ord = param match {
           case "url"       => Ordering[String].on[ResourceView](_.url.toString)
           case "validated" => Ordering[(DateTime, String)].on[ResourceView](view => (view.lastValidated, view.url.toString))
@@ -40,7 +48,7 @@ class ResourcesView (val source: Iterable[ResourceView], val classe: String = "l
         }
         if (ascending) ord else ord.reverse
       }
-      case _ => order(Some(SortParam("errors", ascending = false)))
+      case _ => order(defaultSortParam)
     }
   }
 

@@ -7,8 +7,15 @@ import org.w3.vs.model.Job
 import scala.concurrent.{ExecutionContext, Future}
 import org.joda.time.DateTime
 import org.w3.vs.view._
+import Collection._
+import play.api.templates
 
-case class JobsView(source: Iterable[JobView], val classe: String = "list") extends CollectionImpl[JobView] {
+case class JobsView(
+    source: Iterable[JobView],
+    classe: String = "list",
+  params: Parameters = Parameters()) extends CollectionImpl[JobView] {
+
+  def copyWith(params: Parameters) = copy(params = params)
 
   def id: String = "jobs"
 
@@ -27,12 +34,14 @@ case class JobsView(source: Iterable[JobView], val classe: String = "list") exte
 
   def emptyMessage: Html = {
     import controllers.routes
-     Html(s"""${Messages("jobs.empty")} <a href="${routes.Jobs.new1}">${Messages("jobs.create.first")}</a>""")
+     templates.Html(s"""${Messages("jobs.empty")} <a href="${routes.Jobs.new1}">${Messages("jobs.create.first")}</a>""")
   }
 
   def filter(filter: Option[String]): (JobView => Boolean) = _ => true
 
-  def order(sort: Option[SortParam]): Ordering[JobView] = {
+  def defaultSortParam = SortParam("name", ascending = true)
+
+  def order(sort: SortParam): Ordering[JobView] = {
     val params = List(
       "name",
       "entrypoint",
@@ -45,7 +54,7 @@ case class JobsView(source: Iterable[JobView], val classe: String = "list") exte
       "health"
     )
     sort match {
-      case Some(SortParam(param, ascending)) if params.contains(param) => {
+      case SortParam(param, ascending) if params.contains(param) => {
         val ord = param match {
           case "name"         => Ordering[(String, String)].on[JobView](job => (job.name, job.id.toString))
           case "entrypoint"   => Ordering[(String, String, String)].on[JobView](job => (job.entrypoint.toString, job.name, job.id.toString))
@@ -59,7 +68,7 @@ case class JobsView(source: Iterable[JobView], val classe: String = "list") exte
         }
         if (ascending) ord else ord.reverse
       }
-      case _ => order(Some(SortParam("name", ascending = true)))
+      case _ => order(defaultSortParam)
     }
   }
 

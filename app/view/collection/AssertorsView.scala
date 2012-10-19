@@ -3,8 +3,14 @@ package org.w3.vs.view.collection
 import org.w3.vs.view.model.AssertorView
 import org.w3.vs.model.{Error, Warning, Assertion}
 import play.api.templates.Html
+import Collection._
 
-class AssertorsView(val source: Iterable[AssertorView], val classe: String = "tabs") extends CollectionImpl[AssertorView] {
+case class AssertorsView(
+    source: Iterable[AssertorView],
+    classe: String = "tabs",
+    params: Parameters = Parameters()) extends CollectionImpl[AssertorView] {
+
+  def copyWith(params: Parameters) = copy(params = params)
 
   def id: String = "assertors"
 
@@ -18,7 +24,9 @@ class AssertorsView(val source: Iterable[AssertorView], val classe: String = "ta
 
   def filter(filter: Option[String]): (AssertorView => Boolean) = _ => true
 
-  def order(sort: Option[SortParam]): Ordering[AssertorView] =
+  def defaultSortParam = SortParam("", ascending = true)
+
+  def order(sort: SortParam): Ordering[AssertorView] =
     Ordering[Int].on[AssertorView](assertor => assertor.errors)
 
   def search(search: Option[String]): (AssertorView => Boolean) = _ => true

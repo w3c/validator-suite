@@ -1,13 +1,16 @@
 package org.w3.vs.view.collection
 
 import org.w3.vs.model.{AssertionSeverity, Assertion}
-import org.w3.vs.view.model.{JobView, AssertorView, AssertionView}
-import play.api.libs.json.JsArray
-import play.api.mvc.Request
+import org.w3.vs.view.model.AssertionView
 import play.api.templates.{HtmlFormat, Html}
-import org.joda.time.DateTime
+import Collection._
 
-class AssertionsView(val source: Iterable[AssertionView], val classe: String = "folds") extends CollectionImpl[AssertionView] {
+case class AssertionsView(
+    source: Iterable[AssertionView],
+    classe: String = "folds",
+    params: Parameters = Parameters()) extends CollectionImpl[AssertionView] {
+
+  def copyWith(params: Parameters) = copy(params = params)
 
   def id: String = "assertions"
 
@@ -22,11 +25,15 @@ class AssertionsView(val source: Iterable[AssertionView], val classe: String = "
     ("resources" -> true)
   ).map(a => Definition(a._1, a._2))
 
-  def emptyMessage: Html = Html("")
+  def emptyMessage: Html = {
+    Html("")
+  }
 
   def filter(filter: Option[String]): (AssertionView => Boolean) = _ => true
 
-  def order(sort: Option[SortParam]): Ordering[AssertionView] = {
+  def defaultSortParam = SortParam("", ascending = true)
+
+  def order(sort: SortParam): Ordering[AssertionView] = {
     val a = Ordering[AssertionSeverity].reverse
     val b = Ordering[Int].reverse
     val c = Ordering[String]
@@ -42,6 +49,7 @@ class AssertionsView(val source: Iterable[AssertionView], val classe: String = "
       case None => _ => true
     }
   }
+
 }
 
 object AssertionsView {
