@@ -7,7 +7,7 @@ import org.w3.vs.view.model.ResourceView
 import play.api.templates.Html
 import org.joda.time.DateTime
 
-class ResourcesView (val source: Iterable[ResourceView]) extends CollectionImpl[ResourceView] {
+class ResourcesView (val source: Iterable[ResourceView], val classe: String = "list") extends CollectionImpl[ResourceView] {
 
   def id: String = "resources"
 

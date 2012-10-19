@@ -19,8 +19,6 @@ trait Collection[+A] {
 
   case class QueryParameter(param: String, value: String)
 
-  def isSingle: Boolean
-
   def isEmpty: Boolean
 
   def source: Iterable[A]
@@ -33,15 +31,17 @@ trait Collection[+A] {
 
   def currentPage: Int
 
-  def currentPageSize: Int
-
   def maxPage: Int
 
-  def filteredSize: Int
+  def size: Int
 
   def totalSize: Int
 
+  def filteredSize: Int
+
   def id: String
+
+  def classe: String
 
   def definitions: Seq[Definition]
 
@@ -95,35 +95,39 @@ abstract class CollectionImpl[A <: View]() extends Collection[A] {
     page: Int = 1,
     perPage: Int = Collection.DefaultPerPage,
     offset: Int = 0
-    )
+  )
 
   protected def params: CollectionParams = CollectionParams()
 
-  val iterable: Seq[A] = {
+  private lazy val filtered: Seq[A] = {
+    source.toSeq
+      .filter{
+        a => filter(params.filter)(a) && search(params.search)(a)
+      }
+  }
+
+  // only val
+  lazy val iterable: Seq[A] = {
     filtered
       .sorted(order(params.sortParam))
       .slice(params.offset, params.offset + params.perPage)
   }
 
-  private def filtered: Seq[A] = {
-    source.toSeq
-      .filter(filter(params.filter))
-      .filter(search(params.search)) // compose functions instead
-  }
-
   import scala.math
 
-  val size: Int = iterable.size
+  def size: Int = iterable.size
 
-  val totalSize: Int = filtered.size
+  def totalSize: Int = source.size
 
-  val firstIndex: Int = math.min(params.offset + 1, totalSize) // if (filtered.isEmpty) 0 else offset + 1
+  def filteredSize: Int = filtered.size
 
-  val lastIndex: Int = math.min(params.offset + params.perPage, totalSize)
+  def firstIndex: Int = math.min(params.offset + 1, totalSize) // if (filtered.isEmpty) 0 else offset + 1
 
-  val maxPage: Int = math.max(math.ceil(filtered.size.toDouble / params.perPage.toDouble).toInt, 1)
+  def lastIndex: Int = math.min(params.offset + params.perPage, totalSize)
 
-  val queryString: String = {
+  def maxPage: Int = math.max(math.ceil(filtered.size.toDouble / params.perPage.toDouble).toInt, 1)
+
+  def queryString: String = {
     List(
       if (params.perPage != Collection.DefaultPerPage) "n=" + params.perPage else "",
       params.sortParam match {
@@ -139,22 +143,32 @@ abstract class CollectionImpl[A <: View]() extends Collection[A] {
     ).filter(_ != "").mkString("?","&","")
   }
 
-  def bindFromRequest(implicit request: play.api.mvc.Request[_]): this.type = this
-  def currentPage: Int = 1
-  def currentPageSize: Int = 2
-  def filterOn(filter: String): this.type = throw new Exception("NI")
-  def filteredSize: Int = 2
-  def goToPage(page: Int): this.type = this
   def isEmpty: Boolean = false
-  def isSingle: Boolean = false
+
+  def currentPage: Int = params.page
+
+  def bindFromRequest(implicit request: play.api.mvc.Request[_]): this.type = this
+
+  def filterOn(filter: String): this.type = this
+
+  def goToPage(page: Int): this.type = this
+
   def isSortedBy(param: String, ascending: Boolean): Boolean = false
+
   def offsetBy(offset: Int): this.type = this
+
   def orderBy(order: String): this.type = this
-  def queryParameters: Seq[QueryParameter] = throw new Exception("NI")
+
+  def queryParameters: Seq[QueryParameter] = Seq.empty
+
   def search(search: String): this.type = this
+
   def showPerPage(perPage: Int): this.type = this
+
   def sortBy(param: String,ascending: Boolean): this.type = this
+
   def legend: String = ""
+
   def isFilteredOn(filter: String): Boolean = false
 
   def toJson: JsArray = {

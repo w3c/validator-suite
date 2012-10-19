@@ -4,7 +4,7 @@ import org.w3.vs.view.model.AssertorView
 import org.w3.vs.model.{Error, Warning, Assertion}
 import play.api.templates.Html
 
-class AssertorsView(val source: Iterable[AssertorView]) extends CollectionImpl[AssertorView] {
+class AssertorsView(val source: Iterable[AssertorView], val classe: String = "tabs") extends CollectionImpl[AssertorView] {
 
   def id: String = "assertors"
 

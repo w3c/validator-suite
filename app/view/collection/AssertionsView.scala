@@ -7,7 +7,7 @@ import play.api.mvc.Request
 import play.api.templates.{HtmlFormat, Html}
 import org.joda.time.DateTime
 
-class AssertionsView(val source: Iterable[AssertionView]) extends CollectionImpl[AssertionView] {
+class AssertionsView(val source: Iterable[AssertionView], val classe: String = "folds") extends CollectionImpl[AssertionView] {
 
   def id: String = "assertions"
 

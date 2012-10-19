@@ -8,7 +8,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import org.joda.time.DateTime
 import org.w3.vs.view._
 
-case class JobsView(source: Iterable[JobView]) extends CollectionImpl[JobView] {
+case class JobsView(source: Iterable[JobView], val classe: String = "list") extends CollectionImpl[JobView] {
 
   def id: String = "jobs"
 

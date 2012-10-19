@@ -2,18 +2,18 @@
     title: String,
     script: String = "",
     style: String = "",
-    collections: Seq[Collection[View]])(implicit flash: Flash, req: Request[_])
+    collections: Seq[Collection[View]])(implicit flash: Flash)
 
 @libs.main(title, style, script) {
 
-    @if(user != null) { @libs.admin(user) }
+    @libs.admin(user)
 
     @libs.navigation()
 
     @libs.messages()
 
     @collections.map { col =>
-    <section id="@col.id" class="@if(col.isSingle){single}else{list}">
+    <section id="@col.id" class="@col.classe">
         <h2>@Messages(s"${col.id}.title")</h2>
         @collection.generic(col)
     </section>}

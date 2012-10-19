@@ -25,7 +25,7 @@ case class AssertionView(
 
   def isEmpty: Boolean = resources.isEmpty && ! description.isDefined
 
-  def occurencesLegend: String = ???
+  def occurencesLegend: String = ""
 }
 
 object AssertionView {
