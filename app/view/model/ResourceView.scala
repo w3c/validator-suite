@@ -5,24 +5,26 @@ import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.view._
 import play.api.libs.json._
-import scala.Some
-import org.w3.vs.view.SortParam
-import scala.Some
-import org.w3.vs.view.SortParam
 import play.api.libs.json.JsString
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsNumber
 import scala.Some
-import org.w3.vs.view.SortParam
+import org.w3.vs.view.collection.Collection
+import play.api.templates.Html
 
 case class ResourceView(
+    jobId: JobId,
     url: URL,
     lastValidated: DateTime,
     warnings: Int,
     errors: Int) extends View {
 
-  def toJson(): JsValue = {
+  def toJson(colOpt: Option[Collection[View]]): JsValue = {
     Json.toJson(this)(ResourceView.writes)
+  }
+
+  def toHtml(colOpt: Option[Collection[View]]): Html = {
+    ???
   }
 }
 
@@ -35,43 +37,7 @@ object ResourceView {
     "errors"
   )
 
-  def fromAssertions(assertions: Iterable[Assertion]): Iterable[ResourceView] = {
-    /*assertions.groupBy(_.url) map { case (url, as) =>
-      val last = as.maxBy(_.timestamp).timestamp
-      var errors = 0
-      var warnings = 0
-      as foreach { a =>
-        a.severity match {
-          case Error => errors += math.max(1, a.contexts.size)
-          case Warning => warnings += math.max(1, a.contexts.size)
-          case Info => ()
-        }
-      }
-      ResourceView(url, last, warnings, errors)
-    }*/
-    assertions.groupBy(_.url).map {
-      case (url, assertions) => {
-        val last = assertions.maxBy(_.timestamp).timestamp
-        val errors = assertions.foldLeft(0) {
-          case (count, assertion) =>
-            count + (assertion.severity match {
-              case Error => scala.math.max(assertion.contexts.size, 1)
-              case _ => 0
-            })
-        }
-        val warnings = assertions.foldLeft(0) {
-          case (count, assertion) =>
-            count + (assertion.severity match {
-              case Warning => scala.math.max(assertion.contexts.size, 1)
-              case _ => 0
-            })
-        }
-        ResourceView(url, last, warnings, errors)
-      }
-    }
-  }
-
-  val filtering: PageFiltering[ResourceView] = new PageFiltering[ResourceView] {
+  /*val filtering: PageFiltering[ResourceView] = new PageFiltering[ResourceView] {
 
     def validate(filter: Option[String]): Option[String] = None
 
@@ -105,7 +71,7 @@ object ResourceView {
       if (safeParam.ascending) ord else ord.reverse
     }
 
-  }
+  }*/
 
   val writes: Writes[ResourceView] = new Writes[ResourceView] {
     def writes(resource: ResourceView): JsValue = {

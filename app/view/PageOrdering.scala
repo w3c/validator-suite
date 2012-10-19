@@ -1,4 +1,4 @@
-package org.w3.vs.view
+/*package org.w3.vs.view
 
 import org.joda.time.DateTime
 import org.w3.vs.model.AssertionSeverity
@@ -16,26 +16,4 @@ trait PageOrdering[A] {
 
   final def order(param: SortParam): Ordering[A] = order_(validate(param))
   final def validate(param: SortParam): SortParam = if (orderParams.exists(_ == param.name)) param else default
-}
-
-object PageOrdering {
-
-  /*implicit val datetimeOptionOrdering: Ordering[Option[DateTime]] = new Ordering[Option[DateTime]] {
-
-    // TODO check this (tom)
-    def compare(x: Option[DateTime], y: Option[DateTime]): Int = (x, y) match {
-      case (Some(date1), Some(date2)) => date1.compareTo(date2)
-      case (None, Some(_)) => +1
-      case (Some(_), None) => -1
-      case (None, None) => 0
-    }
-
-  }*/
-
-
-
-
-
-
-
-}
+} */

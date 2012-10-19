@@ -1,5 +1,5 @@
 
-# JobView
+# Job
 job.name=Job Name
 job.name.detail=The name of the job
 job.entrypoint=Start URL
@@ -27,7 +27,7 @@ job.button.delete.title=Delete this job
 job.button.clear=Clear
 job.button.search=Search
 
-# ResourceView
+# Resource
 resource.report.for=Report for
 resource.url=Resource
 resource.url.detail=The resource to which the report refers
@@ -40,7 +40,7 @@ resource.errors.detail= TODO
 resource.external.link=Open resource in a new tab
 resource.button.revalidate=Revalidate
 
-# AssertionView
+# Assertion
 assertion.assertor=Assertor
 assertion.assertor.detail= TODO
 assertion.severity=Severity
@@ -122,3 +122,7 @@ assertions.empty=No assertions to show.
 report.link=Go to the report
 search.empty.jobs=No search result.
 search.clear=Clear search.
+
+
+sort.ascending=Sort in ascending order
+sort.descending=Sort in descending order

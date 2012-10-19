@@ -1,6 +1,7 @@
-package org.w3.vs.view
+/*package org.w3.vs.view
 
 import play.api.mvc.Request
+import org.w3.vs.view.model.View
 
 case class Page[A <: View] private (
     iterable: Iterable[A],
@@ -16,7 +17,7 @@ case class Page[A <: View] private (
 
   //private val offset = (current - 1) * perPage
 
-  private val filtered: Seq[A] = {
+  private def filtered()(implicit filtering: PageFiltering[A]): Seq[A] = {
     iterable.toSeq
       .filter(filtering.filter(filter))
       .filter(filtering.search(search)) // compose functions instead
@@ -63,7 +64,7 @@ case class Page[A <: View] private (
 
   def groupBy(group: Option[String]): Page[A] = this.copy(group = group)
 
-  def offsetBy(offset: Option[Int]): Page[A] = this.copy(group = group)
+  def offsetBy(offset: Int): Page[A] = this.copy(offset = offset)
 
   val queryString: String = {
     List(
@@ -87,11 +88,13 @@ object Page {
   val defaultPerPage = 30
   val maxPerPage = 1000
 
-  def apply[A <: View](a: A)(implicit ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = {
+  def apply(any: Any): Page[_] = ???
+
+  /*def apply[A <: Model](a: A)(implicit ordering: PageOrdering[A], filtering: PageFiltering[A]): Page[A] = {
     new Page[A](Iterable(a))
   }
 
-  def apply[A <: View](a: Iterable[A])(
+  def apply[A <: Model](a: Iterable[A])(
       implicit req: Request[_],
       ordering: PageOrdering[A],
       filtering: PageFiltering[A]): Page[A] = {
@@ -128,5 +131,6 @@ object Page {
       group = group
     )
 
-  }
+  }*/
 }
+  */

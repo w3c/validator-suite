@@ -8,9 +8,10 @@ import play.api.libs.json._
 import play.api.libs.json.JsString
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsNumber
-import org.w3.vs.view.SortParam
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
+import play.api.templates.Html
+import play.api.mvc.Request
+import org.w3.vs.view.collection.Collection
 
 case class JobView(
     id: JobId,
@@ -24,15 +25,19 @@ case class JobView(
     maxResources: Int,
     health: Int) extends View {
 
-  def toJson(): JsValue = {
+  def toJson(colOpt: Option[Collection[View]]): JsValue = {
     Json.toJson(this)(JobView.writes)
+  }
+
+  def toHtml(colOpt: Option[Collection[View]]): Html = {
+    views.html.models.job(this, colOpt)
   }
 
 }
 
 object JobView {
 
-  val params = Seq[String](
+  /*val params = Seq[String](
     "name",
     "entrypoint",
     "status",
@@ -42,9 +47,9 @@ object JobView {
     "resources",
     "maxResources",
     "health"
-  )
+  )*/
 
-  def fromJob(job: Job)(implicit ec: ExecutionContext): Future[JobView] = {
+  def apply(job: Job)(implicit ec: ExecutionContext): Future[JobView] = {
     for {
       activity <- job.getActivity()
       completedOn <- job.getCompletedOn()
@@ -63,11 +68,11 @@ object JobView {
     )
   }
 
-  def fromJobs(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[Iterable[JobView]] = {
-    Future.sequence(jobs.map(fromJob _))
+  def apply(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[Iterable[JobView]] = {
+    Future.sequence(jobs.map(apply _))
   }
 
-  val filtering: PageFiltering[JobView] = new PageFiltering[JobView] {
+  /*val filtering: PageFiltering[JobView] = new PageFiltering[JobView] {
 
     def validate(filter: Option[String]): Option[String] = None
 
@@ -106,7 +111,7 @@ object JobView {
       }
       if (safeParam.ascending) ord else ord.reverse
     }
-  }
+  }*/
 
   val writes: Writes[JobView] = new Writes[JobView] {
     def writes(job: JobView): JsValue = {

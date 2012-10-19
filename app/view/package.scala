@@ -16,17 +16,17 @@ package object view {
     }
   }
 
-  implicit val singleAssertionFiltering = SingleAssertionView.filtering
-  implicit val singleAssertionOrdering = SingleAssertionView.ordering
+  //implicit val singleAssertionFiltering = SingleAssertionView.filtering
+  //implicit val singleAssertionOrdering = SingleAssertionView.ordering
 
-  implicit val groupedAssertionFiltering = GroupedAssertionView.filtering
-  implicit val groupedAssertionOrdering = GroupedAssertionView.ordering
+  //implicit val groupedAssertionFiltering = GroupedAssertionView.filtering
+  //implicit val groupedAssertionOrdering = GroupedAssertionView.ordering
 
-  implicit val jobFiltering = JobView.filtering
-  implicit val jobOrdering = JobView.ordering
+  //implicit val jobFiltering = JobView.filtering
+  //implicit val jobOrdering = JobView.ordering
 
-  implicit val resourceFiltering = ResourceView.filtering
-  implicit val resourceOrdering = ResourceView.ordering
+  //implicit val resourceFiltering = ResourceView.filtering
+  //implicit val resourceOrdering = ResourceView.ordering
 
   implicit val jobToJson: Writes[JobView] = JobView.writes
 

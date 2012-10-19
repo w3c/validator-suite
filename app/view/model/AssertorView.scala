@@ -3,13 +3,21 @@ package org.w3.vs.view.model
 import org.w3.vs.model._
 import org.w3.vs.assertor.Assertor
 import org.w3.vs.view._
+import play.api.libs.json.JsValue
+import org.w3.vs.view.collection.Collection
+import play.api.templates.Html
 
 case class AssertorView(
     name: String,
     errors: Int,
-    warnings: Int) extends View
+    warnings: Int) extends View {
 
-object AssertorView {
+  def toJson(colOpt: Option[Collection[View]]): JsValue = ???
+  def toHtml(colOpt: Option[Collection[View]]): Html = ???
+
+}
+
+/*object AssertorView {
 
   def fromAssertions(assertions: Iterable[Assertion]): Iterable[AssertorView] = {
     assertions.groupBy(_.assertor).map {
@@ -37,4 +45,4 @@ object AssertorView {
      }
   }
 
-}
+} */

@@ -23,23 +23,11 @@
 </head>
 
 <body class="no-js">
-    <script>document.body.setAttribute("class", "js");</script>
-    <header>
-        <h1>
-            <a href="@routes.Jobs.index" tabindex="-1">
-                <img alt="Validator Suite Logo" src='@routes.Assets.at("/public", "images/vsLogo.svg")' height="60">
-                <span>W3C Validator</span> <span>Suite</span>
-            </a>
-        </h1>
-    </header>
+    <script>document.body.className = "js";</script>
+    @libs.header()
     <div id="main">
     @content
     </div>
     @footer
-
-    @**
-    <script src='@routes.Assets.at("javascripts/libs/progress-polyfill.js")'></script>
-    <script src='@routes.Assets.at("javascripts/libs/prism.js")'></script>
-    **@
 </body>
 </html>

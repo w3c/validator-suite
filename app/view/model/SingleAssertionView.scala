@@ -1,10 +1,11 @@
-package org.w3.vs.view.model
+/*package org.w3.vs.view.model
 
 import org.w3.util.URL
 import org.w3.vs.model._
 import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.assertor.Assertor
 import org.w3.vs.view.{SortParam, PageOrdering, PageFiltering}
+import play.api.libs.json.JsValue
 
 case class SingleAssertionView(
   assertor: String,
@@ -13,9 +14,11 @@ case class SingleAssertionView(
   description: Option[Html],
   occurrences: Int,
   url: URL,
-  contexts: Iterable[ContextView]) extends AssertionView{
+  contexts: Iterable[ContextView]) {
 
   def isEmpty: Boolean = contexts.isEmpty && ! description.isDefined
+
+  def toJson(): JsValue = ???
 }
 
 object SingleAssertionView {
@@ -66,8 +69,7 @@ object SingleAssertionView {
     def search(search: Option[String]): (SingleAssertionView) => Boolean = {
       search match {
         case Some(searchString) => {
-          case assertion
-            if (assertion.title.toString.contains(searchString)) => true
+          case assertion if (assertion.title.toString.toLowerCase.contains(searchString.toLowerCase)) => true
           case _ => false
         }
         case None => _ => true
@@ -96,4 +98,4 @@ object SingleAssertionView {
 
   }
 
-}
+}        */

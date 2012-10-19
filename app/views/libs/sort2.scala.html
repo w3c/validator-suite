@@ -1,0 +1,9 @@
+@(collection: Collection[_], param: String)
+            <span class="sort">
+                <a class="ascend @if(collection.isSortedBy(param, true)){current}"
+                   href="@collection.sortBy(param, true).goToPage(1).queryString"
+                   title="Sort in ascending order"><span>▴</span></a>
+                <a class="descend @if(collection.isSortedBy(param, false)){current}"
+                   href="@collection.sortBy(param, false).goToPage(1).queryString"
+                   title="Sort in descending order"><span>▾</span></a>
+            </span>

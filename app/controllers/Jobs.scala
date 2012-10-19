@@ -4,8 +4,8 @@ import org.w3.util._
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
-import org.w3.vs.view._
 import org.w3.vs.view.model._
+import org.w3.vs.view.collection._
 import org.w3.vs.view.form._
 import org.w3.vs.actor.message._
 
@@ -40,14 +40,20 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        org <- user.getOrganization() map (_.get)
-        jobs <- Job.getFor(user.id)(conf)
-        jobViews <- JobView.fromJobs(jobs)
+        jobs_ <- user.getJobs()
+        jobs <- JobsView(jobs_)
       } yield {
-        if (!isAjax)
-          Ok(views.html.jobs(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
-        else
-          Ok(JsArray(Page(jobViews).iterator.map(_.toJson()).toSeq))
+        if (isAjax) {
+          Ok(jobs.bindFromRequest.toJson)
+        } else {
+          //Ok(views.html.jobs(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
+          Ok(views.html.main(
+              user = user,
+              title = "Jobs - Validator Suite",
+              style = "",
+              script = "dashboard",
+              collections = Seq(jobs.bindFromRequest))).withHeaders(("Cache-Control", "no-cache, no-store"))
+        }
       }) recover toError
     }
   }
@@ -56,28 +62,49 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        org <- user.getOrganization()
-        job <- user.getJob(id)
-        assertions <- job.getAssertions()
-        jobView <- JobView.fromJob(job)
+        job_ <- user.getJob(id)
+        job <- JobsView(job_)
+        assertions_ <- job_.getAssertions()
       } yield {
-        req.getQueryString("group") match {
-          case Some("message") => {
-            val assertorViews = AssertorView.fromAssertions(assertions)
-            val assertionViews = GroupedAssertionView.fromAssertions(assertions)
-            Ok(views.html.job_assertions(jobView, assertorViews, Page(assertionViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        if (isAjax) {
+          req.getQueryString("group") match {
+            case Some("message") => {
+              val assertions = AssertionsView(assertions_)
+              Ok(assertions.bindFromRequest.toJson)
+            }
+            case _ => {
+              val resources = ResourcesView(assertions_, job_.id)
+              Ok(resources.bindFromRequest.toJson)
+            }
           }
-          /*case Some("url") => {
-            val resourceViews = ResourceView.fromAssertions(assertions)
-            Ok(views.html.report(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
-          }*/
-          case _ => {
-            val resourceViews = ResourceView.fromAssertions(assertions)
-            if (!isAjax)
-              Ok(views.html.job_resources(jobView, Page(resourceViews), user, org.get, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
-            else
-              Ok(JsArray(Page(resourceViews).iterator.map(_.toJson()).toSeq))
-
+        } else {
+          req.getQueryString("group") match {
+            case Some("message") => {
+              val assertors = AssertorsView(assertions_)
+              val assertions = AssertionsView.grouped(assertions_)
+              Ok(views.html.main(
+                  user = user,
+                  title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
+                  style = "",
+                  script = "",
+                  collections = Seq(
+                    job,
+                    assertors,
+                    assertions.bindFromRequest
+                  ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+            }
+            case _ => {
+              val resources = ResourcesView(assertions_, job_.id)
+              Ok(views.html.main(
+                  user = user,
+                  title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
+                  style = "",
+                  script = "",
+                  collections = Seq(
+                    job,
+                    resources.bindFromRequest
+                  ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+            }
           }
         }
       }) recover toError
@@ -88,15 +115,25 @@ object Jobs extends Controller {
     AsyncResult {
       (for {
         user <- getUser
-        org <- user.getOrganization() map (_.get)
-        job <- user.getJob(id)
-        assertions <- job.getAssertions().map(_.filter(_.url === url)) // TODO Empty = exception
-        jobView <- JobView.fromJob(job)
-        resourceView = ResourceView.fromAssertions(assertions).head
-        assertorViews = AssertorView.fromAssertions(assertions)
-        assertionViews = SingleAssertionView.fromAssertions(assertions)
+        job_ <- user.getJob(id)
+        assertions_ <- job_.getAssertions().map(_.filter(_.url === url)) // TODO Empty = exception
+        //job <- JobView.fromJob(job_)
+        resource = ResourcesView(assertions_, job_.id)
+        assertors = AssertorsView(assertions_)
+        assertions = AssertionsView(assertions_)
       } yield {
-        Ok(views.html.resource(jobView, resourceView, assertorViews, Page(assertionViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
+        Ok(views.html.main(
+          user = user,
+          title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
+          style = "",
+          script = "",
+          collections = Seq(
+            resource,
+            assertors,
+            assertions.bindFromRequest
+          ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+
+        //Ok(views.html.resource(jobView, resourceView, assertorViews, Page(assertionViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) recover toError
     }
   }

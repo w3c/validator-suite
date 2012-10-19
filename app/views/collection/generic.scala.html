@@ -1,0 +1,22 @@
+@(collection: Collection[View])
+
+    <aside>
+        <h3>Definitions</h3>
+        <dl>
+            @collection.definitions.map { definition =>
+            <dt class="@definition.param">
+                <dfn>@Messages(s"${collection.id}.${definition.param}")</dfn>
+                @if(definition.isSortable){@libs.sort2(collection, definition.param)}
+            </dt>
+            <dd>@Messages(s"${collection.id}.${definition.param}.detail")</dd>}
+        </dl>
+        <hr>
+    </aside>
+
+    @collection.iterable.map { ob => @ob.toHtml(Some(collection)) }
+
+    @if(collection.isEmpty) {
+    <p class="empty">
+        @collection.emptyMessage
+    </p>}
+

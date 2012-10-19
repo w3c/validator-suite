@@ -44,6 +44,7 @@ object ApplicationBuild extends Build {
     templatesImport += "org.w3.vs.view._",
     templatesImport += "org.w3.vs.view.form._",
     templatesImport += "org.w3.vs.view.model._",
+    templatesImport += "org.w3.vs.view.collection._",
     templatesImport += "org.w3.vs.model._",
     templatesImport += "org.w3.vs.exception._",
 //    templatesImport += "scalaz.{Validation, Failure, Success}",

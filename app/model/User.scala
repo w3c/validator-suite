@@ -37,6 +37,10 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
       jobs => jobs.filter(_.id === jobId).headOption.getOrElse { throw UnknownJob(jobId) }
     }
   }
+
+  def getJobs(): Future[Iterable[Job]] = {
+    Job.getFor(id)
+  }
   
   def save(): Future[Unit] = User.save(this)
   

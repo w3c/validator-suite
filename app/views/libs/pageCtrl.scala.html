@@ -1,19 +1,16 @@
-@(page: Page[_])
+@**(page: Page[_])
 <nav class="pagination">
     <p class="legend">
         @if(page.size > 0) {@Messages("pagination.legend", page.firstIndex, page.lastIndex, page.totalSize)
         } else {@Messages("pagination.empty")}
     </p>
 
-    <p>
+    <p class="nav">
       @if(page.current > 1) {
         <a class="button" href="@page.goToPage(page.current - 1).queryString">Previous</a>
-      } else {
-        <span class="button disabled">Previous</span>}
-      @if(page.current < page.maxPage) {
+      } @if(page.current < page.maxPage) {
         <a class="button" href="@page.goToPage(page.current + 1).queryString">Next</a>
-      } else {
-        <span class="button disabled">Next</span>}
+      }
     </p>
 
     <form method="get">
@@ -32,3 +29,4 @@
     </form>
 </nav>
 
+   **@

@@ -1,4 +1,4 @@
-@(job: JobView,
+@**(job: JobView,
     page: Page[ResourceView],
     user: User,
     organization: Organization,
@@ -13,18 +13,19 @@
     
     <section id="jobs" class="single" data-url="@routes.Jobs.index" data-count="1">
         <h2>Job: @job.name</h2>
-        @pages.jobs(Page(job))
+        @**collection.jobs(Page(job))** @
     </section>
     
-    <section id="resources" class="list" data-id="@job.id" data-url="@routes.Jobs.show(job.id)" data-count="@page.iterable.size">
+    <section id="resources" class="list" data-id="@job" data-url="@routes.Jobs.show(job.id)" data-count="@page.iterable.size">
         <h2>Resources</h2>
-        @pages.resources(page, job)
+        @**collection.resources(page, job)** @
     </section>
     
-}{ @***** Footer *****@
+}{ @***** Footer ***** @
 
     @libs.footer {
     @libs.pageCtrl(page)
     }
 
 }
+**@

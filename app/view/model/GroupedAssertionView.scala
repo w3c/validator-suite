@@ -1,10 +1,11 @@
-package org.w3.vs.view.model
+/*package org.w3.vs.view.model
 
 import org.w3.util.URL
 import org.w3.vs.model.{Context, Assertion, AssertionSeverity}
 import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.assertor.Assertor
 import org.w3.vs.view.{SortParam, PageOrdering, PageFiltering}
+import play.api.libs.json.JsValue
 
 case class GroupedAssertionView(
   assertor: String,
@@ -12,9 +13,11 @@ case class GroupedAssertionView(
   title: Html,
   description: Option[Html],
   occurrences: Int,
-  resources: Iterable[URL]) extends AssertionView{
+  resources: Iterable[URL]) {
 
   def isEmpty: Boolean = resources.isEmpty && ! description.isDefined
+
+  def toJson(): JsValue = ???
 }
 
 object GroupedAssertionView {
@@ -99,3 +102,4 @@ object GroupedAssertionView {
   }
 
 }
+  */

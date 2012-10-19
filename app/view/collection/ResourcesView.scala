@@ -1,0 +1,84 @@
+package org.w3.vs.view.collection
+
+import org.w3.vs.model.{JobId, Warning, Error, Assertion}
+import org.w3.util._
+import org.w3.vs.view._
+import org.w3.vs.view.model.ResourceView
+import play.api.templates.Html
+import org.joda.time.DateTime
+
+class ResourcesView (val source: Iterable[ResourceView]) extends CollectionImpl[ResourceView] {
+
+  def id: String = "resources"
+
+  def definitions: Seq[Definition] = Seq(
+    ("url" -> true),
+    ("validated" -> true),
+    ("warnings" -> true),
+    ("errors" -> true),
+    ("actions" -> false)
+  ).map(a => Definition(a._1, a._2))
+
+  def emptyMessage: Html = Html("")
+
+  def filter(filter: Option[String]): (ResourceView => Boolean) = _ => true
+
+  def order(sort: Option[SortParam]): Ordering[ResourceView] = {
+    val params = List(
+      "url",
+      "validated",
+      "warnings",
+      "errors"
+    )
+    sort match {
+      case Some(SortParam(param, ascending)) if params.contains(param) => {
+        val ord = param match {
+          case "url"       => Ordering[String].on[ResourceView](_.url.toString)
+          case "validated" => Ordering[(DateTime, String)].on[ResourceView](view => (view.lastValidated, view.url.toString))
+          case "warnings"  => Ordering[(Int, String)].on[ResourceView](view => (view.warnings, view.url.toString))
+          case "errors"    => Ordering[(Int, String)].on[ResourceView](view => (view.errors, view.url.toString))
+        }
+        if (ascending) ord else ord.reverse
+      }
+      case _ => order(Some(SortParam("errors", ascending = false)))
+    }
+  }
+
+  def search(search: Option[String]): (org.w3.vs.view.model.ResourceView => Boolean) = {
+    search match {
+      case Some(searchString) => {
+        case resource if (resource.url.toString.toLowerCase.contains(searchString.toLowerCase)) => true
+        case _ => false
+      }
+      case None => _ => true
+    }
+  }
+}
+
+object ResourcesView {
+
+  def apply(assertions: Iterable[Assertion], jobId: JobId): ResourcesView = {
+    val views = assertions.groupBy(_.url).map {
+      case (url, assertions) => {
+        val last = assertions.maxBy(_.timestamp).timestamp
+        val errors = assertions.foldLeft(0) {
+          case (count, assertion) =>
+            count + (assertion.severity match {
+              case Error => scala.math.max(assertion.contexts.size, 1)
+              case _ => 0
+            })
+        }
+        val warnings = assertions.foldLeft(0) {
+          case (count, assertion) =>
+            count + (assertion.severity match {
+              case Warning => scala.math.max(assertion.contexts.size, 1)
+              case _ => 0
+            })
+        }
+        ResourceView(jobId, url, last, warnings, errors)
+      }
+    }
+    new ResourcesView(views)
+  }
+
+}

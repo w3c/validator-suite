@@ -1,13 +1,18 @@
-package org.w3.vs.view.model
+/*package org.w3.vs.view.model
 
 import org.w3.vs.model.Context
 import play.api.templates.Html
 import org.w3.vs.view._
+import play.api.libs.json.JsValue
 
 case class ContextView(
     line: Option[Int],
     column: Option[Int],
-    content: Option[Html]) extends View
+    content: Option[Html]) extends View {
+
+  def toJson(): JsValue = ???
+
+}
 
 object ContextView {
 
@@ -22,4 +27,4 @@ object ContextView {
     )
   }
 
-}
+} */

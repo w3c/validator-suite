@@ -1,4 +1,4 @@
-@(job: JobView,
+@**(job: JobView,
   resource: ResourceView,
   assertors: Iterable[AssertorView],
   assertionsPage: Page[SingleAssertionView],
@@ -18,7 +18,7 @@ $(this).parents("article").toggleClass("folded");
 });
 """
 
-******@
+****** @
     
     @libs.admin(user)
     @libs.navigation(List(
@@ -31,27 +31,29 @@ $(this).parents("article").toggleClass("folded");
     
     <section id="resources" class="single" data-id="@job.id">
         <h2>Resource: @resource.url</h2>
-        @pages.resources(Page(resource), job)
+        @**collection.resources(Page(resource), job)** @
     </section>
 
     <hr>
 
     <section id="assertors" class="tabs">
         <h2>Assertors</h2>
-        @libs.assertors(assertors, assertionsPage)
+        @**collection.assertors(assertors, assertionsPage)** @
     </section>
     
     <hr>
     
     <section id="assertions" class="folds">
         <h2>Assertions</h2>
-        @pages.singleAssertions(assertionsPage)
+        @**collection.singleAssertions(assertionsPage)** @
     </section>
     
-}{ @***** Footer *****@
+}{ @***** Footer ***** @
 
     @libs.footer{
     @libs.pageCtrl(assertionsPage)
     }
 
 }
+
+**@

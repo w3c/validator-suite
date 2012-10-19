@@ -1,4 +1,4 @@
-@(page: Page[ResourceView], job: JobView)(implicit req: Request[_])
+@**(page: Page[ResourceView], job: JobView)(implicit req: Request[_])
 
         <aside>
             <h3>Definitions</h3>
@@ -19,10 +19,11 @@
     <article>
         <p>
             @Messages("resources.empty")
-            @if(job.status == "idle") { @** TODO type job.status **@
+            @if(job.status == "idle") { @** TODO type job.status ** @
             <!--<a href="#">@Messages("job.run")</a>-->}
         </p>
     </article>
     }
 
     @models.template_resource()
+**@

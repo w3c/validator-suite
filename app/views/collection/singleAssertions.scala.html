@@ -1,10 +1,9 @@
-@(page: Page[GroupedAssertionView])
+@**(page: Page[SingleAssertionView])
 
         <aside>
-            <h2>Assertions</h2>
             <h3>Definitions</h3>
             <dl>
-                @GroupedAssertionView.params.map {param =>
+                @SingleAssertionView.params.map {param =>
                 <dt class="@param"><dfn>@Messages("assertion.%s" format param)</dfn></dt>
                 <dd>@Messages("assertion.%s.detail" format param)</dd>}
             </dl>
@@ -24,3 +23,4 @@
         </article>
         }
     }
+**@

@@ -31,6 +31,7 @@ object Application extends Controller {
   
   implicit def toError(implicit req: Request[_]): PartialFunction[Throwable, Result] = {
     // TODO timeout, store exception, etc...
+    case ForceResult(result) => result
     case UnknownJob(id) => {
       if (isAjax) {
         NotFound(Messages("exceptions.job.unknown", id))
@@ -43,6 +44,10 @@ object Application extends Controller {
     case t: Throwable => {
       logger.error("Unexpected exception: " + t.getMessage, t)
       InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage)))))
+    }
+    case t => {
+      logger.error("Unexpected exception: ", t)
+      InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.toString)))))
     }
   }
   
@@ -86,7 +91,8 @@ object Application extends Controller {
 
   def getUser()(implicit /*req: Request[_], */ session: Session): Future[User] = {
     for {
-      email <- session.get("email").get.asFuture recoverWith { case _ => Future { throw Unauthenticated } }
+      email <- session.get("email").get.asFuture recoverWith { case _ => Future {
+        throw Unauthenticated } }
       user <- Cache.getAs[User](email).get.asFuture recoverWith { case _ => User.getByEmail(email) }
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))

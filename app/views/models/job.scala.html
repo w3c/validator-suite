@@ -1,4 +1,4 @@
-@(job: JobView)(implicit req: Request[_])
+@(job: JobView, collectionOpt: Option[Collection[View]])
         <article data-id="@job.id">
             <dl>
                 <dt>Job Name</dt>
@@ -16,7 +16,7 @@
                     <span data-status>@job.status</span>
 
                     <form action="@routes.Jobs.dispatcher(job.id)" method="post">
-                        <input type="hidden" name="uri" value="@{req.uri}">
+                        @**<input type="hidden" name="uri" value="@{req.uri}">**@
                         @job.status match {
                         case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
                         case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
@@ -65,7 +65,7 @@
                 <dt>Actions</dt>
                 <dd class="actions">
                     <form action="@routes.Jobs.dispatcher(job.id)" method="post">
-                        <input type="hidden" name="uri" value="@{req.uri}">
+                        @**<input type="hidden" name="uri" value="@{req.uri}">**@
                         <fieldset>
                             <legend>Job Controls</legend>
                             @defining(job.status){case status =>
@@ -76,7 +76,9 @@
                             <button type="submit" name="action" value="delete" class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
                         </fieldset>
                     </form>
-                    <form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
+
+                    @if(collectionOpt.isDefined) {
+                    @**<form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
                         <fieldset>
                             <legend>Search</legend>
                             <input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>
@@ -101,7 +103,7 @@
                             <label for="message">Group by message</label>
                         </fieldset>
                         <button type=submit>Go</button>
-                    </form>
+                    </form>**@}
                 </dd>
             </dl>
             <hr>

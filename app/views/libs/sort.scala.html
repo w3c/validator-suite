@@ -1,5 +1,4 @@
-@(page: Page[_], param: String)
-
+@**(page: Page[_], param: String)
             <span class="sort">
                 <a class="ascend @if(page.sortParam == SortParam(param, true)){current}"
                    href="@page.sortBy(SortParam(param, true)).goToPage(1).queryString"
@@ -8,3 +7,4 @@
                    href="@page.sortBy(SortParam(param, false)).goToPage(1).queryString"
                    title="Sort in descending order"><span>▾</span></a>
             </span>
+                                 **@
