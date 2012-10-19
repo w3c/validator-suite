@@ -61,6 +61,8 @@ trait Collection[+A] {
 
   def filterOn(filter: String): this.type
 
+  def isFilteredOn(filter: String): Boolean
+
   def orderBy(order: String): this.type
 
   def offsetBy(offset: Int): this.type
@@ -145,7 +147,7 @@ abstract class CollectionImpl[A <: View]() extends Collection[A] {
   def goToPage(page: Int): this.type = this
   def isEmpty: Boolean = false
   def isSingle: Boolean = false
-  def isSortedBy(param: String,ascending: Boolean): Boolean = false
+  def isSortedBy(param: String, ascending: Boolean): Boolean = false
   def offsetBy(offset: Int): this.type = this
   def orderBy(order: String): this.type = this
   def queryParameters: Seq[QueryParameter] = throw new Exception("NI")
@@ -153,6 +155,7 @@ abstract class CollectionImpl[A <: View]() extends Collection[A] {
   def showPerPage(perPage: Int): this.type = this
   def sortBy(param: String,ascending: Boolean): this.type = this
   def legend: String = ""
+  def isFilteredOn(filter: String): Boolean = false
 
   def toJson: JsArray = {
     JsArray(iterable.map(a => a.toJson(Some(this))))

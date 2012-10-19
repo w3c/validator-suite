@@ -8,7 +8,6 @@ import play.api.libs.json._
 import play.api.libs.json.JsString
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsNumber
-import scala.Some
 import org.w3.vs.view.collection.Collection
 import play.api.templates.Html
 
@@ -19,13 +18,12 @@ case class ResourceView(
     warnings: Int,
     errors: Int) extends View {
 
-  def toJson(colOpt: Option[Collection[View]]): JsValue = {
+  def toJson(colOpt: Option[Collection[View]]): JsValue =
     Json.toJson(this)(ResourceView.writes)
-  }
 
-  def toHtml(colOpt: Option[Collection[View]]): Html = {
-    ???
-  }
+  def toHtml(colOpt: Option[Collection[View]]): Html =
+    views.html.models.resource(this, colOpt)
+
 }
 
 object ResourceView {
@@ -73,7 +71,7 @@ object ResourceView {
 
   }*/
 
-  val writes: Writes[ResourceView] = new Writes[ResourceView] {
+  implicit val writes: Writes[ResourceView] = new Writes[ResourceView] {
     def writes(resource: ResourceView): JsValue = {
       JsObject(Seq(
         ("resourceUrl"   -> JsString(resource.url.toString)),

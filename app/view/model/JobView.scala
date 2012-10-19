@@ -1,17 +1,13 @@
 package org.w3.vs.view.model
 
-import org.w3.vs.model._
-import org.w3.util.URL
 import org.joda.time.DateTime
+import org.w3.util.URL
+import org.w3.vs.model._
 import org.w3.vs.view._
-import play.api.libs.json._
-import play.api.libs.json.JsString
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsNumber
-import scala.concurrent._
-import play.api.templates.Html
-import play.api.mvc.Request
 import org.w3.vs.view.collection.Collection
+import play.api.libs.json._
+import play.api.templates.Html
+import scala.concurrent._
 
 case class JobView(
     id: JobId,
@@ -25,13 +21,11 @@ case class JobView(
     maxResources: Int,
     health: Int) extends View {
 
-  def toJson(colOpt: Option[Collection[View]]): JsValue = {
+  def toJson(colOpt: Option[Collection[View]]): JsValue =
     Json.toJson(this)(JobView.writes)
-  }
 
-  def toHtml(colOpt: Option[Collection[View]]): Html = {
+  def toHtml(colOpt: Option[Collection[View]]): Html =
     views.html.models.job(this, colOpt)
-  }
 
 }
 
@@ -113,7 +107,7 @@ object JobView {
     }
   }*/
 
-  val writes: Writes[JobView] = new Writes[JobView] {
+  implicit val writes: Writes[JobView] = new Writes[JobView] {
     def writes(job: JobView): JsValue = {
       JsObject(Seq(
         ("id"           -> JsString(job.id.toString)),

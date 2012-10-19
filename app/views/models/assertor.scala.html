@@ -1,0 +1,17 @@
+@(assertor: AssertorView, colOpt: Option[Collection[View]])
+
+<article data-id="@assertor.name"  class="@if(colOpt.isDefined && colOpt.get.isFilteredOn(assertor.name)){current }@if(assertor.warnings + assertor.errors == 0){valid}">
+    <dl>
+        <dt>Assertor</dt>
+        <dd class="assertor">@Messages("assertor." + assertor.name)</dd>
+        <dt>Warnings</dt>
+        <dd class="warnings">@assertor.warnings</dd>
+        <dt>Errors</dt>
+        <dd class="errors">@assertor.errors</dd>
+        <dt>Actions</dt>
+        <dd class="actions">
+            @if(colOpt.isDefined) {
+            <a href="@colOpt.get.filterOn(assertor.name).goToPage(1).queryString" class="button">filter</a>}
+        </dd>
+    </dl>
+</article>

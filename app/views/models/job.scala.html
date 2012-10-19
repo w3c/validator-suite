@@ -1,4 +1,4 @@
-@(job: JobView, collectionOpt: Option[Collection[View]])
+@(job: JobView, colOpt: Option[Collection[View]])
         <article data-id="@job.id">
             <dl>
                 <dt>Job Name</dt>
@@ -77,7 +77,7 @@
                         </fieldset>
                     </form>
 
-                    @if(collectionOpt.isDefined) {
+                    @if(colOpt.isDefined) {
                     @**<form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
                         <fieldset>
                             <legend>Search</legend>

@@ -2,7 +2,9 @@ package org.w3.vs
 
 import org.joda.time.DateTime
 import org.w3.vs.view.model._
-import play.api.libs.json.Writes
+import play.api.libs.json.{Json, JsNull, JsValue, Writes}
+import scala.Some
+import play.api.templates.Html
 
 package object view {
 
@@ -16,17 +18,20 @@ package object view {
     }
   }
 
-  //implicit val singleAssertionFiltering = SingleAssertionView.filtering
-  //implicit val singleAssertionOrdering = SingleAssertionView.ordering
+  implicit val htmlWrites = new Writes[Html] {
+    def writes(html: Html): JsValue = {
+      Json.toJson(html.toString())
+    }
+  }
 
-  //implicit val groupedAssertionFiltering = GroupedAssertionView.filtering
-  //implicit val groupedAssertionOrdering = GroupedAssertionView.ordering
-
-  //implicit val jobFiltering = JobView.filtering
-  //implicit val jobOrdering = JobView.ordering
-
-  //implicit val resourceFiltering = ResourceView.filtering
-  //implicit val resourceOrdering = ResourceView.ordering
+  implicit def optionWrites[A](implicit wa: Writes[A]) = new Writes[Option[A]] {
+    def writes(o: Option[A]): JsValue = {
+      o match {
+        case Some(a) => wa.writes(a)
+        case None => JsNull
+      }
+    }
+  }
 
   implicit val jobToJson: Writes[JobView] = JobView.writes
 
