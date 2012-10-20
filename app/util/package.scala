@@ -1,8 +1,6 @@
 package org.w3
 
-import java.net.{ URL => jURL }
-
-package object util extends HeadersImplicits {
+package object util {
   
   type Host = String
   type Protocol = String
@@ -10,10 +8,13 @@ package object util extends HeadersImplicits {
   type Port = Int
   type FileName = String
   
+  type ContentType = String
+
   // should be collection.immutable.ListMap to preserver order insertion
   type Headers = Map[String, List[String]]
-  type ContentType = String
-  
+  object Headers { val DEFAULT_CHARSET = "UTF-8" }
+  implicit def wrapHeaders(headers: Headers): HeadersW = new HeadersW(headers)
+
   import scala.math.Ordering
   import org.joda.time.DateTime
 
@@ -24,11 +25,6 @@ package object util extends HeadersImplicits {
   implicit val equalDateTime: Equal[DateTime] = new Equal[DateTime] {
     def equal(a1: DateTime, a2: DateTime) = DateTimeOrdering.compare(a1, a2) == 0
   }
-
-  import org.w3.banana._
-  import org.w3.vs.VSConfiguration
-  import java.util.concurrent.TimeoutException
-  import scala.concurrent._
   
   def shortId(id: String): String = id.substring(0, 6)
 

@@ -6,7 +6,7 @@
             @collection.definitions.map { definition =>
             <dt class="@definition.param">
                 <dfn>@Messages(s"${collection.id}.${definition.param}")</dfn>
-                @if(definition.isSortable){@libs.sort2(collection, definition.param)}
+                @if(definition.isSortable){@libs.sort(collection, definition.param)}
             </dt>
             <dd>@Messages(s"${collection.id}.${definition.param}.detail")</dd>}
         </dl>

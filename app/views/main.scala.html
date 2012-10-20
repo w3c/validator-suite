@@ -16,9 +16,10 @@
     <section id="@col.id" class="@col.classe">
         <h2>@Messages(s"${col.id}.title")</h2>
         @collection.generic(col)
+        @col.template
     </section>}
 
 }{
     @libs.footer {
-    @libs.pageCtrl2(collections.last)}
+    @libs.pageCtrl(collections.last)}
 }

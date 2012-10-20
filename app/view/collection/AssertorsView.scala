@@ -31,6 +31,10 @@ case class AssertorsView(
 
   def search(search: Option[String]): (AssertorView => Boolean) = _ => true
 
+  def template: Option[Html] = {
+    Some(views.html.template.assertor())
+  }
+
 }
 
 object AssertorsView {

@@ -8,6 +8,8 @@ import play.api.libs.json.{JsNull, Writes, Json, JsValue}
 import play.api.templates.{HtmlFormat, Html}
 import scala.Some
 import org.joda.time.DateTime
+import org.w3.vs.assertor.Assertor
+import play.api.i18n.Messages
 
 case class AssertionView(
     assertor: String,
@@ -23,11 +25,20 @@ case class AssertionView(
     Json.toJson(this)(AssertionView.writes)
 
   def toHtml: Html =
-    views.html.models.assertion(this)
+    views.html.model.assertion(this)
 
   def isEmpty: Boolean = resources.isEmpty && ! description.isDefined
 
-  def occurencesLegend: String = ""
+  def occurencesLegend: String = {
+    if (resources.size > 1) {
+      val occ = if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
+                else Messages("assertion.occurrences.count.one")
+      Messages("assertion.occurrences.count.resources", occ, resources.size)
+    } else {
+      if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
+      else Messages("assertion.occurrences.count.one")
+    }
+  }
 }
 
 object AssertionView {

@@ -1,32 +1,25 @@
-@**(page: Page[_])
+@(collection: Collection[_])
 <nav class="pagination">
     <p class="legend">
-        @if(page.size > 0) {@Messages("pagination.legend", page.firstIndex, page.lastIndex, page.totalSize)
-        } else {@Messages("pagination.empty")}
+        @collection.legend
     </p>
 
     <p class="nav">
-      @if(page.current > 1) {
-        <a class="button" href="@page.goToPage(page.current - 1).queryString">Previous</a>
-      } @if(page.current < page.maxPage) {
-        <a class="button" href="@page.goToPage(page.current + 1).queryString">Next</a>
-      }
+        @if(collection.page > 1) {
+        <a class="button" href="@collection.goToPage(collection.page - 1).queryString">Previous</a>
+        } @if(collection.page < collection.maxPage) {
+        <a class="button" href="@collection.goToPage(collection.page + 1).queryString">Next</a>
+        }
     </p>
 
     <form method="get">
-        @if(page.perPage != Page.defaultPerPage) {
-        <input type=hidden name="n" value="@page.perPage"/>}
-        @if(page.sortParam != page.ordering.default) {
-        <input type=hidden name="sort" value="@page.sortParam.name"/>}
+        @**collection.queryParameters.map { param =>
+        <input type=hidden name="@param.name" value="@param.value"/>}**@
         <label for="p">Page:</label>
-        <select id="p" name="p"@if(page.maxPage == 0 || page.maxPage == 1){ disabled}>
-            @if(page.maxPage == 0) {
-            <option>0</option>}
-            @for(i <- 1 until page.maxPage + 1) {
-            <option@if(page.current == i){ selected}>@i</option>}
+        <select id="p" name="p" @if(collection.maxPage == 1){disabled}>
+        @for(i <- 1 until collection.maxPage + 1) {
+        <option @if(collection.page == i){selected}>@i</option>}
         </select>
-        <button type=submit@if(page.maxPage == 0 || page.maxPage == 1){ disabled}>Go</button>
+        <button type=submit @if(collection.maxPage == 1){disabled}>Go</button>
     </form>
 </nav>
-
-   **@

@@ -1,11 +1,11 @@
 package org.w3.vs.view.collection
 
 import play.api.templates.Html
-import play.api.mvc.Request
 import play.api.libs.json.JsArray
 import org.w3.vs.view.model.View
 import scalaz.Scalaz._
 import scalaz.Equal
+import play.api.i18n.Messages
 
 object Collection {
 
@@ -55,7 +55,7 @@ trait Collection[+A] {
 
   def lastIndex: Int
 
-  def currentPage: Int
+  def page: Int
 
   def maxPage: Int
 
@@ -99,6 +99,8 @@ trait Collection[+A] {
 
   def toHtml: Seq[Html]
 
+  def template: Option[Html]
+
 }
 
 abstract class CollectionImpl[A <: View] extends Collection[A] {
@@ -111,7 +113,7 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
 
   protected def order(order: SortParam): Ordering[A]
 
-  protected def copyWith(params: Parameters): CollectionImpl[A]
+  protected def copyWith(params: Parameters): Collection[A]
 
  // def bindFromRequest(implicit request: Request[_]): CollectionImpl[A]
 
@@ -122,10 +124,9 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
       }
   }
 
-  // only val
   lazy val iterable: Seq[A] = {
     filtered
-      .sorted(order(params.sortParam.getOrElse(defaultSortParam)).asInstanceOf[Ordering[A]])
+      .sorted(order(params.sortParam.getOrElse(defaultSortParam)))
       .slice(params.offset, params.offset + params.perPage)
   }
 
@@ -141,13 +142,13 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
 
   def lastIndex: Int = math.min(params.offset + params.perPage, totalSize)
 
-  def currentPage: Int = params.page
+  def page: Int = params.page
 
   def maxPage: Int = math.ceil(filtered.size.toDouble / params.perPage.toDouble).toInt
 
   def isEmpty: Boolean = iterable.isEmpty
 
-  def bindFromRequest(implicit req: play.api.mvc.Request[_]): CollectionImpl[A] = {
+  def bindFromRequest(implicit req: play.api.mvc.Request[_]): Collection[A] = {
     val page    = try { req.getQueryString("p").get.toInt } catch { case _: Exception => 1 }
     val perPage = try { req.getQueryString("n").get.toInt } catch { case _: Exception => Collection.DefaultPerPage }
     val filter = req.getQueryString("filter")
@@ -177,10 +178,10 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
       res.goToPage(page)
   }
 
-  def filterOn(filter: String): CollectionImpl[A] =
+  def filterOn(filter: String): Collection[A] =
     copyWith(params.copy(filter = if (filter != "") Some(filter) else None))
 
-  def goToPage(_page: Int): CollectionImpl[A] = {
+  def goToPage(_page: Int): Collection[A] = {
     val page = _page match {
       case p if p > maxPage => maxPage
       case p if p < 1 => 1
@@ -193,7 +194,7 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
   def isSortedBy(param: String, ascending: Boolean): Boolean =
     params.sortParam === Some(SortParam(param, ascending))
 
-  def offsetBy(_offset: Int): CollectionImpl[A] = {
+  def offsetBy(_offset: Int): Collection[A] = {
     val offset = if (_offset < 0) 0 else _offset
     val page = math.max(maxPage, math.ceil(offset.toDouble / params.perPage.toDouble).toInt)
     copyWith(params.copy(
@@ -208,7 +209,7 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
     List(
       if (params.perPage != DefaultPerPage) "n=" + params.perPage else "",
       params.sortParam match {
-        //case a if (a == ordering.default) => ""
+        case Some(sort) if (sort === defaultSortParam) => ""
         case Some(SortParam(a, true)) => "sort=-" + a
         case Some(SortParam(a, false)) => "sort=" + a
         case _ => ""
@@ -220,16 +221,22 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
     ).filter(_ != "").mkString("?","&","")
   }
 
-  def search(search: String): CollectionImpl[A] =
+  def search(search: String): Collection[A] =
     copyWith(params.copy(search = if (search != "") Some(search) else None))
 
-  def showPerPage(perPage: Int): CollectionImpl[A] =
+  def showPerPage(perPage: Int): Collection[A] =
     copyWith(params.copy(perPage = if (perPage > MaxPerPage || perPage < 1) MaxPerPage else perPage))
 
-  def sortBy(param: String, ascending: Boolean): CollectionImpl[A] =
+  def sortBy(param: String, ascending: Boolean): Collection[A] =
     copyWith(params.copy(sortParam = Some(SortParam(param, ascending))))
 
-  def legend: String = ""
+  def legend: String = {
+    if(size > 0) {
+      Messages("pagination.legend", firstIndex, lastIndex, totalSize)
+    } else {
+      Messages("pagination.empty")
+    }
+  }
 
   def isFilteredOn(filter: String): Boolean =
     params.filter === Some(filter)
@@ -241,5 +248,7 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
   def toHtml: Seq[Html] = {
     iterable.map(_.toHtml)
   }
+
+
 
 }

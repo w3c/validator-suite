@@ -14,31 +14,21 @@ class HeadersW(headers: Headers) {
 
 }
 
-object Headers {
-  implicit val wrapHeaders = HeadersW.wrapHeaders _
-  val DEFAULT_CHARSET = "UTF-8"
-}
-
-trait HeadersImplicits {
-
- implicit def wrapHeaders(headers: Headers):HeadersW = new HeadersW(headers)
-
-}
-
-object HeadersW extends HeadersImplicits {
+object HeadersW {
 
   val CONTENT_TYPE_REGEX = """^(\w+?/\w+?)(;.*)?$""".r
+
   val CHARSET_REGEX = """charset=(.*)$""".r
 
-  def convertJMapJList(headers:java.util.Map[String, java.util.List[String]]):Map[String, List[String]] = {
+  def convertJMapJList(headers:java.util.Map[String, java.util.List[String]]): Map[String, List[String]] = {
     import scala.collection.JavaConversions._
     mapAsScalaMap(headers).toMap map { case (k, l) => (k, asScalaBuffer(l).toList) }
   }
 
-  def extractMimeType(contentTypeHeader:String):Option[String] =
+  def extractMimeType(contentTypeHeader:String): Option[String] =
     CONTENT_TYPE_REGEX findFirstMatchIn contentTypeHeader map { _.group(1) }
 
-  private def extractCharset(contentTypeHeader:String):Option[String] =
+  private def extractCharset(contentTypeHeader:String): Option[String] =
     CHARSET_REGEX findFirstMatchIn contentTypeHeader map { _.group(1) }
 
 }

@@ -61,9 +61,10 @@ case class ResourcesView (
     }
   }
 
-  override def bindFromRequest(implicit req: play.api.mvc.Request[_]): ResourcesView = {
-    super.bindFromRequest.asInstanceOf[ResourcesView]
+  def template: Option[Html] = {
+    Some(views.html.template.resource())
   }
+
 }
 
 object ResourcesView {

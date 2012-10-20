@@ -23,7 +23,7 @@ case class ResourceView(
     Json.toJson(this)(ResourceView.writes)
 
   def toHtml: Html =
-    views.html.models.resource(this, assertionsOpt)
+    views.html.model.resource(this, assertionsOpt)
 
 }
 

@@ -3,15 +3,10 @@ package org.w3.vs.actor
 import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.util._
-import org.w3.vs.assertor._
 import org.w3.vs.actor.message._
 import akka.actor._
-import play.api.libs.iteratee._
 import play.Logger
-import System.{ currentTimeMillis => now }
 import org.w3.vs.http._
-import scala.concurrent.util.duration._
-import org.w3.util.Headers.wrapHeaders
 import org.joda.time.DateTime
 import org.w3.util.akkaext._
 import org.joda.time.DateTimeZone

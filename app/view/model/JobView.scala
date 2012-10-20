@@ -34,7 +34,7 @@ case class JobView(
       else
         None*/
 
-    views.html.models.job(
+    views.html.model.job(
       job = this,
       collection = collection
     )

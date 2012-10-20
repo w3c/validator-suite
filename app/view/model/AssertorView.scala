@@ -14,7 +14,7 @@ case class AssertorView(
     Json.toJson(this)(AssertorView.writes)
 
   def toHtml: Html =
-    views.html.models.assertor(this, assertions)
+    views.html.model.assertor(this, assertions)
 
 }
 

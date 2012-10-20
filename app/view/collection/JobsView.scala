@@ -33,7 +33,7 @@ case class JobsView(
 
   def emptyMessage: Html = {
     import controllers.routes
-     templates.Html(s"""${Messages("jobs.empty")} <a href="${routes.Jobs.new1}">${Messages("jobs.create.first")}</a>""")
+    Html(s"""${Messages("jobs.empty")} <a href="${routes.Jobs.new1}">${Messages("jobs.create.first")}</a>""")
   }
 
   def filter(filter: Option[String]): (JobView => Boolean) = _ => true
@@ -71,7 +71,7 @@ case class JobsView(
     }
   }
 
-  def search(search: Option[String]): (org.w3.vs.view.model.JobView => Boolean) = {
+  def search(search: Option[String]): (JobView => Boolean) = {
     search match {
       case Some(searchString) => {
         case job if (job.name.toLowerCase.contains(searchString.toLowerCase) || job.entrypoint.toString.toLowerCase.contains(searchString.toLowerCase))
@@ -82,8 +82,8 @@ case class JobsView(
     }
   }
 
-  override def bindFromRequest(implicit req: play.api.mvc.Request[_]): JobsView = {
-    super.bindFromRequest.asInstanceOf[JobsView]
+  def template: Option[Html] = {
+    Some(views.html.template.job())
   }
 
 }

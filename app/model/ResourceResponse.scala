@@ -1,7 +1,6 @@
 package org.w3.vs.model
 
 import org.w3.util._
-import org.w3.util.Headers.wrapHeaders
 import org.joda.time._
 import org.w3.banana._
 import org.w3.banana.LinkedDataStore._

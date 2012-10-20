@@ -57,12 +57,16 @@ case class AssertionsView(
     }
   }
 
+  def template: Option[Html] = {
+    Some(views.html.template.assertion())
+  }
+
 }
 
 object AssertionsView {
 
   def apply(assertions: Iterable[Assertion]): AssertionsView = {
-    new AssertionsView(assertions.map(assertion => AssertionView(assertion)))
+    AssertionsView(source = assertions.map(assertion => AssertionView(assertion)))
   }
 
   def grouped(assertions: Iterable[Assertion]): AssertionsView = {
@@ -76,8 +80,12 @@ object AssertionsView {
       val severity = assertions.head.severity
       val title = HtmlFormat.raw(assertions.head.title)
       val description = None //assertions.head.description.map(HtmlFormat.raw)
-      val occurrences = assertions.foldLeft(0)((count, assertion) => count + scala.math.max(1, assertion.contexts.size))
       val resources = assertions.map(_.url).toSeq.sortBy(_.toString)
+      val occurrences = assertions.foldLeft(0)((count, assertion) => count + scala.math.max(1, assertion.contexts.size))
+
+      println(title)
+      println(occurrences)
+
 
       AssertionView(
         assertor = assertorKey,
@@ -89,7 +97,7 @@ object AssertionsView {
         resources = resources
       )
     }
-    new AssertionsView(views)
+    AssertionsView(source = views)
   }
 
 }
