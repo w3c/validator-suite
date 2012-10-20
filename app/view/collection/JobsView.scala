@@ -12,12 +12,11 @@ import play.api.templates
 
 case class JobsView(
     source: Iterable[JobView],
+    id: String = "jobs",
     classe: String = "list",
-  params: Parameters = Parameters()) extends CollectionImpl[JobView] {
+    params: Parameters = Parameters()) extends CollectionImpl[JobView] {
 
   def copyWith(params: Parameters) = copy(params = params)
-
-  def id: String = "jobs"
 
   def definitions: Seq[Definition] = Seq(
     ("name" -> true),
@@ -83,16 +82,20 @@ case class JobsView(
     }
   }
 
+  override def bindFromRequest(implicit req: play.api.mvc.Request[_]): JobsView = {
+    super.bindFromRequest.asInstanceOf[JobsView]
+  }
+
 }
 
 object JobsView {
 
   def apply(job: Job)(implicit ec: ExecutionContext): Future[JobsView] = {
-    JobView(job).map(view => new JobsView(Iterable(view)))
+    JobView(job).map(view => JobsView(source = Iterable(view), classe = "single"))
   }
 
   def apply(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[JobsView] = {
-    JobView(jobs).map(new JobsView(_))
+    JobView(jobs).map(JobsView(_))
   }
 
 }

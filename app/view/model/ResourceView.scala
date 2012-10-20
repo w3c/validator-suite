@@ -8,7 +8,7 @@ import play.api.libs.json._
 import play.api.libs.json.JsString
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsNumber
-import org.w3.vs.view.collection.Collection
+import org.w3.vs.view.collection.{AssertionsView, Collection}
 import play.api.templates.Html
 
 case class ResourceView(
@@ -16,13 +16,14 @@ case class ResourceView(
     url: URL,
     lastValidated: DateTime,
     warnings: Int,
-    errors: Int) extends View {
+    errors: Int,
+    assertionsOpt: Option[Collection[AssertionView]]) extends View {
 
-  def toJson(colOpt: Option[Collection[View]]): JsValue =
+  def toJson: JsValue =
     Json.toJson(this)(ResourceView.writes)
 
-  def toHtml(colOpt: Option[Collection[View]]): Html =
-    views.html.models.resource(this, colOpt)
+  def toHtml: Html =
+    views.html.models.resource(this, assertionsOpt)
 
 }
 

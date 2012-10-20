@@ -4,7 +4,7 @@ import org.joda.time.DateTime
 import org.w3.util.URL
 import org.w3.vs.model._
 import org.w3.vs.view._
-import org.w3.vs.view.collection.Collection
+import org.w3.vs.view.collection.{ResourcesView, AssertionsView, Collection}
 import play.api.libs.json._
 import play.api.templates.Html
 import scala.concurrent._
@@ -19,13 +19,26 @@ case class JobView(
     errors: Int,
     resources: Int,
     maxResources: Int,
-    health: Int) extends View {
+    health: Int,
+    collection: Option[Either[Collection[AssertionView], Collection[ResourceView]]] = None) extends View {
 
-  def toJson(colOpt: Option[Collection[View]]): JsValue =
+  def toJson: JsValue =
     Json.toJson(this)(JobView.writes)
 
-  def toHtml(colOpt: Option[Collection[View]]): Html =
-    views.html.models.job(this, colOpt)
+  def toHtml: Html = {
+
+    /*val colOpt = if (assertionsCol.isDefined)
+        assertionsCol.map(Left(_))
+      else if (resourcesCol.isDefined)
+        resourcesCol.map(Right(_))
+      else
+        None*/
+
+    views.html.models.job(
+      job = this,
+      collection = collection
+    )
+  }
 
 }
 

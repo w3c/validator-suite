@@ -13,7 +13,9 @@
         <hr>
     </aside>
 
-    @collection.iterable.map { ob => @ob.toHtml(Some(collection)) }
+    @**collection.iterable.map { ob => @ob.toHtml }**@
+
+    @collection.toHtml
 
     @if(collection.isEmpty) {
     <p class="empty">

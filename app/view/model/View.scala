@@ -6,8 +6,8 @@ import org.w3.vs.view.collection.Collection
 
 trait View {
 
-  def toHtml(colOpt: Option[Collection[View]] = None): Html
+  def toHtml: Html
 
-  def toJson(colOpt: Option[Collection[View]] = None): JsValue
+  def toJson: JsValue
 
 }

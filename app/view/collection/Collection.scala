@@ -75,9 +75,9 @@ trait Collection[+A] {
 
   def emptyMessage: Html
 
-  def sortBy(param: String, ascending: Boolean): Collection[A]
-
   def isSortedBy(param: String, ascending: Boolean): Boolean
+
+  def sortBy(param: String, ascending: Boolean): Collection[A]
 
   def goToPage(page: Int): Collection[A]
 
@@ -87,17 +87,17 @@ trait Collection[+A] {
 
   def filterOn(filter: String): Collection[A]
 
-  def isFilteredOn(filter: String): Boolean
-
   def offsetBy(offset: Int): Collection[A]
+
+  def isFilteredOn(filter: String): Boolean
 
   def queryParameters: Seq[QueryParameter]
 
   def queryString: String
 
-  def bindFromRequest(implicit request: Request[_]): Collection[A]
-
   def toJson: JsArray
+
+  def toHtml: Seq[Html]
 
 }
 
@@ -111,7 +111,9 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
 
   protected def order(order: SortParam): Ordering[A]
 
-  protected def copyWith(params: Parameters): Collection[A]
+  protected def copyWith(params: Parameters): CollectionImpl[A]
+
+ // def bindFromRequest(implicit request: Request[_]): CollectionImpl[A]
 
   private lazy val filtered: Seq[A] = {
     source.toSeq
@@ -123,7 +125,7 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
   // only val
   lazy val iterable: Seq[A] = {
     filtered
-      .sorted(order(params.sortParam.getOrElse(defaultSortParam)))
+      .sorted(order(params.sortParam.getOrElse(defaultSortParam)).asInstanceOf[Ordering[A]])
       .slice(params.offset, params.offset + params.perPage)
   }
 
@@ -145,7 +147,7 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
 
   def isEmpty: Boolean = iterable.isEmpty
 
-  def bindFromRequest(implicit req: play.api.mvc.Request[_]): Collection[A] = {
+  def bindFromRequest(implicit req: play.api.mvc.Request[_]): CollectionImpl[A] = {
     val page    = try { req.getQueryString("p").get.toInt } catch { case _: Exception => 1 }
     val perPage = try { req.getQueryString("n").get.toInt } catch { case _: Exception => Collection.DefaultPerPage }
     val filter = req.getQueryString("filter")
@@ -175,10 +177,10 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
       res.goToPage(page)
   }
 
-  def filterOn(filter: String): Collection[A] =
+  def filterOn(filter: String): CollectionImpl[A] =
     copyWith(params.copy(filter = if (filter != "") Some(filter) else None))
 
-  def goToPage(_page: Int): Collection[A] = {
+  def goToPage(_page: Int): CollectionImpl[A] = {
     val page = _page match {
       case p if p > maxPage => maxPage
       case p if p < 1 => 1
@@ -191,7 +193,7 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
   def isSortedBy(param: String, ascending: Boolean): Boolean =
     params.sortParam === Some(SortParam(param, ascending))
 
-  def offsetBy(_offset: Int): Collection[A] = {
+  def offsetBy(_offset: Int): CollectionImpl[A] = {
     val offset = if (_offset < 0) 0 else _offset
     val page = math.max(maxPage, math.ceil(offset.toDouble / params.perPage.toDouble).toInt)
     copyWith(params.copy(
@@ -218,13 +220,13 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
     ).filter(_ != "").mkString("?","&","")
   }
 
-  def search(search: String): Collection[A] =
+  def search(search: String): CollectionImpl[A] =
     copyWith(params.copy(search = if (search != "") Some(search) else None))
 
-  def showPerPage(perPage: Int): Collection[A] =
+  def showPerPage(perPage: Int): CollectionImpl[A] =
     copyWith(params.copy(perPage = if (perPage > MaxPerPage || perPage < 1) MaxPerPage else perPage))
 
-  def sortBy(param: String, ascending: Boolean): Collection[A] =
+  def sortBy(param: String, ascending: Boolean): CollectionImpl[A] =
     copyWith(params.copy(sortParam = Some(SortParam(param, ascending))))
 
   def legend: String = ""
@@ -233,7 +235,11 @@ abstract class CollectionImpl[A <: View] extends Collection[A] {
     params.filter === Some(filter)
 
   def toJson: JsArray = {
-    JsArray(iterable.map(_.toJson(Some(this))))
+    JsArray(iterable.map(_.toJson))
+  }
+
+  def toHtml: Seq[Html] = {
+    iterable.map(_.toHtml)
   }
 
 }

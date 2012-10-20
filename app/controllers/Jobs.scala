@@ -46,7 +46,6 @@ object Jobs extends Controller {
         if (isAjax) {
           Ok(jobs.bindFromRequest.toJson)
         } else {
-          //Ok(views.html.jobs(Page(jobViews), user, org)).withHeaders(("Cache-Control", "no-cache, no-store"))
           Ok(views.html.main(
               user = user,
               title = "Jobs - Validator Suite",
@@ -58,69 +57,15 @@ object Jobs extends Controller {
     }
   }
   
-  def show(id: JobId, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
-    AsyncResult {
-      (for {
-        user <- getUser
-        job_ <- user.getJob(id)
-        job <- JobsView(job_)
-        assertions_ <- job_.getAssertions()
-      } yield {
-        if (isAjax) {
-          req.getQueryString("group") match {
-            case Some("message") => {
-              val assertions = AssertionsView(assertions_)
-              Ok(assertions.bindFromRequest.toJson)
-            }
-            case _ => {
-              val resources = ResourcesView(assertions_, job_.id)
-              Ok(resources.bindFromRequest.toJson)
-            }
-          }
-        } else {
-          req.getQueryString("group") match {
-            case Some("message") => {
-              val assertors = AssertorsView(assertions_)
-              val assertions = AssertionsView.grouped(assertions_)
-              Ok(views.html.main(
-                  user = user,
-                  title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
-                  style = "",
-                  script = "",
-                  collections = Seq(
-                    job,
-                    assertors,
-                    assertions.bindFromRequest
-                  ))).withHeaders(("Cache-Control", "no-cache, no-store"))
-            }
-            case _ => {
-              val resources = ResourcesView(assertions_, job_.id)
-              Ok(views.html.main(
-                  user = user,
-                  title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
-                  style = "",
-                  script = "",
-                  collections = Seq(
-                    job,
-                    resources.bindFromRequest
-                  ))).withHeaders(("Cache-Control", "no-cache, no-store"))
-            }
-          }
-        }
-      }) recover toError
-    }
-  }
-  
   def report(id: JobId, url: URL, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
     AsyncResult {
       (for {
         user <- getUser
         job_ <- user.getJob(id)
         assertions_ <- job_.getAssertions().map(_.filter(_.url === url)) // TODO Empty = exception
-        //job <- JobView.fromJob(job_)
-        resource = ResourcesView(assertions_, job_.id)
-        assertors = AssertorsView(assertions_)
-        assertions = AssertionsView(assertions_)
+        assertions = AssertionsView(assertions_).bindFromRequest
+        resource = ResourcesView.single(url, assertions, job_.id)
+        assertors = AssertorsView(assertions)
       } yield {
         Ok(views.html.main(
           user = user,
@@ -130,14 +75,123 @@ object Jobs extends Controller {
           collections = Seq(
             resource,
             assertors,
-            assertions.bindFromRequest
+            assertions
           ))).withHeaders(("Cache-Control", "no-cache, no-store"))
 
         //Ok(views.html.resource(jobView, resourceView, assertorViews, Page(assertionViews), user, org, messages)).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) recover toError
     }
   }
-    
+
+  def show(id: JobId, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
+    req.getQueryString("group") match {
+      case Some("message") => reportByMessages(id, messages)
+      case _ =>               reportByResources(id, messages)
+    }
+  }
+
+  def reportByMessages(id: JobId, messages: List[(String, String)] = List.empty)(implicit req: Request[_]) = {
+    AsyncResult {
+      (for {
+        user <- getUser
+        job_ <- user.getJob(id)
+        assertions_ <- job_.getAssertions()
+        job <- JobsView(job_)
+        assertions = AssertionsView.grouped(assertions_).bindFromRequest
+      } yield {
+        //val assertions = AssertionsView.grouped(assertions_).bindFromRequest
+        if (isAjax) {
+          Ok(assertions.toJson)
+        } else {
+          val assertors = AssertorsView(assertions)
+          Ok(views.html.main(
+            user = user,
+            title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
+            style = "",
+            script = "",
+            collections = Seq(
+              job,
+              assertors,
+              assertions
+            ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+        }
+      }) recover toError
+    }
+  }
+
+  def reportByResources(id: JobId, messages: List[(String, String)] = List.empty)(implicit req: Request[_]) = {
+    AsyncResult {
+      (for {
+        user <- getUser
+        job_ <- user.getJob(id)
+        assertions_ <- job_.getAssertions()
+        job <- JobsView(job_)
+        resources = ResourcesView(assertions_, job_.id).bindFromRequest
+      } yield {
+        //val resources = ResourcesView(assertions_, job_.id, None).bindFromRequest
+        if (isAjax) {
+          Ok(resources.toJson)
+        } else {
+          Ok(views.html.main(
+            user = user,
+            title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
+            style = "",
+            script = "",
+            collections = Seq(
+              job,
+              resources
+            ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+        }
+      }) recover toError
+    }
+  }
+    /*Action { implicit req =>
+    AsyncResult {
+      (for {
+        user <- getUser
+        job_ <- user.getJob(id)
+        assertions_ <- job_.getAssertions()
+        job <- JobsView(job_)
+      } yield {
+        if (isAjax) {
+          req.getQueryString("group") match {
+            case Some("message") => Ok(AssertionsView(assertions_).bindFromRequest.toJson)
+            case _ =>               Ok(ResourcesView(assertions_, job_.id, None).bindFromRequest.toJson)
+          }
+        } else {
+          req.getQueryString("group") match {
+            case Some("message") => {
+              val assertions = AssertionsView.grouped(assertions_).bindFromRequest
+              val assertors = AssertorsView(assertions)
+              Ok(views.html.main(
+                user = user,
+                title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
+                style = "",
+                script = "",
+                collections = Seq(
+                  job,
+                  assertors,
+                  assertions
+                ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+            }
+            case _ => {
+              val resources = ResourcesView(assertions_, job_.id, None)
+              Ok(views.html.main(
+                user = user,
+                title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
+                style = "",
+                script = "",
+                collections = Seq(
+                  job,
+                  resources.bindFromRequest
+                ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+            }
+          }
+        }
+      }) recover toError
+    }
+  }   */
+
   def delete(id: JobId): ActionA = Action { implicit req =>
     AsyncResult {
       (for {

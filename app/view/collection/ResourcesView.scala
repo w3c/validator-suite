@@ -3,19 +3,18 @@ package org.w3.vs.view.collection
 import org.w3.vs.model.{JobId, Warning, Error, Assertion}
 import org.w3.util._
 import org.w3.vs.view._
-import org.w3.vs.view.model.ResourceView
+import org.w3.vs.view.model.{AssertionView, ResourceView}
 import play.api.templates.Html
 import org.joda.time.DateTime
 import Collection._
 
 case class ResourcesView (
-  source: Iterable[ResourceView],
-  classe: String = "list",
-  params: Parameters = Parameters()) extends CollectionImpl[ResourceView] {
+    source: Iterable[ResourceView],
+    id: String = "resources",
+    classe: String = "list",
+    params: Parameters = Parameters()) extends CollectionImpl[ResourceView] {
 
   def copyWith(params: Parameters) = copy(params = params)
-
-  def id: String = "resources"
 
   def definitions: Seq[Definition] = Seq(
     ("url" -> true),
@@ -61,9 +60,33 @@ case class ResourcesView (
       case None => _ => true
     }
   }
+
+  override def bindFromRequest(implicit req: play.api.mvc.Request[_]): ResourcesView = {
+    super.bindFromRequest.asInstanceOf[ResourcesView]
+  }
 }
 
 object ResourcesView {
+
+  def single(url: URL, assertions: Collection[AssertionView], jobId: JobId): ResourcesView = {
+    val last = assertions.source.maxBy(_.validated).validated
+    val errors = assertions.source.foldLeft(0) {
+      case (count, assertion) =>
+        count + (assertion.severity match {
+          case Error => scala.math.max(assertion.contexts.size, 1)
+          case _ => 0
+        })
+    }
+    val warnings = assertions.source.foldLeft(0) {
+      case (count, assertion) =>
+        count + (assertion.severity match {
+          case Warning => scala.math.max(assertion.contexts.size, 1)
+          case _ => 0
+        })
+    }
+    val view = ResourceView(jobId, url, last, warnings, errors, Some(assertions))
+    ResourcesView(source = Iterable(view), classe = "single")
+  }
 
   def apply(assertions: Iterable[Assertion], jobId: JobId): ResourcesView = {
     val views = assertions.groupBy(_.url).map {
@@ -83,10 +106,10 @@ object ResourcesView {
               case _ => 0
             })
         }
-        ResourceView(jobId, url, last, warnings, errors)
+        ResourceView(jobId, url, last, warnings, errors, None)
       }
     }
-    new ResourcesView(views)
+    ResourcesView(source = views)
   }
 
 }

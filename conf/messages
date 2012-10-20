@@ -1,25 +1,26 @@
 
 # Job
-job.name=Job Name
-job.name.detail=The name of the job
-job.entrypoint=Start URL
-job.entrypoint.detail=The start URL for this job, entry point of the crawler
-job.status=Status
-job.status.detail=The current status of the job, either Idle or Running.
-job.completedOn=Last completed
-job.completedOn.detail=The date the job was last completed
-job.warnings=Warnings
-job.warnings.detail=The total number or warnings reported by the job's assertors
-job.errors=Errors
-job.errors.detail=The total number of errors reported by the job's assertors
-job.resources=Resources
-job.resources.detail=The total number of resources that have been considered by the crawler
-job.maxResources=Max resources
-job.maxResources.detail=The maximum number of resources to crawl
-job.health=Health
-job.health.detail=An indicator of the overall quality of the job's resources
-job.actions=Actions
-job.actions.detail=Actions to perform on the job
+jobs.name=Job Name
+jobs.name.detail=The name of the job
+jobs.entrypoint=Start URL
+jobs.entrypoint.detail=The start URL for this job, entry point of the crawler
+jobs.status=Status
+jobs.status.detail=The current status of the job, either Idle or Running.
+jobs.completedOn=Last completed
+jobs.completedOn.detail=The date the job was last completed
+jobs.warnings=Warnings
+jobs.warnings.detail=The total number or warnings reported by the job's assertors
+jobs.errors=Errors
+jobs.errors.detail=The total number of errors reported by the job's assertors
+jobs.resources=Resources
+jobs.resources.detail=The total number of resources that have been considered by the crawler
+jobs.maxResources=Max resources
+jobs.maxResources.detail=The maximum number of resources to crawl
+jobs.health=Health
+jobs.health.detail=An indicator of the overall quality of the job's resources
+jobs.actions=Actions
+jobs.actions.detail=Actions to perform on the job
+
 job.button.stop=Cancel
 job.button.run=Run
 job.button.delete=Delete
@@ -29,16 +30,18 @@ job.button.search=Search
 
 # Resource
 resource.report.for=Report for
-resource.url=Resource
-resource.url.detail=The resource to which the report refers
-resource.validated=Last validated
-resource.validated.detail= TODO
-resource.warnings=Warnings
-resource.warnings.detail= TODO
-resource.errors=Errors
-resource.errors.detail= TODO
-resource.external.link=Open resource in a new tab
-resource.button.revalidate=Revalidate
+
+resources.url=Resource
+resources.url.detail=The resource to which the report refers
+resources.validated=Last validated
+resources.validated.detail= TODO
+resources.warnings=Warnings
+resources.warnings.detail= TODO
+resources.errors=Errors
+resources.errors.detail= TODO
+
+resources.external.link=Open resource in a new tab
+resources.button.revalidate=Revalidate
 
 # Assertion
 assertion.assertor=Assertor

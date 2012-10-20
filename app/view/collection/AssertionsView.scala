@@ -4,15 +4,15 @@ import org.w3.vs.model.{AssertionSeverity, Assertion}
 import org.w3.vs.view.model.AssertionView
 import play.api.templates.{HtmlFormat, Html}
 import Collection._
+import org.joda.time.DateTime
 
 case class AssertionsView(
     source: Iterable[AssertionView],
+    id: String = "assertions",
     classe: String = "folds",
     params: Parameters = Parameters()) extends CollectionImpl[AssertionView] {
 
   def copyWith(params: Parameters) = copy(params = params)
-
-  def id: String = "assertions"
 
   def definitions: Seq[Definition] = Seq(
     ("assertor" -> true),
@@ -29,11 +29,18 @@ case class AssertionsView(
     Html("")
   }
 
-  def filter(filter: Option[String]): (AssertionView => Boolean) = _ => true
+  def filter(filter: Option[String]) =
+    filter match {
+      case Some(param) => {
+        case assertion if (assertion.assertor == param) => true
+        case _ => false
+      }
+      case None => _ => true
+    }
 
   def defaultSortParam = SortParam("", ascending = true)
 
-  def order(sort: SortParam): Ordering[AssertionView] = {
+  def order(sort: SortParam) = {
     val a = Ordering[AssertionSeverity].reverse
     val b = Ordering[Int].reverse
     val c = Ordering[String]
@@ -60,6 +67,9 @@ object AssertionsView {
 
   def grouped(assertions: Iterable[Assertion]): AssertionsView = {
     // group by title + assertorId
+
+    val now = DateTime.now()
+
     val views = assertions.groupBy(e => e.title + e.assertor).map { case (_, assertions) =>
       // /!\ assuming that the severity is the same for all assertions sharing the same title.
       val assertorKey = assertions.head.assertor
@@ -72,6 +82,7 @@ object AssertionsView {
       AssertionView(
         assertor = assertorKey,
         severity = severity,
+        validated = now,
         title = title,
         description = description,
         occurrences = occurrences,

@@ -1,18 +1,18 @@
 package org.w3.vs.view.collection
 
-import org.w3.vs.view.model.AssertorView
-import org.w3.vs.model.{Error, Warning, Assertion}
+import org.w3.vs.view.model.{AssertionView, AssertorView}
+import org.w3.vs.model.{Error, Warning}
 import play.api.templates.Html
 import Collection._
+import play.api.i18n.Messages
 
 case class AssertorsView(
     source: Iterable[AssertorView],
+    id: String = "assertors",
     classe: String = "tabs",
     params: Parameters = Parameters()) extends CollectionImpl[AssertorView] {
 
   def copyWith(params: Parameters) = copy(params = params)
-
-  def id: String = "assertors"
 
   def definitions: Seq[Definition] = Seq(
     ("name" -> true),
@@ -27,7 +27,7 @@ case class AssertorsView(
   def defaultSortParam = SortParam("", ascending = true)
 
   def order(sort: SortParam): Ordering[AssertorView] =
-    Ordering[Int].on[AssertorView](assertor => assertor.errors)
+    Ordering[(Int, Int, String)].on[AssertorView](v => (-v.errors, -v.warnings, Messages(v.name)))
 
   def search(search: Option[String]): (AssertorView => Boolean) = _ => true
 
@@ -35,8 +35,8 @@ case class AssertorsView(
 
 object AssertorsView {
 
-  def apply(assertions: Iterable[Assertion]): AssertorsView = {
-    val views = assertions.groupBy(_.assertor).map {
+  def apply(assertionsView: Collection[AssertionView]): AssertorsView = {
+    val views = assertionsView.source.groupBy(_.assertor).map {
       case (assertor, assertions) => {
         val errors = assertions.foldLeft(0) {
           case (count, assertion) =>
@@ -55,7 +55,8 @@ object AssertorsView {
         AssertorView(
           assertor,
           errors,
-          warnings
+          warnings,
+          assertionsView
         )
       }
     }

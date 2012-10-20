@@ -7,21 +7,23 @@ import org.w3.vs.view.collection.Collection
 import play.api.libs.json.{JsNull, Writes, Json, JsValue}
 import play.api.templates.{HtmlFormat, Html}
 import scala.Some
+import org.joda.time.DateTime
 
 case class AssertionView(
     assertor: String,
     severity: AssertionSeverity,
+    validated: DateTime,
     title: Html,
     description: Option[Html],
     occurrences: Int,
     contexts: Iterable[AssertionView.Context] = Iterable.empty,
     resources: Iterable[URL] = Iterable.empty) extends View {
 
-  def toJson(colOpt: Option[Collection[View]]): JsValue =
+  def toJson: JsValue =
     Json.toJson(this)(AssertionView.writes)
 
-  def toHtml(colOpt: Option[Collection[View]]): Html =
-    views.html.models.assertion(this, colOpt)
+  def toHtml: Html =
+    views.html.models.assertion(this)
 
   def isEmpty: Boolean = resources.isEmpty && ! description.isDefined
 
@@ -36,6 +38,7 @@ object AssertionView {
     AssertionView(
       assertor = assertion.assertor,
       severity = assertion.severity,
+      validated = assertion.timestamp,
       title = HtmlFormat.raw(assertion.title),
       description = assertion.description.map(HtmlFormat.raw),
       occurrences = scala.math.max(1, assertion.contexts.size),
