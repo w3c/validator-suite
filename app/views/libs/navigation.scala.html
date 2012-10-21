@@ -1,4 +1,4 @@
-@(crumbs: Iterable[(String, String)] = List())
+@(crumbs: Crumbs)
 @**
     <!--<nav id="nav">
         <h1>Main navigation</h1>
@@ -14,11 +14,9 @@
         <ul>
             <li><a href="@routes.Jobs.index">Jobs</a></li>
             @crumbs.map { crumb =>
-            @if(crumb._2 == "") {
-            <li>@crumb._1</li>
-            } else {
-            <li><a href="@crumb._2">@crumb._1</a></li>
-            }}
+            @if(crumb._2 != "") {
+            <li><a href="@crumb._2">@crumb._1</a></li>} else {
+            <li>@crumb._1</li>}}
         </ul>
         <hr>
     </nav>

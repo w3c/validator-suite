@@ -1,18 +1,22 @@
 package org.w3.vs.view.collection
 
-import org.w3.vs.model.{JobId, Warning, Error, Assertion}
-import org.w3.util._
+import java.net.URL
+import org.joda.time.DateTime
+import org.w3.vs.model.{Assertion, JobId, Warning, Error}
+import org.w3.vs.view.Collection._
 import org.w3.vs.view._
 import org.w3.vs.view.model.{AssertionView, ResourceView}
 import play.api.templates.Html
-import org.joda.time.DateTime
-import Collection._
 
 case class ResourcesView (
     source: Iterable[ResourceView],
     id: String = "resources",
     classe: String = "list",
     params: Parameters = Parameters()) extends CollectionImpl[ResourceView] {
+
+  def withAssertions(assertions: Collection[AssertionView]): ResourcesView = {
+    copy(source = source.map(_.copy(assertions = Some(assertions))))
+  }
 
   def copyWith(params: Parameters) = copy(params = params)
 
@@ -86,7 +90,10 @@ object ResourcesView {
         })
     }
     val view = ResourceView(jobId, url, last, warnings, errors, Some(assertions))
-    ResourcesView(source = Iterable(view), classe = "single")
+    ResourcesView(
+      source = Iterable(view),
+      classe = "single"
+    )
   }
 
   def apply(assertions: Iterable[Assertion], jobId: JobId): ResourcesView = {

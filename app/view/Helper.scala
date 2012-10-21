@@ -1,12 +1,11 @@
 package org.w3.vs.view
 
+import java.net.URL
+import java.net.URLEncoder
 import org.joda.time._
 import org.joda.time.format._
-import org.w3.util.URL
-import play.api.i18n.Messages
-import play.api.mvc.Request
 import play.api.Play._
-import java.net.URLEncoder
+import play.api.i18n.Messages
 
 object Helper {
 
@@ -66,8 +65,8 @@ object Helper {
     a.groupBy(_._1).map{case (k, v) => (k, v.map(_._2))}.toMap
   }
 
-  def clearParam(param: String)(implicit req: Request[_]): String = {
+  /*def clearParam(param: String)(implicit req: Request[_]): String = {
     queryString(req.queryString - param)
-  }
+  }*/
 
 }

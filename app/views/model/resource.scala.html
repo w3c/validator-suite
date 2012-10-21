@@ -6,9 +6,8 @@
                     <a href="@Helper.encode(resource.url)" class="report" title="@Messages("report.link")">
                         <span>@Messages("resource.report.for")</span>
                         <span>@Helper.shorten(resource.url, 80)</span>
-                    </a>
-                    <br>
-                    <a href="@resource.url" data-resourceUrl="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@Helper.encode(resource.url)</a>
+                    </a><br>
+                    <a href="@resource.url" data-resourceUrl="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@resource.url</a>
                 </dd>
 
                 <dt>@Messages("resource.validated")</dt>
@@ -26,28 +25,26 @@
                 <dt>Actions</dt>
                 <dd class="actions">
                     @**<form action="@routes.Jobs.report(resource.jobId, resource.url)" method="post">
-                        <input type="hidden" name="uri" value="@{req.uri}">
+                        @if(!assertions.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.show(resource.jobId)">}
                         <fieldset>
                             <legend>Controls</legend>
                             <button type="submit" name="action" value="revalidate" class="delete">@Messages("resource.button.revalidate")</button>
                         </fieldset>
                     </form>**@
+                    @if(assertions.isDefined) {
+                    @defining(assertions.get) { collection =>
                     <form class="search" action="@routes.Jobs.report(resource.jobId, resource.url)" method=get>
                         <fieldset>
                             <legend>Search</legend>
-                            @**<input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>**@
-                            <!--<span>✘</span>-->
-                            @**if(req.getQueryString("search") != None) {
-                            <a class="button clear" href="@Helper.clearParam("search")">@Messages("job.button.clear")</a>}
-                            @if(req.getQueryString("group") != None) {
-                            <input name=group type=hidden value="@req.getQueryString("group")">}
-                            @if(req.getQueryString("filter") != None) {
-                            <input name=filter type=hidden value="@req.getQueryString("filter")">}
-                            @if(req.getQueryString("sort") != None) {
-                            <input name=sort type=hidden value="@req.getQueryString("sort")">}**@
+                            <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
+                            @if(collection.params.search != None) {
+                            <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
+                            @collection.search().goToPage(1).queryParameters.map { param =>
+                            <input name="@param.name" type=hidden value="@param.value">}
                             <button type=submit>@Messages("job.button.search")</button>
                         </fieldset>
                     </form>
+                    }}
                 </dd>
             </dl>
             <hr>

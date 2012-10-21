@@ -13,12 +13,12 @@
     </p>
 
     <form method="get">
-        @**collection.queryParameters.map { param =>
-        <input type=hidden name="@param.name" value="@param.value"/>}**@
+        @collection.goToPage(1).queryParameters.map { param =>
+        <input type=hidden name="@param.name" value="@param.value"/>}
         <label for="p">Page:</label>
         <select id="p" name="p" @if(collection.maxPage == 1){disabled}>
-        @for(i <- 1 until collection.maxPage + 1) {
-        <option @if(collection.page == i){selected}>@i</option>}
+            @for(i <- 1 until collection.maxPage + 1) {
+            <option @if(collection.page == i){selected}>@i</option>}
         </select>
         <button type=submit @if(collection.maxPage == 1){disabled}>Go</button>
     </form>

@@ -1,15 +1,12 @@
 package org.w3.vs.view.model
 
-import org.w3.util.URL
+import java.net.URL
+import org.joda.time.DateTime
 import org.w3.vs.model.{Context => ContextModel, Assertion, AssertionSeverity}
 import org.w3.vs.view._
-import org.w3.vs.view.collection.Collection
+import play.api.i18n.Messages
 import play.api.libs.json.{JsNull, Writes, Json, JsValue}
 import play.api.templates.{HtmlFormat, Html}
-import scala.Some
-import org.joda.time.DateTime
-import org.w3.vs.assertor.Assertor
-import play.api.i18n.Messages
 
 case class AssertionView(
     assertor: String,
@@ -19,7 +16,7 @@ case class AssertionView(
     description: Option[Html],
     occurrences: Int,
     contexts: Iterable[AssertionView.Context] = Iterable.empty,
-    resources: Iterable[URL] = Iterable.empty) extends View {
+    resources: Iterable[URL] = Iterable.empty) extends Model {
 
   def toJson: JsValue =
     Json.toJson(this)(AssertionView.writes)

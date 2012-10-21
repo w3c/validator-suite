@@ -1,20 +1,27 @@
 package org.w3.vs.view.collection
 
-import org.w3.vs.view.model.JobView
+import org.joda.time.DateTime
+import org.w3.vs.model.Job
+import org.w3.vs.view.Collection._
+import org.w3.vs.view.model.{ResourceView, AssertionView, JobView}
 import play.api.i18n.Messages
 import play.api.templates.Html
-import org.w3.vs.model.Job
 import scala.concurrent.{ExecutionContext, Future}
-import org.joda.time.DateTime
-import org.w3.vs.view._
-import Collection._
-import play.api.templates
+import org.w3.vs.view.Collection
 
 case class JobsView(
     source: Iterable[JobView],
     id: String = "jobs",
     classe: String = "list",
     params: Parameters = Parameters()) extends CollectionImpl[JobView] {
+
+  def withAssertions(assertions: Collection[AssertionView]): JobsView = {
+    copy(source = source.map(_.copy(collection = Some(Left(assertions)))))
+  }
+
+  def withResources(resources: Collection[ResourceView]): JobsView = {
+    copy(source = source.map(_.copy(collection = Some(Right(resources)))))
+  }
 
   def copyWith(params: Parameters) = copy(params = params)
 
@@ -41,6 +48,7 @@ case class JobsView(
   def defaultSortParam = SortParam("name", ascending = true)
 
   def order(sort: SortParam): Ordering[JobView] = {
+    implicit val d = org.w3.vs.view.datetimeOrdering
     val params = List(
       "name",
       "entrypoint",
@@ -86,12 +94,19 @@ case class JobsView(
     Some(views.html.template.job())
   }
 
+  override def toHtml: Html = {
+    views.html.collection.jobs(this)
+  }
+
 }
 
 object JobsView {
 
-  def apply(job: Job)(implicit ec: ExecutionContext): Future[JobsView] = {
-    JobView(job).map(view => JobsView(source = Iterable(view), classe = "single"))
+  def single(job: Job)(implicit ec: ExecutionContext): Future[JobsView] = {
+    JobView(job).map(view => new JobsView(
+      source = Iterable(view),
+      classe = "single"
+    ))
   }
 
   def apply(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[JobsView] = {

@@ -18,7 +18,6 @@
             <fieldset>
                 <legend>Search</legend>
                 <input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>
-                <!--<span>✘</span>-->
                 @if(req.getQueryString("search") != None) {
                 <a class="button clear" href="@Helper.clearParam("search")">@Messages("job.button.clear")</a>}
                 @if(req.getQueryString("group") != None) {

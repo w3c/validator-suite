@@ -1,18 +1,17 @@
 package org.w3.vs.view.form
 
+import java.net.URL
+import org.w3.banana._
+import org.w3.vs.VSConfiguration
+import org.w3.vs.assertor.Assertor
+import org.w3.vs.controllers._
+import org.w3.vs.model._
 import play.api.data.Forms._
-import play.api.data.format.Formats._
 import play.api.data._
 import play.api.mvc._
-import play.api.i18n.Messages
-import org.w3.util.URL
-import org.w3.vs.model._
-import org.w3.vs.VSConfiguration
-import org.w3.vs.controllers._
 import scala.concurrent._
-import java.util.concurrent.TimeoutException
-import org.w3.vs.assertor.Assertor
-import org.w3.banana._
+
+//import org.w3.util.URL
 
 object JobForm {
 
@@ -138,7 +137,7 @@ class ValidJobForm private[view](
       organization = user.vo.organization.get, // TODO what if organization = None?
       creator = user.id,
       strategy = Strategy(
-        entrypoint = entrypoint,
+        entrypoint = org.w3.util.URL(entrypoint),
         linkCheck = linkCheck,
         filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
         maxResources = maxResources,

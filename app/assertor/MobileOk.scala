@@ -13,9 +13,7 @@ object MobileOk extends FromHttpResponseAssertor with UnicornFormatAssertor {
   val serviceUrl = "http://validator.w3.org/mobile/check"
 
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
-    val a = validatorURLForHuman(url, assertorConfiguration + ("output" -> List("unicorn")))
-    println(a)
-    a
+    validatorURLForHuman(url, assertorConfiguration + ("output" -> List("unicorn")))
   }
 
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {

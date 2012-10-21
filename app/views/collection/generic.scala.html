@@ -1,24 +1,28 @@
-@(collection: Collection[View])
+@(collection: Collection[Model])
+    <section id="@collection.id" class="@collection.classe">
+        <h2>@Messages(s"${collection.id}.title")</h2>
 
-    <aside>
-        <h3>Definitions</h3>
-        <dl>
-            @collection.definitions.map { definition =>
-            <dt class="@definition.param">
-                <dfn>@Messages(s"${collection.id}.${definition.param}")</dfn>
-                @if(definition.isSortable){@libs.sort(collection, definition.param)}
-            </dt>
-            <dd>@Messages(s"${collection.id}.${definition.param}.detail")</dd>}
-        </dl>
-        <hr>
-    </aside>
+        <aside>
+            <h3>Definitions</h3>
+            <dl>
+                @collection.definitions.map { definition =>
+                <dt class="@definition.name">
+                    <dfn>@Messages(s"${collection.id}.${definition.name}")</dfn>
+                    @if(definition.isSortable){@libs.sort(collection, definition.name)}
+                </dt>
+                <dd>@Messages(s"${collection.id}.${definition.name}.detail")</dd>}
+            </dl>
+            <hr>
+        </aside>
 
-    @**collection.iterable.map { ob => @ob.toHtml }**@
+        @collection.iterable.map { view =>
+        @view.toHtml}
 
-    @collection.toHtml
+        @if(collection.isEmpty) {
+        <p class="empty">
+            @collection.emptyMessage
+        </p>}
 
-    @if(collection.isEmpty) {
-    <p class="empty">
-        @collection.emptyMessage
-    </p>}
+        @collection.template
 
+    </section>

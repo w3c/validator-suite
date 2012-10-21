@@ -1,31 +1,51 @@
+@(collection: Collection[JobView])
+
+@if(collection.classe == "list") {
+<section id="actions">
+    <a href="@routes.Jobs.new1" class="button">New job</a>
+    <form class="search" action="@routes.Jobs.index" method=get>
+        <fieldset>
+            <legend>Search</legend>
+            <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
+            @if(collection.params.search != None) {
+            <a class="button clear" href="@collection.search().queryString">@Messages("job.button.clear")</a>}
+            @collection.search("").queryParameters.map { param =>
+            <input name="@param.name" type=hidden value="@param.value">}
+            <button type=submit>@Messages("job.button.search")</button>
+        </fieldset>
+    </form>
+</section>}
+
+@views.html.collection.generic(collection)
+
 @**(page: Page[JobView])(implicit req: Request[_])
 
-        <aside>
-            <h3>Definitions</h3>
-            <dl>
-                @JobView.params.map {param =>
-                <dt class="@param"><dfn>@Messages("job.%s" format param)</dfn>@libs.sort(page, param)</dt>
-                <dd>@Messages("job.%s.detail" format param)</dd>}
-                <dt class="actions"><dfn>@Messages("job.actions")</dfn></dt>
-                <dd>@Messages("job.actions.detail")</dd>
-            </dl>
-            <hr>
-        </aside>
+<aside>
+    <h3>Definitions</h3>
+    <dl>
+        @JobView.params.map {param =>
+        <dt class="@param"><dfn>@Messages("job.%s" format param)</dfn>@libs.sort(page, param)</dt>
+        <dd>@Messages("job.%s.detail" format param)</dd>}
+        <dt class="actions"><dfn>@Messages("job.actions")</dfn></dt>
+        <dd>@Messages("job.actions.detail")</dd>
+    </dl>
+    <hr>
+</aside>
 
-        @page.iterator.map { case job => @models.job(job) }
+@page.iterator.map { case job => @models.job(job) }
 
-        @if(page.iterator.size < 1) {
-        <p class="empty">
-        @if(req.getQueryString("search") != None) {
-            @Messages("search.empty.jobs")
-            @** <a href="@Helper.clearParam("search")">@Messages("search.clear")</a> ** @
-        } else {
-            @Messages("jobs.empty")
-            <a href="@routes.Jobs.new1">@Messages("jobs.create.first")</a>
-        }
-        </p>
-        }
+@if(page.iterator.size < 1) {
+<p class="empty">
+    @if(req.getQueryString("search") != None) {
+    @Messages("search.empty.jobs")
+    @** <a href="@Helper.clearParam("search")">@Messages("search.clear")</a> ** @
+    } else {
+    @Messages("jobs.empty")
+    <a href="@routes.Jobs.new1">@Messages("jobs.create.first")</a>
+    }
+</p>
+}
 
-        @models.template_job()
+@models.template_job()
 
 **@

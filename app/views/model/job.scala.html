@@ -14,14 +14,20 @@
                 <dt>Status</dt>
                 <dd class="status @job.status">
                     <span data-status>@job.status</span>
-
+                    @if(!collection.isDefined) {
                     <form action="@routes.Jobs.dispatcher(job.id)" method="post">
-                        @**<input type="hidden" name="uri" value="@{req.uri}">**@
+                        <input type="hidden" name="uri" value="@routes.Jobs.index">
                         @job.status match {
-                        case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
-                        case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
+                          case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
+                          case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
                         }
-                    </form>
+                    </form>}
+
+                    @collection match {
+                      case Some(Left(assertions)) => {}
+                      case Some(Right(resources)) => {}
+                      case _ => {}
+                    }
                 </dd>
 
                 <dt>Last Completed</dt>
@@ -65,45 +71,43 @@
                 <dt>Actions</dt>
                 <dd class="actions">
                     <form action="@routes.Jobs.dispatcher(job.id)" method="post">
-                        @**<input type="hidden" name="uri" value="@{req.uri}">**@
+                        @if(!collection.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.index">}
                         <fieldset>
-                            <legend>Job Controls</legend>
-                            @defining(job.status){case status =>
-                            @status match {
+                            <legend>Controls</legend>
+                            @job.status match {
                                 case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
                                 case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
-                            }}
+                            }
                             <button type="submit" name="action" value="delete" class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
                         </fieldset>
                     </form>
-
-
-                    @**<form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
+                    @if(collection.isDefined) {
+                    @defining(collection.get.fold(a => a, r => r)) { collection =>
+                    <form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
                         <fieldset>
                             <legend>Search</legend>
-                            <input name=search type=text placeholder="Search" required value="@req.getQueryString("search")" @if(req.getQueryString("search") == None){class="cleared"}>
-                            <!--<span>✘</span>-->
-                            @if(req.getQueryString("search") != None) {
-                            <a class="button clear" href="@Helper.clearParam("search")">@Messages("job.button.clear")</a>}
-                            @if(req.getQueryString("group") != None) {
-                            <input name=group type=hidden value="@req.getQueryString("group")">}
-                            @if(req.getQueryString("filter") != None) {
-                            <input name=filter type=hidden value="@req.getQueryString("filter")">}
-                            @if(req.getQueryString("sort") != None) {
-                            <input name=sort type=hidden value="@req.getQueryString("sort")">}
+                            <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
+                            @if(collection.params.search != None) {
+                            <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
+                            @collection.search().goToPage(1).queryParameters.map { param =>
+                            <input name="@param.name" type=hidden value="@param.value">}
                             <button type=submit>@Messages("job.button.search")</button>
                         </fieldset>
                     </form>
+
                     <form class="group" action="@routes.Jobs.dispatcher(job.id)" method=get>
                         <fieldset class="dropdown">
                             <legend>Report by</legend>
-                            <input name=group type=radio value="url" id="url" @if(req.queryString.get("group").toSeq.flatten.isEmpty || req.queryString.get("group").toSeq.flatten.exists(_ == "url")){checked}>
-                            <label for="url">Group by url</label>
-                            <input name=group type=radio value="message" id="message" @if(req.queryString.get("group").toSeq.flatten.exists(_ == "message")){checked}>
+                            <input name=group type=radio value="url" id="url" @if(collection.params.group != Some("message")){checked}>
+                            <label for="url">Group by resource</label>
+                            <input name=group type=radio value="message" id="message" @if(collection.params.group == Some("message")){checked}>
                             <label for="message">Group by message</label>
+                            @collection.params.search.map { search =>
+                            <input name="search" type=hidden value="@search">}
                         </fieldset>
                         <button type=submit>Go</button>
-                    </form>**@
+                    </form>
+                    }}
                 </dd>
             </dl>
             <hr>

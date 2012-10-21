@@ -6,40 +6,11 @@
                 <dt>@Messages("assertion.severity")</dt>
                 <dd class="severity">@assertion.severity</dd>
                 <dt>@Messages("assertion.occurrences")</dt>
-                <dd class="occurrences">
-                    @assertion.occurencesLegend
-                @**assertion match {
-                  case assertion: SingleAssertionView => {
-                    @if(assertion.occurrences > 1) {
-                    @Messages("assertion.occurrences.count", assertion.occurrences)
-                    } else {
-                    @Messages("assertion.occurrences.count.one")
-                    }
-                  }
-                  case assertion: GroupedAssertionView => {
-                    @if(assertion.resources.size > 1) {
-                      @if(assertion.occurrences > 1) {
-                      @Messages("assertion.occurrences.count.resources", Messages("assertion.occurrences.count", assertion.occurrences), assertion.resources.size)
-                      } else {
-                      @Messages("assertion.occurrences.count.resources", Messages("assertion.occurrences.count.one"), assertion.resources.size)
-                      }
-                    } else {
-                      @if(assertion.occurrences > 1) {
-                      @Messages("assertion.occurrences.count", assertion.occurrences)
-                      } else {
-                      @Messages("assertion.occurrences.count.one")
-                      }
-                    }
-                  }
-                }**@
-                </dd>
-
+                <dd class="occurrences">@assertion.occurencesLegend</dd>
                 <dt>@Messages("assertion.message")</dt>
                 <dd class="title@if(!assertion.isEmpty){ fold}">@assertion.title</dd>
-
                 <dt>@Messages("assertion.description")</dt>
                 <dd class="description">@assertion.description</dd>
-
                 <dt>@Messages("assertion.context")</dt>
                 @assertion.contexts.take(50).map { case context =>
                 <dd class="context">
@@ -54,7 +25,6 @@
                 <dd class="more">
                     <p>And @{assertion.contexts.size - 50} more</p>
                 </dd>}
-
                 <dt class="url">@Messages("assertion.resources.detail")</dt>
                 @assertion.resources.take(50).map { case url =>
                 <dd class="url">

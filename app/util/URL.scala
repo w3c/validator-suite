@@ -34,6 +34,10 @@ case class URL(url: String) {
   def externalForm = underlying.toExternalForm
 
   def openConnection() = underlying.openConnection()
+
+  def ==(url: jURL) = {
+    underlying == url
+  }
     
 }
 

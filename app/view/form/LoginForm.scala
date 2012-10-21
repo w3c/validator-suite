@@ -1,14 +1,12 @@
 package org.w3.vs.view.form
 
-import play.api.data.Forms._
-import play.api.data.format.Formats._
-import play.api.data._
-import play.api.mvc._
-import play.api.i18n.Messages
 import java.util.concurrent.TimeoutException
-import scalaz._
-import scala.concurrent._
 import org.w3.banana._
+import play.api.data.Forms._
+import play.api.data._
+import play.api.i18n.Messages
+import play.api.mvc._
+import scala.concurrent._
 
 object LoginForm {
 

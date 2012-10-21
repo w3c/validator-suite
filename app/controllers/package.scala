@@ -1,6 +1,7 @@
 package org.w3.vs
 
-import org.w3.util._
+//import org.w3.util._
+import java.net.URL
 import org.w3.vs.Prod.configuration
 import org.w3.vs.model._
 import play.api.data.format.Formats._
@@ -34,7 +35,7 @@ package object controllers {
     def bind(key: String, data: Map[String, String]) = {
       stringFormat.bind(key, data).right.flatMap { s =>
         scala.util.control.Exception.allCatch[URL]
-          .either(URL(s))
+          .either(new URL(s))
           .left.map(e => Seq(FormError(key, "error.url", Nil)))
       }
     }
@@ -67,7 +68,7 @@ package object controllers {
   implicit val bindableURL = new PathBindable[URL] {
     def bind (key: String, value: String): Either[String, URL] = {
       try {
-        Right(URL(URLDecoder.decode(value, "UTF-8")))
+        Right(new URL(URLDecoder.decode(value, "UTF-8")))
       } catch { case e: Exception =>
         Left("invalid url: " + value)
       }

@@ -1,14 +1,10 @@
 package org.w3.vs.view.model
 
+import java.net.URL
 import org.joda.time.DateTime
-import org.w3.util._
 import org.w3.vs.model._
 import org.w3.vs.view._
 import play.api.libs.json._
-import play.api.libs.json.JsString
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsNumber
-import org.w3.vs.view.collection.{AssertionsView, Collection}
 import play.api.templates.Html
 
 case class ResourceView(
@@ -17,13 +13,13 @@ case class ResourceView(
     lastValidated: DateTime,
     warnings: Int,
     errors: Int,
-    assertionsOpt: Option[Collection[AssertionView]]) extends View {
+    assertions: Option[Collection[AssertionView]]) extends Model {
 
   def toJson: JsValue =
     Json.toJson(this)(ResourceView.writes)
 
   def toHtml: Html =
-    views.html.model.resource(this, assertionsOpt)
+    views.html.model.resource(this, assertions)
 
 }
 

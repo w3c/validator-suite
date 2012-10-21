@@ -1,6 +1,6 @@
 package org.w3.vs.view.model
 
-import org.w3.vs.view.collection.{AssertionsView, Collection}
+import org.w3.vs.view._
 import play.api.libs.json.{Writes, Json, JsValue}
 import play.api.templates.Html
 
@@ -8,7 +8,7 @@ case class AssertorView(
     name: String,
     errors: Int,
     warnings: Int,
-    assertions: Collection[AssertionView]) extends View {
+    assertions: Option[Collection[AssertionView]] = None) extends Model {
 
   def toJson: JsValue =
     Json.toJson(this)(AssertorView.writes)
