@@ -7,6 +7,7 @@ import org.w3.vs.view._
 import play.api.i18n.Messages
 import play.api.libs.json.{JsNull, Writes, Json, JsValue}
 import play.api.templates.{HtmlFormat, Html}
+import org.w3.vs.view.Collection.Definition
 
 case class AssertionView(
     assertor: String,
@@ -42,6 +43,16 @@ object AssertionView {
 
   case class Context(line: Option[Int], column: Option[Int], content: Option[Html])
 
+  def definitions: Seq[Definition] = Seq(
+    ("assertor" -> true),
+    ("severity" -> true),
+    ("occurrences" -> true),
+    ("title" -> true),
+    ("description" -> true),
+    ("contexts" -> true),
+    ("resources" -> true)
+  ).map(a => Definition(a._1, a._2))
+
   def apply(assertion: Assertion): AssertionView = {
     AssertionView(
       assertor = assertion.assertor,
@@ -67,9 +78,7 @@ object AssertionView {
   }
 
   implicit val writes: Writes[AssertionView] = new Writes[AssertionView] {
-
     import Json.toJson
-
     implicit def contextWrites = new Writes[AssertionView.Context] {
       def writes(context: AssertionView.Context): JsValue = {
         toJson(Map(
@@ -79,7 +88,6 @@ object AssertionView {
         ))
       }
     }
-
     def writes(assertion: AssertionView): JsValue = {
       toJson(Map(
         "assertor" -> toJson(assertion.assertor),

@@ -15,35 +15,7 @@ case class JobsView(
     classe: String = "list",
     params: Parameters = Parameters()) extends CollectionImpl[JobView] {
 
-  def withAssertions(assertions: Collection[AssertionView]): JobsView = {
-    copy(source = source.map(_.copy(collection = Some(Left(assertions)))))
-  }
-
-  def withResources(resources: Collection[ResourceView]): JobsView = {
-    copy(source = source.map(_.copy(collection = Some(Right(resources)))))
-  }
-
-  def copyWith(params: Parameters) = copy(params = params)
-
-  def definitions: Seq[Definition] = Seq(
-    ("name" -> true),
-    ("entrypoint" -> true),
-    ("status" -> true),
-    ("completedOn" -> true),
-    ("warnings" -> true),
-    ("errors" -> true),
-    ("resources" -> true),
-    ("maxResources" -> true),
-    ("health" -> true),
-    ("actions" -> false)
-  ).map(a => Definition(a._1, a._2))
-
-  def emptyMessage: Html = {
-    import controllers.routes
-    Html(s"""${Messages("jobs.empty")} <a href="${routes.Jobs.new1}">${Messages("jobs.create.first")}</a>""")
-  }
-
-  def filter(filter: Option[String]): (JobView => Boolean) = _ => true
+  def definitions = JobView.definitions
 
   def defaultSortParam = SortParam("name", ascending = true)
 
@@ -79,6 +51,8 @@ case class JobsView(
     }
   }
 
+  def filter(filter: Option[String]): (JobView => Boolean) = _ => true
+
   def search(search: Option[String]): (JobView => Boolean) = {
     search match {
       case Some(searchString) => {
@@ -90,13 +64,22 @@ case class JobsView(
     }
   }
 
-  def template: Option[Html] = {
-    Some(views.html.template.job())
+  def emptyMessage: Html = {
+    import controllers.routes
+    Html(s"""${Messages("jobs.empty")} <a href="${routes.Jobs.new1}">${Messages("jobs.create.first")}</a>""")
   }
 
-  override def toHtml: Html = {
-    views.html.collection.jobs(this)
-  }
+  def jsTemplate: Option[Html] = Some(views.html.template.job())
+
+  def withAssertions(assertions: Collection[AssertionView]): JobsView =
+    copy(source = source.map(_.copy(collection = Some(Left(assertions)))))
+
+  def withResources(resources: Collection[ResourceView]): JobsView =
+    copy(source = source.map(_.copy(collection = Some(Right(resources)))))
+
+  def copyWith(params: Parameters) = copy(params = params)
+
+  override def toHtml: Html = views.html.collection.jobs(this)
 
 }
 

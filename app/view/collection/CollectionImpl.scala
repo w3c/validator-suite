@@ -46,22 +46,14 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
 
   def maxPage: Int = math.max(math.ceil(filtered.size.toDouble / params.perPage.toDouble).toInt, 1)
 
-  def isEmpty: Boolean = iterable.isEmpty
-
-  def bindFromRequest(implicit req: Request[_]): Collection[A] = {
-    var res: Collection[A] = this
-    res = req.getQueryString("n").map(n => res.showPerPage(n.toInt)).getOrElse(res)
-    res = req.getQueryString("filter").map(res.filterOn(_)).getOrElse(res)
-    res = req.getQueryString("search").map(res.search(_)).getOrElse(res)
-    res = req.getQueryString("group").map(res.groupBy(_)).getOrElse(res)
-    res = req.getQueryString("sort").map(sort => res.sortBy(sort.replaceFirst("^-",""), sort.startsWith("-"))).getOrElse(res)
-    res = req.getQueryString("p").map(p => res.goToPage(p.toInt)).getOrElse(res)
-    res = req.getQueryString("offset").map(offset => res.offsetBy(offset.toInt)).getOrElse(res)
-    res
-  }
+  def sortBy(param: String, ascending: Boolean): Collection[A] =
+    copyWith(params.copy(sortParam = Some(SortParam(param, ascending))))
 
   def filterOn(filter: String): Collection[A] =
     copyWith(params.copy(filter = if (filter != "") Some(filter) else None))
+
+  def search(search: String): Collection[A] =
+    copyWith(params.copy(search = if (search != "") Some(search) else None))
 
   def groupBy(group: String): Collection[A] =
     copyWith(params.copy(group = if (group != "") Some(group) else None))
@@ -76,10 +68,8 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
     copyWith(params.copy(page = page, offset = offset))
   }
 
-  def isSortedBy(param: String, ascending: Boolean): Boolean = {
-    params.sortParam === Some(SortParam(param, ascending)) ||
-      params.sortParam === None && SortParam(param, ascending) === defaultSortParam
-  }
+  def showPerPage(perPage: Int): Collection[A] =
+    copyWith(params.copy(perPage = if (perPage > MaxPerPage || perPage < 1) MaxPerPage else perPage))
 
   def offsetBy(_offset: Int): Collection[A] = {
     val offset = if (_offset < 0) 0 else _offset
@@ -89,6 +79,31 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
       page = page
     ))
   }
+
+  def bindFromRequest(implicit req: Request[_]): Collection[A] = {
+    var res: Collection[A] = this
+    res = req.getQueryString("n").map(n => res.showPerPage(n.toInt)).getOrElse(res)
+    res = req.getQueryString("filter").map(res.filterOn(_)).getOrElse(res)
+    res = req.getQueryString("search").map(res.search(_)).getOrElse(res)
+    res = req.getQueryString("group").map(res.groupBy(_)).getOrElse(res)
+    res = req.getQueryString("sort").map(sort => res.sortBy(sort.replaceFirst("^-",""), sort.startsWith("-"))).getOrElse(res)
+    res = req.getQueryString("p").map(p => res.goToPage(p.toInt)).getOrElse(res)
+    res = req.getQueryString("offset").map(offset => res.offsetBy(offset.toInt)).getOrElse(res)
+    res
+  }
+
+  def isEmpty: Boolean = iterable.isEmpty
+
+  def isFilteredOn(filter: String): Boolean =
+    params.filter === Some(filter)
+
+  def isSortedBy(param: String, ascending: Boolean): Boolean = {
+    params.sortParam === Some(SortParam(param, ascending)) ||
+      params.sortParam === None && SortParam(param, ascending) === defaultSortParam
+  }
+
+  def isGroupedBy(group: String): Boolean =
+    params.group === Some(group)
 
   def queryParameters: Seq[QueryParameter] = {
     Seq (
@@ -112,15 +127,6 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
   def queryString: String =
     queryParameters.map(q => q.name + "=" + q.value).mkString("?","&","")
 
-  def search(search: String): Collection[A] =
-    copyWith(params.copy(search = if (search != "") Some(search) else None))
-
-  def showPerPage(perPage: Int): Collection[A] =
-    copyWith(params.copy(perPage = if (perPage > MaxPerPage || perPage < 1) MaxPerPage else perPage))
-
-  def sortBy(param: String, ascending: Boolean): Collection[A] =
-    copyWith(params.copy(sortParam = Some(SortParam(param, ascending))))
-
   def legend: String = {
     if(size > 0) {
       Messages("pagination.legend", firstIndex, lastIndex, filteredSize)
@@ -128,9 +134,6 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
       Messages("pagination.empty")
     }
   }
-
-  def isFilteredOn(filter: String): Boolean =
-    params.filter === Some(filter)
 
   def toJson: JsArray =
     JsArray(iterable.map(_.toJson))

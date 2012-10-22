@@ -3,6 +3,7 @@ package org.w3.vs.view.model
 import org.w3.vs.view._
 import play.api.libs.json.{Writes, Json, JsValue}
 import play.api.templates.Html
+import org.w3.vs.view.Collection.Definition
 
 case class AssertorView(
     name: String,
@@ -20,10 +21,15 @@ case class AssertorView(
 
 object AssertorView {
 
+  def definitions: Seq[Definition] = Seq(
+    ("name" -> true),
+    ("warnings" -> true),
+    ("errors" -> true),
+    ("actions" -> false)
+  ).map(a => Definition(a._1, a._2))
+
   implicit val writes: Writes[AssertorView] = new Writes[AssertorView] {
-
     import Json.toJson
-
     def writes(assertor: AssertorView): JsValue = {
       toJson(
         Map(

@@ -1,5 +1,8 @@
+# All collection
+collection.definitions=Definitions
 
-# Job
+# Jobs
+jobs.col.title=Jobs
 jobs.name=Job Name
 jobs.name.detail=The name of the job
 jobs.entrypoint=Start URL
@@ -21,6 +24,59 @@ jobs.health.detail=An indicator of the overall quality of the job's resources
 jobs.actions=Actions
 jobs.actions.detail=Actions to perform on the job
 
+# Resources
+resources.col.title=Resources
+resources.url=Resource
+resources.url.detail=The resource to which the report refers
+resources.validated=Last validated
+resources.validated.detail=The date of the resource last received assertion
+resources.warnings=Warnings
+resources.warnings.detail=The total number of warnings reported for the resource
+resources.errors=Errors
+resources.errors.detail=The total number of errors reported for the resource
+resources.actions=Actions
+resources.actions.detail=Actions to perform on the resource
+
+# Assertions
+assertions.col.title=Assertions
+assertions.assertor=Assertor
+assertions.assertor.detail=The assertor that reported this message
+assertions.severity=Severity
+assertions.severity.detail=The severity of the message, one of info, warning or error
+assertions.occurrences=Occurrences
+assertions.occurrences.detail=The total number of times this message was reported
+assertions.title=Title
+assertions.title.detail=The message title
+assertions.description=Description
+assertions.description.detail=The message description
+assertions.validated=Validated on
+assertions.validated.detail=When this message was reported
+assertions.contexts=Contexts
+assertions.contexts.detail=Contexts to which this message applies
+assertions.resources=Resources
+assertions.resources.detail=Resources where this message appears
+
+# Assertors
+assertors.col.title=Assertors
+assertors.name=Assertor Name
+assertors.name.detail=The name of the assertor
+assertors.warnings=Warnings
+assertors.warnings.detail=The total number of warnings reported by the assertor
+assertors.errors=Errors
+assertors.errors.detail=The total number of errors reported by the assertor
+assertors.actions=Actions
+assertors.actions.detail=Actions to perform on the assertor
+
+
+
+
+
+
+
+resource.report.for=Report for
+resources.external.link=Open resource in a new tab
+resources.button.revalidate=Revalidate
+
 job.button.stop=Cancel
 job.button.run=Run
 job.button.delete=Delete
@@ -28,38 +84,9 @@ job.button.delete.title=Delete this job
 job.button.clear=Clear
 job.button.search=Search
 
-# Resource
-resource.report.for=Report for
 
-resources.url=Resource
-resources.url.detail=The resource to which the report refers
-resources.validated=Last validated
-resources.validated.detail= TODO
-resources.warnings=Warnings
-resources.warnings.detail= TODO
-resources.errors=Errors
-resources.errors.detail= TODO
 
-resources.external.link=Open resource in a new tab
-resources.button.revalidate=Revalidate
 
-# Assertion
-assertion.assertor=Assertor
-assertion.assertor.detail= TODO
-assertion.severity=Severity
-assertion.severity.detail= TODO
-assertion.occurrences=Occurrences
-assertion.occurrences.detail= TODO
-assertion.message=Message
-assertion.message.detail= TODO
-assertion.description=Description
-assertion.description.detail= TODO
-assertion.validated=Validated on
-assertion.validated.detail= TODO
-assertion.context=Contexts
-assertion.context.detail= TODO
-assertion.resources=Resources
-assertion.resources.detail=Resources where this message appears
 
 assertion.occurrences.count={0} times
 assertion.occurrences.count.one=1 time

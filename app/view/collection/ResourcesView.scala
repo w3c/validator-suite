@@ -14,23 +14,7 @@ case class ResourcesView (
     classe: String = "list",
     params: Parameters = Parameters()) extends CollectionImpl[ResourceView] {
 
-  def withAssertions(assertions: Collection[AssertionView]): ResourcesView = {
-    copy(source = source.map(_.copy(assertions = Some(assertions))))
-  }
-
-  def copyWith(params: Parameters) = copy(params = params)
-
-  def definitions: Seq[Definition] = Seq(
-    ("url" -> true),
-    ("validated" -> true),
-    ("warnings" -> true),
-    ("errors" -> true),
-    ("actions" -> false)
-  ).map(a => Definition(a._1, a._2))
-
-  def emptyMessage: Html = Html("")
-
-  def filter(filter: Option[String]): (ResourceView => Boolean) = _ => true
+  def definitions = ResourceView.definitions
 
   def defaultSortParam = SortParam("errors", ascending = false)
 
@@ -55,6 +39,8 @@ case class ResourcesView (
     }
   }
 
+  def filter(filter: Option[String]): (ResourceView => Boolean) = _ => true
+
   def search(search: Option[String]): (org.w3.vs.view.model.ResourceView => Boolean) = {
     search match {
       case Some(searchString) => {
@@ -65,9 +51,14 @@ case class ResourcesView (
     }
   }
 
-  def template: Option[Html] = {
-    Some(views.html.template.resource())
-  }
+  def emptyMessage: Html = Html("")
+
+  def jsTemplate: Option[Html] = Some(views.html.template.resource())
+
+  def withAssertions(assertions: Collection[AssertionView]): ResourcesView =
+    copy(source = source.map(_.copy(assertions = Some(assertions))))
+
+  def copyWith(params: Parameters) = copy(params = params)
 
 }
 

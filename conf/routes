@@ -19,7 +19,7 @@ GET     /suite/jobs/:id/                  controllers.Jobs.show(id: JobId)
 POST    /suite/jobs/:id                   controllers.Jobs.dispatcher(id: JobId)
 POST    /suite/jobs/:id/                  controllers.Jobs.dispatcher(id: JobId)
 GET     /suite/jobs/:id/edit              controllers.Jobs.edit(id: JobId)
-GET     /suite/jobs/:id/:url              controllers.Jobs.report(id: JobId, url: org.w3.util.URL)
+GET     /suite/jobs/:id/:url              controllers.Jobs.report(id: JobId, url: java.net.URL)
 
 # Application
 GET     /suite/login                      controllers.Application.login

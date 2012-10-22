@@ -1,9 +1,9 @@
 @(collection: Collection[Model])
     <section id="@collection.id" class="@collection.classe">
-        <h2>@Messages(s"${collection.id}.title")</h2>
+        <h2>@Messages(s"${collection.id}.col.title")</h2>
 
         <aside>
-            <h3>Definitions</h3>
+            <h3>@Messages("collection.definitions")</h3>
             <dl>
                 @collection.definitions.map { definition =>
                 <dt class="@definition.name">
@@ -23,6 +23,6 @@
             @collection.emptyMessage
         </p>}
 
-        @collection.template
+        @collection.jsTemplate
 
     </section>

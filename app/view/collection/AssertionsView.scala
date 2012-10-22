@@ -12,21 +12,15 @@ case class AssertionsView(
     classe: String = "folds",
     params: Parameters = Parameters()) extends CollectionImpl[AssertionView] {
 
-  def copyWith(params: Parameters) = copy(params = params)
+  def definitions = AssertionView.definitions
 
-  def definitions: Seq[Definition] = Seq(
-    ("assertor" -> true),
-    ("severity" -> true),
-    ("title" -> true),
-    ("description" -> true),
-    ("occurrences" -> true),
-    ("url" -> true),
-    ("contexts" -> true),
-    ("resources" -> true)
-  ).map(a => Definition(a._1, a._2))
+  def defaultSortParam = SortParam("", ascending = false)
 
-  def emptyMessage: Html = {
-    Html("")
+  def order(sort: SortParam) = {
+    val a = Ordering[AssertionSeverity].reverse
+    val b = Ordering[Int].reverse
+    val c = Ordering[String]
+    Ordering.Tuple3(a, b, c).on[AssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.title.text))
   }
 
   def filter(filter: Option[String]) =
@@ -38,15 +32,6 @@ case class AssertionsView(
       case None => _ => true
     }
 
-  def defaultSortParam = SortParam("", ascending = false)
-
-  def order(sort: SortParam) = {
-    val a = Ordering[AssertionSeverity].reverse
-    val b = Ordering[Int].reverse
-    val c = Ordering[String]
-    Ordering.Tuple3(a, b, c).on[AssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.title.text))
-  }
-
   def search(search: Option[String]): (AssertionView => Boolean) = {
     search match {
       case Some(search) => {
@@ -57,9 +42,11 @@ case class AssertionsView(
     }
   }
 
-  def template: Option[Html] = {
-    Some(views.html.template.assertion())
-  }
+  def emptyMessage: Html = Html("")
+
+  def jsTemplate: Option[Html] = Some(views.html.template.assertion())
+
+  def copyWith(params: Parameters) = copy(params = params)
 
 }
 

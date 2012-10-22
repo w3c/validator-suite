@@ -1,51 +1,53 @@
 @(resource: ResourceView, assertions: Option[Collection[AssertionView]])
-        <article>
-            <dl>
-                <dt>@Messages("resource.url")</dt>
-                <dd class="url">
-                    <a href="@Helper.encode(resource.url)" class="report" title="@Messages("report.link")">
-                        <span>@Messages("resource.report.for")</span>
-                        <span>@Helper.shorten(resource.url, 80)</span>
-                    </a><br>
-                    <a href="@resource.url" data-resourceUrl="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@resource.url</a>
-                </dd>
+    <article>
+        <dl>
+            @ResourceView.definitions.map { definition =>
+            <dt>@Messages(s"resources.${definition.name}")</dt>
+            <dd class="@{definition.name}">
+            @definition.name match {
 
-                <dt>@Messages("resource.validated")</dt>
-                <dd class="validated">
-                    <time datetime="@resource.lastValidated" data-lastValidated="@resource.lastValidated" data-lastValidated-legend1>@Helper.formatTime(resource.lastValidated)</time>
-                    <span class="legend" data-lastValidated-legend2>@Helper.formatLegendTime(resource.lastValidated)</span>
-                </dd>
+                case "url" => {
+                <a href="@Helper.encode(resource.url)" class="report" title="@Messages("report.link")">
+                    <span>@Messages("resource.report.for")</span>
+                    <span>@Helper.shorten(resource.url, 80)</span>
+                </a>
+                <br><a href="@resource.url" data-resourceUrl="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@resource.url</a>}
 
-                <dt>@Messages("resource.warnings")</dt>
-                <dd class="warnings"><span data-warnings>@resource.warnings</span></dd>
+                case "validated" => {
+                <time datetime="@resource.lastValidated" data-lastValidated="@resource.lastValidated" data-lastValidated-legend1>@Helper.formatTime(resource.lastValidated)</time>
+                <span class="legend" data-lastValidated-legend2>@Helper.formatLegendTime(resource.lastValidated)</span>}
 
-                <dt>@Messages("resource.errors")</dt>
-                <dd class="errors"><span data-errors>@resource.errors</span></dd>
+                case "warnings" => {
+                <span data-warnings>@resource.warnings</span>}
 
-                <dt>Actions</dt>
-                <dd class="actions">
-                    @**<form action="@routes.Jobs.report(resource.jobId, resource.url)" method="post">
-                        @if(!assertions.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.show(resource.jobId)">}
-                        <fieldset>
-                            <legend>Controls</legend>
-                            <button type="submit" name="action" value="revalidate" class="delete">@Messages("resource.button.revalidate")</button>
-                        </fieldset>
-                    </form>**@
-                    @if(assertions.isDefined) {
-                    @defining(assertions.get) { collection =>
-                    <form class="search" action="@routes.Jobs.report(resource.jobId, resource.url)" method=get>
-                        <fieldset>
-                            <legend>Search</legend>
-                            <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
-                            @if(collection.params.search != None) {
-                            <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
-                            @collection.search().goToPage(1).queryParameters.map { param =>
-                            <input name="@param.name" type=hidden value="@param.value">}
-                            <button type=submit>@Messages("job.button.search")</button>
-                        </fieldset>
-                    </form>
-                    }}
-                </dd>
-            </dl>
-            <hr>
-        </article>
+                case "errors" => {
+                <span data-errors>@resource.errors</span>}
+
+                case "actions" => {
+                @**********
+                <form action="@routes.Jobs.report(resource.jobId, resource.url)" method="post">
+                    @if(!assertions.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.show(resource.jobId)">}
+                    <fieldset>
+                        <legend>Controls</legend>
+                        <button type="submit" name="action" value="revalidate" class="delete">@Messages("resource.button.revalidate")</button>
+                    </fieldset>
+                </form>
+                *********@
+                @if(assertions.isDefined) {
+                @defining(assertions.get) { collection =>
+                <form class="search" action="@routes.Jobs.report(resource.jobId, resource.url)" method=get>
+                    <fieldset>
+                        <legend>Search</legend>
+                        <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
+                        @if(collection.params.search != None) {
+                        <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
+                        @collection.search().goToPage(1).queryParameters.map { param =>
+                        <input name="@param.name" type=hidden value="@param.value">}
+                        <button type=submit>@Messages("job.button.search")</button>
+                    </fieldset>
+                </form>
+                }}}
+            }}
+        </dl>
+        <hr>
+    </article>

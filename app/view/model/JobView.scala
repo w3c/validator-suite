@@ -7,6 +7,7 @@ import org.w3.vs.view._
 import play.api.libs.json._
 import play.api.templates.Html
 import scala.concurrent._
+import org.w3.vs.view.Collection.Definition
 
 case class JobView(
     id: JobId,
@@ -34,6 +35,19 @@ case class JobView(
 }
 
 object JobView {
+
+  def definitions: Seq[Definition] = Seq(
+    ("name" -> true),
+    ("entrypoint" -> true),
+    ("status" -> true),
+    ("completedOn" -> true),
+    ("warnings" -> true),
+    ("errors" -> true),
+    ("resources" -> true),
+    ("maxResources" -> true),
+    ("health" -> true),
+    ("actions" -> false)
+  ).map(a => Definition(a._1, a._2))
 
   def apply(job: Job)(implicit ec: ExecutionContext): Future[JobView] = {
     for {

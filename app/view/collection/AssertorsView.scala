@@ -13,36 +13,27 @@ case class AssertorsView(
     classe: String = "tabs",
     params: Parameters = Parameters()) extends CollectionImpl[AssertorView] {
 
-  def withAssertions(assertions: Collection[AssertionView]): AssertorsView = {
-    copy(source = source.map(_.copy(assertions = Some(assertions))))
-  }
-
-  def copyWith(params: Parameters) = copy(params = params)
-
-  def definitions: Seq[Definition] = Seq(
-    ("name" -> true),
-    ("errors" -> true),
-    ("warnings" -> true)
-  ).map(a => Definition(a._1, a._2))
-
-  def emptyMessage: Html = Html("")
-
-  def filter(filter: Option[String]): (AssertorView => Boolean) = _ => true
+  def definitions = AssertorView.definitions
 
   def defaultSortParam = SortParam("", ascending = false)
 
   def order(sort: SortParam): Ordering[AssertorView] =
     Ordering[(Int, Int, String)].on[AssertorView](v => (-v.errors, -v.warnings, Messages(v.name)))
 
+  def filter(filter: Option[String]): (AssertorView => Boolean) = _ => true
+
   def search(search: Option[String]): (AssertorView => Boolean) = _ => true
 
-  def template: Option[Html] = {
-    Some(views.html.template.assertor())
-  }
+  def emptyMessage: Html = Html("")
 
-  def firstAssertor: String = {
-    iterable.maxBy(_.errors).name
-  }
+  def jsTemplate: Option[Html] = Some(views.html.template.assertor())
+
+  def firstAssertor: String = iterable.maxBy(_.errors).name
+
+  def withAssertions(assertions: Collection[AssertionView]): AssertorsView =
+    copy(source = source.map(_.copy(assertions = Some(assertions))))
+
+  def copyWith(params: Parameters) = copy(params = params)
 
 }
 

@@ -6,6 +6,7 @@ import org.w3.vs.model._
 import org.w3.vs.view._
 import play.api.libs.json._
 import play.api.templates.Html
+import org.w3.vs.view.Collection.Definition
 
 case class ResourceView(
     jobId: JobId,
@@ -25,48 +26,13 @@ case class ResourceView(
 
 object ResourceView {
 
-  val params = Seq[String](
-    "url",
-    "validated",
-    "warnings",
-    "errors"
-  )
-
-  /*val filtering: PageFiltering[ResourceView] = new PageFiltering[ResourceView] {
-
-    def validate(filter: Option[String]): Option[String] = None
-
-    def filter(param: Option[String]): (ResourceView) => Boolean = _ => true
-
-    def search(search: Option[String]): (ResourceView) => Boolean = {
-      search match {
-        case Some(searchString) => {
-          case resource
-            if (resource.url.toString.contains(searchString)) => true
-          case _ => false
-        }
-        case None => _ => true
-      }
-    }
-  }
-
-  val ordering: PageOrdering[ResourceView] = new PageOrdering[ResourceView] {
-
-    val orderParams = params
-
-    val default: SortParam = SortParam("errors", ascending = false)
-
-    def order_(safeParam: SortParam): Ordering[ResourceView] = {
-      val ord = safeParam.name match {
-        case "url"       => Ordering[String].on[ResourceView](_.url.toString)
-        case "validated" => Ordering[(DateTime, String)].on[ResourceView](view => (view.lastValidated, view.url.toString))
-        case "warnings"  => Ordering[(Int, String)].on[ResourceView](view => (view.warnings, view.url.toString))
-        case "errors"    => Ordering[(Int, String)].on[ResourceView](view => (view.errors, view.url.toString))
-      }
-      if (safeParam.ascending) ord else ord.reverse
-    }
-
-  }*/
+  def definitions: Seq[Definition] = Seq(
+    ("url" -> true),
+    ("validated" -> true),
+    ("warnings" -> true),
+    ("errors" -> true),
+    ("actions" -> false)
+  ).map(a => Definition(a._1, a._2))
 
   implicit val writes: Writes[ResourceView] = new Writes[ResourceView] {
     def writes(resource: ResourceView): JsValue = {

@@ -8,15 +8,17 @@ trait Collection[+A] extends View {
 
   import Collection._
 
-  def defaultSortParam: SortParam
-
   def params: Parameters
-
-  def isEmpty: Boolean
 
   def source: Iterable[A]
 
   def iterable: Iterable[A]
+
+  def size: Int
+
+  def totalSize: Int
+
+  def filteredSize: Int
 
   def firstIndex: Int
 
@@ -26,11 +28,35 @@ trait Collection[+A] extends View {
 
   def maxPage: Int
 
-  def size: Int
+  def sortBy(param: String, ascending: Boolean): Collection[A]
 
-  def totalSize: Int
+  def filterOn(filter: String): Collection[A]
 
-  def filteredSize: Int
+  def search(search: String = ""): Collection[A]
+
+  def groupBy(group: String): Collection[A]
+
+  def goToPage(page: Int): Collection[A]
+
+  def showPerPage(perPage: Int): Collection[A]
+
+  def offsetBy(offset: Int): Collection[A]
+
+  def bindFromRequest(implicit req: Request[_]): Collection[A]
+
+  def isEmpty: Boolean
+
+  def isFilteredOn(filter: String): Boolean
+
+  def isSortedBy(param: String, ascending: Boolean): Boolean
+
+  def isGroupedBy(group: String): Boolean
+
+  def queryParameters: Seq[QueryParameter]
+
+  def queryString: String
+
+  def legend: String
 
   def id: String
 
@@ -38,35 +64,11 @@ trait Collection[+A] extends View {
 
   def definitions: Seq[Definition]
 
-  def legend: String
+  def defaultSortParam: SortParam
 
   def emptyMessage: Html
 
-  def isSortedBy(param: String, ascending: Boolean): Boolean
-
-  def sortBy(param: String, ascending: Boolean): Collection[A]
-
-  def goToPage(page: Int): Collection[A]
-
-  def showPerPage(perPage: Int): Collection[A]
-
-  def search(search: String = ""): Collection[A]
-
-  def filterOn(filter: String): Collection[A]
-
-  def groupBy(group: String): Collection[A]
-
-  def offsetBy(offset: Int): Collection[A]
-
-  def isFilteredOn(filter: String): Boolean
-
-  def queryParameters: Seq[QueryParameter]
-
-  def queryString: String
-
-  def template: Option[Html]
-
-  def bindFromRequest(implicit req: Request[_]): Collection[A]
+  def jsTemplate: Option[Html]
 
 }
 

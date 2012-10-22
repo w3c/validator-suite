@@ -1,17 +1,25 @@
 @(assertor: AssertorView, assertions: Option[Collection[AssertionView]])
+    <article data-id="@assertor.name" class="@if(assertions.isDefined && assertions.get.isFilteredOn(assertor.name)){current} @if(assertor.warnings + assertor.errors == 0){valid}">
+        <dl>
+            @AssertorView.definitions.map { definition =>
+            <dt>@Messages(s"assertors.${definition.name}")</dt>
+            <dd class="@{definition.name}">
+            @definition.name match {
 
-<article data-id="@assertor.name" class="@if(assertions.isDefined && assertions.get.isFilteredOn(assertor.name)){current} @if(assertor.warnings + assertor.errors == 0){valid}">
-    <dl>
-        <dt>Assertor</dt>
-        <dd class="assertor">@Messages("assertor." + assertor.name)</dd>
-        <dt>Warnings</dt>
-        <dd class="warnings">@assertor.warnings</dd>
-        <dt>Errors</dt>
-        <dd class="errors">@assertor.errors</dd>
-        <dt>Actions</dt>
-        <dd class="actions">
-            @if(assertions.isDefined) {
-            <a href="@assertions.get.filterOn(assertor.name).goToPage(1).queryString">filter</a>}
-        </dd>
-    </dl>
-</article>
+                case "name" => {
+                <span>@Messages(s"assertor.${assertor.name}")</span>}
+
+                case "warnings" => {
+                <span>@assertor.warnings</span>}
+
+                case "errors" => {
+                <span>@assertor.errors</span>}
+
+                case "actions" => {
+                @if(assertions.isDefined) {
+                <a href="@assertions.get.filterOn(assertor.name).goToPage(1).queryString">filter</a>}}
+
+            }}
+        </dl>
+        <hr>
+    </article>
