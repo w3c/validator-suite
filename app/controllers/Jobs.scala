@@ -19,6 +19,9 @@ import play.api.libs.{EventSource, Comet}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import org.w3.banana._
+import org.w3.util.Util._
+import com.yammer.metrics.Metrics
+import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 
 object Jobs extends Controller {
   
@@ -33,51 +36,65 @@ object Jobs extends Controller {
   import org.w3.vs.view._
 
   def redirect: ActionA = Action { implicit req => Redirect(routes.Jobs.index) }
+
+  val indexName = (new controllers.javascript.ReverseJobs).reportSocket.name
+
+  val indexTimer = Metrics.newTimer(Jobs.getClass, indexName, MILLISECONDS, SECONDS)
   
   def index: ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
-        user <- getUser
-        jobs_ <- user.getJobs()
-        jobs <- JobsView(jobs_)
-      } yield {
-        if (isAjax) {
-          Ok(jobs.bindFromRequest.toJson)
-        } else {
-          Ok(views.html.main(
+      val f = {
+        for {
+          user <- getUser
+          jobs_ <- user.getJobs()
+          jobs <- JobsView(jobs_)
+        } yield {
+          if (isAjax) {
+            Ok(jobs.bindFromRequest.toJson)
+          } else {
+            Ok(views.html.main(
               user = user,
               title = "Jobs - Validator Suite",
               style = "",
               script = "",
               collections = Seq(jobs.bindFromRequest)
-          )).withHeaders(("Cache-Control", "no-cache, no-store"))
+            )).withHeaders("Cache-Control" -> "no-cache, no-store")
+          }
         }
-      }) recover toError
+      } recover toError
+      f.timer(indexName).timer(indexTimer)
     }
   }
   
+  val reportName = (new controllers.javascript.ReverseJobs).report.name
+
+  val reportTimer = Metrics.newTimer(Jobs.getClass, reportName, MILLISECONDS, SECONDS)
+
   def report(id: JobId, url: URL, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
-        user <- getUser
-        job_ <- user.getJob(id)
-        assertions_ <- job_.getAssertions().map(_.filter(_.url == url)) // TODO Empty = exception
-        assertors = AssertorsView(assertions_)
-        assertions = AssertionsView(assertions_).filterOn(assertors.firstAssertor).bindFromRequest
-        resource = ResourcesView.single(url, assertions, job_.id)
-      } yield {
-        Ok(views.html.main(
-          user = user,
-          title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
-          style = "",
-          script = "",
-          crumbs = Seq((job_.name, routes.Jobs.show(job_.id).toString), (Helper.shorten(url, 50), "")),
-          collections = Seq(
-            resource.withAssertions(assertions),
-            assertors.withAssertions(assertions),
-            assertions
-          ))).withHeaders(("Cache-Control", "no-cache, no-store"))
-      }) recover toError
+      val f = (
+        for {
+          user <- getUser
+          job_ <- user.getJob(id)
+          assertions_ <- job_.getAssertions().map(_.filter(_.url == url)) // TODO Empty = exception
+          assertors = AssertorsView(assertions_)
+          assertions = AssertionsView(assertions_).filterOn(assertors.firstAssertor).bindFromRequest
+          resource = ResourcesView.single(url, assertions, job_.id)
+        } yield {
+          Ok(views.html.main(
+            user = user,
+            title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
+            style = "",
+            script = "",
+            crumbs = Seq((job_.name, routes.Jobs.show(job_.id).toString), (Helper.shorten(url, 50), "")),
+            collections = Seq(
+              resource.withAssertions(assertions),
+              assertors.withAssertions(assertions),
+              assertions
+            ))).withHeaders("Cache-Control" -> "no-cache, no-store")
+        }
+      ) recover toError
+      f.timer(reportName).timer(reportTimer)
     }
   }
 
@@ -88,61 +105,74 @@ object Jobs extends Controller {
     }
   }
 
+  val reportByMsgName = (new controllers.javascript.ReverseJobs).show.name + "/reportByMessages"
+
+  val reportByMsgTimer = Metrics.newTimer(Jobs.getClass, reportByMsgName, MILLISECONDS, SECONDS)
+
   def reportByMessages(id: JobId, messages: List[(String, String)] = List.empty)(implicit req: Request[_]) = {
     AsyncResult {
-      (for {
-        user <- getUser
-        job_ <- user.getJob(id)
-        assertions_ <- job_.getAssertions()
-        job <- JobsView.single(job_)
-
-      } yield {
-        if (isAjax) {
-          val assertions = AssertionsView.grouped(assertions_).bindFromRequest
-          Ok(assertions.toJson)
-        } else {
-          val assertors = AssertorsView(assertions_)
-          val assertions = AssertionsView.grouped(assertions_).filterOn(assertors.firstAssertor).bindFromRequest
-          Ok(views.html.main(
-            user = user,
-            title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
-            style = "",
-            script = "",
-            crumbs = Seq((job_.name, "")),
-            collections = Seq(
-              job.withAssertions(assertions),
-              assertors.withAssertions(assertions),
-              assertions
-            ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+      val f = (
+        for {
+          user <- getUser
+          job_ <- user.getJob(id)
+          assertions_ <- job_.getAssertions()
+          job <- JobsView.single(job_)
+        } yield {
+          if (isAjax) {
+            val assertions = AssertionsView.grouped(assertions_).bindFromRequest
+            Ok(assertions.toJson)
+          } else {
+            val assertors = AssertorsView(assertions_)
+            val assertions = AssertionsView.grouped(assertions_).filterOn(assertors.firstAssertor).bindFromRequest
+            Ok(views.html.main(
+              user = user,
+              title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
+              style = "",
+              script = "",
+              crumbs = Seq((job_.name, "")),
+              collections = Seq(
+                job.withAssertions(assertions),
+                assertors.withAssertions(assertions),
+                assertions
+              ))).withHeaders("Cache-Control" -> "no-cache, no-store")
+          }
         }
-      }) recover toError
+      ) recover toError
+      f.timer(reportByMsgName).timer(reportByMsgTimer)
     }
   }
 
+  val reportByResourcesName = (new controllers.javascript.ReverseJobs).show.name + "/reportByResources"
+
+  val reportByResourcesTimer = Metrics.newTimer(Jobs.getClass, reportByResourcesName, MILLISECONDS, SECONDS)
+
   def reportByResources(id: JobId, messages: List[(String, String)] = List.empty)(implicit req: Request[_]) = {
     AsyncResult {
-      (for {
-        user <- getUser
-        job_ <- user.getJob(id)
-        assertions_ <- job_.getAssertions()
-        job <- JobsView.single(job_)
-        resources = ResourcesView(assertions_, job_.id).bindFromRequest
-      } yield {
-        if (isAjax) {
-          Ok(resources.toJson)
-        } else {
-          Ok(views.html.main(
-            user = user,
-            title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
-            style = "",
-            script = "",
-            crumbs = Seq((job_.name, "")),
-            collections = Seq(
-              job.withResources(resources),
-              resources
-            ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+      val f = (
+        for {
+          user <- getUser
+          job_ <- user.getJob(id)
+          assertions_ <- job_.getAssertions()
+          job <- JobsView.single(job_)
+          resources = ResourcesView(assertions_, job_.id).bindFromRequest
+        } yield {
+          if (isAjax) {
+            Ok(resources.toJson)
+          } else {
+            Ok(views.html.main(
+              user = user,
+              title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
+              style = "",
+              script = "",
+              crumbs = Seq((job_.name, "")),
+              collections = Seq(
+                job.withResources(resources),
+                resources
+              ))).withHeaders("Cache-Control" -> "no-cache, no-store")
+          }
         }
-      }) recover toError
+      ) recover toError
+      f.timer(reportByResourcesName).timer(reportByResourcesTimer)
     }
   }
 

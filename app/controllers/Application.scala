@@ -19,7 +19,6 @@ import org.w3.vs.model.Redirect
 import org.w3.vs.exception.ForceResult
 import org.w3.vs.exception.UnknownJob
 import play.api.mvc.AsyncResult
-import scala.Some
 
 object Application extends Controller {
   

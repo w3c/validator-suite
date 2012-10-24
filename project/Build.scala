@@ -17,7 +17,7 @@ object ApplicationBuild extends Build {
 //    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/scala-tools-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10-0.4-SNAPSHOT.jar",
     "com.yammer.metrics" % "metrics-core" % "2.1.3" excludeAll(ExclusionRule(organization = "org.slf4j")),
-    "org.w3" %% "banana-jena" % "x13-SNAPSHOT",
+    "org.w3" %% "banana-jena" % "x13-SNAPSHOT" excludeAll(ExclusionRule(organization = "org.slf4j")),
     "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121016-7.jar",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit_2.10.0-M7" % "2.1-M2" % "test",

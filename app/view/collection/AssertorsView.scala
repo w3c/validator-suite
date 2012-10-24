@@ -28,6 +28,7 @@ case class AssertorsView(
 
   def jsTemplate: Option[Html] = Some(views.html.template.assertor())
 
+  // BUG: if iterable.isEmpty, then this raises UnsupportedOperationException
   def firstAssertor: String = iterable.maxBy(_.errors).name
 
   def withAssertions(assertions: Collection[AssertionView]): AssertorsView =
