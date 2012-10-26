@@ -75,7 +75,7 @@ class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod) 
     val lines = responseHeadersFile.asBinaryReadChars(Codec.UTF8).lines()
     val status = {
       val headerRegex("null", status) = lines.head
-      status.toInt
+      status.split(" ")(1).toInt
     }
     val builder = Map.newBuilder[String, List[String]]
     lines.tail foreach { case headerRegex(key, values) =>
@@ -105,7 +105,7 @@ class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod) 
       val map = new LinkedHashMap[String, jList[String]](headers.size + 1)
       val statusSingletonList = {
         val l = new ArrayList[String](1)
-        l.add(status.toString)
+        l.add("HTTP/1.0 " + status.toString + " FIXED STATUS TEXT")
         l
       }
       map.put(null, statusSingletonList)

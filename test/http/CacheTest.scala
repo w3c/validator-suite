@@ -91,7 +91,11 @@ class CacheTest extends WordSpec with MustMatchers {
 
       Resource.fromInputStream(cacheResponse.getBody()).string must be(content)
 
-      cacheResponse.getHeaders.asScala.mapValues(_.asScala.toList).toMap must be(headers + ((null, List(status.toString))))
+      val rHeaders = cacheResponse.getHeaders.asScala.mapValues(_.asScala.toList).toMap
+
+      (rHeaders - null) must be(headers)
+
+      (rHeaders(null).head contains status.toString) must be (true)
 
     }
 

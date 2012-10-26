@@ -1,0 +1,12 @@
+null: HTTP/1.0 200 FIXED STATUS TEXT
+Last-Modified: Thu, 18 Aug 2011 19:10:42 GMT
+Server: Apache/2
+Accept-Ranges: bytes
+Expires: Fri, 02 Nov 2012 22:10:36 GMT
+Connection: close
+Content-Length: 19
+Cache-Control: max-age=604800
+P3P: policyref="http://www.w3.org/2001/05/P3P/p3p.xml"
+Content-Type: text/css
+Date: Fri, 26 Oct 2012 22:10:36 GMT
+ETag: "13-4aacc5e7ad080"

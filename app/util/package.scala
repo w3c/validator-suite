@@ -10,10 +10,54 @@ package object util {
   
   type ContentType = String
 
+  /*******/
+
   // should be collection.immutable.ListMap to preserver order insertion
   type Headers = Map[String, List[String]]
+
   object Headers { val DEFAULT_CHARSET = "UTF-8" }
-  implicit def wrapHeaders(headers: Headers): HeadersW = new HeadersW(headers)
+
+  /**
+   * helper class to deal with HTTP headers
+   */
+  implicit class HeadersW(val headers: Headers) extends AnyVal {
+    import HeadersHelper._
+    def contentTypeHeader: Option[String] = headers get "Content-Type" flatMap { _.headOption }
+    def mimetype: Option[String] = contentTypeHeader flatMap { extractMimeType(_) }
+    def charset: Option[String] = contentTypeHeader flatMap { extractCharset(_)}
+  }
+
+  /*******/
+
+  import java.util.{ Map => jMap, List => jList }
+  import scala.collection.JavaConverters._
+
+  implicit class jHeaders(val headers: jMap[String, jList[String]]) extends AnyVal {
+    def asScalaHeaders: Headers = headers.asScala.mapValues(_.asScala.toList).toMap
+  }
+
+  /*******/
+
+  import com.ning.http.client.Response
+  import java.util.{ Map => jMap, List => jList }
+  import org.w3.vs.model.{ HttpMethod, HttpResponse }
+  import scalax.io.{ Resource, InputResource }
+  import java.io.{ InputStream, ByteArrayInputStream }
+
+  implicit class ResponseW(val response: Response) extends AnyVal {
+    def asHttpResponse(url: URL, method: HttpMethod): (HttpResponse, InputResource[InputStream]) = {
+      val status = response.getStatusCode()
+      val headers: Headers =
+        response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScalaHeaders
+      println("1")
+      def bodyContent = Resource.fromInputStream(response.getResponseBodyAsStream())
+      println("2")
+      val httpResponse = HttpResponse(url, method, status, headers, bodyContent)
+      (httpResponse, bodyContent)
+    }
+  }
+
+  /*******/
 
   import scala.math.Ordering
   import org.joda.time.DateTime

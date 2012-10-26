@@ -1,0 +1,11 @@
+null: HTTP/1.0 302 FIXED STATUS TEXT
+Location: http://www.google.fr/
+Server: gws
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+Content-Length: 218
+Cache-Control: private
+P3P: CP="This is not a P3P policy! See http://www.google.com/support/accounts/bin/answer.py?hl=en&answer=151657 for more info."
+Content-Type: text/html; charset=UTF-8
+Date: Fri, 26 Oct 2012 22:10:23 GMT
+Set-Cookie: PREF=ID=379c8039ea7467d7:FF=0:TM=1351289423:LM=1351289423:S=AAHyH2jZobZT8AWa; expires=Sun, 26-Oct-2014 22:10:23 GMT; path=/; domain=.google.com,NID=65=OJToFJgKATsMjFTWumfnhkDLHJ_Mif4gsZ_bVY-JvUL970HkCNUpO-CI-HFg5p2MXpb9I_z7R31IRh270U79aDvWxG0mTQsFrmYF9iEuIR3cSum9JygPkj0kF-R1Tzc9; expires=Sat, 27-Apr-2013 22:10:23 GMT; path=/; domain=.google.com; HttpOnly

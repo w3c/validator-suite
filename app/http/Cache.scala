@@ -2,9 +2,9 @@ package org.w3.vs.http
 
 import org.w3.vs.model._
 import java.io.File
-import java.net._
+import java.net.{ URI, CacheRequest, ResponseCache, CacheResponse, URLConnection }
 import java.util.{ List => jList, Map => jMap }
-import org.w3.util.URL
+import org.w3.util._
 import scala.util.Try
 import java.io.InputStream
 import scalax.io._
@@ -28,7 +28,7 @@ case class Cache(directory: File) extends ResponseCache {
 
   val logger = play.Logger.of(classOf[Cache])
 
-  def reset: Unit = {
+  def reset(): Unit = {
     directory.listFiles foreach { file =>
       val r = file.delete()
       if (!r) sys.error("couldn't delete " + file.getAbsolutePath)
@@ -43,6 +43,8 @@ case class Cache(directory: File) extends ResponseCache {
     CachedResource(this, url, method).toOption
 
   def get(uri: URI, rqstMethod: String, rqstHeaders: jMap[String, jList[String]]): CacheResponse = {
+    val userAgent = rqstHeaders.get("User-Agent")
+    logger.debug(s"${userAgent} ${rqstMethod} ${uri}")
     val cacheResponseOpt = for {
       method <- HttpMethod.fromString(rqstMethod)
       url = URL(uri.toURL)
@@ -57,6 +59,35 @@ case class Cache(directory: File) extends ResponseCache {
 
   def put(uri: URI, conn: URLConnection): CacheRequest = null
 
+  def retrieveAndCache(url: URL, method: HttpMethod): Unit = {
+
+    import com.ning.http.client._
+
+    try {
+//      val client = {
+//        import java.util.concurrent.Executors
+//        val executor = Executors.newCachedThreadPool()
+//        val builder = new AsyncHttpClientConfig.Builder()
+//        val config =
+//          builder.setMaximumConnectionsTotal(100)
+//          .setMaximumConnectionsPerHost(100)
+//          .setExecutorService(executor)
+//          .setFollowRedirects(true)
+//          .setConnectionTimeoutInMs(5000)
+//          .build
+//        new AsyncHttpClient(config)
+//      }
+      val client = new AsyncHttpClient()
+      val response: Response = client.prepareGet(url.toString).execute().get()
+      val (hr, bodyContent) = response.asHttpResponse(url, method)
+      this.save(hr, bodyContent)
+    } catch { case e: Exception =>
+      val er = ErrorResponse(url, method, e.getMessage)
+      this.save(er)
+    }
+
+  }
+
   def save(er: ErrorResponse): Try[Unit] = Try {
     val cr = new CachedResource(this, er.url, er.method)
     cr.remove()
@@ -70,13 +101,19 @@ case class Cache(directory: File) extends ResponseCache {
     cr.metaFile.asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + hr.url)
     cr.responseHeadersFile.asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>
       val wc = owc.asWriteChars
-      wc.write("null: " + hr.status + "\n")
+      // wc.write("null: " + hr.status + "\n")
+      wc.write("null: HTTP/1.0 " + hr.status + " FIXED STATUS TEXT\n")
       hr.headers foreach { case (header, values) =>
         wc.write(header + ": " + values.mkString(",") + "\n")
       }
     }
     bodyContent.copyDataTo(cr.bodyFile.asOutput)
   }
-  
+
+  private var previousCache: ResponseCache = null
+
+  def setAsDefaultCache(): Unit = ResponseCache.setDefault(this)
+
+  def restorePreviousCache(): Unit = ResponseCache.setDefault(previousCache)
 
 }
