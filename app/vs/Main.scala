@@ -9,8 +9,36 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.banana._
 
 object Main {
-  
-  def main(args: Array[String]): Unit = {
+
+  def stressTestData(n: Int): Unit = {
+    implicit val conf = new DefaultProdConfiguration { }
+
+    if (conf.storeDirectory.exists)
+      Util.delete(conf.storeDirectory)
+
+    val orgId = OrganizationId()
+
+    def makeUser(name: String): User = 
+      User(userId = UserId(), organization = Some(orgId), email = name + "@w3.org", name = name, password = "secret")
+
+    val admin = makeUser("admin")
+
+    val org = Organization(orgId = orgId, name = "W3C", admin = admin.id)
+    
+    User.save(admin).getOrFail()
+    Organization.save(org).getOrFail()
+    (1 to n) foreach { i =>
+      val user = makeUser("user" + i)
+      User.save(user)
+    }
+
+    conf.store.shutdown()
+    conf.system.shutdown()
+    conf.system.awaitTermination()
+
+  }
+
+  def defaultData(): Unit = {
     
     implicit val conf = new DefaultProdConfiguration { }
 
@@ -77,10 +105,6 @@ object Main {
         filter = Filter(include = Everything, exclude = Nothing),
         assertorsConfiguration = AssertorsConfiguration.default))
 
-//    conf.blockingStore.readTransaction {
-//      println("<<< "+conf.blockingStore.dg.size())
-//    }
-
     val script = for {
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
@@ -94,21 +118,23 @@ object Main {
     } yield ()
 
     script.getOrFail()
-
-//    script.result(Duration(3, "seconds")) fold (
-//      t => throw t,
-//      _ => println("loaded data successfully")
-//    )
-
-//    conf.blockingStore.readTransaction {
-//      println(">>> "+conf.blockingStore.dg.size())
-//    }
     
     conf.store.shutdown()
     conf.system.shutdown()
     conf.system.awaitTermination()
 
-    // must be missing one thread as we're not going back to the REPL...
+  }
+  
+  def main(args: Array[String]): Unit = {
+    
+    val int = new Object {
+      def unapply(s: String): Option[Int] = try Some(s.toInt) catch { case _: NumberFormatException => None }
+    }
+
+    args match {
+      case Array(int(n)) => stressTestData(n)
+      case _ => defaultData()
+    }
 
   }
   

@@ -9,6 +9,17 @@ import java.util.{ LinkedHashMap, ArrayList, List => jList, Map => jMap }
 import scala.collection.JavaConverters._
 import org.w3.util.{ URL, Headers }
 import Cache._
+import scala.util.Try
+
+object CachedResource {
+
+  def apply(cache: Cache, url: URL, method: HttpMethod): Try[CachedResource] = Try {
+    val cr = new CachedResource(cache, url, method)
+    assert(cr.metaFile.exists, "the ." + method + " file must exist")
+    cr
+  }
+
+}
 
 /**
  * a cached resource from the cache
@@ -20,31 +31,32 @@ import Cache._
  * - a 404 is not an error because the server could be reached
  * - a failed connection, or a DNS issue, are the typical errors
  */
-case class CachedResource(cache: Cache, url: URL) {
+class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod) {
 
   val filename = math.abs(url.toString.hashCode).toString
 
-  def metaFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString)
-  def responseHeadersFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".respHeaders")
-  def errorFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".error")
-  def bodyFile(method: HttpMethod) = new File(cache.directory, filename + "." + method.toString + ".body")
+  val metaFile = new File(cache.directory, filename + "." + method.toString)
+
+  val responseHeadersFile = new File(cache.directory, filename + "." + method.toString + ".respHeaders")
+  val errorFile = new File(cache.directory, filename + "." + method.toString + ".error")
+  val bodyFile = new File(cache.directory, filename + "." + method.toString + ".body")
 
   /**
    * remove the informations for this url/method from the cache
    */
-  def remove(method: HttpMethod): Unit = {
+  def remove(): Unit = {
     import java.nio.file.Files.{ deleteIfExists => delete }
-    delete(metaFile(method).toPath)
-    delete(errorFile(method).toPath)
-    delete(responseHeadersFile(method).toPath)
-    delete(bodyFile(method).toPath)
+    delete(metaFile.toPath)
+    delete(errorFile.toPath)
+    delete(responseHeadersFile.toPath)
+    delete(bodyFile.toPath)
   }
 
   /**
    * get the state for this url/method
    */  
-  def getCachedResourceState(method: HttpMethod): CachedResourceState = {
-    val line = metaFile(method).asBinaryReadChars(Codec.UTF8).lines().head
+  def getCachedResourceState(): CachedResourceState = {
+    val line = metaFile.asBinaryReadChars(Codec.UTF8).lines().head
     val metaRegex(responseStateS, timestamp, reqUrl) = line
     assert(reqUrl == url.toString)
     val responseState = responseStateS match {
@@ -54,13 +66,13 @@ case class CachedResource(cache: Cache, url: URL) {
     responseState
   }
 
-  def isError(method: HttpMethod): Boolean = errorFile(method).exists
+  def isError: Boolean = errorFile.exists
 
   /**
    * get the status+headers
    */  
-  def getStatusHeaders(method: HttpMethod): (Int, Headers) = {
-    val lines = responseHeadersFile(method).asBinaryReadChars(Codec.UTF8).lines()
+  def getStatusHeaders(): (Int, Headers) = {
+    val lines = responseHeadersFile.asBinaryReadChars(Codec.UTF8).lines()
     val status = {
       val headerRegex("null", status) = lines.head
       status.toInt
@@ -73,70 +85,45 @@ case class CachedResource(cache: Cache, url: URL) {
     (status, headers)
   }
 
-  def save(er: ErrorResponse): Unit = {
-    remove(er.method)
-    metaFile(er.method).asBinaryWriteChars(Codec.UTF8).write("ERROR " + System.currentTimeMillis() + " " + er.url)
-    errorFile(er.method).asBinaryWriteChars(Codec.UTF8).write(er.why)
+  def get(): Try[ResourceResponse] = Try {
+    if (isError) {
+      val errorMessage = errorFile.asBinaryReadChars(Codec.UTF8).string
+      ErrorResponse(url, method, errorMessage)
+    } else {
+      val (status, headers) = getStatusHeaders()
+      val bodyContent: InputResource[InputStream] = method match {
+        case HEAD => Resource.fromInputStream(new ByteArrayInputStream(Array.empty[Byte]))
+        case GET => Resource.fromInputStream(new FileInputStream(bodyFile))
+      }
+      HttpResponse(url, method, status, headers, bodyContent)
+    }
   }
 
-  def save(hr: HttpResponse, bodyContent: InputResource[InputStream]): Unit = {
-    remove(hr.method)
-    metaFile(hr.method).asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + hr.url)
-    responseHeadersFile(hr.method).asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>
-      val wc = owc.asWriteChars
-      wc.write("null: " + hr.status + "\n")
-      hr.headers foreach { case (header, values) =>
-        wc.write(header + ": " + values.mkString(",") + "\n")
+  def asCacheResponse(): Try[CacheResponse] = Try {
+    val headers: jMap[String, jList[String]] = {
+      val (status, headers) = getStatusHeaders()
+      val map = new LinkedHashMap[String, jList[String]](headers.size + 1)
+      val statusSingletonList = {
+        val l = new ArrayList[String](1)
+        l.add(status.toString)
+        l
       }
+      map.put(null, statusSingletonList)
+      headers foreach { case (header, values) =>
+        map.put(header, values.asJava)
+      }
+      map
     }
-    bodyContent.copyDataTo(bodyFile(hr.method).asOutput)
+
+    val cr = new CacheResponse {
+
+      def getBody(): InputStream = new BufferedInputStream(new FileInputStream(bodyFile))
+      
+      def getHeaders(): jMap[String, jList[String]] = headers
+
+    }
+    
+    cr
   }
-
-  def get(method: HttpMethod): Option[ResourceResponse] =
-    try {
-      if (isError(method)) {
-        val errorMessage = errorFile(method).asBinaryReadChars(Codec.UTF8).string
-        Some(ErrorResponse(url, method, errorMessage))
-      } else {
-        val (status, headers) = getStatusHeaders(method)
-        val bodyContent: InputResource[InputStream] = method match {
-          case HEAD => Resource.fromInputStream(new ByteArrayInputStream(Array.empty[Byte]))
-          case GET => Resource.fromInputStream(new FileInputStream(bodyFile(method)))
-        }
-        Some(HttpResponse(url, method, status, headers, bodyContent))
-      }
-    } catch { case e: Exception =>
-      cache.logger.error(method.toString + " " + url.toString + ": " + e.getMessage)
-      None
-    }
-
-  def asCacheResponse(method: HttpMethod): Option[CacheResponse] =
-    try {
-      val headers: jMap[String, jList[String]] = {
-        val (status, headers) = getStatusHeaders(method)
-        val map = new LinkedHashMap[String, jList[String]](headers.size + 1)
-        val statusSingletonList = {
-          val l = new ArrayList[String](1)
-          l.add(status.toString)
-          l
-        }
-        map.put(null, statusSingletonList)
-        headers foreach { case (header, values) =>
-          map.put(header, values.asJava)
-        }
-        map
-      }
-
-      val cr = new CacheResponse {
-
-        def getBody(): InputStream = new BufferedInputStream(new FileInputStream(bodyFile(method)))
-        
-        def getHeaders(): jMap[String, jList[String]] = headers
-
-      }
-      Some(cr)
-    } catch { case e: Exception =>
-      None
-    }
 
 }
