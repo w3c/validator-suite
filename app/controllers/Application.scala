@@ -1,55 +1,19 @@
 package controllers
 
-import play.api.mvc._
-import play.api.i18n._
-import play.api.Play.current
-import org.w3.util._
-import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
-import org.w3.vs.view._
 import org.w3.vs.view.form._
-import scalaz._
-import Scalaz._
-import play.api.cache.Cache
-import scala.concurrent._
+import play.api.i18n._
+import play.api.mvc._
+import scala.Some
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.banana._
-import org.w3.vs.model.Redirect
-import org.w3.vs.exception.ForceResult
-import org.w3.vs.exception.UnknownJob
-import play.api.mvc.AsyncResult
 
-object Application extends Controller {
-  
-  type ActionA = Action[AnyContent]
+object Application extends VSController {
   
   val logger = play.Logger.of("org.w3.vs.controllers.Application")
-  
-  implicit private def configuration = org.w3.vs.Prod.configuration
-  
-  implicit def toError(implicit req: Request[_]): PartialFunction[Throwable, Result] = {
-    // TODO timeout, store exception, etc...
-    case ForceResult(result) => result
-    case UnknownJob(id) => {
-      if (isAjax) {
-        NotFound(Messages("exceptions.job.unknown", id))
-      } else {
-        SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("exceptions.job.unknown", id)))
-      }
-    }
-    case _: UnauthorizedException =>
-      Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.unauthorized"))))).withNewSession
-    case t: Throwable => {
-      logger.error("Unexpected exception: " + t.getMessage, t)
-      InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage)))))
-    }
-    case t => {
-      logger.error("Unexpected exception: ", t)
-      InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.toString)))))
-    }
-  }
-  
+
+  def index: ActionA = Action { Redirect(routes.Jobs.index.toString) }
+
   def login: ActionA = Action { implicit req =>
     AsyncResult {
       getUser map {
@@ -88,22 +52,11 @@ object Application extends Controller {
     }
   }
 
-  def getUser()(implicit /*req: Request[_], */ session: Session): Future[User] = {
-    for {
-      email <- session.get("email").get.asFuture recoverWith { case _ => Future {
-        throw Unauthenticated } }
-      user <- Cache.getAs[User](email).get.asFuture recoverWith { case _ => User.getByEmail(email) }
-    } yield {
-      Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
-      user
-    }
-  } 
-  
-  def redirectWithSlash(a: Any): ActionA = Action { req =>
+  /*def redirectWithSlash(a: Any): ActionA = Action { req =>
     MovedPermanently(
       req.path + "/" + Helper.queryString(req.queryString)
     )
-  }
+  }*/
   
 //  def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
 //    e match {

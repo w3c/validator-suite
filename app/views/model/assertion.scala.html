@@ -1,5 +1,5 @@
 @(assertion: AssertionView)
-    <article class="@assertion.severity" tabindex="1">
+    <article class="@assertion.severity" tabindex="1" data-id="@assertion.id">
         <dl>
             @AssertionView.definitions.map { definition =>
             <dt>@Messages(s"assertions.${definition.name}")</dt>
@@ -7,19 +7,21 @@
             @definition.name match {
 
             case "assertor" => {
-            <span>@assertion.assertor</span>}
+            <span data-assertor>@assertion.assertor</span>}
 
             case "severity" => {
-            <span>@assertion.severity</span>}
+            <span data-severity>@assertion.severity</span>}
 
             case "occurrences" => {
-            <span>@assertion.occurencesLegend</span>}
+            <span data-occurrences="@assertion.occurrences" data-occurrencesLegend>@assertion.occurrencesLegend</span>}
 
             case "title" => {
-            <span @if(!assertion.isEmpty){class="fold"}>@assertion.title</span>}
+            <div @if(!assertion.isEmpty){class="fold"} data-title>@assertion.title</div>}
 
-            case "description" => {
-            <span>@assertion.description</span>}
+            case "description" if assertion.description.isDefined => {
+            <div data-description>@assertion.description</div>}
+
+            case "description" => {}
 
             case "contexts" => {
             @assertion.contexts.take(50).map { case context =>
@@ -37,9 +39,10 @@
             </dd>}}
 
             case "resources" => {
+            @if(assertion.resources.size > 0) {@Messages("assertion.resources.detail")}
             @assertion.resources.take(50).map { case url =>
-            <dd class="url">
-                <a href="@Helper.encode(url)" class="report" title="@Messages("report.link")">
+            <dd class="resource">
+                <a href="@routes.Assertions.index1(assertion.jobId, url)" class="report" title="@Messages("report.link")">
                 <span>@Messages("resource.report.for")</span>
                 <span>@Helper.shorten(url, 80)</span>
                 </a>

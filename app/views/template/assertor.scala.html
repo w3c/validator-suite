@@ -1,0 +1,24 @@
+<script type="text/template" id="assertor-template">
+    @**<article data-id="@assertor.name" class="@if(assertions.isDefined && assertions.get.isFilteredOn(assertor.name)){current} @if(assertor.warnings + assertor.errors == 0){valid}">**@
+        <dl>
+            @AssertorView.definitions.map { definition =>
+            <dt>@Messages(s"assertors.${definition.name}")</dt>
+            <dd class="@{definition.name}">
+            @definition.name match {
+
+                case "name" => {
+                <span><%= name %></span>}
+
+                case "warnings" => {
+                <span><%= warnings %></span>}
+
+                case "errors" => {
+                <span><%= errors %></span>}
+
+                case "actions" => {
+                <a class="filter">filter</a>}
+
+            }}
+        </dl>
+    <hr>
+</script>

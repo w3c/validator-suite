@@ -7,7 +7,7 @@
                 @definition.name match {
 
                 case "name" => {
-                <a href="@routes.Jobs.show(job.id)" data-name>@job.name</a>}
+                <a href="@routes.Resources.index(job.id)" data-name>@job.name</a>}
 
                 case "entrypoint" => {
                 <a href="@job.entrypoint" data-entrypoint="@job.entrypoint" class="external" target="_blank" title="@Messages("resource.external.link")">
@@ -63,7 +63,7 @@
 
                 @if(collection.isDefined) {
                 @defining(collection.get.fold(a => a, r => r)) { collection =>
-                <form class="search" action="@routes.Jobs.dispatcher(job.id)" method=get>
+                <form class="search" method=get>
                     <fieldset>
                         <legend>Search</legend>
                         <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
@@ -77,8 +77,8 @@
                 <form class="group" action="@routes.Jobs.dispatcher(job.id)" method=get>
                     <fieldset class="dropdown">
                         <legend>Report by</legend>
-                        <input name=group type=radio value="url" id="url" @if(!collection.isGroupedBy("message")){checked}>
-                        <label for="url">Group by resource</label>
+                        <input name=group type=radio value="resource" id="resource" @if(!collection.isGroupedBy("message")){checked}>
+                        <label for="resource">Group by resource</label>
                         <input name=group type=radio value="message" id="message" @if(collection.isGroupedBy("message")){checked}>
                         <label for="message">Group by message</label>
                         @collection.params.search.map { search =>

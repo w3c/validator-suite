@@ -1,0 +1,30 @@
+<script type="text/template" id="assertion-template">
+    <dl class="<%= severity %>">
+        @AssertionView.definitions.map { definition =>
+        <dt>@Messages(s"assertions.${definition.name}")</dt>
+        <dd class="@{definition.name}">
+            @definition.name match {
+
+            case "assertor" => {
+            <span><%= assertor %></span>}
+
+            case "severity" => {
+            <span><%= severity %></span>}
+
+            case "occurrences" => {
+            <span><%= occurrencesLegend %></span>}
+
+            case "title" => {
+            <div<% if(view.isFoldable()){print(" class='fold'")}%>><%= title %></div>}
+
+            case "description" => {
+            <div><%= description %></div>}
+
+            case "contexts" => {}
+
+            case "resources" => {}
+
+        }}
+    </dl>
+    <hr>
+</script>

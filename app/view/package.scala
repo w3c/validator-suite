@@ -5,6 +5,12 @@ import org.w3.vs.view.model._
 import play.api.libs.json.{Json, JsNull, JsValue, Writes}
 import play.api.templates.Html
 import scala.Some
+import play.api.data.format.Formatter
+import play.api.data.FormError
+import java.net.URL
+import play.api.data.format.Formats._
+import play.api.data.FormError
+import scala.Some
 
 package object view {
 
@@ -35,6 +41,25 @@ package object view {
         case None => JsNull
       }
     }
+  }
+
+  implicit val booleanFormatter = new Formatter[Boolean] {
+    def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Boolean] =
+      Right(data isDefinedAt key)
+    def unbind(key: String, value: Boolean): Map[String, String] =
+      if (value) Map(key -> "on") else Map()
+  }
+
+  implicit val urlFormat = new Formatter[URL] {
+    override val format = Some("format.url", Nil)
+    def bind(key: String, data: Map[String, String]) = {
+      stringFormat.bind(key, data).right.flatMap { s =>
+        scala.util.control.Exception.allCatch[URL]
+          .either(new URL(s))
+          .left.map(e => Seq(FormError(key, "error.url", Nil)))
+      }
+    }
+    def unbind(key: String, url: URL) = Map(key -> url.toString)
   }
 
   implicit val jobToJson: Writes[JobView] = JobView.writes

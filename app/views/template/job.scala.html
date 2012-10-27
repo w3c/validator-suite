@@ -1,81 +1,76 @@
-        <script type="text/template" id="job-template">
-            <dl>
-                <dt>Job Name</dt>
-                <dd class="name">
-                    <a href="<%= url %>"><%= name %></a>
-                </dd>
+    <script type="text/template" id="job-template">
+        @JobView.definitions.map { definition =>
+        <dt>@Messages(s"jobs.${definition.name}")</dt>
+        <dd class="@{definition.name}">
+            @definition.name match {
 
-                <dt>URL</dt>
-                <dd class="entrypoint">
-                    <a href="<%= entrypoint %>" class="external" target="_blank" title="@Messages("resource.external.link")"><% print(W3.Util.shortenUrl(entrypoint, 100)) %></a>
-                </dd>
+            case "name" => {
+            <a href="<%= reportUrl %>"><%= name %></a>}
 
-                <dt>Status</dt>
-                <dd class="status <%= status %>">
-                    <span><%= status %></span>
-                    <% if(isIdle) { %>
-                    <button class="run">@Messages("job.button.run")</button>
-                    <% } else { %>
-                    <button class="stop">@Messages("job.button.stop")</button>
-                    <% } %>
-                </dd>
+            case "entrypoint" => {
+            <a href="<%= entrypoint %>" class="external" target="_blank" title="@Messages("resource.external.link")">
+                <% print(Util.shortenUrl(entrypoint, 100)) %>
+            </a>}
 
-                <dt>Last Completed</dt>
-                <dd class="completedOn">
-                    <% if (isCompleted) { %>
-                    <time datetime="<%= completedOn.timestamp %>"><%= completedOn.legend1 %></time>
-                    <span class="legend"><%= completedOn.legend2 %></span>
-                    <% } else { %>
-                    <span class="never">Never</span>
-                    <% } %>
-                </dd>
+            case "status" => {
+            <span class="<%= status %>"><%= status %></span>
+            <% if(isIdle) { %>
+            <button class="run">@Messages("job.button.run")</button>
+            <% } else { %>
+            <button class="stop">@Messages("job.button.stop")</button>
+            <% } %>}
 
-                <dt>Warnings</dt>
-                <dd class="warnings">
-                    <span><%= warnings %></span>
-                </dd>
+            case "completedOn" => {
+            <% if (isCompleted) { %>
+            <time datetime="<%= completedOn.timestamp %>"><%= completedOn.legend1 %></time>
+            <span class="legend"><%= completedOn.legend2 %></span>
+            <% } else { %>
+            <span class="never">Never</span>
+            <% } %>}
 
-                <dt>Errors</dt>
-                <dd class="errors">
-                    <span><%= errors %></span>
-                </dd>
+            case "warnings" => {
+            <span><%= warnings %></span>}
 
-                <dt>Resources</dt>
-                <dd class="resources">
-                    <span><%= resources %></span>
-                </dd>
+            case "errors" => {
+            <span><%= errors %></span>}
 
-                <dt>Max resources</dt>
-                <dd class="maxResources">
-                    <span><%= maxResources %></span>
-                </dd>
+            case "resources" => {
+            <span><%= resources %></span>}
 
-                <dt>Health</dt>
-                <dd class="health">
-                    <progress max=100 value=<%= health %> title="<%= health %>%">
-                        <%= health %>%
-                    </progress>
-                </dd>
+            case "maxResources" => {
+            <span><%= maxResources %></span>}
 
-                <dt>Actions</dt>
-                <dd class="actions">
-                    <% if(isIdle) { %>
-                    <button class="run">@Messages("job.button.run")</button>
-                    <% } else { %>
-                    <button class="stop">@Messages("job.button.stop")</button>
-                    <% } %>
-                    <button class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
-                    <input name=search class="search cleared" type=text placeholder="Search" required value="">
-                    <form class="group" action="<%= url %>" method=get>
-                        <fieldset class="dropdown">
-                            <legend>Report by</legend>
-                            <input name=group type=radio value="url" id="url" @**if(req.queryString.get("group").toSeq.flatten.isEmpty || req.queryString.get("group").toSeq.flatten.exists(_ == "url")){checked}**@>
-                            <label for="url">Group by url</label>
-                            <input name=group type=radio value="message" id="message" @**if(req.queryString.get("group").toSeq.flatten.exists(_ == "message")){checked}**@>
-                            <label for="message">Group by message</label>
-                        </fieldset>
-                    </form>
-                </dd>
-            </dl>
-            <hr>
-        </script>
+            case "health" => {
+            <progress max=100 value=<%= health %> title="<%= health %>%">
+                <%= health %>%
+            </progress>}
+
+            case "actions" => {
+            <% if(isIdle) { %>
+            <button class="run">@Messages("job.button.run")</button>
+            <% } else { %>
+            <button class="stop">@Messages("job.button.stop")</button>
+            <% } %>
+            <button class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
+            <input name=search class="search cleared" type=text placeholder="Search" required value="">
+            <form class="group" action="<%= url %>" method=get>
+                <fieldset class="dropdown">
+                    <legend>Report by</legend>
+                    <input name=group type=radio value="url" id="url" <% if(hasResources()){print("checked")} %>>
+                    <label for="url">Group by resource</label>
+                    <input name=group type=radio value="message" id="message" <% if(!hasResources()){print("checked")} %>>
+                    <label for="message">Group by message</label>
+                </fieldset>
+            </form>}
+            }
+        </dd>}
+
+        @**collection match {
+        case Some(Left(assertions)) => {}
+        case Some(Right(resources)) => {}
+        case _ => {}
+        }**@
+
+        </dl>
+        <hr>
+    </script>

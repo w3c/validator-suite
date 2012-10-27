@@ -1,21 +1,11 @@
-@(messages: List[(String, String)] = List(), userO: Option[User] = None)(implicit flash: Flash, req: Request[_])
+@(messages: List[(String, String)] = List(), userO: Option[User] = None)(implicit flash: Flash)
 
-@import org.w3.vs.controllers.isAjax
-
-@if(!isAjax) {
-
-    @libs.main("Validator Suite"){
-        
-        @libs.messages(messages)
-        
-    }{ @***** Footer *****@
-    
-        @libs.footer()
-    
-    }
-
-} else { @***** Ajax *****@ 
+@libs.main("Validator Suite"){
 
     @libs.messages(messages)
+
+}{ @***** Footer *****@
+
+    @libs.footer()
 
 }

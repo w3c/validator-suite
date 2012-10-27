@@ -1,38 +1,28 @@
-@(form: LoginForm, messages: List[(String, String)] = List())(implicit flash: Flash, req: Request[_])
+@(form: LoginForm, messages: List[(String, String)] = List())(implicit flash: Flash)
 
-@import org.w3.vs.controllers.isAjax
+@libs.main("Login - Validator Suite"){
 
-@if(!isAjax) {
+    @libs.messages(messages ++ form.errors)
 
-    @libs.main("Login - Validator Suite"){
-        
-        @libs.messages(messages ++ form.errors)
-        
-        <section id="loginForm"><div>
-        @helper.form(routes.Application.authenticate) {
-            @**form.globalError.map { error =>
-            <p class="error">@error.message</p>
-            }**@
-            <p>
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="Email" value="@form("email").value">
-            <p>
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Password">
-            <p>
-                <button id="submit-login" type="submit">Login</button>
-                <input type="hidden" name="uri" value="@{req.uri}">
-        }
-        </div></section>
-        
-    }{ @***** Footer *****@
-    
-        @libs.footer()
-    
+    <section id="loginForm"><div>
+    @helper.form(routes.Application.authenticate) {
+        @**form.globalError.map { error =>
+        <p class="error">@error.message</p>
+        }**@
+        <p>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Email" value="@form("email").value">
+        <p>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Password">
+        <p>
+            <button id="submit-login" type="submit">Login</button>
+            @** TODO <input type="hidden" name="uri" value="@{req.uri}"> **@
     }
+    </div></section>
 
-} else { @***** Ajax *****@ 
+}{ @***** Footer *****@
 
-    @libs.messages(messages)
+    @libs.footer()
 
 }

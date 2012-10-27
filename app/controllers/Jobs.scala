@@ -1,192 +1,151 @@
 package controllers
 
-import java.net.URL
-import org.w3.vs.controllers._
+import org.w3.banana._
+import org.w3.vs.actor.message._
 import org.w3.vs.exception._
 import org.w3.vs.model._
-import org.w3.vs.view.model._
 import org.w3.vs.view.collection._
 import org.w3.vs.view.form._
-import org.w3.vs.actor.message._
+import org.w3.vs.view.model._
+import play.Logger.ALogger
 import play.api.i18n.Messages
 import play.api.libs.iteratee.Enumeratee
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Iteratee
 import play.api.libs.json.JsValue
-import play.api.mvc._
-import scalaz.Scalaz._
 import play.api.libs.{EventSource, Comet}
+import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent._
-import org.w3.banana._
-import org.w3.util.Util._
-import com.yammer.metrics.Metrics
-import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 
-object Jobs extends Controller {
+object Jobs extends VSController {
   
-  type ActionA = Action[AnyContent]
+  val logger: ALogger = play.Logger.of("org.w3.vs.controllers.Jobs")
   
-  val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
-  // TODO: make the implicit explicit!!!
-  implicit val conf: org.w3.vs.VSConfiguration = org.w3.vs.Prod.configuration
-  
-  import Application._
+  //def redirect: ActionA = Action { implicit req => Redirect(routes.Jobs.index) }
 
-  import org.w3.vs.view._
-
-  def redirect: ActionA = Action { implicit req => Redirect(routes.Jobs.index) }
-
-  val indexName = (new controllers.javascript.ReverseJobs).reportSocket.name
-
-  val indexTimer = Metrics.newTimer(Jobs.getClass, indexName, MILLISECONDS, SECONDS)
-  
-  def index: ActionA = Action { implicit req =>
-    AsyncResult {
-      val f = {
-        for {
-          user <- getUser
-          jobs_ <- user.getJobs()
-          jobs <- JobsView(jobs_)
-        } yield {
-          if (isAjax) {
-            Ok(jobs.bindFromRequest.toJson)
-          } else {
-            Ok(views.html.main(
-              user = user,
-              title = "Jobs - Validator Suite",
-              style = "",
-              script = "",
-              collections = Seq(jobs.bindFromRequest)
-            )).withHeaders("Cache-Control" -> "no-cache, no-store")
-          }
-        }
-      } recover toError
-      f.timer(indexName).timer(indexTimer)
-    }
-  }
-  
-  val reportName = (new controllers.javascript.ReverseJobs).report.name
-
-  val reportTimer = Metrics.newTimer(Jobs.getClass, reportName, MILLISECONDS, SECONDS)
-
-  def report(id: JobId, url: URL, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
-    AsyncResult {
-      val f = (
-        for {
-          user <- getUser
-          job_ <- user.getJob(id)
-          assertions_ <- job_.getAssertions().map(_.filter(_.url == url)) // TODO Empty = exception
-          assertors = AssertorsView(assertions_)
-          assertions = AssertionsView(assertions_).filterOn(assertors.firstAssertor).bindFromRequest
-          resource = ResourcesView.single(url, assertions, job_.id)
-        } yield {
-          Ok(views.html.main(
+  def index: ActionA = AuthAsyncAction { implicit req => user =>
+    for {
+      jobs_ <- user.getJobs()
+      jobs <- JobsView(jobs_)
+    } yield {
+      if (isAjax) {
+        Ok(jobs.bindFromRequest.toJson)
+      } else {
+        Ok(views.html.main(
             user = user,
-            title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
+            title = "Jobs - Validator Suite",
             style = "",
-            script = "",
-            crumbs = Seq((job_.name, routes.Jobs.show(job_.id).toString), (Helper.shorten(url, 50), "")),
-            collections = Seq(
-              resource.withAssertions(assertions),
-              assertors.withAssertions(assertions),
-              assertions
-            ))).withHeaders("Cache-Control" -> "no-cache, no-store")
-        }
-      ) recover toError
-      f.timer(reportName).timer(reportTimer)
+            script = "test",
+            collections = Seq(jobs.bindFromRequest)
+        )).withHeaders(("Cache-Control", "no-cache, no-store"))
+      }
     }
   }
 
-  def show(id: JobId, messages: List[(String, String)] = List.empty): ActionA = Action { implicit req =>
-    req.getQueryString("group") match {
-      case Some("message") => reportByMessages(id, messages)
-      case _ =>               reportByResources(id, messages)
-    }
-  }
-
-  val reportByMsgName = (new controllers.javascript.ReverseJobs).show.name + "/reportByMessages"
-
-  val reportByMsgTimer = Metrics.newTimer(Jobs.getClass, reportByMsgName, MILLISECONDS, SECONDS)
-
-  def reportByMessages(id: JobId, messages: List[(String, String)] = List.empty)(implicit req: Request[_]) = {
-    AsyncResult {
-      val f = (
-        for {
-          user <- getUser
-          job_ <- user.getJob(id)
-          assertions_ <- job_.getAssertions()
-          job <- JobsView.single(job_)
-        } yield {
-          if (isAjax) {
-            val assertions = AssertionsView.grouped(assertions_).bindFromRequest
-            Ok(assertions.toJson)
-          } else {
-            val assertors = AssertorsView(assertions_)
-            val assertions = AssertionsView.grouped(assertions_).filterOn(assertors.firstAssertor).bindFromRequest
-            Ok(views.html.main(
-              user = user,
-              title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
-              style = "",
-              script = "",
-              crumbs = Seq((job_.name, "")),
-              collections = Seq(
-                job.withAssertions(assertions),
-                assertors.withAssertions(assertions),
-                assertions
-              ))).withHeaders("Cache-Control" -> "no-cache, no-store")
-          }
-        }
-      ) recover toError
-      f.timer(reportByMsgName).timer(reportByMsgTimer)
-    }
-  }
-
-  val reportByResourcesName = (new controllers.javascript.ReverseJobs).show.name + "/reportByResources"
-
-  val reportByResourcesTimer = Metrics.newTimer(Jobs.getClass, reportByResourcesName, MILLISECONDS, SECONDS)
-
-  def reportByResources(id: JobId, messages: List[(String, String)] = List.empty)(implicit req: Request[_]) = {
-    AsyncResult {
-      val f = (
-        for {
-          user <- getUser
-          job_ <- user.getJob(id)
-          assertions_ <- job_.getAssertions()
-          job <- JobsView.single(job_)
-          resources = ResourcesView(assertions_, job_.id).bindFromRequest
-        } yield {
-          if (isAjax) {
-            Ok(resources.toJson)
-          } else {
-            Ok(views.html.main(
-              user = user,
-              title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
-              style = "",
-              script = "",
-              crumbs = Seq((job_.name, "")),
-              collections = Seq(
-                job.withResources(resources),
-                resources
-              ))).withHeaders("Cache-Control" -> "no-cache, no-store")
-          }
-        }
-      ) recover toError
-      f.timer(reportByResourcesName).timer(reportByResourcesTimer)
-    }
-  }
-
-  def delete(id: JobId): ActionA = Action { implicit req =>
+  /*def report(id: JobId, url: URL/*, messages: List[(String, String)] = List.empty*/): ActionA = Action { implicit req =>
     AsyncResult {
       (for {
         user <- getUser
-        job <- user.getJob(id)
-        _ <- job.delete()
+        job_ <- user.getJob(id)
+        assertions_ <- job_.getAssertions().map(_.filter(_.url == url)) // TODO Empty = exception
+        assertors = AssertorsView(assertions_)
+        assertions = AssertionsView(assertions_).filterOn(assertors.firstAssertor).bindFromRequest
+        resource = ResourcesView.single(url, assertions, job_.id)
       } yield {
-        if (isAjax) Ok else SeeOther(routes.Jobs.index.toString) /*.flashing(("success" -> Messages("jobs.deleted", job.name)))*/
+        Ok(views.html.main(
+          user = user,
+          title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
+          style = "",
+          script = "test",
+          crumbs = Seq((job_.name, routes.Assertions.index(job_.id).toString), (Helper.shorten(url, 50), "")),
+          collections = Seq(
+            resource.withAssertions(assertions),
+            assertors.withAssertions(assertions),
+            assertions
+          ))).withHeaders(("Cache-Control", "no-cache, no-store"))
       }) recover toError
     }
-  } 
+  }*/
+
+  def get(id: JobId/*, messages: List[(String, String)] = List.empty*/): ActionA = Action { implicit req =>
+    req.getQueryString("group") match {
+      case Some("message") => Action { implicit req => Redirect(routes.Assertions.index(id)) }(req) //reportByAssertions_(id, messages)
+      case _ =>               Action { implicit req => Redirect(routes.Resources.index(id)) }(req) //reportByResources_(id, messages)
+    }
+  }
+
+  /*def reportByAssertions_(id: JobId, messages: List[(String, String)] = List.empty)(implicit req: Request[_]) = {
+    AsyncResult {
+      (for {
+        user <- getUser
+        job_ <- user.getJob(id)
+        assertions_ <- job_.getAssertions()
+        job <- JobsView.single(job_)
+
+      } yield {
+        if (isAjax) {
+          val assertions = AssertionsView.grouped(assertions_).bindFromRequest
+          Ok(assertions.toJson)
+        } else {
+          val assertors = AssertorsView(assertions_)
+          val assertions = AssertionsView.grouped(assertions_).filterOn(assertors.firstAssertor).bindFromRequest
+          Ok(views.html.main(
+            user = user,
+            title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
+            style = "",
+            script = "test",
+            crumbs = Seq((job_.name, "")),
+            collections = Seq(
+              job.withAssertions(assertions),
+              assertors.withAssertions(assertions),
+              assertions
+            ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+        }
+      }) recover toError
+    }
+  }
+
+  def reportByResources_(id: JobId, messages: List[(String, String)] = List.empty)(implicit req: Request[_]) = {
+    AsyncResult {
+      (for {
+        user <- getUser
+        job_ <- user.getJob(id)
+        assertions_ <- job_.getAssertions()
+        job <- JobsView.single(job_)
+        resources = ResourcesView(assertions_, job_.id).bindFromRequest
+      } yield {
+        if (isAjax) {
+          Ok(resources.toJson)
+        } else {
+          Ok(views.html.main(
+            user = user,
+            title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
+            style = "",
+            script = "test",
+            crumbs = Seq((job_.name, "")),
+            collections = Seq(
+              job.withResources(resources),
+              resources
+            ))).withHeaders(("Cache-Control", "no-cache, no-store"))
+        }
+      }) recover toError
+    }
+  }
+
+  def reportByAssertions(id: JobId, messages: List[(String, String)] = List.empty): ActionA =
+    Action { implicit req => reportByAssertions_(id, messages) }
+
+  def reportByResources(id: JobId, messages: List[(String, String)] = List.empty): ActionA =
+    Action { implicit req => reportByResources_(id, messages) }*/
+
+  def delete(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
+    for {
+      job <- user.getJob(id)
+      _ <- job.delete()
+    } yield {
+      if (isAjax) Ok else SeeOther(routes.Jobs.index.toString) /*.flashing(("success" -> Messages("jobs.deleted", job.name)))*/
+    }
+  }
     
   def new1: ActionA = newOrEditJob(None)
   def edit(id: JobId): ActionA = newOrEditJob(Some(id))
@@ -215,7 +174,6 @@ object Jobs extends Controller {
   }
 
   private def enumerator(implicit reqHeader: RequestHeader): Enumerator[JsValue] = {
-    implicit val session: Session = reqHeader.session // may not be needed anymore?
     Enumerator.flatten((
       for {
         user <- getUser
@@ -243,7 +201,7 @@ object Jobs extends Controller {
     Ok.stream(enumerator &> EventSource()).as("text/event-stream")
   }
   
-  def reportSocket(id: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
+  /*def reportSocket(id: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit req =>
     val promiseEnumerator: Future[Enumerator[JsValue]] =
       (for {
         user <- getUser
@@ -262,15 +220,13 @@ object Jobs extends Controller {
     val enumerator =  Enumerator.flatten(promiseEnumerator)
 
     (iteratee, enumerator)
-  }
+  }*/
 
   /*
    * Private methods
    */
-  private def newOrEditJob(implicit idOpt: Option[JobId]): ActionA = Action { implicit req =>
-    AsyncResult {
+  private def newOrEditJob(implicit idOpt: Option[JobId]): ActionA = AuthAsyncAction { implicit req => user =>
       (for {
-        user <- getUser
         org <- user.getOrganization() map (_.get)
         form <- idOpt match {
           case Some(id) => user.getJob(id) map JobForm.fill _
@@ -280,59 +236,53 @@ object Jobs extends Controller {
         Ok(views.html.jobForm(form, user, org, idOpt))
       }) recover toError
     }
-  }
-  
-  private def createOrUpdateJob(implicit idOpt: Option[JobId]): ActionA = Action { implicit req =>
-    AsyncResult {
-      (for {
-        user <- getUser
-        org <- user.getOrganization() map (_.get)
-        form <- JobForm.bind map {
-          case Left(form) => throw new InvalidJobFormException(form, user, org, idOpt)
-          case Right(validJobForm) => validJobForm
-        }
-        jobM <- idOpt match {
-          case Some(id) => user.getJob(id)
-            .flatMap(j => form.update(j)
-            .save()
-            .map(job => (job, "jobs.updated")))
-          case None => form
-            .createJob(user)
-            .save()
-            .map(job => (job, "jobs.created"))
-        }
-      } yield {
-        val (job, msg) = jobM
-        if (isAjax)
-          Created(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
-        else
-          SeeOther(routes.Jobs.index.toString /*show(job.id)*/) /*.flashing(("success" -> Messages(msg, job.name)))*/
-      }) recover {
-        case InvalidJobFormException(form, user, org, idOpt) => BadRequest(views.html.jobForm(form, user, org, idOpt))
-      } recover toError
+
+  private def createOrUpdateJob(implicit idOpt: Option[JobId]): ActionA = AuthAsyncAction { implicit req => user =>
+    (for {
+      org <- user.getOrganization() map (_.get)
+      form <- JobForm.bind map {
+        case Left(form) => throw new InvalidJobFormException(form, user, org, idOpt)
+        case Right(validJobForm) => validJobForm
+      }
+      jobM <- idOpt match {
+        case Some(id) => user.getJob(id)
+          .flatMap(j => form.update(j)
+          .save()
+          .map(job => (job, "jobs.updated")))
+        case None => form
+          .createJob(user)
+          .save()
+          .map(job => (job, "jobs.created"))
+      }
+    } yield {
+      val (job, msg) = jobM
+      if (isAjax)
+        Created(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
+      else
+        SeeOther(routes.Jobs.index.toString /*show(job.id)*/) /*.flashing(("success" -> Messages(msg, job.name)))*/
+    }) recover {
+      case InvalidJobFormException(form, user, org, idOpt) => BadRequest(views.html.jobForm(form, user, org, idOpt))
     }
   }
-  
-  private def simpleJobAction(id: JobId)(action: User => Job => Any)(msg: String): ActionA = Action { implicit req =>
-    AsyncResult {
-      (for {
-        user <- getUser
-        job <- user.getJob(id)
-      } yield {
-        action(user)(job)
-        if (isAjax)
-          Accepted(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
-        else
-          (for {
-            body <- req.body.asFormUrlEncoded
-            param <- body.get("uri")
-            uri <- param.headOption
-          } yield uri) match {
-            case Some(uri) => SeeOther(uri) /*.flashing(("success" -> Messages(msg, job.name)))*/ // Redirect to "uri" param if specified
-            case None =>SeeOther(routes.Jobs.show(job.id).toString)
-          }
-      }) recover toError
+
+  private def simpleJobAction(id: JobId)(action: User => Job => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>
+    for {
+      job <- user.getJob(id)
+    } yield {
+      action(user)(job)
+      if (isAjax) {
+        Accepted(views.html.libs.messages(List(("success" -> Messages(msg, job.name)))))
+      } else {
+        (for {
+          body <- req.body.asFormUrlEncoded
+          param <- body.get("uri")
+          uri <- param.headOption
+        } yield uri) match {
+          case Some(uri) => SeeOther(uri) /*.flashing(("success" -> Messages(msg, job.name)))*/ // Redirect to "uri" param if specified
+          case None =>SeeOther(routes.Resources.index(job.id).toString)
+        }
+      }
     }
   }
-  
+
 }

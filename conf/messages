@@ -3,7 +3,7 @@ collection.definitions=Definitions
 
 # Jobs
 jobs.col.title=Jobs
-jobs.name=Job Name
+jobs.name=Name
 jobs.name.detail=The name of the job
 jobs.entrypoint=Start URL
 jobs.entrypoint.detail=The start URL for this job, entry point of the crawler
@@ -74,7 +74,7 @@ assertors.actions.detail=Actions to perform on the assertor
 
 
 resource.report.for=Report for
-resources.external.link=Open resource in a new tab
+resource.external.link=Open resource in a new tab
 resources.button.revalidate=Revalidate
 
 job.button.stop=Cancel
@@ -91,6 +91,8 @@ job.button.search=Search
 assertion.occurrences.count={0} times
 assertion.occurrences.count.one=1 time
 assertion.occurrences.count.resources={0} in {1} resources
+
+assertion.resources.detail=This message appears in the following resources:
 
 
 # Application

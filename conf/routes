@@ -1,36 +1,63 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
-# ~~~~
 
-# Indexes
-GET     /suite/                           controllers.Jobs.redirect
-GET     /suite/dashboard                  controllers.Jobs.redirect
-
-# Jobs
-GET     /suite/jobs                       controllers.Jobs.index
-POST    /suite/jobs                       controllers.Jobs.create
-GET     /suite/jobs/new                   controllers.Jobs.new1
-GET     /suite/jobs/ws                    controllers.Jobs.webSocket
-GET     /suite/jobs/ws/:id                controllers.Jobs.reportSocket(id: JobId)
-GET     /suite/jobs/comet                 controllers.Jobs.cometSocket
-GET     /suite/jobs/events                controllers.Jobs.eventsSocket
-GET     /suite/jobs/:id                   controllers.Application.redirectWithSlash(id: JobId)
-GET     /suite/jobs/:id/                  controllers.Jobs.show(id: JobId)
-POST    /suite/jobs/:id                   controllers.Jobs.dispatcher(id: JobId)
-POST    /suite/jobs/:id/                  controllers.Jobs.dispatcher(id: JobId)
-GET     /suite/jobs/:id/edit              controllers.Jobs.edit(id: JobId)
-GET     /suite/jobs/:id/:url              controllers.Jobs.report(id: JobId, url: java.net.URL)
-
+##########################
 # Application
-GET     /suite/login                      controllers.Application.login
-POST    /suite/login                      controllers.Application.authenticate
-POST    /suite/logout                     controllers.Application.logout
+GET     /suite                                                  controllers.Application.index
+GET     /suite/login                                            controllers.Application.login
+POST    /suite/login                                            controllers.Application.authenticate
+POST    /suite/logout                                           controllers.Application.logout
 
+##########################
+# Jobs
+GET     /suite/jobs                                             controllers.Jobs.index
+POST    /suite/jobs                                             controllers.Jobs.create
+GET     /suite/jobs/new                                         controllers.Jobs.new1
+GET     /suite/jobs/:job                                        controllers.Jobs.get(job: JobId)
+POST    /suite/jobs/:job                                        controllers.Jobs.dispatcher(job: JobId)
+GET     /suite/jobs/:job/edit                                   controllers.Jobs.edit(job: JobId)
+# Sockets
+GET     /suite/jobs/ws                                          controllers.Jobs.webSocket
+GET     /suite/jobs/comet                                       controllers.Jobs.cometSocket
+GET     /suite/jobs/events                                      controllers.Jobs.eventsSocket
+
+##########################
+# Resources
+GET     /suite/jobs/:job/resources                              controllers.Resources.index(job: JobId)
+GET     /suite/jobs/:job/resources/:url                         controllers.Resources.get(job: JobId, url: java.net.URL)
+
+##########################
+# Assertions
+GET     /suite/jobs/:job/assertions                             controllers.Assertions.index(job: JobId)
+GET     /suite/jobs/:job/assertions/:assert                     controllers.Assertions.get(job: JobId, assert: AssertionId)
+GET     /suite/jobs/:job/resources/:url/assertions              controllers.Assertions.index1(job: JobId, url: java.net.URL)
+GET     /suite/jobs/:job/resources/:url/assertions/:assert      controllers.Assertions.get1(job: JobId, url: java.net.URL, assert: AssertionId)
+
+##########################
+# Assertors
+GET     /suite/jobs/:job/assertors                              controllers.Assertors.index(job: JobId)
+GET     /suite/jobs/:job/resources/:url/assertors               controllers.Assertors.index1(job: JobId, url: java.net.URL)
+
+##########################
 # Map static resources from the /public folder to the /assets URL path
-GET     /suite/public/*file               controllers.Assets.at(path="/public", file)
+GET     /suite/public/*file                                     controllers.Assets.at(path="/public", file)
 
 # Adds an Assets controller to expose javascript sources directly during development
 # Because Play changes the signature of routes.Assets.at() depending on whether there is a single assets controller or
 # more i added a dummy controller that serves files from nowhere. The switch has to be done manually.
-#GET     /no_folder/*file            controllers.Assets.at(path="/no_folder", file)
-GET     /suite/dev/scripts/*file         controllers.Assets.at(path="/app/assets/scripts", file)
+#GET     /no_folder/*file                                       controllers.Assets.at(path="/no_folder", file)
+GET     /suite/dev/scripts/*file                                controllers.Assets.at(path="/app/assets/scripts", file)
+
+
+
+
+#
+#POST   /suite/jobs/:job/resources                              controllers.Resources.create(job: JobId)
+#GET    /suite/jobs/:job/resources/new                          controllers.Resources.new1(job: JobId)
+#POST   /suite/jobs/:job/resources/:url                         controllers.Resources.dispatcher(job: JobId, url: java.net.URL)
+#GET    /suite/jobs/:job/resources/:url/edit                    controllers.Resources.edit(job: JobId, url: java.net.URL)
+#POST   /suite/jobs/:job/assertions                             controllers.Assertions.create(job: JobId)
+#GET    /suite/jobs/:job/assertions/new                         controllers.Assertions.new1(job: JobId)
+#POST   /suite/jobs/:job/assertions/:assert                     controllers.Assertions.dispatcher(job: JobId, assert: AssertionId)
+#GET    /suite/jobs/:job/assertions/:assert/edit                controllers.Assertions.edit(job: JobId, assert: AssertionId)
+#
