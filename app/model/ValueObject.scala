@@ -12,10 +12,10 @@ case class JobVO (
     strategy: Strategy,
     creator: UserId,
     organization: OrganizationId) extends ValueObject
-    
+
 case class OrganizationVO (
-  name: String,
-  admin: UserId) extends ValueObject
+    name: String,
+    admin: UserId) extends ValueObject
     
 case class UserVO(
     name: String,

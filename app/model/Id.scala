@@ -39,6 +39,8 @@ case class AssertorId(id: String) {
 
   assert(AssertorId.regex.findFirstMatchIn(id).isDefined)
 
+  override def toString = id
+
 }
 
 object JobId {

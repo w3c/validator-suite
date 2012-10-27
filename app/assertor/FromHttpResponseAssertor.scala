@@ -19,9 +19,9 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
             val contexts = assertions.foldLeft(Iterable[Context]()){case (contexts, a) => contexts ++ a.contexts}
             assertions.head.copy(contexts = contexts.toList)
           }
-      AssertorResult(context = context, assertor = name, sourceUrl = response.url, assertions = assertions.toList)
+      AssertorResult(context = context, assertor = id, sourceUrl = response.url, assertions = assertions.toList)
     } catch { case t: Throwable =>
-      AssertorFailure(context = context, assertor = name, sourceUrl = response.url, why = t.getMessage)
+      AssertorFailure(context = context, assertor = id, sourceUrl = response.url, why = t.getMessage)
     }
     val end = System.currentTimeMillis()
     logger.debug("%s took %dms to assert %s" format (this.name, end - start, response.url))

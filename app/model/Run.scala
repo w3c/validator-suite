@@ -105,7 +105,7 @@ case class Run private (
     warnings: Int = 0,
     invalidated: Int = 0,
     // based on scheduled assertions
-    pendingAssertions: Set[(String, URL)] = Set.empty) {
+    pendingAssertions: Set[(AssertorId, URL)] = Set.empty) {
 
   val logger = play.Logger.of(classOf[Run])
 
@@ -287,7 +287,7 @@ case class Run private (
            Set.empty[AssertorCall]
          }
         val runWithPendingAssertorCalls =
-          runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.name, ac.response.url)))
+          runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.id, ac.response.url)))
         (runWithPendingAssertorCalls, urlsToFetch, assertorCalls)
       }
       case Redirect(_, url) => {

@@ -235,7 +235,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event(failure: AssertorFailure, run) => {
-      logger.debug("%s: %s failed to assert %s because [%s]" format (run.shortId, failure.assertor, failure.sourceUrl.toString, failure.why))
+      logger.warn("%s: %s failed to assert %s because [%s]" format (run.shortId, failure.assertor, failure.sourceUrl.toString, failure.why))
       Run.saveEvent(run.runUri, AssertorResponseEvent(failure))
       stateOf(run.withAssertorFailure(failure))
     }

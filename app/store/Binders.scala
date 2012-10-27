@@ -40,7 +40,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
     lazy val job = property[(OrganizationId, JobId)](apply("job"))
     lazy val run = property[(OrganizationId, JobId, RunId)](apply("run"))
-    lazy val assertor = property[String](apply("assertor"))
+    lazy val assertor = property[AssertorId](apply("assertor"))
     lazy val createdAt = property[DateTime](apply("createdAt"))
     lazy val timestamp = property[DateTime](apply("timestamp"))
     lazy val user = property[UserVO](apply("user"))
@@ -89,9 +89,11 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val BeLazyBinder: PointedGraphBinder[Rdf, BeLazy.type] = constant(BeLazy, ont.beLazy)
 
-  implicit lazy val AssertorFailureBinder = pgb[AssertorFailure](ont.run, ont.assertor, ont.url, ont.why)(AssertorFailure.apply, AssertorFailure.unapply)
+  implicit lazy val AssertorFailureBinder: PointedGraphBinder[Rdf, AssertorFailure] =
+    pgb[AssertorFailure](ont.run, ont.assertor, ont.url, ont.why)(AssertorFailure.apply, AssertorFailure.unapply)
 
-  implicit lazy val AssertorResultBinder = pgb[AssertorResult](ont.run, ont.assertor, ont.url, ont.assertions)(AssertorResult.apply, AssertorResult.unapply)
+  implicit lazy val AssertorResultBinder: PointedGraphBinder[Rdf, AssertorResult] =
+    pgb[AssertorResult](ont.run, ont.assertor, ont.url, ont.assertions)(AssertorResult.apply, AssertorResult.unapply)
 
   implicit lazy val AssertorResponseBinder = new PointedGraphBinder[Rdf, AssertorResponse] {
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Try[AssertorResponse] =
@@ -188,7 +190,7 @@ trait Binders extends UriBuilders with LiteralBinders {
         // @@
         val start = System.currentTimeMillis()
         var toBeFetched = Set.empty[URL]
-        var toBeAsserted = Map.empty[(URL, String), AssertorCall]
+        var toBeAsserted = Map.empty[(URL, AssertorId), AssertorCall]
         val (initialRun, urls) = Run(id, strategy, createdAt).newlyStartedRun
         var run = initialRun
         toBeFetched ++= urls
@@ -208,7 +210,7 @@ trait Binders extends UriBuilders with LiteralBinders {
             run = newRun
             toBeFetched ++= urls
             assertorCalls foreach { ac =>
-              toBeAsserted += ((ac.response.url, ac.assertor.name) -> ac)
+              toBeAsserted += ((ac.response.url, ac.assertor.id) -> ac)
             }
           }
           case ResourceResponseEvent(er@ErrorResponse(url, _, _), _) => {

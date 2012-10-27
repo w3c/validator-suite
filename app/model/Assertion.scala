@@ -15,7 +15,7 @@ import org.w3.vs.sparql._
 
 case class Assertion(
     url: URL,
-    assertor: String,
+    assertor: AssertorId,
     contexts: List[Context],
     lang: String,
     title: String,
