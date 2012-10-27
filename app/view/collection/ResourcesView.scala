@@ -7,12 +7,16 @@ import org.w3.vs.view.Collection._
 import org.w3.vs.view._
 import org.w3.vs.view.model.{AssertionView, ResourceView}
 import play.api.templates.Html
+import controllers.routes
 
 case class ResourcesView (
+    jobId: JobId,
     source: Iterable[ResourceView],
     id: String = "resources",
     classe: String = "list",
     params: Parameters = Parameters()) extends CollectionImpl[ResourceView] {
+
+  val route = routes.Resources.index(jobId)
 
   def definitions = ResourceView.definitions
 
@@ -82,6 +86,7 @@ object ResourcesView {
     }
     val view = ResourceView(jobId, url, last, warnings, errors, Some(assertions))
     ResourcesView(
+      jobId = jobId,
       source = Iterable(view),
       classe = "single"
     )
@@ -108,7 +113,6 @@ object ResourcesView {
         ResourceView(jobId, url, last, warnings, errors, None)
       }
     }
-    ResourcesView(source = views)
+    ResourcesView(jobId = jobId, source = views)
   }
-
 }

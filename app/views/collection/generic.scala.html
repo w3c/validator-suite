@@ -1,5 +1,5 @@
 @(collection: Collection[Model])
-    <section id="@collection.id" class="@collection.classe">
+    <section id="@collection.id" class="@collection.classe" @collection.attributes.map{attr => data-@attr.name="@attr.value"}>
         <h2>@Messages(s"${collection.id}.col.title")</h2>
 
         <aside>

@@ -6,12 +6,15 @@ import org.w3.vs.view._
 import org.w3.vs.view.model.{AssertionView, AssertorView}
 import play.api.i18n.Messages
 import play.api.templates.Html
+import controllers.routes
 
 case class AssertorsView(
     source: Iterable[AssertorView],
     id: String = "assertors",
     classe: String = "tabs",
     params: Parameters = Parameters()) extends CollectionImpl[AssertorView] {
+
+  def route = routes.Jobs.index
 
   def definitions = AssertorView.definitions
 
@@ -28,8 +31,9 @@ case class AssertorsView(
 
   def jsTemplate: Option[Html] = Some(views.html.template.assertor())
 
-  // BUG: if iterable.isEmpty, then this raises UnsupportedOperationException
-  def firstAssertor: String = iterable.maxBy(_.errors).name
+  def firstAssertor: String = {
+    if (iterable.size > 0) iterable.maxBy(_.errors).id.toString else ""
+  }
 
   def withAssertions(assertions: Collection[AssertionView]): AssertorsView =
     copy(source = source.map(_.copy(assertions = Some(assertions))))

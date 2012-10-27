@@ -2,7 +2,7 @@ package org.w3.vs.view
 
 import play.api.templates.Html
 import scalaz.Equal
-import play.api.mvc.Request
+import play.api.mvc.{Call, Request}
 
 trait Collection[+A] extends View {
 
@@ -52,6 +52,8 @@ trait Collection[+A] extends View {
 
   def isGroupedBy(group: String): Boolean
 
+  def route: Call
+
   def queryParameters: Seq[QueryParameter]
 
   def queryString: String
@@ -61,6 +63,8 @@ trait Collection[+A] extends View {
   def id: String
 
   def classe: String
+
+  def attributes: Iterable[Attribute]
 
   def definitions: Seq[Definition]
 
@@ -81,6 +85,8 @@ object Collection {
   case class Definition(name: String, isSortable: Boolean)
 
   case class QueryParameter(name: String, value: String)
+
+  case class Attribute(name: String, value: String)
 
   case class SortParam(name: String, ascending: Boolean)
 

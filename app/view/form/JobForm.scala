@@ -4,8 +4,9 @@ import java.net.URL
 import org.w3.banana._
 import org.w3.vs.VSConfiguration
 import org.w3.vs.assertor.Assertor
-import org.w3.vs.controllers._
+//import org.w3.vs.controllers._
 import org.w3.vs.model._
+import org.w3.vs.view._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._

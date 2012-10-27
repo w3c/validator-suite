@@ -8,6 +8,7 @@ import play.api.templates.Html
 import scala.math
 import scalaz.Scalaz._
 import play.api.mvc.Request
+import controllers.routes
 
 abstract class CollectionImpl[A <: Model] extends Collection[A] {
 
@@ -85,7 +86,7 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
     res = req.getQueryString("n").map(n => res.showPerPage(n.toInt)).getOrElse(res)
     res = req.getQueryString("filter").map(res.filterOn(_)).getOrElse(res)
     res = req.getQueryString("search").map(res.search(_)).getOrElse(res)
-    res = req.getQueryString("group").map(res.groupBy(_)).getOrElse(res)
+    //res = req.getQueryString("group").map(res.groupBy(_)).getOrElse(res)
     res = req.getQueryString("sort").map(sort => res.sortBy(sort.replaceFirst("^-",""), sort.startsWith("-"))).getOrElse(res)
     res = req.getQueryString("p").map(p => res.goToPage(p.toInt)).getOrElse(res)
     res = req.getQueryString("offset").map(offset => res.offsetBy(offset.toInt)).getOrElse(res)
@@ -104,6 +105,7 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
 
   def isGroupedBy(group: String): Boolean =
     params.group === Some(group)
+
 
   def queryParameters: Seq[QueryParameter] = {
     Seq (
@@ -140,5 +142,12 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
 
   def toHtml: Html =
     views.html.collection.generic(this)
+
+  //def attributes: Iterable[Attribute] = Iterable.empty
+
+  def attributes: Iterable[Attribute] = Iterable(
+    ("url" -> route.toString),
+    ("count" -> source.size.toString)
+  ).map(a => Attribute(a._1, a._2))
 
 }

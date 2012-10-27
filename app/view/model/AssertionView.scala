@@ -2,15 +2,20 @@ package org.w3.vs.view.model
 
 import java.net.URL
 import org.joda.time.DateTime
-import org.w3.vs.model.{Context => ContextModel, Assertion, AssertionSeverity}
+import org.w3.vs.model.{Context => ContextModel, _}
 import org.w3.vs.view._
 import play.api.i18n.Messages
 import play.api.libs.json.{JsNull, Writes, Json, JsValue}
 import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.view.Collection.Definition
+import org.w3.vs.view.Collection.Definition
+import org.w3.vs.model.Context
+import scala.Some
 
 case class AssertionView(
-    assertor: String,
+    id: Int,
+    jobId: JobId,
+    assertor: AssertorId,
     severity: AssertionSeverity,
     validated: DateTime,
     title: Html,
@@ -25,9 +30,9 @@ case class AssertionView(
   def toHtml: Html =
     views.html.model.assertion(this)
 
-  def isEmpty: Boolean = resources.isEmpty && ! description.isDefined
+  def isEmpty: Boolean = resources.isEmpty && contexts.isEmpty && !description.isDefined
 
-  def occurencesLegend: String = {
+  def occurrencesLegend: String = {
     if (resources.size > 1) {
       val occ = if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
                 else Messages("assertion.occurrences.count.one")
@@ -53,15 +58,17 @@ object AssertionView {
     ("resources" -> true)
   ).map(a => Definition(a._1, a._2))
 
-  def apply(assertion: Assertion): AssertionView = {
+  def apply(assertion: Assertion, jobId: JobId): AssertionView = {
     AssertionView(
+      id = assertion.title.hashCode,
+      jobId = jobId,
       assertor = assertion.assertor,
       severity = assertion.severity,
       validated = assertion.timestamp,
       title = HtmlFormat.raw(assertion.title),
       description = assertion.description.map(HtmlFormat.raw),
       occurrences = scala.math.max(1, assertion.contexts.size),
-      resources = Iterable(assertion.url),
+      resources = Iterable.empty,
       contexts = assertion.contexts.toSeq.sorted(
         Ordering[(Int, Int)].on[ContextModel](context => (context.line.getOrElse(1000000), context.column.getOrElse(1000000)))
       ).map(context =>
@@ -90,11 +97,13 @@ object AssertionView {
     }
     def writes(assertion: AssertionView): JsValue = {
       toJson(Map(
-        "assertor" -> toJson(assertion.assertor),
+        "id" -> toJson(assertion.id),
+        "assertor" -> toJson(assertion.assertor.id.toString),
         "severity" -> toJson(assertion.severity.toString),
         "title" -> toJson(assertion.title.toString),
         "description" -> assertion.description.map(d => toJson(d.toString)).getOrElse(JsNull),
         "occurrences" -> toJson(assertion.occurrences),
+        "occurrencesLegend" -> toJson(assertion.occurrencesLegend),
         "contexts" -> toJson(assertion.contexts),
         "resources" -> toJson(assertion.resources.map(_.toString))
       ))

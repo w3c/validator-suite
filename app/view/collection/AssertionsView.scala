@@ -1,16 +1,30 @@
 package org.w3.vs.view.collection
 
 import org.joda.time.DateTime
-import org.w3.vs.model.{AssertionSeverity, Assertion}
+import org.w3.vs.model.{JobId, AssertionSeverity, Assertion}
 import org.w3.vs.view.Collection._
 import org.w3.vs.view.model.AssertionView
 import play.api.templates.{HtmlFormat, Html}
+import controllers.routes
+import play.api.mvc.Call
+import java.net.URL
+import scalaz.Scalaz._
 
 case class AssertionsView(
     source: Iterable[AssertionView],
     id: String = "assertions",
     classe: String = "folds",
-    params: Parameters = Parameters()) extends CollectionImpl[AssertionView] {
+    params: Parameters = Parameters(),
+    route: Call) extends CollectionImpl[AssertionView] {
+
+
+  /*override def attributes = Iterable(
+    //("url1" -> routes.Assertions.index(jobId)),
+    //("url2" -> routes.Assertions.index(jobId)),
+    ("count" -> source.size.toString)
+  ).map(a => Attribute(a._1, a._2))*/
+
+  //def route = routes.Jobs.index
 
   def definitions = AssertionView.definitions
 
@@ -26,7 +40,7 @@ case class AssertionsView(
   def filter(filter: Option[String]) =
     filter match {
       case Some(param) => {
-        case assertion if (assertion.assertor == param) => true
+        case assertion if (assertion.assertor.toString === param) => true
         case _ => false
       }
       case None => _ => true
@@ -42,7 +56,7 @@ case class AssertionsView(
     }
   }
 
-  def emptyMessage: Html = Html("")
+  def emptyMessage: Html = Html("empty")
 
   def jsTemplate: Option[Html] = Some(views.html.template.assertion())
 
@@ -52,11 +66,11 @@ case class AssertionsView(
 
 object AssertionsView {
 
-  def apply(assertions: Iterable[Assertion]): AssertionsView = {
-    AssertionsView(source = assertions.map(assertion => AssertionView(assertion)))
+  def apply(assertions: Iterable[Assertion], id: JobId, url: URL): AssertionsView = {
+    AssertionsView(source = assertions.map(assertion => AssertionView(assertion, id)), route = routes.Assertions.index1(id, url))
   }
 
-  def grouped(assertions: Iterable[Assertion]): AssertionsView = {
+  def grouped(assertions: Iterable[Assertion], id: JobId): AssertionsView = {
     val now = DateTime.now()
     // group by title + assertorId
     val views = assertions.groupBy(e => e.title + e.assertor).map { case (_, assertions) =>
@@ -68,6 +82,8 @@ object AssertionsView {
       val resources = assertions.map(_.url.underlying).toSeq.sortBy(_.toString)
       val occurrences = assertions.foldLeft(0)((count, assertion) => count + scala.math.max(1, assertion.contexts.size))
       AssertionView(
+        id = title.text.hashCode,
+        jobId = id,
         assertor = assertorKey,
         severity = severity,
         validated = now,
@@ -77,7 +93,7 @@ object AssertionsView {
         resources = resources
       )
     }
-    AssertionsView(source = views)
+    AssertionsView(source = views, route = routes.Assertions.index(id))
   }
 
 }

@@ -8,12 +8,15 @@ import play.api.i18n.Messages
 import play.api.templates.Html
 import scala.concurrent.{ExecutionContext, Future}
 import org.w3.vs.view.Collection
+import controllers.routes
 
 case class JobsView(
     source: Iterable[JobView],
     id: String = "jobs",
     classe: String = "list",
     params: Parameters = Parameters()) extends CollectionImpl[JobView] {
+
+  val route = routes.Jobs.index
 
   def definitions = JobView.definitions
 
