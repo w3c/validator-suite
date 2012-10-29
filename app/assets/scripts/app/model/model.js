@@ -32,7 +32,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
         initialize: function () {
             this.model.on('change', this.render, this);
             this.model.on('destroy', this.remove, this);
-            this.template = Util.getTemplate(this.templateId);
+            this.template = this.options.template || Util.getTemplate(this.templateId);
             if (_.isFunction(this.init)) { this.init(); }
         },
 

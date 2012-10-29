@@ -8,10 +8,11 @@ define(["lib/Logger"], function (Logger) {
 
         getTemplate: function (name) {
             try {
+                logger.info("Getting template: " + name);
                 return _.template(document.getElementById(name).text);
             } catch (ex) {
-                console.log(ex);
-                logger.error("Template " + name + " not found");
+                //console.log(ex);
+                logger.error("Error getting " + name + " template: " + ex.message);
                 return _.template("");
             }
         },

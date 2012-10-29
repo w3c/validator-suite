@@ -109,6 +109,10 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             var collection = this.collection,
                 initial_sort = this.getSortParam();
 
+            if (this.templateId && !this.template) {
+                this.template = Util.getTemplate(this.templateId);
+            }
+
             if (this.options.url) {
                 collection.url = this.options.url;
             } else if (this.$el.attr('data-url')) {
@@ -199,7 +203,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             models = this.displayed = models.slice(0, this.maxOnScreen);
 
             elements = models.map(function (model) {
-                return model.view().render().el;
+                return model.view({ template: this.template }).render().el;
             }, this);
 
             this.$('.empty').remove();
@@ -223,6 +227,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                 this.$el.append(empty);
             }
 
+            //if (this.isList()) { setTimeout(_.bind(this.updateLegend, this), 0); }
             if (this.isList()) { this.updateLegend(); }
 
             if (_.isFunction(this.afterRender)) { this.afterRender(); }
@@ -296,9 +301,70 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             return this.$el.hasClass('list') || this.$el.hasClass('folds');
         },
 
+        getVisibles: function () {
+            var views = _.invoke(this.displayed, 'view'),
+                visibles = { first: null, last: null },
+                i = 0,
+                isVisible;
+            for (i; i < views.length; i += 1) {
+                isVisible = views[i].isVisible();
+                if (visibles.first === null) {
+                    visibles.first = isVisible ? (i + 1) : null;
+                }
+                visibles.last = isVisible ? (i + 1) : visibles.last;
+                if (!isVisible && visibles.first !== null && visibles.last !== null) {
+                    break;
+                }
+            }
+            return visibles;
+        },
+
+        getVisibles2: function () {
+            var views = _.invoke(this.displayed, 'view'),
+                visibles = { first: null, last: null },
+                i = views.length - 1,
+                isVisible;
+            for (i; i >= 0; i -= 1) {
+                isVisible = views[i].isVisible();
+                if (visibles.last === null) {
+                    visibles.last = isVisible ? (i + 1) : null;
+                }
+                visibles.first = isVisible ? (i + 1) : visibles.first;
+                if (!isVisible && visibles.first !== null && visibles.last !== null) {
+                    break;
+                }
+            }
+            return visibles;
+        },
+
+        getVisibles3: function () {
+            var views = _.invoke(this.displayed, 'view').reverse(),
+                visibles = { first: null, last: null },
+                i = 0,
+                isVisible,
+                index;
+            for (i; i < views.length; i += 1) {
+                index = views.length - i;
+                isVisible = views[i].isVisible();
+                if (visibles.last === null) {
+                    visibles.last = isVisible ? index : null;
+                }
+                visibles.first = isVisible ? index : visibles.first;
+                if (!isVisible && visibles.first !== null && visibles.last !== null) {
+                    break;
+                }
+            }
+            return visibles;
+        },
+
         updateLegend: function () {
 
-            var views = _.invoke(this.displayed, 'view'),
+            var visibles = this.getVisibles3(), /*{ first: null, last: null }, */
+                old,
+                total,
+                legend;
+
+            /*var views = _.invoke(this.displayed, 'view'),
                 visibles = { first: null, last: null },
                 i = 0,
                 isVisible,
@@ -314,12 +380,13 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                 if (!isVisible && visibles.first !== null && visibles.last !== null) {
                     break;
                 }
-            }
+            }*/
 
             old = this.maxOnScreen;
             this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 5 : 30;
+            //this.maxOnScreen = 200;
 
-            if (this.maxOnScreen !== old) {
+            if (this.maxOnScreen !== old && visibles.last === this.displayed.length) { // does not remove elements on scroll up. seems more efficient like that
                 this.render();
             }
 
@@ -340,11 +407,5 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
     });
 
     return Collection;
-
-    return {
-
-        extend: function (options) { return Collection.extend(options); }
-
-    };
 
 });

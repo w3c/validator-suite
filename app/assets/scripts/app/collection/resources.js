@@ -13,6 +13,8 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "model/resource", "lib/Loader", 
 
     Resources.View = Resources.View.extend({
 
+        templateId: "resource-template",
+
         attributes: {
             id: "resources"
         },

@@ -13,6 +13,8 @@ define(["lib/Logger", "model/assertor", "lib/Loader", "lib/Util", "lib/Socket", 
 
     Assertors.View = Assertors.View.extend({
 
+        templateId: "assertor-template",
+
         attributes: {
             id: "assertors"
         },

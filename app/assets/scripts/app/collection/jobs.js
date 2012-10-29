@@ -13,6 +13,8 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "model/job", "lib/Loader", "libs
 
     Jobs.View = Jobs.View.extend({
 
+        templateId: "job-template",
+
         attributes: {
             id: "jobs"
         },
