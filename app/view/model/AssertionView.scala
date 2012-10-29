@@ -104,8 +104,10 @@ object AssertionView {
         "description" -> assertion.description.map(d => toJson(d.toString)).getOrElse(JsNull),
         "occurrences" -> toJson(assertion.occurrences),
         "occurrencesLegend" -> toJson(assertion.occurrencesLegend),
-        "contexts" -> toJson(assertion.contexts),
-        "resources" -> toJson(assertion.resources.map(_.toString))
+        "contexts" -> toJson(assertion.contexts.take(50)),
+        "contextsMore" -> toJson(scala.math.max(0, assertion.contexts.size - 50)),
+        "resources" -> toJson(assertion.resources.map(_.toString).take(50)),
+        "resourcesMore" -> toJson(scala.math.max(0, assertion.resources.size - 50))
       ))
     }
   }

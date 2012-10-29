@@ -1,23 +1,17 @@
-define(["w3", "libs/backbone"], function (W3, Backbone) {
+define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Logger, Util, Backbone, Model) {
 
     "use strict";
 
-    var Job = {};
+    var logger = new Logger("Job"),
+        Job;
 
-    Job.Model = Backbone.Model.extend({
-
-        logger: new W3.Logger("Job"),
+    Job = Model.extend({
 
         defaults: {
             name: "New Job",
-            //entrypoint: "",
+            entrypoint: "http://www.example.com",
             status: "idle",
-            /*completedOn: {
-                timestamp: null,
-                legend1: "Never",
-                legend2: null
-            },*/
-            completedOn: null,
+            completedOn: null, // .timestamp, .legend1, .legend2
             warnings: 0,
             errors: 0,
             resources: 0,
@@ -34,6 +28,15 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
             'delete': 'POST'
         },
 
+        search: function (search) {
+            return this.get("name").toLowerCase().indexOf(search.toLowerCase()) > -1 ||
+                    this.get("entrypoint").toLowerCase().indexOf(search.toLowerCase()) > -1;
+        },
+
+        reportUrl: function () {
+            return this.url() + "/resources";
+        },
+
         isIdle: function () {
             return this.get("status") === "idle";
         },
@@ -43,24 +46,24 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
         },
 
         run: function (options) {
-            this.logger.info(this.get("name") + ": run");
+            logger.info(this.get("name") + ": run");
             var action = this._serverEvent('run', options);
-            this.logger.debug(action);
+            logger.debug(action);
         },
 
         stop: function (options) { this._serverEvent('stop', options); },
 
         validate: function (attrs) {
             if (!attrs.name || attrs.name.length < 1) {
-                this.logger.warn("Name required");
+                logger.warn("Name required");
                 return "Name required";
             }
             if (!attrs.entrypoint || attrs.entrypoint.length < 1) {
-                this.logger.warn("Start URL required");
+                logger.warn("Start URL required");
                 return "Start URL required";
             }
             if (!attrs.maxResources || attrs.maxResources < 1 || attrs.maxResources > 500) {
-                this.logger.warn("Max resources must be between 1 and 500");
+                logger.warn("Max resources must be between 1 and 500");
                 return "Max resources must be between 1 and 500";
             }
         },
@@ -96,7 +99,7 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
             type = this.methodMap[method];
             params = { type: type };
             if (!options.url) {
-                params.url = model.url() || W3.exception("A 'url' property or function must be specified");
+                params.url = model.url() || Util.exception("A 'url' property or function must be specified");
             }
             if (method !== 'read') {
                 params.data = { action: method };
@@ -114,24 +117,17 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
                 );
             }
 
-            this.logger.info("Sending request: ");
-            this.logger.debug(_.extend(params, options));
+            logger.info("Sending request: ");
+            logger.debug(_.extend(params, options));
 
             return $.ajax(_.extend(params, options));
-        },
+        }
 
-        log: function () { console.log(JSON.stringify(this.toJSON())); }
     });
 
-    Job.View = Backbone.View.extend({
+    Job.View = Job.View.extend({
 
-        // requires template option
-
-        logger: new W3.Logger("JobView"),
-
-        model: new Job.Model(),
-
-        tagName: "article",
+        templateId: "job-template",
 
         events: {
             "click .stop"   : "stop",
@@ -145,68 +141,19 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
             $(event.target).parents('form').submit();
         },
 
-        initialize: function () {
+        init: function () {
             this.el.setAttribute("data-id", this.model.id);
-            this.model.on('change', this.render, this);
-            this.model.on('destroy', this.remove, this);
         },
 
-        /*search: function (event) {
-            console.log(event);
-            console.log(event.target.value);
-            this.formOptions.search = event.target.value;
-            this.formOptions.searchPosition = event.target.selectionStart;
-            console.log(this.formOptions.searchPosition);
-            this.render();
-            return;
-        },*/
-
-        render: function () {
-            this.$el.html(this.options.template(
-                _.extend(
-                    this.model.toJSON(),
-                    {
-                        url : this.model.url(),
-                        isIdle: this.model.isIdle(),
-                        isCompleted: this.model.get("completedOn") !== null,
-                        W3: W3
-                        //search: this.formOptions.search,
-                        //group: this.formOptions.group
-                    }
-                )
-            ));
-            return this;
+        templateOptions: function () {
+            return {
+                url : this.model.url(),
+                isIdle: this.model.isIdle(),
+                reportUrl : this.model.reportUrl(),
+                isCompleted: this.model.get("completedOn") !== null,
+                hasResources: function () { return $("#resources").size() > 0; }
+            };
         },
-
-        isVisible: (function () {
-
-            // cache those vars
-            var footer = $('body > footer');
-            var win = $(window);
-            var aside = $('#jobs aside');
-
-            return function () {
-                var top = this.$el.offset().top;
-                var bottom = this.$el.offset().top + this.$el.height();
-
-                return (top > win.scrollTop() + aside.height() &&
-                //      top < win.scrollTop() + win.height() - footer.height());
-                        bottom <= win.scrollTop() + win.height() - footer.height());
-
-            }
-        })(),
-
-        isScrolledUp: (function () {
-
-            // cache those vars
-            var footer = $('body > footer');
-            var win = $(window);
-
-            return function () {
-                var top = this.$el.offset().top;
-                return (top <= win.scrollTop() + win.height() - footer.height());
-            }
-        })(),
 
         stop: function () {
             this.model.stop({ wait: true });
@@ -218,46 +165,40 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
             return false;
         },
 
-        _delete: function () {
-            this.model.destroy({ wait: true });
-            return false;
+        addSearchHandler: function () {
+            var collec = this.options.resources || this.options.assertions;
+            if (!collec) { return; }
+            this.$(".actions input[name=search]").bind("keyup change", function () {
+                var value = this.value;
+                setTimeout(function () {
+                    collec.view().search(value);
+                }, 0);
+            });
         },
 
-        remove: function () {
-            this.$el.remove();
+        afterRender: function () {
+            this.addSearchHandler();
         }
 
     });
 
-    Job.fromHtml = function (elem) {
-        var $elem = $(elem);
-        var _value = function (attribute) {
-            var tag = $elem.find('[' + attribute + ']');
-            var attr = tag.attr(attribute);
-            if (attr !== "") {
-                return attr;
-            } else {
-                return tag.text();
-            }
-        };
-
-        var jobObj = {
+    Job.fromHtml = function (value, $elem) {
+        return {
             id: $elem.attr("data-id"),
-            name: _value('data-name'),
-            entrypoint: _value('data-entrypoint'),
-            status: _value('data-status'),
-            completedOn:_.isUndefined(_value('data-completed')) ? null : {
-                timestamp: _value('data-completed'),
-                legend1: _value('data-completed-legend1'),
-                legend2: _value('data-completed-legend2')},
-            warnings: parseInt(_value('data-warnings')),
-            errors: parseInt(_value('data-errors')),
-            resources: parseInt(_value('data-resources')),
-            maxResources: parseInt(_value('data-maxResources')),
-            health: parseInt(_value('data-health'))
+            name: value('data-name'),
+            entrypoint: value('data-entrypoint'),
+            status: value('data-status'),
+            completedOn: _.isUndefined(value('data-completed')) ? null : {
+                timestamp: value('data-completed'),
+                legend1: value('data-completed-legend1'),
+                legend2: value('data-completed-legend2')
+            },
+            warnings: parseInt(value('data-warnings'), 10),
+            errors: parseInt(value('data-errors'), 10),
+            resources: parseInt(value('data-resources'), 10),
+            maxResources: parseInt(value('data-maxResources'), 10),
+            health: parseInt(value('data-health'), 10)
         };
-
-        return new Job.Model(jobObj);
     };
 
     return Job;

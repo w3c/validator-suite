@@ -1,6 +1,8 @@
-define(["w3", "libs/backbone"], function (W3, Backbone) {
+define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Backbone) {
 
-    var logger = new W3.Logger("Loader");
+    "use strict";
+
+    var logger = new Logger("Loader");
 
     /**
      * var loader = new Loader(collection);
@@ -20,11 +22,11 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
         this.options = _.extend({ silent: true, add: true, cache: false }, options);
 
         if (!collection || !collection.expected)
-            W3.exception("collection not provided or does not have an expected count");
+            Util.exception("collection not provided or does not have an expected count");
 
         this.collection = collection;
 
-        logger.info("Created loader with options: " + JSON.stringify(options));
+        logger.info("Created loader with options: " + JSON.stringify(this.options));
 
     };
 
@@ -77,10 +79,10 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
         },
 
         setData: function (data, force) {
-            if (this.collection.isComplete()) return false;
+            if (this.collection.isComplete()) { return false; }
 
             var params = _.clone(this.options);
-            params.data = _.extend({ offset: 0, n: Loader.perPage }, data);
+            params.data = _.extend({}, this.xhr.params.data || {}, { offset: 0, n: Loader.perPage }, data);
 
             return this.request(params, force);
         },
@@ -88,12 +90,14 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
         getSuccess: function (params) {
 
             if (!_.isNumber(params.data.n) || !_.isNumber(params.data.offset)) {
-                W3.exception("offset or n is not a number");
+                Util.exception("offset or n is not a number");
             }
 
             var self = this;
 
             return function (collection, models) {
+
+                self.collection.trigger('reset');
 
                 if (!self.xhr.nextData) {
 
@@ -121,16 +125,17 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
                     if (!self.collection.isComplete()) {
                         if (self.xhr.nextData) {
 
-                            // if only offset differs use the previous one, review
-                            var diff = false;
-                            for (v in self.xhr.nextData) {
-                                if (v !== "offset" && self.xhr.nextData[v] != params.data[v]) {
-                                    diff = true;
-                                    break;
-                                }
-                            }
+                            console.log(self.xhr.nextData);
 
-                            if (diff) {
+                            // if only offset differs use the previous one
+                            var diff = false,
+                                previous = _.clone(params.data),
+                                next = _.clone(self.xhr.nextData);
+
+                            delete previous.offset;
+                            delete next.offset;
+
+                            if (!_.isEqual(previous, next)) {
                                 params.data = self.xhr.nextData;
                             } else {
                                 logger.info("keeping previous data");
@@ -151,14 +156,13 @@ define(["w3", "libs/backbone"], function (W3, Backbone) {
 
         isSearching: function () {
             return this.xhr && _.isString(this.xhr.params.data.search)
-                    &&this.xhr.params.data.search !== "" ? true : false;
+                    && this.xhr.params.data.search !== "" ? true : false;
         },
 
 
         isLoading: function () {
             return this.xhr ? true : false;
         }
-
 
     });
 

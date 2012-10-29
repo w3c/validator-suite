@@ -79,7 +79,7 @@
     .status {
         //width: 10%;
         width: 85px;
-        &.idle span {
+        .idle {
             vertical-align: middle;
             line-height: 22px;
         }
@@ -103,7 +103,7 @@
             color: #06C;
             border-radius: 0;
         }
-        &.running span:before {
+        .running:before {
             top: 8px;
         }
 
@@ -147,7 +147,7 @@
 
 }
 
-#jobs .status.running span {
+#jobs .status .running {
 
     padding-left: 20px;
     position: relative;

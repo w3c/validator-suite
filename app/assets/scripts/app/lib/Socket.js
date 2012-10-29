@@ -1,82 +1,12 @@
-define(["libs/backbone"], function (Backbone) {
+define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Backbone) {
 
     "use strict";
 
-    var W3 = {};
+    var logger = new Logger("Socket");
 
-    W3.Logger = function (name, active) {
+    var Socket = function (url, type) {
 
-
-
-        return {
-            log: function (msg) {
-                console.log("[" + name + "] " + msg);
-            },
-            info: function (msg) {
-                /*console.log(arguments);
-
-                var callstack = [];
-
-                try {
-
-                    i.d = s;
-                }catch (e) {
-
-                    var lines = e.stack.split('\n');
-                    for (var i=0, len=lines.length; i<len; i+=1) {
-                        //if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
-                            callstack.push(lines[i]);
-                        //}
-                    }
-                    console.log(callstack);
-
-                    console.log(e.name);
-                    console.log(e.type);
-                    console.log(e.arguments);
-                    console.log(e.stack);
-
-                }*/
-                if (console && console.info) { console.info("[" + name + "] " + msg); }
-            },
-            warn: function (msg) {
-                if (console && console.warn) { console.warn("[" + name + "] " + msg); }
-            },
-            error: function (msg) {
-                if (console && console.error) { console.error("[" + name + "] " + msg); }
-            },
-            debug: function (msg) {
-                if (console && console.debug) { console.debug(msg); }
-            },
-            trace: function () {
-                if (console && console.trace) { console.trace(); }
-            }
-        };
-
-    };
-
-    W3.Util = {
-
-        shortenUrl: function (url, limit) {
-            var shortUrl;
-            shortUrl = url.replace("http://", "");
-            return (shortUrl.length > limit ?
-                    shortUrl.substring(0, limit / 2) + "…" + shortUrl.substring(shortUrl.length - limit / 2) :
-                    shortUrl);
-        },
-
-        resolveUrl: function (url) {
-            var a = document.createElement('a');
-            a.setAttribute("href", url);
-            return a.href;
-        }
-
-    };
-
-    W3.Socket = function (url, type) {
-
-        var logger, websocketProtocol, types, socket, implementations, i;
-
-        logger = new W3.Logger("Socket");
+        var websocketProtocol, types, socket, implementations, i;
 
         websocketProtocol = {
             "http://": "ws://",
@@ -89,7 +19,7 @@ define(["libs/backbone"], function (Backbone) {
             2: "comet"
         };
 
-        socket = _.extend({ url: W3.Util.resolveUrl(url) }, Backbone.Events);
+        socket = _.extend({ url: Util.resolveUrl(url) }, Backbone.Events);
 
         implementations = {
 
@@ -191,16 +121,6 @@ define(["libs/backbone"], function (Backbone) {
         return socket;
     };
 
-    W3.Messages = function (msg) {
-
-
-
-    };
-
-    W3.exception = function (msg) {
-        throw new Error(msg);
-    };
-
-    return W3;
+    return Socket;
 
 });

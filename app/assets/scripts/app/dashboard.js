@@ -1,11 +1,11 @@
-require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
+require(["w3", "model/job", "collection/jobs"], function (W3, Job, Jobs) {
 
     // for debugging
     window.W3 = W3;
     window.Job = Job;
     window.Jobs = Jobs;
 
-    if(!('position' in document.createElement('progress'))) {
+    if (!('position' in document.createElement('progress'))) {
         require(["libs/progress-polyfill"]);
     }
 
@@ -18,8 +18,8 @@ require(["w3", "model/job", "model/jobs"], function (W3, Job, Jobs) {
         //header = $('body > header'),
         //footer = $('body > footer');
 
-        $("#actions .search button").hide();
-        $("#actions .search input").addClass("cleared");
+        //$("#actions .search button").hide();
+        //$("#actions .search input").addClass("cleared");
         $("#actions .clear").remove();
         $('nav.pagination :not(p.legend)').hide();
         $('body > footer').addClass('jsFixed');

@@ -1,10 +1,51 @@
-define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Resource, Loader, Backbone) {
+define(["lib/Logger", "lib/Util", "lib/Socket", "model/resource", "lib/Loader", "libs/backbone", "collection/collection"], function (Logger, Util, Socket, Resource, Loader, Backbone, Collection) {
 
     "use strict";
 
+    var logger = new Logger("Resources"),
+        Resources;
+
+    Resources = Collection.extend({
+
+        model: Resource
+
+    });
+
+    Resources.View = Resources.View.extend({
+
+        attributes: {
+            id: "resources"
+        },
+
+        sortParams: [
+            "url",
+            "validated",
+            "errors",
+            "warnings"
+        ],
+
+        /*search: function (search) {
+            this.search_ = function (resource) {
+                return resource.get("resourceUrl").toLowerCase().indexOf(search.toLowerCase()) > -1;
+            };
+            this.render();
+        },*/
+
+        init: function () {
+            if (!this.isList()) {
+                var view = this.collection.at(0).view();
+                view.options.assertions = this.options.assertions;
+                view.addSearchHandler();
+            }
+        }
+
+    });
+
+    return Resources;
+
     var Resources = {};
 
-    Resources.getComparatorBy = function (param, reverse) {
+/*    Resources.getComparatorBy = function (param, reverse) {
 
         reverse = (reverse || false);
 
@@ -38,13 +79,13 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
                 return reverse ? +1 : -1;
             }
         };
-    };
+    }; */
 
-    Resources.Collection = Backbone.Collection.extend({
+    Resources.Collection = Collection.extend({
 
-        model: Resource.Model,
+        model: Resource
 
-        comparator: Resources.getComparatorBy("name"),
+        /*comparator: Resources.getComparatorBy("name"),
 
         sortByParam: function (param, reverse) {
             this.comparator = Resources.getComparatorBy(param, reverse);
@@ -61,12 +102,10 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
                     this.expected = this.length;
                 }
             });
-        }
+        }*/
     });
 
     Resources.View = Backbone.View.extend({
-
-        logger: new W3.Logger("ResourcesView"),
 
         tagName: "section",
 
@@ -88,8 +127,7 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
 
         initialize: function () {
 
-            var logger = this.logger,
-                collection = this.collection,
+            var collection = this.collection,
                 resourcesSection = this.$el,
                 self = this,
                 sortParams = [
@@ -113,7 +151,7 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
             } else if (this.$el.attr('data-url')) {
                 collection.url = this.$el.attr('data-url');
             } else {
-                W3.exception('No url parameter was specified');
+                Util.exception('No url parameter was specified');
             }
 
 //          Listen on collection events
@@ -125,13 +163,13 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
 //          Parse the resources already on the page if our collection is new
 
             if (collection.length == 0 && this.$('article').size() > 0) {
-                try {
+                //try {
                     collection.reset(this.$('article').map(function (i, article) {
                         return Resource.fromHtml(article);
                     }).toArray());
-                } catch (ex) {
-                    logger.error(ex);
-                }
+                //} catch (ex) {
+                    //logger.error(ex);
+                //}
             }
 
 //          Add search handler
@@ -151,19 +189,19 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
             }
 
 //          Start the loader
-
+            var loader;
             if (this.options.load) {
-                var loader = this.loader = new Loader(collection);
+                loader = this.loader = new Loader(collection);
                 loader.start({ sort: this.getSortParam(), search: this.getSearchParam() });
                 loader.on('update', _.bind(this.render, this));
 
                 // debug
-                window.loader = loader;
+                //window.loader = loader;
             }
 
 //          Open a socket and listen on jobupdate events
 
-            /*this.socket = new W3.Socket(collection.url);
+            /*this.socket = new Socket(collection.url);
             this.socket.on("jobupdate", function (data) {
                 var job = collection.get(data.id);
                 if (!_.isUndefined(job)) {
@@ -266,8 +304,8 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
 //          Create resource views and render
 
             var elements = models.map(function (resource, index) {
-                resource.view = new Resource.View({ model: resource, template: this.options.template });
-                return resource.view.render().el;
+                //resource.view = new Resource.View({ model: resource });
+                return resource.view().render().el;
             }, this);
 
             this.$el.children('article').remove();
@@ -292,7 +330,7 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
 
         updateLegend: function () {
 
-            var views = _.pluck(this.displayed, 'view');
+            var views = _.invoke(this.displayed, 'view');
             var visibles = { first: null, last: null };
             var i = 0;
             for (i; i < views.length; i++) {
@@ -306,10 +344,10 @@ define(["w3", "model/resource", "lib/Loader", "libs/backbone"], function (W3, Re
                 }
             }
 
-            var o = this.maxOnScreen;
+            var old = this.maxOnScreen;
             this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 5 : 30;
 
-            if (this.maxOnScreen != o) {
+            if (this.maxOnScreen != old) {
                 this.render();
             }
 

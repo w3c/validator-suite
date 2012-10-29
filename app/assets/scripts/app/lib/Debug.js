@@ -1,4 +1,8 @@
-define(["w3", "model/jobs", "model/job"], function (W3, Jobs, Job) {
+define(["lib/Logger", "collection/jobs", "model/job"], function (Logger, Jobs, Job) {
+
+    "use strict";
+
+    var logger = new Logger("Debug");
 
     var Debug = {};
 

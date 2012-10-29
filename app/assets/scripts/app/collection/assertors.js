@@ -1,92 +1,75 @@
-define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Loader, Backbone) {
+define(["lib/Logger", "model/assertor", "lib/Loader", "lib/Util", "lib/Socket", "libs/backbone", "collection/Collection"], function (Logger, Assertor, Loader, Util, Socket, Backbone, Collection) {
 
     "use strict";
 
-    var Jobs = {};
+    var logger = new Logger("Assertors"),
+        Assertors;
 
-    Jobs.getComparatorBy = function (param, reverse) {
+    Assertors = Collection.extend({
 
-        reverse = (reverse || false);
+        model: Assertor
 
-        if (param == "completedOn") {
-            var co = "completedOn";
-            return function (o1, o2) {
-                var p1 = o1.get(co);
-                var p2 = o2.get(co);
-                if (p1 == null && p2 == null) {
-                    return 0;
-                } else if (p2 == null) {
-                    return reverse ? -1 : +1;
-                } else if (p1 == null) {
-                    return reverse ? +1 : -1;
-                } else if (p1.timestamp > p2.timestamp) {
-                    return reverse ? -1 : +1;
-                } else if (p1.timestamp == p2.timestamp) {
-                    return 0;
-                } else {
-                    return reverse ? +1 : -1;
-                }
-            };
-        }
-
-        // TODO Job.dummyJob
-        var job = new Job.Model({name: "job", entrypoint: "http://www.example.com", maxResources: 1, completedOn: {}});
-        if (!_.isNumber(job.get(param)) && !_.isString(job.get(param)))
-            throw new Error("Cannot sort by \"" + param + "\", not a string or a number. " + job.get(param));
-
-
-        return function (o1, o2) {
-            if (o1.get(param) > o2.get(param) || (o1.get(param) === o2.get(param) && o1.id > o2.id)) {
-                return reverse ? -1 : +1;
-            } else if (o1.get(param) === o2.get(param) && o1.id === o2.id) {
-                return 0;
-            } else {
-                return reverse ? +1 : -1;
-            }
-        };
-    };
-
-    Jobs.Collection = Backbone.Collection.extend({
-
-        model: Job.Model,
-
-        comparator: Jobs.getComparatorBy("name"),
-
-        sortByParam: function (param, reverse) {
-            this.comparator = Jobs.getComparatorBy(param, reverse);
-            this.sort();
-        },
-
-        isComplete: function () {
-            return this.expected && this.length < this.expected ? false : true;
-        },
-
-        initialize: function () {
-            this.on('add reset', function () {
-                if (this.expected && this.expected < this.length) {
-                    this.expected = this.length;
-                }
-            });
-        }
     });
 
-    Jobs.View = Backbone.View.extend({
+    Assertors.View = Assertors.View.extend({
 
-        logger: new W3.Logger("JobView"),
+        attributes: {
+            id: "assertors"
+        },
+
+        getSortParam: function () {
+            return {
+                param: "errors",
+                reverse: true
+                //string: "errors"
+            };
+        },
+
+        afterRender: function () {
+            this.addFilterHandler();
+            if (this.$('article.current').size() === 0) {
+                this.$(".filter")[0].click();
+            }
+        },
+
+        addFilterHandler: function () {
+            var filterLinks = this.$(".filter"),
+                self = this;
+            filterLinks.unbind('click');
+            filterLinks.click(function (event) {
+                event.preventDefault();
+                filterLinks.parents('article').removeClass("current");
+                $(this).parents('article').addClass("current");
+                self.options.assertions.view().filterOn($(this).parents('article').attr('data-id'));
+                return false;
+            });
+        }
+
+    });
+
+    return Assertors;
+
+    Assertors.Collection = Collection.extend({
+
+        model: Assertor
+
+    });
+
+    Assertors.View = Backbone.View.extend({
 
         tagName: "section",
 
         attributes: {
-            id: "jobs"
+            id: "assertors"
         },
 
         events: {
 
         },
 
-        collection: new Jobs.Collection(),
+        collection: new Assertors.Collection(),
 
-        displayedJobs: [],
+        displayed: [],
 
         maxOnScreen: 30,
 
@@ -94,8 +77,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
         initialize: function () {
 
-            var logger = this.logger,
-                collection = this.collection,
+            var collection = this.collection,
                 jobsSection = this.$el,
                 self = this,
                 sortParams = [
@@ -124,7 +106,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             } else if (this.$el.attr('data-url')) {
                 collection.url = this.$el.attr('data-url');
             } else {
-                W3.exception('No url parameter was specified');
+                Util.exception('No url parameter was specified');
             }
 
 //          Listen on collection events
@@ -136,14 +118,19 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 //          Parse the jobs already on the page if our collection is new
 
             if (collection.length == 0 && this.$('article').size() > 0) {
-                try {
+                //try {
                     collection.reset(this.$('article').map(function (i, article) {
-                        return Job.fromHtml(article);
+                        console.log(article);
+                        var a = Assertor.fromHtml(article);
+                        console.log(a);
+                        return a;
                     }).toArray());
-                } catch (ex) {
-                    logger.error(ex);
-                }
+//                } catch (ex) {
+//                    logger.error(ex);
+//                }
             }
+
+            console.log(collection.length)
 
 //          Start the loader
 
@@ -158,7 +145,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
 //          Open a socket and listen on jobupdate events
 
-            this.socket = new W3.Socket(collection.url);
+            this.socket = new Socket(collection.url);
             this.socket.on("jobupdate", function (data) {
                 var job = collection.get(data.id);
                 if (!_.isUndefined(job)) {
@@ -253,8 +240,8 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
             var models = this.collection.models;
 
             /*if (_.isFunction(this.filter)) {
-                models = _.filter(models, this.filter, this);
-            } */
+             models = _.filter(models, this.filter, this);
+             } */
 
             var search = this.getSearchParam();
             if (_.isString(search) && search != "") {
@@ -265,15 +252,18 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
             this.filteredCount = models.length;
 
-            models = this.displayedJobs = models.slice(0, this.maxOnScreen);
+            models = this.displayed = models.slice(0, this.maxOnScreen);
 
             //this.displayedJobs = models;
 
 //          Create job views and render
 
-            var elements = models.map(function (job, index) {
-                job.view = new Job.View({ model: job, template: this.options.jobTemplate });
-                return job.view.render().el;
+            var elements = models.map(function (assertor, index) {
+                //var view = assertor.view();
+
+                //console.log(assertor.view());
+
+                return assertor.view().render().el;
             }, this);
 
             this.$el.children('article').remove();
@@ -298,7 +288,7 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
 
         updateLegend: function () {
 
-            var views = _.pluck(this.displayedJobs, 'view');
+            /*var views = _.pluck(this.displayed, 'view');
             var visibles = { first: null, last: null };
             var i = 0;
             for (i; i < views.length; i++) {
@@ -329,12 +319,12 @@ define(["w3", "model/job", "lib/Loader", "libs/backbone"], function (W3, Job, Lo
                 legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results");
             } else {
                 legend.text("");
-            }
+            }*/
 
         }
 
     });
 
-    return Jobs;
+    return Assertors;
 
 });

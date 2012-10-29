@@ -1,4 +1,4 @@
-require(["w3", "model/job", "model/jobs", "model/resource", "model/resources"], function (W3, Job, Jobs, Resource, Resources) {
+require(["w3", "model/job", "collection/jobs", "model/resource", "collection/resources"], function (W3, Job, Jobs, Resource, Resources) {
 
     // for debugging
     window.W3 = W3;
