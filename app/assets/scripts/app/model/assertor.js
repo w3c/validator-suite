@@ -1,4 +1,4 @@
-define(["model/Model"], function (Model) {
+define(["model/Model", "lib/Util"], function (Model, Util) {
 
     "use strict";
 
@@ -50,9 +50,10 @@ define(["model/Model"], function (Model) {
 
     });
 
-    Assertor.fromHtml = function (value, $elem) {
+    Assertor.fromHtml = function ($article) {
+        var value = Util.valueFrom($article);
         return {
-            id: $elem.attr('data-id'),
+            id: $article.attr('data-id'),
             name: value('data-name'),
             errors: parseInt(value('data-errors'), 10),
             warnings: parseInt(value('data-warnings'), 10)

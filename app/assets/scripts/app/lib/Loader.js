@@ -37,7 +37,8 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
 
         start: function (data) {
 
-            if (this.collection.isComplete()) { return false; }
+            //if (this.collection.isComplete()) { return false; }
+            if (this.collection.expected === 0) { return false; }
 
             if (this.xhr) { this.stop(); }
 

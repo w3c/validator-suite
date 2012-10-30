@@ -1,4 +1,4 @@
-define(["model/model", "collection/assertions"], function (Model, Assertions) {
+define(["model/model", "collection/assertions", "lib/Util"], function (Model, Assertions, Util) {
 
     "use strict";
 
@@ -61,7 +61,8 @@ define(["model/model", "collection/assertions"], function (Model, Assertions) {
 
     });
 
-    Resource.fromHtml = function (value) {
+    Resource.fromHtml = function ($article) {
+        var value = Util.valueFrom($article);
         return {
             resourceUrl: value('data-resourceUrl'),
             lastValidated: {

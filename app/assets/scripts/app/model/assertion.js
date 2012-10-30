@@ -15,7 +15,9 @@ define(["lib/Logger", "lib/Util", "model/model"], function (Logger, Util, Model)
             occurrences: 0,
             occurrencesLegend: "",
             contexts: [],
-            resources: []
+            resources: [],
+            contextsMore: 0,
+            resourcesMore: 0
         },
 
         search: function (search) {
@@ -54,15 +56,30 @@ define(["lib/Logger", "lib/Util", "model/model"], function (Logger, Util, Model)
 
     });
 
-    Assertion.fromHtml = function (value, $elem) {
+    Assertion.fromHtml = function ($article) {
+        var value = Util.valueFrom($article);
         return {
-            id: $elem.attr("data-id"),
+            id: $article.attr("data-id"),
             assertor: value('data-assertor'),
             severity: value('data-severity'),
-            occurrences: value('data-occurrences'),
-            occurrencesLegend: value('data-occurrencesLegend'),
             title: value('data-title'),
-            description: value('data-description')
+            description: value('data-description') || null,
+            occurrences: parseInt(value('data-occurrences'), 10),
+            occurrencesLegend: value('data-occurrencesLegend'),
+            contexts: $('.context', $article).map(function (i, context) {
+                var value = Util.valueFrom($(context));
+                return {
+                    line: value('data-context-line'),
+                    column: value('data-context-column'),
+                    content: value('data-context-content')
+                };
+            }),
+            resources: $('.resource', $article).map(function (i, resource) {
+                var value = Util.valueFrom($(resource));
+                return value('data-resource');
+            }),
+            contextsMore: parseInt(value('data-contextsMore'), 10) || 0,
+            resourcesMore: parseInt(value('data-resourcesMore'), 10) || 0
         };
     };
 

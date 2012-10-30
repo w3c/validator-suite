@@ -36,16 +36,25 @@ define(["lib/Logger"], function (Logger) {
         },
 
         valueFrom: function (elem) {
-
-            //var $elem = $(elem);
+            elem = $(elem);
             return function (attribute) {
-                var tag = elem.find('[' + attribute + ']'),
-                    attr = tag.attr(attribute);
-                if (attr !== "") {
-                    return attr;
-                } else {
-                    return tag.text();
+                var result = $('[' + attribute + ']', elem).map(function (i, sub) {
+                    //var tag = elem.find('[' + attribute + ']'),
+                    var attr = $(sub).attr(attribute);
+                    if (attr !== "") {
+                        return attr;
+                    } else {
+                        return $(sub).html();
+                    }
+                }).toArray();
+
+                if (result.length === 0) {
+                    return undefined;
                 }
+                if (result.length === 1) {
+                    return result[0];
+                }
+                return result;
             };
         }
 

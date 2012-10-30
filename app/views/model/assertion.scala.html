@@ -1,5 +1,5 @@
 @(assertion: AssertionView)
-    <article class="@assertion.severity" tabindex="1" data-id="@assertion.id">
+<article class="@assertion.severity" tabindex="1" data-id="@assertion.id" xmlns="http://www.w3.org/1999/html">
         <dl>
             @AssertionView.definitions.map { definition =>
             <dt>@Messages(s"assertions.${definition.name}")</dt>
@@ -27,15 +27,15 @@
             @assertion.contexts.take(50).map { case context =>
             <dd class="context">
                 @if(context.line.isDefined){
-                <span class="line">Line <span title="Line @context.line">@context.line</span></span>}
+                <span class="line">Line <span title="Line @context.line" data-context-line>@context.line</span></span>}
                 @if(context.column.isDefined){
-                <span class="column">Column <span title="Column @context.column">@context.column</span></span>}
+                <span class="column">Column <span title="Column @context.column" data-context-column>@context.column</span></span>}
                 @if(context.content.isDefined){
-                <code class="code language-">@context.content</code>}
+                <code class="code language-" data-context-content>@context.content</code>}
             </dd>}
             @if(assertion.contexts.size > 50){
             <dd class="more">
-                <p>And @{assertion.contexts.size - 50} more</p>
+                <p>And <span data-contextsMore>@{assertion.contexts.size - 50}</span> more</p>
             </dd>}}
 
             case "resources" => {
@@ -43,15 +43,14 @@
             @assertion.resources.take(50).map { case url =>
             <dd class="resource">
                 <a href="@routes.Assertions.index1(assertion.jobId, url)" class="report" title="@Messages("report.link")">
-                <span>@Messages("resource.report.for")</span>
-                <span>@Helper.shorten(url, 80)</span>
+                    <span>@Messages("resource.report.for")</span>
+                    <span>@Helper.shorten(url, 80)</span>
                 </a>
-                <br>
-                <a href="@url" class="external" target="_blank" title="@Messages("resource.external.link")">@url</a>
+                <br><a href="@url" data-resource="@url" class="external" target="_blank" title="@Messages("resource.external.link")">@url</a>
             </dd>}
             @if(assertion.resources.size > 50){
             <dd class="more">
-                <p>And @{assertion.resources.size - 50} more</p>
+                <p>And <span data-resourcesMore>@{assertion.resources.size - 50}</span> more</p>
             </dd>}}
 
             }}

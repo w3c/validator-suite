@@ -140,14 +140,15 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                 this.addScrollHandler();
             }
 
-            if (_.isFunction(collection.comparator)) {
-                collection.sort();
-            } else {
-                collection.sortByParam(initial_sort.param, initial_sort.reverse, { silent: true });
+            if (_.isUndefined(this.options.loadFromMarkup) || this.options.loadFromMarkup) {
+                logger.log("loadFromMarkup");
+                this.loadFromMarkup();
             }
 
-            if (_.isUndefined(this.options.loadFromMarkup) || this.options.loadFromMarkup) {
-                this.loadFromMarkup();
+            if (!_.isFunction(collection.comparator)) {
+                collection.sortByParam(initial_sort.param, initial_sort.reverse, { silent: true });
+            } else {
+                //collection.sort({ silent: true });
             }
 
             if (_.isFunction(this.init)) { this.init(); }
@@ -156,17 +157,22 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
 
         loadFromMarkup: function () {
             var collection = this.collection,
-                articles = this.$('article');
-            collection.reset(
-                articles.map(function (i, article) {
+                models;
 
-                    var $article = $(article),
-                        value = Util.valueFrom($article);
-                    return new collection.model.fromHtml(value, $article);
+            if (!_.isFunction(collection.model.fromHtml)) {
+                logger.error("fromHtml function not provided");
+                return false;
+            }
 
-                    //return collection.model.fromHtml(article);
-                }).toArray()
-            );
+            models = this.$('article').map(function (i, article) {
+                var $article = $(article),
+                    value = Util.valueFrom($article);
+                return new collection.model.fromHtml($(article));
+            }).toArray();
+
+            logger.info("parsed " + models.length + " model(s) from the page.");
+
+            collection.reset(models);
         },
 
         getSortParam: function () {
@@ -228,10 +234,10 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                         logger.warn("No emptyMessage function or value provided");
                     }
                     //empty.html("No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>");
+                } else if (this.collection.loader && this.collection.loader.isSearching()) {
+                    empty.html("<span class='loader'></span>");
                 } else if (this.collection.loader && !this.collection.loader.isSearching()) {
                     empty.text("No search result.");
-                } else {
-                    empty.html("<span class='loader'></span>");
                 }
             }
 

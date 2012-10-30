@@ -182,9 +182,10 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
 
     });
 
-    Job.fromHtml = function (value, $elem) {
+    Job.fromHtml = function ($article) {
+        var value = Util.valueFrom($article);
         return {
-            id: $elem.attr("data-id"),
+            id: $article.attr("data-id"),
             name: value('data-name'),
             entrypoint: value('data-entrypoint'),
             status: value('data-status'),

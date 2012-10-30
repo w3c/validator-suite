@@ -42,11 +42,10 @@
             <% _.map(resources, function (url) {%>
             <dd class="resource">
                 <a href="<%= "resources/" + encodeURIComponent(url) + "/assertions" %>" class="report" title="@Messages("report.link")">
-                <span>@Messages("resource.report.for")</span>
-                <span><%= Util.shortenUrl(url, 80) %></span>
+                    <span>@Messages("resource.report.for")</span>
+                    <span><%= Util.shortenUrl(url, 80) %></span>
                 </a>
-                <br>
-                <a href="<%= url %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= url %></a>
+                <br><a href="<%= url %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= url %></a>
             </dd>
             <%}); %>
             <% if(resourcesMore > 0){ %>
