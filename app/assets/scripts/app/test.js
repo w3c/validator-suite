@@ -50,7 +50,11 @@ require([
             $("#assertions").map(function (i, el) {
                 root.assertions = new Assertions().configure({
                     el: el,
-                    //loadFromMarkup: false
+                    loadFromMarkup: false
+                    // Do not load assertions from markup because
+                    // 1. not all resources are shown as a workaround a bug in play which truncates large responses
+                    // 2. there is an implicit assertor filter parameter set to the first assertor that is not taken
+                    //    into account by the loader. TODO
                 });
             });
 

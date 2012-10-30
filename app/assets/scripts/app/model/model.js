@@ -18,6 +18,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
         view: function (options) {
             if (this._view) { return this._view; }
             this._view = new this.constructor.prototype.constructor.View(_.extend({ model: this }, options));
+            this._view.render();
             return this._view;
         },
 

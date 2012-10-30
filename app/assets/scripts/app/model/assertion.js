@@ -39,7 +39,9 @@ define(["lib/Logger", "lib/Util", "model/model"], function (Logger, Util, Model)
         },
 
         fold: function (event) {
-            $(event.currentTarget).parents("article").toggleClass("folded");
+            if (this.isFoldable()) {
+                $(event.currentTarget).parents("article").toggleClass("folded");
+            }
         },
 
         isFoldable: function () {

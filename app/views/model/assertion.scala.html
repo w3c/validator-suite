@@ -40,7 +40,10 @@
 
             case "resources" => {
             @if(assertion.resources.size > 0) {@Messages("assertion.resources.detail")}
-            @assertion.resources.take(50).map { case url =>
+
+            @** /!\ XXX: I have to limit the number of resources shown because of a bug in play which truncates large responses **@
+
+            @assertion.resources.take(15).map { case url =>
             <dd class="resource">
                 <a href="@routes.Assertions.index1(assertion.jobId, url)" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>
@@ -48,9 +51,9 @@
                 </a>
                 <br><a href="@url" data-resource="@url" class="external" target="_blank" title="@Messages("resource.external.link")">@url</a>
             </dd>}
-            @if(assertion.resources.size > 50){
+            @if(assertion.resources.size > 15){
             <dd class="more">
-                <p>And <span data-resourcesMore>@{assertion.resources.size - 50}</span> more</p>
+                <p>And <span data-resourcesMore>@{assertion.resources.size - 15}</span> more</p>
             </dd>}}
 
             }}

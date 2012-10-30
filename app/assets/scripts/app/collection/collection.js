@@ -192,7 +192,9 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             };
         },
 
-        render: function () {
+        render: function (options) {
+
+            options = (options || {});
 
             logger.log("render");
 
@@ -215,7 +217,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             models = this.displayed = models.slice(0, this.maxOnScreen);
 
             elements = models.map(function (model) {
-                return model.view({ template: this.template }).render().el;
+                return model.view({ template: this.template }).el; //render().el;
             }, this);
 
             this.$('.empty').remove();
@@ -258,7 +260,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                 }
             }
 
-            if (this.isList()) { this.updateLegend(); }
+            if (this.isList() && this.options.updateLegend) { this.updateLegend(); }
 
             if (_.isFunction(this.afterRender)) { this.afterRender(); }
 
@@ -324,7 +326,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                     self.updateLegend();
                 }, 0);
             });
-            //win.scroll();
+            win.scroll();
         },
 
         isList: function () {
@@ -397,8 +399,10 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             old = this.maxOnScreen;
             this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 10 : 30;
 
-            if (this.maxOnScreen !== old && visibles.last === this.displayed.length) { // does not remove elements on scroll up. seems more efficient like that
-                this.render();
+            if (this.maxOnScreen !== old && (this.displayed.length - visibles.last < 5 || this.displayed.length - visibles.last > 20)) { // does not remove elements on scroll up. seems more efficient like that
+                //console.log("re-rendering");
+                this.render({ updateLegend: false });
+                //return;
             }
 
             total = this.filteredCount !== this.collection.length ? this.filteredCount : this.collection.expected;

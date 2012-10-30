@@ -31,14 +31,14 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
 
     };
 
-    Loader.perPage = 30;
+    Loader.perPage = 50;
 
     _.extend(Loader.prototype, Backbone.Events, {
 
         start: function (data) {
 
-            //if (this.collection.isComplete()) { return false; }
-            if (this.collection.expected === 0) { return false; }
+            if (this.collection.isComplete()) { return false; }
+            //if (this.collection.expected === 0) { return false; }
 
             if (this.xhr) { this.stop(); }
 
