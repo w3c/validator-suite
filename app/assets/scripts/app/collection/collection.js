@@ -147,9 +147,9 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
 
             if (!_.isFunction(collection.comparator)) {
                 collection.sortByParam(initial_sort.param, initial_sort.reverse, { silent: true });
-            } else {
+            } /*else {
                 //collection.sort({ silent: true });
-            }
+            }*/
 
             if (_.isFunction(this.init)) { this.init(); }
 
@@ -224,7 +224,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             } else {
                 empty = $('<p class="empty"></p>');
                 this.$el.append(empty);
-                console.log(this.collection.expected === 0);
                 if (this.collection.expected === 0) {
                     if (_.isFunction(this.emptyMessage)) {
                         empty.html(this.emptyMessage());
