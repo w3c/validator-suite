@@ -45,12 +45,12 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
         },
 
         addSearchHandler: function () {
-            var collec = this.options.assertions;
+            var collec = this.options.assertions, input;
             if (!collec) { return; }
             this.$(".actions input[name=search]").bind("keyup change", function () {
-                var value = this.value;
+                input = this;
                 setTimeout(function () {
-                    collec.view().search(value);
+                    collec.view().search(input.value, input);
                 }, 0);
             });
         },

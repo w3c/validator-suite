@@ -76,6 +76,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
             if (this.xhr) {
                 this.xhr.abort();
                 delete this.xhr;
+                this.trigger('stopped');
                 logger.info("loader stoped");
                 return true;
             }
@@ -109,13 +110,14 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
                     if (models.length < params.data.n && _.isString(params.data["search"])
                             && params.data["search"] !== "") {
                         logger.info("No more search results. Proceeding without search param.");
+                        self.trigger('stopSearching');
                         params.data.search = "";
                         params.data.offset = 0;
                         self.setData(params.data);
                         return;
                     }
 
-                    if (models.length == 0 && (!params.data["search"] || params.data["search"] == "")) {
+                    if (models.length === 0 && (!params.data["search"] || params.data["search"] == "")) {
                         logger.error("empty result. collection size: " + self.collection.size() + "/" + self.collection.expected);
                         self.stop();
                         return;
@@ -129,8 +131,6 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
 
                     if (!self.collection.isComplete()) {
                         if (self.xhr.nextData) {
-
-                            console.log(self.xhr.nextData);
 
                             // if only offset differs use the previous one
                             var diff = false,

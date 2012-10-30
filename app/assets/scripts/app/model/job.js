@@ -169,9 +169,9 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
             var collec = this.options.resources || this.options.assertions;
             if (!collec) { return; }
             this.$(".actions input[name=search]").bind("keyup change", function () {
-                var value = this.value;
+                var input = this;
                 setTimeout(function () {
-                    collec.view().search(value);
+                    collec.view().search(input.value, input);
                 }, 0);
             });
         },

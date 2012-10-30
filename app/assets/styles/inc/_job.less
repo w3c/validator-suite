@@ -45,61 +45,49 @@
             background-size: 19px 15px;
             padding-left: 7px;
         }
-
-        dd {
-            &.maxResources {
-                display: none
-            }
-            &.health,
-            &.actions {
-                display: block;
+        .maxResources {
+            display: none
+        }
+        .health,
+        .actions {
+            display: block;
+            position: absolute;
+        }
+        .health {
+            //progress {
                 position: absolute;
+                right: 20px;
+                bottom: 21px;
+            //}
+
+            progress[role] { width: 228px !important; }
+
+        }
+        .actions {
+            left: 10px;
+            bottom: 10px;
+            height: 27px;
+
+            legend {display: none;}
+
+            form, fieldset {
+                display: inline;
+                vertical-align: top;
             }
-            &.health {
-                //progress {
-                    position: absolute;
-                    right: 20px;
-                    bottom: 21px;
-                //}
 
-                progress[role] { width: 228px !important; }
-
+            .delete {
+                display: none;
             }
-            &.actions {
-                left: 10px;
-                bottom: 10px;
-                height: 27px;
 
-                legend {display: none;}
+            button, .button, input {vertical-align: top;}
 
-                form, fieldset {
-                    display: inline;
-                    vertical-align: top;
-                }
-
-                .delete {
-                    display: none;
-                }
-
-                button, .button, input {vertical-align: top;}
-
-                // refactor
-                input,
-                select,
-                input[type="text"],
-                input[type="url"],
-                input[type="range"],
-                input[pattern] {
-                    font-size: 13px;
-                }
+        }
+        .status {
+            form, a:not(:link) {
+                display: none;
             }
-            &.status {
-                form, a:not(:link) {
-                    display: none;
-                }
-                .run,
-                .stop { display: none; }
-            }
+            .run,
+            .stop { display: none; }
         }
         .health {
             progress {

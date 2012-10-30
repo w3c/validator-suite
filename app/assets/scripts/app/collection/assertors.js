@@ -1,4 +1,4 @@
-define(["lib/Logger", "model/assertor", "lib/Loader", "lib/Util", "lib/Socket", "libs/backbone", "collection/Collection"], function (Logger, Assertor, Loader, Util, Socket, Backbone, Collection) {
+define(["lib/Logger", "model/assertor", "collection/Collection"], function (Logger, Assertor, Collection) {
 
     "use strict";
 

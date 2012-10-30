@@ -1,4 +1,4 @@
-define(["lib/Logger", "model/assertion", "lib/Loader", "lib/Util", "lib/Socket", "libs/backbone", "collection/Collection"], function (Logger, Assertion, Loader, Util, Socket, Backbone, Collection) {
+define(["lib/Logger", "model/assertion", "collection/Collection"], function (Logger, Assertion, Collection) {
 
     "use strict";
 
@@ -49,13 +49,6 @@ define(["lib/Logger", "model/assertion", "lib/Loader", "lib/Util", "lib/Socket",
         },
 
         emptyMessage: "No assertions to show." // assertions.empty
-
-        /*search: function (search) {
-            this.search_ = function (resource) {
-                return resource.get("title").toLowerCase().indexOf(search.toLowerCase()) > -1;
-            };
-            this.render();
-        }*/
 
     });
 

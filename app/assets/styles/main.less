@@ -57,6 +57,15 @@ input[type="file"] > input[type="button"]::-moz-focus-inner {
 }
 /*input:focus, button:focus {-moz-box-shadow:0 0px 3px #C80 !important;}*/
 
+input,
+select,
+input[type="text"],
+input[type="url"],
+input[type="range"],
+input[pattern] {
+    font-size: 14px;
+}
+
 .button-shadow() {box-shadow: 1px 1px 1px #AAA;}
 .button-border() {border: 1px solid #BBB; border-radius: 4px;}
 
@@ -127,6 +136,8 @@ span.legend {
     margin-top: 4px;
 }
 
+
+
 form.search input[type="text"],
 input.search {
     padding: 5px 5px 4px 5px;
@@ -135,16 +146,22 @@ input.search {
     .button-border();
     .button-shadow();
 
-    //&.cleared {
-        width: 207px;
-    //}
+//&.cleared {
+    width: 207px;
+//}
 
     &.clearable {
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
         width: 160px;
     }
+}
 
+input.search + .loader {
+    margin-left: 0;
+    margin-top: 5px;
+    position: relative;
+    left: -22px;
 }
 
 /* Group and search form */
@@ -233,5 +250,14 @@ fieldset.dropdown {
         top: 0px;
         right: -51px;
     }*/
+}
+
+.loader {
+    background: url("../images/loader.gif") no-repeat 50% 50%;
+    display: inline-block !important;
+    height: 16px;
+    width: 16px;
+    vertical-align: sub;
+    margin: 0 5px;
 }
 

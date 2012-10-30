@@ -63,17 +63,6 @@
 
                 @if(collection.isDefined) {
                 @defining(collection.get.fold(a => a, r => r)) { collection =>
-                <form class="search" method=get>
-                    <fieldset>
-                        <legend>Search</legend>
-                        <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
-                        @if(collection.params.search != None) {
-                        <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
-                        @collection.search().goToPage(1).queryParameters.map { param =>
-                        <input name="@param.name" type=hidden value="@param.value">}
-                        <button type=submit>@Messages("job.button.search")</button>
-                    </fieldset>
-                </form>
                 <form class="group" action="@routes.Jobs.dispatcher(job.id)" method=get>
                     <fieldset class="dropdown">
                         <legend>Report by</legend>
@@ -85,6 +74,17 @@
                         <input name="search" type=hidden value="@search">}
                     </fieldset>
                     <button type=submit>Go</button>
+                </form>
+                <form class="search" method=get>
+                    <fieldset>
+                        <legend>Search</legend>
+                        <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
+                        @if(collection.params.search != None) {
+                        <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
+                        @collection.search().goToPage(1).queryParameters.map { param =>
+                        <input name="@param.name" type=hidden value="@param.value">}
+                        <button type=submit>@Messages("job.button.search")</button>
+                    </fieldset>
                 </form>
                 }}
               }

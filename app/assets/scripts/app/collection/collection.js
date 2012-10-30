@@ -40,7 +40,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
 
         sortByParam: function (param, reverse, options) {
             this.comparator = getComparatorBy(param, reverse);
-            //if (_.isUndefined(silent) || !silent)
             this.sort(options);
         },
 
@@ -76,10 +75,11 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             var loader = this.loader = new Loader(this),
                 view = this.view();
             loader.start({
-                sort: view.getSortParam().string
+                sort: view.getSortParam().string,
+                offset: this.length
                 //search: view.getSearchParam()
             });
-            //loader.on('update', view.render, view);
+            //loader.on('stopped', view.updateLegend, view);
         }
 
     });
@@ -94,13 +94,19 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
 
         sortParams: [],
 
-        search: function (search) {
-            this.search_ = function (model) {
-                return model.search(search);
-            };
-            if (this.collection.loader) {
-                this.collection.loader.setData({ search: search });
+        search: function (search, searchInput) {
+            var loader = this.collection.loader;
+            if (loader) {
+                loader.setData({ search: search });
+                if (loader.isSearching() && searchInput && $(searchInput).parent().find('.loader').size() === 0) {
+                    console.log(searchInput)
+                    var loading = $('<span class="loader"></span>');
+                    $(searchInput).after(loading);
+                    loader.on('stopSearching', function () { loading.remove(); });
+                }
             }
+            this.currentSearch = search;
+            this.search_ = (_.isString(search) && search !== "") ? function (model) { return model.search(search); } : undefined;
             this.render();
         },
 
@@ -224,23 +230,34 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             } else {
                 empty = $('<p class="empty"></p>');
                 this.$el.append(empty);
-                if (this.collection.expected === 0) {
-                    if (_.isFunction(this.emptyMessage)) {
-                        empty.html(this.emptyMessage());
-                    } else if (_.isString(this.emptyMessage)) {
-                        empty.html(this.emptyMessage);
+
+                var self = this;
+                var emptyMessage = (function () {
+                    if (_.isFunction(self.emptyMessage)) {
+                        return self.emptyMessage();
+                    } else if (_.isString(self.emptyMessage)) {
+                        return self.emptyMessage;
                     } else {
                         logger.warn("No emptyMessage function or value provided");
+                        return "";
                     }
-                    //empty.html("No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>");
-                } else if (this.collection.loader && this.collection.loader.isSearching()) {
-                    empty.html("<span class='loader'></span>");
-                } else if (this.collection.loader && !this.collection.loader.isSearching()) {
-                    empty.text("No search result.");
+                }());
+
+                if (this.collection.expected === 0) {
+                    empty.html(emptyMessage);
+                } else if (this.collection.loader && this.collection.loader.isLoading()) {
+                    if (this.collection.loader.isSearching()) {
+                        empty.html("<span class='loader'></span>");
+                    } else {
+                        empty.html("No search result.");
+                    }
+                } else if (this.currentSearch && this.currentSearch !== "") {
+                    empty.html("No search result.");
+                } else {
+                    empty.html(emptyMessage);
                 }
             }
 
-            //if (this.isList()) { setTimeout(_.bind(this.updateLegend, this), 0); }
             if (this.isList()) { this.updateLegend(); }
 
             if (_.isFunction(this.afterRender)) { this.afterRender(); }
@@ -259,7 +276,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                     event.preventDefault();
                     sortLinks.removeClass("current");
                     $(this).addClass("current");
-                    if (self.loader) { self.loader.setData({ sort: "-" + param/*, search: self.getSearchParam()*/ }, true); }
+                    if (self.loader) { self.loader.setData({ sort: "-" + param }, true); }
                     self.collection.sortByParam(param);
                     return false;
                 });
@@ -267,7 +284,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                     event.preventDefault();
                     sortLinks.removeClass("current");
                     $(this).addClass("current");
-                    if (self.loader) { self.loader.setData({ sort: param, search: self.getSearchParam() }, true); }
+                    if (self.loader) { self.loader.setData({ sort: param }, true); }
                     self.collection.sortByParam(param, true);
                     return false;
                 });
@@ -372,52 +389,37 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
 
         updateLegend: function () {
 
-            var visibles = this.getVisibles3(), /*{ first: null, last: null }, */
+            var visibles = this.getVisibles3(),
                 old,
                 total,
                 legend;
-
-            /*var views = _.invoke(this.displayed, 'view'),
-                visibles = { first: null, last: null },
-                i = 0,
-                isVisible,
-                old,
-                total,
-                legend;
-            for (i; i < views.length; i += 1) {
-                isVisible = views[i].isVisible();
-                if (visibles.first === null) {
-                    visibles.first = isVisible ? (i + 1) : null;
-                }
-                visibles.last = isVisible ? (i + 1) : visibles.last;
-                if (!isVisible && visibles.first !== null && visibles.last !== null) {
-                    break;
-                }
-            }*/
 
             old = this.maxOnScreen;
             this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 10 : 30;
-            //this.maxOnScreen = 200;
 
             if (this.maxOnScreen !== old && visibles.last === this.displayed.length) { // does not remove elements on scroll up. seems more efficient like that
                 this.render();
             }
 
-            total = this.filteredCount; //this.getSearchParam() !== "" ? this.filteredCount : this.collection.expected;
-
+            total = this.filteredCount !== this.collection.length ? this.filteredCount : this.collection.expected;
             legend = $('.pagination .legend');
 
             if (visibles.first !== null && visibles.last !== null) {
-                //legend.text("Viewing " + visibles.first + "-" + visibles.last +
-                //    " of " + total + " results (" + this.collection.length + "/" + this.collection.expected + " - " + this.maxOnScreen + ")");
                 if (total === 1) {
-                    legend.text("1 result"); // pagination.legend.one
+                    // pagination.legend.one
+                    legend.text("1 result");
                 } else {
-                    legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results"); // pagination.legend
+                    // pagination.legend
+                    legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results");
                 }
             } else {
-                legend.text(""); // pagination.empty
+                // pagination.empty
+                legend.text("");
             }
+
+            /*if (this.collection.loader && this.collection.loader.isLoading()) {
+                legend.append($("<span class='loader'></span>"));
+            }*/
 
         }
 

@@ -1,4 +1,4 @@
-define(["lib/Logger", "lib/Util", "lib/Socket", "model/job", "lib/Loader", "libs/backbone", "collection/collection"], function (Logger, Util, Socket, Job, Loader, Backbone, Collection) {
+define(["lib/Logger", "model/job", "collection/collection"], function (Logger, Job, Collection) {
 
     "use strict";
 
@@ -32,7 +32,7 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "model/job", "lib/Loader", "libs
         ],
 
         init: function () {
-            var self = this, view, value;
+            var self = this, view, input;
             if (!this.isList()) {
                 view = this.collection.at(0).view();
                 view.options.assertions = this.options.assertions;
@@ -40,9 +40,9 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "model/job", "lib/Loader", "libs
                 view.addSearchHandler();
             }
             $("#actions input[name=search]").bind("keyup change", function () {
-                value = this.value;
+                input = this;
                 setTimeout(function () {
-                    self.search(value);
+                    self.search(input.value, input);
                 }, 0);
             });
         },
