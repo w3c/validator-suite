@@ -39,7 +39,9 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "model/resource", "lib/Loader", 
                 view.options.assertions = this.options.assertions;
                 view.addSearchHandler();
             }
-        }
+        },
+
+        emptyMessage: "No resources to show." // resources.empty
 
     });
 

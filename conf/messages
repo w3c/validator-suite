@@ -128,6 +128,7 @@ assertor.noissues=The {0} found no issues to report
 assertor.externalResourcesWarning=However this document points to the following invalid resources:
 
 pagination.legend=Viewing {0}-{1} of {2} results
+pagination.legend.one=1 result
 pagination.empty=
 
 time.pattern=MM/dd/yy'' at ''K:mma
@@ -152,7 +153,7 @@ resources.revalidate=Revalidate this resource.
 assertions.empty=No assertions to show.
 
 report.link=Go to the report
-search.empty.jobs=No search result.
+search.empty=No search result.
 search.clear=Clear search.
 
 

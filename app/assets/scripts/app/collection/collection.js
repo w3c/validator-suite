@@ -124,7 +124,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             if (this.options.expected) {
                 collection.expected = this.options.expected;
             } else if (this.$el.attr('data-count')) {
-                collection.expected = this.$el.attr('data-count');
+                collection.expected = parseInt(this.$el.attr('data-count'), 10);
             } else {
                 Util.exception('No count parameter was specified');
             }
@@ -217,14 +217,22 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
                 }, this);
             } else {
                 empty = $('<p class="empty"></p>');
-                if (this.loader && !this.loader.isSearching()) {
+                this.$el.append(empty);
+                console.log(this.collection.expected === 0);
+                if (this.collection.expected === 0) {
+                    if (_.isFunction(this.emptyMessage)) {
+                        empty.html(this.emptyMessage());
+                    } else if (_.isString(this.emptyMessage)) {
+                        empty.html(this.emptyMessage);
+                    } else {
+                        logger.warn("No emptyMessage function or value provided");
+                    }
+                    //empty.html("No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>");
+                } else if (this.collection.loader && !this.collection.loader.isSearching()) {
                     empty.text("No search result.");
-                } else if (this.collection.expected === 0) {
-                    empty.html("No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>");
                 } else {
                     empty.html("<span class='loader'></span>");
                 }
-                this.$el.append(empty);
             }
 
             //if (this.isList()) { setTimeout(_.bind(this.updateLegend, this), 0); }
@@ -383,7 +391,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             }*/
 
             old = this.maxOnScreen;
-            this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 5 : 30;
+            this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 10 : 30;
             //this.maxOnScreen = 200;
 
             if (this.maxOnScreen !== old && visibles.last === this.displayed.length) { // does not remove elements on scroll up. seems more efficient like that
@@ -397,9 +405,13 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             if (visibles.first !== null && visibles.last !== null) {
                 //legend.text("Viewing " + visibles.first + "-" + visibles.last +
                 //    " of " + total + " results (" + this.collection.length + "/" + this.collection.expected + " - " + this.maxOnScreen + ")");
-                legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results");
+                if (total === 1) {
+                    legend.text("1 result"); // pagination.legend.one
+                } else {
+                    legend.text("Viewing " + visibles.first + "-" + visibles.last + " of " + total + " results"); // pagination.legend
+                }
             } else {
-                legend.text("");
+                legend.text(""); // pagination.empty
             }
 
         }

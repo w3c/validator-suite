@@ -21,8 +21,9 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
 
         this.options = _.extend({ silent: true, add: true, cache: false }, options);
 
-        if (!collection || !collection.expected)
-            Util.exception("collection not provided or does not have an expected count");
+        if (_.isUndefined(collection) || !_.isNumber(collection.expected)) {
+            Util.exception("No collection was provided or it does not have a valid expected count");
+        }
 
         this.collection = collection;
 
@@ -35,6 +36,9 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
     _.extend(Loader.prototype, Backbone.Events, {
 
         start: function (data) {
+
+            if (this.collection.isComplete()) { return false; }
+
             if (this.xhr) { this.stop(); }
 
             var params = _.clone(this.options);
@@ -155,8 +159,11 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
         },
 
         isSearching: function () {
-            return this.xhr && _.isString(this.xhr.params.data.search)
-                    && this.xhr.params.data.search !== "" ? true : false;
+            var a = this.xhr && _.isString(this.xhr.params.data.search)
+                    && this.xhr.params.data.search !== "",
+                b = this.xhr && this.xhr.nextData && _.isString(this.xhr.nextData.search)
+                    && this.xhr.nextData.search !== "";
+            return (a || b);
         },
 
 

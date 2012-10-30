@@ -45,6 +45,10 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "model/job", "lib/Loader", "libs
                     self.search(value);
                 }, 0);
             });
+        },
+
+        emptyMessage: function () {
+            return "No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>";
         }
 
     });

@@ -29,8 +29,8 @@ define(["lib/Logger", "model/assertor", "lib/Loader", "lib/Util", "lib/Socket", 
 
         afterRender: function () {
             this.addFilterHandler();
-            if (this.$('article.current').size() === 0) {
-                this.$(".filter")[0].click();
+            if (this.$('.current').size() === 0) {
+                this.$("article:first-of-type .filter").click();
             }
         },
 

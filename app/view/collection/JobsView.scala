@@ -69,7 +69,11 @@ case class JobsView(
 
   def emptyMessage: Html = {
     import controllers.routes
-    Html(s"""${Messages("jobs.empty")} <a href="${routes.Jobs.new1}">${Messages("jobs.create.first")}</a>""")
+    if (source.size == 0) {
+      Html(Messages("jobs.empty") + s"""<a href="${routes.Jobs.new1}">${Messages("jobs.create.first")}</a>""")
+    } else {
+      Html(Messages("search.empty"))
+    }
   }
 
   def jsTemplate: Option[Html] = Some(views.html.template.job())

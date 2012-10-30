@@ -46,7 +46,9 @@ define(["lib/Logger", "model/assertion", "lib/Loader", "lib/Util", "lib/Socket",
                 return assertion.get("assertor") === assertorId;
             };
             this.render();
-        }
+        },
+
+        emptyMessage: "No assertions to show." // assertions.empty
 
         /*search: function (search) {
             this.search_ = function (resource) {

@@ -9,6 +9,7 @@ import controllers.routes
 import play.api.mvc.Call
 import java.net.URL
 import scalaz.Scalaz._
+import play.api.i18n.Messages
 
 case class AssertionsView(
     source: Iterable[AssertionView],
@@ -56,7 +57,7 @@ case class AssertionsView(
     }
   }
 
-  def emptyMessage: Html = Html("empty")
+  def emptyMessage: Html = Html(Messages("assertions.empty"))
 
   def jsTemplate: Option[Html] = Some(views.html.template.assertion())
 

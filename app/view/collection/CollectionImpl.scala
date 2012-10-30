@@ -131,7 +131,10 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
 
   def legend: String = {
     if(size > 0) {
-      Messages("pagination.legend", firstIndex, lastIndex, filteredSize)
+      if (filteredSize == 1)
+        Messages("pagination.legend.one")
+      else
+        Messages("pagination.legend", firstIndex, lastIndex, filteredSize)
     } else {
       Messages("pagination.empty")
     }

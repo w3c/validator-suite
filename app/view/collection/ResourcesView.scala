@@ -8,6 +8,7 @@ import org.w3.vs.view._
 import org.w3.vs.view.model.{AssertionView, ResourceView}
 import play.api.templates.Html
 import controllers.routes
+import play.api.i18n.Messages
 
 case class ResourcesView (
     jobId: JobId,
@@ -55,7 +56,7 @@ case class ResourcesView (
     }
   }
 
-  def emptyMessage: Html = Html("")
+  def emptyMessage: Html = Html(Messages("resources.empty"))
 
   def jsTemplate: Option[Html] = Some(views.html.template.resource())
 

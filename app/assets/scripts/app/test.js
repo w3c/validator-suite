@@ -35,10 +35,10 @@ require([
             window.model = Model;
 
             $("#actions .clear").remove();
-            $("#actions .search button").remove();
+            //$("#actions .search button").remove();
             $("#actions .search input").removeClass("clearable");
-            $('nav.pagination :not(p.legend)').remove();
-            $('body > footer').addClass('jsFixed');
+            //$('nav.pagination :not(.legend)').remove();
+            //$('body > footer').addClass('jsFixed');
             // TODO height + padding-top + padding-bottom
             //$('#main').css("padding-bottom", footer.height() + "px");
             $('#main').css("padding-bottom", "50px");
