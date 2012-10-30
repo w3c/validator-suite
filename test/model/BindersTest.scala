@@ -71,7 +71,7 @@ class BindersTest extends WordSpec with MustMatchers {
   val assertion =
     Assertion(
       url = URL("http://example.com/foo"),
-      assertor = "test-assertor",
+      assertor = AssertorId("test_assertor"),
       contexts = List(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
       lang = "fr",
       title = "bar",
@@ -117,10 +117,10 @@ class BindersTest extends WordSpec with MustMatchers {
 //  }
 
   val assertorResult =
-    AssertorResult((OrganizationId(), JobId(), RunId()), "test-assertor", URL("http://example.com"), List(assertion))
+    AssertorResult((OrganizationId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), List(assertion))
 
   val assertorFailure =
-    AssertorFailure((OrganizationId(), JobId(), RunId()), "test-assertor", URL("http://example.com"), "parceke")
+    AssertorFailure((OrganizationId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
 
   "AssertorResult" in {
     assertorResult.toPG.as[AssertorResult] must be(Success(assertorResult))
