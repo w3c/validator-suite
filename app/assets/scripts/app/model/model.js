@@ -6,21 +6,24 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
         footer = $('body > footer'),
         aside = $('#jobs aside'),
         win = $(window),
-        Model,
-        View;
+        Model;
 
     Model = Backbone.Model.extend({
 
         initialize: function () {
+
+            this.view = new this.constructor.prototype.constructor.View(_.extend({ model: this }));
+            this.view.render();
+
             if (_.isFunction(this.init)) { this.init(); }
         },
 
-        view: function (options) {
+        /*view: function (options) {
             if (this._view) { return this._view; }
             this._view = new this.constructor.prototype.constructor.View(_.extend({ model: this }, options));
             this._view.render();
             return this._view;
-        },
+        },*/
 
         log: function () { logger.log(JSON.stringify(this.toJSON())); }
 

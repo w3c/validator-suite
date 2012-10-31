@@ -58,28 +58,25 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
 
         configure: function (options) {
             options = this.options = (options || {});
-            this.view(options);
-            if (options.load || (_.isUndefined(options.load) && this._view.isList())) {
+            this.view = new this.constructor.prototype.constructor.View(_.extend({ collection: this }, options));
+            if (options.load || (_.isUndefined(options.load) && this.view.isList())) {
                 this.load();
             }
             return this;
         },
 
-        view: function (options) {
-            if (this._view) { return this._view; }
-            this._view = new this.constructor.prototype.constructor.View(_.extend({ collection: this }, options));
-            return this._view;
-        },
-
         load: function () {
-            var loader = this.loader = new Loader(this),
-                view = this.view();
+            var loader = this.loader = new Loader(this);
+                //view = this.view();
             loader.start({
-                sort: view.getSortParam().string,
-                offset: this.length
-                //search: view.getSearchParam()
+                sort: this.view.getSortParam().string,
+                offset: this.length // for assertions add the implicit filter parameter
             });
             //loader.on('stopped', view.updateLegend, view);
+        },
+
+        listen: function () {
+            var socket = new Util.Socket(this.url);
         }
 
     });
@@ -99,7 +96,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             if (loader) {
                 loader.setData({ search: search });
                 if (loader.isSearching() && searchInput && $(searchInput).parent().find('.loader').size() === 0) {
-                    console.log(searchInput)
                     var loading = $('<span class="loader"></span>');
                     $(searchInput).after(loading);
                     loader.on('stopSearching', function () { loading.remove(); });
@@ -114,10 +110,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
 
             var collection = this.collection,
                 initial_sort = this.getSortParam();
-
-            if (this.templateId && !this.template) {
-                this.template = Util.getTemplate(this.templateId);
-            }
 
             if (this.options.url) {
                 collection.url = this.options.url;
@@ -217,8 +209,8 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             models = this.displayed = models.slice(0, this.maxOnScreen);
 
             elements = models.map(function (model) {
-                return model.view({ template: this.template }).el; //render().el;
-            }, this);
+                return model.view.el;
+            });
 
             this.$('.empty').remove();
 
@@ -334,7 +326,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
         },
 
         getVisibles: function () {
-            var views = _.invoke(this.displayed, 'view'),
+            var views = _.pluck(this.displayed, 'view'),
                 visibles = { first: null, last: null },
                 i = 0,
                 isVisible;
@@ -352,7 +344,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
         },
 
         getVisibles2: function () {
-            var views = _.invoke(this.displayed, 'view'),
+            var views = _.pluck(this.displayed, 'view'),
                 visibles = { first: null, last: null },
                 i = views.length - 1,
                 isVisible;
@@ -370,7 +362,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
         },
 
         getVisibles3: function () {
-            var views = _.invoke(this.displayed, 'view').reverse(),
+            var views = _.pluck(this.displayed, 'view').reverse(),
                 visibles = { first: null, last: null },
                 i = 0,
                 isVisible,

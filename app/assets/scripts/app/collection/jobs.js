@@ -13,8 +13,6 @@ define(["lib/Logger", "model/job", "collection/collection"], function (Logger, J
 
     Jobs.View = Jobs.View.extend({
 
-        templateId: "job-template",
-
         attributes: {
             id: "jobs"
         },
@@ -34,7 +32,7 @@ define(["lib/Logger", "model/job", "collection/collection"], function (Logger, J
         init: function () {
             var self = this, view, input;
             if (!this.isList()) {
-                view = this.collection.at(0).view();
+                view = this.collection.at(0).view;
                 view.options.assertions = this.options.assertions;
                 view.options.resources = this.options.resources;
                 view.addSearchHandler();

@@ -13,8 +13,6 @@ define(["lib/Logger", "model/resource", "collection/collection"], function (Logg
 
     Resources.View = Resources.View.extend({
 
-        templateId: "resource-template",
-
         attributes: {
             id: "resources"
         },
@@ -28,7 +26,7 @@ define(["lib/Logger", "model/resource", "collection/collection"], function (Logg
 
         init: function () {
             if (!this.isList()) {
-                var view = this.collection.at(0).view();
+                var view = this.collection.at(0).view;
                 view.options.assertions = this.options.assertions;
                 view.addSearchHandler();
             }

@@ -2,16 +2,21 @@ define(["lib/Logger"], function (Logger) {
 
     "use strict";
 
-    var logger = new Logger("Util");
+    var logger = new Logger("Util"),
+        templates = {};
 
     return {
 
         getTemplate: function (name) {
+            if (templates[name]) {
+                logger.debug("Getting template: " + name + " from cache");
+                return templates[name];
+            }
             try {
                 logger.info("Getting template: " + name);
-                return _.template(document.getElementById(name).text);
+                templates[name] = _.template(document.getElementById(name).text);
+                return templates[name];
             } catch (ex) {
-                //console.log(ex);
                 logger.error("Error getting " + name + " template: " + ex.message);
                 return _.template("");
             }

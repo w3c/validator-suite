@@ -171,7 +171,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
             this.$(".actions input[name=search]").bind("keyup change", function () {
                 var input = this;
                 setTimeout(function () {
-                    collec.view().search(input.value, input);
+                    collec.view.search(input.value, input);
                 }, 0);
             });
         },

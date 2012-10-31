@@ -13,8 +13,6 @@ define(["lib/Logger", "model/assertor", "collection/Collection"], function (Logg
 
     Assertors.View = Assertors.View.extend({
 
-        templateId: "assertor-template",
-
         attributes: {
             id: "assertors"
         },
@@ -42,7 +40,7 @@ define(["lib/Logger", "model/assertor", "collection/Collection"], function (Logg
                 event.preventDefault();
                 filterLinks.parents('article').removeClass("current");
                 $(this).parents('article').addClass("current");
-                self.options.assertions.view().filterOn($(this).parents('article').attr('data-id'));
+                self.options.assertions.view.filterOn($(this).parents('article').attr('data-id'));
                 return false;
             });
         }

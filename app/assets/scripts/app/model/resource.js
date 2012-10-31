@@ -50,7 +50,7 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
             this.$(".actions input[name=search]").bind("keyup change", function () {
                 input = this;
                 setTimeout(function () {
-                    collec.view().search(input.value, input);
+                    collec.view.search(input.value, input);
                 }, 0);
             });
         },

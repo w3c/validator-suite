@@ -33,8 +33,6 @@ define(["lib/Logger", "model/assertion", "collection/Collection"], function (Log
 
     Assertions.View = Assertions.View.extend({
 
-        templateId: "assertion-template",
-
         attributes: {
             id: "assertions"
         },
