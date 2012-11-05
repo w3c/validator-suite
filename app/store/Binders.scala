@@ -147,13 +147,13 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val AssertionBinder: PointedGraphBinder[Rdf, Assertion] = pgb[Assertion](ont.url, ont.assertor, ont.contexts, ont.lang, ont.title, ont.severity, ont.description, ont.timestamp)(Assertion.apply, Assertion.unapply)
 
-  implicit lazy val JobVOBinder = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.creator, ont.organization)(JobVO.apply, JobVO.unapply)
+  implicit lazy val JobVOBinder: PointedGraphBinder[Rdf, JobVO] = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.creator, ont.organization)(JobVO.apply, JobVO.unapply)
 
-  implicit lazy val OrganizationVOBinder = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
+  implicit lazy val OrganizationVOBinder: PointedGraphBinder[Rdf, OrganizationVO] = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
 
-  implicit lazy val ErrorResponseBinder = pgb[ErrorResponse](ont.url, ont.method, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
+  implicit lazy val ErrorResponseBinder: PointedGraphBinder[Rdf, ErrorResponse] = pgb[ErrorResponse](ont.url, ont.method, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
 
-  implicit lazy val HttpResponseBinder = pgb[HttpResponse](ont.url, ont.method, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
+  implicit lazy val HttpResponseBinder: PointedGraphBinder[Rdf, HttpResponse] = pgb[HttpResponse](ont.url, ont.method, ont.status, ont.headers, ont.urls)(HttpResponse.apply, HttpResponse.unapply)
 
 
   implicit lazy val ResourceResponseBinder = new PointedGraphBinder[Rdf, ResourceResponse] {

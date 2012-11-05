@@ -7,7 +7,7 @@
                 @definition.name match {
 
                 case "name" => {
-                <a href="@routes.Resources.index(job.id)" data-name>@job.name</a>}
+                <a href="@routes.Resources.index(job.id, None)" data-name="">@job.name</a>}
 
                 case "entrypoint" => {
                 <a href="@job.entrypoint" data-entrypoint="@job.entrypoint" class="external" target="_blank" title="@Messages("resource.external.link")">
@@ -15,10 +15,10 @@
                 </a>}
 
                 case "status" => {
-                <span data-status class="@job.status">@job.status</span>
+                <span data-status="" class="@job.status">@job.status</span>
                 @if(!collection.isDefined) {
-                <form action="@routes.Jobs.dispatcher(job.id)" method="post">
-                    <input type="hidden" name="uri" value="@routes.Jobs.index">
+                <form action="@routes.Job.dispatcher(job.id)" method="post">
+                    <input type="hidden" name="uri" value="@routes.Jobs.index"/>
                     @job.status match {
                     case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
                     case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
@@ -28,29 +28,29 @@
                 case "completedOn" => {
                 @job.completedOn match{
                   case Some(date) => {
-                    <time datetime="@date" data-completed="@date" data-completed-legend1>@Helper.formatTime(date)</time>
-                    <span class="legend" data-completed-legend2>@Helper.formatLegendTime(date)</span>}
+                    <time datetime="@date" data-completed="@date" data-completed-legend1="">@Helper.formatTime(date)</time>
+                    <span class="legend" data-completed-legend2="">@Helper.formatLegendTime(date)</span>}
                   case _ => {<span class="never">Never</span>}
                 }}
 
                 case "warnings" => {
-                <span data-warnings>@job.warnings</span>}
+                <span data-warnings="">@job.warnings</span>}
 
                 case "errors" => {
-                <span data-errors>@job.errors</span>}
+                <span data-errors="">@job.errors</span>}
 
                 case "resources" => {
-                <span data-resources>@job.resources</span>}
+                <span data-resources="">@job.resources</span>}
 
                 case "maxResources" => {
-                <span data-maxResources>@job.maxResources</span>}
+                <span data-max-resources="">@job.maxResources</span>}
 
                 case "health" => {
-                <progress max=100 value=@job.health title="@job.health%" data-health="@job.health">@job.health%</progress>}
+                <progress max="100" value="@job.health" title="@job.health%" data-health="@job.health">@job.health%</progress>}
 
                 case "actions" => {
-                <form action="@routes.Jobs.dispatcher(job.id)" method="post">
-                    @if(!collection.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.index">}
+                <form action="@routes.Job.dispatcher(job.id)" method="post">
+                    @if(!collection.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.index"/>}
                     <fieldset>
                         <legend>Controls</legend>
                         @job.status match {
@@ -63,27 +63,27 @@
 
                 @if(collection.isDefined) {
                 @defining(collection.get.fold(a => a, r => r)) { collection =>
-                <form class="group" action="@routes.Jobs.dispatcher(job.id)" method=get>
+                <form class="group" action="@routes.Job.dispatcher(job.id)" method="get">
                     <fieldset class="dropdown">
                         <legend>Report by</legend>
-                        <input name=group type=radio value="resource" id="resource" @if(!collection.isGroupedBy("message")){checked}>
+                        <input name=group type=radio value="resource" id="resource" @if(!collection.isGroupedBy("message")){checked}/>
                         <label for="resource">Group by resource</label>
-                        <input name=group type=radio value="message" id="message" @if(collection.isGroupedBy("message")){checked}>
+                        <input name=group type=radio value="message" id="message" @if(collection.isGroupedBy("message")){checked}/>
                         <label for="message">Group by message</label>
                         @collection.params.search.map { search =>
-                        <input name="search" type=hidden value="@search">}
+                        <input name="search" type="hidden" value="@search"/>}
                     </fieldset>
-                    <button type=submit>Go</button>
+                    <button type="submit">Go</button>
                 </form>
-                <form class="search" method=get>
+                <form class="search" method="get">
                     <fieldset>
                         <legend>Search</legend>
-                        <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
+                        <input name="search" type="text" placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>
                         @if(collection.params.search != None) {
                         <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
                         @collection.search().goToPage(1).queryParameters.map { param =>
-                        <input name="@param.name" type=hidden value="@param.value">}
-                        <button type=submit>@Messages("job.button.search")</button>
+                        <input name="@param.name" type="hidden" value="@param.value"/>}
+                        <button type="submit">@Messages("job.button.search")</button>
                     </fieldset>
                 </form>
                 }}
@@ -98,5 +98,5 @@
             }**@
 
         </dl>
-        <hr>
+        <hr/>
     </article>

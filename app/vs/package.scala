@@ -11,6 +11,6 @@ package object vs  {
 
   implicit val sparql: SparqlOps[Rdf] = JenaSparqlOps
 
-  implicit val uriBinder = URIBinder.uriBinderForURI[Rdf].toNodeBinder.toPGB
+  implicit val uriBinder: PointedGraphBinder[Rdf, Rdf#URI] = URIBinder.uriBinderForURI[Rdf].toNodeBinder.toPGB
 
 }

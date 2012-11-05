@@ -68,7 +68,7 @@ case class AssertionsView(
 object AssertionsView {
 
   def apply(assertions: Iterable[Assertion], id: JobId, url: URL): AssertionsView = {
-    AssertionsView(source = assertions.map(assertion => AssertionView(assertion, id)), route = routes.Assertions.index1(id, url))
+    AssertionsView(source = assertions.map(assertion => AssertionView(assertion, id)), route = routes.Assertions.index(id, Some(url)))
   }
 
   def grouped(assertions: Iterable[Assertion], id: JobId): AssertionsView = {
@@ -94,7 +94,7 @@ object AssertionsView {
         resources = resources
       )
     }
-    AssertionsView(source = views, route = routes.Assertions.index(id))
+    AssertionsView(source = views, route = routes.Assertions.index(id, None))
   }
 
 }

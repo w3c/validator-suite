@@ -1,5 +1,6 @@
 package controllers
 
+import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
 import org.w3.vs.view.form._
@@ -7,6 +8,7 @@ import play.api.i18n._
 import play.api.mvc._
 import scala.Some
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 object Application extends VSController {
   
@@ -30,14 +32,12 @@ object Application extends VSController {
   
   def authenticate: ActionA = Action { implicit req =>
     AsyncResult {
-      val f = for {
-        form <- LoginForm.bind() map {
-          case Left(form) => throw ForceResult(BadRequest(views.html.login(form)))
+      (for {
+        form <- Future.successful(LoginForm.bind() match {
+          case Left(form) => throw InvalidFormException(form)
           case Right(validForm) => validForm
-        }
-        user <- User.authenticate(form.email, form.password) recover {
-          case _: UnauthorizedException => throw ForceResult(Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession)
-        }
+        })
+        user <- User.authenticate(form.email, form.password)
       } yield {
         (for {
           body <- req.body.asFormUrlEncoded
@@ -45,26 +45,13 @@ object Application extends VSController {
           uri <- param.headOption
         } yield uri) match {
           case Some(uri) => SeeOther(uri).withSession("email" -> user.vo.email) // Redirect to "uri" param if specified
-          case None => SeeOther(routes.Jobs.index.toString).withSession("email" -> user.vo.email)
+          case None => SeeOther(routes.Jobs.index).withSession("email" -> user.vo.email)
         }
-      }
-      f recover toError
+      }) recover {
+        case  _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession
+        case InvalidFormException(form: LoginForm) => BadRequest(views.html.login(form))
+      } recover toError
     }
   }
-
-  /*def redirectWithSlash(a: Any): ActionA = Action { req =>
-    MovedPermanently(
-      req.path + "/" + Helper.queryString(req.queryString)
-    )
-  }*/
-  
-//  def toResult(authenticatedUserOpt: Option[User] = None)(e: SuiteException)(implicit req: Request[_]): Result = {
-//    e match {
-//      case  _@ (UnknownJob | UnauthorizedJob) => if (isAjax) NotFound(views.html.libs.messages(List(("error" -> Messages("jobs.notfound"))))) else SeeOther(routes.Jobs.index.toString).flashing(("error" -> Messages("jobs.notfound")))
-//      case _@ (UnknownUser | Unauthenticated) => Unauthorized(views.html.login(loginForm, List(("error" -> Messages("application.unauthorized"))))).withNewSession
-//      case                  StoreException(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.store", t.getMessage))), authenticatedUserOpt))
-//      case                      Unexpected(t) => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage))), authenticatedUserOpt))
-//    }
-//  }
   
 }

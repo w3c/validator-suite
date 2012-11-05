@@ -1,13 +1,13 @@
 @(title: String, style: String = "", script: String = "")(content: Html)(footer: Html)
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>@title</title>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg" href='@routes.Assets.at("/public", "images/vsLogo.svg")'>
-    <link href='@routes.Assets.at("/public", "styles/main.min.css")' rel="stylesheet">
+    <link rel="icon" type="image/svg" href='@routes.Assets.at("/public", "images/vsLogo.svg")' />
+    <link href='@routes.Assets.at("/public", "styles/main.min.css")' rel="stylesheet" />
     @if(style != "") {
-    <link href='@routes.Assets.at("/public", "styles/" + style + ".min.css")' rel="stylesheet">}
+    <link href='@routes.Assets.at("/public", "styles/" + style + ".min.css")' rel="stylesheet" />}
 
     <script src='@routes.Assets.at("/app/assets/scripts", "libs/require.js")'></script>
     <script>

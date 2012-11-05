@@ -4,9 +4,34 @@ import java.net.URL
 import java.net.URLDecoder
 import java.net.URLEncoder
 import org.w3.vs.model._
-import play.api.mvc.PathBindable
+import play.api.mvc.{AnyContent, Action, QueryStringBindable, PathBindable}
+import play.api.mvc.QueryStringBindable.Parsing
 
 package object controllers {
+
+  type URL = java.net.URL
+  type SocketType = SocketType.SocketType
+  type ActionA = Action[AnyContent]
+
+  val socketEnum = new Enumeration() {}
+
+  object SocketType extends Enumeration {
+    type SocketType = Value
+    val ws, events, comet = Value
+  }
+
+  implicit val bindableSocketType = new PathBindable[SocketType] {
+    def bind(key: String, value: String): Either[String, SocketType] = {
+      try {
+        Right(SocketType.withName(value))
+      } catch { case e: Exception =>
+        Left("invalid socket type: " + value)
+      }
+    }
+    def unbind(key: String, value: SocketType): String = {
+      value.toString
+    }
+  }
 
   implicit val bindableJobId = new PathBindable[JobId] {
     def bind (key: String, value: String): Either[String, JobId] = {
@@ -46,5 +71,9 @@ package object controllers {
       URLEncoder.encode(value.toString, "UTF-8")
     }
   }
+
+  implicit object urlQueryStringBinder extends Parsing[URL] (
+    s => new URL(s), _.toString, (key: String, e: Exception) => "Cannot parse parameter %s as URL: %s".format(key, e.getMessage)
+  )
   
 }

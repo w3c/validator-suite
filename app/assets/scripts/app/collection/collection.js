@@ -1,4 +1,4 @@
-define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logger, Backbone, Util, Loader) {
+define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], function (Logger, Backbone, Util, Loader, Socket) {
 
     "use strict";
 
@@ -62,6 +62,18 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
             if (options.load || (_.isUndefined(options.load) && this.view.isList())) {
                 this.load();
             }
+            if (options.listen || (_.isUndefined(options.load))) {
+                if (this.view.isList()) {
+                    this.listen();
+                } else if (this.view.isSingle()) {
+                    if (this.at(0)) {
+                        console.log("##########")
+                        console.log(this.at(0))
+                        console.log(this.at(0).url())
+                        this.at(0).listen();
+                    }
+                }
+            }
             return this;
         },
 
@@ -76,7 +88,18 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
         },
 
         listen: function () {
-            var socket = new Util.Socket(this.url);
+            //var socket = new Util.Socket(this.url);
+            var self = this;
+            this.socket = new Socket(this.url);
+            this.socket.on("message", function (data) {
+                var model = self.get(data.id);
+                if (!_.isUndefined(model)) {
+                    model.set(data);
+                } else {
+                    logger.warn("Unknown model with id: " + data.id);
+                    logger.debug(data);
+                }
+            });
         }
 
     });
@@ -323,6 +346,10 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader"], function (Logg
 
         isList: function () {
             return this.$el.hasClass('list') || this.$el.hasClass('folds');
+        },
+
+        isSingle: function () {
+            return this.$el.hasClass('single');
         },
 
         getVisibles: function () {

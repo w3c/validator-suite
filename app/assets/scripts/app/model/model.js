@@ -1,4 +1,4 @@
-define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Backbone) {
+define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logger, Util, Socket, Backbone) {
 
     "use strict";
 
@@ -11,11 +11,21 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
     Model = Backbone.Model.extend({
 
         initialize: function () {
-
-            this.view = new this.constructor.prototype.constructor.View(_.extend({ model: this }));
-            this.view.render();
+            var view = this.view = new this.constructor.prototype.constructor.View(_.extend({ model: this }));
+            view.render();
 
             if (_.isFunction(this.init)) { this.init(); }
+        },
+
+        listen: function () {
+            this.socket = new Socket(Util.getValue(this.url, this));
+            this.socket.on("message", function (data) {
+                if (data.id !== this.id) {
+                    logger.error("Received an update with an incorrect id");
+                    return;
+                }
+                this.set(data);
+            });
         },
 
         /*view: function (options) {

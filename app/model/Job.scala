@@ -12,7 +12,7 @@ import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
 import diesel._
-import ops._
+import diesel.ops._
 import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs.store.Binders._

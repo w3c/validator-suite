@@ -15,7 +15,7 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
 
         assertions: new Assertions(),
 
-        initialize: function () {
+        init: function () {
             this.id = this.get("resourceUrl");
         },
 

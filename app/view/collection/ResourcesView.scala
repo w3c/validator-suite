@@ -17,7 +17,7 @@ case class ResourcesView (
     classe: String = "list",
     params: Parameters = Parameters()) extends CollectionImpl[ResourceView] {
 
-  val route = routes.Resources.index(jobId)
+  val route = routes.Resources.index(jobId, None)
 
   def definitions = ResourceView.definitions
 

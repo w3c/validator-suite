@@ -2,7 +2,7 @@
 @defining("validator_html"){case name =>
 
 <label for="@name" title="Add the Markup Validator to this job">HTML Validator</label>
-<input  id="@name" name=assertor[] value="@name" type=checkbox  @if(form.hasAssertor(name)){checked}>
+<input  id="@name" name=assertor[] value="@name" type=checkbox  @if(form.hasAssertor(name)){checked}/>
 
 <fieldset class="@name assertor">
     <legend>HTML Validator</legend>
@@ -52,7 +52,7 @@
         <option value="windows-1256">windows-1256 (Arabic)</option>
         <option value="windows-1257">windows-1257 (Baltic Rim)</option>
     </select>
-    <input id="@name-fbc" name="@name-fbc" type="checkbox" value="1">
+    <input id="@name-fbc" name="@name-fbc" type="checkbox" value="1"/>
     <label for="@name-fbc" title="Use selected Character encoding only if missing in the document">Only if missing</label>
 
     <br>
@@ -86,9 +86,9 @@
         <option value="SMIL 1.0">SMIL 1.0</option>
         <option value="SMIL 2.0">SMIL 2.0</option>
     </select>
-    <input id="@name-fbd" name="@name-fbd" type="checkbox" value="1" title="Use selected Document Type only if missing in the document">
+    <input id="@name-fbd" name="@name-fbd" type="checkbox" value="1" title="Use selected Document Type only if missing in the document"/>
     <label for="@name-fbd">Only if missing</label>
 
-    <input name="@name-No200" type="hidden" value="1">
+    <input name="@name-No200" type="hidden" value="1"/>
 </fieldset>
 }

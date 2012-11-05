@@ -2,16 +2,16 @@
 
 @if(collection.classe == "list") {
 <section id="actions">
-    <a href="@routes.Jobs.new1" class="button">New job</a>
-    <form class="search" action="@routes.Jobs.index" method=get>
+    <a href="@routes.Jobs.newJob" class="button">New job</a>
+    <form class="search" action="@routes.Jobs.index" method="get">
         <fieldset>
             <legend>Search</legend>
-            <input name=search type=text placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required>
+            <input name="search" type="text" placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required=""/>
             @if(collection.params.search != None) {
             <a class="button clear" href="@collection.search().queryString">@Messages("job.button.clear")</a>}
             @collection.search("").queryParameters.map { param =>
-            <input name="@param.name" type=hidden value="@param.value">}
-            <button type=submit>@Messages("job.button.search")</button>
+            <input name="@param.name" type="hidden" value="@param.value"/>}
+            <button type="submit">@Messages("job.button.search")</button>
         </fieldset>
     </form>
 </section>}
@@ -29,7 +29,7 @@
         <dt class="actions"><dfn>@Messages("job.actions")</dfn></dt>
         <dd>@Messages("job.actions.detail")</dd>
     </dl>
-    <hr>
+    <hr/>
 </aside>
 
 @page.iterator.map { case job => @models.job(job) }
@@ -41,7 +41,7 @@
     @** <a href="@Helper.clearParam("search")">@Messages("search.clear")</a> ** @
     } else {
     @Messages("jobs.empty")
-    <a href="@routes.Jobs.new1">@Messages("jobs.create.first")</a>
+    <a href="@routes.Jobs.newJob">@Messages("jobs.create.first")</a>
     }
 </p>
 }

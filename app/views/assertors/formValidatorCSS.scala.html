@@ -2,7 +2,7 @@
 @defining("validator_css"){case name =>
 
 <label for="@name" class="tab" title="Add the CSS Validator to this job">CSS Validator</label>
-<input  id="@name" name=assertor[] value="@name" type=checkbox @if(form.hasAssertor(name)){checked}>
+<input  id="@name" name=assertor[] value="@name" type=checkbox @if(form.hasAssertor(name)){checked}/>
 
 <fieldset class="@name assertor">
     <legend>CSS Validator</legend>

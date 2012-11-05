@@ -1,7 +1,6 @@
 package org.w3.vs.view.form
 
 import java.util.concurrent.TimeoutException
-import org.w3.banana._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.i18n.Messages
@@ -10,13 +9,13 @@ import scala.concurrent._
 
 object LoginForm {
 
-  def bind()(implicit req: Request[_], context: ExecutionContext): Future[Either[LoginForm, ValidLoginForm]] = {
+  def bind()(implicit req: Request[_], context: ExecutionContext): Either[LoginForm, ValidLoginForm] = {
     val form = playForm.bindFromRequest
     implicit def onTo(to: TimeoutException): LoginForm = new LoginForm(form.withError("key", Messages("error.timeout")))
     form.fold(
       f => Left(new LoginForm(f)),
       s => Right(new ValidLoginForm(form, s))
-    ).asFuture
+    )
   }
 
   def blank: LoginForm = new LoginForm(playForm)

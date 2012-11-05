@@ -61,6 +61,14 @@ define(["lib/Logger"], function (Logger) {
                 }
                 return result;
             };
+        },
+
+        getValue: function (url, obj) {
+            if (_.isFunction(url)) {
+                return _.bind(url, obj)();
+            } else {
+                return url;
+            }
         }
 
     };

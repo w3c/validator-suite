@@ -106,4 +106,21 @@ object Collection {
     }
   }
 
+/*  implicit def queryStringBinder(implicit intBinder: QueryStringBindable[Int]) = new QueryStringBindable[Pager] {
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Pager]] = {
+      for {
+        index <- intBinder.bind(key + ".index", params)
+        size <- intBinder.bind(key + ".size", params)
+      } yield {
+        (index, size) match {
+          case (Right(index), Right(size)) => Right(Pager(index, size))
+          case _ => Left("Unable to bind a Pager")
+        }
+      }
+    }
+    override def unbind(key: String, pager: Pager): String = {
+      intBinder.unbind(key + ".index", pager.index) + "&" + intBinder.unbind(key + ".size", pager.size)
+    }
+  }*/
+
 }

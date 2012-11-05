@@ -1,42 +1,40 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 
-##########################
 # Application
-GET     /suite                                                  controllers.Application.index
-GET     /suite/login                                            controllers.Application.login
-POST    /suite/login                                            controllers.Application.authenticate
-POST    /suite/logout                                           controllers.Application.logout
+GET     /suite                                            controllers.Application.index
+GET     /suite/login                                      controllers.Application.login
+POST    /suite/login                                      controllers.Application.authenticate
+POST    /suite/logout                                     controllers.Application.logout
 
-##########################
 # Jobs
-GET     /suite/jobs                                             controllers.Jobs.index
-POST    /suite/jobs                                             controllers.Jobs.create
-GET     /suite/jobs/new                                         controllers.Jobs.new1
-GET     /suite/jobs/:job                                        controllers.Jobs.get(job: JobId)
-POST    /suite/jobs/:job                                        controllers.Jobs.dispatcher(job: JobId)
-GET     /suite/jobs/:job/edit                                   controllers.Jobs.edit(job: JobId)
-# Sockets
-GET     /suite/jobs/ws                                          controllers.Jobs.webSocket
-GET     /suite/jobs/comet                                       controllers.Jobs.cometSocket
-GET     /suite/jobs/events                                      controllers.Jobs.eventsSocket
+GET     /suite/jobs                                       controllers.Jobs.index
+POST    /suite/jobs                                       controllers.Jobs.create
+GET     /suite/jobs/new                                   controllers.Jobs.newJob
+GET     /suite/jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
-##########################
-# Resources
-GET     /suite/jobs/:job/resources                              controllers.Resources.index(job: JobId)
-GET     /suite/jobs/:job/resources/:url                         controllers.Resources.get(job: JobId, url: java.net.URL)
+# Job
+GET     /suite/jobs/:job                                  controllers.Job.get(job: JobId)
+POST    /suite/jobs/:job                                  controllers.Job.dispatcher(job: JobId)
+GET     /suite/jobs/:job/edit                             controllers.Job.edit(job: JobId)
+GET     /suite/jobs/:job/socket/:socket                   controllers.Job.socket(job: JobId, socket: SocketType)
 
-##########################
-# Assertions
-GET     /suite/jobs/:job/assertions                             controllers.Assertions.index(job: JobId)
-GET     /suite/jobs/:job/assertions/:assert                     controllers.Assertions.get(job: JobId, assert: AssertionId)
-GET     /suite/jobs/:job/resources/:url/assertions              controllers.Assertions.index1(job: JobId, url: java.net.URL)
-GET     /suite/jobs/:job/resources/:url/assertions/:assert      controllers.Assertions.get1(job: JobId, url: java.net.URL, assert: AssertionId)
+# Job/assertions
+GET     /suite/jobs/:job/assertions                       controllers.Assertions.index(job: JobId, resource: Option[URL])
+GET     /suite/jobs/:job/assertions/socket/:socket        controllers.Assertions.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
-##########################
-# Assertors
-GET     /suite/jobs/:job/assertors                              controllers.Assertors.index(job: JobId)
-GET     /suite/jobs/:job/resources/:url/assertors               controllers.Assertors.index1(job: JobId, url: java.net.URL)
+# Job/assertors
+GET     /suite/jobs/:job/assertors                        controllers.Assertors.index(job: JobId, resource: Option[URL])
+GET     /suite/jobs/:job/assertors/socket/:socket         controllers.Assertors.socket(job: JobId, resource: Option[URL], socket: SocketType)
+
+# Job/resources
+GET     /suite/jobs/:job/resources                        controllers.Resources.index(job: JobId, resource: Option[URL])
+GET     /suite/jobs/:job/resources/socket/:socket         controllers.Resources.socket(job: JobId, resource: Option[URL], socket: SocketType)
+
+# Job/resources/resource
+#GET     /suite/jobs/:job/resources/:url                   controllers.Resources.get(job: JobId, url: URL)
+#GET     /suite/jobs/:job/resources/:url/assertions        controllers.Assertions.index1(job: JobId, url: URL)
+#GET     /suite/jobs/:job/resources/:url/assertors         controllers.Assertors.index1(job: JobId, url: URL)
 
 ##########################
 # Map static resources from the /public folder to the /assets URL path
@@ -47,17 +45,3 @@ GET     /suite/public/*file                                     controllers.Asse
 # more i added a dummy controller that serves files from nowhere. The switch has to be done manually.
 #GET     /no_folder/*file                                       controllers.Assets.at(path="/no_folder", file)
 GET     /suite/dev/scripts/*file                                controllers.Assets.at(path="/app/assets/scripts", file)
-
-
-
-
-#
-#POST   /suite/jobs/:job/resources                              controllers.Resources.create(job: JobId)
-#GET    /suite/jobs/:job/resources/new                          controllers.Resources.new1(job: JobId)
-#POST   /suite/jobs/:job/resources/:url                         controllers.Resources.dispatcher(job: JobId, url: java.net.URL)
-#GET    /suite/jobs/:job/resources/:url/edit                    controllers.Resources.edit(job: JobId, url: java.net.URL)
-#POST   /suite/jobs/:job/assertions                             controllers.Assertions.create(job: JobId)
-#GET    /suite/jobs/:job/assertions/new                         controllers.Assertions.new1(job: JobId)
-#POST   /suite/jobs/:job/assertions/:assert                     controllers.Assertions.dispatcher(job: JobId, assert: AssertionId)
-#GET    /suite/jobs/:job/assertions/:assert/edit                controllers.Assertions.edit(job: JobId, assert: AssertionId)
-#

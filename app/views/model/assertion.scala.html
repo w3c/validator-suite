@@ -7,19 +7,19 @@
             @definition.name match {
 
             case "assertor" => {
-            <span data-assertor>@assertion.assertor</span>}
+            <span data-assertor="">@assertion.assertor</span>}
 
             case "severity" => {
-            <span data-severity>@assertion.severity</span>}
+            <span data-severity="">@assertion.severity</span>}
 
             case "occurrences" => {
-            <span data-occurrences="@assertion.occurrences" data-occurrencesLegend>@assertion.occurrencesLegend</span>}
+            <span data-occurrences="@assertion.occurrences" data-occurrencesLegend="">@assertion.occurrencesLegend</span>}
 
             case "title" => {
-            <div @if(!assertion.isEmpty){class="fold"} data-title>@assertion.title</div>}
+            <div @if(!assertion.isEmpty){class="fold"} data-title="">@assertion.title</div>}
 
             case "description" if assertion.description.isDefined => {
-            <div data-description>@assertion.description</div>}
+            <div data-description="">@assertion.description</div>}
 
             case "description" => {}
 
@@ -27,15 +27,15 @@
             @assertion.contexts.take(50).map { case context =>
             <dd class="context">
                 @if(context.line.isDefined){
-                <span class="line">Line <span title="Line @context.line" data-context-line>@context.line</span></span>}
+                <span class="line">Line <span title="Line @context.line" data-context-line="">@context.line</span></span>}
                 @if(context.column.isDefined){
-                <span class="column">Column <span title="Column @context.column" data-context-column>@context.column</span></span>}
+                <span class="column">Column <span title="Column @context.column" data-context-column="">@context.column</span></span>}
                 @if(context.content.isDefined){
-                <code class="code language-" data-context-content>@context.content</code>}
+                <code class="code language-" data-context-content="">@context.content</code>}
             </dd>}
             @if(assertion.contexts.size > 50){
             <dd class="more">
-                <p>And <span data-contextsMore>@{assertion.contexts.size - 50}</span> more</p>
+                <p>And <span data-contextsMore="">@{assertion.contexts.size - 50}</span> more</p>
             </dd>}}
 
             case "resources" => {
@@ -45,7 +45,7 @@
 
             @assertion.resources.take(15).map { case url =>
             <dd class="resource">
-                <a href="@routes.Assertions.index1(assertion.jobId, url)" class="report" title="@Messages("report.link")">
+                <a href="@routes.Assertions.index(assertion.jobId, Some(url))" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>
                     <span>@Helper.shorten(url, 80)</span>
                 </a>
@@ -53,12 +53,12 @@
             </dd>}
             @if(assertion.resources.size > 15){
             <dd class="more">
-                <p>And <span data-resourcesMore>@{assertion.resources.size - 15}</span> more</p>
+                <p>And <span data-resourcesMore="">@{assertion.resources.size - 15}</span> more</p>
             </dd>}}
 
             }}
         </dl>
-        <hr>
+        <hr/>
     </article>
 
 
@@ -101,5 +101,5 @@
                 <p>And @{assertion.resources.size - 50} more</p>
             </dd>}
         </dl>
-        <hr>
+        <hr/>
     </article>**@

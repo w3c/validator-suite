@@ -1,7 +1,6 @@
 package org.w3.vs.view.form
 
 import java.net.URL
-import org.w3.banana._
 import org.w3.vs.VSConfiguration
 import org.w3.vs.assertor.Assertor
 //import org.w3.vs.controllers._
@@ -62,7 +61,7 @@ object JobForm {
     }
   }*/
 
-  def bind()(implicit req: Request[AnyContent], context: ExecutionContext): Future[Either[JobForm, ValidJobForm]] = {
+  def bind()(implicit req: Request[AnyContent], context: ExecutionContext): Either[JobForm, ValidJobForm] = {
 
     //println(assertorParameters())
 
@@ -78,7 +77,7 @@ object JobForm {
       }
     )
 
-    vsform.asFuture
+    vsform
   }
 
   def blank: JobForm = new JobForm(playForm, AssertorsConfiguration.default)

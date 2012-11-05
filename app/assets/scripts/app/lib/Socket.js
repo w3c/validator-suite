@@ -2,9 +2,12 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
 
     "use strict";
 
-    var logger = new Logger("Socket");
+    var logger = new Logger("Socket"),
+        Socket;
 
-    var Socket = function (url, type) {
+    Socket = function (url, type) {
+
+        logger.trace();
 
         var websocketProtocol, types, socket, implementations, i;
 
@@ -31,15 +34,13 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
                 for (protocol in websocketProtocol) {
                     socket.url = socket.url.replace(protocol, websocketProtocol[protocol]);
                 }
-                websocket = new window.WebSocket(socket.url + '/ws');
+                websocket = new window.WebSocket(socket.url + '/socket/ws');
                 websocket.onmessage = function (event) {
-                    var job = JSON.parse(event.data);
-                    logger.info("New message: jobUpdate");
-                    logger.debug(job);
-                    socket.trigger("jobupdate", job);
+                    var message = JSON.parse(event.data);
+                    socket.trigger("message", message);
                 };
                 websocket.onopen = function (event) {
-                    logger.info("websocket opened: " + socket.url + '/ws');
+                    logger.info("websocket opened: " + socket.url + '/socket/ws');
                     socket.trigger("open", event);
                 };
                 websocket.onerror = function (event) {
@@ -60,15 +61,13 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
                 if (!window.EventSource) {
                     throw new Error("EventSource is not supported");
                 }
-                eventsource = new window.EventSource(socket.url + '/events');
+                eventsource = new window.EventSource(socket.url + '/socket/events');
                 eventsource.onmessage = function (event) {
-                    var job = JSON.parse(event.data);
-                    logger.info("New message: jobUpdate");
-                    logger.debug(job);
-                    socket.trigger("jobupdate", job);
+                    var message = JSON.parse(event.data);
+                    socket.trigger("message", message);
                 };
                 eventsource.onopen = function (event) {
-                    logger.info("eventsource connection opened: " + socket.url + '/events');
+                    logger.info("eventsource connection opened: " + socket.url + '/socket/events');
                     socket.trigger("open", event);
                 };
                 eventsource.onerror = function (event) {
@@ -87,7 +86,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
             comet: function () {
                 var iframe;
                 logger.warn("using comet iframe");
-                iframe = $('<iframe src="' + socket.url + '/comet"></iframe>');
+                iframe = $('<iframe src="' + socket.url + '/socket/comet"></iframe>');
                 $(function () {
                     setTimeout(function () {
                         $('body').append(iframe);

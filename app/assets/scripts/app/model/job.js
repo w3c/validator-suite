@@ -197,7 +197,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
             warnings: parseInt(value('data-warnings'), 10),
             errors: parseInt(value('data-errors'), 10),
             resources: parseInt(value('data-resources'), 10),
-            maxResources: parseInt(value('data-maxResources'), 10),
+            maxResources: parseInt(value('data-max-resources'), 10),
             health: parseInt(value('data-health'), 10)
         };
     };
