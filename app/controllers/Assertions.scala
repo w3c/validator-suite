@@ -53,7 +53,7 @@ object Assertions extends VSController  {
     } yield {
       case _: Html => {
         val assertors = AssertorsView(assertions_)
-        val assertions = AssertionsView.grouped(assertions_, id).filterOn(assertors.firstAssertor).bindFromRequest
+        val assertions = AssertionsView(assertions_, id, url).filterOn(assertors.firstAssertor).bindFromRequest
         val resource = ResourcesView.single(url, assertions, job_.id)
         Ok(views.html.main(
           user = user,
