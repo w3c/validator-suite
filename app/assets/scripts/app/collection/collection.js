@@ -275,7 +275,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
                 }
             }
 
-            if (this.isList() && this.options.updateLegend) { this.updateLegend(); }
+            if (this.isList() && (_.isUndefined(this.options.updateLegend) || this.options.updateLegend)) { this.updateLegend(); }
 
             if (_.isFunction(this.afterRender)) { this.afterRender(); }
 
@@ -341,7 +341,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
                     self.updateLegend();
                 }, 0);
             });
-            win.scroll();
         },
 
         isList: function () {

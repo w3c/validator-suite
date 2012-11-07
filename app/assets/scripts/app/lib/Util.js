@@ -9,7 +9,7 @@ define(["lib/Logger"], function (Logger) {
 
         getTemplate: function (name) {
             if (templates[name]) {
-                logger.debug("Getting template: " + name + " from cache");
+                //logger.debug("Getting template: " + name + " from cache");
                 return templates[name];
             }
             try {

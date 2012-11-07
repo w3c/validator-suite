@@ -3,9 +3,6 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logg
     "use strict";
 
     var logger = new Logger("Model"),
-        footer = $('body > footer'),
-        aside = $('#jobs aside'),
-        win = $(window),
         Model;
 
     Model = Backbone.Model.extend({
@@ -48,6 +45,11 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logg
             this.model.on('destroy', this.remove, this);
             this.template = this.options.template || Util.getTemplate(this.templateId);
             if (_.isFunction(this.init)) { this.init(); }
+            this.$cache = {
+                footer: $('body > footer'),
+                aside: $('#jobs aside'),
+                win: $(window)
+            };
         },
 
         render: function (options) {
@@ -65,7 +67,11 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logg
         },
 
         isVisible: function () {
-            var top = this.$el.offset().top,
+
+            var footer = this.$cache.footer,
+                aside = this.$cache.aside,
+                win = this.$cache.win,
+                top = this.$el.offset().top,
                 bottom = this.$el.offset().top + this.$el.height();
 
             return (top > win.scrollTop() + aside.height() &&
@@ -75,7 +81,9 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logg
         },
 
         isScrolledUp: function () {
-            var top = this.$el.offset().top;
+            var footer = this.$cache.footer,
+                win = this.$cache.win,
+                top = this.$el.offset().top;
             return (top <= win.scrollTop() + win.height() - footer.height());
         },
 
