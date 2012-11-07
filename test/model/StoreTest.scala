@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
 import org.w3.banana._
 import scala.concurrent.duration.Duration
-import org.w3.vs.util.Util._
+import org.w3.util.Util._
 
 abstract class StoreTest(
   nbUrlsPerAssertions: Int,

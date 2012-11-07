@@ -3,6 +3,7 @@ package org.w3.vs
 import org.w3.vs.model._
 import org.joda.time.{ Duration => _, _ }
 import org.w3.util.{ URL, Util }
+import org.w3.util.Util._
 import scala.concurrent.util._
 import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -10,7 +11,7 @@ import org.w3.banana._
 
 object Main {
 
-  def stressTestData(n: Int = 500): Unit = {
+  def stressTestData(n: Int): Unit = {
     implicit val conf = new DefaultProdConfiguration { }
 
     if (conf.storeDirectory.exists)
@@ -114,7 +115,7 @@ object Main {
       _ <- Job.save(lemonde)
     } yield ()
 
-    script.getOrFail()
+    script.getOrFail(10.seconds)
     
     conf.store.shutdown()
     conf.system.shutdown()

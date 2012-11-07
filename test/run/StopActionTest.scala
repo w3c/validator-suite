@@ -10,7 +10,7 @@ import org.w3.vs.http._
 import org.w3.vs.http.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import org.w3.vs.util.Util._
+import org.w3.util.Util._
 import org.w3.banana._
 
 class StopActionTest extends RunTestHelper with TestKitHelper {

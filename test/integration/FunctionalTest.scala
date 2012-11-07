@@ -6,11 +6,14 @@ import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 import play.api.Play._
 import play.api.test.TestServer
+import org.w3.util.Util._
 
 class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   override def beforeAll(configMap: Map[String, Any]): Unit = {
-    org.w3.vs.Main.main(Array())
+    timer("load data for FunctionalTest") {
+      org.w3.vs.Main.main(Array())
+    }
   }
 
   "an Application should let a valid user log" in {

@@ -7,7 +7,7 @@ import org.w3.vs.model._
 import org.w3.vs.actor.message._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import org.w3.vs.util.Util._
+import org.w3.util.Util._
 import org.w3.banana._
 
 /**

@@ -65,4 +65,10 @@ object Util {
 
   }
 
+  implicit class DurationW(val n: Int) extends AnyVal {
+    import scala.concurrent.duration.{ FiniteDuration, Duration }
+    def second: FiniteDuration = seconds
+    def seconds: FiniteDuration = Duration(n, java.util.concurrent.TimeUnit.SECONDS)
+  }
+
 }
