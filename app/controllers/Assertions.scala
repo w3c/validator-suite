@@ -6,8 +6,11 @@ import org.w3.vs.view.Helper
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
-import play.api.mvc.{Action, Handler}
-import scalaz.Scalaz._
+import play.api.mvc.{ Result, Action, Handler }
+import scala.concurrent.Future
+import org.w3.util.Util._
+import com.yammer.metrics.Metrics
+import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 
 object Assertions extends VSController  {
 
@@ -18,8 +21,11 @@ object Assertions extends VSController  {
     case None => index(id)
   }
 
+  val indexName = (new controllers.javascript.ReverseAssertions).index.name
+  val indexTimer = Metrics.newTimer(Assertions.getClass, indexName, MILLISECONDS, SECONDS)
+
   def index(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
-    for {
+    val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       assertions_ <- job_.getAssertions()
       job <- JobsView.single(job_)
@@ -44,10 +50,14 @@ object Assertions extends VSController  {
         Ok(assertions.toJson)
       }
     }
+    f.timer(indexName).timer(indexTimer)
   }
 
+  val indexUrlName = indexName + "+url"
+  val indexUrlTimer = Metrics.newTimer(Assertions.getClass, indexUrlName, MILLISECONDS, SECONDS)
+
   def index(id: JobId, url: URL): ActionA = AuthAsyncAction { implicit req => user =>
-    for {
+    val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       assertions_ <- job_.getAssertions().map(_.filter(_.url == url))
     } yield {
@@ -74,6 +84,7 @@ object Assertions extends VSController  {
         Ok(assertions.toJson)
       }
     }
+    f.timer(indexUrlName).timer(indexUrlTimer)
   }
 
   def socket(jobId: JobId, url: Option[URL], typ: SocketType): Handler = {
