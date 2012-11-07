@@ -19,7 +19,7 @@ object Application extends VSController {
   def index: ActionA = Action { Redirect(routes.Jobs.index.toString) }
 
   val loginName = (new controllers.javascript.ReverseApplication).login.name
-  val loginTimer = Metrics.newTimer(Jobs.getClass, loginName, MILLISECONDS, SECONDS)
+  val loginTimer = Metrics.newTimer(Application.getClass, loginName, MILLISECONDS, SECONDS)
 
   def login: ActionA = Action { implicit req =>
     AsyncResult {
@@ -37,7 +37,7 @@ object Application extends VSController {
   }
 
   val authenticateName = (new controllers.javascript.ReverseApplication).authenticate.name
-  val authenticateTimer = Metrics.newTimer(Jobs.getClass, authenticateName, MILLISECONDS, SECONDS)
+  val authenticateTimer = Metrics.newTimer(Application.getClass, authenticateName, MILLISECONDS, SECONDS)
   
   def authenticate: ActionA = Action { implicit req =>
     AsyncResult {

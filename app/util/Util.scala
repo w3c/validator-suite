@@ -10,6 +10,7 @@ object Util {
 
   /**
    * deletes all the files in a directory (only first level, not recursive)
+   * note: there is still an issue with Windows
    */
   def delete(f: File): Unit = {
     if (f.isDirectory)
@@ -17,6 +18,8 @@ object Util {
     if (!f.delete())
       throw new FileNotFoundException("Failed to delete file: " + f)
   }
+
+  /* use the following timer for synchronous tasks */
 
   def timer[T](name: String)(body: => T): T = {
     val start = System.currentTimeMillis
@@ -40,7 +43,7 @@ object Util {
   implicit class FutureF[+T](val future: Future[T]) extends AnyVal {
 
     /**
-     * logs (DEBUG) how much the Future took to be completed
+     * logs (DEBUG) how long the Future took to be completed
      */
     def timer(name: String)(implicit ec: ExecutionContext): Future[T] = {
       val start = System.currentTimeMillis

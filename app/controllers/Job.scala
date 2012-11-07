@@ -6,9 +6,12 @@ import org.w3.vs.model.{Job => JobModel, User, JobId}
 import org.w3.vs.view.form.JobForm
 import play.Logger.ALogger
 import play.api.i18n.Messages
-import play.api.mvc.{Result, Handler, Action}
+import play.api.mvc.{ Result, Handler, Action }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.w3.util.Util._
+import com.yammer.metrics.Metrics
+import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 
 object Job extends VSController {
 
@@ -18,19 +21,28 @@ object Job extends VSController {
 
   def reportByResource(id: JobId): ActionA = Resources.index(id, None)
 
+  val getName = (new controllers.javascript.ReverseJob).get.name
+  val getTimer = Metrics.newTimer(Job.getClass, getName, MILLISECONDS, SECONDS)
+
   def get(id: JobId): ActionA = AuthAction { implicit req => user =>
-    req.getQueryString("group") match {
-      case Some("message") => {case _ => Redirect(routes.Assertions.index(id, None))}
-      case _ =>               {case _ => Redirect(routes.Resources.index(id, None))}
+    timer(editName, editTimer) {
+      req.getQueryString("group") match {
+        case Some("message") => { case _ => Redirect(routes.Assertions.index(id, None)) }
+        case _ =>               { case _ => Redirect(routes.Resources.index(id, None)) }
+      }
     }
   }
 
+  val editName = (new controllers.javascript.ReverseJob).edit.name
+  val editTimer = Metrics.newTimer(Jobs.getClass, editName, MILLISECONDS, SECONDS)
+
   def edit(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
-    for {
+    val f: Future[PartialFunction[Format, Result]] = for {
       job <- user.getJob(id)
     } yield {
-      case _: Html => Ok(views.html.jobForm(JobForm.fill(job), user, Some(id)))
+      case Html(_) => Ok(views.html.jobForm(JobForm.fill(job), user, Some(id)))
     }
+    f.timer(editName).timer(editTimer)
   }
 
   def update(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
@@ -71,12 +83,16 @@ object Job extends VSController {
 
   def stop(id: JobId): ActionA = simpleJobAction(id)(user => job => job.cancel())("jobs.stop")
 
+  val dispatcherName = (new controllers.javascript.ReverseJob).dispatcher.name
+  val dispatcherTimer = Metrics.newTimer(Jobs.getClass, dispatcherName, MILLISECONDS, SECONDS)
+
   def dispatcher(implicit id: JobId): ActionA = Action { implicit req =>
-    (for {
-      body <- req.body.asFormUrlEncoded
-      param <- body.get("action")
-      action <- param.headOption
-    } yield action.toLowerCase match {
+    timer(dispatcherName, dispatcherTimer) {
+      (for {
+        body <- req.body.asFormUrlEncoded
+        param <- body.get("action")
+        action <- param.headOption
+      } yield action.toLowerCase match {
         case "update" => update(id)(req)
         case "delete" => delete(id)(req)
         //case "on" => on(id)(req)
@@ -85,6 +101,7 @@ object Job extends VSController {
         case "stop" => stop(id)(req)
         case a => BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
       }).getOrElse(BadRequest(views.html.error(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
+    }
   }
 
   def socket(jobId: JobId, typ: SocketType): Handler = {
