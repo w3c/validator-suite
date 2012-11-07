@@ -26,7 +26,7 @@ object Util {
     result
   }
 
-  implicit class FutureF[T](val future: Future[T]) extends AnyVal {
+  implicit class FutureF[+T](val future: Future[T]) extends AnyVal {
 
     /**
      * logs (DEBUG) how much the Future took to be completed

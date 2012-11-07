@@ -16,17 +16,23 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import scala.concurrent.Future
+import org.w3.util.Util._
+import com.yammer.metrics.Metrics
+import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 
 object Jobs extends VSController {
   
   val logger: ALogger = play.Logger.of("org.w3.vs.controllers.Jobs")
 
+  val indexName = (new controllers.javascript.ReverseJobs).socket.name
+  val indexTimer = Metrics.newTimer(Jobs.getClass, indexName, MILLISECONDS, SECONDS)
+
   def index: ActionA = AuthAsyncAction { implicit req => user =>
-    for {
+    val f: Future[PartialFunction[Format, Result]] = for {
       jobs_ <- user.getJobs()
       jobs <- JobsView(jobs_)
     } yield {
-      case _: Html => {
+      case Html(_) => {
         Ok(views.html.main(
           user = user,
           title = "Jobs - Validator Suite",
@@ -37,6 +43,7 @@ object Jobs extends VSController {
       case Json => Ok(jobs.bindFromRequest.toJson)
       case Rdf => TODO(req) // TODO
     }
+    f.timer(indexName).timer(indexTimer)
   }
 
   def newJob: ActionA = AuthAction { implicit req => user => {
