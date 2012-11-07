@@ -18,12 +18,23 @@ object Util {
       throw new FileNotFoundException("Failed to delete file: " + f)
   }
 
-  def time[T](name: String)(body: => T): T = {
+  def timer[T](name: String)(body: => T): T = {
     val start = System.currentTimeMillis
     val result = body
     val end = System.currentTimeMillis
     logger.debug(name + ": " + (end - start))
     result
+  }
+
+  def timer[T](t: Timer)(body: => T): T = {
+    val context = t.time()
+    val result = body
+    context.stop()
+    result
+  }
+
+  def timer[T](name: String, t: Timer)(body: => T): T = {
+    timer(t) { timer(name)(body) }
   }
 
   implicit class FutureF[+T](val future: Future[T]) extends AnyVal {

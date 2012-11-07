@@ -46,9 +46,14 @@ object Jobs extends VSController {
     f.timer(indexName).timer(indexTimer)
   }
 
-  def newJob: ActionA = AuthAction { implicit req => user => {
-    case _: Html => Ok(views.html.jobForm(JobForm.blank, user, None))
-  }}
+  val newJobName = (new controllers.javascript.ReverseJobs).newJob.name
+  val newJobTimer = Metrics.newTimer(Jobs.getClass, newJobName, MILLISECONDS, SECONDS)
+
+  def newJob: ActionA = AuthAction { implicit req => user =>
+    timer(newJobName, newJobTimer) {
+      case Html(_) => Ok(views.html.jobForm(JobForm.blank, user, None))
+    }
+  }
 
   def create: ActionA = AuthAsyncAction { implicit req => user =>
     val result: Future[PartialFunction[Format, Result]] = (for {
