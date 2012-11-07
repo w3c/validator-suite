@@ -55,23 +55,28 @@ object Jobs extends VSController {
     }
   }
 
+  val createName = (new controllers.javascript.ReverseJobs).create.name
+  val createTimer = Metrics.newTimer(Jobs.getClass, createName, MILLISECONDS, SECONDS)
+
   def create: ActionA = AuthAsyncAction { implicit req => user =>
-    val result: Future[PartialFunction[Format, Result]] = (for {
-      form <- Future.successful(JobForm.bind match {
-        case Left(form) => throw new InvalidFormException(form)
-        case Right(validJobForm) => validJobForm
+    val f1: Future[PartialFunction[Format, Result]] =
+      (for {
+        form <- Future.successful(JobForm.bind match {
+          case Left(form) => throw new InvalidFormException(form)
+          case Right(validJobForm) => validJobForm
+        })
+        job <- form.createJob(user).save()
+      } yield {
+        case Html(_) => SeeOther(routes.Jobs.index()) /*.flashing(("success" -> Messages("jobs.created", job.name)))*/
+        case _ => Created
       })
-      job <- form.createJob(user).save()
-    } yield {
-      case _: Html => SeeOther(routes.Jobs.index()) /*.flashing(("success" -> Messages("jobs.created", job.name)))*/
-      case _ => Created
-    })
-    result recover {
-      case InvalidFormException(form: JobForm) => {
-        case format: Html => BadRequest(views.html.jobForm(form, user, None))
-        case _ => BadRequest
+      val f2: Future[PartialFunction[Format, Result]] = f1 recover {
+        case InvalidFormException(form: JobForm) => {
+          case format @ Html(_) => BadRequest(views.html.jobForm(form, user, None))
+          case _ => BadRequest
+        }
       }
-    }
+      f2.timer(createName).timer(createTimer)
   }
 
   def socket(typ: SocketType): Handler = {
