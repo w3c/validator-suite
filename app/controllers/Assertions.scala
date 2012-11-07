@@ -70,7 +70,7 @@ object Assertions extends VSController  {
         )))
       }
       case Json => {
-        val assertions = AssertionsView.grouped(assertions_, id).bindFromRequest
+        val assertions = AssertionsView(assertions_, id, url).bindFromRequest
         Ok(assertions.toJson)
       }
     }
