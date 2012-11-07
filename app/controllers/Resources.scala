@@ -6,7 +6,11 @@ import org.w3.vs.view.collection.{AssertionsView, AssertorsView, ResourcesView, 
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.view.Helper
 import org.w3.vs.controllers._
-import play.api.mvc.{Action, Handler}
+import play.api.mvc.{ Result, Action, Handler }
+import scala.concurrent.Future
+import org.w3.util.Util._
+import com.yammer.metrics.Metrics
+import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 
 object Resources extends VSController  {
 
@@ -17,8 +21,11 @@ object Resources extends VSController  {
     case None => index(id)
   }
 
+  val indexName = (new controllers.javascript.ReverseResources).index.name
+  val indexTimer = Metrics.newTimer(Resources.getClass, indexName, MILLISECONDS, SECONDS)
+
   def index(id: JobId) : ActionA = AuthAsyncAction { implicit req => user =>
-    for {
+    val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       assertions_ <- job_.getAssertions()
       job <- JobsView.single(job_)
@@ -35,11 +42,17 @@ object Resources extends VSController  {
           resources
         )))
     }
+    f.timer(indexName).timer(indexTimer)
   }
 
-  def index(id: JobId, url: URL): ActionA = AuthAction { implicit req => user => {
-    case Html(_) => Redirect(routes.Assertions.index(id, Some(url)))
-  }}
+  val indexUrlName = indexName + "+url"
+  val indexUrlTimer = Metrics.newTimer(Resources.getClass, indexUrlName, MILLISECONDS, SECONDS)
+
+  def index(id: JobId, url: URL): ActionA = AuthAction { implicit req => user =>
+    timer(indexUrlName, indexUrlTimer) {
+      case Html(_) => Redirect(routes.Assertions.index(id, Some(url)))
+    }
+  }
 
   def socket(jobId: JobId, url: Option[URL], typ: SocketType): Handler = {
     typ match {
