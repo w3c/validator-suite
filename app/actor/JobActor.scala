@@ -151,9 +151,9 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       //val msg = UpdateData(_run.jobData, job.id, _run.activity)
       //tellEverybody(msg)
       if (_run.noMoreUrlToExplore)
-        logger.info("%s: Exploration phase finished. Fetched %d pages" format (_run.shortId, _run.numberOfFetchedResources))
+        logger.debug("%s: Exploration phase finished. Fetched %d pages" format (_run.shortId, _run.numberOfFetchedResources))
       if (_run.pendingAssertions.isEmpty) {
-        logger.info("Assertion phase finished.")
+        logger.debug("Assertion phase finished.")
       }
     }
     stay() using _run

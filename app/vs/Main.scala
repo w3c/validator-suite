@@ -10,26 +10,23 @@ import org.w3.banana._
 
 object Main {
 
-  def stressTestData(n: Int): Unit = {
+  def stressTestData(n: Int = 500): Unit = {
     implicit val conf = new DefaultProdConfiguration { }
 
     if (conf.storeDirectory.exists)
       Util.delete(conf.storeDirectory)
 
-    val orgId = OrganizationId()
-
-    def makeUser(name: String): User = 
-      User(userId = UserId(), organization = Some(orgId), email = name + "@w3.org", name = name, password = "secret")
-
-    val admin = makeUser("admin")
-
-    val org = Organization(orgId = orgId, name = "W3C", admin = admin.id)
+    def makeUser(name: String): (Organization, User) = {
+      val orgId = OrganizationId()
+      val user = User(userId = UserId(), organization = Some(orgId), email = name + "@w3.org", name = name, password = "secret")
+      val org = Organization(orgId = orgId, name = name, admin = user.id)
+      (org, user)
+    }
     
-    User.save(admin).getOrFail()
-    Organization.save(org).getOrFail()
     (1 to n) foreach { i =>
-      val user = makeUser("user" + i)
-      User.save(user)
+      val (org, user) = makeUser("user" + i)
+      User.save(user).getOrFail()
+      Organization.save(org).getOrFail()
     }
 
     conf.store.shutdown()
