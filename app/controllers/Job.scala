@@ -54,12 +54,12 @@ object Job extends VSController {
       job_ <- user.getJob(id)
       job <- form.update(job_).save()
     } yield {
-      case _: Html => SeeOther(routes.Job.get(job.id)).flashing(("success" -> Messages("jobs.updated", job.name)))
+      case Html(_) => SeeOther(routes.Job.get(job.id)).flashing(("success" -> Messages("jobs.updated", job.name)))
       case _ => Ok
     }
     result recover {
       case InvalidFormException(form: JobForm) => {
-        case _: Html => BadRequest(views.html.jobForm(form, user, Some(id)))
+        case Html(_) => BadRequest(views.html.jobForm(form, user, Some(id)))
         case _ => BadRequest
       }
     }
@@ -70,7 +70,7 @@ object Job extends VSController {
       job <- user.getJob(id)
       _ <- job.delete()
     } yield {
-      case _: Html => SeeOther(routes.Jobs.index()).flashing(("success" -> Messages("jobs.deleted", job.name)))
+      case Html(_) => SeeOther(routes.Jobs.index()).flashing(("success" -> Messages("jobs.deleted", job.name)))
       case _ => Ok
     }
   }
@@ -117,7 +117,7 @@ object Job extends VSController {
       job <- user.getJob(id)
       _ = action(user)(job)
     } yield {
-      case _: Html => SeeOther(routes.Job.get(job.id)).flashing(("success" -> Messages(msg, job.name)))
+      case Html(_) => SeeOther(routes.Job.get(job.id)).flashing(("success" -> Messages(msg, job.name)))
       case _ => Accepted
     }
   }

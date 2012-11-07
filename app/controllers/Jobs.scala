@@ -94,7 +94,7 @@ object Jobs extends VSController {
   }
 
   def cometSocket: ActionA = AuthAction { implicit req => user => {
-    case _: Html => Ok.stream(enumerator(user) &> Comet(callback = "parent.VS.jobupdate"))
+    case Html(_) => Ok.stream(enumerator(user) &> Comet(callback = "parent.VS.jobupdate"))
   }}
 
   def eventsSocket: ActionA = AuthAction { implicit req => user => {

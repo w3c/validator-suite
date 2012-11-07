@@ -24,7 +24,7 @@ object Assertions extends VSController  {
       assertions_ <- job_.getAssertions()
       job <- JobsView.single(job_)
     } yield {
-      case _: Html => {
+      case Html(_) => {
         val assertors = AssertorsView(assertions_)
         val assertions = AssertionsView.grouped(assertions_, id).filterOn(assertors.firstAssertor).bindFromRequest
         Ok(views.html.main(
@@ -51,7 +51,7 @@ object Assertions extends VSController  {
       job_ <- user.getJob(id)
       assertions_ <- job_.getAssertions().map(_.filter(_.url == url))
     } yield {
-      case _: Html => {
+      case Html(_) => {
         val assertors = AssertorsView(assertions_)
         val assertions = AssertionsView(assertions_, id, url).filterOn(assertors.firstAssertor).bindFromRequest
         val resource = ResourcesView.single(url, assertions, job_.id)

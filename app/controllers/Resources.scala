@@ -25,7 +25,7 @@ object Resources extends VSController  {
       resources = ResourcesView(assertions_, job_.id).bindFromRequest
     } yield {
       case Json => Ok(resources.toJson)
-      case _: Html => Ok(views.html.main(
+      case Html(_) => Ok(views.html.main(
         user = user,
         title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
         script = "test",
@@ -38,7 +38,7 @@ object Resources extends VSController  {
   }
 
   def index(id: JobId, url: URL): ActionA = AuthAction { implicit req => user => {
-    case _: Html => Redirect(routes.Assertions.index(id, Some(url)))
+    case Html(_) => Redirect(routes.Assertions.index(id, Some(url)))
   }}
 
   def socket(jobId: JobId, url: Option[URL], typ: SocketType): Handler = {
