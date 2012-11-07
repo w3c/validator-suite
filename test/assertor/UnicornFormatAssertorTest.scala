@@ -2,11 +2,12 @@ package org.w3.vs.assertor
 
 import org.w3.vs.model._
 import org.w3.util.URL
-import org.specs2.mutable._
 import org.w3.vs.view.Helper
 import io.Source
+import org.scalatest._
+import org.scalatest.matchers.MustMatchers
 
-object UnicornFormatAssertorTest extends Specification with AssertionResultMatcher {
+class UnicornFormatAssertorTest extends WordSpec with MustMatchers {
 
   val source = new Source {
     protected val iter: Iterator[Char] = { //[&lt; &gt; &amp; &#39; &amp;#39;]
@@ -33,18 +34,19 @@ object UnicornFormatAssertorTest extends Specification with AssertionResultMatch
 
   "A UnicornFormat Assertor must unescape urls correctly" in {
 
-    assertion.url must beEqualTo (URL("http://test.vs?p=1&p=2"))
+    assertion.url must be (URL("http://test.vs?p=1&p=2"))
 
   }
 
   "A UnicornFormat Assertor must unescape the title correctly" in {
 
-    assertion.title must beEqualTo ("""Property doesn't exist. ## ' &lt; &gt; ' &amp; ## <a href="?p=1&amp;p=2">test</a>""") // [&lt; &gt; & ' ']
+    assertion.title must be ("""Property doesn't exist. ## ' &lt; &gt; ' &amp; ## <a href="?p=1&amp;p=2">test</a>""") // [&lt; &gt; & ' ']
 
   }
+
   "A UnicornFormat Assertor must unescape the description correctly" in {
 
-    assertion.description must beEqualTo (Some("<code>&lt;p&gt; test &lt;/p&gt;</code>"))
+    assertion.description must be (Some("<code>&lt;p&gt; test &lt;/p&gt;</code>"))
 
   }
 

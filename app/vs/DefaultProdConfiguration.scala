@@ -5,8 +5,8 @@ import org.w3.vs.http._
 import org.w3.vs.actor._
 import org.w3.util.Util
 import scala.concurrent._
-import scala.concurrent.util._
-import akka.util._
+import scala.concurrent.duration._
+import akka.util.Timeout
 import java.util.concurrent.{ Executors, ExecutorService }
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
@@ -75,7 +75,11 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs
   }
   
-  implicit val timeout: Timeout = Timeout(Duration(configuration.getString("application.timeout") getOrElse sys.error("application.timeout")))
+  implicit val timeout: Timeout = {
+    val r = """^(\d+)([^\d]+)$""".r
+    val r(timeoutS, unitS) = configuration.getString("application.timeout") getOrElse sys.error("application.timeout")
+    Timeout(Duration(timeoutS.toInt, unitS))
+  }
 
   val storeDirectory = new File(configuration.getString("application.store.directory") getOrElse sys.error("application.store.directory"))
 

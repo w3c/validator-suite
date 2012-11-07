@@ -1,7 +1,7 @@
 package org.w3.vs.util
 
 import org.w3.vs.model._
-import akka.testkit.{TestKit, ImplicitSender}
+import akka.testkit.{ TestKit, ImplicitSender }
 import org.w3.vs.VSConfiguration
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers

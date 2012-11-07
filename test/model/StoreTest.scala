@@ -14,7 +14,7 @@ import org.w3.vs.util._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
 import org.w3.banana._
-import scala.concurrent.util.Duration
+import scala.concurrent.duration.Duration
 import org.w3.vs.util.Util._
 
 abstract class StoreTest(
