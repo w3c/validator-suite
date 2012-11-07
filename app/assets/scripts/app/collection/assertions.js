@@ -1,4 +1,4 @@
-define(["lib/Logger", "model/assertion", "collection/Collection"], function (Logger, Assertion, Collection) {
+define(["lib/Logger", "model/assertion", "collection/collection"], function (Logger, Assertion, Collection) {
 
     "use strict";
 
