@@ -1,4 +1,4 @@
-define(["model/Model", "lib/Util"], function (Model, Util) {
+define(["model/model", "lib/Util"], function (Model, Util) {
 
     "use strict";
 

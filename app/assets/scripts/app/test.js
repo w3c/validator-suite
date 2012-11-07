@@ -36,8 +36,6 @@ require([
 
         $(function () {
 
-            window.model = Model;
-
             // TODO
             $("#actions .clear").remove();
             $("#actions .search input").removeClass("clearable");
