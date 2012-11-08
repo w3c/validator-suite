@@ -25,7 +25,7 @@ object Job extends VSController {
   val getTimer = Metrics.newTimer(Job.getClass, getName, MILLISECONDS, SECONDS)
 
   def get(id: JobId): ActionA = AuthAction { implicit req => user =>
-    timer(editName, editTimer) {
+    timer(getName, getTimer) {
       req.getQueryString("group") match {
         case Some("message") => { case _ => Redirect(routes.Assertions.index(id, None)) }
         case _ =>               { case _ => Redirect(routes.Resources.index(id, None)) }
