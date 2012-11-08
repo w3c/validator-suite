@@ -64,6 +64,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
   implicit val system: ActorSystem = {
     val vs = ActorSystem("vs")
     vs.actorOf(Props(new OrganizationsActor()(this)), "organizations")
+    vs.actorOf(Props(new UsersActor()(this)), "users")
     vs.actorOf(Props(new Http(httpClient, vs.scheduler, httpCacheOpt)), "http")
     val listener = vs.actorOf(Props(new Actor {
       val logger = play.Logger.of(classOf[VSConfiguration])
