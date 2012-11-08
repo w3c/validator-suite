@@ -7,12 +7,17 @@ import org.w3.vs.exception._
 import org.w3.banana._
 import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
-import diesel._
-import ops._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
+import org.w3.vs.diesel._
+import org.w3.vs.diesel.ops._
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.iteratee.{Concurrent, Enumerator}
+import org.w3.vs.actor.message.RunUpdate
+import akka.actor.{Actor, Props, ActorRef}
+import java.nio.channels.ClosedChannelException
+import org.w3.util.akkaext.{Deafen, Listen, PathAware}
 
 case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   
@@ -46,6 +51,40 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   
   def delete(): Future[Unit] = User.delete(this)
 
+  lazy val enumerator: Enumerator[RunUpdate] = {
+    val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
+    val subscriber: ActorRef = system.actorOf(Props(new Actor {
+      def receive = {
+        case msg: RunUpdate =>
+          try {
+            channel.push(msg)
+          } catch {
+            case e: ClosedChannelException => {
+              logger.error("ClosedChannel exception: ", e)
+              channel.eofAndEnd()
+            }
+            case e => {
+              logger.error("Enumerator exception: ", e)
+              channel.eofAndEnd()
+            }
+          }
+        case msg => logger.error("subscriber got " + msg)
+      }
+    }))
+    listen(subscriber)
+    _enumerator
+  }
+
+  def listen(implicit listener: ActorRef): Unit =
+    PathAware(usersRef, path).tell(Listen(listener), listener)
+
+  def deafen(implicit listener: ActorRef): Unit =
+    PathAware(usersRef, path).tell(Deafen(listener), listener)
+
+  val usersRef = system.actorFor(system / "users")
+
+  private val path = system / "users" / id.toString
+  
 }
 
 object User {
@@ -83,6 +122,11 @@ object User {
       case user if (user.vo.password /== password) => throw Unauthenticated
       case user => user
     }
+  }
+
+  def register(email: String, name: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
+    val user = User(userId = UserId(), organization = Some(OrganizationId()), email = email, name = name, password = password)
+    user.save().map(_ => user)
   }
   
   def getByEmail(email: String)(implicit conf: VSConfiguration): Future[User] = {

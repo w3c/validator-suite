@@ -31,7 +31,7 @@ object Application extends VSController {
       f.timer(loginName).timer(loginTimer)
     }
   }
-  
+
   def logout: ActionA = Action {
     Redirect(routes.Application.login).withNewSession.flashing("success" -> Messages("application.loggedOut"))
   }
@@ -61,6 +61,32 @@ object Application extends VSController {
         case InvalidFormException(form: LoginForm) => BadRequest(views.html.login(form))
       } recover toError
       f.timer(authenticateName).timer(authenticateTimer)
+    }
+  }
+
+  def register: ActionA = Action { implicit req =>
+    AsyncResult {
+      getUser map {
+        case _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
+      } recover {
+        case  _: UnauthorizedException => Ok(views.html.register(RegisterForm.blank)).withNewSession
+      } recover toError
+    }
+  }
+
+  def registerAction: ActionA = Action { implicit req =>
+    AsyncResult {
+      (for {
+        form <- Future(RegisterForm.bind() match {
+          case Left(form) => throw InvalidFormException(form)
+          case Right(validForm) => validForm
+        })
+        user <- User.register(email = form.email, name = form.name, password = form.password(0))
+      } yield {
+        SeeOther(routes.Jobs.index).withSession("email" -> user.vo.email)
+      }) recover {
+        case InvalidFormException(form: RegisterForm) => BadRequest(views.html.register(form))
+      } recover toError
     }
   }
   

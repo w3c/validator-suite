@@ -6,6 +6,8 @@ GET     /suite                                            controllers.Applicatio
 GET     /suite/login                                      controllers.Application.login
 POST    /suite/login                                      controllers.Application.authenticate
 POST    /suite/logout                                     controllers.Application.logout
+GET     /suite/register                                   controllers.Application.register
+POST    /suite/register                                   controllers.Application.registerAction
 
 # Jobs
 GET     /suite/jobs                                       controllers.Jobs.index
@@ -30,11 +32,6 @@ GET     /suite/jobs/:job/assertors/socket/:socket         controllers.Assertors.
 # Job/resources
 GET     /suite/jobs/:job/resources                        controllers.Resources.index(job: JobId, resource: Option[URL])
 GET     /suite/jobs/:job/resources/socket/:socket         controllers.Resources.socket(job: JobId, resource: Option[URL], socket: SocketType)
-
-# Job/resources/resource
-#GET     /suite/jobs/:job/resources/:url                   controllers.Resources.get(job: JobId, url: URL)
-#GET     /suite/jobs/:job/resources/:url/assertions        controllers.Assertions.index1(job: JobId, url: URL)
-#GET     /suite/jobs/:job/resources/:url/assertors         controllers.Assertors.index1(job: JobId, url: URL)
 
 ##########################
 # Map static resources from the /public folder to the /assets URL path

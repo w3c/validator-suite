@@ -58,12 +58,12 @@ object Main {
     val w3 = Job(
       createdOn = DateTime.now(DateTimeZone.UTC),
       name = "W3C",
-      creator = bertails.id,
+      creator = tgambet.id,
       organization = w3c.id,
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/"),
         linkCheck = false,
-        maxResources = 2,
+        maxResources = 10,
         filter = Filter(include = Everything, exclude = Nothing),
         assertorsConfiguration = AssertorsConfiguration.default))
         

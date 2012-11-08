@@ -1,0 +1,33 @@
+@(form: RegisterForm, messages: List[(String, String)] = List())(implicit flash: Flash)
+
+@libs.main("Register - Validator Suite"){
+
+    @libs.messages(messages ++ form.errors)
+
+    <section id="registerForm"><div>
+    @helper.form(routes.Application.registerAction) {
+        @**form.globalError.map { error =>
+        <p class="error">@error.message</p>
+        }**@
+        <p>
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Name"/>
+        <p>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Email" value="@form("email").value"/>
+        <p>
+            <label for="password1">Password</label>
+            <input type="password" id="password1" name="password[0]" placeholder="Password"/>
+        <p>
+            <label for="password2">Repeat password</label>
+            <input type="password" id="password2" name="password[1]" placeholder="Password"/>
+        <p>
+            <button id="submit-login" type="submit">Register</button>
+    }
+    </div></section>
+
+}{ @***** Footer *****@
+
+    @libs.footer()
+
+}
