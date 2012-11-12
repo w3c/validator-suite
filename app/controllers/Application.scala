@@ -42,7 +42,7 @@ object Application extends VSController {
   def authenticate: ActionA = Action { implicit req =>
     AsyncResult {
       val f = (for {
-        form <- Future.successful(LoginForm.bind() match {
+        form <- Future(LoginForm.bind() match {
           case Left(form) => throw InvalidFormException(form)
           case Right(validForm) => validForm
         })
