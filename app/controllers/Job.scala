@@ -47,7 +47,7 @@ object Job extends VSController {
 
   def update(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
     val result: Future[PartialFunction[Format, Result]] = for {
-      form <- Future.successful(JobForm.bind match {
+      form <- Future(JobForm.bind match {
         case Left(form) => throw new InvalidFormException(form)
         case Right(validJobForm) => validJobForm
       })
