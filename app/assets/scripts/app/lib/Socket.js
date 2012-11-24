@@ -7,7 +7,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
 
     Socket = function (url, type) {
 
-        logger.trace();
+        //logger.trace();
 
         var websocketProtocol, types, socket, implementations, i;
 
@@ -64,6 +64,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
                 eventsource = new window.EventSource(socket.url + '/socket/events');
                 eventsource.onmessage = function (event) {
                     var message = JSON.parse(event.data);
+                    //logger.debug(message);
                     socket.trigger("message", message);
                 };
                 eventsource.onopen = function (event) {
@@ -71,7 +72,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
                     socket.trigger("open", event);
                 };
                 eventsource.onerror = function (event) {
-                    logger.info("eventsource connection error");
+                    logger.info("eventsource connection error (" + socket.url + ")");
                     logger.debug(event);
                     socket.trigger("error", event);
                 };

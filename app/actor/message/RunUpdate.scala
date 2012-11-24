@@ -18,4 +18,4 @@ case class RunCompleted(jobId: JobId, completedOn: DateTime) extends RunUpdate
  */
 case class NewResource(context: (OrganizationId, JobId, RunId), resource: ResourceResponse) extends RunUpdate
 
-case class NewAssertorResult(result: AssertorResult, timestamp: DateTime) extends RunUpdate
+case class NewAssertorResult(result: AssertorResult, run: Run, timestamp: DateTime) extends RunUpdate

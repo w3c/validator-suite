@@ -67,6 +67,8 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
 
             logger.info("New request: " + JSON.stringify(params.data));
             params.success = this.getSuccess(params);
+            var self = this;
+            params.error = function () { self.stop(); };
             this.xhr = this.collection.fetch(params);
             this.xhr.params = params;
             return this.xhr;

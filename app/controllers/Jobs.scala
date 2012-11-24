@@ -10,7 +10,7 @@ import play.Logger.ALogger
 import play.api.libs.iteratee.Enumeratee
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Iteratee
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsArray, JsValue}
 import play.api.libs.{EventSource, Comet}
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -60,7 +60,7 @@ object Jobs extends VSController {
 
   def create: ActionA = AuthAsyncAction { implicit req => user =>
     val f1: Future[PartialFunction[Format, Result]] =
-      (for {
+      for {
         form <- Future(JobForm.bind match {
           case Left(form) => throw new InvalidFormException(form)
           case Right(validJobForm) => validJobForm
@@ -69,14 +69,14 @@ object Jobs extends VSController {
       } yield {
         case Html(_) => SeeOther(routes.Jobs.index()) /*.flashing(("success" -> Messages("jobs.created", job.name)))*/
         case _ => Created
-      })
-      val f2: Future[PartialFunction[Format, Result]] = f1 recover {
-        case InvalidFormException(form: JobForm) => {
-          case format @ Html(_) => BadRequest(views.html.jobForm(form, user, None))
-          case _ => BadRequest
-        }
       }
-      f2.timer(createName).timer(createTimer)
+    val f2: Future[PartialFunction[Format, Result]] = f1 recover {
+      case InvalidFormException(form: JobForm) => {
+        case format @ Html(_) => BadRequest(views.html.jobForm(form, user, None))
+        case _ => BadRequest
+      }
+    }
+    f2.timer(createName).timer(createTimer)
   }
 
   def socket(typ: SocketType): Handler = {
@@ -109,11 +109,11 @@ object Jobs extends VSController {
         // ready to explode...
         // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
         org.enumerator &> Enumeratee.collect {
-          case a: UpdateData => JobView.toJobMessage(a.jobId, a.data, a.activity)
-          case a: RunCompleted => JobView.toJobMessage(a.jobId, a.completedOn)
+          case a: UpdateData => JsArray(List(JobView.toJobMessage(a.jobId, a.data, a.activity)))
+          case a: RunCompleted => JsArray(List(JobView.toJobMessage(a.jobId, a.completedOn)))
         }
       }
-    ).recover{ case _ => Enumerator.eof[JsValue] })
+    )/*.recover{ case _ => Enumerator.eof[JsValue] }*/)
   }
 
 }

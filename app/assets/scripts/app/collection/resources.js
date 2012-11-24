@@ -1,4 +1,4 @@
-define(["lib/Logger", "model/resource", "collection/collection"], function (Logger, Resource, Collection) {
+define(["lib/Logger", "model/resource", "collection/collection", "lib/Socket"], function (Logger, Resource, Collection, Socket) {
 
     "use strict";
 
@@ -7,7 +7,27 @@ define(["lib/Logger", "model/resource", "collection/collection"], function (Logg
 
     Resources = Collection.extend({
 
-        model: Resource
+        model: Resource,
+
+        listen: function () {
+            //var socket = new Util.Socket(this.url);
+            var self = this;
+
+            this.socket = new Socket(this.url);
+            self.socket.on("message", function (data) {
+                _.each(data, function (data) {
+                    logger.debug(data);
+                    var model = self.get(data.resourceUrl);
+                    if (!_.isUndefined(model)) {
+                        model.set(data);
+                    } else {
+                        self.add(new Resource(data));
+                        logger.warn("Unknown model with resourceUrl: " + data.resourceUrl);
+                        logger.debug(data);
+                    }
+                });
+            });
+        }
 
     });
 

@@ -6,12 +6,19 @@ import org.w3.vs.model.{Job => JobModel, User, JobId}
 import org.w3.vs.view.form.JobForm
 import play.Logger.ALogger
 import play.api.i18n.Messages
-import play.api.mvc.{ Result, Handler, Action }
+import play.api.mvc.{WebSocket, Result, Handler, Action}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
+import java.net.URL
+import play.api.libs.json.JsValue
+import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
+import play.api.libs.{EventSource, Comet}
+import org.w3.vs.actor.message.{RunCompleted, UpdateData, NewAssertorResult, RunUpdate}
+import org.w3.vs.view.collection.ResourcesView
+import org.w3.vs.view.model.JobView
 
 object Job extends VSController {
 
@@ -106,10 +113,37 @@ object Job extends VSController {
 
   def socket(jobId: JobId, typ: SocketType): Handler = {
     typ match {
-      case SocketType.ws => Action{Ok} //webSocket()
-      case SocketType.events => Action{Ok} //eventsSocket()
-      case SocketType.comet => Action{Ok} //cometSocket()
+      case SocketType.ws => webSocket(jobId)
+      case SocketType.events => eventsSocket(jobId)
+      case SocketType.comet => cometSocket(jobId)
     }
+  }
+
+  def webSocket(jobId: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
+    val iteratee = Iteratee.ignore[JsValue]
+    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, user)))
+    (iteratee, enum)
+  }
+
+  def cometSocket(jobId: JobId): ActionA = AuthAction { implicit req => user => {
+    case Html(_) => Ok.stream(enumerator(jobId, user) &> Comet(callback = "parent.VS.resourceupdate"))
+  }}
+
+  def eventsSocket(jobId: JobId): ActionA = AuthAction { implicit req => user => {
+    case Stream => Ok.stream(enumerator(jobId, user) &> EventSource())
+  }}
+
+  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
+    Enumerator.flatten(
+      (for {
+        org <- user.getOrganization() map (_.get)
+      } yield {
+        org.enumerator &> Enumeratee.collect[RunUpdate] {
+          case UpdateData(id, data, activity) if id == jobId => JobView.toJobMessage(jobId, data, activity)
+          case RunCompleted(id, completedOn) if id == jobId => JobView.toJobMessage(jobId, completedOn)
+        }
+      }) /*.recover[Enumerator[JsArray]]{ case _ => Enumerator.eof[JsArray] }*/ // Need help here
+    )
   }
 
   private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>

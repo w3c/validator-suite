@@ -87,7 +87,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
             //loader.on('stopped', view.updateLegend, view);
         },
 
-        listen: function () {
+/*        listen: function () {
             //var socket = new Util.Socket(this.url);
             var self = this;
             this.socket = new Socket(this.url);
@@ -99,6 +99,25 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
                     logger.warn("Unknown model with id: " + data.id);
                     logger.debug(data);
                 }
+            });
+        }*/
+        listen: function () {
+            //var socket = new Util.Socket(this.url);
+            var self = this;
+
+            this.socket = new Socket(this.url);
+            self.socket.on("message", function (data) {
+                _.each(data, function (data) {
+                    logger.debug(data);
+                    var model = self.get(data.id);
+                    if (!_.isUndefined(model)) {
+                        model.set(data);
+                    } else {
+                        self.add(new self.model(data));
+                        logger.warn("Unknown model with id: " + data.id);
+                        logger.debug(data);
+                    }
+                });
             });
         }
 

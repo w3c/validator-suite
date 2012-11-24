@@ -59,6 +59,7 @@ require([
                 root.resources = new Resources().configure({
                     el: el,
                     assertions: root.assertions
+                    //loadFromMarkup: false
                 });
             });
 

@@ -162,6 +162,11 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
 
         run: function () {
             this.model.run({ wait: true });
+            var collec = this.options.resources || this.options.assertions;
+            if (collec) {
+                logger.log("reset collection");
+                collec.reset();
+            }
             return false;
         },
 

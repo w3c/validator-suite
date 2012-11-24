@@ -230,8 +230,9 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       logger.debug("%s: %s produced AssertorResult for %s" format (run.shortId, result.assertor, result.sourceUrl.toString))
       val now = DateTime.now(DateTimeZone.UTC)
       Run.saveEvent(run.runUri, AssertorResponseEvent(result, now))
-      tellEverybody(NewAssertorResult(result, now))
-      stateOf(run.withAssertorResult(result))
+      val newRun = run.withAssertorResult(result)
+      tellEverybody(NewAssertorResult(result, newRun, now))
+      stateOf(newRun)
     }
 
     case Event(failure: AssertorFailure, run) => {
