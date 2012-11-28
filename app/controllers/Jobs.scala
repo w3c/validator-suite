@@ -68,7 +68,7 @@ object Jobs extends VSController {
         job <- form.createJob(user).save()
       } yield {
         case Html(_) => SeeOther(routes.Jobs.index()) /*.flashing(("success" -> Messages("jobs.created", job.name)))*/
-        case _ => Created
+        case _ => Created(routes.Job.get(job.id).toString)
       }
     val f2: Future[PartialFunction[Format, Result]] = f1 recover {
       case InvalidFormException(form: JobForm) => {
