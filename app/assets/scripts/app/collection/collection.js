@@ -48,9 +48,10 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
         },
 
         initialize: function () {
-            this.on('add reset', function () {
-                if (this.expected && this.expected < this.length) {
-                    this.expected = this.length;
+            var self = this;
+            this.on('add', function () {
+                if (!_.isUndefined(self.expected) && self.expected < self.length) {
+                    self.expected = self.length;
                 }
             });
             if (_.isFunction(this.init)) { this.init(); }
@@ -102,9 +103,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
             });
         }*/
         listen: function () {
-            //var socket = new Util.Socket(this.url);
             var self = this;
-
             this.socket = new Socket(this.url);
             self.socket.on("message", function (data) {
                 _.each(data, function (data) {
@@ -114,7 +113,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
                         model.set(data);
                     } else {
                         self.add(new self.model(data));
-                        logger.warn("Unknown model with id: " + data.id);
                         logger.debug(data);
                     }
                 });
@@ -169,8 +167,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
                 Util.exception('No count parameter was specified');
             }
 
-            collection.on('add', this.render, this);
-            collection.on('reset', this.render, this);
+            collection.on('add reset', this.render, this);
             collection.on('destroy', this.render, this);
 
             this.addSortHandler();
