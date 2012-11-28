@@ -94,6 +94,7 @@ object Main {
     val script = for {
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
+      _ <- User.save(bernard)
       _ <- User.save(ralph)
       _ <- User.save(w3team)
       _ <- Job.save(w3)
