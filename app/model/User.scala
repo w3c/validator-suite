@@ -124,22 +124,22 @@ object User {
   def getByEmail(email: String)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
     val query = """
-CONSTRUCT {
-  <local:user> <local:hasUri> ?user .
-  ?s ?p ?o
-} WHERE {
-  graph ?userG {
-    ?user ont:email ?email .
-    ?s ?p ?o
+SELECT ?user WHERE {
+  graph ?emails {
+    ?user ont:email ?email
   }
 }
 """
-    val construct = ConstructQuery(query, ont)
-    val r = for {
-      graph <- store.executeConstruct(construct, Map("email" -> email.toNode))
-      as <- (PointedGraph[Rdf](URI("local:user"), graph) / URI("local:hasUri")).as2[UserId, UserVO].asFuture
-    } yield User(as._1, as._2)
-    r recover { case _: Exception => throw UnknownUser }
+    val select = SelectQuery(query, ont)
+    store.executeSelect(select, Map("emails" -> emailsGraph, "email" -> email.toNode)) flatMap { rows =>
+      rows.toIterable.headOption match {
+        case None => throw UnknownUser
+        case Some(row) => {
+          val userUri = row("user").flatMap(_.as[Rdf#URI]).get
+          User.get(userUri)
+        }
+      }
+    }
   }
 
   def save(vo: UserVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
