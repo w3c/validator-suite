@@ -15,7 +15,7 @@ import org.w3.banana._
 
 class MaxResourcesTest extends RunTestHelper with TestKitHelper {
 
-  val maxResources = 100
+  val maxResources = 10
 
   val strategy =
     Strategy(
@@ -29,7 +29,7 @@ class MaxResourcesTest extends RunTestHelper with TestKitHelper {
   
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 
-  "shoudldn't access more that 100 resources" in {
+  s"""shoudldn't access more that $maxResources resources""" in {
 
     (for {
       a <- Organization.save(organizationTest)
