@@ -110,7 +110,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
             case t: Throwable => {
               val errorResponse = ErrorResponse(url = url, method = method, why = t.getMessage)
               to ! (token, errorResponse)
-              cacheOpt foreach { _.save(errorResponse, Some(token.toString)) }
+              cacheOpt foreach { _.save(errorResponse) }
               throw t // rethrow for benefit of AsyncHttpClient
             }
           } finally {
@@ -152,7 +152,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
           def resource = Resource.fromInputStream(new ByteArrayInputStream(bodyAsBytes))
           val httpResponse = HttpResponse(url, method, status, headers, resource)
           to ! (token, httpResponse)
-          cacheOpt foreach { _.save(httpResponse, resource, Some(token.toString)) }
+          cacheOpt foreach { _.save(httpResponse, resource) }
         }
       }
     }

@@ -20,11 +20,9 @@ object Cache {
 
   val headerRegex = """^([^:]+):\s*(.*)$""".r
 
-  val tokenRegex = """^(.+?)(t0k3n=(.*))?$""".r
-
 }
 
-case class Cache(directory: File, useToken: Boolean) extends ResponseCache {
+case class Cache(directory: File) extends ResponseCache {
 
   assert(directory.isDirectory)
 
@@ -41,20 +39,16 @@ case class Cache(directory: File, useToken: Boolean) extends ResponseCache {
    * typically, you want to write something like
    *   val resourceResponse = cache.resource(url).flatMap(_.get(method))
    */
-  def resource(url: URL, method: HttpMethod, tokenOpt: Option[String]): Option[CachedResource] =
-    CachedResource(this, url, method, tokenOpt).toOption
+  def resource(url: URL, method: HttpMethod): Option[CachedResource] =
+    CachedResource(this, url, method).toOption
 
   def get(uri: URI, rqstMethod: String, rqstHeaders: jMap[String, jList[String]]): CacheResponse = {
     val userAgent = rqstHeaders.get("User-Agent")
     logger.debug(s"${userAgent} ${rqstMethod} ${uri}")
+    val url = URL(uri.toURL)
     val cacheResponseOpt = for {
       method <- HttpMethod.fromString(rqstMethod)
-      (url, tokenOpt) = {
-        val Cache.tokenRegex(urlString, _, token) = uri.toString
-        val tokenOpt = if (useToken) Option(token) else None
-        (URL(urlString), tokenOpt)
-      }
-      cachedResource <- resource(url, method, tokenOpt)
+      cachedResource <- resource(url, method)
       cacheResponse <- cachedResource.asCacheResponse().toOption
     } yield {
       logger.debug(rqstMethod + " " + uri)
@@ -70,39 +64,27 @@ case class Cache(directory: File, useToken: Boolean) extends ResponseCache {
     import com.ning.http.client._
 
     try {
-//      val client = {
-//        import java.util.concurrent.Executors
-//        val executor = Executors.newCachedThreadPool()
-//        val builder = new AsyncHttpClientConfig.Builder()
-//        val config =
-//          builder.setMaximumConnectionsTotal(100)
-//          .setMaximumConnectionsPerHost(100)
-//          .setExecutorService(executor)
-//          .setFollowRedirects(true)
-//          .setConnectionTimeoutInMs(5000)
-//          .build
-//        new AsyncHttpClient(config)
-//      }
       val client = new AsyncHttpClient()
       val response: Response = client.prepareGet(url.toString).execute().get()
       val (hr, bodyContent) = response.asHttpResponse(url, method)
-      this.save(hr, bodyContent, None)
+      this.save(hr, bodyContent)
     } catch { case e: Exception =>
       val er = ErrorResponse(url, method, e.getMessage)
-      this.save(er, None)
+      this.save(er)
     }
 
   }
 
-  def save(er: ErrorResponse, tokenOpt: Option[String]): Try[Unit] = Try {
-    val cr = new CachedResource(this, er.url, er.method, if (useToken) tokenOpt else None)
+  def save(er: ErrorResponse): Try[Unit] = Try {
+    import scalax.file.{ FileOps, Path }
+    val cr = new CachedResource(this, er.url, er.method)
     cr.remove()
     cr.metaFile.asBinaryWriteChars(Codec.UTF8).write("ERROR " + System.currentTimeMillis() + " " + er.url)
     cr.errorFile.asBinaryWriteChars(Codec.UTF8).write(er.why)
   }
 
-  def save(hr: HttpResponse, bodyContent: InputResource[InputStream], tokenOpt: Option[String]): Try[Unit] = Try {
-    val cr = new CachedResource(this, hr.url, hr.method, if (useToken) tokenOpt else None)
+  def save(hr: HttpResponse, bodyContent: InputResource[InputStream]): Try[Unit] = Try {
+    val cr = new CachedResource(this, hr.url, hr.method)
     cr.remove()
     cr.metaFile.asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + hr.url)
     cr.responseHeadersFile.asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>

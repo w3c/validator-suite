@@ -19,13 +19,11 @@ class CacheTest extends WordSpec with MustMatchers {
     d
   }
 
-  val cache = Cache(directory, useToken = true)
+  val cache = Cache(directory)
 
-  val token = "foo"
-    
   "retrieving a resource that was never cached should be a miss" in {
 
-    cache.resource(URL("http://example.com/never-cached"), GET, Some(token)) must be(None)
+    cache.resource(URL("http://example.com/never-cached"), GET) must be(None)
     
   }
 
@@ -41,9 +39,9 @@ class CacheTest extends WordSpec with MustMatchers {
       val bais = new ByteArrayInputStream(content.getBytes("UTF-8"))
       val bodyContent = Resource.fromInputStream(bais)
   
-      cache.save(hr, bodyContent, Some(token)) must be('success)
+      cache.save(hr, bodyContent) must be('success)
   
-      val r = cache.resource(url, method, Some(token)).flatMap(_.get().toOption)
+      val r = cache.resource(url, method).flatMap(_.get().toOption)
   
       r must be(Some(hr))
 
@@ -59,9 +57,9 @@ class CacheTest extends WordSpec with MustMatchers {
   
       val er = ErrorResponse(url, method, "server not reachable")
   
-      cache.save(er, Some(token)) must be('success)
+      cache.save(er) must be('success)
   
-      val r = cache.resource(url, method, Some(token)).flatMap(_.get().toOption)
+      val r = cache.resource(url, method).flatMap(_.get().toOption)
   
       r must be(Some(er))
 
@@ -86,9 +84,9 @@ class CacheTest extends WordSpec with MustMatchers {
       val bais = new ByteArrayInputStream(content.getBytes("UTF-8"))
       val bodyContent = Resource.fromInputStream(bais)
   
-      cache.save(hr, bodyContent, Some(token)) must be('success)
+      cache.save(hr, bodyContent) must be('success)
   
-      val cacheResponse = cache.get(url.withToken(token).toURI, method.toString, Map("foo" -> List("bar").asJava).asJava)
+      val cacheResponse = cache.get(url.toURI, method.toString, Map("foo" -> List("bar").asJava).asJava)
 
       cacheResponse must not be(null)
 

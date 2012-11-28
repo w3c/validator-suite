@@ -35,7 +35,7 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
     val sender = self
     
     Future {
-      assertor.assert(context, response, job.vo.strategy.assertorsConfiguration(assertor.id), Some(context._3.toString))
+      assertor.assert(context, response, job.vo.strategy.assertorsConfiguration(assertor.id))
     } andThen { case _ =>
       atomic { implicit txn => pendingAssertions -= 1 }
     } andThen {

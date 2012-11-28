@@ -27,12 +27,12 @@ trait FromURLAssertor extends FromSourceAssertor {
    *  @param url a pointer to the document
    *  @return the assertion
    */
-  def assert(url: URL, configuration: AssertorConfiguration, tokenOpt: Option[String]): Iterable[Assertion] = {
-    val urll = tokenOpt match {
-      case Some(token) => url.withToken(token)
-      case None => url
-    }
-    val source = Source.fromURL(validatorURLForMachine(urll, configuration))
+  def assert(url: URL, configuration: AssertorConfiguration/*, tokenOpt: Option[String]*/): Iterable[Assertion] = {
+//    val urll = tokenOpt match {
+//      case Some(token) => url.withToken(token)
+//      case None => url
+//    }
+    val source = Source.fromURL(validatorURLForMachine(url, configuration))
     assert(source)
   }
   

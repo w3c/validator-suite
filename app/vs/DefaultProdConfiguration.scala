@@ -53,9 +53,8 @@ trait DefaultProdConfiguration extends VSConfiguration {
         if (directory.exists) Util.delete(directory)
         if (! directory.mkdir()) sys.error("could not create HTTP Cache directory " + directory.getAbsolutePath)
       }
-      val useToken = httpCacheConf.getBoolean("use-token") getOrElse sys.error("use-token")
       assert(directory.exists, "directory [" + directory.getAbsolutePath + "] for the HTTP Cache must exist")
-      val cache = Cache(directory, useToken)
+      val cache = Cache(directory)
       Some(cache)
     } else {
       None
