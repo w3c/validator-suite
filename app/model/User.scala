@@ -79,6 +79,8 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
 }
 
 object User {
+
+  val emailsGraph = URI("https://validator.w3.org/suite/emails")
   
   val logger = play.Logger.of(classOf[User])
 
@@ -142,12 +144,20 @@ CONSTRUCT {
 
   def save(vo: UserVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
     import conf._
-    store.asLDStore.POSTToCollection(userContainer, vo.toPG)
+    val script = for {
+      userUri <- Command.POSTToCollection[Rdf](userContainer, vo.toPG)
+      _ <- Command.POST[Rdf](emailsGraph, userUri -- ont.email ->- vo.email)
+    } yield userUri
+    store.execute(script)
   }
   
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.asLDStore.PUT(user.ldr)
+    val script = for {
+      _ <- Command.PUT[Rdf](user.ldr)
+      _ <- Command.POST[Rdf](emailsGraph, user.userUri -- ont.email ->- user.vo.email)
+    } yield ()
+    store.execute(script)
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): Future[Unit] =
