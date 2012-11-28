@@ -21,7 +21,7 @@ class RunTest extends WordSpec with MustMatchers {
 
   "A fresh run" must {
 
-    val fresh = Run.freshRun(OrganizationId(), JobId(), strategy)
+    val fresh = Run.freshRun(UserId(), JobId(), strategy)
 
     "not be Running" in {
       

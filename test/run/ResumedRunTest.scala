@@ -24,7 +24,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
 
   val circumference = 20
   
@@ -33,7 +33,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
   "test cyclic + interruption + resuming job" in {
     
     (for {
-      _ <- Organization.save(organizationTest)
+      _ <- User.save(userTest)
       _ <- Job.save(job)
     } yield ()).getOrFail()
     
@@ -50,7 +50,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     }))
     system.eventStream.subscribe(listener, classOf[DeadLetter])
 
-    val (orgId, jobId, runId) = job.run().getOrFail()
+    val (userId, jobId, runId) = job.run().getOrFail()
 
     job.getSnapshot().getOrFail()
 
@@ -67,7 +67,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     // that's the same test as in cyclic
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail()
+        val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail()
         rrs must have size (circumference + 1)
       }
     }

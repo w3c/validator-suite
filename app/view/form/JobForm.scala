@@ -134,7 +134,6 @@ class ValidJobForm private[view](
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
     Job(
       name = name,
-      organization = user.vo.organization.get, // TODO what if organization = None?
       creator = user.id,
       strategy = Strategy(
         entrypoint = org.w3.util.URL(entrypoint),
@@ -146,7 +145,7 @@ class ValidJobForm private[view](
   }
 
   def update(job: Job)(implicit conf: VSConfiguration): Job = {
-    null // TODO decide, implement
+    ??? // TODO decide, implement
     //     job.copy(
     //         name = name,
     //         strategy = job.strategy.copy(

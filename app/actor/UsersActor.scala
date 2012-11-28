@@ -25,7 +25,7 @@ class UsersActor()(implicit conf: VSConfiguration) extends Actor with PathAwareA
   def receive = {
 
     case tell @ Tell(Child(id), msg) => {
-      // logger.debug("passing message to child %s: %s" format (msg.toString, id.toString))
+      //println("passing message to child %s: %s" format (msg.toString, id.toString))
       val from = sender
       val to = self
       context.children.find(_.path.name === id) match {

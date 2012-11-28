@@ -38,8 +38,8 @@ trait Binders extends UriBuilders with LiteralBinders {
     lazy val assertion = property[Assertion](apply("assertion"))
     lazy val assertions = property[List[Assertion]](apply("assertions"))
 
-    lazy val job = property[(OrganizationId, JobId)](apply("job"))
-    lazy val run = property[(OrganizationId, JobId, RunId)](apply("run"))
+    lazy val job = property[(UserId, JobId)](apply("job"))
+    lazy val run = property[(UserId, JobId, RunId)](apply("run"))
     lazy val assertor = property[AssertorId](apply("assertor"))
     lazy val createdAt = property[DateTime](apply("createdAt"))
     lazy val timestamp = property[DateTime](apply("timestamp"))
@@ -47,8 +47,6 @@ trait Binders extends UriBuilders with LiteralBinders {
 
     lazy val name = property[String](apply("name"))
     lazy val creator = property[UserId](apply("creator"))
-    lazy val organization/*: Property[Rdf, OrganizationId]*/ = property[OrganizationId](apply("organization"))
-    lazy val organizationOpt = optional[OrganizationId](apply("organization"))
     lazy val strategy = property[Strategy](apply("strategy"))(StrategyBinder)
 
     lazy val resources = property[Int](apply("resources"))
@@ -147,9 +145,7 @@ trait Binders extends UriBuilders with LiteralBinders {
 
   implicit lazy val AssertionBinder: PointedGraphBinder[Rdf, Assertion] = pgb[Assertion](ont.url, ont.assertor, ont.contexts, ont.lang, ont.title, ont.severity, ont.description, ont.timestamp)(Assertion.apply, Assertion.unapply)
 
-  implicit lazy val JobVOBinder: PointedGraphBinder[Rdf, JobVO] = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.creator, ont.organization)(JobVO.apply, JobVO.unapply)
-
-  implicit lazy val OrganizationVOBinder: PointedGraphBinder[Rdf, OrganizationVO] = pgbWithId[OrganizationVO]("#thing")(ont.name, ont.admin)(OrganizationVO.apply, OrganizationVO.unapply)
+  implicit lazy val JobVOBinder: PointedGraphBinder[Rdf, JobVO] = pgbWithId[JobVO]("#thing")(ont.name, ont.timestamp, ont.strategy, ont.creator)(JobVO.apply, JobVO.unapply)
 
   implicit lazy val ErrorResponseBinder: PointedGraphBinder[Rdf, ErrorResponse] = pgb[ErrorResponse](ont.url, ont.method, ont.why)(ErrorResponse.apply, ErrorResponse.unapply)
 
@@ -181,7 +177,7 @@ trait Binders extends UriBuilders with LiteralBinders {
   implicit lazy val RunFromPG: FromPointedGraph[Rdf, (Run, Iterable[URL], Iterable[AssertorCall])] = new FromPointedGraph[Rdf, (Run, Iterable[URL], Iterable[AssertorCall])] {
     def fromPointedGraph(pointed: PointedGraph[Rdf]): Try[(Run, Iterable[URL], Iterable[AssertorCall])] = {
       for {
-        id <- (pointed / ont.run).as[(OrganizationId, JobId, RunId)]
+        id <- (pointed / ont.run).as[(UserId, JobId, RunId)]
         strategy <- (pointed / ont.strategy).as[Strategy]
         createdAt <- (pointed / ont.createdAt).as[DateTime]
         completedOn <- (pointed / ont.completedOn).asOption[DateTime]
@@ -228,7 +224,7 @@ trait Binders extends UriBuilders with LiteralBinders {
     }
   }
 
-  implicit lazy val UserVOBinder = pgbWithId[UserVO]("#me")(ont.name, ont.email, ont.password, ont.organizationOpt)(UserVO.apply, UserVO.unapply)
+  implicit lazy val UserVOBinder = pgbWithId[UserVO]("#me")(ont.name, ont.email, ont.password)(UserVO.apply, UserVO.unapply)
 
   // works only for Filter(include = Everything, exclude = Nothing) for the moment
   implicit lazy val StrategyBinder: PointedGraphBinder[Rdf, Strategy] =

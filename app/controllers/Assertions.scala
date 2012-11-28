@@ -114,26 +114,20 @@ object Assertions extends VSController  {
   }}
 
   private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(
-      (for {
-        org <- user.getOrganization() map (_.get)
-      } yield {
-        org.enumerator &> Enumeratee.collect[RunUpdate] {
-          url match {
-            case None => {
-              case NewAssertorResult(result, run, now) => {
-                AssertionsView.grouped(result.assertions, jobId).toJson
-              }
-            }
-            case Some(url) => {
-              case NewAssertorResult(result, run, now) if result.assertions.map(_.url).toList.contains(url) => {
-                AssertionsView(run.assertions.filter(_.url == url), jobId, url).toJson
-              }
-            }
+    user.enumerator &> Enumeratee.collect[RunUpdate] {
+      url match {
+        case None => {
+          case NewAssertorResult(result, run, now) => {
+            AssertionsView.grouped(result.assertions, jobId).toJson
           }
         }
-      }) /*.recover{ case _ => Enumerator.eof }*/ // Need help here
-    )
+        case Some(url) => {
+          case NewAssertorResult(result, run, now) if result.assertions.map(_.url).toList.contains(url) => {
+            AssertionsView(run.assertions.filter(_.url == url), jobId, url).toJson
+          }
+        }
+      }
+    }/*.recover{ case _ => Enumerator.eof }*/ // Need help here
   }
 
 }

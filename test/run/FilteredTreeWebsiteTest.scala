@@ -27,26 +27,26 @@ class FilteredTreeWebsiteTest extends RunTestHelper with TestKitHelper {
       filter=Filter.includePrefixes("http://localhost:9001/1", "http://localhost:9001/3"),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
 
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 
   "test FilteredTreeWebsiteTest" in {
 
     (for {
-      a <- Organization.save(organizationTest)
-      b <- Job.save(job)
+      _ <- User.save(userTest)
+      _ <- Job.save(job)
     } yield ()).getOrFail()
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    val (orgId, jobId, runId) = job.run().getOrFail()
+    val (userId, jobId, runId) = job.run().getOrFail()
 
     job.listen(testActor)
 
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail(3.seconds)
+        val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail(3.seconds)
         rrs must have size (50)
         rrs foreach { rr =>
           rr.url.toString must startWith regex ("http://localhost:9001/[13]")

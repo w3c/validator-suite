@@ -27,15 +27,6 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
 
   val ldr: LinkedDataResource[Rdf] = LinkedDataResource[Rdf](userUri, vo.toPG)
 
-  val orgUriOpt = vo.organization map (_.toUri)
-
-  def getOrganization(): Future[Option[Organization]] = {
-    orgUriOpt match {
-      case Some(orgUri) => Organization.bananaGet(orgUri) map (Some(_))
-      case None => (None: Option[Organization]).asFuture
-    }
-  }
-
   // getJob with id only if owned by user. should probably be a db request directly.
   def getJob(jobId: JobId): Future[Job] = {
     Job.getFor(id) map {
@@ -95,10 +86,9 @@ object User {
     userId: UserId,
     name: String,
     email: String,
-    password: String,
-    organization: Option[OrganizationId])(
+    password: String)(
     implicit conf: VSConfiguration): User =
-      User(userId, UserVO(name, email, password, organization))
+      User(userId, UserVO(name, email, password))
 
   def bananaGet(userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
@@ -125,7 +115,7 @@ object User {
   }
 
   def register(email: String, name: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
-    val user = User(userId = UserId(), organization = Some(OrganizationId()), email = email, name = name, password = password)
+    val user = User(userId = UserId(), email = email, name = name, password = password)
     user.save().map(_ => user)
   }
   

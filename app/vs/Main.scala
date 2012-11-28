@@ -17,17 +17,11 @@ object Main {
     if (conf.storeDirectory.exists)
       Util.delete(conf.storeDirectory)
 
-    def makeUser(name: String): (Organization, User) = {
-      val orgId = OrganizationId()
-      val user = User(userId = UserId(), organization = Some(orgId), email = name + "@w3.org", name = name, password = "secret")
-      val org = Organization(orgId = orgId, name = name, admin = user.id)
-      (org, user)
-    }
-    
+    def makeUser(name: String): User = User(userId = UserId(), email = name + "@w3.org", name = name, password = "secret")
+
     (1 to n) foreach { i =>
-      val (org, user) = makeUser("user" + i)
+      val user = makeUser("user" + i)
       User.save(user).getOrFail()
-      Organization.save(org).getOrFail()
     }
 
     conf.store.shutdown()
@@ -43,23 +37,20 @@ object Main {
     if (conf.storeDirectory.exists)
       Util.delete(conf.storeDirectory)
 
-    val orgId = OrganizationId()
+    val tgambet = User(userId = UserId(), email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret")
 
-    val tgambet = User(userId = UserId(), organization = Some(orgId), email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret")
+    val bertails = User(userId = UserId(), email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret")
 
-    val bertails = User(userId = UserId(), organization = Some(orgId), email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret")
+    val bernard = User(userId = UserId(), email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar")
 
-    val ralph = User(userId = UserId(), organization = Some(orgId), email = "swick@w3.org", name = "Ralph R. Swick", password = "secret")
+    val ralph = User(userId = UserId(), email = "swick@w3.org", name = "Ralph R. Swick", password = "secret")
 
-    val w3team = User(userId = UserId(), organization = Some(orgId), email = "w3t@w3.org", name = "W3C Team", password = "w3team")
-
-    val w3c = Organization(orgId = orgId, name = "W3C", admin = tgambet.id)
+    val w3team = User(userId = UserId(), email = "w3t@w3.org", name = "W3C Team", password = "w3team")
     
     val w3 = Job(
       createdOn = DateTime.now(DateTimeZone.UTC),
       name = "W3C",
       creator = tgambet.id,
-      organization = w3c.id,
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/"),
         linkCheck = false,
@@ -71,7 +62,6 @@ object Main {
       createdOn = DateTime.now.plus(1000),
       name = "TR",
       creator = bertails.id,
-      organization = w3c.id,
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/TR"),
         linkCheck = false,
@@ -83,7 +73,6 @@ object Main {
       createdOn = DateTime.now.plus(2000),
       name = "IBM",
       creator = bertails.id,
-      organization = w3c.id,
       strategy = Strategy(
         entrypoint = URL("http://www.ibm.com"),
         linkCheck = false,
@@ -94,8 +83,7 @@ object Main {
     val lemonde = Job(
       createdOn = DateTime.now.plus(3000),
       name = "Le Monde",
-      creator = bertails.id,
-      organization = w3c.id,
+      creator = tgambet.id,
       strategy = Strategy(
         entrypoint = URL("http://www.lemonde.fr"),
         linkCheck = false,
@@ -108,7 +96,6 @@ object Main {
       _ <- User.save(bertails)
       _ <- User.save(ralph)
       _ <- User.save(w3team)
-      _ <- Organization.save(w3c)
       _ <- Job.save(w3)
       _ <- Job.save(tr)
       _ <- Job.save(ibm)

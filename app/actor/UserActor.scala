@@ -11,7 +11,7 @@ extends Actor with PathAwareActor with Listeners {
 
   val logger = play.Logger.of(classOf[UserActor])
 
-  val jobsRef: ActorRef = context.actorOf(Props(new UsersActor()), name = "users")
+  val jobsRef: ActorRef = context.actorOf(Props(new JobsActor()), name = "jobs")
   
   def receive: Actor.Receive = listenerHandler orElse {
     case Tell(path, msg) if path == selfPath => self ! msg

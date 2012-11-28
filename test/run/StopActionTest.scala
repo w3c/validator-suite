@@ -23,20 +23,20 @@ class StopActionTest extends RunTestHelper with TestKitHelper {
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
   
   val servers = Seq(Webserver(9001, Website.cyclic(1000).toServlet))
 
   "test stop" in {
     
     (for {
-      a <- Organization.save(organizationTest)
+      _ <- User.save(userTest)
       _ <- Job.save(job)
     } yield ()).getOrFail()
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
-    val (orgId, jobId, runId) = job.run().getOrFail()
+    val (userId, jobId, runId) = job.run().getOrFail()
 
     job.listen(testActor)
 
@@ -48,7 +48,7 @@ class StopActionTest extends RunTestHelper with TestKitHelper {
 
     fishForMessagePF(3.seconds) {
       case UpdateData(jobData, _, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail()
+        val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail()
         rrs.size must be < (100)
       }
     }

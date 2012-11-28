@@ -40,17 +40,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     identityMap.asScala
   }
 
-  // that's exactly why manipulating the id ourselves is a bad idea
-  val orgId = OrganizationId()
-  val user1Id = UserId()
+  val user1: User = User(UserId(), "foo", "foo@example.com", "secret")
 
-  val org: Organization = Organization(orgId, "World Wide Web Consortium", user1Id)
+  val user2 = User(UserId(), "bar", "bar@example.com", "secret")
 
-  val user1: User = User(user1Id, "foo", "foo@example.com", "secret", Some(orgId))
-
-  val user2 = User(UserId(), "bar", "bar@example.com", "secret", Some(org.id))
-
-  val user3 = User(UserId(), "baz", "baz@example.com", "secret", Some(org.id))
+  val user3 = User(UserId(), "baz", "baz@example.com", "secret")
   
   val strategy =
     Strategy( 
@@ -75,53 +69,48 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     name = "job1",
     createdOn = now,
     strategy = strategy,
-    creator = user1.id,
-    organization = org.id)
+    creator = user1.id)
 
   val job2 = Job(
     id = JobId(),
     name = "job2",
     createdOn = now,
     strategy = strategy,
-    creator = user1.id,
-    organization = org.id)
+    creator = user1.id)
 
   val job3 = Job(
     id = JobId(),
     name = "job3",
     createdOn = now,
     strategy = strategy,
-    creator = user1.id,
-    organization = org.id)
+    creator = user1.id)
 
   val job4 = Job(
     id = JobId(),
     name = "job4",
     createdOn = now,
     strategy = strategy2,
-    creator = user2.id,
-    organization = org.id)
+    creator = user2.id)
 
   val job5 = Job(
     id = JobId(),
     name = "job5",
     createdOn = now,
     strategy = strategy,
-    creator = user1.id,
-    organization = OrganizationId())
+    creator = user1.id)
 
   // a job may have never completed, for example if the user has forced a new run
   // is this assumption ok? -> yes
   // or do we want to force a completeOn before switching to the new Job? this would be weird
-  var run1 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now)
+  var run1 = Run(id = (user1.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now)
 
-  var run2 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(5)).completeOn(now.plusMinutes(7))
+  var run2 = Run(id = (user1.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(5)).completeOn(now.plusMinutes(7))
 
-  var run3 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(10)).completeOn(now.plusMinutes(12))
+  var run3 = Run(id = (user1.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(10)).completeOn(now.plusMinutes(12))
 
-  var run4 = Run(id = (org.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(15))
+  var run4 = Run(id = (user1.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(15))
 
-  var run5 = Run(id = (org.id, job5.id, RunId()), strategy = job5.strategy, createdAt = now)
+  var run5 = Run(id = (user1.id, job5.id, RunId()), strategy = job5.strategy, createdAt = now)
 
   val assertorIds = List(AssertorId("test_assertor_1"), AssertorId("test_assertor_2"))
 
@@ -190,7 +179,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
     val r = for {
-      _ <- Organization.save(org)
       _ <- User.save(user1)
       _ <- User.save(user2)
       _ <- User.save(user3)
@@ -214,31 +202,21 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve unknown Job" in {
-    val retrieved = Try { Job.get(OrganizationId(), JobId()).getOrFail() }
+    val retrieved = Try { Job.get(UserId(), JobId()).getOrFail() }
     retrieved must be ('Failure) // TODO test exception type (UnknownJob)
-  }
-  
-  "retrieve unknown Organization" in {
-    val retrieved = Try { Organization.get(organizationContainer / "foo").getOrFail() }
-    retrieved must be ('Failure) // TODO test exception type (UnknownOrganization)
   }
  
   "create, put, retrieve, delete Job" in {
     val job = job1.copy(id = JobId())
-    Try { Job.get(org.id, job.id).getOrFail() } must be ('failure)
+    Try { Job.get(user1.id, job.id).getOrFail() } must be ('failure)
     Try { Job.save(job).getOrFail() } must be ('success)
-    val retrieved = Job.get(org.id, job.id).getOrFail(10.seconds)._1
+    val retrieved = Job.get(user1.id, job.id).getOrFail(10.seconds)._1
     retrieved must be (job)
     Try { Job.delete(job).getOrFail() } must be ('success)
-    Try { Job.get(org.id, job.id).getOrFail() } must be ('failure)
+    Try { Job.get(user1.id, job.id).getOrFail() } must be ('failure)
   }
 
-  "retrieve Organization" in {
-    val retrieved = Organization.get(org.id).getOrFail(3.seconds)
-    retrieved must be(org)
-  }
-
-  "save and retrieve User" in {
+  "retrieve User" in {
     val retrieved = User.get(user1.id).getOrFail(3.seconds)
     retrieved must be(user1)
   }
@@ -256,15 +234,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
     Try {User.authenticate("unknown@example.com", "bouleshit").getOrFail() } must be (Failure(UnknownUser))
   }
-
-//  "get all Jobs that belong to the same organization" in {
-//    val jobs = Job.getFor(org.id).getOrFail(3.seconds)
-//    jobs must have size(4)
-//    jobs must contain (job1)
-//    jobs must contain (job2)
-//    jobs must contain (job3)
-//    jobs must contain (job4)
-//  }
 
   "a user can only access the jobs that he created" in {
     val jobs = Job.getFor(user1.id).getOrFail(3.seconds)

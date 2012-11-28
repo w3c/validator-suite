@@ -21,10 +21,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val http = system.actorFor(system / "http")
 
-  val orgTestId = OrganizationId()
-  val userTestId = UserId()
-  val organizationTest = Organization(orgTestId, "test orga", userTestId)
-  val userTest = User(userId = userTestId, organization = Some(orgTestId), email = "", name = "", password = "")
+  val userTest = User(userId = UserId(), email = "", name = "", password = "")
   
   val logger = play.Logger.of(classOf[RunTestHelper])
   

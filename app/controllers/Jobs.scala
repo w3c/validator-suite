@@ -102,18 +102,10 @@ object Jobs extends VSController {
   }}
 
   private def enumerator(user: User): Enumerator[JsValue] = {
-    Enumerator.flatten((
-      for {
-        org <- user.getOrganization() map (_.get)
-      } yield {
-        // ready to explode...
-        // better: a user can belong to several organization. this would handle the case with 0, 1 and > 1
-        org.enumerator &> Enumeratee.collect {
-          case a: UpdateData => JsArray(List(JobView.toJobMessage(a.jobId, a.data, a.activity)))
-          case a: RunCompleted => JsArray(List(JobView.toJobMessage(a.jobId, a.completedOn)))
-        }
-      }
-    )/*.recover{ case _ => Enumerator.eof[JsValue] }*/)
+    user.enumerator &> Enumeratee.collect {
+      case a: UpdateData => JsArray(List(JobView.toJobMessage(a.jobId, a.data, a.activity)))
+      case a: RunCompleted => JsArray(List(JobView.toJobMessage(a.jobId, a.completedOn)))
+    }/*.recover{ case _ => Enumerator.eof[JsValue] }*/
   }
 
 }

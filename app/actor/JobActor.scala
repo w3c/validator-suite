@@ -92,7 +92,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
   import conf._
 
-  val orgId = job.organization
+  val userId = job.creatorId
   val jobId = job.id
 
   val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
@@ -272,7 +272,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     case Event(Refresh, run) => {
       logger.debug("%s: received a Refresh" format run.shortId)
-      val (startedRun, urlsToBeFetched) = Run.freshRun(orgId, jobId, strategy).newlyStartedRun
+      val (startedRun, urlsToBeFetched) = Run.freshRun(userId, jobId, strategy).newlyStartedRun
       sender ! startedRun.id
       executeCommands(startedRun, self, urlsToBeFetched, List.empty, http, assertionsActorRef)
       stateOf(startedRun)
@@ -287,7 +287,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   }
 
   private def tellEverybody(msg: RunUpdate): Unit = {
-    // tell the organization
+    // tell the user
     context.actorFor("../..") ! msg
     // tell all the listeners
     tellListeners(msg)

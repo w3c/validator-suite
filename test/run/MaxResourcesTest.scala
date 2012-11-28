@@ -25,26 +25,26 @@ class MaxResourcesTest extends RunTestHelper with TestKitHelper {
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
   
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 
   s"""shoudldn't access more that $maxResources resources""" in {
 
     (for {
-      a <- Organization.save(organizationTest)
-      b <- Job.save(job)
+      _ <- User.save(userTest)
+      _ <- Job.save(job)
     } yield ()).getOrFail(5.seconds)
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    val (orgId, jobId, runId) = job.run().getOrFail()
+    val (userId, jobId, runId) = job.run().getOrFail()
 
     job.listen(testActor)
 
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail()
+        val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail()
         rrs must have size (maxResources)
       }
     }

@@ -134,16 +134,10 @@ object Job extends VSController {
   }}
 
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(
-      (for {
-        org <- user.getOrganization() map (_.get)
-      } yield {
-        org.enumerator &> Enumeratee.collect[RunUpdate] {
-          case UpdateData(id, data, activity) if id == jobId => JobView.toJobMessage(jobId, data, activity)
-          case RunCompleted(id, completedOn) if id == jobId => JobView.toJobMessage(jobId, completedOn)
-        }
-      }) /*.recover[Enumerator[JsArray]]{ case _ => Enumerator.eof[JsArray] }*/ // Need help here
-    )
+    user.enumerator &> Enumeratee.collect[RunUpdate] {
+      case UpdateData(id, data, activity) if id == jobId => JobView.toJobMessage(jobId, data, activity)
+      case RunCompleted(id, completedOn) if id == jobId => JobView.toJobMessage(jobId, completedOn)
+    }/*.recover[Enumerator[JsArray]]{ case _ => Enumerator.eof[JsArray] }*/ // Need help here
   }
 
   private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>

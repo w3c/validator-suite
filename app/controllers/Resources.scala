@@ -83,32 +83,25 @@ object Resources extends VSController  {
   }}
 
   private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(
-      (for {
-        org <- user.getOrganization() map (_.get)
-      } yield {
-        org.enumerator &> Enumeratee.collect[RunUpdate] {
-          url match {
-            case None => {
-              case NewAssertorResult(result, run, now) => {
-                // URLs part of this assertorResult
-                val urls = result.assertions.groupBy(_.url).map(_._1).toList
-                // Get all the assertions we received for this urls
-                val allAssertions = run.assertions.filter(a => urls.contains(a.url))
-                ResourcesView(allAssertions, jobId).toJson
-              }
-            }
-            case Some(url) => {
-              case NewAssertorResult(result, run, now) if result.assertions.map(_.url).toList.contains(url) => {
-                val assertionViews = AssertionsView(run.assertions.filter(_.url == url), jobId, url)
-                ResourcesView.single(url, assertionViews, jobId).toJson
-              }
-            }
+    user.enumerator &> Enumeratee.collect[RunUpdate] {
+      url match {
+        case None => {
+          case NewAssertorResult(result, run, now) => {
+            // URLs part of this assertorResult
+            val urls = result.assertions.groupBy(_.url).map(_._1).toList
+            // Get all the assertions we received for this urls
+            val allAssertions = run.assertions.filter(a => urls.contains(a.url))
+            ResourcesView(allAssertions, jobId).toJson
           }
-
         }
-      }) /*.recover[Enumerator[JsArray]]{ case _ => Enumerator.eof[JsArray] }*/ // Need help here
-    )
+        case Some(url) => {
+          case NewAssertorResult(result, run, now) if result.assertions.map(_.url).toList.contains(url) => {
+            val assertionViews = AssertionsView(run.assertions.filter(_.url == url), jobId, url)
+            ResourcesView.single(url, assertionViews, jobId).toJson
+          }
+        }
+      }
+    }/*.recover[Enumerator[JsArray]]{ case _ => Enumerator.eof[JsArray] }*/ // Need help here
   }
 
 }

@@ -6,18 +6,18 @@ import scalaz._
 import scalaz.Scalaz._
 
 sealed trait AssertorResponse {
-  val context: (OrganizationId, JobId, RunId)
+  val context: (UserId, JobId, RunId)
   val assertor: AssertorId
   val sourceUrl: URL
 }
 case class AssertorFailure(
-    context: (OrganizationId, JobId, RunId),
+    context: (UserId, JobId, RunId),
     assertor: AssertorId,
     sourceUrl: URL,
     why: String) extends AssertorResponse
 
 case class AssertorResult(
-    context: (OrganizationId, JobId, RunId),
+    context: (UserId, JobId, RunId),
     assertor: AssertorId,
     sourceUrl: URL,
     assertions: List[Assertion]) extends AssertorResponse {

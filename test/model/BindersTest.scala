@@ -32,12 +32,6 @@ class BindersTest extends WordSpec with MustMatchers {
     result must be === (Success(t))
   }
 
-  "OrganizationVO" in {
-    testSerializeDeserialize(OrganizationVOBinder) {
-      OrganizationVO(name = "foo", admin = UserId())
-    }
-  }
-
   "StrategyVO" in {
     testSerializeDeserialize(StrategyBinder) {
       Strategy(
@@ -63,8 +57,7 @@ class BindersTest extends WordSpec with MustMatchers {
         name = "foo",
         createdOn = DateTime.now(DateTimeZone.UTC),
         strategy = strategy,
-        creator = UserId(),
-        organization = OrganizationId())
+        creator = UserId())
     }
   }
 
@@ -112,15 +105,15 @@ class BindersTest extends WordSpec with MustMatchers {
   }
 
 //  "Run" in {
-//    val run = Run(id = (OrganizationId(), JobId(), RunId()), strategy = strategy)
+//    val run = Run(id = (UserId(), JobId(), RunId()), strategy = strategy)
 //    run.toPG.as[Run] must be(Success(run))
 //  }
 
   val assertorResult =
-    AssertorResult((OrganizationId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), List(assertion))
+    AssertorResult((UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), List(assertion))
 
   val assertorFailure =
-    AssertorFailure((OrganizationId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
+    AssertorFailure((UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
 
   "AssertorResult" in {
     assertorResult.toPG.as[AssertorResult] must be(Success(assertorResult))
@@ -182,29 +175,23 @@ class BindersTest extends WordSpec with MustMatchers {
       UserVO(
         name = "foo bar",
         email = "foo@example.com",
-        password = "secret",
-        organization = Some(OrganizationId()))
+        password = "secret")
     }
   }
 
   "UserId" in {
     val userId = UserId()
     userId.toPG.as[UserId] must be(Success(userId))
+  }
+
+  "(UserId, JobId)" in {
+    val userJobId = (UserId(), JobId())
+    userJobId.toPG.as[(UserId, JobId)] must be(Success(userJobId))
   } 
 
-  "OrganizationId" in {
-    val orgId = OrganizationId()
-    orgId.toPG.as[OrganizationId] must be(Success(orgId))
-  } 
-
-  "(OrganizationId, JobId)" in {
-    val orgJobId = (OrganizationId(), JobId())
-    orgJobId.toPG.as[(OrganizationId, JobId)] must be(Success(orgJobId))
-  } 
-
-  "(OrganizationId, JobId, RunId)" in {
-    val orgJobRunId = (OrganizationId(), JobId(), RunId())
-    orgJobRunId.toPG.as[(OrganizationId, JobId, RunId)] must be(Success(orgJobRunId))
+  "(UserId, JobId, RunId)" in {
+    val userJobRunId = (UserId(), JobId(), RunId())
+    userJobRunId.toPG.as[(UserId, JobId, RunId)] must be(Success(userJobRunId))
   } 
 
 }

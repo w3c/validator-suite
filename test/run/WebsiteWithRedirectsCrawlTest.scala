@@ -23,7 +23,7 @@ class WebsiteWithRedirectsCrawlTest extends RunTestHelper with TestKitHelper {
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id, organization = organizationTest.id)
+  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
 
   val circumference = 10
   
@@ -32,19 +32,19 @@ class WebsiteWithRedirectsCrawlTest extends RunTestHelper with TestKitHelper {
   "test cyclic" in {
     
     (for {
-      _ <- Organization.save(organizationTest)
+      _ <- User.save(userTest)
       _ <- Job.save(job)
     } yield ()).getOrFail()
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    val (orgId, jobId, runId) = job.run().getOrFail()
+    val (userId, jobId, runId) = job.run().getOrFail()
 
     job.listen(testActor)
     
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {
-        val rrs = ResourceResponse.bananaGetFor(orgId, jobId, runId).getOrFail()
+        val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail()
         // the redirect URLs are not counted
         rrs.filterNot(_.url.toString endsWith ",redirect") must have size (circumference + 1)
       }

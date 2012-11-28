@@ -10,15 +10,9 @@ case class JobVO (
     name: String,
     createdOn: DateTime,
     strategy: Strategy,
-    creator: UserId,
-    organization: OrganizationId) extends ValueObject
+    creator: UserId) extends ValueObject
 
-case class OrganizationVO (
-    name: String,
-    admin: UserId) extends ValueObject
-    
 case class UserVO(
     name: String,
     email: String,
-    password: String,
-    organization: Option[OrganizationId]) extends ValueObject
+    password: String) extends ValueObject

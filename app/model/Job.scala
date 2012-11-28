@@ -27,12 +27,10 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
   val creatorId = vo.creator
 
-  val jobUri: Rdf#URI = JobUri(vo.organization, id)
+  val jobUri: Rdf#URI = JobUri(vo.creator, id)
 
-//  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(uriSyntax[Rdf](jobUri).fragmentLess, vo.toPG)
   def ldr: LinkedDataResource[Rdf] = LinkedDataResource(jobUri.fragmentLess, vo.toPG)
 
-  val orgUri: Rdf#URI = anySyntax(vo.organization).toUri
   val creatorUri: Rdf#URI = vo.creator.toUri
 
   private val logger = Logger.of(classOf[Job])
@@ -40,10 +38,8 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   def getCreator(): Future[User] =
     User.bananaGet(creatorUri)
 
-  def getOrganization(): Future[Organization] = Organization.get(orgUri)
-    
   def getRun(): Future[Run] = {
-    (PathAware(organizationsRef, path) ? GetRun).mapTo[Run]
+    (PathAware(usersRef, path) ? GetRun).mapTo[Run]
   }
 
   def getAssertions(): Future[Iterable[Assertion]] = {
@@ -77,23 +73,23 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
     Job.delete(this)
   }
   
-  def run(): Future[(OrganizationId, JobId, RunId)] = 
-    (PathAware(organizationsRef, path) ? Refresh).mapTo[(OrganizationId, JobId, RunId)]
+  def run(): Future[(UserId, JobId, RunId)] =
+    (PathAware(usersRef, path) ? Refresh).mapTo[(UserId, JobId, RunId)]
   
   def cancel(): Unit = 
-    PathAware(organizationsRef, path) ! Stop
+    PathAware(usersRef, path) ! Stop
 
   def on(): Unit = 
-    PathAware(organizationsRef, path) ! BeProactive
+    PathAware(usersRef, path) ! BeProactive
 
   def off(): Unit = 
-    PathAware(organizationsRef, path) ! BeLazy
+    PathAware(usersRef, path) ! BeLazy
 
   def resume(): Unit = 
-    PathAware(organizationsRef, path) ! Resume
+    PathAware(usersRef, path) ! Resume
 
   def getSnapshot(): Future[JobData] =
-    (PathAware(organizationsRef, path) ? GetSnapshot).mapTo[JobData]
+    (PathAware(usersRef, path) ? GetSnapshot).mapTo[JobData]
 
   lazy val enumerator: Enumerator[RunUpdate] = {
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
@@ -120,20 +116,19 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   }
 
   def listen(implicit listener: ActorRef): Unit =
-    PathAware(organizationsRef, path).tell(Listen(listener), listener)
+    PathAware(usersRef, path).tell(Listen(listener), listener)
   
   def deafen(implicit listener: ActorRef): Unit =
-    PathAware(organizationsRef, path).tell(Deafen(listener), listener)
+    PathAware(usersRef, path).tell(Deafen(listener), listener)
   
-  private val organizationsRef = system.actorFor(system / "organizations")
+  private val usersRef = system.actorFor(system / "users")
 
-  private val path = {
-    /* val relPath = jobUri.relativize(URI("https://validator.w3.org/suite/")).getString */
-    system / "organizations" / vo.organization.id / "jobs" / id.id
+  private val path: ActorPath = {
+    system / "users" / vo.creator.id / "jobs" / id.id
   }
   
   def !(message: Any)(implicit sender: ActorRef = null): Unit =
-    PathAware(organizationsRef, path) ! message
+    PathAware(usersRef, path) ! message
 
 }
 
@@ -144,18 +139,17 @@ object Job {
     name: String,
     createdOn: DateTime = DateTime.now(DateTimeZone.UTC),
     strategy: Strategy,
-    creator: UserId,
-    organization: OrganizationId)(
+    creator: UserId)(
     implicit conf: VSConfiguration): Job =
-      Job(id, JobVO(name, createdOn, strategy, creator, organization))
+      Job(id, JobVO(name, createdOn, strategy, creator))
 
   implicit def toVO(job: Job): JobVO = job.vo
 
-  def get(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
-    get(JobUri(orgId, jobId))
+  def get(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
+    get(JobUri(userId, jobId))
 
-  def bananaGet(orgId: OrganizationId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
-    bananaGet((orgId, jobId).toUri)
+  def bananaGet(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
+    bananaGet((userId, jobId).toUri)
 
   def bananaGet(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
     import conf._
@@ -193,7 +187,7 @@ CONSTRUCT {
     for {
       graph <- store.executeConstruct(construct, Map("user" -> userId.toUri))
       pointedUser = PointedGraph[Rdf](userId.toUri, graph)
-      it <- (pointedUser / ont.job).asSet2[(OrganizationId, JobId), JobVO].asFuture
+      it <- (pointedUser / ont.job).asSet2[(UserId, JobId), JobVO].asFuture
     } yield {
       it map { case (ids, jobVO) => Job(ids._2, jobVO) }
     }
@@ -225,11 +219,9 @@ SELECT ?timestamp WHERE {
 
   def save(job: Job)(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
-    val orgUri = job.vo.organization.toUri
     val creatorUri = job.vo.creator.toUri
     val script = for {
       _ <- Command.PUT[Rdf](job.ldr)
-      _ <- Command.POST[Rdf](orgUri, orgUri -- ont.job ->- job.jobUri)
       _ <- Command.POST[Rdf](creatorUri, creatorUri -- ont.job ->- job.jobUri)
     } yield ()
     store.execute(script).map(_ => job)
@@ -240,8 +232,6 @@ SELECT ?timestamp WHERE {
     val script = for {
       _ <- Command.PATCH[Rdf](job.vo.creator.toUri,
                               tripleMatches = List((job.vo.creator.toUri, ont.job.uri, job.jobUri)))
-      _ <- Command.PATCH[Rdf](job.orgUri,
-                              tripleMatches = List((job.orgUri, ont.job.uri, job.jobUri)))
       _ <- Command.DELETE[Rdf](job.jobUri.fragmentLess)
     } yield ()
     store.execute(script)

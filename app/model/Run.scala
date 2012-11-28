@@ -18,11 +18,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Run {
 
-  def bananaGet(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
-    bananaGet((orgId, jobId, runId).toUri)
+  def bananaGet(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
+    bananaGet((userId, jobId, runId).toUri)
 
-  def get(orgId: OrganizationId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
-    get((orgId, jobId, runId).toUri)
+  def get(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
+    get((userId, jobId, runId).toUri)
 
   def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
@@ -51,14 +51,14 @@ object Run {
   def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
     sys.error("")
 
-  def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy): Run =
+  def apply(id: (UserId, JobId, RunId), strategy: Strategy): Run =
     new Run(id, strategy)
 
-  def apply(id: (OrganizationId, JobId, RunId), strategy: Strategy, createdAt: DateTime): Run =
+  def apply(id: (UserId, JobId, RunId), strategy: Strategy, createdAt: DateTime): Run =
     new Run(id, strategy, createdAt)
 
-  def freshRun(orgId: OrganizationId, jobId: JobId, strategy: Strategy): Run = {
-    new Run(id = (orgId, jobId, RunId()), strategy = strategy)
+  def freshRun(userId: UserId, jobId: JobId, strategy: Strategy): Run = {
+    new Run(id = (userId, jobId, RunId()), strategy = strategy)
   }
 
   /* addResourceResponse */
@@ -87,7 +87,7 @@ object Run {
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
 case class Run private (
-    id: (OrganizationId, JobId, RunId),
+    id: (UserId, JobId, RunId),
     strategy: Strategy,
     createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
     // from completion event, None at creation

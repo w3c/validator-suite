@@ -20,10 +20,10 @@ class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareAc
 
   val logger = play.Logger.of(classOf[JobsActor])
 
-  def orgId: OrganizationId = {
+  def userId: UserId = {
     val elements = self.path.elements.toList
-    val orgIdStr = elements(elements.size - 2)
-    OrganizationId(orgIdStr)
+    val userIdStr = elements(elements.size - 2)
+    UserId(userIdStr)
   }
 
   def getJobRefOrCreate(job: Job, initialState: JobActorState, run: Run, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall]): ActorRef = {
@@ -47,10 +47,10 @@ class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareAc
           // should get the relPath and provide the uri to the job in the store
           // later: make the job actor as something backed by a graph in the store!
           val f: Future[CreateJobAndForward] =
-            Job.bananaGet(orgId, JobId(id)) flatMap { case (job, runUriOpt) =>
+            Job.bananaGet(userId, JobId(id)) flatMap { case (job, runUriOpt) =>
               runUriOpt match {
                 case None => {
-                  val run = Run.freshRun(orgId, job.id, job.strategy)
+                  val run = Run.freshRun(userId, job.id, job.strategy)
                   CreateJobAndForward(job, NeverStarted, run, List.empty, List.empty, msg).asFuture
                 }
                 case Some(runUri) =>

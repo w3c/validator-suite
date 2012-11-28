@@ -16,6 +16,6 @@ case class RunCompleted(jobId: JobId, completedOn: DateTime) extends RunUpdate
 /**
  * A new Response was received during the exploration
  */
-case class NewResource(context: (OrganizationId, JobId, RunId), resource: ResourceResponse) extends RunUpdate
+case class NewResource(context: (UserId, JobId, RunId), resource: ResourceResponse) extends RunUpdate
 
 case class NewAssertorResult(result: AssertorResult, run: Run, timestamp: DateTime) extends RunUpdate

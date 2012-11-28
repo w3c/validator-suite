@@ -29,7 +29,7 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
   val queue = Queue[AssertorCall]()
 
-  private def scheduleAssertion(context: (OrganizationId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
+  private def scheduleAssertion(context: (UserId, JobId, RunId), assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
 
     atomic { implicit txn => pendingAssertions += 1 }
     val sender = self
