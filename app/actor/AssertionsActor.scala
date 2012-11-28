@@ -6,7 +6,6 @@ import org.w3.vs.assertor._
 import akka.actor._
 import scala.concurrent._
 import scala.util._
-//import scalaz._
 import scala.collection.mutable.Queue
 import scala.concurrent.stm._
 import org.w3.util._
@@ -36,7 +35,7 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
     val sender = self
     
     Future {
-      assertor.assert(context, response, job.vo.strategy.assertorsConfiguration(assertor.id))
+      assertor.assert(context, response, job.vo.strategy.assertorsConfiguration(assertor.id), Some(context._3.toString))
     } andThen { case _ =>
       atomic { implicit txn => pendingAssertions -= 1 }
     } andThen {

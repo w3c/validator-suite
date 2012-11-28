@@ -4,6 +4,7 @@ import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 import java.nio.file.Files.createTempDirectory
 import org.w3.util.URL
+import org.w3.util.Util._
 import org.w3.vs.model._
 import java.io._
 import scalax.io._
@@ -18,11 +19,13 @@ class CacheTest extends WordSpec with MustMatchers {
     d
   }
 
-  val cache = Cache(directory)
+  val cache = Cache(directory, useToken = true)
+
+  val token = "foo"
     
   "retrieving a resource that was never cached should be a miss" in {
 
-    cache.resource(URL("http://example.com/never-cached"), GET) must be(None)
+    cache.resource(URL("http://example.com/never-cached"), GET, Some(token)) must be(None)
     
   }
 
@@ -38,9 +41,9 @@ class CacheTest extends WordSpec with MustMatchers {
       val bais = new ByteArrayInputStream(content.getBytes("UTF-8"))
       val bodyContent = Resource.fromInputStream(bais)
   
-      cache.save(hr, bodyContent) must be('success)
+      cache.save(hr, bodyContent, Some(token)) must be('success)
   
-      val r = cache.resource(url, method).flatMap(_.get().toOption)
+      val r = cache.resource(url, method, Some(token)).flatMap(_.get().toOption)
   
       r must be(Some(hr))
 
@@ -56,9 +59,9 @@ class CacheTest extends WordSpec with MustMatchers {
   
       val er = ErrorResponse(url, method, "server not reachable")
   
-      cache.save(er) must be('success)
+      cache.save(er, Some(token)) must be('success)
   
-      val r = cache.resource(url, method).flatMap(_.get().toOption)
+      val r = cache.resource(url, method, Some(token)).flatMap(_.get().toOption)
   
       r must be(Some(er))
 
@@ -83,9 +86,9 @@ class CacheTest extends WordSpec with MustMatchers {
       val bais = new ByteArrayInputStream(content.getBytes("UTF-8"))
       val bodyContent = Resource.fromInputStream(bais)
   
-      cache.save(hr, bodyContent) must be('success)
+      cache.save(hr, bodyContent, Some(token)) must be('success)
   
-      val cacheResponse = cache.get(url.toURI, method.toString, Map("foo" -> List("bar").asJava).asJava)
+      val cacheResponse = cache.get(url.withToken(token).toURI, method.toString, Map("foo" -> List("bar").asJava).asJava)
 
       cacheResponse must not be(null)
 

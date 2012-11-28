@@ -13,8 +13,8 @@ import scala.util.Try
 
 object CachedResource {
 
-  def apply(cache: Cache, url: URL, method: HttpMethod): Try[CachedResource] = Try {
-    val cr = new CachedResource(cache, url, method)
+  def apply(cache: Cache, url: URL, method: HttpMethod, tokenOpt: Option[String]): Try[CachedResource] = Try {
+    val cr = new CachedResource(cache, url, method, tokenOpt)
     assert(cr.metaFile.exists, "the ." + method + " file must exist")
     cr
   }
@@ -31,9 +31,12 @@ object CachedResource {
  * - a 404 is not an error because the server could be reached
  * - a failed connection, or a DNS issue, are the typical errors
  */
-class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod) {
+class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod, tokenOpt: Option[String]) {
 
-  val filename = math.abs(url.toString.hashCode).toString
+  val filename = tokenOpt match {
+    case None => math.abs(url.toString.hashCode).toString
+    case Some(token) => math.abs(url.toString.hashCode).toString + "-" + token
+  }
 
   val metaFile = new File(cache.directory, filename + "." + method.toString)
 

@@ -35,11 +35,6 @@ class ValidatorNu(serviceUrl: String) extends FromHttpResponseAssertor {
     validatorURL
   }
 
-  /*def assert(url: URL)(implicit context: ExecutionContext): FutureVal[Throwable, Iterable[Assertion]] = FutureVal {
-    val urlCon = validatorURLForMachine(url).openConnection()
-    urlCon.setConnectTimeout(2000)
-    //urlCon.setReadTimeout(10000)
-    val content = Source.fromInputStream(urlCon.getInputStream).getLines.mkString("\n")*/
   def assert(source: Source): Iterable[Assertion] = {
     val json = Json.parse(source.getLines.mkString("\n"))
     val url = URL((json \ "url").asInstanceOf[JsString].value)

@@ -1,6 +1,7 @@
 package org.w3.vs.assertor
 
 import org.w3.util._
+import org.w3.util.Util.URLW
 import org.w3.vs.model._
 import scala.io.Source
 
@@ -26,8 +27,12 @@ trait FromURLAssertor extends FromSourceAssertor {
    *  @param url a pointer to the document
    *  @return the assertion
    */
-  def assert(url: URL, configuration: AssertorConfiguration): Iterable[Assertion] = {
-    val source = Source.fromURL(validatorURLForMachine(url, configuration))
+  def assert(url: URL, configuration: AssertorConfiguration, tokenOpt: Option[String]): Iterable[Assertion] = {
+    val urll = tokenOpt match {
+      case Some(token) => url.withToken(token)
+      case None => url
+    }
+    val source = Source.fromURL(validatorURLForMachine(urll, configuration))
     assert(source)
   }
   
