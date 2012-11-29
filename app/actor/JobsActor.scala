@@ -29,7 +29,7 @@ class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareAc
   def getJobRefOrCreate(job: Job, initialState: JobActorState, run: Run, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall]): ActorRef = {
     val id = job.id.toString
     try {
-      context.actorOf(Props(new JobActor(job, initialState, run, toBeFetched, toBeAsserted)), name = id)
+      context.actorOf(Props(new JobActor(job, initialState, run, toBeFetched, toBeAsserted)).withDispatcher("job-dispatcher"), name = id)
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / id)
     }

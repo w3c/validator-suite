@@ -14,8 +14,6 @@ trait VSConfiguration {
   
   implicit val timeout: Timeout
 
-  val assertorExecutionContext: ExecutionContext
-
   val httpCacheOpt: Option[Cache]
 
   val httpClient: AsyncHttpClient

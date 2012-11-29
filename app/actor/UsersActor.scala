@@ -16,7 +16,7 @@ class UsersActor()(implicit conf: VSConfiguration) extends Actor with PathAwareA
   def getUserRefOrCreate(user: User): ActorRef = {
     val id = user.id
     try {
-      context.actorOf(Props(new UserActor(user)), name = id.toString)
+      context.actorOf(Props(new UserActor(user)).withDispatcher("user-dispatcher"), name = id.toString)
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / id.toString)
     }

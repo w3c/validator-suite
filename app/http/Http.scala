@@ -50,7 +50,7 @@ class Http(httpClient: AsyncHttpClient, scheduler: Scheduler, cacheOpt: Option[C
     val encoded = encode(authority)
     try {
       context.children.find(_.path.name === encoded) getOrElse {
-        context.actorOf(Props(new AuthorityManager(authority, httpClient, scheduler, cacheOpt)), name = encoded)
+        context.actorOf(Props(new AuthorityManager(authority, httpClient, scheduler, cacheOpt)).withDispatcher("http-dispatcher"), name = encoded)
       }
     } catch {
       case iane: InvalidActorNameException => context.actorFor(self.path / encoded)

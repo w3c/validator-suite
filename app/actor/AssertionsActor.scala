@@ -23,7 +23,7 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
   lazy val logger = play.Logger.of(classOf[AssertionsActor])
 
-  implicit val ec = conf.assertorExecutionContext
+  implicit val ec = conf.system.dispatchers.lookup("assertor-dispatcher")
 
   val pendingAssertions: Ref[Int] = Ref(0)
 

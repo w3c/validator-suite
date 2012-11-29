@@ -20,11 +20,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
 
   val configuration = Configuration.load(new File("."))
   
-  val assertorExecutionContext: ExecutionContext = {
-    val executor: ExecutorService = Executors.newFixedThreadPool(10)
-    ExecutionContext.fromExecutorService(executor)
-  }
-
   /**
    * note: an AsyncHttpClient is a heavy object with a thread
    * and connection pool associated with it, it's supposed to
@@ -62,9 +57,9 @@ trait DefaultProdConfiguration extends VSConfiguration {
   }
 
   implicit val system: ActorSystem = {
-    val vs = ActorSystem("vs")
-    vs.actorOf(Props(new UsersActor()(this)), "users")
-    vs.actorOf(Props(new Http(httpClient, vs.scheduler, httpCacheOpt)), "http")
+    val vs = ActorSystem("vs", configuration.getConfig("application.vs").map(_.underlying) getOrElse sys.error("application.http-client"))
+    vs.actorOf(Props(new UsersActor()(this)).withDispatcher("user-dispatcher"), "users")
+    vs.actorOf(Props(new Http(httpClient, vs.scheduler, httpCacheOpt)).withDispatcher("http-dispatcher"), "http")
     val listener = vs.actorOf(Props(new Actor {
       val logger = play.Logger.of(classOf[VSConfiguration])
       def receive = {

@@ -95,7 +95,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   val userId = job.creatorId
   val jobId = job.id
 
-  val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
+  val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)).withDispatcher("user-dispatcher"), "assertions")
 
   // TODO is it really what we want? I don't think so
 
