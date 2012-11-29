@@ -22,29 +22,31 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       Thread.sleep(2000)
       import browser._
 
-      val baseUrl: String = "http://localhost:9001"
+      //val baseUrl: String = "http://localhost:9001/suite"
 
-      goTo(baseUrl + controllers.routes.Jobs.index.toString)
-      url must be === (baseUrl + controllers.routes.Jobs.index.toString)
+      goTo("http://localhost:9001/suite/jobs")
+      url must be === "http://localhost:9001/suite/jobs"
+      // and code should be Unauthenticated (not verifiable in this framework)
+
       fill("#email").`with`("bertails@w3.org")
       fill("#password").`with`("secret")
       click("#submit-login")
-      url must be === (baseUrl + controllers.routes.Jobs.index.toString)
+      url must be === "http://localhost:9001/suite/jobs"
 
       $("#admin .name").first().getText() must include ("Alexandre Bertails")       
       
       // and log out
       click("#admin form button")
       //goTo("http://localhost:9001/logout")
-      url must be === (baseUrl + controllers.routes.Application.login.toString)
-      goTo(baseUrl + controllers.routes.Jobs.index.toString)
+      url must be === "http://localhost:9001/suite/login"
+      goTo("http://localhost:9001/suite/jobs")
       $("button#submit-login").isEmpty must be (false)
       
       // can't log in with wrong password
       fill("#email").`with`("bertails@w3.org")
       fill("#password").`with`("wrong")
       click("#submit-login")
-      url must be === (baseUrl + controllers.routes.Application.login.toString)
+      url must be === ("http://localhost:9001/suite/login")
 
     }
   }
