@@ -2,36 +2,36 @@
 # This file defines all application routes (Higher priority routes first)
 
 # Application
-GET     /suite                                            controllers.Application.index
-GET     /suite/login                                      controllers.Application.login
-POST    /suite/login                                      controllers.Application.authenticate
-POST    /suite/logout                                     controllers.Application.logout
-GET     /suite/register                                   controllers.Application.register
-POST    /suite/register                                   controllers.Application.registerAction
+GET     /                                           controllers.Application.index
+GET     /login                                      controllers.Application.login
+POST    /login                                      controllers.Application.authenticate
+POST    /logout                                     controllers.Application.logout
+GET     /register                                   controllers.Application.register
+POST    /register                                   controllers.Application.registerAction
 
 # Jobs
-GET     /suite/jobs                                       controllers.Jobs.index
-POST    /suite/jobs                                       controllers.Jobs.create
-GET     /suite/jobs/new                                   controllers.Jobs.newJob
-GET     /suite/jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
+GET     /jobs                                       controllers.Jobs.index
+POST    /jobs                                       controllers.Jobs.create
+GET     /jobs/new                                   controllers.Jobs.newJob
+GET     /jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
 # Job
-GET     /suite/jobs/:job                                  controllers.Job.get(job: JobId)
-POST    /suite/jobs/:job                                  controllers.Job.dispatcher(job: JobId)
-GET     /suite/jobs/:job/edit                             controllers.Job.edit(job: JobId)
-GET     /suite/jobs/:job/socket/:socket                   controllers.Job.socket(job: JobId, socket: SocketType)
+GET     /jobs/:job                                  controllers.Job.get(job: JobId)
+POST    /jobs/:job                                  controllers.Job.dispatcher(job: JobId)
+GET     /jobs/:job/edit                             controllers.Job.edit(job: JobId)
+GET     /jobs/:job/socket/:socket                   controllers.Job.socket(job: JobId, socket: SocketType)
 
 # Job/assertions
-GET     /suite/jobs/:job/assertions                       controllers.Assertions.index(job: JobId, resource: Option[URL])
-GET     /suite/jobs/:job/assertions/socket/:socket        controllers.Assertions.socket(job: JobId, resource: Option[URL], socket: SocketType)
+GET     /jobs/:job/assertions                       controllers.Assertions.index(job: JobId, resource: Option[URL])
+GET     /jobs/:job/assertions/socket/:socket        controllers.Assertions.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Job/assertors
-GET     /suite/jobs/:job/assertors                        controllers.Assertors.index(job: JobId, resource: Option[URL])
-GET     /suite/jobs/:job/assertors/socket/:socket         controllers.Assertors.socket(job: JobId, resource: Option[URL], socket: SocketType)
+GET     /jobs/:job/assertors                        controllers.Assertors.index(job: JobId, resource: Option[URL])
+GET     /jobs/:job/assertors/socket/:socket         controllers.Assertors.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Job/resources
-GET     /suite/jobs/:job/resources                        controllers.Resources.index(job: JobId, resource: Option[URL])
-GET     /suite/jobs/:job/resources/socket/:socket         controllers.Resources.socket(job: JobId, resource: Option[URL], socket: SocketType)
+GET     /jobs/:job/resources                        controllers.Resources.index(job: JobId, resource: Option[URL])
+GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 ##########################
 # Map static resources from the /public folder to the /assets URL path
@@ -41,4 +41,4 @@ GET     /suite/public/*file                                     controllers.Asse
 # Because Play changes the signature of routes.Assets.at() depending on whether there is a single assets controller or
 # more i added a dummy controller that serves files from nowhere. The switch has to be done manually.
 #GET     /no_folder/*file                                       controllers.Assets.at(path="/no_folder", file)
-GET     /suite/dev/scripts/*file                                controllers.Assets.at(path="/app/assets/scripts", file)
+GET     /dev/scripts/*file                                controllers.Assets.at(path="/app/assets/scripts", file)
