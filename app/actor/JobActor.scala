@@ -14,6 +14,7 @@ import com.yammer.metrics._
 import com.yammer.metrics.core._
 import scalaz.Equal
 import scalaz.Scalaz._
+import scala.concurrent.Future
 
 object JobActor {
 
@@ -30,6 +31,7 @@ object JobActor {
   case object Stop
   case object BeProactive
   case object BeLazy
+  case object WaitLastWrite
 
   /* events internal to the application */
   case object GetRun
@@ -89,6 +91,8 @@ class JobActor(
   toBeAsserted: Iterable[AssertorCall])(
   implicit val conf: VSConfiguration)
 extends Actor with FSM[JobActorState, Run] with Listeners {
+
+  var lastWrite: Future[Unit] = Future.successful(())
 
   import conf._
 
@@ -184,6 +188,11 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       stay()
     }
 
+    case Event(WaitLastWrite, _) => {
+      sender ! lastWrite
+      stay()
+    }
+
     // this may not be needed
     /*case Event('Tick, run) => {
       // do it only if necessary (ie. something has changed since last time)
@@ -206,7 +215,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   when(NeverStarted) {
 
     case Event(Refresh, run) => {
-      Run.save(run)
+      lastWrite = Run.save(run)
       sender ! run.id
       val (startedRun, toBeFetched) = run.newlyStartedRun
       executeCommands(startedRun, self, toBeFetched, List.empty, http, assertionsActorRef)
@@ -229,7 +238,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     case Event(result: AssertorResult, run) => {
       logger.debug("%s: %s produced AssertorResult for %s" format (run.shortId, result.assertor, result.sourceUrl.toString))
       val now = DateTime.now(DateTimeZone.UTC)
-      Run.saveEvent(run.runUri, AssertorResponseEvent(result, now))
+      lastWrite = Run.saveEvent(run.runUri, AssertorResponseEvent(result, now))
       val newRun = run.withAssertorResult(result)
       tellEverybody(NewAssertorResult(result, newRun, now))
       stateOf(newRun)
@@ -237,7 +246,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     case Event(failure: AssertorFailure, run) => {
       logger.warn("%s: %s failed to assert %s because [%s]" format (run.shortId, failure.assertor, failure.sourceUrl.toString, failure.why))
-      Run.saveEvent(run.runUri, AssertorResponseEvent(failure))
+      lastWrite = Run.saveEvent(run.runUri, AssertorResponseEvent(failure))
       stateOf(run.withAssertorFailure(failure))
     }
 
@@ -250,7 +259,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     case Event((_: RunId, httpResponse: HttpResponse), run) => {
       logger.debug("%s: <<< %s" format (run.shortId, httpResponse.url))
       extractedUrls.update(httpResponse.extractedURLs.size)
-      Run.saveEvent(run.runUri, ResourceResponseEvent(httpResponse))
+      lastWrite = Run.saveEvent(run.runUri, ResourceResponseEvent(httpResponse))
       tellEverybody(NewResource(run.id, httpResponse))
       val (newRun, urlsToFetch, assertorCalls) =
         run.withHttpResponse(httpResponse)
@@ -260,7 +269,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     case Event((_: RunId, error: ErrorResponse), run) => {
       logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
-      Run.saveEvent(run.runUri, ResourceResponseEvent(error))
+      lastWrite = Run.saveEvent(run.runUri, ResourceResponseEvent(error))
       tellEverybody(NewResource(run.id, error))
       val (runWithErrorResponse, urlsToFetch) = run.withErrorResponse(error)
       executeCommands(runWithErrorResponse, self, urlsToFetch, Iterable.empty, http, assertionsActorRef)

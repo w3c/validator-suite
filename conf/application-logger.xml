@@ -15,15 +15,10 @@
     </encoder>
   </appender>
   
-  <!--appender name="STDOUTCALLER" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>%coloredLevel %logger{15} %caller{2} - %message%n%xException{40}</pattern>
-    </encoder>
-  </appender-->
-
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
   <logger name="org.w3.vs" level="DEBUG" />
+  <logger name="org.w3.banana.jena" level="DEBUG" />
   <logger name="Controller.Validator" level="DEBUG" />
   <logger name="org.eclipse.jetty.server" level="INFO">
     <appender-ref ref="STDOUT" />

@@ -44,6 +44,7 @@ class MaxResourcesTest extends RunTestHelper with TestKitHelper {
 
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {
+        job.waitLastWrite().getOrFail()
         val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail()
         rrs must have size (maxResources)
       }

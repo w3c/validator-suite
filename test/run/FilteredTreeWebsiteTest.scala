@@ -46,6 +46,7 @@ class FilteredTreeWebsiteTest extends RunTestHelper with TestKitHelper {
 
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {
+        job.waitLastWrite().getOrFail()
         val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail(3.seconds)
         rrs must have size (50)
         rrs foreach { rr =>

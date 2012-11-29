@@ -46,8 +46,9 @@ class StopActionTest extends RunTestHelper with TestKitHelper {
 
     job.cancel()
 
-    fishForMessagePF(6.seconds) {
+    fishForMessagePF(3.seconds) {
       case UpdateData(jobData, _, activity) if activity == Idle => {
+        job.waitLastWrite().getOrFail()
         val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail()
         rrs.size must be < (100)
       }

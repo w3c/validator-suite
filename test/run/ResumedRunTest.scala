@@ -67,6 +67,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     // that's the same test as in cyclic
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {
+        job.waitLastWrite().getOrFail()
         val rrs = ResourceResponse.bananaGetFor(userId, jobId, runId).getOrFail()
         rrs must have size (circumference + 1)
       }

@@ -42,6 +42,11 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
     (PathAware(usersRef, path) ? GetRun).mapTo[Run]
   }
 
+  def waitLastWrite(): Future[Unit] = {
+    val wait = (PathAware(usersRef, path) ? WaitLastWrite).mapTo[Future[Unit]]
+    wait.flatMap(x => x)
+  }
+
   def getAssertions(): Future[Iterable[Assertion]] = {
     getRun() map {
       run => run.assertions.toIterable
