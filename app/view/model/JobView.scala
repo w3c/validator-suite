@@ -51,21 +51,28 @@ object JobView {
 
   def apply(job: Job)(implicit ec: ExecutionContext): Future[JobView] = {
     for {
-      activity <- job.getActivity()
-      completedOn <- job.getCompletedOn()
-      data <- job.getData()
-    } yield JobView(
-      job.id,
-      job.name,
-      job.strategy.entrypoint,
-      activity.toString,
-      completedOn,
-      data.warnings,
-      data.errors,
-      data.resources,
-      job.strategy.maxResources,
-      data.health
-    )
+      (run, completedOn) <- {
+        import akka.dataflow._
+        val run: Future[Run] = job.getRun()
+        val completedOn: Future[Option[DateTime]] = job.getCompletedOn()
+        flow { (run(), completedOn()) }
+      }
+    } yield {
+      val activity = run.activity
+      val data = run.jobData
+      JobView(
+        job.id,
+        job.name,
+        job.strategy.entrypoint,
+        activity.toString,
+        completedOn,
+        data.warnings,
+        data.errors,
+        data.resources,
+        job.strategy.maxResources,
+        data.health
+      )
+    }
   }
 
   def apply(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[Iterable[JobView]] = {

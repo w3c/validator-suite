@@ -23,6 +23,7 @@ object ApplicationBuild extends Build {
 //    "org.w3" % "validators" % "1.0-SNAPSHOT" from "file:///home/betehess/projects/validators/target/validators.jar",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit_2.10.0-RC1" % "2.1.0-RC1" % "test",
+    "com.typesafe.akka" % "akka-dataflow_2.10.0-RC1" % "2.1.0-RC1",
 //    "com.typesafe.akka" % "akka-testkit" % "2.0.2" % "test",
     "org.scalatest" % "scalatest_2.10.0-RC1" % "2.0.M4-2.10.0-RC1-B1"
   )
@@ -33,6 +34,13 @@ object ApplicationBuild extends Build {
 //  lazy val bananaRdf = ProjectRef(uri("https://github.com/w3c/banana-rdf.git"), "banana-jena")
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
+
+    autoCompilerPlugins := true,
+    libraryDependencies <+= scalaVersion {
+      v => compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-RC3")
+    },
+    scalacOptions += "-P:continuations:enable",
+
     testOptions in Test := Nil,
     testOptions in Test += Tests.Argument("""stdout(config="durations")"""),
     scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
