@@ -37,7 +37,7 @@ object ApplicationBuild extends Build {
 
     autoCompilerPlugins := true,
     libraryDependencies <+= scalaVersion {
-      v => compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-RC3")
+      v => compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-RC1")
     },
     scalacOptions += "-P:continuations:enable",
 
