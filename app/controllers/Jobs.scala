@@ -24,7 +24,7 @@ object Jobs extends VSController {
   
   val logger: ALogger = play.Logger.of("org.w3.vs.controllers.Jobs")
 
-  val indexName = (new controllers.javascript.ReverseJobs).socket.name
+  val indexName = (new controllers.javascript.ReverseJobs).index.name
   val indexTimer = Metrics.newTimer(Jobs.getClass, indexName, MILLISECONDS, SECONDS)
 
   def index: ActionA = AuthAsyncAction { implicit req => user =>
