@@ -211,7 +211,9 @@ trait Binders extends UriBuilders with LiteralBinders {
           }
           case ResourceResponseEvent(er@ErrorResponse(url, _, _), _) => {
             toBeFetched -= url
-            run = run.withErrorResponse(er)
+            val (newRun, urls) = run.withErrorResponse(er)
+            run = newRun
+            toBeFetched ++= urls
           }
           case BeProactiveEvent(_) => ()
           case BeLazyEvent(_) => ()

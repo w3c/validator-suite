@@ -68,7 +68,20 @@ object Main {
         maxResources = 10,
         filter=Filter.includePrefixes("http://www.w3.org/TR"),
         assertorsConfiguration = AssertorsConfiguration.default))
-          
+
+    val List(w3c1, w3c2, w3c3, w3c4, w3c5, w3c6) = List(1, 2, 3, 4, 5, 6) map { i =>
+      Job(
+        createdOn = DateTime.now.plus(1000),
+        name = s"""w3c${i}""",
+        creator = bertails.id,
+        strategy = Strategy(
+          entrypoint = URL("http://www.w3.org"),
+          linkCheck = false,
+          maxResources = 100,
+          filter=Filter.includePrefixes("http://www.w3.org/TR"),
+          assertorsConfiguration = AssertorsConfiguration.default))
+    }
+
     val ibm = Job(
       createdOn = DateTime.now.plus(2000),
       name = "IBM",
@@ -98,6 +111,12 @@ object Main {
       _ <- User.save(ralph)
       _ <- User.save(w3team)
       _ <- Job.save(w3)
+      _ <- Job.save(w3c1)
+      _ <- Job.save(w3c2)
+      _ <- Job.save(w3c3)
+      _ <- Job.save(w3c4)
+      _ <- Job.save(w3c5)
+      _ <- Job.save(w3c6)
       _ <- Job.save(tr)
       _ <- Job.save(ibm)
       _ <- Job.save(lemonde)

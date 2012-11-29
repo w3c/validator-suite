@@ -259,10 +259,11 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event((_: RunId, error: ErrorResponse), run) => {
-      logger.debug("%s: <<< error when fetching %s" format (run.shortId, error.url))
+      logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
       Run.saveEvent(run.runUri, ResourceResponseEvent(error))
       tellEverybody(NewResource(run.id, error))
-      val runWithErrorResponse = run.withErrorResponse(error)
+      val (runWithErrorResponse, urlsToFetch) = run.withErrorResponse(error)
+      executeCommands(runWithErrorResponse, self, urlsToFetch, Iterable.empty, http, assertionsActorRef)
       stateOf(runWithErrorResponse)
     }
 

@@ -263,8 +263,12 @@ case class Run private (
   def newlyStartedRun: (Run, Iterable[URL]) =
     this.withNewUrlsToBeExplored(List(strategy.entrypoint)).takeAtMost(Strategy.maxUrlsToFetch)
 
-  def withErrorResponse(errorResponse: ErrorResponse): Run = {
-    withResponse(errorResponse)._1
+  def withErrorResponse(errorResponse: ErrorResponse): (Run, Iterable[URL]) = {
+    val runWithResponse = withResponse(errorResponse)._1
+    if (explorationMode === ProActive)
+      runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
+    else
+      (runWithResponse, Iterable.empty[URL])
   }
 
   def withHttpResponse(httpResponse: HttpResponse): (Run, Iterable[URL], Iterable[AssertorCall]) = {
