@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg 
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    viewBox="-1500 -1400 3000 2800"
+    width="105"
+    height="100">
+    
+    <style type="text/css">
+        .color > :nth-child(1) {fill: #6c0100; stroke: #6c0100; stroke-width: 6; stroke-linejoin:bevel;} /* Red */
+        .color > :nth-child(2) {fill: #bb1e17; stroke: #bb1e17; stroke-width: 6; stroke-linejoin:bevel;}
+        .color > :nth-child(3) {fill: #40006c; stroke: #40006c; stroke-width: 6; stroke-linejoin:bevel;} /* Purple */
+        .color > :nth-child(4) {fill: #7A00bc; stroke: #7A00bc; stroke-width: 6; stroke-linejoin:bevel;}
+        .color > :nth-child(5) {fill: #02356d; stroke: #02356d; stroke-width: 6; stroke-linejoin:bevel;} /* Blue */
+        .color > :nth-child(6) {fill: #02579e; stroke: #02579e; stroke-width: 6; stroke-linejoin:bevel;}
+        .color > :nth-child(7) {fill: #136c00; stroke: #136c00; stroke-width: 6; stroke-linejoin:bevel;} /* Green */
+        .color > :nth-child(8) {fill: #3bbc00; stroke: #3bbc00; stroke-width: 6; stroke-linejoin:bevel;}
+        .color > :nth-child(9) {fill: #c27400; stroke: #c27400; stroke-width: 6; stroke-linejoin:bevel;} /* Yellow */
+        .color > :nth-child(10){fill: #f4d538; stroke: #f4d538; stroke-width: 6; stroke-linejoin:bevel;}
+        .border > * {fill: white; stroke: white; stroke-width: 10;}
+    </style>
+    
+    <defs>
+        <polygon id="E16"  points="  0, 0      224, -688   1115, -688   1307, -99    809, 263   724, 0    "/>
+        <polygon id="M16a" points=" 52, -160   172, -528    999, -528   1119, -160                        "/>
+        <polygon id="M16b" points="                                     1119, -160   757, 103   672, -160 "/>
+        <filter id = "shadow">
+            <feOffset in="SourceAlpha" dx="0" dy="0" result="offset"/>
+            <feGaussianBlur in="offset" stdDeviation="80" result="blur"/>
+            <feFlood flood-color='black' flood-opacity='0.8' result='color' />
+            <feComposite operator='in' in='color' in2='blur' result='shadow' />
+            <feComposite operator='over' in='SourceGraphic' in2='shadow' />
+        </filter>
+    </defs>
+
+    <g class="logo m16">
+        <g class="border" filter="url(#shadow)">
+            <use xlink:href="#E16" transform="rotate(0)"/>
+            <use xlink:href="#E16" transform="rotate(72)"/>
+            <use xlink:href="#E16" transform="rotate(144)"/>
+            <use xlink:href="#E16" transform="rotate(216)"/>
+            <use xlink:href="#E16" transform="rotate(288)"/>
+        </g>
+        <g class="color">
+            <use xlink:href="#M16b" transform="rotate(0)"/>
+            <use xlink:href="#M16a" transform="rotate(0)"/>
+            <use xlink:href="#M16b" transform="rotate(72)"/>
+            <use xlink:href="#M16a" transform="rotate(72)"/>
+            <use xlink:href="#M16b" transform="rotate(144)"/>
+            <use xlink:href="#M16a" transform="rotate(144)"/>
+            <use xlink:href="#M16b" transform="rotate(216)"/>
+            <use xlink:href="#M16a" transform="rotate(216)"/>
+            <use xlink:href="#M16b" transform="rotate(288)"/>
+            <use xlink:href="#M16a" transform="rotate(288)"/>
+        </g>
+    </g>
+
+</svg>
