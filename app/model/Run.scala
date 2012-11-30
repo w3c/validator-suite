@@ -3,7 +3,7 @@ package org.w3.vs.model
 import org.w3.vs._
 import org.w3.util._
 import org.w3.vs.assertor._
-import scalaz.Equal
+import scalaz.{ Free, Equal }
 import scalaz.Scalaz._
 import org.joda.time._
 import org.w3.banana._
@@ -37,14 +37,20 @@ object Run {
     }
   }
 
-  def save(run: Run)(implicit conf: VSConfiguration): Future[Unit] = {
-    import conf._
+  def saveAsScript(run: Run): Free[({type l[+x] = Command[Rdf, x]})#l, Unit] = {
     val jobUri = (run.id._1, run.id._2).toUri
     val script = for {
       _ <- Command.PUT[Rdf](run.ldr)
       _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.run.uri, ANY)))
       _ <- Command.POST[Rdf](jobUri, jobUri -- ont.run ->- run.runUri)
     } yield ()
+    script
+  }
+
+  @deprecated("", "")
+  def save(run: Run)(implicit conf: VSConfiguration): Future[Unit] = {
+    import conf._
+    val script = saveAsScript(run)
     store.execute(script)
   }
 
@@ -63,20 +69,32 @@ object Run {
 
   /* addResourceResponse */
 
+  def saveEventAsScript(runUri: Rdf#URI, event: RunEvent): Free[({type l[+x] = Command[Rdf, x]})#l, Unit] = {
+    Command.POST[Rdf](runUri, runUri -- ont.event ->- event.toPG)
+  }
+
+  @deprecated("", "")
   def saveEvent(runUri: Rdf#URI, event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    store.asLDStore.POST(runUri, runUri -- ont.event ->- event.toPG)
+    val script = saveEventAsScript(runUri, event)
+    store.execute(script)
   }
 
   /* other events */
 
-  def complete(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): Future[Unit] = {
-    import conf._
+  def completeAsScript(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime): Free[({type l[+x] = Command[Rdf, x]})#l, Unit] = {
     val script = for {
       _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.lastRun.uri, ANY)))
       _ <- Command.POST[Rdf](jobUri, jobUri -- ont.lastRun ->- runUri)
       _ <- Command.POST[Rdf](runUri, runUri -- ont.completedOn ->- at)
     } yield ()
+    script
+  }
+
+  @deprecated("", "")
+  def complete(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): Future[Unit] = {
+    import conf._
+    val script = completeAsScript(jobUri, runUri, at)
     store.execute(script)
   }
 
