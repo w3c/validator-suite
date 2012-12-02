@@ -4,12 +4,13 @@ import org.joda.time._
 
 /* any event that has an impact on the state of a run */
 sealed trait RunEvent {
-
   def timestamp: DateTime
-
 }
+
+// simple hack to get though an issue with the Format-s
+sealed trait BeXEvent extends RunEvent
 
 case class AssertorResponseEvent(ar: AssertorResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 case class ResourceResponseEvent(rr: ResourceResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
-case class BeProactiveEvent(timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
-case class BeLazyEvent(timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+case class BeProactiveEvent(timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends BeXEvent
+case class BeLazyEvent(timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends BeXEvent

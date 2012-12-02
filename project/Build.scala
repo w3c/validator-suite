@@ -18,7 +18,8 @@ object ApplicationBuild extends Build {
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10-0.4-20121107.jar",
     "com.yammer.metrics" % "metrics-core" % "2.1.3" excludeAll(ExclusionRule(organization = "org.slf4j")),
     "com.yammer.metrics" % "metrics-graphite" % "2.1.3" excludeAll(ExclusionRule(organization = "org.slf4j")),
-    "org.w3" %% "banana-jena" % "x14-SNAPSHOT" excludeAll(ExclusionRule(organization = "org.slf4j")),
+    //"org.w3" %% "banana-jena" % "x14-SNAPSHOT" excludeAll(ExclusionRule(organization = "org.slf4j")),
+    "play.modules.reactivemongo" %% "play2-reactivemongo" % "0.1-SNAPSHOT"  cross CrossVersion.full,
     "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121107-2.jar",
 //    "org.w3" % "validators" % "1.0-SNAPSHOT" from "file:///home/betehess/projects/validators/target/validators.jar",
     // test dependencies
@@ -30,7 +31,7 @@ object ApplicationBuild extends Build {
 
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
-//  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-jena")
+  lazy val bananaRdf = ProjectRef(uri("file:///home/betehess/projects/banana-rdf"), "banana-jena")
 //  lazy val bananaRdf = ProjectRef(uri("https://github.com/w3c/banana-rdf.git"), "banana-jena")
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
@@ -59,7 +60,8 @@ object ApplicationBuild extends Build {
 //    templatesImport += "scalaz.{Validation, Failure, Success}",
     templatesImport += "scala.util._",
     logLevel := Level.Debug,
-    resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+    resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    resolvers += "sgodbillon" at "https://bitbucket.org/sgodbillon/repository/raw/master/snapshots/"
 //    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
 //    resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
     // resolvers += "sesame-repo-releases" at "http://repo.aduna-software.org/maven2/releases/"
@@ -71,6 +73,6 @@ object ApplicationBuild extends Build {
     //     key(":doubleIndentClassDeclaration"), true
     //   )
     // )
-  ) //dependsOn (bananaRdf)
+  ) dependsOn (bananaRdf)
 
 }
