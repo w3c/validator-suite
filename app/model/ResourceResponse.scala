@@ -16,12 +16,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object ResourceResponse {
 
-  def bananaGetFor(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
+  def getFor(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
     import conf._
-    bananaGetFor((userId, jobId, runId).toUri)
+    getFor((userId, jobId, runId).toUri)
   }
 
-  def bananaGetFor(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
+  def getFor(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
     import conf._
     for {
       ldr <- store.asLDStore.GET(runUri)

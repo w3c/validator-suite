@@ -36,7 +36,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   private val logger = Logger.of(classOf[Job])
   
   def getCreator(): Future[User] =
-    User.bananaGet(creatorUri)
+    User.get(creatorUri)
 
   def getRun(): Future[Run] = {
     (PathAware(usersRef, path) ? GetRun).mapTo[Run]
@@ -153,10 +153,7 @@ object Job {
   def get(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
     get(JobUri(userId, jobId))
 
-  def bananaGet(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
-    bananaGet((userId, jobId).toUri)
-
-  def bananaGet(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
+  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
     import conf._
     for {
       ids <- JobUri.fromUri(jobUri).asFuture
@@ -164,11 +161,6 @@ object Job {
       runUriOpt <- (jobLDR.resource / ont.run).asOption[Rdf#URI].asFuture
       jobVO <- jobLDR.resource.as[JobVO].asFuture
     } yield (Job(ids._2, jobVO), runUriOpt)
-  }
-
-  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
-    import conf._
-    bananaGet(jobUri)
   }
 
   def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {

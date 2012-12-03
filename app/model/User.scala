@@ -92,18 +92,13 @@ object User {
     implicit conf: VSConfiguration): User =
       User(userId, UserVO(name, email, password))
 
-  def bananaGet(userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[User] = {
+  def get(userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
     for {
       userId <- userUri.as[UserId].asFuture
       userLDR <- store.asLDStore.GET(userUri)
       userVO <- userLDR.resource.as[UserVO].asFuture
     } yield new User(userId, userVO) { override val ldr = userLDR }
-  }
-
-  def get(userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[User] = {
-    import conf._
-    bananaGet(userUri)
   }
   
   def get(id: UserId)(implicit conf: VSConfiguration): Future[User] =

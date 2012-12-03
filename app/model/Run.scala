@@ -18,18 +18,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Run {
 
-  def bananaGet(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
-    bananaGet((userId, jobId, runId).toUri)
-
   def get(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
     get((userId, jobId, runId).toUri)
 
   def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
-    import conf._
-    bananaGet(runUri)
-  }
-
-  def bananaGet(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
     store.asLDStore.GET(runUri) flatMap { ldr =>
       // there is a bug in banana preventing the implicit to be discovered
