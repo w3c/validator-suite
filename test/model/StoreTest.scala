@@ -102,15 +102,15 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   // a job may have never completed, for example if the user has forced a new run
   // is this assumption ok? -> yes
   // or do we want to force a completeOn before switching to the new Job? this would be weird
-  var run1 = Run(id = (user1.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now)
+  var run1 = Run((user1.id, job1.id, RunId()), job1.strategy, createdAt = now)
 
-  var run2 = Run(id = (user1.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(5)).completeOn(now.plusMinutes(7))
+  var run2 = Run((user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(5)).completeOn(now.plusMinutes(7))
 
-  var run3 = Run(id = (user1.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(10)).completeOn(now.plusMinutes(12))
+  var run3 = Run((user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(10)).completeOn(now.plusMinutes(12))
 
-  var run4 = Run(id = (user1.id, job1.id, RunId()), strategy = job1.strategy, createdAt = now.plusMinutes(15))
+  var run4 = Run((user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(15))
 
-  var run5 = Run(id = (user1.id, job5.id, RunId()), strategy = job5.strategy, createdAt = now)
+  var run5 = Run((user1.id, job5.id, RunId()), job5.strategy, now)
 
   val assertorIds = List(AssertorId("test_assertor_1"), AssertorId("test_assertor_2"))
 
@@ -143,7 +143,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         run1 = run1.copy(assertions = run1.assertions + assertion)
         assertion
       }
-      val assertorResult = AssertorResult(run1.id, assertorId, url, assertions)
+      val assertorResult = AssertorResult(run1.context, assertorId, url, assertions)
       Run.saveEvent(run1.runUri, AssertorResponseEvent(assertorResult)).getOrFail()
     }
     Run.complete(job1.jobUri, run2.runUri, run2.completedOn.get).getOrFail()

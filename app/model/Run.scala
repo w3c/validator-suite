@@ -17,6 +17,8 @@ import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Run {
+  
+  type Context = (UserId, JobId, RunId)
 
   def get(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
     get((userId, jobId, runId).toUri)
@@ -30,7 +32,7 @@ object Run {
   }
 
   def saveAsScript(run: Run): Free[({type l[+x] = Command[Rdf, x]})#l, Unit] = {
-    val jobUri = (run.id._1, run.id._2).toUri
+    val jobUri = (run.userId, run.jobId).toUri
     val script = for {
       _ <- Command.PUT[Rdf](run.ldr)
       _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.run.uri, ANY)))
@@ -49,14 +51,14 @@ object Run {
   def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
     sys.error("")
 
-  def apply(id: (UserId, JobId, RunId), strategy: Strategy): Run =
-    new Run(id, strategy)
+  def apply(context: Run.Context, strategy: Strategy): Run =
+    new Run(context._1, context._2, context._3, strategy)
 
-  def apply(id: (UserId, JobId, RunId), strategy: Strategy, createdAt: DateTime): Run =
-    new Run(id, strategy, createdAt)
+  def apply(context:Run.Context, strategy: Strategy, createdAt: DateTime): Run =
+    new Run(context._1, context._2, context._3, strategy, createdAt)
 
   def freshRun(userId: UserId, jobId: JobId, strategy: Strategy): Run = {
-    new Run(id = (userId, jobId, RunId()), strategy = strategy)
+    new Run(userId, jobId, RunId(), strategy = strategy)
   }
 
   /* addResourceResponse */
@@ -97,31 +99,35 @@ object Run {
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
 case class Run private (
-    id: (UserId, JobId, RunId),
-    strategy: Strategy,
-    createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
-    // from completion event, None at creation
-    completedOn: Option[DateTime] = None,
-    // from user event, ProActive by default at creation
-    explorationMode: ExplorationMode = ProActive,
-    // based on scheduled fetches
-    toBeExplored: List[URL] = List.empty,
-    pending: Set[URL] = Set.empty,
-    // based on added resources
-    knownResources: Map[URL, ResourceInfo] = Map.empty,
-    // based on added assertions
-    assertions: Set[Assertion] = Set.empty,
-    errors: Int = 0,
-    warnings: Int = 0,
-    invalidated: Int = 0,
-    // based on scheduled assertions
-    pendingAssertions: Set[(AssertorId, URL)] = Set.empty) {
+  userId: UserId,
+  jobId: JobId,
+  runId: RunId,
+  strategy: Strategy,
+  createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
+  // from completion event, None at creation
+  completedOn: Option[DateTime] = None,
+  // from user event, ProActive by default at creation
+  explorationMode: ExplorationMode = ProActive,
+  // based on scheduled fetches
+  toBeExplored: List[URL] = List.empty,
+  pending: Set[URL] = Set.empty,
+  // based on added resources
+  knownResources: Map[URL, ResourceInfo] = Map.empty,
+  // based on added assertions
+  assertions: Set[Assertion] = Set.empty,
+  errors: Int = 0,
+  warnings: Int = 0,
+  invalidated: Int = 0,
+  // based on scheduled assertions
+  pendingAssertions: Set[(AssertorId, URL)] = Set.empty) {
+
+  val context: Run.Context = (userId, jobId, runId)
 
   val logger = play.Logger.of(classOf[Run])
 
-  val shortId: String = id._2.shortId + "/" + id._3.shortId
+  val shortId: String = jobId.shortId + "/" + runId.shortId
 
-  val runUri = id.toUri
+  val runUri = (userId, jobId, runId).toUri
 
   def jobData: JobData = JobData(numberOfFetchedResources, errors, warnings, createdAt, completedOn)
   
@@ -296,7 +302,7 @@ case class Run private (
        val assertorCalls =
          if (explorationMode === ProActive && httpResponse.method === GET) {
            val assertors = strategy.getAssertors(httpResponse)
-           assertors map { assertor => AssertorCall(this.id, assertor, httpResponse) }
+           assertors map { assertor => AssertorCall(this.context, assertor, httpResponse) }
          } else {
            Set.empty[AssertorCall]
          }

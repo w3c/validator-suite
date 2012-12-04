@@ -9,7 +9,7 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
 
   def supportedMimeTypes: List[String]
 
-  def assert(context: (UserId, JobId, RunId), response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
+  def assert(context: Run.Context, response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
     val start = System.currentTimeMillis()
     val result = try {
       val assertions = assert(response.url, configuration)
