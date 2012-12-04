@@ -5,6 +5,7 @@ import scalaz.Equal
 import java.util.UUID
 import org.w3.vs.store.Binders._
 import org.w3.vs.diesel._
+import reactivemongo.bson._
 
 class Id(val uuid: UUID) {
   def shortId: String = toString.substring(0, 6)
@@ -14,9 +15,15 @@ class Id(val uuid: UUID) {
 
 case class JobId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class RunId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
-case class UserId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid) {
+case class UserId (oid: BSONObjectID = BSONObjectID.generate) /*extends Id(uuid)*/ {
+  def shortId: String = toString.substring(0, 6)
+  def id: String = oid.stringify
+  override def toString = oid.stringify
   def toUri: Rdf#URI = UserUri(this)
 }
+//case class UserId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid) {
+//  def toUri: Rdf#URI = UserUri(this)
+//}
 case class JobDataId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class ContextId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
 case class StrategyId (override val uuid: UUID = UUID.randomUUID()) extends Id(uuid)
@@ -49,7 +56,7 @@ object RunId {
 }
 
 object UserId {
-  def apply(s: String): UserId = UserId(UUID.fromString(s))
+  def apply(s: String): UserId = UserId(BSONObjectID(s))
   implicit val equal = Equal.equalA[UserId]
 }
 

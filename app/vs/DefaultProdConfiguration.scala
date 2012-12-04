@@ -15,6 +15,7 @@ import org.w3.banana.jena._
 import com.hp.hpl.jena.tdb.TDBFactory.createDatasetGraph
 import play.api.Configuration
 import java.io.File
+import reactivemongo.api.MongoConnection
 
 trait DefaultProdConfiguration extends VSConfiguration {
 
@@ -81,7 +82,13 @@ trait DefaultProdConfiguration extends VSConfiguration {
   lazy val store: RDFStore[Rdf, Future] =
     JenaStore(createDatasetGraph(storeDirectory.getAbsolutePath))
 
-  // ouch :-)
-//  http.authorityManagerFor("w3.org").sleepTime = 0
+  lazy val connection = MongoConnection( List( "localhost:27017" ) )
   
+  lazy val db = {
+    val conn = connection("vs")
+//    conn.drop().getOrFail()
+//    connection("vs")
+    conn
+  }
+
 }

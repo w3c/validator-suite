@@ -7,6 +7,7 @@ import org.w3.vs.store.Binders
 import org.w3.vs.http.Cache
 import org.w3.banana._
 import akka.util.Timeout
+import reactivemongo.api.{ DefaultDB, MongoConnection }
 
 trait VSConfiguration {
   
@@ -19,5 +20,9 @@ trait VSConfiguration {
   val httpClient: AsyncHttpClient
 
   val store: RDFStore[Rdf, Future]
+
+  val connection: MongoConnection
+
+  val db: DefaultDB
 
 }

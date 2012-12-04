@@ -3,9 +3,8 @@ package org.w3.vs.model
 import org.w3.util._
 import scalaz.std.string._
 import scalaz.Scalaz.ToEqualOps
+import org.w3.banana.TryW
 import org.w3.vs.exception._
-import org.w3.banana._
-import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
 import org.w3.vs.store.Binders._
 import org.w3.vs.sparql._
@@ -19,13 +18,24 @@ import akka.actor.{Actor, Props, ActorRef}
 import java.nio.channels.ClosedChannelException
 import org.w3.util.akkaext.{Deafen, Listen, PathAware}
 
+// Reactive Mongo imports
+import reactivemongo.api._
+import reactivemongo.bson._
+import reactivemongo.bson.handlers.DefaultBSONHandlers._
+// Reactive Mongo plugin
+import play.modules.reactivemongo._
+import play.modules.reactivemongo.PlayBsonImplicits._
+// Play Json imports
+import play.api.libs.json._
+import Json.toJson
+
+import org.w3.vs.store.Formats._
+
 case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   
   import conf._
 
   val userUri = id.toUri
-
-  val ldr: LinkedDataResource[Rdf] = LinkedDataResource[Rdf](userUri, vo.toPG)
 
   // getJob with id only if owned by user. should probably be a db request directly.
   def getJob(jobId: JobId): Future[Job] = {
@@ -80,6 +90,9 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
 
 object User {
 
+  def collection(implicit conf: VSConfiguration): DefaultCollection =
+    conf.db("users")
+
   val emailsGraph = URI("https://validator.w3.org/suite/emails")
   
   val logger = play.Logger.of(classOf[User])
@@ -96,9 +109,15 @@ object User {
     import conf._
     for {
       userId <- userUri.as[UserId].asFuture
-      userLDR <- store.asLDStore.GET(userUri)
-      userVO <- userLDR.resource.as[UserVO].asFuture
-    } yield new User(userId, userVO) { override val ldr = userLDR }
+      userVO <- {
+        val query = Json.obj(("_id" -> Json.obj("$oid" -> userId.oid.stringify)))
+        val cursor = collection.find[JsValue, JsValue](query)
+        cursor.toList map { _.headOption match {
+          case Some(json) => json.as[UserVO]
+          case None => sys.error("user not found")
+        }}
+      }
+    } yield new User(userId, userVO)
   }
   
   def get(id: UserId)(implicit conf: VSConfiguration): Future[User] =
@@ -118,41 +137,34 @@ object User {
   
   def getByEmail(email: String)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
-    val query = """
-SELECT ?user WHERE {
-  graph ?emails {
-    ?user ont:email ?email
-  }
-}
-"""
-    val select = SelectQuery(query, ont)
-    store.executeSelect(select, Map("emails" -> emailsGraph, "email" -> email.toNode)) flatMap { rows =>
-      rows.toIterable.headOption match {
-        case None => throw UnknownUser
-        case Some(row) => {
-          val userUri = row("user").flatMap(_.as[Rdf#URI]).get
-          User.get(userUri)
-        }
+    val query = Json.obj("email" -> JsString(email))
+    val cursor: FlattenedCursor[JsValue] = collection.find[JsValue, JsValue](query)
+    cursor.toList map { _.headOption match {
+      case Some(json) => {
+        val id = (json \ "_id" \ "$oid").as[UserId]
+        val userVo = json.as[UserVO]
+        User(id, userVo)
       }
-    }
+      case None => throw UnknownUser
+    }}
   }
 
   def save(vo: UserVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
     import conf._
-    val script = for {
-      userUri <- Command.POSTToCollection[Rdf](userContainer, vo.toPG)
-      _ <- Command.POST[Rdf](emailsGraph, userUri -- ont.email ->- vo.email)
-    } yield userUri
-    store.execute(script)
+    val userId = UserId()
+    val oid = userId.oid
+    val user = toJson(vo).asInstanceOf[JsObject] + ("_id" -> Json.obj("$oid" -> oid.stringify))
+    collection.insert(user) map { lastError =>
+      userId.toUri
+    }
   }
   
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    val script = for {
-      _ <- Command.PUT[Rdf](user.ldr)
-      _ <- Command.POST[Rdf](emailsGraph, user.userUri -- ont.email ->- user.vo.email)
-    } yield ()
-    store.execute(script)
+    val userId = user.id
+    val oid = userId.oid
+    val userJ = toJson(user.vo).asInstanceOf[JsObject] + ("_id" -> Json.obj("$oid" -> oid.stringify))
+    collection.insert(userJ) map { lastError => () }
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): Future[Unit] =

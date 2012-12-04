@@ -17,7 +17,7 @@ import org.w3.banana._
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
 
-abstract class StoreTest(
+abstract class MongoStoreTest(
   nbUrlsPerAssertions: Int,
   severities: Map[AssertionSeverity, Int],
   nbHttpErrorsPerAssertions: Int,
@@ -126,101 +126,50 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         description = Some("some description"))
     }
 
-  // these assertions are for job1, in run1
-  def addAssertions(): Unit = {
-    for {
-      assertorId <- assertorIds
-      i <- 1 to nbUrlsPerAssertions
-    } {
-      // Only one AssertorResult for every unique (assertor, url). No partial validations.
-      val url = URL("http://example.com/foo/"+i)
-      val assertions = for {
-        severity <- List(Error, Warning, Info)
-        nb = severities(severity)
-        j <- 1 to nb
-      } yield {
-        val assertion = newAssertion(url, assertorId, severity)
-        run1 = run1.copy(assertions = run1.assertions + assertion)
-        assertion
-      }
-      val assertorResult = AssertorResult(run1.id, assertorId, url, assertions)
-      Run.saveEvent(run1.runUri, AssertorResponseEvent(assertorResult)).getOrFail()
-    }
-    Run.complete(job1.jobUri, run2.runUri, run2.completedOn.get).getOrFail()
-    Run.complete(job1.jobUri, run3.runUri, run3.completedOn.get).getOrFail()
-  }
-
-//   val resourceResponses: Vector[ResourceResponse] = {
-//     val builder = Vector.newBuilder[ResourceResponse]
-//     builder.sizeHint(nbHttpErrorsPerAssertions + nbHttpResponsesPerAssertions)
-//     for ( i <- 1 to nbHttpErrorsPerAssertions)
-//       builder += ErrorResponse(
-//         jobId = job1,
-//         runId = run1,
-//         url = URL("http://example.com/error/" + i),
-//         action = GET,
-//         why = "because I can")
-//     for ( i <- 1 to nbHttpResponsesPerAssertions)
-//       builder += HttpResponse(
-//         jobId = job1,
-//         runId = run1,
-//         url = URL("http://example.com/foo/" + i),
-//         action = GET,
-//         status = 200,
-//         headers = Map("foo" -> List("bar")),
-//         extractedURLs = List(URL("http://example.com/foo/"+i+"/1"), URL("http://example.com/foo/"+i+"/2")))
-//     builder.result()
-//   }
-
-
-
-
 
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
-    val r = for {
+    val initScript = for {
       _ <- db.drop()
       _ <- User.collection.create()
+
       _ <- User.save(user1)
       _ <- User.save(user2)
       _ <- User.save(user3)
-      _ <- Job.save(job1)
-      _ <- Job.save(job2)
-      _ <- Job.save(job3)
-      _ <- Job.save(job4)
-      _ <- Job.save(job5)
-      _ <- Run.save(run1)
-      _ <- Run.save(run2)
-      _ <- Run.save(run3)
-      _ <- Run.save(run4)
-      _ <- Run.save(run5)
+
+
     } yield ()
-    r.getOrFail(10.seconds)
-    addAssertions() // <- already blocking
+    initScript.getOrFail()
+
+
+
+//    val r = for {
+//      _ <- User.save(user1)
+//      _ <- User.save(user2)
+//      _ <- User.save(user3)
+//      _ <- Job.save(job1)
+//      _ <- Job.save(job2)
+//      _ <- Job.save(job3)
+//      _ <- Job.save(job4)
+//      _ <- Job.save(job5)
+//      _ <- Run.save(run1)
+//      _ <- Run.save(run2)
+//      _ <- Run.save(run3)
+//      _ <- Run.save(run4)
+//      _ <- Run.save(run5)
+//    } yield ()
+//    r.getOrFail(10.seconds)
+//    addAssertions() // <- already blocking
 
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
     println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
   }
 
-  "retrieve unknown Job" in {
-    val retrieved = Try { Job.get(UserId(), JobId()).getOrFail() }
-    retrieved must be ('Failure) // TODO test exception type (UnknownJob)
-  }
- 
-  "create, put, retrieve, delete Job" in {
-    val job = job1.copy(id = JobId())
-    Try { Job.get(user1.id, job.id).getOrFail() } must be ('failure)
-    Try { Job.save(job).getOrFail() } must be ('success)
-    val retrieved = Job.get(user1.id, job.id).getOrFail(10.seconds)._1
-    retrieved must be (job)
-    Try { Job.delete(job).getOrFail() } must be ('success)
-    Try { Job.get(user1.id, job.id).getOrFail() } must be ('failure)
-  }
 
-  "retrieve User" in {
-    val retrieved = User.get(user1.id).getOrFail(3.seconds)
-    retrieved must be(user1)
+  "User" in {
+    val r = User.get(user1.id).getOrFail()
+    r must be(user1)
   }
 
   "retrieve User by email" in {
@@ -237,59 +186,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     Try {User.authenticate("unknown@example.com", "bouleshit").getOrFail() } must be (Failure(UnknownUser))
   }
 
-  "a user can only access the jobs that he created" in {
-    val jobs = Job.getFor(user1.id).getOrFail(3.seconds)
-    jobs must have size(4)
-    jobs must contain (job1)
-    jobs must contain (job2)
-    jobs must contain (job3)
-    jobs must contain (job5)
-  }
-
-  "a user with no job should still be able to list his empty list of jobs" in {
-    val jobs = Job.getFor(user3.id).getOrFail(3.seconds)
-    jobs must be ('empty)
-  }
-
-  "retrieve Run" in {
-    val run = Run.get(run1.runUri).getOrFail(10.seconds)._1
-    run.assertions.size must be(run1.assertions.size)
-  }
-
-//  "get history of JobDatas for a given jobId" in {
-//    // define test logic
-//  }
-
-  "get timestamp of latest completed Run for a given job" in {
-    val latestCompleted = job1.getCompletedOn().getOrFail(3.seconds)
-    latestCompleted must be (run3.completedOn)
-  }
-
-  "get timestamp for a job that has never been completed once" in {
-    val neverCompleted = job2.getCompletedOn().getOrFail(3.seconds)
-    neverCompleted must be(None)
-  }
-
 }
 
-
-class StoreTestSuperLight extends StoreTest(
-  nbUrlsPerAssertions = 1,
-  severities = Map(Error -> 1, Warning -> 0, Info -> 0),
-  nbHttpErrorsPerAssertions = 1,
-  nbHttpResponsesPerAssertions = 1,
-  nbJobDatas = 1)
-
-class StoreTestLight extends StoreTest(
+class MongoStoreTestLight extends MongoStoreTest(
   nbUrlsPerAssertions = 10,
   severities = Map(Error -> 2, Warning -> 3, Info -> 4),
   nbHttpErrorsPerAssertions = 2,
   nbHttpResponsesPerAssertions = 5,
-  nbJobDatas = 3)
-
-abstract class StoreTestHeavy extends StoreTest(
-  nbUrlsPerAssertions = 100,
-  severities = Map(Error -> 10, Warning -> 10, Info -> 10),
-  nbHttpErrorsPerAssertions = 5,
-  nbHttpResponsesPerAssertions = 10,
   nbJobDatas = 3)
