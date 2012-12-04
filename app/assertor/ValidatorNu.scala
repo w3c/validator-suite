@@ -9,7 +9,6 @@ import org.w3.vs.view.Helper
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsString
 import play.api.libs.json.JsNumber
-import scala.Some
 import org.w3.vs.model.Context
 
 
@@ -40,7 +39,6 @@ class ValidatorNu(serviceUrl: String) extends FromHttpResponseAssertor {
     val url = URL((json \ "url").asInstanceOf[JsString].value)
     val messages = json \ "messages"
     messages.asInstanceOf[JsArray].value.map { obj =>
-      val assertionId = AssertionId()
       val severity = AssertionSeverity((obj \ "type") match {
         case JsString("non-document-error") => throw new Exception("validator.nu failed")
         case JsString("info") => (obj \ "subType") match {

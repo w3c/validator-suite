@@ -20,6 +20,17 @@ import org.w3.vs.sparql._
 import org.w3.vs.actor.JobActor._
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
+// Reactive Mongo imports
+import reactivemongo.api._
+import reactivemongo.bson._
+import reactivemongo.bson.handlers.DefaultBSONHandlers._
+// Reactive Mongo plugin
+import play.modules.reactivemongo._
+import play.modules.reactivemongo.PlayBsonImplicits._
+// Play Json imports
+import play.api.libs.json._
+import Json.toJson
+import org.w3.vs.store.Formats._
 
 case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
@@ -139,6 +150,9 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
 object Job {
 
+  def collection(implicit conf: VSConfiguration): DefaultCollection =
+    conf.db("jobs")
+
   def apply(
     id: JobId = JobId(),
     name: String,
@@ -150,11 +164,16 @@ object Job {
 
   implicit def toVO(job: Job): JobVO = job.vo
 
-  def get(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] =
-    get(JobUri(userId, jobId))
+  def get(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
+    
+    ???
+  }
+
 
   def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
     import conf._
+    
+
     for {
       ids <- JobUri.fromUri(jobUri).asFuture
       jobLDR <- store.asLDStore.GET(jobUri)
@@ -165,29 +184,13 @@ object Job {
 
   def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
     import conf._
-    val query = """
-CONSTRUCT {
-  ?user ont:job ?job .
-  ?s2 ?p2 ?o2
-} WHERE {
-  BIND (iri(strbefore(str(?user), "#")) AS ?userG) .
-  graph ?userG {
-    ?user ont:job ?job .
-  } .
-  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
-  graph ?jobG {
-    ?s2 ?p2 ?o2
-  }
-}
-"""
-    val construct = ConstructQuery(query, ont)
-    for {
-      graph <- store.executeConstruct(construct, Map("user" -> userId.toUri))
-      pointedUser = PointedGraph[Rdf](userId.toUri, graph)
-      it <- (pointedUser / ont.job).asSet2[(UserId, JobId), JobVO].asFuture
-    } yield {
-      it map { case (ids, jobVO) => Job(ids._2, jobVO) }
-    }
+    val query = Json.obj(("creator" -> Json.obj("$oid" -> userId.oid.stringify)))
+    val cursor = collection.find[JsValue, JsValue](query)
+    cursor.toList map { list => list map { json =>
+      val jobId = (json \ "_id" \ "$oid").as[JobId]
+      val jobVo = json.as[JobVO]
+      Job(jobId, jobVo)
+    }}
   }
 
   def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Option[DateTime]] = {
@@ -216,22 +219,14 @@ SELECT ?timestamp WHERE {
 
   def save(job: Job)(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
-    val creatorUri = job.vo.creator.toUri
-    val script = for {
-      _ <- Command.PUT[Rdf](job.ldr)
-      _ <- Command.POST[Rdf](creatorUri, creatorUri -- ont.job ->- job.jobUri)
-    } yield ()
-    store.execute(script).map(_ => job)
+    val oid = job.id.oid
+    val jobJson = toJson(job.vo).asInstanceOf[JsObject] + ("_id" -> Json.obj("$oid" -> oid.stringify))
+    collection.insert(jobJson) map { lastError => job }
   }
 
   def delete(job: Job)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    val script = for {
-      _ <- Command.PATCH[Rdf](job.vo.creator.toUri,
-                              tripleMatches = List((job.vo.creator.toUri, ont.job.uri, job.jobUri)))
-      _ <- Command.DELETE[Rdf](job.jobUri.fragmentLess)
-    } yield ()
-    store.execute(script)
+    ???
   }
 
 }

@@ -16,10 +16,25 @@ import org.w3.vs.actor.AssertorCall
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
 
+// Reactive Mongo imports
+import reactivemongo.api._
+import reactivemongo.bson._
+import reactivemongo.bson.handlers.DefaultBSONHandlers._
+// Reactive Mongo plugin
+import play.modules.reactivemongo._
+import play.modules.reactivemongo.PlayBsonImplicits._
+// Play Json imports
+import play.api.libs.json._
+import Json.toJson
+import org.w3.vs.store.Formats._
+
 object Run {
-  
+
   type Context = (UserId, JobId, RunId)
 
+  def collection(implicit conf: VSConfiguration): DefaultCollection =
+    conf.db("runs")
+  
   def get(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
     get((userId, jobId, runId).toUri)
 
