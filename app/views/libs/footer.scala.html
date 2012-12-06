@@ -1,23 +1,5 @@
-@(html: Html = Html(""))
-
-    <footer>
+@(fixed: Boolean = false)(html: Html = Html(""))
+    <footer @if(fixed){class="fixed"}>
         @html
+        @if(fixed){<style>#main {padding-bottom: 50px;}</style>}
     </footer>
-    
-
-    
-@**    <script type="text/template" id="urlArticle-template">
-        <dl>
-            <dt>URL</dt>
-            <dd class="url"><a href="<%= encodeURIComponent(url) %>"><%= url %></a></dd>
-            
-            <dt>Last validated</dt>
-            <dd class="timestamp"><%= timestamp %></dd>
-            
-            <dt>Warnings</dt>
-            <dd class="warnings"><% if (timestamp === "") { %><%= "-" %><% } else { %><%= warnings %><% } %></dd>
-            
-            <dt>Errors</dt>
-            <dd class="errors"><% if (timestamp === "") { %><%= "-" %><% } else { %><%= errors %><% } %></dd>
-        </dl>
-    </script>**@

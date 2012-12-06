@@ -1,0 +1,104 @@
+@(form: OneTimeJobForm,
+    user: Option[User],
+    idOpt: Option[JobId] = None)(implicit req: Request[AnyContent], flash: Flash)
+
+@libs.main("New Job - Validator Suite"){
+
+    @if(user.isDefined) { @libs.admin(user.get) }
+    @libs.navigation(List((form("name").value.getOrElse("New Job"), "")))
+    @libs.messages(form.errors.toList)
+    
+    <section id="jobForm">
+
+    <form method="post" action="@routes.Admin.purchase">
+
+        @if(!user.isDefined) {
+
+        <h1>Login/Register</h1>
+
+        <input id="userKnown" name="userType" value="known" type="radio" checked />
+        <label for="userKnown">I already have an account</label>
+
+        <br>
+        <input id="userNew" name="userType" value="new" type="radio" />
+        <label for="userNew">I am a new user</label>
+
+        <br>
+        <label for="userName">Name</label>
+        <input type="text" id="userName" name="userName" placeholder="Name" value='@form("userName").value'/>
+
+        <br>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Email" value='@form("email").value'/>
+
+        <br>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Password"/>
+
+        }
+
+        <h1>Purchase a one-time job</h1>
+
+        <label for="name">Job Name</label>
+        <input id="name" name="name" type="text" value='@form("name").value' required="required"/>
+
+        <br>
+        <label for="entrypoint">Start URL</label>
+        <input id="entrypoint" name="entrypoint" type="url" value='@form("entrypoint").value' required="required"/>
+
+        <br>
+        <label>Max pages</label>
+
+        <div class="otoj">
+        <label for="otoj1">500</label>
+        <input id="otoj1" name="otoj" value="otoj1" type="radio" checked />
+        <span>($75 USD)</span>
+        <br>
+        <label for="otoj2">2,000</label>
+        <input id="otoj2" name="otoj" value="otoj2" type="radio" />
+        <span>($90 USD)</span>
+        <br>
+        <label for="otoj3">5,000</label>
+        <input id="otoj3" name="otoj" value="otoj3" type="radio" />
+        <span>($150 USD)</span>
+        </div>
+
+        <br>
+        @assertors.formValidatorHTML(form.assertorsConfiguration)
+        @assertors.formValidatorCSS(form.assertorsConfiguration)
+        @assertors.formValidatorNu(form.assertorsConfiguration)
+        @assertors.formCheckerI18n(form.assertorsConfiguration)
+        @assertors.formCheckerMobile(form.assertorsConfiguration)
+
+        <button type="submit" name="action" value="create" formaction="@routes.Admin.purchase">Purchase</button>
+
+    </form>
+
+    <script>
+        require(["libs/jquery"], function () {
+        $(function (){
+            var slider = $("input#maxResources");
+            var output = $("output.maxResources");
+            slider.change(function (){
+                output.html(slider.attr("value"));
+            });
+            slider.change();
+
+            $('input[name=assertor[]] + fieldset').each(function (){
+                var fold = $('<a class="jsFold"></a>');
+                fold.click(function (){
+                    $(this).toggleClass('folded');
+                });
+                $(this).before(fold);
+            });
+        });
+        });
+    </script>
+
+    </section>
+    
+}{ @***** Footer *****@
+
+    @libs.footer()()
+
+}

@@ -1,8 +1,8 @@
-@(form: JobForm)
+@(config: AssertorsConfiguration)
 @defining("validator_nu"){case name =>
 
 <label for="@name" title="Add Validator.nu to this job">Validator.nu</label>
-<input  id="@name" name=assertor[] value="@name" type=checkbox @if(form.hasAssertor(name)){checked}/>
+<input  id="@name" name=assertor[] value="@name" type=checkbox @if(config.contains(AssertorId(name))){checked}/>
 
 <fieldset class="@name assertor">
     <legend>Validator.nu options</legend>

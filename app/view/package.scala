@@ -14,6 +14,45 @@ import scala.Some
 
 package object view {
 
+  object OTOJType {
+    def fromOpt(o: Option[String]): OTOJType = {
+      o match {
+        case Some("otoj2") => Otoj2
+        case Some("otoj3") => Otoj3
+        case _ => Otoj1
+      }
+    }
+  }
+  sealed trait OTOJType {
+    def index: Int
+    def value: String
+    def maxPages: Int
+  }
+  case object Otoj1 extends OTOJType {
+    val index = 1
+    val value = "otoj1"
+    val maxPages = 500
+  }
+  case object Otoj2 extends OTOJType{
+    val index = 2
+    val value = "otoj2"
+    val maxPages = 2000
+  }
+  case object Otoj3 extends OTOJType{
+    val index = 3
+    val value = "otoj3"
+    val maxPages = 5000
+  }
+  implicit val Otojformater = new Formatter[OTOJType]{
+    def bind(key: String, data: Map[String, String]): Either[Seq[FormError], OTOJType] = {
+      Right(OTOJType.fromOpt(data.get("otoj")))
+    }
+    def unbind(key: String, value: OTOJType): Map[String, String] = {
+      Map(key -> value.value)
+    }
+  }
+
+
   type Crumb = (String, String)
   type Crumbs = Seq[(String, String)]
 

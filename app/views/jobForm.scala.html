@@ -21,16 +21,16 @@
         <input id="entrypoint" name="entrypoint" type="url" value="@form("entrypoint").value" required="required"/>
 
         <br>
-        <label for="maxResources">Max resources</label>
+        <label for="maxResources">Max pages</label>
         <input id="maxResources" name="maxResources" type="range" min="1" max="500" value="@form("maxResources").value.getOrElse(100)"/>
         <output class="maxResources"></output>
 
         <br>
-        @assertors.formValidatorHTML(form)
-        @assertors.formValidatorCSS(form)
-        @assertors.formValidatorNu(form)
-        @assertors.formCheckerI18n(form)
-        @assertors.formCheckerMobile(form)
+        @assertors.formValidatorHTML(form.assertorsConfiguration)
+        @assertors.formValidatorCSS(form.assertorsConfiguration)
+        @assertors.formValidatorNu(form.assertorsConfiguration)
+        @assertors.formCheckerI18n(form.assertorsConfiguration)
+        @assertors.formCheckerMobile(form.assertorsConfiguration)
 
         <button type="submit" name="action" value="create" formaction="@routes.Jobs.create">Create</button>
 
@@ -67,6 +67,6 @@
     
 }{ @***** Footer *****@
 
-    @libs.footer()
+    @libs.footer()()
 
 }

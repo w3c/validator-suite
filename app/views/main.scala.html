@@ -16,5 +16,5 @@
     @collections.map { collection => @collection.toHtml }
 
 }{
-    @libs.footer { @libs.pageCtrl(collections.last) }
+    @libs.footer(true) { @libs.pageCtrl(collections.last) }
 }
