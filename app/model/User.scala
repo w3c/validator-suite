@@ -6,10 +6,6 @@ import scalaz.Scalaz.ToEqualOps
 import org.w3.banana.TryW
 import org.w3.vs.exception._
 import org.w3.vs._
-import org.w3.vs.store.Binders._
-import org.w3.vs.sparql._
-import org.w3.vs.diesel._
-import org.w3.vs.diesel.ops._
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee.{Concurrent, Enumerator}
@@ -34,7 +30,7 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   
   import conf._
 
-  val userUri = id.toUri
+  val logger = play.Logger.of(classOf[User])
 
   // getJob with id only if owned by user. should probably be a db request directly.
   def getJob(jobId: JobId): Future[Job] = {
@@ -92,8 +88,6 @@ object User {
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("users")
 
-  val emailsGraph = URI("https://validator.w3.org/suite/emails")
-  
   val logger = play.Logger.of(classOf[User])
 
   def apply(
@@ -143,15 +137,6 @@ object User {
     }}
   }
 
-  def save(vo: UserVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
-    import conf._
-    val userId = UserId()
-    val user = toJson(vo).asInstanceOf[JsObject] + ("_id" -> toJson(userId))
-    collection.insert(user) map { lastError =>
-      userId.toUri
-    }
-  }
-  
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     val userId = user.id

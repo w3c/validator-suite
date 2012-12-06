@@ -3,15 +3,9 @@ package org.w3.vs.model
 import org.w3.vs._
 import org.w3.util._
 import org.joda.time._
-import org.w3.banana._
 import scalaz.Scalaz._
 import scalaz._
-import org.w3.banana._
-import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
-import diesel._
-import org.w3.vs.store.Binders._
-import org.w3.vs.sparql._
 
 case class Assertion(
     url: URL,

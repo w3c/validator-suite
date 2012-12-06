@@ -76,7 +76,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   
   def delete(): Future[Unit] = {
     cancel()
-    Job.delete(this)
+    Job.delete(id)
   }
   
   def run(): Future[(UserId, JobId, RunId)] =
@@ -188,7 +188,7 @@ object Job {
     val query= QueryBuilder().
       query( Json.obj("jobId" -> toJson(jobId), "completedOn" -> Json.obj("$exists" -> JsBoolean(true))) ).
       sort("completedOn" -> SortOrder.Descending)
-    val cursor = collection.find[JsValue](query)
+    val cursor = Run.collection.find[JsValue](query)
     cursor.toList map { list =>
       list.headOption.flatMap(json => json.as[Option[(Run, Iterable[URL], Iterable[AssertorCall])]])
     }
@@ -200,7 +200,7 @@ object Job {
       query( Json.obj("jobId" -> toJson(jobId), "completedOn" -> Json.obj("$exists" -> JsBoolean(true))) ).
       sort("completedOn" -> SortOrder.Descending).
       projection( BSONDocument("completedOn" -> BSONInteger(1)) )
-    val cursor = collection.find[JsValue](query)
+    val cursor = Run.collection.find[JsValue](query)
     cursor.toList map { list =>
       list.headOption.flatMap(json => (json \ "completedOn").as[Option[DateTime]])
     }
@@ -212,9 +212,10 @@ object Job {
     collection.insert(jobJson) map { lastError => job }
   }
 
-  def delete(job: Job)(implicit conf: VSConfiguration): Future[Unit] = {
+  def delete(jobId: JobId)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    ???
+    val query = Json.obj("_id" -> toJson(jobId))
+    collection.remove[JsValue](query) map { lastError => () }
   }
 
 }

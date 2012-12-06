@@ -2,9 +2,6 @@ package org.w3.vs.model
 
 import org.w3.vs._
 import scalaz.Equal
-import java.util.UUID
-import org.w3.vs.store.Binders._
-import org.w3.vs.diesel._
 import reactivemongo.bson._
 
 class Id(val oid: BSONObjectID = BSONObjectID.generate) {
@@ -15,9 +12,7 @@ class Id(val oid: BSONObjectID = BSONObjectID.generate) {
 
 case class JobId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
 case class RunId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
-case class UserId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid) {
-  def toUri: Rdf#URI = UserUri(this)
-}
+case class UserId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
 case class AssertorId (id: String)
 
 object JobId {

@@ -32,7 +32,6 @@ object Global extends GlobalSettings {
     Metrics.shutdown()
     ResponseCache.setDefault(null)
     org.w3.vs.assertor.LocalValidators.stop()
-    store.shutdown()
     system.shutdown()
   }
   

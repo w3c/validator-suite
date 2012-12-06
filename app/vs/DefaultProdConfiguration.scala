@@ -10,9 +10,6 @@ import akka.util.Timeout
 import java.util.concurrent.{ Executors, ExecutorService }
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
-import org.w3.banana._
-import org.w3.banana.jena._
-import com.hp.hpl.jena.tdb.TDBFactory.createDatasetGraph
 import play.api.Configuration
 import java.io.File
 import reactivemongo.api.MongoConnection
@@ -76,11 +73,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
     val r(timeoutS, unitS) = configuration.getString("application.timeout") getOrElse sys.error("application.timeout")
     Timeout(Duration(timeoutS.toInt, unitS))
   }
-
-  val storeDirectory = new File(configuration.getString("application.store.directory") getOrElse sys.error("application.store.directory"))
-
-  lazy val store: RDFStore[Rdf, Future] =
-    JenaStore(createDatasetGraph(storeDirectory.getAbsolutePath))
 
   lazy val connection = MongoConnection( List( "localhost:27017" ) )
   

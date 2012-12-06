@@ -14,9 +14,6 @@ object Main {
   def stressTestData(n: Int): Unit = {
     implicit val conf = new DefaultProdConfiguration { }
 
-    if (conf.storeDirectory.exists)
-      Util.delete(conf.storeDirectory)
-
     def makeUser(name: String): User = User(userId = UserId(), email = name + "@w3.org", name = name, password = "secret")
 
     (1 to n) foreach { i =>
@@ -24,7 +21,6 @@ object Main {
       User.save(user).getOrFail()
     }
 
-    conf.store.shutdown()
     conf.system.shutdown()
     conf.system.awaitTermination()
 
@@ -33,9 +29,6 @@ object Main {
   def defaultData(): Unit = {
     
     implicit val conf = new DefaultProdConfiguration { }
-
-    if (conf.storeDirectory.exists)
-      Util.delete(conf.storeDirectory)
 
     val tgambet = User(userId = UserId(), email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret")
 
@@ -105,6 +98,10 @@ object Main {
         assertorsConfiguration = AssertorsConfiguration.default))
 
     val script = for {
+      _ <- conf.db.drop()
+      _ <- User.collection.create()
+      _ <- Job.collection.create()
+      _ <- Run.collection.create()
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
       _ <- User.save(bernard)
@@ -124,7 +121,6 @@ object Main {
 
     script.getOrFail(10.seconds)
     
-    conf.store.shutdown()
     conf.system.shutdown()
     conf.system.awaitTermination()
 
