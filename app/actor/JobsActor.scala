@@ -53,8 +53,9 @@ class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareAc
                   val run = Run.freshRun(userId, job.id, job.strategy)
                   CreateJobAndForward(job, NeverStarted, run, List.empty, List.empty, msg)
                 }
-                case Some((run, toBeFetched, toBeAsserted)) =>
+                case Some((run, toBeFetched, toBeAsserted)) => {
                   CreateJobAndForward(job, Started, run, toBeFetched, toBeAsserted, msg)
+                }
               }
             }
 

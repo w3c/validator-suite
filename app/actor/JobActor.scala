@@ -40,6 +40,11 @@ object JobActor {
   case object GetSnapshot
 
   val logger = Logger.of(classOf[JobActor])
+//  val logger = new Object {
+//    def debug(msg: String): Unit = println("== " + msg)
+//    def error(msg: String): Unit = println("== " + msg)
+//    def warn(msg: String): Unit = println("== " + msg)
+//  }
 
   def executeCommands(run: Run, runActor: ActorRef, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall], http: ActorRef, assertionsActorRef: ActorRef)(implicit sender: ActorRef): Unit = {
     

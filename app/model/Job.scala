@@ -168,7 +168,7 @@ object Job {
           Job(jobId, jobVo)
         }
       }
-      runOpt <- getLastCompletedRun(jobId)
+      runOpt <- getLastRun(jobId)
     } yield (job -> runOpt)
   }
 
@@ -181,6 +181,17 @@ object Job {
       val jobVo = json.as[JobVO]
       Job(jobId, jobVo)
     }}
+  }
+
+  def getLastRun(jobId: JobId)(implicit conf: VSConfiguration): Future[Option[(Run, Iterable[URL], Iterable[AssertorCall])]] = {
+    import conf._
+    val query= QueryBuilder().
+      query( Json.obj("jobId" -> toJson(jobId)) ).
+      sort("createdOn" -> SortOrder.Descending)
+    val cursor = Run.collection.find[JsValue](query)
+    cursor.toList map { list =>
+      list.headOption.flatMap(json => json.as[Option[(Run, Iterable[URL], Iterable[AssertorCall])]])
+    }
   }
 
   def getLastCompletedRun(jobId: JobId)(implicit conf: VSConfiguration): Future[Option[(Run, Iterable[URL], Iterable[AssertorCall])]] = {

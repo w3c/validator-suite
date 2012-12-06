@@ -52,7 +52,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
 
     val (userId, jobId, runId) = job.run().getOrFail()
 
-    job.getSnapshot().getOrFail()
+    job.waitLastWrite().getOrFail()
 
     // kills the jobActor
     job ! PoisonPill
