@@ -5,6 +5,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait DefaultTestConfiguration extends DefaultProdConfiguration {
 
-  override lazy val db = connection("vs-test")
+
 
 }

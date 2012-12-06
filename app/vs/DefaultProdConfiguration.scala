@@ -74,8 +74,14 @@ trait DefaultProdConfiguration extends VSConfiguration {
     Timeout(Duration(timeoutS.toInt, unitS))
   }
 
-  lazy val connection = MongoConnection( List( "localhost:27017" ) )
-  
-  lazy val db = connection("vs")
+  lazy val connection = {
+    val node = configuration.getString("application.mongodb.node") getOrElse sys.error("application.mongodb.node")
+    MongoConnection( List( node ) )
+  }
+
+  lazy val db = {
+    val dbName = configuration.getString("application.mongodb.db-name") getOrElse sys.error("application.mongodb.db-name")
+    connection(dbName)
+  }
 
 }
