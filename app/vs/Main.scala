@@ -16,6 +16,15 @@ object Main {
 
     def makeUser(name: String): User = User(userId = UserId(), email = name + "@w3.org", name = name, password = "secret")
 
+    val script = for {
+      _ <- conf.db.drop()
+      _ <- User.collection.create()
+      _ <- Job.collection.create()
+      _ <- Run.collection.create()
+    } yield ()
+
+    script.getOrFail()
+
     (1 to n) foreach { i =>
       val user = makeUser("user" + i)
       User.save(user).getOrFail()
@@ -23,6 +32,10 @@ object Main {
 
     conf.system.shutdown()
     conf.system.awaitTermination()
+    conf.httpClient.close()
+    conf.connection.close()
+
+    println("you need to press ctrl-c")
 
   }
 
@@ -123,6 +136,7 @@ object Main {
     
     conf.system.shutdown()
     conf.system.awaitTermination()
+    conf.connection.close()
 
   }
   

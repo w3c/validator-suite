@@ -76,11 +76,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
 
   lazy val connection = MongoConnection( List( "localhost:27017" ) )
   
-  lazy val db = {
-    val conn = connection("vs")
-//    conn.drop().getOrFail()
-//    connection("vs")
-    conn
-  }
+  lazy val db = connection("vs")
 
 }
