@@ -33,6 +33,8 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   }
   
   override def afterAll: Unit = {
+    configuration.httpClient.close()
+    configuration.connection.close()
     configuration.system.shutdown()
     configuration.system.awaitTermination()
     servers foreach { _.stop() }
