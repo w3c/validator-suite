@@ -18,7 +18,7 @@ case class RunId (override val oid: BSONObjectID = BSONObjectID.generate) extend
 case class UserId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid) {
   def toUri: Rdf#URI = UserUri(this)
 }
-case class AssertorId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
+case class AssertorId (id: String)
 
 object JobId {
   def apply(s: String): JobId = JobId(BSONObjectID(s))
@@ -36,7 +36,6 @@ object UserId {
 }
 
 object AssertorId {
-  def apply(s: String): AssertorId = AssertorId(BSONObjectID(s))
   implicit val equal = Equal.equalA[AssertorId]
 }
 

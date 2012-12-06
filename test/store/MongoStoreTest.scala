@@ -132,10 +132,21 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val initScript = for {
       _ <- db.drop()
       _ <- User.collection.create()
-
+      _ <- Job.collection.create()
+      _ <- Run.collection.create()
       _ <- User.save(user1)
       _ <- User.save(user2)
       _ <- User.save(user3)
+      _ <- Job.save(job1)
+      _ <- Job.save(job2)
+      _ <- Job.save(job3)
+      _ <- Job.save(job4)
+      _ <- Job.save(job5)
+      _ <- Run.save(run1)
+      _ <- Run.save(run2)
+      _ <- Run.save(run3)
+      _ <- Run.save(run4)
+      _ <- Run.save(run5)
 
 
     } yield ()

@@ -28,7 +28,6 @@ import play.modules.reactivemongo.PlayBsonImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
-
 import org.w3.vs.store.Formats._
 
 case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
@@ -105,24 +104,19 @@ object User {
     implicit conf: VSConfiguration): User =
       User(userId, UserVO(name, email, password))
 
-  def get(userUri: Rdf#URI)(implicit conf: VSConfiguration): Future[User] = {
+  def get(userId: UserId)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
-    for {
-      userId <- userUri.as[UserId].asFuture
-      userVO <- {
-        val query = Json.obj(("_id" -> Json.obj("$oid" -> userId.oid.stringify)))
-        val cursor = collection.find[JsValue, JsValue](query)
-        cursor.toList map { _.headOption match {
-          case Some(json) => json.as[UserVO]
-          case None => sys.error("user not found")
-        }}
+    val query = Json.obj("_id" -> toJson(userId))
+    val cursor = collection.find[JsValue, JsValue](query)
+    cursor.toList map { _.headOption match {
+      case Some(json) => {
+        val userVo = json.as[UserVO]
+        User(userId, userVo)
       }
-    } yield new User(userId, userVO)
+      case None => sys.error("user not found")
+    }}
   }
   
-  def get(id: UserId)(implicit conf: VSConfiguration): Future[User] =
-    get(UserUri(id))
-
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
     getByEmail(email) map { 
       case user if (user.vo.password /== password) => throw Unauthenticated
@@ -141,7 +135,7 @@ object User {
     val cursor: FlattenedCursor[JsValue] = collection.find[JsValue, JsValue](query)
     cursor.toList map { _.headOption match {
       case Some(json) => {
-        val id = (json \ "_id" \ "$oid").as[UserId]
+        val id = (json \ "_id").as[UserId]
         val userVo = json.as[UserVO]
         User(id, userVo)
       }
@@ -152,8 +146,7 @@ object User {
   def save(vo: UserVO)(implicit conf: VSConfiguration): Future[Rdf#URI] = {
     import conf._
     val userId = UserId()
-    val oid = userId.oid
-    val user = toJson(vo).asInstanceOf[JsObject] + ("_id" -> Json.obj("$oid" -> oid.stringify))
+    val user = toJson(vo).asInstanceOf[JsObject] + ("_id" -> toJson(userId))
     collection.insert(user) map { lastError =>
       userId.toUri
     }
@@ -162,8 +155,7 @@ object User {
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     val userId = user.id
-    val oid = userId.oid
-    val userJ = toJson(user.vo).asInstanceOf[JsObject] + ("_id" -> Json.obj("$oid" -> oid.stringify))
+    val userJ = toJson(user.vo).asInstanceOf[JsObject] + ("_id" -> toJson(userId))
     collection.insert(userJ) map { lastError => () }
   }
 

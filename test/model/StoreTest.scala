@@ -144,10 +144,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         assertion
       }
       val assertorResult = AssertorResult(run1.context, assertorId, url, assertions)
-      Run.saveEvent(run1.runUri, AssertorResponseEvent(assertorResult)).getOrFail()
+      Run.saveEvent(run1.runId, AssertorResponseEvent(assertorResult)).getOrFail()
     }
-    Run.complete(job1.jobUri, run2.runUri, run2.completedOn.get).getOrFail()
-    Run.complete(job1.jobUri, run3.runUri, run3.completedOn.get).getOrFail()
+    Run.complete(run2.runId, run2.completedOn.get).getOrFail()
+    Run.complete(run3.runId, run3.completedOn.get).getOrFail()
   }
 
 //   val resourceResponses: Vector[ResourceResponse] = {
@@ -204,18 +204,18 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve unknown Job" in {
-    val retrieved = Try { Job.get(UserId(), JobId()).getOrFail() }
+    val retrieved = Try { Job.get(JobId()).getOrFail() }
     retrieved must be ('Failure) // TODO test exception type (UnknownJob)
   }
  
   "create, put, retrieve, delete Job" in {
     val job = job1.copy(id = JobId())
-    Try { Job.get(user1.id, job.id).getOrFail() } must be ('failure)
+    Try { Job.get(job.id).getOrFail() } must be ('failure)
     Try { Job.save(job).getOrFail() } must be ('success)
-    val retrieved = Job.get(user1.id, job.id).getOrFail(10.seconds)._1
+    val retrieved = Job.get(job.id).getOrFail(10.seconds)._1
     retrieved must be (job)
     Try { Job.delete(job).getOrFail() } must be ('success)
-    Try { Job.get(user1.id, job.id).getOrFail() } must be ('failure)
+    Try { Job.get(job.id).getOrFail() } must be ('failure)
   }
 
   "retrieve User" in {
@@ -252,7 +252,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve Run" in {
-    val run = Run.get(run1.runUri).getOrFail(10.seconds)._1
+    val run = Run.get(run1.runId).getOrFail(10.seconds)._1
     run.assertions.size must be(run1.assertions.size)
   }
 

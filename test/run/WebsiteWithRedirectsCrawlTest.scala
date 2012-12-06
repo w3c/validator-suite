@@ -45,7 +45,7 @@ class WebsiteWithRedirectsCrawlTest extends RunTestHelper with TestKitHelper {
     fishForMessagePF(3.seconds) {
       case UpdateData(_, _, activity) if activity == Idle => {
         job.waitLastWrite().getOrFail()
-        val rrs = ResourceResponse.getFor(userId, jobId, runId).getOrFail()
+        val rrs = ResourceResponse.getFor(runId).getOrFail()
         // the redirect URLs are not counted
         rrs.filterNot(_.url.toString endsWith ",redirect") must have size (circumference + 1)
       }

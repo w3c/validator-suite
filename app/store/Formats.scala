@@ -67,6 +67,14 @@ object Formats {
     def writes(t: T): JsValue = JsString(unapply(t))
   }
 
+  def oid[T <: Id](apply: BSONObjectID => T): Format[T] = new Format[T] {
+    def reads(json: JsValue): JsResult[T] = {
+      val oid = (json \ "$oid").as[String]
+      JsSuccess(apply(BSONObjectID(oid)))
+    }
+    def writes(id: T): JsValue = Json.obj("$oid" -> id.oid.stringify)
+  }
+
   // it uses the UTC timezone
   // there is a pending ticket in Play to deal with that properly
   // with the default Format[DateTime]
@@ -88,11 +96,11 @@ object Formats {
 
   implicit val AssertorIdFormat = string[AssertorId](AssertorId(_), _.id)
 
-  implicit val UserIdFormat = string[UserId](UserId(_), _.id)
+  implicit val UserIdFormat = oid[UserId](UserId(_))
 
-  implicit val JobIdFormat = string[JobId](JobId(_), _.id)
+  implicit val JobIdFormat = oid[JobId](JobId(_))
 
-  implicit val RunIdFormat = string[RunId](RunId(_), _.id)
+  implicit val RunIdFormat = oid[RunId](RunId(_))
 
   implicit val FilterFormat = constant[Filter]("includeEverything", Filter.includeEverything)
 
@@ -238,6 +246,68 @@ object Formats {
     (__ \ 'password).format[String]
   )(UserVO.apply _, unlift(UserVO.unapply _))
 
-  
+  implicit object RunReads extends Reads[(Run, Iterable[URL], Iterable[AssertorCall])] {
+    import org.w3.util.DateTimeOrdering
+    def reads(json: JsValue): JsResult[(Run, Iterable[URL], Iterable[AssertorCall])] = reeads {
+      val runId = (json \ "_id").as[RunId]
+      val userId = (json \ "userId").as[UserId]
+      val jobId = (json \ "jobId").as[JobId]
+      val strategy = (json \ "strategy").as[Strategy]
+      val createdAt = (json \ "createdAt").as[DateTime]
+      val completedOn = (json \ "completedOn").as[Option[DateTime]]
+      val events = (json \ "events").as[List[RunEvent]]
+      val start = System.currentTimeMillis()
+      var toBeFetched = Set.empty[URL]
+      var toBeAsserted = Map.empty[(URL, AssertorId), AssertorCall]
+      val (initialRun, urls) = Run((userId, jobId, runId), strategy, createdAt).newlyStartedRun
+      var run = initialRun
+      toBeFetched ++= urls
+      completedOn foreach { at => run = run.completeOn(at) }
+      events.toList.sortBy(_.timestamp) foreach {
+        case AssertorResponseEvent(ar@AssertorResult(_, assertor, url, _), _) => {
+          toBeAsserted -= ((url, assertor))
+          run = run.withAssertorResult(ar)
+        }
+        case AssertorResponseEvent(af@AssertorFailure(_, assertor, url, _), _) => {
+          toBeAsserted -= ((url, assertor))
+          run = run.withAssertorFailure(af)
+        }
+        case ResourceResponseEvent(hr@HttpResponse(url, _, _, _, _), _) => {
+          toBeFetched -= url
+          val (newRun, urls, assertorCalls) = run.withHttpResponse(hr)
+          run = newRun
+          toBeFetched ++= urls
+          assertorCalls foreach { ac =>
+            toBeAsserted += ((ac.response.url, ac.assertor.id) -> ac)
+          }
+        }
+        case ResourceResponseEvent(er@ErrorResponse(url, _, _), _) => {
+          toBeFetched -= url
+          val (newRun, urls) = run.withErrorResponse(er)
+          run = newRun
+          toBeFetched ++= urls
+        }
+        case BeProactiveEvent(_) => ()
+        case BeLazyEvent(_) => ()
+      }
+      val result = (run, toBeFetched, toBeAsserted.values)
+      val end = System.currentTimeMillis()
+      logger.debug("Run deserialized in %dms (found %d events)" format (end - start, events.size))
+      result
+    }
+  }
+
+  implicit object RunWrites extends Writes[Run] {
+    def writes(run: Run) = {
+      Json.obj(
+        "_id" -> toJson(run.runId),
+        "userId" -> toJson(run.userId),
+        "jobId" -> toJson(run.jobId),
+        "strategy" -> toJson(run.strategy),
+        "createdAt" -> toJson(run.createdAt),
+        "events" -> Json.arr()
+      )
+    }
+  }
 
 }

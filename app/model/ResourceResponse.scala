@@ -2,31 +2,33 @@ package org.w3.vs.model
 
 import org.w3.util._
 import org.joda.time._
-import org.w3.banana._
-import org.w3.banana.LinkedDataStore._
 import org.w3.vs._
-import diesel._
-import ops._
-import org.w3.vs.store.Binders._
-import org.w3.vs.sparql._
 import java.io._
 import scalax.io._
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 
+// Reactive Mongo imports
+import reactivemongo.api._
+import reactivemongo.bson._
+import reactivemongo.bson.handlers.DefaultBSONHandlers._
+// Reactive Mongo plugin
+import play.modules.reactivemongo._
+import play.modules.reactivemongo.PlayBsonImplicits._
+// Play Json imports
+import play.api.libs.json._
+import Json.toJson
+import org.w3.vs.store.Formats._
+
 object ResourceResponse {
 
-  def getFor(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
+  def getFor(runId: RunId)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
     import conf._
-    getFor((userId, jobId, runId).toUri)
-  }
-
-  def getFor(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
-    import conf._
-    for {
-      ldr <- store.asLDStore.GET(runUri)
-      events <- (ldr.resource / ont.event).asSet[RunEvent].asFuture
-    } yield {
+    val query = Json.obj("_id" -> toJson(runId))
+    val cursor = Run.collection.find[JsValue, JsValue](query)
+    cursor.toList map { list =>
+      val json = list.headOption.get
+      val events = (json \ "events").as[Set[RunEvent]]
       events collect { case ResourceResponseEvent(rr, _) => rr }
     }
   }

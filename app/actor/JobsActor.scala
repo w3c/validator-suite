@@ -47,17 +47,14 @@ class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareAc
           // should get the relPath and provide the uri to the job in the store
           // later: make the job actor as something backed by a graph in the store!
           val f: Future[CreateJobAndForward] =
-            Job.get(userId, JobId(id)) flatMap { case (job, runUriOpt) =>
-              runUriOpt match {
+            Job.get(JobId(id)) map { case (job, runIdOpt) =>
+              runIdOpt match {
                 case None => {
                   val run = Run.freshRun(userId, job.id, job.strategy)
-                  CreateJobAndForward(job, NeverStarted, run, List.empty, List.empty, msg).asFuture
+                  CreateJobAndForward(job, NeverStarted, run, List.empty, List.empty, msg)
                 }
-                case Some(runUri) =>
-                  import scala.concurrent.ExecutionContext.Implicits.global
-                  Run.get(runUri) map { case (run, toBeFetched, toBeAsserted) =>
-                    CreateJobAndForward(job, Started, run, toBeFetched, toBeAsserted, msg)
-                  }
+                case Some((run, toBeFetched, toBeAsserted)) =>
+                  CreateJobAndForward(job, Started, run, toBeFetched, toBeAsserted, msg)
               }
             }
 

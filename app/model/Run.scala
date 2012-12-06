@@ -6,12 +6,6 @@ import org.w3.vs.assertor._
 import scalaz.{ Free, Equal }
 import scalaz.Scalaz._
 import org.joda.time._
-import org.w3.banana._
-import org.w3.banana.LinkedDataStore._
-import org.w3.vs.store.Binders._
-import org.w3.vs.diesel._
-import org.w3.vs.diesel.ops._
-import org.w3.vs.sparql._
 import org.w3.vs.actor.AssertorCall
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,33 +28,19 @@ object Run {
 
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("runs")
-  
-  def get(userId: UserId, jobId: JobId, runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] =
-    get((userId, jobId, runId).toUri)
 
-  def get(runUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
+  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
     import conf._
-    store.asLDStore.GET(runUri) flatMap { ldr =>
-      // there is a bug in banana preventing the implicit to be discovered
-      RunFromPG.fromPointedGraph(ldr.resource).asFuture
+    val query = Json.obj("_id" -> toJson(runId))
+    val cursor = collection.find[JsValue, JsValue](query)
+    cursor.toList map { list =>
+      list.headOption.get.as[(Run, Iterable[URL], Iterable[AssertorCall])]
     }
-  }
-
-  def saveAsScript(run: Run): Free[({type l[+x] = Command[Rdf, x]})#l, Unit] = {
-    val jobUri = (run.userId, run.jobId).toUri
-    val script = for {
-      _ <- Command.PUT[Rdf](run.ldr)
-      _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.run.uri, ANY)))
-      _ <- Command.POST[Rdf](jobUri, jobUri -- ont.run ->- run.runUri)
-    } yield ()
-    script
-  }
-
-  @deprecated("", "")
+  }  
+  
   def save(run: Run)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    val script = saveAsScript(run)
-    store.execute(script)
+    collection.insert(toJson(run)) map { lastError => () }
   }
 
   def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
@@ -78,33 +58,20 @@ object Run {
 
   /* addResourceResponse */
 
-  def saveEventAsScript(runUri: Rdf#URI, event: RunEvent): Free[({type l[+x] = Command[Rdf, x]})#l, Unit] = {
-    Command.POST[Rdf](runUri, runUri -- ont.event ->- event.toPG)
-  }
-
-  @deprecated("", "")
-  def saveEvent(runUri: Rdf#URI, event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
+  def saveEvent(runId: RunId, event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    val script = saveEventAsScript(runUri, event)
-    store.execute(script)
+    val selector = Json.obj("_id" -> toJson(runId))
+    val update = Json.obj("$push" -> Json.obj("events" -> toJson(event)))
+    collection.update(selector, update) map { lastError => () }
   }
 
   /* other events */
 
-  def completeAsScript(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime): Free[({type l[+x] = Command[Rdf, x]})#l, Unit] = {
-    val script = for {
-      _ <- Command.PATCH[Rdf](jobUri, tripleMatches = List((jobUri, ont.lastRun.uri, ANY)))
-      _ <- Command.POST[Rdf](jobUri, jobUri -- ont.lastRun ->- runUri)
-      _ <- Command.POST[Rdf](runUri, runUri -- ont.completedOn ->- at)
-    } yield ()
-    script
-  }
-
-  @deprecated("", "")
-  def complete(jobUri: Rdf#URI, runUri: Rdf#URI, at: DateTime)(implicit conf: VSConfiguration): Future[Unit] = {
+  def complete(runId: RunId, at: DateTime)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    val script = completeAsScript(jobUri, runUri, at)
-    store.execute(script)
+    val selector = Json.obj("_id" -> toJson(runId))
+    val update = Json.obj("$set" -> Json.obj("completedOn" -> toJson(at)))
+    collection.update(selector, update) map { lastError => () }
   }
 
 }
@@ -142,8 +109,6 @@ case class Run private (
 
   val shortId: String = jobId.shortId + "/" + runId.shortId
 
-  val runUri = (userId, jobId, runId).toUri
-
   def jobData: JobData = JobData(numberOfFetchedResources, errors, warnings, createdAt, completedOn)
   
   def health: Int = jobData.health
@@ -154,10 +119,6 @@ case class Run private (
   def completeOn(at: DateTime): Run = this.copy(
     completedOn = Some(at),
     toBeExplored = List.empty)
-
-  /* methods related to the data */
-  
-  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(runUri, this.toPG)
 
   // should we also count the errors and redirections?
   lazy val numberOfFetchedResources: Int = {

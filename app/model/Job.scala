@@ -11,15 +11,10 @@ import org.w3.util._
 import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
-import diesel._
-import diesel.ops._
-import org.w3.banana._
-import org.w3.banana.LinkedDataStore._
-import org.w3.vs.store.Binders._
-import org.w3.vs.sparql._
 import org.w3.vs.actor.JobActor._
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
+
 // Reactive Mongo imports
 import reactivemongo.api._
 import reactivemongo.bson._
@@ -31,6 +26,7 @@ import play.modules.reactivemongo.PlayBsonImplicits._
 import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
+import org.w3.vs.actor.AssertorCall
 
 case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
@@ -38,16 +34,10 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
   val creatorId = vo.creator
 
-  val jobUri: Rdf#URI = JobUri(vo.creator, id)
-
-  def ldr: LinkedDataResource[Rdf] = LinkedDataResource(jobUri.fragmentLess, vo.toPG)
-
-  val creatorUri: Rdf#URI = vo.creator.toUri
-
   private val logger = Logger.of(classOf[Job])
   
   def getCreator(): Future[User] =
-    User.get(creatorUri)
+    User.get(creatorId)
 
   def getRun(): Future[Run] = {
     (PathAware(usersRef, path) ? GetRun).mapTo[Run]
@@ -79,7 +69,7 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   }
 
   def getCompletedOn(): Future[Option[DateTime]] = {
-    Job.getLastCompleted(jobUri)
+    Job.getLastCompleted(id)
   }
   
   def save(): Future[Job] = Job.save(this)
@@ -164,63 +154,61 @@ object Job {
 
   implicit def toVO(job: Job): JobVO = job.vo
 
-  def get(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
-    
-    ???
-  }
-
-
-  def get(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[(Job, Option[Rdf#URI])] = {
-    import conf._
-    
-
+  // returns the Job with the jobId and optionally the latest Run* for this Job
+  // the Run may not exist if the Job was never started
+  def get(jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[(Run, Iterable[URL], Iterable[AssertorCall])])] = {
+    val query = Json.obj("_id" -> toJson(jobId))
+    val cursor = collection.find[JsValue, JsValue](query)
     for {
-      ids <- JobUri.fromUri(jobUri).asFuture
-      jobLDR <- store.asLDStore.GET(jobUri)
-      runUriOpt <- (jobLDR.resource / ont.run).asOption[Rdf#URI].asFuture
-      jobVO <- jobLDR.resource.as[JobVO].asFuture
-    } yield (Job(ids._2, jobVO), runUriOpt)
+      job <- {
+        cursor.toList map { list =>
+          val json = list.headOption.get
+          val jobId = (json \ "_id").as[JobId]
+          val jobVo = json.as[JobVO]
+          Job(jobId, jobVo)
+        }
+      }
+      runOpt <- getLastCompletedRun(jobId)
+    } yield (job -> runOpt)
   }
 
   def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
     import conf._
-    val query = Json.obj(("creator" -> Json.obj("$oid" -> userId.oid.stringify)))
+    val query = Json.obj("creator" -> toJson(userId))
     val cursor = collection.find[JsValue, JsValue](query)
     cursor.toList map { list => list map { json =>
-      val jobId = (json \ "_id" \ "$oid").as[JobId]
+      val jobId = (json \ "_id").as[JobId]
       val jobVo = json.as[JobVO]
       Job(jobId, jobVo)
     }}
   }
 
-  def getLastCompleted(jobUri: Rdf#URI)(implicit conf: VSConfiguration): Future[Option[DateTime]] = {
+  def getLastCompletedRun(jobId: JobId)(implicit conf: VSConfiguration): Future[Option[(Run, Iterable[URL], Iterable[AssertorCall])]] = {
     import conf._
-    val query = """
-SELECT ?timestamp WHERE {
-  BIND (iri(strbefore(str(?job), "#")) AS ?jobG) .
-  graph ?jobG {
-    ?job ont:lastRun ?run
-  } .
-  BIND (iri(strbefore(str(?run), "#")) AS ?runG) .
-  graph ?runG {
-    ?run ont:completedOn ?timestamp
+    val query= QueryBuilder().
+      query( Json.obj("jobId" -> toJson(jobId), "completedOn" -> Json.obj("$exists" -> JsBoolean(true))) ).
+      sort("completedOn" -> SortOrder.Descending)
+    val cursor = collection.find[JsValue](query)
+    cursor.toList map { list =>
+      list.headOption.flatMap(json => json.as[Option[(Run, Iterable[URL], Iterable[AssertorCall])]])
+    }
   }
-}
-"""
-    val select = SelectQuery(query, ont)
-    store.executeSelect(select, Map("job" -> jobUri)) flatMap { rows =>
-      val rds: Iterable[DateTime] = rows.toIterable map { row =>
-        val timestamp = row("timestamp").flatMap(_.as[DateTime]).get
-        timestamp
-      }
-      rds.headOption.asFuture
+
+  def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): Future[Option[DateTime]] = {
+    import conf._
+    val query= QueryBuilder().
+      query( Json.obj("jobId" -> toJson(jobId), "completedOn" -> Json.obj("$exists" -> JsBoolean(true))) ).
+      sort("completedOn" -> SortOrder.Descending).
+      projection( BSONDocument("completedOn" -> BSONInteger(1)) )
+    val cursor = collection.find[JsValue](query)
+    cursor.toList map { list =>
+      list.headOption.flatMap(json => (json \ "completedOn").as[Option[DateTime]])
     }
   }
 
   def save(job: Job)(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
-    val oid = job.id.oid
-    val jobJson = toJson(job.vo).asInstanceOf[JsObject] + ("_id" -> Json.obj("$oid" -> oid.stringify))
+    val jobJson = toJson(job.vo).asInstanceOf[JsObject] + ("_id" -> toJson(job.id))
     collection.insert(jobJson) map { lastError => job }
   }
 

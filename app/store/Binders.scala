@@ -166,12 +166,13 @@ trait Binders extends UriBuilders with LiteralBinders {
   }
 
   implicit lazy val RunToPG: ToPointedGraph[Rdf, Run] = new ToPointedGraph[Rdf, Run] {
-    def toPointedGraph(run: Run): PointedGraph[Rdf] = (
-      ops.makeUri("#thing")
-      -- ont.run ->- run.runUri
-      -- ont.strategy ->- run.strategy
-      -- ont.createdAt ->- run.createdAt
-    )
+    def toPointedGraph(run: Run): PointedGraph[Rdf] = ???
+// (
+//      ops.makeUri("#thing")
+//      -- ont.run ->- run.runUri
+//      -- ont.strategy ->- run.strategy
+//      -- ont.createdAt ->- run.createdAt
+//    )
   }
 
   implicit lazy val RunFromPG: FromPointedGraph[Rdf, (Run, Iterable[URL], Iterable[AssertorCall])] = new FromPointedGraph[Rdf, (Run, Iterable[URL], Iterable[AssertorCall])] {
