@@ -3,6 +3,9 @@ package org.w3.util
 import java.io._
 import scala.concurrent.{ Future, ExecutionContext }
 import com.yammer.metrics.core.Timer
+import scala.concurrent.duration.Duration
+import scala.concurrent.Await
+import scala.util.{ Success, Failure, Try }
 
 object Util {
 
@@ -42,6 +45,10 @@ object Util {
 
   implicit class FutureF[+T](val future: Future[T]) extends AnyVal {
 
+    def getOrFail(duration: Duration = Duration("6s")): T = {
+      Await.result(future, duration)
+    }
+
     /**
      * logs (DEBUG) how long the Future took to be completed
      */
@@ -79,6 +86,22 @@ object Util {
 
   implicit class URLW(val url: URL) extends AnyVal {
     def withToken(token: String): URL = URL(s"""${url}t0k3n=${token}""")
+  }
+
+  implicit class TryW[T](t: Try[T]) {
+    def asFuture: Future[T] = t match {
+      case Success(s) => Future.successful(s)
+      case Failure(f) => Future.failed(f)
+    }
+  }
+
+  implicit class AnyW[T](t: => T) {
+    def asFuture: Future[T] =
+      try {
+        Future.successful(t)
+      } catch { case e: Exception =>
+        Future.failed(e)
+      }
   }
 
 

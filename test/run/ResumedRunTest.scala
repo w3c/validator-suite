@@ -12,7 +12,6 @@ import akka.actor._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
-import org.w3.banana._
 
 class ResumedRunTest extends RunTestHelper with TestKitHelper {
 

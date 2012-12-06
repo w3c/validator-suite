@@ -3,7 +3,6 @@ package org.w3.vs.model
 import org.w3.util._
 import scalaz.std.string._
 import scalaz.Scalaz.ToEqualOps
-import org.w3.banana.TryW
 import org.w3.vs.exception._
 import org.w3.vs._
 import scala.concurrent._

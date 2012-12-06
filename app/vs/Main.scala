@@ -7,7 +7,6 @@ import org.w3.util.Util._
 import scala.concurrent.util._
 import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.banana._
 
 object Main {
 

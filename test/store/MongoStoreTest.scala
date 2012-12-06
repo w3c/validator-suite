@@ -10,7 +10,6 @@ import org.w3.vs.exception._
 import org.w3.vs.util._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
-import org.w3.banana.{ FutureW, TryW, AnyW }
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
 
@@ -29,13 +28,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   implicit val conf: VSConfiguration = new DefaultTestConfiguration { }
 
   import conf._
-
-  // used to remember the uri that was assigned to an object saved into the store
-  val uriMap: collection.mutable.Map[AnyRef, Rdf#URI] = {
-    import collection.JavaConverters._
-    val identityMap = new java.util.IdentityHashMap[AnyRef, Rdf#URI]
-    identityMap.asScala
-  }
 
   val user1: User = User(UserId(), "foo", "foo@example.com", "secret")
 

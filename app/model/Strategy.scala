@@ -3,7 +3,6 @@ package org.w3.vs.model
 import org.w3.vs._
 import org.w3.util._
 import akka.dispatch._
-import org.w3.banana._
 import scalaz._
 import scalaz.Scalaz._
 

@@ -9,7 +9,6 @@ import org.w3.util._
 import org.w3.util.akkaext._
 import Http._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.banana._
 import org.w3.util.Util._
 
 // the test would be better without extending RunTestHelper...

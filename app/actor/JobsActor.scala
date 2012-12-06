@@ -6,8 +6,6 @@ import scalaz.Equal
 import scalaz.Scalaz._
 import org.w3.util.akkaext._
 import org.w3.vs._
-import diesel._
-import org.w3.banana._
 import org.w3.util.URL
 import scala.concurrent._
 import scala.util._
