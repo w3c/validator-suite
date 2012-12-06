@@ -55,7 +55,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
   }
 
   implicit val system: ActorSystem = {
-    val vs = ActorSystem("vs", configuration.getConfig("application.vs").map(_.underlying) getOrElse sys.error("application.http-client"))
+    val vs = ActorSystem("vs", configuration.getConfig("application.vs").map(_.underlying) getOrElse sys.error("application.vs"))
     vs.actorOf(Props(new UsersActor()(this)).withDispatcher("user-dispatcher"), "users")
     vs.actorOf(Props(new Http(httpClient, vs.scheduler, httpCacheOpt)).withDispatcher("http-dispatcher"), "http")
     val listener = vs.actorOf(Props(new Actor {
@@ -81,7 +81,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
 
   lazy val db = {
     val dbName = configuration.getString("application.mongodb.db-name") getOrElse sys.error("application.mongodb.db-name")
-    connection(dbName)
+    connection(dbName)(system.dispatchers.lookup("reactivemongo-dispatcher"))
   }
 
 }

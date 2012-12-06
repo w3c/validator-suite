@@ -39,14 +39,5 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
     org.w3.vs.Prod.configuration = configurationBeforeTest
   }
   
-//  /**
-//   * test the invariant that must be true for all observations
-//   */
-//  def testInvariants(run: Run): Example = {
-//    logger.debug("TODO: for every authority, delay was respected")
-//    logger.debug("TODO: for every authority, no fetch overlap")
-//    1 must beEqualTo(1)
-//  }
-  
 }
 
