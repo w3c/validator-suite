@@ -97,21 +97,18 @@ trait VSController extends Controller {
     }
   }
 
-  /*def AuthAsyncAction(f: Request[AnyContent] => User => Future[Result]): ActionA = Action { implicit req =>
-    AsyncResult {
-      (for {
-        user <- getUser()
-        result <- f(req)(user)
-      } yield result.withHeaders(("Cache-Control", "no-cache, no-store"))).recover(toError)
-    }
-  }*/
-
   def AuthAsyncAction(f: Request[AnyContent] => User => Future[PartialFunction[Format, Result]]): ActionA = Action { implicit req =>
     AsyncResult {
       (for {
         user <- getUser()
         result <- f(req)(user)
       } yield format(result).withHeaders(("Cache-Control", "no-cache, no-store"))).recover(toError)
+    }
+  }
+
+  def AsyncAction(f: Request[AnyContent] => Future[PartialFunction[Format, Result]]): ActionA = Action { implicit req =>
+    AsyncResult {
+      f(req).map(format _) recover(toError _)
     }
   }
 

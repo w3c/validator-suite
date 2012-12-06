@@ -10,7 +10,7 @@
     
     <section id="jobForm">
 
-    <form method="post" action="@routes.Admin.purchase">
+    <form method="post" action="@routes.Store.purchase">
 
         @if(!user.isDefined) {
 
@@ -70,7 +70,7 @@
         @assertors.formCheckerI18n(form.assertorsConfiguration)
         @assertors.formCheckerMobile(form.assertorsConfiguration)
 
-        <button type="submit" name="action" value="create" formaction="@routes.Admin.purchase">Purchase</button>
+        <button type="submit" name="action" value="create">Purchase</button>
 
     </form>
 

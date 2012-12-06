@@ -23,6 +23,6 @@ case class StoreException(t: Throwable) extends Exception("StoreException") //wi
 
 case class Unexpected(t: Throwable) extends Exception(t) //with SuiteException
 
-case class InvalidFormException[A <: VSForm](form: A) extends Exception("InvalidFormException")
+case class InvalidFormException[A <: VSForm](form: A, userOpt: Option[User] = None) extends Exception("InvalidFormException")
 
 //case class ForceResult(result: Result) extends Exception("ForceResult carries a Result that can be used by Play")

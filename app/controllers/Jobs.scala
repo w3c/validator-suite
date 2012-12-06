@@ -71,8 +71,8 @@ object Jobs extends VSController {
         case _ => Created(routes.Job.get(job.id).toString)
       }
     val f2: Future[PartialFunction[Format, Result]] = f1 recover {
-      case InvalidFormException(form: JobForm) => {
-        case format @ Html(_) => BadRequest(views.html.jobForm(form, user, None))
+      case InvalidFormException(form: JobForm, _) => {
+        case Html(_) => BadRequest(views.html.jobForm(form, user, None))
         case _ => BadRequest
       }
     }

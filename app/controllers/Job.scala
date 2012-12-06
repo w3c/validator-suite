@@ -65,7 +65,7 @@ object Job extends VSController {
       case _ => Ok
     }
     result recover {
-      case InvalidFormException(form: JobForm) => {
+      case InvalidFormException(form: JobForm, _) => {
         case Html(_) => BadRequest(views.html.jobForm(form, user, Some(id)))
         case _ => BadRequest
       }

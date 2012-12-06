@@ -58,7 +58,7 @@ object Application extends VSController {
         }
       }) recover {
         case  _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession
-        case InvalidFormException(form: LoginForm) => BadRequest(views.html.login(form))
+        case InvalidFormException(form: LoginForm, _) => BadRequest(views.html.login(form))
       } recover toError
       f.timer(authenticateName).timer(authenticateTimer)
     }
@@ -81,11 +81,11 @@ object Application extends VSController {
           case Left(form) => throw InvalidFormException(form)
           case Right(validForm) => validForm
         })
-        user <- User.register(email = form.email, name = form.name, password = form.password(0))
+        user <- User.register(email = form.email, name = form.name, password = form.password)
       } yield {
         SeeOther(routes.Jobs.index).withSession("email" -> user.vo.email)
       }) recover {
-        case InvalidFormException(form: RegisterForm) => BadRequest(views.html.register(form))
+        case InvalidFormException(form: RegisterForm, _) => BadRequest(views.html.register(form))
       } recover toError
     }
   }

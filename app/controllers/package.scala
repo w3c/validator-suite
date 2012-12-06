@@ -73,7 +73,9 @@ package object controllers {
   }
 
   implicit object urlQueryStringBinder extends Parsing[URL] (
-    s => new URL(s), _.toString, (key: String, e: Exception) => "Cannot parse parameter %s as URL: %s".format(key, e.getMessage)
+    s => new URL(s),
+    _.toString,
+    (key: String, e: Exception) => "Cannot parse parameter %s as URL: %s".format(key, e.getMessage)
   )
   
 }
