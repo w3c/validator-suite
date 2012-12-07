@@ -87,8 +87,10 @@
             $('input[name="userType"]').change(function () {
                 if (this.value === "new") {
                     $('.userName').show();
+                    $('.userName').attr("required", "required");
                 } else {
                     $('.userName').hide();
+                    $('.userName').removeAttr("required");
                 }
             });
             $('input[value="known"]').change();
