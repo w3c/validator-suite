@@ -111,9 +111,6 @@ object Main {
 
     val script = for {
       _ <- conf.db.drop()
-      _ <- User.collection.create()
-      _ <- Job.collection.create()
-      _ <- Run.collection.create()
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
       _ <- User.save(bernard)
@@ -133,9 +130,10 @@ object Main {
 
     script.getOrFail(10.seconds)
     
+    conf.connection.close()
+    conf.httpClient.close()
     conf.system.shutdown()
     conf.system.awaitTermination()
-    conf.connection.close()
 
   }
   

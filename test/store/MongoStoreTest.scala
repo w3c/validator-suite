@@ -143,10 +143,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
     val initScript = for {
-      _ <- db.drop()
-      _ <- User.collection.create()
-      _ <- Job.collection.create()
-      _ <- Run.collection.create()
+      _ <- conf.db.drop()
       _ <- User.save(user1)
       _ <- User.save(user2)
       _ <- User.save(user3)
@@ -168,6 +165,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
   }
 
+  override def afterAll(): Unit = {
+    connection.close()
+    httpClient.close()
+    system.shutdown()
+    system.awaitTermination()
+  }
 
   "User" in {
     val r = User.get(user1.id).getOrFail()
