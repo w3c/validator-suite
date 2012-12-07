@@ -13,7 +13,7 @@ class Id(val oid: BSONObjectID = BSONObjectID.generate) {
 case class JobId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
 case class RunId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
 case class UserId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
-case class AssertorId (id: String)
+case class AssertorId (id: String) { override def toString = id }
 
 object JobId {
   def apply(s: String): JobId = JobId(BSONObjectID(s))

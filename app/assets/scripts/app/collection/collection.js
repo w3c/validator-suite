@@ -63,7 +63,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
             if (options.load || (_.isUndefined(options.load) && this.view.isList())) {
                 this.load();
             }
-            if (options.listen || (_.isUndefined(options.load))) {
+            if (options.listen || (_.isUndefined(options.listen))) {
                 if (this.view.isList()) {
                     this.listen();
                 } else if (this.view.isSingle()) {
