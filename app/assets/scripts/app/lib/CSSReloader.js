@@ -1,4 +1,4 @@
-define(["jquery"], function ($) {
+define(["jquery", "libs/underscore"], function () {
 
     var CSSReloader = {};
 

@@ -3,7 +3,8 @@
     //width: 70%;
     //padding: 17px 15% 10px 15%;
     padding: 20px;
-    line-height: 2em;
+    padding-top: 25px;
+    //line-height: 2em;
 
     box-shadow:
         inset 0 1px 0 #699FC7,
@@ -24,6 +25,11 @@
         inset 0 4px 0 #216FAD,
         inset 0 5px 0 #104176;
 
+    form {
+        width: 700px;
+
+    }
+
     h1 {
         text-transform: uppercase;
         font-family: 'LeagueGothicRegular', Arial, sans-serif;
@@ -31,22 +37,30 @@
         color: #043255;
         color: #2571AB;
         font-weight: normal;
-        margin: 10px 0;
+        margin: 20px 0 5px 0;
+        padding-left: 150px;
+        padding-bottom: 7px;
+        border-bottom: 1px solid #CCC;
+
+        &:first-of-type {
+            margin-top: 0;
+        }
     }
 
     // ############
 
     form > label  {
         min-width: 135px;
-        border-right: 1px solid #CCC;
+        //border-right: 1px solid #CCC;
         font-weight: bold;
+        vertical-align: middle;
     }
 
     fieldset {
         label:first-of-type,
         br + label {
             min-width: 135px;
-            border-right: 1px solid transparent;
+            //border-right: 1px solid transparent;
         }
     }
 
@@ -57,11 +71,14 @@
     input[type="range"],
     input[pattern] {
         font-size: 13px;
-        margin: 0 0 0 5px;
+        margin: 3px 0 3px 5px;
+        vertical-align: middle;
     }
 
-    input[type="checkbox"] {
-        margin: 0 3px 0 5px;
+    input[type="checkbox"],
+    input[type="radio"] {
+        font-size: 16px;
+        margin: 5px 3px 5px 5px;
     }
 
     input[name="name"],
@@ -119,7 +136,7 @@
     }
 
     button {
-        margin: 7px 0 0 127px;
+        margin: 7px 0 0 150px;
     }
 
     .jsFold {
@@ -133,21 +150,33 @@
         }*/
 
         cursor: pointer;
+        font-style: italic;
+        color: #555;
 
-        display: inline-block;
-        vertical-align: middle;
+        &:hover {
+            color: black;
+            text-decoration: underline;
+        }
 
-        height:0;
-        width:0;
-        overflow: hidden;
+        &:after {
+            content: "";
+            display: inline-block;
+            vertical-align: middle;
+            height:0;
+            width:0;
+            overflow: hidden;
+            margin-left: 7px;
+            margin-top: -1px;
+        }
 
-        &:not(.folded) {
+
+        &:not(.folded):after {
             border-top: 4px solid transparent;
             border-bottom: 4px solid transparent;
             border-left: 7px solid #222;
         }
 
-        &.folded {
+        &.folded:after {
             border-left: 4px solid transparent;
             border-right: 4px solid transparent;
             border-top: 7px solid #222;
@@ -169,6 +198,32 @@
     .jsFold.folded + fieldset {
         height: auto;
         padding: 5px 0;
+    }
+
+    .otoj {
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: -5px;
+        padding-left: 10px;
+
+        label {
+            text-align: right;
+            min-width: 35px;
+            padding-right: 0;
+        }
+    }
+
+    input[name="userType"] {
+        margin-left: 122px;
+        margin-right: 2px;
+
+        + label {
+            padding-left: 10px;
+
+            display: inline-block;
+            text-align: left;
+            border-right: none;
+        }
     }
 
 }

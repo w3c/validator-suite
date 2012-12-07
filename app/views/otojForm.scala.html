@@ -17,15 +17,15 @@
         <h1>Login/Register</h1>
 
         <input id="userKnown" name="userType" value="known" type="radio" checked />
-        <label for="userKnown">I already have an account</label>
+        <label for="userKnown">Log in with an existing account:</label>
 
         <br>
         <input id="userNew" name="userType" value="new" type="radio" />
-        <label for="userNew">I am a new user</label>
+        <label for="userNew">Register a new account:</label>
 
-        <br>
-        <label for="userName">Name</label>
-        <input type="text" id="userName" name="userName" placeholder="Name" value='@form("userName").value'/>
+        <br class="userName">
+        <label for="userName" class="userName">Name</label>
+        <input type="text" id="userName" name="userName" placeholder="Name" value='@form("userName").value' class="userName" required/>
 
         <br>
         <label for="email">Email</label>
@@ -37,7 +37,7 @@
 
         }
 
-        <h1>Purchase a one-time job</h1>
+        <h1 class="purchase">Purchase a one-time job</h1>
 
         <label for="name">Job Name</label>
         <input id="name" name="name" type="text" value='@form("name").value' required="required"/>
@@ -65,10 +65,10 @@
 
         <br>
         @assertors.formValidatorHTML(form.assertorsConfiguration)
-        @assertors.formValidatorCSS(form.assertorsConfiguration)
         @assertors.formValidatorNu(form.assertorsConfiguration)
+        @assertors.formValidatorCSS(form.assertorsConfiguration)
         @assertors.formCheckerI18n(form.assertorsConfiguration)
-        @assertors.formCheckerMobile(form.assertorsConfiguration)
+        @**assertors.formCheckerMobile(form.assertorsConfiguration)**@
 
         <button type="submit" name="action" value="create">Purchase</button>
 
@@ -77,20 +77,21 @@
     <script>
         require(["libs/jquery"], function () {
         $(function (){
-            var slider = $("input#maxResources");
-            var output = $("output.maxResources");
-            slider.change(function (){
-                output.html(slider.attr("value"));
-            });
-            slider.change();
-
-            $('input[name=assertor[]] + fieldset').each(function (){
-                var fold = $('<a class="jsFold"></a>');
+            $('input[name=assertor[]] + fieldset').each(function () {
+                var fold = $('<a class="jsFold">Options</a>');
                 fold.click(function (){
                     $(this).toggleClass('folded');
                 });
                 $(this).before(fold);
             });
+            $('input[name="userType"]').change(function () {
+                if (this.value === "new") {
+                    $('.userName').show();
+                } else {
+                    $('.userName').hide();
+                }
+            });
+            $('input[value="known"]').change();
         });
         });
     </script>

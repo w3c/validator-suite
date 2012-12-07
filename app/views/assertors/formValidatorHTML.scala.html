@@ -2,7 +2,7 @@
 @defining("validator_html"){case name =>
 
 <label for="@name" title="Add the Markup Validator to this job">HTML Validator</label>
-<input  id="@name" name=assertor[] value="@name" type=checkbox  @if(config.contains(AssertorId(name))){checked}/>
+<input  id="@name" name="assertor[]" value="@name" type="radio"  @if(config.contains(AssertorId(name))){checked}/>
 
 <fieldset class="@name assertor">
     <legend>HTML Validator</legend>
