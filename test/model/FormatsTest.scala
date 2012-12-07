@@ -78,7 +78,8 @@ class FormatsTest extends WordSpec with MustMatchers {
   val userVo = UserVO(
     name = "foo bar",
     email = "foo@example.com",
-    password = "secret")
+    password = "secret",
+    isSubscriber = true)
 
   val userId = UserId()
   

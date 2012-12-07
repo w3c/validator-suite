@@ -93,9 +93,10 @@ object User {
     userId: UserId,
     name: String,
     email: String,
-    password: String)(
+    password: String,
+    isSubscriber: Boolean = true /* TODO: remove default value */)(
     implicit conf: VSConfiguration): User =
-      User(userId, UserVO(name, email, password))
+      User(userId, UserVO(name, email, password, isSubscriber))
 
   def get(userId: UserId)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
@@ -118,7 +119,7 @@ object User {
   }
 
   def register(email: String, name: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
-    val user = User(userId = UserId(), email = email, name = name, password = password)
+    val user = User(UserId(), email, name, password, isSubscriber = true /* TODO */)
     user.save().map(_ => user)
   }
   

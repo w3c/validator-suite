@@ -13,6 +13,7 @@ case class JobVO (
     creator: UserId) extends ValueObject
 
 case class UserVO(
-    name: String,
-    email: String,
-    password: String) extends ValueObject
+  name: String,
+  email: String,
+  password: String,
+  isSubscriber: Boolean) extends ValueObject

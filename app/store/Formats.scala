@@ -243,7 +243,8 @@ object Formats {
   implicit val UserVOFormat: Format[UserVO] = (
     (__ \ 'name).format[String] and
     (__ \ 'email).format[String] and
-    (__ \ 'password).format[String]
+    (__ \ 'password).format[String] and
+    (__ \ 'isSubscriber).format[Boolean]
   )(UserVO.apply _, unlift(UserVO.unapply _))
 
   implicit object RunReads extends Reads[(Run, Iterable[URL], Iterable[AssertorCall])] {
