@@ -44,7 +44,7 @@ object Store extends VSController {
                 case Left(form) => println(form.errors); throw InvalidFormException(form)
                 case Right(validForm) => validForm
               })
-              user <- User.register(email = form.email, name = form.name, password = form.password)
+              user <- User.register(email = form.email, name = form.name, password = form.password, isSubscriber = false)
             } yield user
           // Known user
           case _ =>

@@ -31,6 +31,8 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
 
   val logger = play.Logger.of(classOf[User])
 
+  def isSubscriber = vo.isSubscriber
+
   // getJob with id only if owned by user. should probably be a db request directly.
   def getJob(jobId: JobId): Future[Job] = {
     Job.getFor(id) map {
@@ -94,7 +96,7 @@ object User {
     name: String,
     email: String,
     password: String,
-    isSubscriber: Boolean = true /* TODO: remove default value */)(
+    isSubscriber: Boolean)(
     implicit conf: VSConfiguration): User =
       User(userId, UserVO(name, email, password, isSubscriber))
 
@@ -118,8 +120,8 @@ object User {
     }
   }
 
-  def register(email: String, name: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
-    val user = User(UserId(), email, name, password, isSubscriber = true /* TODO */)
+  def register(email: String, name: String, password: String, isSubscriber: Boolean)(implicit conf: VSConfiguration): Future[User] = {
+    val user = User(UserId(), email, name, password, isSubscriber)
     user.save().map(_ => user)
   }
   

@@ -29,11 +29,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   import conf._
 
-  val user1: User = User(UserId(), "foo", "foo@example.com", "secret")
+  val user1: User = User(UserId(), "foo", "foo@example.com", "secret", isSubscriber = true)
 
-  val user2 = User(UserId(), "bar", "bar@example.com", "secret")
+  val user2 = User(UserId(), "bar", "bar@example.com", "secret", isSubscriber = true)
 
-  val user3 = User(UserId(), "baz", "baz@example.com", "secret")
+  val user3 = User(UserId(), "baz", "baz@example.com", "secret", isSubscriber = true)
   
   val strategy =
     Strategy( 

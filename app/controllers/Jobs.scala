@@ -51,7 +51,13 @@ object Jobs extends VSController {
 
   def newJob: ActionA = AuthAction { implicit req => user =>
     timer(newJobName, newJobTimer) {
-      case Html(_) => Ok(views.html.jobForm(JobForm.blank, user, None))
+      case Html(_) => {
+        if (user.isSubscriber) {
+          Ok(views.html.jobForm(JobForm.blank, user, None))
+        } else {
+          Ok(views.html.otojForm(OneTimeJobForm.blank, Some(user), None))
+        }
+      }
     }
   }
 

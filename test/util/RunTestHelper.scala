@@ -21,7 +21,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val http = system.actorFor(system / "http")
 
-  val userTest = User(userId = UserId(), email = "", name = "", password = "")
+  val userTest = User(userId = UserId(), email = "", name = "", password = "", isSubscriber = true)
   
   val logger = play.Logger.of(classOf[RunTestHelper])
   
