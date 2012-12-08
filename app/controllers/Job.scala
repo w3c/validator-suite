@@ -19,6 +19,7 @@ import play.api.libs.{EventSource, Comet}
 import org.w3.vs.actor.message.{RunCompleted, UpdateData, NewAssertorResult, RunUpdate}
 import org.w3.vs.view.collection.ResourcesView
 import org.w3.vs.view.model.JobView
+import org.w3.vs.view.OTOJType
 
 object Job extends VSController {
 
@@ -82,11 +83,35 @@ object Job extends VSController {
     }
   }
 
-  def on(id: JobId): ActionA = simpleJobAction(id)(user => job => job.on())("jobs.on")
+  //def on(id: JobId): ActionA = simpleJobAction(id)(user => job => job.on())("jobs.on")
 
-  def off(id: JobId): ActionA = simpleJobAction(id)(user => job => job.off())("jobs.off")
+  //def off(id: JobId): ActionA = simpleJobAction(id)(user => job => job.off())("jobs.off")
 
-  def run(id: JobId): ActionA = simpleJobAction(id)(user => job => job.run())("jobs.run")
+  //def run(id: JobId): ActionA = simpleJobAction(id)(user => job => job.run())("jobs.run")
+
+  def run(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
+    for {
+      job <- user.getJob(id)
+      //_ = if (user.isSubscriber) job.run()
+    } yield {
+      case Html(_) => {
+        if (user.isSubscriber) {
+          job.run()
+          SeeOther(routes.Job.get(job.id)) //.flashing(("success" -> Messages("jobs.run", job.name)))
+        } else {
+          controllers.Store.redirectToStore(OTOJType.fromJob(job).index, job.id)
+        }
+      }
+      case _ => {
+        if (user.isSubscriber) {
+          job.run()
+          Accepted
+        } else {
+          Status(402) // Payment required
+        }
+      }
+    }
+  }
 
   def stop(id: JobId): ActionA = simpleJobAction(id)(user => job => job.cancel())("jobs.stop")
 

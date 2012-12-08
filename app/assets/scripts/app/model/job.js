@@ -49,6 +49,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
             logger.info(this.get("name") + ": run");
             var action = this._serverEvent('run', options);
             logger.debug(action);
+
         },
 
         stop: function (options) { this._serverEvent('stop', options); },
@@ -161,13 +162,15 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
         },
 
         run: function () {
-            this.model.run({ wait: true });
+            this.$(".run").parent("form").attr("action", this.model.url());
+
+            /*this.model.run({ wait: true });
             var collec = this.options.resources || this.options.assertions;
             if (collec) {
                 logger.log("reset collection");
                 collec.reset();
             }
-            return false;
+            return false;*/
         },
 
         addSearchHandler: function () {

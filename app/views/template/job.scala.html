@@ -16,7 +16,7 @@
             case "status" => {
             <span class="<%= status %>"><%= status %></span>
             <% if(isIdle) { %>
-            <button class="run">@Messages("job.button.run")</button>
+            <form method="post"><button class="run" name="action" value="run">@Messages("job.button.run")</button></form>
             <% } else { %>
             <button class="stop">@Messages("job.button.stop")</button>
             <% } %>}
@@ -48,7 +48,7 @@
 
             case "actions" => {
             <% if(isIdle) { %>
-            <button class="run">@Messages("job.button.run")</button>
+            <form method="post"><button class="run" name="action" value="run">@Messages("job.button.run")</button></form>
             <% } else { %>
             <button class="stop">@Messages("job.button.stop")</button>
             <% } %>

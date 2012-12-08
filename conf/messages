@@ -159,3 +159,7 @@ search.clear=Clear search.
 
 sort.ascending=Sort in ascending order
 sort.descending=Sort in descending order
+
+
+# Form
+name.error.required=Name cannot be empty

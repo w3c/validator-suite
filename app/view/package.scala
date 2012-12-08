@@ -11,6 +11,7 @@ import java.net.URL
 import play.api.data.format.Formats._
 import play.api.data.FormError
 import scala.Some
+import org.w3.vs.model.Job
 
 package object view {
 
@@ -20,6 +21,14 @@ package object view {
         case Some("otoj2") => Otoj2
         case Some("otoj3") => Otoj3
         case _ => Otoj1
+      }
+    }
+    def fromJob(job: Job): OTOJType = {
+      job.strategy.maxResources match {
+        case n if n <= Otoj1.maxPages => Otoj1
+        case n if n <= Otoj2.maxPages => Otoj2
+        case n if n <= Otoj3.maxPages => Otoj3
+        case _ => throw new Exception("this job max pages exceed the maximum one-time job value")
       }
     }
   }

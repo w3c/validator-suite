@@ -65,7 +65,7 @@ object Store extends VSController {
     } yield {
       // LOG something !!
       case Html(_) => {
-        Redirect("https://sites.fastspring.com/ercim/instant/otoj" + form.otoj.index + "?referrer=" + job.id).withSession("email" -> user.vo.email)
+        redirectToStore(form.otoj.index, job.id).withSession("email" -> user.vo.email)
       }
     }
     f1 recover {
@@ -85,5 +85,7 @@ object Store extends VSController {
       }
     }
   }
+
+  def redirectToStore(otojIndex: Int, jobId :JobId) = Redirect("https://sites.fastspring.com/ercim/instant/otoj" + otojIndex + "?referrer=" + jobId)
 
 }
