@@ -18,18 +18,18 @@ import play.modules.reactivemongo.PlayBsonImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
-import org.w3.vs.store.Formats._
+import org.w3.vs.store.Formats.{ RunIdFormat, ResourceResponseEventFormat }
 
 object ResourceResponse {
 
   def getFor(runId: RunId)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
     import conf._
-    val query = Json.obj("_id" -> toJson(runId))
+    val query = Json.obj(
+      "runId" -> toJson(runId),
+      "event" -> toJson("resource-response") )
     val cursor = Run.collection.find[JsValue, JsValue](query)
     cursor.toList map { list =>
-      val json = list.headOption.get
-      val events = (json \ "events").as[Set[RunEvent]]
-      events collect { case ResourceResponseEvent(rr, _) => rr }
+      list.map(json => json.as[ResourceResponseEvent](ResourceResponseEventFormat).rr).toSet
     }
   }
 

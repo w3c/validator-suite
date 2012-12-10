@@ -133,10 +133,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         assertion
       }
       val assertorResult = AssertorResult(run1.context, assertorId, url, assertions)
-      Run.saveEvent(run1.runId, AssertorResponseEvent(assertorResult)).getOrFail()
+      Run.saveEvent(AssertorResponseEvent(run1.runId, assertorResult)).getOrFail()
     }
-    Run.complete(run2.runId, run2.completedOn.get).getOrFail()
-    Run.complete(run3.runId, run3.completedOn.get).getOrFail()
+    Run.saveEvent(CompleteRunEvent(run2.userId, run2.jobId, run2.runId, run2.completedOn.get)).getOrFail()
+    Run.saveEvent(CompleteRunEvent(run3.userId, run3.jobId, run3.runId, run3.completedOn.get)).getOrFail()
   }
 
 
@@ -152,11 +152,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       _ <- Job.save(job3)
       _ <- Job.save(job4)
       _ <- Job.save(job5)
-      _ <- Run.save(run1)
-      _ <- Run.save(run2)
-      _ <- Run.save(run3)
-      _ <- Run.save(run4)
-      _ <- Run.save(run5)
+      _ <- Run.saveEvent(CreateRunEvent(run1))
+      _ <- Run.saveEvent(CreateRunEvent(run2))
+      _ <- Run.saveEvent(CreateRunEvent(run3))
+      _ <- Run.saveEvent(CreateRunEvent(run4))
+      _ <- Run.saveEvent(CreateRunEvent(run5))
     } yield ()
     initScript.getOrFail()
     addAssertions() // <- already blocking

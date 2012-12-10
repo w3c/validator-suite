@@ -70,10 +70,10 @@ class FormatsTest extends WordSpec with MustMatchers {
   val assertorFailure =
     AssertorFailure((UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
 
-  val httpResponseEvent = ResourceResponseEvent(httpResponse)
-  val errorResponseEvent = ResourceResponseEvent(errorResponse)
-  val beProactiveEvent = BeProactiveEvent()
-  val beLazyEvent = BeLazyEvent()
+  val httpResponseEvent = ResourceResponseEvent(RunId(), httpResponse)
+  val errorResponseEvent = ResourceResponseEvent(RunId(), errorResponse)
+  val beProactiveEvent = BeProactiveEvent(RunId())
+  val beLazyEvent = BeLazyEvent(RunId())
 
   val userVo = UserVO(
     name = "foo bar",

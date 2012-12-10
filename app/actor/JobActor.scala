@@ -52,15 +52,15 @@ object JobActor {
       val action = run.strategy.getActionFor(url)
       action match {
         case GET => {
-          logger.debug("%s: >>> GET %s" format (run.shortId, url))
+          logger.debug(s"${run.shortId}: >>> GET ${url}")
           http ! Http.Fetch(url, GET, run.runId)
         }
         case HEAD => {
-          logger.debug("%s: >>> HEAD %s" format (run.shortId, url))
+          logger.debug(s"${run.shortId}: >>> HEAD ${url}")
           http ! Http.Fetch(url, HEAD, run.runId)
         }
         case IGNORE => {
-          logger.debug("%s: Ignoring %s. If you're here, remember that you have to remove that url is not pending anymore..." format (run.shortId, url))
+          logger.debug(s"${run.shortId}: Ignoring ${url}. If you're here, remember that you have to remove that url is not pending anymore...")
         }
       }
     }
@@ -129,7 +129,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     val _run =
       if (run.hasNoPendingAction && !run.completedOn.isDefined) {
         val now = DateTime.now(DateTimeZone.UTC)
-        lastWrite = Run.complete(run.runId, now)
+        lastWrite = Run.saveEvent(CompleteRunEvent(run.userId, run.jobId, run.runId, now))
         val msg = RunCompleted(job.id, now)
         tellEverybody(msg)
         run.copy(completedOn = Some(now))
@@ -156,11 +156,11 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     if (stateData.state /== _run.state) {
-      logger.debug("%s: transition to new state %s" format (run.shortId, _run.state.toString))
+      logger.debug(s"${run.shortId}: transition to new state ${_run.state}")
       //val msg = UpdateData(_run.jobData, job.id, _run.activity)
       //tellEverybody(msg)
       if (_run.noMoreUrlToExplore)
-        logger.debug("%s: Exploration phase finished. Fetched %d pages" format (_run.shortId, _run.numberOfFetchedResources))
+        logger.debug(s"${_run.shortId}: Exploration phase finished. Fetched ${_run.numberOfFetchedResources} pages")
       if (_run.pendingAssertions.isEmpty) {
         logger.debug("Assertion phase finished.")
       }
@@ -171,12 +171,12 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   whenUnhandled {
 
     case Event(Resume, run) => {
-      logger.debug("%s: Resume" format run.shortId)
+      logger.debug(s"${run.shortId}: Resume")
       stay()
     }
 
     case Event(GetSnapshot, run) => {
-      logger.debug("%s: GetSnapshot" format run.shortId)
+      logger.debug(s"${run.shortId}: GetSnapshot")
       sender ! run.jobData
       stay()
     }
@@ -188,7 +188,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event(msg: ListenerMessage, run) => {
-      logger.debug("%s: ListenerMessage" format run.shortId)
+      logger.debug(s"${run.shortId}: ListenerMessage")
       listenerHandler(msg)
       stay()
     }
@@ -211,7 +211,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }*/
 
     case Event(e, run) => {
-      logger.error("%s: unexpected event %s" format (run.shortId, e.toString))
+      logger.error(s"${run.shortId}: unexpected event ${e}")
       stay()
     }
 
@@ -220,7 +220,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   when(NeverStarted) {
 
     case Event(Refresh, run) => {
-      lastWrite = Run.save(run)
+      lastWrite = Run.saveEvent(CreateRunEvent(run.userId, run.jobId, run.runId, run.strategy, run.createdAt))
       sender ! run.context
       val (startedRun, toBeFetched) = run.newlyStartedRun
       executeCommands(startedRun, self, toBeFetched, List.empty, http, assertionsActorRef)
@@ -234,24 +234,24 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   
     // just ignore this event if from a previous Run
     case Event(ar: AssertorResponse, run) if ar.context /== run.context => {
-      logger.debug("%s (previous run): received assertor response" format (run.shortId))
+      logger.debug(s"${run.shortId} (previous run): received assertor response")
       logger.debug(s"assertorResponse.context = ${ar.context}")
       logger.debug(s"run.context =              ${run.context}")
       stay()
     }
 
     case Event(result: AssertorResult, run) => {
-      logger.debug("%s: %s produced AssertorResult for %s" format (run.shortId, result.assertor, result.sourceUrl.toString))
+      logger.debug(s"${run.shortId}: ${result.assertor} produced AssertorResult for ${result.sourceUrl}")
       val now = DateTime.now(DateTimeZone.UTC)
-      lastWrite = Run.saveEvent(run.runId, AssertorResponseEvent(result, now))
+      lastWrite = Run.saveEvent(AssertorResponseEvent(run.runId, result, now))
       val newRun = run.withAssertorResult(result)
       tellEverybody(NewAssertorResult(result, newRun, now))
       stateOf(newRun)
     }
 
     case Event(failure: AssertorFailure, run) => {
-      logger.warn("%s: %s failed to assert %s because [%s]" format (run.shortId, failure.assertor, failure.sourceUrl.toString, failure.why))
-      lastWrite = Run.saveEvent(run.runId, AssertorResponseEvent(failure))
+      logger.warn(s"${run.shortId}: ${failure.assertor} failed to assert ${failure.sourceUrl} because [${failure.why}]")
+      lastWrite = Run.saveEvent(AssertorResponseEvent(run.runId, failure))
       stateOf(run.withAssertorFailure(failure))
     }
 
@@ -262,9 +262,9 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event((_: RunId, httpResponse: HttpResponse), run) => {
-      logger.debug("%s: <<< %s" format (run.shortId, httpResponse.url))
+      logger.debug(s"${run.shortId}: <<< ${httpResponse.url}")
       extractedUrls.update(httpResponse.extractedURLs.size)
-      lastWrite = Run.saveEvent(run.runId, ResourceResponseEvent(httpResponse))
+      lastWrite = Run.saveEvent(ResourceResponseEvent(run.runId, httpResponse))
       tellEverybody(NewResource(run.context, httpResponse))
       val (newRun, urlsToFetch, assertorCalls) =
         run.withHttpResponse(httpResponse)
@@ -274,7 +274,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     case Event((_: RunId, error: ErrorResponse), run) => {
       logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
-      lastWrite = Run.saveEvent(run.runId, ResourceResponseEvent(error))
+      lastWrite = Run.saveEvent(ResourceResponseEvent(run.runId, error))
       tellEverybody(NewResource(run.context, error))
       val (runWithErrorResponse, urlsToFetch) = run.withErrorResponse(error)
       executeCommands(runWithErrorResponse, self, urlsToFetch, Iterable.empty, http, assertionsActorRef)
@@ -286,7 +286,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     case Event(BeLazy, run) => stateOf(run.withMode(Lazy))
 
     case Event(Refresh, run) => {
-      logger.debug("%s: received a Refresh" format run.shortId)
+      logger.debug(s"${run.shortId}: received a Refresh")
       val (startedRun, urlsToBeFetched) = Run.freshRun(userId, jobId, strategy).newlyStartedRun
       sender ! startedRun.context
       executeCommands(startedRun, self, urlsToBeFetched, List.empty, http, assertionsActorRef)
@@ -294,7 +294,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event(Stop, run) => {
-      logger.debug("%s: received a Stop" format run.shortId)
+      logger.debug(s"${run.shortId}: received a Stop")
       assertionsActorRef ! Stop
       stateOf(run.stopMe())
     }

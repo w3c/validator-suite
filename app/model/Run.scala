@@ -24,24 +24,26 @@ import org.w3.vs.store.Formats._
 
 object Run {
 
+  val logger = play.Logger.of(classOf[Run])
+
   type Context = (UserId, JobId, RunId)
 
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("runs")
 
   def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
-    import conf._
-    val query = Json.obj("_id" -> toJson(runId))
+    val query = Json.obj("runId" -> toJson(runId))
     val cursor = collection.find[JsValue, JsValue](query)
     cursor.toList map { list =>
-      list.headOption.get.as[(Run, Iterable[URL], Iterable[AssertorCall])]
+      // the sort is done client-side
+      val orderedEvents = list.map(_.as[RunEvent]).sortBy(_.timestamp)
+      val (createRun, events) = orderedEvents match {
+        case (createRun@CreateRunEvent(_, _, _, _, _, _)) :: events => (createRun, events)
+        case _ => sys.error("CreateRunEvent MUST be the first event")
+      }
+      Run.replayEvents(createRun, events)
     }
   }  
-  
-  def save(run: Run)(implicit conf: VSConfiguration): Future[Unit] = {
-    import conf._
-    collection.insert(toJson(run)) map { lastError => () }
-  }
 
   def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
     sys.error("")
@@ -58,21 +60,58 @@ object Run {
 
   /* addResourceResponse */
 
-  def saveEvent(runId: RunId, event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
+  def saveEvent(event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    val selector = Json.obj("_id" -> toJson(runId))
-    val update = Json.obj("$push" -> Json.obj("events" -> toJson(event)))
-    collection.update(selector, update) map { lastError => () }
+    collection.insert(toJson(event)) map { lastError => () }
   }
 
-  /* other events */
-
-  def complete(runId: RunId, at: DateTime)(implicit conf: VSConfiguration): Future[Unit] = {
-    import conf._
-    val selector = Json.obj("_id" -> toJson(runId))
-    val update = Json.obj("$set" -> Json.obj("completedOn" -> toJson(at)))
-    collection.update(selector, update) map { lastError => () }
+  /** replays all the events that define a run, starting with the CreateRunEvent
+    * assumption: all events share the same runId and are ordered by their timestamp
+    */
+  def replayEvents(createRun: CreateRunEvent, events: Iterable[RunEvent]): (Run, Iterable[URL], Iterable[AssertorCall]) = {
+    import createRun._
+    val start = System.currentTimeMillis()
+    var toBeFetched = Set.empty[URL]
+    var toBeAsserted = Map.empty[(URL, AssertorId), AssertorCall]
+    val (initialRun, urls) = Run((userId, jobId, runId), strategy, createdAt).newlyStartedRun
+    var run = initialRun
+    toBeFetched ++= urls
+    events.toList.sortBy(_.timestamp) foreach {
+      case CompleteRunEvent(userId, jobId, runId, at, _) => {
+        run = run.completeOn(at)
+      }
+      case AssertorResponseEvent(runId, ar@AssertorResult(_, assertor, url, _), _) => {
+        toBeAsserted -= ((url, assertor))
+        run = run.withAssertorResult(ar)
+      }
+      case AssertorResponseEvent(runId, af@AssertorFailure(_, assertor, url, _), _) => {
+        toBeAsserted -= ((url, assertor))
+        run = run.withAssertorFailure(af)
+      }
+      case ResourceResponseEvent(runId, hr@HttpResponse(url, _, _, _, _), _) => {
+        toBeFetched -= url
+        val (newRun, urls, assertorCalls) = run.withHttpResponse(hr)
+        run = newRun
+        toBeFetched ++= urls
+        assertorCalls foreach { ac =>
+          toBeAsserted += ((ac.response.url, ac.assertor.id) -> ac)
+        }
+      }
+      case ResourceResponseEvent(runId, er@ErrorResponse(url, _, _), _) => {
+        toBeFetched -= url
+        val (newRun, urls) = run.withErrorResponse(er)
+        run = newRun
+        toBeFetched ++= urls
+      }
+      case BeProactiveEvent(runId, _) => ()
+      case BeLazyEvent(runId, _) => ()
+    }
+    val result = (run, toBeFetched, toBeAsserted.values)
+    val end = System.currentTimeMillis()
+    logger.debug("Run deserialized in %dms (found %d events)" format (end - start, events.size))
+    result
   }
+
 
 }
 

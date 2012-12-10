@@ -5,7 +5,7 @@ import scalaz.Equal
 import reactivemongo.bson._
 
 class Id(val oid: BSONObjectID = BSONObjectID.generate) {
-  def shortId: String = toString.substring(0, 6)
+  def shortId: String = toString//.substring(2, 8)
   def id: String = oid.stringify
   override def toString = oid.stringify
 }

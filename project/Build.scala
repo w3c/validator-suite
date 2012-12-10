@@ -60,15 +60,13 @@ object ApplicationBuild extends Build {
     resolvers += "sgodbillon" at "https://bitbucket.org/sgodbillon/repository/raw/master/snapshots/"
 //    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
 //    resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
-    // resolvers += "sesame-repo-releases" at "http://repo.aduna-software.org/maven2/releases/"
-
-    // ensimeConfig := sexp(
-    //   key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),
-    //   key(":formatting-prefs"), sexp(
-    //     key(":rewriteArrowSymbols"), false,
-    //     key(":doubleIndentClassDeclaration"), true
-    //   )
-    // )
+//    ensimeConfig := sexp(
+//      key(":compiler-args"), sexp("-Ywarn-dead-code", "-Ywarn-shadowing"),
+//      key(":formatting-prefs"), sexp(
+//        key(":rewriteArrowSymbols"), false,
+//        key(":doubleIndentClassDeclaration"), false
+//      )
+//    )
   )
 
 }

@@ -19,7 +19,7 @@ import play.modules.reactivemongo.PlayBsonImplicits._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import Json.toJson
-
+import play.api.libs.json.Reads.pattern
 
 object Formats {
 
@@ -206,37 +206,79 @@ object Formats {
     }
   }
 
-  val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
-    (__ \ 'event).format[String] and
-    (__ \ 'ar).format[AssertorResponse] and
-    (__ \ 'timestamp).format[DateTime]
-  )({ case (_, timestamp, ar) => AssertorResponseEvent(timestamp, ar) }, { case AssertorResponseEvent(timestamp, ar) => ("assertor-response", timestamp, ar) } )
-
-  val ResourceResponseEventFormat: Format[ResourceResponseEvent] = (
-    (__ \ 'event).format[String] and
-    (__ \ 'rr).format[ResourceResponse] and
-    (__ \ 'timestamp).format[DateTime]
-  )({ case (_, timestamp, rr) => ResourceResponseEvent(timestamp, rr) }, { case ResourceResponseEvent(timestamp, ar) => ("resource-response", timestamp, ar) })
-
-  val BeXEventFormat: Format[BeXEvent] = (
-    (__ \ 'event).format[String] and
+  val CreateRunEventFormat: Format[CreateRunEvent] = (
+    (__ \ 'event).format[String](pattern("create-run".r)) and
+    (__ \ 'userId).format[UserId] and
+    (__ \ 'jobId).format[JobId] and
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'strategy).format[Strategy] and
+    (__ \ 'createdAt).format[DateTime] and
     (__ \ 'timestamp).format[DateTime]
   )({
-    case (event, timestamp) if event == "be-proactive" => BeProactiveEvent(timestamp)
-    case (event, timestamp) if event == "be-lazy" => BeLazyEvent(timestamp)
-  }, {
-    case BeProactiveEvent(timestamp) => ("be-proactive", timestamp)
-    case BeLazyEvent(timestamp) => ("be-lazy", timestamp)
-  })
+    case (_, userId, jobId, runId, strategy, createdAt, timestamp) =>
+      CreateRunEvent(userId, jobId, runId, strategy, createdAt, timestamp)
+  },
+    {
+      case CreateRunEvent(userId, jobId, runId, strategy, createdAt, timestamp) =>
+        ("create-run", userId, jobId, runId, strategy, createdAt, timestamp)
+    }
+  )
+
+  val CompleteRunEventFormat: Format[CompleteRunEvent] = (
+    (__ \ 'event).format[String](pattern("complete-run".r)) and
+    (__ \ 'userId).format[UserId] and
+    (__ \ 'jobId).format[JobId] and
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'at).format[DateTime] and
+    (__ \ 'timestamp).format[DateTime]
+  )({ case (_, userId, jobId, runId, at, timestamp) => CompleteRunEvent(userId, jobId, runId, at, timestamp) },
+    { case CompleteRunEvent(userId, jobId, runId, at, timestamp) => ("complete-run", userId, jobId, runId, at, timestamp) }
+  )
+
+  val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
+    (__ \ 'event).format[String](pattern("assertor-response".r)) and
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'ar).format[AssertorResponse] and
+    (__ \ 'timestamp).format[DateTime]
+  )({ case (_, runId, timestamp, ar) => AssertorResponseEvent(runId, timestamp, ar) }, { case AssertorResponseEvent(runId, timestamp, ar) => ("assertor-response", runId, timestamp, ar) } )
+
+  val ResourceResponseEventFormat: Format[ResourceResponseEvent] = (
+    (__ \ 'event).format[String](pattern("resource-response".r)) and
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'rr).format[ResourceResponse] and
+    (__ \ 'timestamp).format[DateTime]
+  )({ case (_, runId, timestamp, rr) => ResourceResponseEvent(runId, timestamp, rr) }, { case ResourceResponseEvent(runId, timestamp, ar) => ("resource-response", runId, timestamp, ar) })
+
+  val BeProactiveEventFormat: Format[BeProactiveEvent] = (
+    (__ \ 'event).format[String](pattern("be-proactive".r)) and
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'timestamp).format[DateTime]
+  )({ case (event, runId, timestamp) => BeProactiveEvent(runId, timestamp) },
+    { case BeProactiveEvent(runId, timestamp) => ("be-proactive", runId, timestamp) })
+
+
+  val BeLazyEventFormat: Format[BeLazyEvent] = (
+    (__ \ 'event).format[String](pattern("be-lazy".r)) and
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'timestamp).format[DateTime]
+  )({ case (event, runId, timestamp) if event == "be-lazy" => BeLazyEvent(runId, timestamp) },
+    { case BeLazyEvent(runId, timestamp) => ("be-lazy", runId, timestamp) })
 
   implicit object RunEventFormat extends Format[RunEvent] {
     def reads(json: JsValue): JsResult[RunEvent] =
-      AssertorResponseEventFormat.reads(json) orElse ResourceResponseEventFormat.reads(json) orElse BeXEventFormat.reads(json)
+      AssertorResponseEventFormat.reads(json) orElse
+        ResourceResponseEventFormat.reads(json) orElse
+        CreateRunEventFormat.reads(json) orElse
+        CompleteRunEventFormat.reads(json) orElse
+        BeProactiveEventFormat.reads(json) orElse
+        BeLazyEventFormat.reads(json)
     def writes(event: RunEvent) = event match {
-      case e@AssertorResponseEvent(_, _) => AssertorResponseEventFormat.writes(e)
-      case e@ResourceResponseEvent(_, _) => ResourceResponseEventFormat.writes(e)
-      case e@BeProactiveEvent(_) => BeXEventFormat.writes(e)
-      case e@BeLazyEvent(_) => BeXEventFormat.writes(e)
+      case e@CreateRunEvent(_, _, _, _, _, _) => CreateRunEventFormat.writes(e)
+      case e@CompleteRunEvent(_, _, _, _, _) => CompleteRunEventFormat.writes(e)
+      case e@AssertorResponseEvent(_, _, _) => AssertorResponseEventFormat.writes(e)
+      case e@ResourceResponseEvent(_, _, _) => ResourceResponseEventFormat.writes(e)
+      case e@BeProactiveEvent(_, _) => BeProactiveEventFormat.writes(e)
+      case e@BeLazyEvent(_, _) => BeLazyEventFormat.writes(e)
     }
   }
 
@@ -246,69 +288,5 @@ object Formats {
     (__ \ 'password).format[String] and
     (__ \ 'isSubscriber).format[Boolean]
   )(UserVO.apply _, unlift(UserVO.unapply _))
-
-  implicit object RunReads extends Reads[(Run, Iterable[URL], Iterable[AssertorCall])] {
-    import org.w3.util.DateTimeOrdering
-    def reads(json: JsValue): JsResult[(Run, Iterable[URL], Iterable[AssertorCall])] = reeads {
-      val runId = (json \ "_id").as[RunId]
-      val userId = (json \ "userId").as[UserId]
-      val jobId = (json \ "jobId").as[JobId]
-      val strategy = (json \ "strategy").as[Strategy]
-      val createdAt = (json \ "createdAt").as[DateTime]
-      val completedOn = (json \ "completedOn").as[Option[DateTime]]
-      val events = (json \ "events").as[List[RunEvent]]
-      val start = System.currentTimeMillis()
-      var toBeFetched = Set.empty[URL]
-      var toBeAsserted = Map.empty[(URL, AssertorId), AssertorCall]
-      val (initialRun, urls) = Run((userId, jobId, runId), strategy, createdAt).newlyStartedRun
-      var run = initialRun
-      toBeFetched ++= urls
-      completedOn foreach { at => run = run.completeOn(at) }
-      events.toList.sortBy(_.timestamp) foreach {
-        case AssertorResponseEvent(ar@AssertorResult(_, assertor, url, _), _) => {
-          toBeAsserted -= ((url, assertor))
-          run = run.withAssertorResult(ar)
-        }
-        case AssertorResponseEvent(af@AssertorFailure(_, assertor, url, _), _) => {
-          toBeAsserted -= ((url, assertor))
-          run = run.withAssertorFailure(af)
-        }
-        case ResourceResponseEvent(hr@HttpResponse(url, _, _, _, _), _) => {
-          toBeFetched -= url
-          val (newRun, urls, assertorCalls) = run.withHttpResponse(hr)
-          run = newRun
-          toBeFetched ++= urls
-          assertorCalls foreach { ac =>
-            toBeAsserted += ((ac.response.url, ac.assertor.id) -> ac)
-          }
-        }
-        case ResourceResponseEvent(er@ErrorResponse(url, _, _), _) => {
-          toBeFetched -= url
-          val (newRun, urls) = run.withErrorResponse(er)
-          run = newRun
-          toBeFetched ++= urls
-        }
-        case BeProactiveEvent(_) => ()
-        case BeLazyEvent(_) => ()
-      }
-      val result = (run, toBeFetched, toBeAsserted.values)
-      val end = System.currentTimeMillis()
-      logger.debug("Run deserialized in %dms (found %d events)" format (end - start, events.size))
-      result
-    }
-  }
-
-  implicit object RunWrites extends Writes[Run] {
-    def writes(run: Run) = {
-      Json.obj(
-        "_id" -> toJson(run.runId),
-        "userId" -> toJson(run.userId),
-        "jobId" -> toJson(run.jobId),
-        "strategy" -> toJson(run.strategy),
-        "createdAt" -> toJson(run.createdAt),
-        "events" -> Json.arr()
-      )
-    }
-  }
 
 }
