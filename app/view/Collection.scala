@@ -80,7 +80,7 @@ object Collection {
 
   val DefaultPerPage = 30
 
-  val MaxPerPage = 200
+  val MaxPerPage = 500
 
   case class Definition(name: String, isSortable: Boolean)
 
