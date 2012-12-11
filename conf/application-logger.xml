@@ -9,6 +9,13 @@
      </encoder>
    </appender>
 
+  <appender name="ORDERS" class="ch.qos.logback.core.FileAppender">
+    <file>${application.home}/logs/orders.log</file>
+    <encoder>
+      <pattern>%date [%level] %message%n%xException{40}</pattern>
+    </encoder>
+  </appender>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%coloredLevel %logger{15} - %message%n%xException{40}</pattern>
@@ -18,10 +25,14 @@
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
   <logger name="org.w3.vs" level="DEBUG" />
-  <logger name="org.w3.banana.jena" level="DEBUG" />
-  <logger name="Controller.Validator" level="DEBUG" />
+  <logger name="org.w3.vs.actor" level="INFO" />
+  <logger name="org.w3.vs.http" level="INFO" />
+  <logger name="org.w3.vs.assertor" level="DEBUG" />
+  <logger name="org.w3.vs.controllers.Store" level="DEBUG">
+      <appender-ref ref="ORDERS" />
+  </logger>
   <logger name="org.eclipse.jetty.server" level="INFO">
-    <appender-ref ref="STDOUT" />
+      <appender-ref ref="STDOUT" />
   </logger>
 
   <root level="ERROR">

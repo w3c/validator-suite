@@ -77,7 +77,7 @@ trait VSController extends Controller {
         _.split(",").map(
           _.trim.replaceAll(";.*$", "") // ignore priority weight
         ).find(Format.supported.keys.toList.contains(_))
-      ).flatten.map(Format.supported(_))
+      ).flatten.map(Format.supported(_)) // TODO: Throws an exception ?
     if (requestFormat.isDefined && f.isDefinedAt(requestFormat.get))
       f(requestFormat.get).as(requestFormat.get.contentType)
     else {

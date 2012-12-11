@@ -8,14 +8,10 @@ import play.api.i18n._
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import org.w3.util.Util._
-import com.yammer.metrics.Metrics
-import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
-import org.w3.vs.view.OTOJType
 
 object Store extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Admin")
+  val logger = play.Logger.of("org.w3.vs.controllers.Store")
 
   def newOTOJ: ActionA = AsyncAction { implicit req =>
     val f: Future[PartialFunction[Format, Result]] =
@@ -63,9 +59,13 @@ object Store extends VSController {
       })
       job <- form.createJob(user).save()
     } yield {
-      // LOG something !!
       case Html(_) => {
-        redirectToStore(form.otoj.index, job.id).withSession("email" -> user.vo.email)
+        if (user.isSubscriber) {
+          Redirect(routes.Jobs.index).withSession("email" -> user.vo.email)
+        } else {
+          logger.info(s"Redirected user ${user.vo.email} to store for jobId ${job.id}")
+          redirectToStore(form.otoj.index, job.id).withSession("email" -> user.vo.email)
+        }
       }
     }
     f1 recover {
@@ -87,5 +87,25 @@ object Store extends VSController {
   }
 
   def redirectToStore(otojIndex: Int, jobId :JobId) = Redirect("https://sites.fastspring.com/ercim/instant/otoj" + otojIndex + "?referrer=" + jobId)
+
+  def callback = Action { req =>
+    AsyncResult {
+      logger.debug(req.body.asFormUrlEncoded.toString)
+      val orderId = req.body.asFormUrlEncoded.get("OrderID").headOption.get // let it fail
+      val f: Future[Result] = for {
+        jobId <- Future(JobId(req.body.asFormUrlEncoded.get("JobId").headOption.get))
+        job <- org.w3.vs.model.Job.get(jobId)
+        // TODO: add security check
+        _ <- {
+          logger.info("Got payment confirmation. Running job " + job.id)
+          job.run()
+        }
+      } yield {
+        InternalServerError
+      }
+      f onFailure { case t: Throwable => logger.error("Error with order " + orderId, t) }
+      f
+    }
+  }
 
 }

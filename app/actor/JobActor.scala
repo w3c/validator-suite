@@ -250,6 +250,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     }
 
     case Event(failure: AssertorFailure, run) => {
+      // It would be better to have the throwable here and log it
       logger.warn(s"${run.shortId}: ${failure.assertor} failed to assert ${failure.sourceUrl} because [${failure.why}]")
       lastWrite = Run.saveEvent(AssertorResponseEvent(run.runId, failure))
       stateOf(run.withAssertorFailure(failure))

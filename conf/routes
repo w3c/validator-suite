@@ -17,6 +17,7 @@ GET     /jobs/socket/:socket                        controllers.Jobs.socket(sock
 
 GET     /jobs/purchase                              controllers.Store.newOTOJ
 POST    /jobs/purchase                              controllers.Store.purchase
+POST    /purchase/callback                          controllers.Store.callback
 
 # Job
 GET     /jobs/:job                                  controllers.Job.get(job: JobId)
