@@ -6,6 +6,8 @@ import org.w3.vs.VSConfiguration
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 import org.w3.util.website._
+import org.w3.vs.store.MongoStore
+import org.w3.util.Util._
 
 /**
  * helper trait that can be used to test Runs
@@ -29,6 +31,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   
   override def beforeAll: Unit = {
     org.w3.vs.Prod.configuration = configuration
+    MongoStore.reInitializeDb().getOrFail()
     servers foreach { _.start() }
   }
   

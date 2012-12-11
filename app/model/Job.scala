@@ -211,8 +211,7 @@ object Job {
     val query = QueryBuilder().
       query( Json.obj(
         "jobId" -> toJson(jobId),
-        "event" -> toJson("create-event"),
-        "completedOn" -> Json.obj("$exists" -> JsBoolean(true))) ).
+        "event" -> toJson("create-event")) ).
       sort( "completedOn" -> SortOrder.Descending ).
       projection( BSONDocument(
         "runId" -> BSONInteger(1),

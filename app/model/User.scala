@@ -139,11 +139,19 @@ object User {
     }}
   }
 
+  /** saves a user in the store
+    * the id is already known (mongo does not create one for us)
+    * if an error happens, we assume it's because there was already a user with the same email
+    * looks like the driver is buggy as it does not return a specific error code
+    */
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     val userId = user.id
     val userJ = toJson(user.vo).asInstanceOf[JsObject] + ("_id" -> toJson(userId))
-    collection.insert(userJ) map { lastError => () }
+    import reactivemongo.core.commands.LastError
+    collection.insert(userJ) map { lastError => () } recover {
+      case LastError(_, _, Some(11000), _, _) => throw DuplicatedEmail(user.vo.email)
+    }
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): Future[Unit] =

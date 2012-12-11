@@ -143,7 +143,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
     val initScript = for {
-      _ <- conf.db.drop()
+      _ <- MongoStore.reInitializeDb()
       _ <- User.save(user1)
       _ <- User.save(user2)
       _ <- User.save(user3)
@@ -181,6 +181,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     User.getByEmail("foo@example.com").getOrFail(3.seconds) must be(user1)
 
     Try { User.getByEmail("unknown@example.com").getOrFail() } must be (Failure(UnknownUser))
+  }
+
+  "a User can't have an email already in use" in {
+    val user = User(UserId(), "FOO", "foo@example.com", "secret", isSubscriber = true)
+    Try { User.save(user).getOrFail() } must be (Failure(DuplicatedEmail("foo@example.com")))
   }
 
   "authenticate a user" in {

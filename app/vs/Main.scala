@@ -7,6 +7,7 @@ import org.w3.util.Util._
 import scala.concurrent.util._
 import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.w3.vs.store.MongoStore
 
 object Main {
 
@@ -16,7 +17,7 @@ object Main {
     def makeUser(name: String): User = User(userId = UserId(), email = name + "@w3.org", name = name, password = "secret", isSubscriber = true)
 
     val script = for {
-      _ <- conf.db.drop()
+      _ <- MongoStore.reInitializeDb()
       _ <- User.collection.create()
       _ <- Job.collection.create()
       _ <- Run.collection.create()
