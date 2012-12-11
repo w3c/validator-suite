@@ -1,4 +1,4 @@
-@rb-width: 70px;
+@rb-width: 80px;
 @rb-padding: 20px;
 @rb-border-color: #C8C8C8;
 @rb-background: #F6F7F9;
@@ -93,7 +93,7 @@
             progress {
                 -moz-box-sizing: border-box;
                 box-sizing: border-box;
-                width: 3 * @rb-width + 2 * @rb-padding - 18px;
+                width: (3 * @rb-width + 10) - @rb-padding;
                 height: 15px;
             }
         }
@@ -150,7 +150,7 @@
         }
     }
     .errors {
-        width: 90px;
+        width: @rb-width + 10px;
         dfn  {border-width: 1px 0 0   0;}
         span {border-width: 0   0 1px 0;}
     }
