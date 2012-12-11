@@ -156,20 +156,15 @@ object Job {
 
   // returns the Job with the jobId and optionally the latest Run* for this Job
   // the Run may not exist if the Job was never started
-  def get(jobId: JobId)(implicit conf: VSConfiguration): Future[(Job, Option[(Run, Iterable[URL], Iterable[AssertorCall])])] = {
+  def get(jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find[JsValue, JsValue](query)
-    for {
-      job <- {
-        cursor.toList map { list =>
-          val json = list.headOption.get
-          val jobId = (json \ "_id").as[JobId]
-          val jobVo = json.as[JobVO]
-          Job(jobId, jobVo)
-        }
-      }
-      runOpt <- getLastRun(jobId)
-    } yield (job -> runOpt)
+    cursor.toList map { list =>
+      val json = list.headOption.get
+      val jobId = (json \ "_id").as[JobId]
+      val jobVo = json.as[JobVO]
+      Job(jobId, jobVo)
+    }
   }
 
   def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
