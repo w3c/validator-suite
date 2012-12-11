@@ -160,10 +160,13 @@ object Job {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find[JsValue, JsValue](query)
     cursor.toList map { list =>
-      val json = list.headOption.get
-      val jobId = (json \ "_id").as[JobId]
+      val json: JsValue = list.headOption match {
+        case Some(json) => json
+        case _ => throw new NoSuchElementException("Invalid jobId: " + jobId)
+      }
+      val jobId_ = (json \ "_id").as[JobId] // Is that necessary ? Why would it differ from the jobId parameter ? Why not an assert ?
       val jobVo = json.as[JobVO]
-      Job(jobId, jobVo)
+      Job(jobId_, jobVo)
     }
   }
 
