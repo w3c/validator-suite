@@ -22,7 +22,8 @@ object Global extends GlobalSettings {
         }
       val host = graphiteConf.getString("host") getOrElse sys.error("host")
       val port = graphiteConf.getInt("port").map(_.toInt) getOrElse sys.error("port")
-      GraphiteReporter.enable(period, unit, host, port /*, prefix*/)
+      val prefix = graphiteConf.getString("prefix") getOrElse sys.error("prefix")
+      GraphiteReporter.enable(period, unit, host, port, prefix)
     }
     conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
     org.w3.vs.assertor.LocalValidators.start()
