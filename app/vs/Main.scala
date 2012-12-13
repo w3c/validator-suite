@@ -111,7 +111,7 @@ object Main {
         assertorsConfiguration = AssertorsConfiguration.default))
 
     val script = for {
-      _ <- conf.db.drop()
+      _ <- MongoStore.reInitializeDb()
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
       _ <- User.save(bernard)
@@ -135,6 +135,8 @@ object Main {
     conf.httpClient.close()
     conf.system.shutdown()
     conf.system.awaitTermination()
+
+    println("you need to press ctrl-c")
 
   }
   

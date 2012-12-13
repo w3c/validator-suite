@@ -13,6 +13,7 @@ import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
 import play.api.Configuration
 import java.io.File
 import reactivemongo.api.MongoConnection
+import com.mongodb.{ MongoClient, DB }
 
 trait DefaultProdConfiguration extends VSConfiguration {
 
@@ -82,6 +83,20 @@ trait DefaultProdConfiguration extends VSConfiguration {
   lazy val db = {
     val dbName = configuration.getString("application.mongodb.db-name") getOrElse sys.error("application.mongodb.db-name")
     connection(dbName)(system.dispatchers.lookup("reactivemongo-dispatcher"))
+  }
+
+  lazy val mongoClient: MongoClient = {
+    val node = configuration.getString("application.mongodb.node") getOrElse sys.error("application.mongodb.node")
+    val (host, port) = {
+      val Array(h, p) = node.split(":")
+      (h, p.toInt)
+    }
+    new MongoClient(host, port)
+  }
+
+  lazy val mongoDb: DB = {
+    val dbName = configuration.getString("application.mongodb.db-name") getOrElse sys.error("application.mongodb.db-name")
+    mongoClient.getDB(dbName)
   }
 
 }

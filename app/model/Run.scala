@@ -21,6 +21,9 @@ import play.modules.reactivemongo.PlayBsonImplicits._
 import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
+import com.mongodb._
+import com.mongodb.util.JSON
+import org.bson.types.ObjectId
 
 object Run {
 
@@ -31,19 +34,39 @@ object Run {
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("runs")
 
-  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
-    val query = Json.obj("runId" -> toJson(runId))
-    val cursor = collection.find[JsValue, JsValue](query)
-    cursor.toList map { list =>
-      // the sort is done client-side
-      val orderedEvents = list.map(_.as[RunEvent]).sortBy(_.timestamp)
-      val (createRun, events) = orderedEvents match {
-        case (createRun@CreateRunEvent(_, _, _, _, _, _)) :: events => (createRun, events)
-        case _ => sys.error("CreateRunEvent MUST be the first event")
-      }
-      Run.replayEvents(createRun, events)
+  def collection2(implicit conf: VSConfiguration): DBCollection =
+    conf.mongoDb.getCollection("runs")
+
+  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = Future {
+    import scala.collection.JavaConverters._
+    val query = new BasicDBObject("runId", new ObjectId(runId.toString))
+    val orderedEvents =
+      // needs to explicitly states the type to provide .asScala
+      (collection2.find(query): java.lang.Iterable[DBObject]).asScala
+        // bridge between Java driver and ReactiveMongo
+        .map(dbObject => Json.parse(JSON.serialize(dbObject)))
+        .map(_.as[RunEvent])
+        .toList.sortBy(_.timestamp)
+    val (createRun, events) = orderedEvents match {
+      case (createRun@CreateRunEvent(_, _, _, _, _, _)) :: events => (createRun, events)
+      case _ => sys.error("CreateRunEvent MUST be the first event")
     }
+    Run.replayEvents(createRun, events)
   }  
+
+//  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = {
+//    val query = Json.obj("runId" -> toJson(runId))
+//    val cursor = collection.find[JsValue, JsValue](query)
+//    cursor.toList map { list =>
+//      // the sort is done client-side
+//      val orderedEvents = list.map(_.as[RunEvent]).sortBy(_.timestamp)
+//      val (createRun, events) = orderedEvents match {
+//        case (createRun@CreateRunEvent(_, _, _, _, _, _)) :: events => (createRun, events)
+//        case _ => sys.error("CreateRunEvent MUST be the first event")
+//      }
+//      Run.replayEvents(createRun, events)
+//    }
+//  }  
 
   def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
     sys.error("")
