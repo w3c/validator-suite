@@ -101,7 +101,7 @@ object Store extends VSController {
           job.run()
         }
       } yield {
-        InternalServerError
+        Ok
       }
       f onFailure { case t: Throwable => logger.error("Error with order " + orderId, t) }
       f
