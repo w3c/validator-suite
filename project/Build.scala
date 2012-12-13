@@ -21,7 +21,7 @@ object ApplicationBuild extends Build {
     "play.modules.reactivemongo" %% "play2-reactivemongo" % "0.1-SNAPSHOT"  cross CrossVersion.full,
     "org.mongodb" % "mongo-java-driver" % "2.10.0",
     "org.scalaz" % "scalaz-core_2.10.0-M7" % "7.0.0-M3",
-    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121107-2.jar",
+    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121213.jar",
 //    "org.w3" % "validators" % "1.0-SNAPSHOT" from "file:///home/betehess/projects/validators/target/validators.jar",
     // test dependencies
     "com.typesafe.akka" % "akka-testkit_2.10.0-RC1" % "2.1.0-RC1" % "test",
