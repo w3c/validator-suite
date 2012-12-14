@@ -62,7 +62,12 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logg
                 _.isFunction(this.templateOptions) ? this.templateOptions() :
                         _.isObject(this.templateOptions) ? this.templateOptions : {}
             );
-            this.$el.html(this.template(options));
+            if (this.options.softRender && _.isFunction(this.softRender)) {
+                this.softRender(options);
+            } else {
+                this.$el.html(this.template(options));
+            }
+
             if (_.isFunction(this.afterRender)) { this.afterRender(); }
             return this;
         },

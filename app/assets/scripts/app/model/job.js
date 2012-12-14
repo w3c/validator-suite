@@ -117,10 +117,6 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
                     }
                 );
             }
-
-            logger.info("Sending request: ");
-            logger.debug(_.extend(params, options));
-
             return $.ajax(_.extend(params, options));
         }
 
@@ -186,6 +182,16 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
 
         afterRender: function () {
             this.addSearchHandler();
+        },
+
+        softRender: function (options) {
+            var html = $(this.template(options));
+            this.$(".status").replaceWith(html.children(".status"));
+            this.$(".completedOn").replaceWith(html.children(".completedOn"));
+            this.$(".warnings").replaceWith(html.children(".warnings"));
+            this.$(".errors").replaceWith(html.children(".errors"));
+            this.$(".resources").replaceWith(html.children(".resources"));
+            this.$(".health").replaceWith(html.children(".health"));
         }
 
     });

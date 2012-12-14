@@ -68,9 +68,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
                     this.listen();
                 } else if (this.view.isSingle()) {
                     if (this.at(0)) {
-                        console.log("##########")
-                        console.log(this.at(0))
-                        console.log(this.at(0).url())
                         this.at(0).listen();
                     }
                 }
