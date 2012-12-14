@@ -127,6 +127,8 @@ object Main {
       _ <- Job.save(tr)
       _ <- Job.save(ibm)
       _ <- Job.save(lemonde)
+      _ <- User.save(User.sample) // The sample user for the demo
+      _ <- Job.save(Job.sample)   // The sample job
     } yield ()
 
     script.getOrFail(10.seconds)

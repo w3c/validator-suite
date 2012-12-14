@@ -20,6 +20,7 @@ import org.w3.vs.actor.message.{RunCompleted, UpdateData, NewAssertorResult, Run
 import org.w3.vs.view.collection.ResourcesView
 import org.w3.vs.view.model.JobView
 import org.w3.vs.view.OTOJType
+import org.w3.vs.model
 
 object Job extends VSController {
 
@@ -29,29 +30,35 @@ object Job extends VSController {
 
   def reportByResource(id: JobId): ActionA = Resources.index(id, None)
 
-  val getName = (new controllers.javascript.ReverseJob).get.name
-  val getTimer = Metrics.newTimer(Job.getClass, getName, MILLISECONDS, SECONDS)
-
-  def get(id: JobId): ActionA = AuthAction { implicit req => user =>
-    timer(getName, getTimer) {
+  def get(id: JobId): ActionA = Action { implicit req =>
+    if (id == model.Job.sample.id) {
       req.getQueryString("group") match {
-        case Some("message") => { case _ => Redirect(routes.Assertions.index(id, None)) }
-        case _ =>               { case _ => Redirect(routes.Resources.index(id, None)) }
+        case Some("message") => Redirect(routes.Assertions.sample(None))
+        case _ =>               Redirect(routes.Resources.sample(None))
+      }
+    } else {
+      req.getQueryString("group") match {
+        case Some("message") => Redirect(routes.Assertions.index(id, None))
+        case _ =>               Redirect(routes.Resources.index(id, None))
       }
     }
   }
 
-  val editName = (new controllers.javascript.ReverseJob).edit.name
-  val editTimer = Metrics.newTimer(Jobs.getClass, editName, MILLISECONDS, SECONDS)
+  def sample: ActionA = Action { implicit req =>
+    req.getQueryString("group") match {
+      case Some("message") => Redirect(routes.Assertions.sample(None))
+      case _ =>               Redirect(routes.Resources.sample(None))
+    }
+  }
 
-  def edit(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
+  /*def edit(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job <- user.getJob(id)
     } yield {
       case Html(_) => Ok(views.html.jobForm(JobForm.fill(job), user, Some(id)))
     }
     f.timer(editName).timer(editTimer)
-  }
+  }*/
 
   def update(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
     val result: Future[PartialFunction[Format, Result]] = for {
@@ -115,9 +122,6 @@ object Job extends VSController {
 
   def stop(id: JobId): ActionA = simpleJobAction(id)(user => job => job.cancel())("jobs.stop")
 
-  val dispatcherName = (new controllers.javascript.ReverseJob).dispatcher.name
-  val dispatcherTimer = Metrics.newTimer(Jobs.getClass, dispatcherName, MILLISECONDS, SECONDS)
-
   def dispatcher(implicit id: JobId): ActionA = Action { implicit req =>
     timer(dispatcherName, dispatcherTimer) {
       (for {
@@ -159,10 +163,12 @@ object Job extends VSController {
   }}
 
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
-    user.enumerator &> Enumeratee.collect[RunUpdate] {
-      case UpdateData(id, data, activity) if id == jobId => JobView.toJobMessage(jobId, data, activity)
-      case RunCompleted(id, completedOn) if id == jobId => JobView.toJobMessage(jobId, completedOn)
-    }/*.recover[Enumerator[JsArray]]{ case _ => Enumerator.eof[JsArray] }*/ // Need help here
+    Enumerator.flatten(user.getJob(jobId).map(
+      _.enumerator &> Enumeratee.collect[RunUpdate] {
+        case UpdateData(id, data, activity) => JobView.toJobMessage(jobId, data, activity)
+        case RunCompleted(id, completedOn) => JobView.toJobMessage(jobId, completedOn)
+      }
+    ))
   }
 
   private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>
@@ -174,5 +180,12 @@ object Job extends VSController {
       case _ => Accepted
     }
   }
+
+  val getName = (new controllers.javascript.ReverseJob).get.name
+  val getTimer = Metrics.newTimer(Job.getClass, getName, MILLISECONDS, SECONDS)
+//  val editName = (new controllers.javascript.ReverseJob).edit.name
+//  val editTimer = Metrics.newTimer(Jobs.getClass, editName, MILLISECONDS, SECONDS)
+  val dispatcherName = (new controllers.javascript.ReverseJob).dispatcher.name
+  val dispatcherTimer = Metrics.newTimer(Jobs.getClass, dispatcherName, MILLISECONDS, SECONDS)
 
 }

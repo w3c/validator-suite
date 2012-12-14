@@ -1,19 +1,19 @@
 package controllers
 
 import java.net.URL
+import org.w3.vs.model
 import org.w3.vs.model.{User, JobId}
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.view.Helper
 import org.w3.vs.controllers._
-import play.api.mvc.{WebSocket, Result, Action, Handler}
+import play.api.mvc._
 import scala.concurrent.Future
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.iteratee.{Iteratee, Enumeratee, Enumerator}
-import play.api.libs.json.{JsArray, JsNull, JsValue}
-import org.w3.vs.actor.message.{RunUpdate, NewAssertorResult, RunCompleted, UpdateData}
+import play.api.libs.json.{JsNull, JsValue}
+import org.w3.vs.actor.message.RunUpdate
 import play.api.libs.{EventSource, Comet}
 import scala.Some
 import org.w3.vs.actor.message.NewAssertorResult
@@ -22,15 +22,30 @@ object Resources extends VSController  {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Resources")
 
-  def index(id: JobId, url: Option[URL]) : ActionA = url match {
-    case Some(url) => index(id, url)
-    case None => index(id)
+  def index(id: JobId, url: Option[URL]): ActionA = {
+    if (id == model.Job.sample.id) {
+      VSAction { req => {
+        case Html(_) => Redirect(routes.Resources.sample(url))
+        case _ => sample(url)(req)
+      }}
+    } else {
+      url match {
+        case Some(url) => AuthAction { index_(id, url) }
+        case None => AuthAsyncAction { index_(id) }
+      }
+    }
   }
 
-  val indexName = (new controllers.javascript.ReverseResources).index.name
-  val indexTimer = Metrics.newTimer(Resources.getClass, indexName, MILLISECONDS, SECONDS)
+  def sample(url: Option[URL]): ActionA = AsyncAction { implicit req =>
+    val sampleId = model.Job.sample.id
+    val sampleUser = User.sample
+    url match {
+      case Some(url) => Future.successful(index_(sampleId, url)(req)(sampleUser))
+      case None => index_(sampleId)(req)(sampleUser)
+    }
+  }
 
-  def index(id: JobId) : ActionA = AuthAsyncAction { implicit req => user =>
+  def index_(id: JobId): Request[AnyContent] => User => Future[PartialFunction[Format, Result]] = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       assertions_ <- job_.getAssertions()
@@ -51,10 +66,7 @@ object Resources extends VSController  {
     f.timer(indexName).timer(indexTimer)
   }
 
-  val indexUrlName = indexName + "+url"
-  val indexUrlTimer = Metrics.newTimer(Resources.getClass, indexUrlName, MILLISECONDS, SECONDS)
-
-  def index(id: JobId, url: URL): ActionA = AuthAction { implicit req => user =>
+  def index_(id: JobId, url: URL): Request[AnyContent] => User => PartialFunction[Format, Result] = { implicit req: RequestHeader => user: User =>
     timer(indexUrlName, indexUrlTimer) {
       case Html(_) => Redirect(routes.Assertions.index(id, Some(url)))
     }
@@ -83,7 +95,7 @@ object Resources extends VSController  {
   }}
 
   private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(org.w3.vs.model.Job.get(jobId).map(job =>
+    Enumerator.flatten(user.getJob(jobId).map(job =>
       job.enumerator &> Enumeratee.collect[RunUpdate] {
         url match {
           case None => {
@@ -105,5 +117,10 @@ object Resources extends VSController  {
       }/*.recover[Enumerator[JsArray]]{ case _ => Enumerator.eof[JsArray] }*/ // Need help here
     ))
   }
+
+  val indexName = (new controllers.javascript.ReverseResources).index.name
+  val indexTimer = Metrics.newTimer(Resources.getClass, indexName, MILLISECONDS, SECONDS)
+  val indexUrlName = indexName + "+url"
+  val indexUrlTimer = Metrics.newTimer(Resources.getClass, indexUrlName, MILLISECONDS, SECONDS)
 
 }

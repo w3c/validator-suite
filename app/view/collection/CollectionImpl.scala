@@ -7,7 +7,7 @@ import play.api.libs.json.JsArray
 import play.api.templates.Html
 import scala.math
 import scalaz.Scalaz._
-import play.api.mvc.Request
+import play.api.mvc.{RequestHeader}
 import controllers.routes
 
 abstract class CollectionImpl[A <: Model] extends Collection[A] {
@@ -81,7 +81,7 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
     ))
   }
 
-  def bindFromRequest(implicit req: Request[_]): Collection[A] = {
+  def bindFromRequest(implicit req: RequestHeader): Collection[A] = {
     var res: Collection[A] = this
     res = req.getQueryString("n").map(n => res.showPerPage(n.toInt)).getOrElse(res)
     res = req.getQueryString("filter").map(res.filterOn(_)).getOrElse(res)

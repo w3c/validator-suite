@@ -27,6 +27,13 @@ object Global extends GlobalSettings {
     }
     conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
     org.w3.vs.assertor.LocalValidators.start()
+
+    // Run the sample job on start
+    /*import org.w3.vs.model.Job
+    implicit val configuration: org.w3.vs.VSConfiguration = org.w3.vs.Prod.configuration
+    import scala.concurrent.ExecutionContext.Implicits.global
+    Job.get(Job.sample.id).map(_.run())*/
+
   }
   
   override def onStop(app: Application): Unit = {

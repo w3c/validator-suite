@@ -6,7 +6,7 @@ import org.w3.vs.view.Helper
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
-import play.api.mvc.{WebSocket, Result, Handler}
+import play.api.mvc._
 import scala.concurrent.Future
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
@@ -15,20 +15,36 @@ import play.api.libs.json.JsValue
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
 import org.w3.vs.actor.message.{NewAssertorResult, RunUpdate}
+import org.w3.vs.model
 
 object Assertions extends VSController  {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Assertions")
 
-  def index(id: JobId, url: Option[URL]) : ActionA = url match {
-    case Some(url) => index(id, url)
-    case None => index(id)
+  def index(id: JobId, url: Option[URL]): ActionA = {
+    if (id == model.Job.sample.id) {
+      VSAction { req => {
+        case Html(_) => Redirect(routes.Assertions.sample(url))
+        case _ => sample(url)(req)
+      }}
+    } else {
+      url match {
+        case Some(url) => AuthAsyncAction { index_(id, url) }
+        case None => AuthAsyncAction { index_(id) }
+      }
+    }
   }
 
-  val indexName = (new controllers.javascript.ReverseAssertions).index.name
-  val indexTimer = Metrics.newTimer(Assertions.getClass, indexName, MILLISECONDS, SECONDS)
+  def sample(url: Option[URL]): ActionA = AsyncAction { implicit req =>
+    val sampleId = model.Job.sample.id
+    val sampleUser = User.sample
+    url match {
+      case Some(url) => index_(sampleId, url)(req)(sampleUser)
+      case None => index_(sampleId)(req)(sampleUser)
+    }
+  }
 
-  def index(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
+  def index_(id: JobId) = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       assertions_ <- job_.getAssertions()
@@ -57,10 +73,7 @@ object Assertions extends VSController  {
     f.timer(indexName).timer(indexTimer)
   }
 
-  val indexUrlName = indexName + "+url"
-  val indexUrlTimer = Metrics.newTimer(Assertions.getClass, indexUrlName, MILLISECONDS, SECONDS)
-
-  def index(id: JobId, url: URL): ActionA = AuthAsyncAction { implicit req => user =>
+  def index_(id: JobId, url: URL) = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       assertions_ <- job_.getAssertions().map(_.filter(_.url == url))
@@ -114,7 +127,7 @@ object Assertions extends VSController  {
   }}
 
   private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(org.w3.vs.model.Job.get(jobId).map(job =>
+    Enumerator.flatten(user.getJob(jobId).map(job =>
       job.enumerator &> Enumeratee.collect[RunUpdate] {
         url match {
           case None => {
@@ -131,5 +144,10 @@ object Assertions extends VSController  {
       }/*.recover{ case _ => Enumerator.eof }*/ // Need help here
     ))
   }
+
+  val indexName = (new controllers.javascript.ReverseAssertions).index.name
+  val indexTimer = Metrics.newTimer(Assertions.getClass, indexName, MILLISECONDS, SECONDS)
+  val indexUrlName = indexName + "+url"
+  val indexUrlTimer = Metrics.newTimer(Assertions.getClass, indexUrlName, MILLISECONDS, SECONDS)
 
 }

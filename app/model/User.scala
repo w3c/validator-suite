@@ -12,6 +12,7 @@ import org.w3.vs.actor.message.RunUpdate
 import akka.actor.{Actor, Props, ActorRef}
 import java.nio.channels.ClosedChannelException
 import org.w3.util.akkaext.{Deafen, Listen, PathAware}
+import org.joda.time.DateTime
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -27,7 +28,7 @@ import org.w3.vs.store.Formats._
 
 case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   
-  import conf._
+  import conf.system
 
   val logger = play.Logger.of(classOf[User])
 
@@ -90,6 +91,14 @@ object User {
     conf.db("users")
 
   val logger = play.Logger.of(classOf[User])
+
+  def sample(implicit conf: VSConfiguration) = User.apply(
+    userId = UserId("50cb6a1c04ca20aa0283bc85"),
+    name = "Test user",
+    email = "sample@valid.w3.org",
+    password = DateTime.now().toString,
+    isSubscriber = false
+  )
 
   def apply(
     userId: UserId,

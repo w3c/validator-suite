@@ -143,6 +143,19 @@ object Job {
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("jobs")
 
+  def sample(implicit conf: VSConfiguration) = Job.apply(
+    id = JobId("50cb698f04ca20aa0283bc84"),
+    name = "Sample report",
+    createdOn = DateTime.now(DateTimeZone.UTC),
+    strategy = Strategy(
+      entrypoint = URL("http://www.w3.org/"),
+      linkCheck = false,
+      maxResources = 10,
+      filter = Filter(include = Everything, exclude = Nothing),
+      assertorsConfiguration = AssertorsConfiguration.default),
+    creator = User.sample.id
+  )
+
   def apply(
     id: JobId = JobId(),
     name: String,

@@ -19,7 +19,7 @@ import scala.collection.mutable.LinkedHashMap
 
 trait VSController extends Controller {
 
-  val logger: ALogger
+  def logger: ALogger
 
   // TODO: make the implicit explicit!!!
   implicit val configuration: org.w3.vs.VSConfiguration = org.w3.vs.Prod.configuration
@@ -112,6 +112,11 @@ trait VSController extends Controller {
     }
   }
 
+  def VSAction(f: Request[AnyContent] => PartialFunction[Format, Result]): ActionA = Action { implicit req =>
+    try { format(f(req)) }
+    catch { toError }
+  }
+
   /*def AuthAction(f: Request[AnyContent] => User => Result): ActionA = AuthAsyncAction {
     req => user => Future.successful(f(req)(user))
   }*/
@@ -127,7 +132,8 @@ trait VSController extends Controller {
       if (isAjax) {
         NotFound(Messages("exceptions.job.unknown", id))
       } else {
-        SeeOther(routes.Jobs.index).flashing(("error" -> Messages("exceptions.job.unknown", id)))
+        NotFound(views.html.error(List(("error", Messages("exceptions.job.unknown", id)))))
+        //SeeOther(routes.Jobs.index).flashing(("error" -> Messages("exceptions.job.unknown", id)))
       }
     }
     case _: UnauthorizedException => {

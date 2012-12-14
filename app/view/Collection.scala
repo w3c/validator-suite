@@ -2,7 +2,7 @@ package org.w3.vs.view
 
 import play.api.templates.Html
 import scalaz.Equal
-import play.api.mvc.{Call, Request}
+import play.api.mvc.{RequestHeader, Call}
 
 trait Collection[+A] extends View {
 
@@ -42,7 +42,7 @@ trait Collection[+A] extends View {
 
   def offsetBy(offset: Int): Collection[A]
 
-  def bindFromRequest(implicit req: Request[_]): Collection[A]
+  def bindFromRequest(implicit req: RequestHeader): Collection[A]
 
   def isEmpty: Boolean
 
