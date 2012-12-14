@@ -34,18 +34,21 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
                 for (protocol in websocketProtocol) {
                     socket.url = socket.url.replace(protocol, websocketProtocol[protocol]);
                 }
-                websocket = new window.WebSocket(socket.url + '/socket/ws');
+
+                var urlA = socket.url.split("?");
+                socket.url = urlA[0] + '/socket/ws?' + (urlA[1] || '');
+                websocket = new window.WebSocket(socket.url);
+
                 websocket.onmessage = function (event) {
                     var message = JSON.parse(event.data);
                     socket.trigger("message", message);
                 };
                 websocket.onopen = function (event) {
-                    logger.info("websocket opened: " + socket.url + '/socket/ws');
+                    logger.info("websocket opened: " + socket.url);
                     socket.trigger("open", event);
                 };
                 websocket.onerror = function (event) {
                     logger.error("websocket error");
-                    logger.debug(event);
                     socket.trigger("error", event);
                 };
                 websocket.onclose = function (event) {
@@ -61,19 +64,21 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
                 if (!window.EventSource) {
                     throw new Error("EventSource is not supported");
                 }
-                eventsource = new window.EventSource(socket.url + '/socket/events');
+
+                var urlA = socket.url.split("?");
+                socket.url = urlA[0] + '/socket/events?' + (urlA[1] || '');
+                eventsource = new window.EventSource(socket.url);
+
                 eventsource.onmessage = function (event) {
                     var message = JSON.parse(event.data);
-                    //logger.debug(message);
                     socket.trigger("message", message);
                 };
                 eventsource.onopen = function (event) {
-                    logger.info("eventsource connection opened: " + socket.url + '/socket/events');
+                    logger.info("eventsource connection opened: " + socket.url);
                     socket.trigger("open", event);
                 };
                 eventsource.onerror = function (event) {
                     logger.info("eventsource connection error (" + socket.url + ")");
-                    logger.debug(event);
                     socket.trigger("error", event);
                 };
                 socket.close = function () {
@@ -87,7 +92,11 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
             comet: function () {
                 var iframe;
                 logger.warn("using comet iframe");
-                iframe = $('<iframe src="' + socket.url + '/socket/comet"></iframe>');
+
+                var urlA = socket.url.split("?");
+                socket.url = urlA[0] + '/socket/comet?' + (urlA[1] || '');
+
+                iframe = $('<iframe src="' + socket.url + '"></iframe>');
                 $(function () {
                     setTimeout(function () {
                         $('body').append(iframe);
