@@ -15,9 +15,9 @@ POST    /jobs                                       controllers.Jobs.create
 GET     /jobs/new                                   controllers.Jobs.newJob
 GET     /jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
-GET     /jobs/purchase                              controllers.Store.newOTOJ
-POST    /jobs/purchase                              controllers.Store.purchase
-POST    /purchase/callback                          controllers.Store.callback
+GET     /jobs/purchase                              controllers.OneTimeJob.newJob
+POST    /jobs/purchase                              controllers.OneTimeJob.purchase
+POST    /purchase/callback                          controllers.OneTimeJob.callback
 
 # Job
 GET     /jobs/:job                                  controllers.Job.get(job: JobId)

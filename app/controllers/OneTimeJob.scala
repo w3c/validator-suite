@@ -9,11 +9,11 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object Store extends VSController {
+object OneTimeJob extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Store")
 
-  def newOTOJ: ActionA = AsyncAction { implicit req =>
+  def newJob: ActionA = AsyncAction { implicit req =>
     val f: Future[PartialFunction[Format, Result]] =
       for {
         user <- getUser()
