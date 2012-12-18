@@ -18,7 +18,7 @@ object ApplicationBuild extends Build {
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10-0.4-20121107.jar",
     "com.yammer.metrics" % "metrics-core" % "2.1.3" excludeAll(ExclusionRule(organization = "org.slf4j")),
     "com.yammer.metrics" % "metrics-graphite" % "2.1.3" excludeAll(ExclusionRule(organization = "org.slf4j")),
-    "play.modules.reactivemongo" %% "play2-reactivemongo" % "0.1-SNAPSHOT"  cross CrossVersion.full,
+    "play.modules.reactivemongo" %% "play2-reactivemongo" % "0.1-SNAPSHOT"  cross CrossVersion.full exclude("io.netty", "netty"),
     "org.mongodb" % "mongo-java-driver" % "2.10.0",
     "org.scalaz" % "scalaz-core_2.10.0-M7" % "7.0.0-M3",
     "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121213.jar",
