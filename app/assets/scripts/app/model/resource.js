@@ -19,9 +19,9 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
             this.id = this.get("resourceUrl");
         },
 
-        url: function () { return "resources?resource=" + this.get("resourceUrl"); },
+        url: function () { return this.collection.url + "?resource=" + this.get("resourceUrl"); },
 
-        reportUrl: function () { return "assertions?resource=" + this.get("resourceUrl"); },
+        reportUrl: function () { return this.collection.url + "../assertions/?resource=" + this.get("resourceUrl"); },
 
         search: function (search) {
             return this.get("resourceUrl").toLowerCase().indexOf(search.toLowerCase()) > -1;

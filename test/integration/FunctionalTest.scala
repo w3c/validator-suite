@@ -24,14 +24,14 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
       //val baseUrl: String = "http://localhost:9001/suite"
 
-      goTo("http://localhost:9001/suite/jobs")
-      url must be === "http://localhost:9001/suite/jobs"
+      goTo("http://localhost:9001/suite/jobs/")
+      url must be === "http://localhost:9001/suite/jobs/"
       // and code should be Unauthenticated (not verifiable in this framework)
 
       fill("#email").`with`("bertails@w3.org")
       fill("#password").`with`("secret")
       click("#submit-login")
-      url must be === "http://localhost:9001/suite/jobs"
+      url must be === "http://localhost:9001/suite/jobs/"
 
       $("#admin .name").first().getText() must include ("Alexandre Bertails")       
       
@@ -39,7 +39,7 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       click("#admin form button")
       //goTo("http://localhost:9001/logout")
       url must be === "http://localhost:9001/suite/login"
-      goTo("http://localhost:9001/suite/jobs")
+      goTo("http://localhost:9001/suite/jobs/")
       $("button#submit-login").isEmpty must be (false)
       
       // can't log in with wrong password

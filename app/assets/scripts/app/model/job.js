@@ -34,7 +34,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
         },
 
         reportUrl: function () {
-            return this.url() + "/resources";
+            return this.url() + "/resources/";
         },
 
         isIdle: function () {
@@ -118,6 +118,10 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
                 );
             }
             return $.ajax(_.extend(params, options));
+        },
+
+        url: function () {
+            return this.collection.url + this.get("id") + "/";
         }
 
     });
