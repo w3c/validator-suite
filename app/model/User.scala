@@ -130,7 +130,12 @@ object User {
   }
 
   def register(email: String, name: String, password: String, isSubscriber: Boolean)(implicit conf: VSConfiguration): Future[User] = {
-    val user = User(UserId(), email, name, password, isSubscriber)
+    val user = User(
+      userId = UserId(),
+      name = name,
+      email = email,
+      password = password,
+      isSubscriber = isSubscriber)
     user.save().map(_ => user)
   }
   

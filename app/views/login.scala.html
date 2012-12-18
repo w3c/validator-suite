@@ -5,7 +5,7 @@
     @libs.messages(messages ++ form.errors)
 
     <section id="loginForm"><div>
-        <h1>Login</h1>
+        <!--<h1>Login</h1>-->
     @helper.form(routes.Application.authenticate) {
         @**form.globalError.map { error =>
         <p class="error">@error.message</p>
