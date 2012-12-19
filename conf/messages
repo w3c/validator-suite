@@ -163,3 +163,9 @@ sort.descending=Sort in descending order
 
 # Form
 name.error.required=Name cannot be empty
+form.email.duplicate=Email already in use. Choose another one.
+
+form.email.error.email=Invalid email address
+form.email.error.required=Email is required
+form.password.error.required=Password is required
+
