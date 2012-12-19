@@ -1,16 +1,17 @@
 package org.w3.vs.assertor
 
+import org.scalatest._
+import org.scalatest.matchers.MustMatchers
 import org.w3.vs.model._
 import org.w3.util.URL
-import org.specs2.mutable._
 import org.w3.vs.view.Helper
 
-object HTMLValidatorTest extends Specification with AssertionResultMatcher {
+class HTMLValidatorTest extends WordSpec with MustMatchers with AssertionResultMatcher {
 
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
-    val assertion: Iterable[Assertion] = HTMLValidator.assert(url, Map.empty)
-    assertion must (haveErrorz)
+    val assertions: Iterable[Assertion] = HTMLValidator.assert(url, Map.empty)
+    assertions must (haveErrors)
   }
 
   "HTMLValidator must accept optional parameters" in {
@@ -23,7 +24,7 @@ object HTMLValidatorTest extends Specification with AssertionResultMatcher {
 
     val queryString: String = urlForMachine.substring(HTMLValidator.serviceUrl.length)
 
-    Helper.parseQueryString(queryString) must beEqualTo (assertorConfiguration
+    Helper.parseQueryString(queryString) must be (assertorConfiguration
       + ("output" -> List("ucn"))
       + ("uri" -> List(Helper.encode(url)))
     )

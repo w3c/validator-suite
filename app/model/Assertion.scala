@@ -15,7 +15,12 @@ case class Assertion(
     title: String,
     severity: AssertionSeverity,
     description: Option[String],
-    timestamp: DateTime = DateTime.now(DateTimeZone.UTC))
+    timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) {
+
+  override def toString: String =
+    s"""Assertion($url, $assertor, $severity)"""
+
+}
 
 object Assertion {
 

@@ -39,7 +39,10 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
     } andThen { case _ =>
       atomic { implicit txn => pendingAssertions -= 1 }
     } andThen {
-      case Failure(t) => sender ! AssertorFailure(context, assertor.id, response.url, why = t.getMessage)
+      case Failure(t) => {
+        logger.error(s"${context._3.shortId}: ${assertor} failed to assert ${response.url} because [${t.getMessage}]", t)
+        sender ! AssertorFailure(context, assertor.id, response.url, why = t.getMessage)
+      }
       case Success(assertorResponse) => sender ! assertorResponse
     }
     
