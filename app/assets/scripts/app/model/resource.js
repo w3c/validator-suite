@@ -19,7 +19,7 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
             this.id = this.get("resourceUrl");
         },
 
-        url: function () { return "?resource=" + this.get("resourceUrl"); },
+        url: function () { return "../resources/?resource=" + this.get("resourceUrl"); },
 
         reportUrl: function () { return "../assertions/?resource=" + this.get("resourceUrl"); },
 

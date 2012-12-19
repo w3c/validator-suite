@@ -41,7 +41,7 @@
             <% if(resources.length > 0) { %>@Messages("assertion.resources.detail")<% } %>
             <% _.map(resources, function (url) {%>
             <dd class="resource">
-                <a href="<%= "assertions?resource=" + url %>" class="report" title="@Messages("report.link")">
+                <a href="<%= "../assertions/?resource=" + url %>" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>
                     <span><%= Util.shortenUrl(url, 80) %></span>
                 </a>
