@@ -90,6 +90,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
                 }
             };
             options.error = Backbone.wrapError(options.error, model, options);
+            options.dataType = "json";
             xhr = (this.sync || Backbone.sync).call(this, event, this, options);
             if (!options.wait) { trigger(); }
             return xhr;
