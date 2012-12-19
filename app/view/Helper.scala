@@ -26,13 +26,13 @@ object Helper {
     shorten(url.toString.replaceFirst("http://", ""), limit)
   }
 
-  val TimeFormatter = try {
+  val TimeFormatter: DateTimeFormatter = try {
     DateTimeFormat.forPattern(Messages("time.pattern"))
   } catch { case _: Exception =>
-    DateTimeFormat.forPattern("MM/dd/yy' at 'K:mma")
+    DateTimeFormat.forPattern("dd MMM yy' at 'H:mm' UTC'")
   }
 
-  def formatTime(time: DateTime): String = TimeFormatter.print(time).toLowerCase
+  def formatTime(time: DateTime): String = TimeFormatter.print(time)
 
   def formatLegendTime(time: DateTime): String = {
     val diff = DateTime.now(DateTimeZone.UTC).minus(time.getMillis)

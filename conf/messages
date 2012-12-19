@@ -131,7 +131,7 @@ pagination.legend=Viewing {0}-{1} of {2} results
 pagination.legend.one=1 result
 pagination.empty=
 
-time.pattern=MM/dd/yy'' at ''K:mma
+time.pattern=dd MMM yy'' at ''H:mm'' UTC''
 time.legend.year={0} year ago
 time.legend.year.p={0} years ago
 time.legend.month={0} month ago
