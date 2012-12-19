@@ -48,9 +48,9 @@
 
             case "actions" => {
             <% if(isIdle) { %>
-            <form method="post"><button class="run" name="action" value="run">@Messages("job.button.run")</button></form>
+            <form method="post" class="action"><button class="run" name="action" value="run">@Messages("job.button.run")</button></form>
             <% } else { %>
-            <button class="stop">@Messages("job.button.stop")</button>
+            <button class="stop" class="action">@Messages("job.button.stop")</button>
             <% } %>
             <button class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
             <form class="group" action="<%= url %>" method="get">

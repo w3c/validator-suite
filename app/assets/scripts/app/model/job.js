@@ -197,6 +197,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
             this.$(".errors").replaceWith(html.children(".errors"));
             this.$(".resources").replaceWith(html.children(".resources"));
             this.$(".health").replaceWith(html.children(".health"));
+            this.$(".action").replaceWith(html.children(".action"));
         }
 
     });
