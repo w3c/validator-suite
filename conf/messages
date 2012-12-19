@@ -169,3 +169,9 @@ form.email.error.email=Invalid email address
 form.email.error.required=Email is required
 form.password.error.required=Password is required
 
+form.name.error.required=A job name is required
+form.entrypoint.error.url=Start URL must be a valid URL
+form.assertor.error.required=No assertors selected
+form.maxResources.error.max=Invalid max pages value
+form.maxResources.error.min=Invalid max pages value
+

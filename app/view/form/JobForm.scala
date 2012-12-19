@@ -12,6 +12,7 @@ import play.api.data.validation.Constraints._
 import play.api.data._
 import play.api.mvc.{ Filter => _, _ }
 import scala.concurrent._
+import play.api.i18n.Messages
 
 object JobForm {
 
@@ -45,7 +46,7 @@ object JobForm {
       f => Left(new JobForm(f, assertorParameters())),
       s => {
         if (assertors().isEmpty)
-          Left(new JobForm(form.withError("assertor", "No assertor selected", "error"), assertorParameters())) // TODO
+          Left(new JobForm(form.withError("assertor", "error.required"), assertorParameters())) // TODO
         else
           Right(new ValidJobForm(form, s, assertorParameters()))
       }
@@ -76,7 +77,7 @@ object JobForm {
       //"assertor" -> of[Seq[String]].verifying("Choose an assertor", ! _.isEmpty),
       "entrypoint" -> of[URL],
       "linkCheck" -> of[Boolean](booleanFormatter),
-      "maxResources" -> number(min=1, max=500)
+      "maxResources" -> number(min=1, max=2000)
     )
   )
 
@@ -88,7 +89,9 @@ class JobForm private[view](
 
   def apply(s: String) = form(s)
 
-  def errors: Seq[(String, String)] = form.errors.map{case error => ("error", s"${error.key}.${error.message}")}
+  def errors: Seq[(String, String)] = form.errors.map{
+    case error => ("error", Messages("form." + error.key + "." + error.message))
+  }
 
   def hasAssertor(assertor: String): Boolean = try {
     assertorsConfiguration.contains(AssertorId(assertor))
