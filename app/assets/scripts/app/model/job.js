@@ -34,7 +34,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
         },
 
         reportUrl: function () {
-            return this.url() + "/resources/";
+            return this.url() + "resources/";
         },
 
         isIdle: function () {
