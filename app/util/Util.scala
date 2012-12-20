@@ -88,21 +88,11 @@ object Util {
     def withToken(token: String): URL = URL(s"""${url}t0k3n=${token}""")
   }
 
-  implicit class TryW[T](t: Try[T]) {
+  implicit class TryW[T](val t: Try[T]) extends AnyVal {
     def asFuture: Future[T] = t match {
       case Success(s) => Future.successful(s)
       case Failure(f) => Future.failed(f)
     }
   }
-
-  implicit class AnyW[T](t: => T) {
-    def asFuture: Future[T] =
-      try {
-        Future.successful(t)
-      } catch { case e: Exception =>
-        Future.failed(e)
-      }
-  }
-
 
 }
