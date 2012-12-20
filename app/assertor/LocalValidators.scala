@@ -8,11 +8,15 @@ object LocalValidators extends LocalValidators({
   val configuration = Configuration.load(new File("."))
   val port = configuration.getInt("application.local-validator.port") getOrElse sys.error("application.local-validator.port")
   port
-})
+}) {
+
+  val logger = play.Logger.of(classOf[LocalValidators])
+
+}
 
 class LocalValidators(port: Int) {
 
-  val logger = play.Logger.of(classOf[LocalValidators])
+  import LocalValidators.logger
 
   var validators: Validators = null
 

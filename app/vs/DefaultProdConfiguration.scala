@@ -15,6 +15,12 @@ import java.io.File
 import reactivemongo.api.MongoConnection
 import com.mongodb.{ MongoClient, DB }
 
+object DefaultProdConfiguration {
+
+  val logger = play.Logger.of(classOf[VSConfiguration])
+
+}
+
 trait DefaultProdConfiguration extends VSConfiguration {
 
   val configuration = Configuration.load(new File("."))
@@ -60,9 +66,8 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs.actorOf(Props(new UsersActor()(this)).withDispatcher("user-dispatcher"), "users")
     vs.actorOf(Props(new Http(httpClient, vs.scheduler, httpCacheOpt)).withDispatcher("http-dispatcher"), "http")
     val listener = vs.actorOf(Props(new Actor {
-      val logger = play.Logger.of(classOf[VSConfiguration])
       def receive = {
-        case d: DeadLetter ⇒ logger.debug("DeadLetter - sender: %s, recipient: %s, message: %s" format(d.sender.toString, d.recipient.toString, d.message.toString))
+        case d: DeadLetter ⇒ DefaultProdConfiguration.logger.debug("DeadLetter - sender: %s, recipient: %s, message: %s" format(d.sender.toString, d.recipient.toString, d.message.toString))
       }
     }))
     vs.eventStream.subscribe(listener, classOf[DeadLetter])

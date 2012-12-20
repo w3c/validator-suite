@@ -11,7 +11,7 @@ import scala.concurrent.Future
 
 object OneTimeJob extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Store")
+  val logger = play.Logger.of("org.w3.vs.controllers.OneTimeJob")
 
   def newJob: ActionA = AsyncAction { implicit req =>
     val f: Future[PartialFunction[Format, Result]] =

@@ -6,10 +6,16 @@ import org.w3.vs._
 import org.w3.vs.actor.message._
 import org.w3.vs.model._
 
+object UserActor {
+
+  val logger = play.Logger.of(classOf[UserActor])
+
+}
+
 class UserActor(user: User)(implicit val configuration: VSConfiguration)
 extends Actor with PathAwareActor with Listeners {
 
-  val logger = play.Logger.of(classOf[UserActor])
+  import UserActor.logger
 
   val jobsRef: ActorRef = context.actorOf(Props(new JobsActor()).withDispatcher("user-dispatcher"), name = "jobs")
   

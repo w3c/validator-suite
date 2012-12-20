@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 
 object Jobs extends VSController {
   
-  val logger: ALogger = play.Logger.of("org.w3.vs.controllers.Jobs")
+  val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
 
   val indexName = (new controllers.javascript.ReverseJobs).index.name
   val indexTimer = Metrics.newTimer(Jobs.getClass, indexName, MILLISECONDS, SECONDS)

@@ -15,6 +15,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object AuthorityManager {
 
+  val logger = play.Logger.of(classOf[AuthorityManager])
+
   def encode(authority: Authority): String =
     authority.replaceAll(":", "_")
 
@@ -22,7 +24,7 @@ object AuthorityManager {
 
 class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, scheduler: Scheduler, cacheOpt: Option[Cache]) extends Actor {
   
-  val logger = play.Logger.of(classOf[AuthorityManager])
+  import AuthorityManager.logger
   
   var sleepTime: Long = 500L
   

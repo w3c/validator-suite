@@ -30,11 +30,10 @@ import org.w3.vs.actor.AssertorCall
 
 case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 
+  import Job.logger
   import conf._
 
   val creatorId = vo.creator
-
-  private val logger = Logger.of(classOf[Job])
   
   def getCreator(): Future[User] =
     User.get(creatorId)
@@ -139,6 +138,8 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
 }
 
 object Job {
+
+  val logger = Logger.of(classOf[Job])
 
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("jobs")

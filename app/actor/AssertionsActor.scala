@@ -9,19 +9,19 @@ import scala.util._
 import scala.collection.mutable.Queue
 import scala.concurrent.stm._
 import org.w3.util._
-import JobActor._
+import JobActor.{ logger => _, _ }
 
 object AssertionsActor {
 
   val MAX_PENDING_ASSERTION = 2
+
+  val logger = play.Logger.of(classOf[AssertionsActor])
 
 }
 
 import AssertionsActor._
 
 class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
-
-  lazy val logger = play.Logger.of(classOf[AssertionsActor])
 
   implicit val ec = conf.system.dispatchers.lookup("assertor-dispatcher")
 

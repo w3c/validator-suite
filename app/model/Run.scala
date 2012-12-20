@@ -165,9 +165,9 @@ case class Run private (
   // based on scheduled assertions
   pendingAssertions: Set[(AssertorId, URL)] = Set.empty) {
 
-  val context: Run.Context = (userId, jobId, runId)
+  import Run.logger
 
-  val logger = play.Logger.of(classOf[Run])
+  val context: Run.Context = (userId, jobId, runId)
 
   val shortId: String = jobId.shortId + "/" + runId.shortId
 

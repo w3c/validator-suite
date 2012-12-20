@@ -27,10 +27,9 @@ import Json.toJson
 import org.w3.vs.store.Formats._
 
 case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
-  
-  import conf.system
 
-  val logger = play.Logger.of(classOf[User])
+  import User.logger
+  import conf.system
 
   def isSubscriber = vo.isSubscriber
 
@@ -87,10 +86,10 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
 
 object User {
 
+  val logger = play.Logger.of(classOf[User])
+
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("users")
-
-  val logger = play.Logger.of(classOf[User])
 
   def sample(implicit conf: VSConfiguration) = User.apply(
     userId = UserId("50cb6a1c04ca20aa0283bc85"),

@@ -4,8 +4,8 @@ import org.w3.util._
 import org.w3.vs.model._
 
 trait FromHttpResponseAssertor extends FromURLAssertor {
-  
-  val logger = play.Logger.of(classOf[Assertor])
+ 
+  import Assertor.logger
 
   def supportedMimeTypes: List[String]
 

@@ -16,6 +16,8 @@ case object ERROR extends CachedResourceState
 
 object Cache {
 
+  val logger = play.Logger.of(classOf[Cache])
+
   val metaRegex = """^(OK|ERROR) (\d+) (.*)$""".r
 
   val headerRegex = """^([^:]+):\s*(.*)$""".r
@@ -24,9 +26,9 @@ object Cache {
 
 case class Cache(directory: File) extends ResponseCache {
 
-  assert(directory.isDirectory)
+  import Cache.logger
 
-  val logger = play.Logger.of(classOf[Cache])
+  assert(directory.isDirectory)
 
   def reset(): Unit = {
     directory.listFiles foreach { file =>

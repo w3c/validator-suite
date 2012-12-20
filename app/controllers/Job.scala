@@ -24,7 +24,7 @@ import org.w3.vs.model
 
 object Job extends VSController {
 
-  val logger: ALogger = play.Logger.of("org.w3.vs.controllers.Job")
+  val logger = play.Logger.of("org.w3.vs.controllers.Job")
 
   def reportByMessage(id: JobId): ActionA = Assertions.index(id, None)
 

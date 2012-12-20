@@ -17,6 +17,8 @@ trait Assertor {
 
 object Assertor {
 
+  val logger = play.Logger.of(classOf[Assertor])
+
   val names = Iterable(
     CSSValidator.name,
     HTMLValidator.name,

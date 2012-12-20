@@ -9,9 +9,15 @@ import scalaz.Scalaz._
 
 case class CreateUserAndForward(user: User, tell: Tell)
 
-class UsersActor()(implicit conf: VSConfiguration) extends Actor with PathAwareActor {
+object UsersActor {
 
   val logger = play.Logger.of(classOf[UsersActor])
+
+}
+
+class UsersActor()(implicit conf: VSConfiguration) extends Actor with PathAwareActor {
+
+  import UsersActor.logger
 
   def getUserRefOrCreate(user: User): ActorRef = {
     val id = user.id

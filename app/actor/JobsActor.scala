@@ -12,11 +12,16 @@ import scala.util._
 
 case class CreateJobAndForward(job: Job, initialState: JobActorState, run: Run, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall], msg: Any)
 
-class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareActor {
-
-  import conf._
+object JobsActor {
 
   val logger = play.Logger.of(classOf[JobsActor])
+
+}
+
+class JobsActor()(implicit conf: VSConfiguration) extends Actor with PathAwareActor {
+
+  import JobsActor.logger
+  import conf._
 
   def userId: UserId = {
     val elements = self.path.elements.toList

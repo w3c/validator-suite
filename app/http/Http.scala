@@ -11,6 +11,8 @@ import AuthorityManager.encode
 
 object Http {
 
+  val logger = Logger.of(classOf[Http])
+
   /**
    * a Fetch command message for an Http actor
    *
@@ -44,7 +46,7 @@ import Http._
  */
 class Http(httpClient: AsyncHttpClient, scheduler: Scheduler, cacheOpt: Option[Cache]) extends Actor with PathAwareActor {
 
-  val logger = Logger.of(classOf[Http])
+  import Http.logger
 
   def getAuthorityManagerRefOrCreate(authority: Authority): ActorRef = {
     val encoded = encode(authority)
