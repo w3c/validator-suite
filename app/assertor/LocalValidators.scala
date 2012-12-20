@@ -8,21 +8,7 @@ object LocalValidators extends LocalValidators({
   val configuration = Configuration.load(new File("."))
   val port = configuration.getInt("application.local-validator.port") getOrElse sys.error("application.local-validator.port")
   port
-}) {
-
-//  override def stop(): Unit = {
-//    if (validators != null) {
-//      if (Play.maybeApplication.map(_.mode) == Some(Mode.Prod)) {
-//        logger.debug("stopping")
-//        validators.stop()
-//        validators = null
-//      } else {
-//        logger.debug("only stops when in Prod mode")
-//      }
-//    }
-//  }
-
-}
+})
 
 class LocalValidators(port: Int) {
 

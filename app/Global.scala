@@ -39,7 +39,6 @@ object Global extends GlobalSettings {
   override def onStop(app: Application): Unit = {
     Metrics.shutdown()
     ResponseCache.setDefault(null)
-    org.w3.vs.assertor.LocalValidators.stop()
     system.shutdown()
   }
   
