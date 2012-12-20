@@ -14,7 +14,7 @@ package object model {
     val default: AssertorsConfiguration =
       Map(
         CSSValidator.id -> Map.empty,
-        HTMLValidator.id -> Map.empty,
+        ValidatorNu.id -> Map.empty,
         I18nChecker.id -> Map.empty)
   }
 
