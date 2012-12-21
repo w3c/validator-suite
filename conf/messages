@@ -120,9 +120,9 @@ debug.unexpected=Unexpected: {0}
 #assertors
 assertor.checker_i18n=I18n Checker
 assertor.checker_mobile=MobileOk Checker
-assertor.validator_nu=Validator.nu
+assertor.validator_nu=HTML5 Validator
 assertor.validator_css=CSS Validator
-assertor.validator_html=HTML Validator
+assertor.validator_html=HTML4/XHTML Validator
 
 assertor.noissues=The {0} found no issues to report
 assertor.externalResourcesWarning=However this document points to the following invalid resources:
