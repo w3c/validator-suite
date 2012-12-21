@@ -3,6 +3,7 @@ package org.w3.vs.store
 import org.w3.vs.model._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.{ Headers, URL }
+import org.w3.util.html.Doctype
 import org.w3.vs._
 import org.w3.vs.actor.JobActor._
 import org.w3.vs.actor.AssertorCall
@@ -166,12 +167,19 @@ object Formats {
     (__ \ 'why).format[String]
   )(ErrorResponse.apply _, unlift(ErrorResponse.unapply _))
 
+  implicit val DoctypeFormat: Format[Doctype] = (
+    (__ \ 'name).format[String] and
+    (__ \ 'publicId).format[String] and
+    (__ \ 'systemId).format[String]
+  )(Doctype.apply _, unlift(Doctype.unapply _))
+
   val HttpResponseFormat: Format[HttpResponse] = (
     (__ \ 'url).format[URL] and
     (__ \ 'method).format[HttpMethod] and
     (__ \ 'status).format[Int] and
     (__ \ 'headers).format[Headers] and
-    (__ \ 'extractedURLs).format[List[URL]]
+    (__ \ 'extractedURLs).format[List[URL]] and
+    (__ \ 'doctype).format[Option[Doctype]]
   )(HttpResponse.apply _, unlift(HttpResponse.unapply _))
 
   implicit object ResourceResponseFormat extends Format[ResourceResponse] {
@@ -179,7 +187,7 @@ object Formats {
       ErrorResponseFormat.reads(json) orElse HttpResponseFormat.reads(json)
     def writes(rr: ResourceResponse) = rr match {
       case er@ErrorResponse(_, _, _) => ErrorResponseFormat.writes(er)
-      case hr@HttpResponse(_, _, _, _, _) => HttpResponseFormat.writes(hr)
+      case hr@HttpResponse(_, _, _, _, _, _) => HttpResponseFormat.writes(hr)
     }
   }
 

@@ -12,6 +12,12 @@ object HtmlParser extends HtmlParser
  */
 trait HtmlParser {
   
+  /** extract the urls in the given document, as well as the Doctype informations if present
+    * this is raw extraction:
+    * - the order of the urls is not specified
+    * - they are not necesseraly absolute
+    * - there can be duplicates
+    */
   def parse(
       baseURL: URL,
       resource: InputResource[InputStream],

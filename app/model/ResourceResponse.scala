@@ -1,6 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.util._
+import org.w3.util.html.Doctype
 import org.joda.time._
 import org.w3.vs._
 import java.io._
@@ -54,19 +55,23 @@ object HttpResponse {
       headers: Headers,
       resource: InputResource[InputStream]): HttpResponse = {
     
-    val extractedURLs: List[URL] = headers.mimetype collect {
-      case "text/html" | "application/xhtml+xml" => html.HtmlParser.parse(url, resource, headers.charset)._1.map(URL.clearHash).distinct
-      case "text/css" => List.empty // TODO
-    } getOrElse List.empty
+    val (extractedURLs, doctypeOpt) = headers.mimetype collect {
+      case "text/html" | "application/xhtml+xml" => {
+        val (urls, doctypeOpt) = html.HtmlParser.parse(url, resource, headers.charset)
+        (urls.map(URL.clearHash).distinct, doctypeOpt)
+      }
+      case "text/css" => (List.empty, None) // TODO
+    } getOrElse (List.empty, None)
     
-    HttpResponse(url = url, method = method, status = status, headers = headers, extractedURLs = extractedURLs)
+    HttpResponse(url = url, method = method, status = status, headers = headers, extractedURLs = extractedURLs, doctypeOpt)
   }
 
 }
 
 case class HttpResponse(
-    url: URL,
-    method: HttpMethod,
-    status: Int,
-    headers: Headers,
-    extractedURLs: List[URL]) extends ResourceResponse
+  url: URL,
+  method: HttpMethod,
+  status: Int,
+  headers: Headers,
+  extractedURLs: List[URL],
+  doctypeOpt: Option[Doctype]) extends ResourceResponse

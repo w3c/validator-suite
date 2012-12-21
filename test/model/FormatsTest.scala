@@ -4,6 +4,7 @@ import org.scalatest.{ Filter => ScalaTestFilter, _}
 import org.scalatest.matchers._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.URL
+import org.w3.util.html.Doctype
 import org.w3.vs.model._
 import org.w3.vs._
 import scala.util._
@@ -62,7 +63,7 @@ class FormatsTest extends WordSpec with MustMatchers {
       method = GET,
       status = 200,
       headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
-      extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")))
+      extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")), Some(Doctype("html", "", "")))
 
   val assertorResult =
     AssertorResult((UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), List(assertion))

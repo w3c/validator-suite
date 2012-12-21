@@ -33,7 +33,7 @@ class CacheTest extends WordSpec with MustMatchers {
 
       val url = URL("http://example.com/ok/" + method)
   
-      val hr = HttpResponse(url, method, 200, Map("foo" -> List("bar", "baz")), List.empty)
+      val hr = HttpResponse(url, method, 200, Map("foo" -> List("bar", "baz")), List.empty, None)
   
       val content = "foo"
       val bais = new ByteArrayInputStream(content.getBytes("UTF-8"))
@@ -78,7 +78,7 @@ class CacheTest extends WordSpec with MustMatchers {
 
       val status = 201
 
-      val hr = HttpResponse(url, method, status, headers, List.empty)
+      val hr = HttpResponse(url, method, status, headers, List.empty, None)
   
       val content = "foo"
       val bais = new ByteArrayInputStream(content.getBytes("UTF-8"))

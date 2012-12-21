@@ -111,7 +111,7 @@ object Run {
         toBeAsserted -= ((url, assertor))
         run = run.withAssertorFailure(af)
       }
-      case ResourceResponseEvent(runId, hr@HttpResponse(url, _, _, _, _), _) => {
+      case ResourceResponseEvent(runId, hr@HttpResponse(url, _, _, _, _, _), _) => {
         toBeFetched -= url
         val (newRun, urls, assertorCalls) = run.withHttpResponse(hr)
         run = newRun
