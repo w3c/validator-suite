@@ -99,7 +99,7 @@ class HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = Helper.encode(url)
     val query = Helper.queryString(assertorConfiguration + ("uri" -> Seq(encoded)))
-    val validatorURL = URL(serviceUrl + query)
+    val validatorURL = URL(serviceUrl + "?" + query)
     validatorURL
   }
 
