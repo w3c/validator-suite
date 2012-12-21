@@ -2,16 +2,19 @@ package org.w3.util.html
 
 import org.w3.util.URL
 import org.xml.sax._
+import org.xml.sax.ext._
 import org.xml.sax.helpers.DefaultHandler
 
-/**
- * http://download.oracle.com/javase/6/docs/api/org/xml/sax/helpers/DefaultHandler.html
- */
-class ExtractorHandler(baseURL: URL) extends DefaultHandler {
+/** http://docs.oracle.com/javase/7/docs/api/org/xml/sax/helpers/DefaultHandler.html
+  * http://docs.oracle.com/javase/7/docs/api/org/xml/sax/ext/LexicalHandler.html
+  */
+class ExtractorHandler(baseURL: URL) extends DefaultHandler with LexicalHandler {
 
   private var _hrefs = List[String]()
 
   def hrefs: List[URL] = _hrefs.reverse flatMap { baseURL / _ }
+
+  var doctypeOpt: Option[Doctype] = None
 
   /**
    * http://download.oracle.com/javase/6/docs/api/org/xml/sax/Attributes.html
@@ -25,4 +28,15 @@ class ExtractorHandler(baseURL: URL) extends DefaultHandler {
       case _ => ()
     }
   }
+
+  def comment(ch: Array[Char], start: Int, length: Int): Unit = ()
+  def endCDATA(): Unit = ()
+  def endDTD(): Unit = ()
+  def endEntity(name: String): Unit = ()
+  def startCDATA(): Unit = ()
+  def startDTD(name: String, publicId: String, systemId: String): Unit = {
+    doctypeOpt = Some(Doctype(name, publicId, systemId))
+  }
+  def startEntity(name: String): Unit = ()
+
 }

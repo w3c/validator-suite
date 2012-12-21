@@ -15,7 +15,7 @@ trait HtmlParser {
   def parse(
       baseURL: URL,
       resource: InputResource[InputStream],
-      encodingOpt: Option[String] = None): List[URL] = {
+      encodingOpt: Option[String] = None): (List[URL], Option[Doctype]) = {
     resource.acquireAndGet { inputStream =>
       val encoding = encodingOpt getOrElse "UTF8"
       val inputSource = {
@@ -29,11 +29,12 @@ trait HtmlParser {
         val p = new nu.validator.htmlparser.sax.HtmlParser(XmlViolationPolicy.ALLOW)
         p.setContentHandler(extractor)
         p.setErrorHandler(extractor)
+        p.setReportingDoctype(true)
+        p.setLexicalHandler(extractor)
         p
       }
       parser.parse(inputSource)
-      val hrefs = extractor.hrefs
-      hrefs
+      (extractor.hrefs, extractor.doctypeOpt)
     }
   }
   

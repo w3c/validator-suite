@@ -55,7 +55,7 @@ object HttpResponse {
       resource: InputResource[InputStream]): HttpResponse = {
     
     val extractedURLs: List[URL] = headers.mimetype collect {
-      case "text/html" | "application/xhtml+xml" => html.HtmlParser.parse(url, resource, headers.charset).map(URL.clearHash).distinct
+      case "text/html" | "application/xhtml+xml" => html.HtmlParser.parse(url, resource, headers.charset)._1.map(URL.clearHash).distinct
       case "text/css" => List.empty // TODO
     } getOrElse List.empty
     
