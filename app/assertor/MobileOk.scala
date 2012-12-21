@@ -18,8 +18,8 @@ object MobileOk extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = Helper.encode(url)
-    val query = Helper.queryString(assertorConfiguration + ("docAddr" -> Seq(encoded)))
-    val validatorURL = URL(serviceUrl + query)
+    val queryString = Helper.queryString(assertorConfiguration + ("docAddr" -> Seq(encoded)))
+    val validatorURL = URL(serviceUrl + "?" + queryString)
     validatorURL
   }
 

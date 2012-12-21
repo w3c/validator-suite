@@ -186,7 +186,8 @@ class HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
       val env = pb.environment()
       env.put("W3C_VALIDATOR_CFG", checkConfig)
       env.put("REQUEST_METHOD", "POST")
-      env.put("QUERY_STRING", "output=ucn")
+      val queryString = Helper.queryString(configuration + ("output" -> List("ucn")))
+      env.put("QUERY_STRING", queryString)
       env.put("HTTP_HOST", "valid.w3.org")
       env.put("CONTENT_TYPE", "multipart/form-data; boundary=---")
       env.put("CONTENT_LENGTH", cos.counter.toString) // size in bytes

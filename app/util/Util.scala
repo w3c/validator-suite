@@ -95,4 +95,15 @@ object Util {
     }
   }
 
+//  def getLoggerNames: List[String] = {
+//    val lc = (LoggerContext) LoggerFactory.getILoggerFactory()
+//     List<String> strList = new ArrayList<String>();
+//     for (ch.qos.logback.classic.Logger log : lc.getLoggerList()) {
+//       if(log.getLevel() != null || hasAppenders(log)) {
+//         strList.add(log.getName());
+//       }
+//     }
+//     return strList;
+//   }
+
 }

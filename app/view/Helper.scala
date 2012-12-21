@@ -54,7 +54,7 @@ object Helper {
   def queryString(parameters: Map[String, Seq[String]]): String = {
     parameters.map { case (param, values) =>
         values.map(value => param + "=" + value)
-    }.flatten.mkString("?", "&", "")
+    }.flatten.mkString("&")
   }
 
   def parseQueryString(queryString: String): Map[String, Seq[String]] = {

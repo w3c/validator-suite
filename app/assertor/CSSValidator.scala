@@ -16,8 +16,8 @@ class CSSValidator(val serviceUrl: String) extends FromHttpResponseAssertor with
   
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = Helper.encode(url)
-    val query = Helper.queryString(assertorConfiguration + ("uri" -> Seq(encoded)))
-    val validatorURL = URL(serviceUrl + query)
+    val queryString = Helper.queryString(assertorConfiguration + ("uri" -> Seq(encoded)))
+    val validatorURL = URL(serviceUrl + "?" + queryString)
     validatorURL
   }
 
