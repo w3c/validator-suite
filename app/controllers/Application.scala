@@ -81,12 +81,13 @@ object Application extends VSController {
           case Left(form) => throw InvalidFormException(form)
           case Right(validForm) => validForm
         })
-        user <- User.register(email = form.email, name = form.name, password = form.password, false)
+        user <- User.register(name = form.name, email = form.email, password = form.password, isSubscriber = false)
         // TODO The registration form should be protected. Registration for one-time users is done through its own form
         // and subscribers registration is done manually. If this form is protected for admins isSubscriber could be set to true
       } yield {
         SeeOther(routes.Jobs.index).withSession("email" -> user.vo.email)
       }) recover {
+        case DuplicatedEmail(email: String) => BadRequest(views.html.register(RegisterForm.blank, List(("error" -> Messages("form.email.duplicate")))))
         case InvalidFormException(form: RegisterForm, _) => BadRequest(views.html.register(form))
       } recover toError
     }

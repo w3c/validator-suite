@@ -186,6 +186,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   "a User can't have an email already in use" in {
     val user = User(UserId(), "FOO", "foo@example.com", "secret", isSubscriber = true)
     Try { User.save(user).getOrFail() } must be (Failure(DuplicatedEmail("foo@example.com")))
+    Try { User.register("FOO", "foo@example.com", "secret", true).getOrFail() } must be (Failure(DuplicatedEmail("foo@example.com")))
   }
 
   "authenticate a user" in {

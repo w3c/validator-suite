@@ -40,7 +40,7 @@ object OneTimeJob extends VSController {
                 case Left(form) => throw InvalidFormException(form)
                 case Right(validForm) => validForm
               })
-              user <- User.register(email = form.email, name = form.name, password = form.password, isSubscriber = false)
+              user <- User.register(name = form.name, email = form.email, password = form.password, isSubscriber = false)
             } yield user
           // Known user
           case _ =>
@@ -72,6 +72,10 @@ object OneTimeJob extends VSController {
       case  _: UnauthorizedException => {
         case Html(_) => Unauthorized(views.html.otojForm(OneTimeJobForm.blank.withError("error", Messages("application.invalidCredentials")), None)).withNewSession
         case _ => Unauthorized
+      }
+      case DuplicatedEmail(email: String) => {
+        case Html(_) => BadRequest(views.html.otojForm(OneTimeJobForm.blank.withErrors(List(("error" -> Messages("form.email.duplicate")))), None))
+        case _ => BadRequest(Messages("form.email.duplicate"))
       }
       case InvalidFormException(form: VSForm, user) => {
         case Html(_) => {

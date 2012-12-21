@@ -15,7 +15,8 @@ case object UnauthorizedJob extends Exception("UnauthorizedJob") //with SuiteExc
 trait UnauthorizedException
 case object UnknownUser extends Exception("UnknownUser") with UnauthorizedException //with SuiteException
 case object Unauthenticated extends Exception("Unauthenticated") with UnauthorizedException //with SuiteException
-case class DuplicatedEmail(email: String) extends Exception(s"${email} already in use") with UnauthorizedException 
+
+case class DuplicatedEmail(email: String) extends Exception(s"${email} already in use")
 
 case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")
 

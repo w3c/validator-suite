@@ -128,7 +128,7 @@ object User {
     }
   }
 
-  def register(email: String, name: String, password: String, isSubscriber: Boolean)(implicit conf: VSConfiguration): Future[User] = {
+  def register(name: String, email: String, password: String, isSubscriber: Boolean)(implicit conf: VSConfiguration): Future[User] = {
     val user = User(
       userId = UserId(),
       name = name,
