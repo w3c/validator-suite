@@ -1,7 +1,7 @@
 @(config: AssertorsConfiguration)
 @defining("validator_nu"){case name =>
 
-<label for="@name" title="Add Validator.nu to this job">@Messages("assertor.validator_nu")</label>
+<label for="@name" title="Add @Messages("assertor.validator_nu") to this job">@Messages("assertor.validator_nu")</label>
 <input  id="@name" name="assertor[]" value="@name" type="radio" @if(config.contains(AssertorId(name))){checked}/>
 
 <fieldset class="@name assertor">
