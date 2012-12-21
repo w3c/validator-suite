@@ -32,11 +32,13 @@ class HTMLValidatorTest extends WordSpec with MustMatchers with AssertionResultM
   }
 
   "http://www.w3.org/TR/html5 should not be valid because it's using HTML5" in {
-    val url = URL("http://www.w3.org/TR/html5")
-    val assertions: Iterable[Assertion] = HTMLValidator.assert(url, Map.empty)
-    assertions must have size(1)
-    val assertion = assertions.head
-    assertion.title must be(HTMLValidator.UsesHtml5Syntax)
+    if (HTMLValidator.enable) {
+      val url = URL("http://www.w3.org/TR/html5")
+      val assertions: Iterable[Assertion] = HTMLValidator.assert(url, Map.empty)
+      assertions must have size(1)
+      val assertion = assertions.head
+      assertion.title must be(HTMLValidator.UsesHtml5Syntax)
+    }
   }
 
 
