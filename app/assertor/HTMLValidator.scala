@@ -50,7 +50,19 @@ class OutputStreamW(val out: OutputStream) extends AnyVal {
 
 object HTMLValidator extends HTMLValidator {
 
+  val UsesHtml5Syntax = "This page uses HTML5 syntax"
+
   val logger = play.Logger.of(classOf[HTMLValidator])
+
+  def fix(assertions: Iterable[Assertion]): Iterable[Assertion] = {
+    assertions map {
+      case assertion@Assertion(_, _, _, _, "External Checker not available", Error, _, _) =>
+        assertion.copy(title = UsesHtml5Syntax)
+      case assertion => assertion
+    }
+
+
+  }
 
 }
 
@@ -60,7 +72,7 @@ object HTMLValidator extends HTMLValidator {
 class HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   import OutputStreamW.pimp
-  import HTMLValidator.logger
+  import HTMLValidator.{ fix, logger }
 
   val id = AssertorId("validator_html")
 
@@ -195,7 +207,8 @@ class HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
       consumeHeaders(stdout)
       val source = Source.fromInputStream(stdout)
       p.waitFor()
-      assert(source)
+      val assertions = assert(source)
+      fix(assertions)
     } else {
       val source = Source.fromURL(validatorURLForMachine(url, configuration))
       assert(source)
