@@ -244,7 +244,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
 
             models = this.displayed = models.slice(0, this.maxOnScreen);
 
-            elements = models.map(function (model) {
+            elements = _.map(models, function (model) {
                 return model.view.el;
             });
 
