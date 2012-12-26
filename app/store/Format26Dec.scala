@@ -22,7 +22,37 @@ import play.api.libs.functional.syntax._
 import Json.toJson
 import play.api.libs.json.Reads.pattern
 
-object Formats {
+object Formats26Dec {
+
+  // TODO indexes
+  def migration()(implicit conf: VSConfiguration): Unit = {
+    import com.mongodb._
+    import com.mongodb.util.JSON
+
+    import scala.collection.JavaConverters._
+
+    val coll = conf.mongoDb.getCollection("runs")
+    val indexes = coll.getIndexInfo()
+    val temp = conf.mongoDb.getCollection("runs-temp")
+    temp.drop()
+    println(indexes.asScala.toList)
+    indexes.asScala foreach { index =>
+      val key = index.get("key").asInstanceOf[DBObject]
+      temp.createIndex(key)
+    }
+    val docs = coll.find()
+    while (docs.hasNext) {
+      val dbObject = docs.next()
+      val json = Json.parse(JSON.serialize(dbObject))
+      val oldRunEvent = json.as[RunEvent](Formats26Dec.RunEventFormat)
+      val newDbObject = {
+        val json = toJson(oldRunEvent)(Formats.RunEventFormat)
+        JSON.parse(Json.stringify(json)).asInstanceOf[DBObject]
+      }
+      temp.insert(newDbObject)
+    }
+    temp.rename("runs", true)
+  }
 
   def reeads[T](body: => T): JsResult[T] = try {
     JsSuccess(body)
@@ -46,11 +76,10 @@ object Formats {
     def writes(t: (A, B, C)) = JsArray(Seq(toJson(t._1), toJson(t._2), toJson(t._3)))    
   }
 
-  implicit def mapFormat[A, B](implicit aFormat: StringLikeFormat[A], bFormat: Format[B]) = new Format[Map[A, B]] {
-    implicit val owrites = implicitly[OWrites[Map[String, B]]] // TODO
-    implicit val f = implicitly[Format[Map[String, B]]]
-    def reads(json: JsValue): JsResult[Map[A, B]] = f.reads(json).map(_.map{ case (k, v) => (aFormat.apply(k), v) })
-    def writes(m: Map[A, B]) = f.writes(m.map{ case (k, v) => (aFormat.unapply(k), v) })
+  implicit def mapFormat[A, B](implicit aFormat: Format[A], bFormat: Format[B]) = new Format[Map[A, B]] {
+    implicit val f = implicitly[Format[List[(A, B)]]]
+    def reads(json: JsValue): JsResult[Map[A, B]] = f.reads(json).map(_.toMap)
+    def writes(map: Map[A, B]) = f.writes(map.toList)
   }
 
   def constant[T](stringConst: String, const: T): Format[T] = new Format[T] {
@@ -61,18 +90,13 @@ object Formats {
     def writes(t: T): JsValue = JsString(stringConst)
   }
 
-  class StringLikeFormat[T](val apply: String => T, val unapply: T => String) extends Format[T] {
+  def string[T](apply: String => T, unapply: T => String): Format[T] = new Format[T] {
     def reads(json: JsValue): JsResult[T] = json match {
       case JsString(s) => JsSuccess(apply(s))
       case _ => JsError()
     }
     def writes(t: T): JsValue = JsString(unapply(t))
   }
-
-  def string[T](apply: String => T, unapply: T => String): StringLikeFormat[T] =
-    new StringLikeFormat[T](apply, unapply)
-
-  implicit val StringLikeString = string[String](s => s, s => s)
 
   def oid[T <: Id](apply: BSONObjectID => T): Format[T] = new Format[T] {
     def reads(json: JsValue): JsResult[T] = {
@@ -128,8 +152,8 @@ object Formats {
   
   implicit val ContextFormat: Format[Context] = (
     (__ \ 'content).format[String] and
-    (__ \ 'line).formatOpt[Int] and
-    (__ \ 'column).formatOpt[Int]
+    (__ \ 'line).format[Option[Int]] and
+    (__ \ 'column).format[Option[Int]]
   )(Context.apply _, unlift(Context.unapply _))
 
   val ErrorFormat = constant[Error.type]("error", Error)
@@ -152,7 +176,7 @@ object Formats {
     (__ \ 'lang).format[String] and
     (__ \ 'title).format[String] and
     (__ \ 'severity).format[AssertionSeverity] and
-    (__ \ 'description).formatOpt[String] and
+    (__ \ 'description).format[Option[String]] and
     (__ \ 'timestamp).format[DateTime]
   )(Assertion.apply _, unlift(Assertion.unapply _))
 
@@ -178,8 +202,6 @@ object Formats {
     (__ \ 'publicId).format[String] and
     (__ \ 'systemId).format[String]
   )(Doctype.apply _, unlift(Doctype.unapply _))
-
-  import Format.constraints._
 
   val HttpResponseFormat: Format[HttpResponse] = (
     (__ \ 'url).format[URL] and

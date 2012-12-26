@@ -149,6 +149,11 @@ object Main {
     }
 
     args match {
+      case Array("migration") => {
+        val conf = new DefaultProdConfiguration { }
+        org.w3.vs.store.Formats26Dec.migration()(conf)
+        println("done")
+      }
       case Array(int(n)) => stressTestData(n)
       case _ => defaultData()
     }
