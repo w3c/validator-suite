@@ -139,7 +139,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     // Compare the state data and not the state of the fsm to tell if we must broadcast
     // sameAs() compares jobData objects ignoring createdAt
-    if (!_run.jobData.sameAs(stateData.jobData)) {
+    if (!_run.jobData.sameAs(stateData.jobData) || _run.activity === Idle) {
       val msg = UpdateData(job.id, _run.jobData, _run.activity)
       tellEverybody(msg)
     }

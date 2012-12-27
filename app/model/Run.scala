@@ -357,8 +357,13 @@ case class Run private (
             (runWithResponse, Set.empty[URL])
         (runWithPendingFetches, urlsToFetch, List.empty)
       }
-      case InfoError(_) => {
-        (runWithResponse, List.empty, List.empty)
+      case InfoError(why) => {
+        val (runWithPendingFetches, urlsToFetch) =
+          if (explorationMode === ProActive)
+            runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
+          else
+            (runWithResponse, Set.empty[URL])
+        (runWithPendingFetches, urlsToFetch, List.empty)
       }
     }
 

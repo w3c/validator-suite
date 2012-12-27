@@ -11,6 +11,25 @@ import org.w3.vs.store.MongoStore
 
 object Main {
 
+  def test(): Unit = {
+    implicit val conf = new DefaultProdConfiguration { }
+
+    val jobId = JobId("50d30e280bccf4072762a039")
+    val Some((run, urls, assertorCalls)) = Job.getLastRun(jobId).getOrFail()
+//    println("3 " + run.toBeExplored)
+
+
+    conf.system.shutdown()
+    conf.system.awaitTermination()
+    conf.httpClient.close()
+    conf.connection.close()
+
+    println("you need to press ctrl-c")
+
+  }
+
+
+
   def stressTestData(n: Int): Unit = {
     implicit val conf = new DefaultProdConfiguration { }
 
@@ -154,8 +173,10 @@ object Main {
         org.w3.vs.store.Formats26Dec.migration()(conf)
         println("done")
       }
+      case Array("test") => test()
       case Array(int(n)) => stressTestData(n)
-      case _ => defaultData()
+      case Array() => defaultData()
+      case _ => sys.error("check your parameters")
     }
 
   }
