@@ -45,9 +45,8 @@ object MongoStore {
       _ <- indexesManager.onCollection(User.collection.name).ensure(Index(List("email" -> true), unique = true))
       _ <- indexesManager.onCollection(Job.collection.name).ensure(Index(List("creator" -> true)))
       runIndexesManager = indexesManager.onCollection(Run.collection.name)
-      _ <- runIndexesManager.ensure(Index(List("jobId" -> true)))
+      _ <- runIndexesManager.ensure(Index(List("jobId" -> true, "event" -> true)))
       _ <- runIndexesManager.ensure(Index(List("runId" -> true)))
-      _ <- runIndexesManager.ensure(Index(List("event" -> true)))
     } yield ()
   }
 
