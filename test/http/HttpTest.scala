@@ -75,24 +75,21 @@ class HttpTest extends RunTestHelper with Inside {
   }
 
   
-//  if (System.getProperty("os.name") startsWith "Linux") {
-//
-//    "testing HEAD on non-existing domain (foo.localhost)" in {
-//      
-//      val token = RunId()
-//      
-//      http ! Fetch(URL("http://foo.localhost/bar"), HEAD, token)
-//      
-//      val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
-//      
-//      inside (fetchResponse) { case (tok, response: ErrorResponse) =>
-//        response.url must be(URL("http://foo.localhost/bar"))
-//        response.method must be(HEAD)
-//        tok must be(token)
-//      }
-//
-//    }
-//  }
+  "testing HEAD on non-existing domain example.com must fail" in {
+
+    val token = RunId()
+
+    http ! Fetch(URL("http://example.com/bar"), HEAD, token)
+
+    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
+
+    inside (fetchResponse) { case (tok, response: ErrorResponse) =>
+      response.url must be(URL("http://example.com/bar"))
+      response.method must be(HEAD)
+      tok must be(token)
+    }
+
+  }
 
   "testing delays" in {
 
@@ -118,7 +115,6 @@ class HttpTest extends RunTestHelper with Inside {
     pendingFetches() must be(98)
 
   }
-
 
 }
 

@@ -72,4 +72,14 @@ package object util {
   
   def shortId(id: String): String = id.substring(0, 6)
 
+  /*******/
+
+  import java.net.{ URL => jURL }
+  import scalaz.Scalaz._
+
+  implicit val equaljURL: Equal[jURL] = new Equal[jURL] {
+    def equal(a1: jURL, a2: jURL) = a1.toExternalForm === a2.toExternalForm
+  }
+
+
 }

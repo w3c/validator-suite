@@ -27,7 +27,6 @@ class WebsiteWithInvalidRedirectCrawlTest extends RunTestHelper with TestKitHelp
 
   val servlet = new HttpServlet {
     override def doGet(req: HttpServletRequest, resp: HttpServletResponse) = {
-      println(req.getRequestURI)
       req.getRequestURI match {
         case "/" => {
           resp.setStatus(200)

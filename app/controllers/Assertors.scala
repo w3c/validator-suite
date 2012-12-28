@@ -11,13 +11,15 @@ import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import org.w3.vs.model
+import scalaz.Scalaz._
+import org.w3.util.equaljURL
 
 object Assertors extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Assertors")
 
   def index(id: JobId, url: Option[URL]): ActionA = {
-    if (id == model.Job.sample.id) {
+    if (id === model.Job.sample.id) {
       VSAction { req => {
         case Html(_) => Redirect(routes.Assertors.sample(url))
         case _ => sample(url)(req)
@@ -53,7 +55,7 @@ object Assertors extends VSController {
   def index_(id: JobId, url: URL) = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
-      assertions_ <- job_.getAssertions().map(_.filter(_.url == url))
+      assertions_ <- job_.getAssertions().map(_.filter(_.url.underlying === url))
       assertors = AssertorsView(assertions_)
     } yield {
       case Json => Ok(assertors.bindFromRequest.toJson)

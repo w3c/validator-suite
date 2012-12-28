@@ -45,7 +45,7 @@
             <dd class="resource">
                 <a href="@routes.Assertions.index(assertion.jobId, Some(url))" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>
-                    <span>@Helper.shorten(url, 80)</span>
+                    <span>url.shorten(80)</span>
                 </a>
                 <br><a href="@url" data-resource="@url" class="external" target="_blank" title="@Messages("resource.external.link")">@url</a>
             </dd>}

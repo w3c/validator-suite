@@ -26,7 +26,7 @@ class HTMLValidatorTest extends WordSpec with MustMatchers with AssertionResultM
 
     Helper.parseQueryString(queryString) must be (assertorConfiguration
       + ("output" -> List("ucn"))
-      + ("uri" -> List(Helper.encode(url)))
+      + ("uri" -> List(url.encode("UTF-8")))
     )
 
   }

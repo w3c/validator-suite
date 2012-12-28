@@ -51,6 +51,12 @@ object Run {
       case (createRun@CreateRunEvent(_, _, _, _, _, _)) :: events => (createRun, events)
       case _ => sys.error("CreateRunEvent MUST be the first event")
     }
+//    var i = 0
+//    events foreach { event =>
+//      i += 1
+//      println(i)
+//      println(event)
+//    }
     Run.replayEvents(createRun, events)
   }  
 

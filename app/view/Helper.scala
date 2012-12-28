@@ -11,8 +11,6 @@ object Helper {
 
   def config = current.configuration
 
-  def encode(url: URL): String = URLEncoder.encode(url.toString, "utf-8")
-
   def shorten(string: String, limit: Int): String = {
     if (string.size > limit) {
       val dif = string.size - limit
@@ -23,7 +21,7 @@ object Helper {
   }
 
   def shorten(url: URL, limit: Int): String = {
-    shorten(url.toString.replaceFirst("http://", ""), limit)
+     shorten(url.toString.replaceFirst("http://", ""), limit)
   }
 
   val TimeFormatter: DateTimeFormatter = try {

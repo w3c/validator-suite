@@ -1,7 +1,8 @@
 package org.w3.util
 
-import java.net.{ URL => jURL }
+import java.net.{ URL => jURL, URLEncoder, URI }
 import scalaz.Equal
+import scala.util.Try
 
 case class URL(url: String) {
   
@@ -31,13 +32,22 @@ case class URL(url: String) {
       case e: Exception => None
     }
 
-  def externalForm = underlying.toExternalForm
+  def encode(enc: String): String = URLEncoder.encode(url, enc)
+
+  /** does the correct convertion to a URI as per RFC 2396
+    */
+  def toURI: URI =
+    new URI(underlying.getProtocol(), underlying.getUserInfo(), underlying.getHost(), underlying.getPort(), underlying.getPath(), underlying.getQuery(), underlying.getRef())
+
+  /** returns an HTTP Client friendly URL as being defined by RFC 2396
+    * DO NOT USE ANY OTHER METHODS as java.net.URL does not do that properly
+    */
+  def httpClientFriendly: String = toURI.toString
 
   def openConnection() = underlying.openConnection()
 
-  def ==(url: jURL) = {
-    underlying == url
-  }
+  def shorten(limit: Int): String =
+    org.w3.vs.view.Helper.shorten(url.replaceFirst("http://", ""), limit)
     
 }
 

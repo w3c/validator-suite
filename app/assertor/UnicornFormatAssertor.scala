@@ -5,7 +5,6 @@ import org.w3.vs.model._
 import com.codecommit.antixml._
 import scala.io.Source
 import play.api.i18n.Messages
-import org.w3.vs.view.Helper
 import org.apache.commons.lang3.StringEscapeUtils
 
 /** An Assertor that reads [[http://code.w3.org/unicorn/wiki/Documentation/Run/Response ObservationResponse]]s from [[scala.io.Source]]s
@@ -40,7 +39,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
           } yield {
             val contextRef: Option[String] = context.attrs get "ref"
             val content = contextRef match {
-              case Some(url) => """<a href="%s" target="_blank" class="external">%s</a> %s""" format (url, Helper.shorten(url, 100), htmlString(context))
+              case Some(url) => """<a href="%s" target="_blank" class="external">%s</a> %s""" format (url, org.w3.vs.view.Helper.shorten(url, 100), htmlString(context))
               case None => htmlString(context)
             }
             //val content = htmlString(context)
@@ -71,13 +70,13 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
               |</li>"""
             .stripMargin
             .format(
-              Helper.encode(url),
+              url.encode("UTF-8"),
               Messages("report.link"),
               Messages("resource.report.for"),
-              Helper.shorten(url, 100),
+              url.shorten(100),
               url,
               Messages("resource.external.link"),
-              Helper.shorten(url, 100)
+              url.shorten(100)
             )
           }.mkString("<ul>", " ", "</ul>")}),
           Warning)

@@ -158,10 +158,17 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
         }
       }
     }
-      
-    method match {
-      case GET => httpClient.prepareGet(url.externalForm).execute(httpHandler)
-      case HEAD => httpClient.prepareHead(url.externalForm).execute(httpHandler)
+
+    try {
+      method match {
+        case GET => httpClient.prepareGet(url.httpClientFriendly).execute(httpHandler)
+        case HEAD => httpClient.prepareHead(url.httpClientFriendly).execute(httpHandler)
+      }
+    } catch { case t: Throwable =>
+        logger.error("that's unexpected: AsyncHttpClient had failed", t)
+        val errorResponse = ErrorResponse(url = url, method = method, why = t.getMessage)
+        to ! (token, errorResponse)
+        cacheOpt foreach { _.save(errorResponse) }
     }
 
   }

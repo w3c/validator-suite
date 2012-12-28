@@ -8,6 +8,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
+import scalaz.Scalaz._
+import org.w3.util.equaljURL
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
@@ -22,7 +24,7 @@ object Assertions extends VSController  {
   val logger = play.Logger.of("org.w3.vs.controllers.Assertions")
 
   def index(id: JobId, url: Option[URL]): ActionA = {
-    if (id == model.Job.sample.id) {
+    if (id === model.Job.sample.id) {
       VSAction { req => {
         case Html(_) => Redirect(routes.Assertions.sample(url))
         case _ => sample(url)(req)
@@ -76,7 +78,7 @@ object Assertions extends VSController  {
   def index_(id: JobId, url: URL) = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
-      assertions_ <- job_.getAssertions().map(_.filter(_.url == url))
+      assertions_ <- job_.getAssertions().map(_.filter(_.url.underlying === url))
     } yield {
       case Html(_) => {
         val assertors = AssertorsView(assertions_)
@@ -137,7 +139,7 @@ object Assertions extends VSController  {
           }
           case Some(url) => {
             case NewAssertorResult(result, run, now) if result.assertions.map(_.url).toList.contains(url) => {
-              AssertionsView(run.assertions.filter(_.url == url), jobId, url).toJson
+              AssertionsView(run.assertions.filter(_.url.underlying === url), jobId, url).toJson
             }
           }
         }

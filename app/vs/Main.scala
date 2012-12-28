@@ -11,13 +11,18 @@ import org.w3.vs.store.MongoStore
 
 object Main {
 
-  def test(): Unit = {
+  def test(jobIdS: String): Unit = {
     implicit val conf = new DefaultProdConfiguration { }
 
-    val jobId = JobId("50d30e280bccf4072762a039")
+    val jobId = JobId(jobIdS)
     val Some((run, urls, assertorCalls)) = Job.getLastRun(jobId).getOrFail()
 //    println("3 " + run.toBeExplored)
 
+    if (urls.size < 10)
+      println("urls: " + urls)
+    else
+      println("urls: " + urls.size)
+    println("assertorCalls: " + assertorCalls.size)
 
     conf.system.shutdown()
     conf.system.awaitTermination()
@@ -173,7 +178,7 @@ object Main {
         org.w3.vs.store.Formats26Dec.migration()(conf)
         println("done")
       }
-      case Array("test") => test()
+      case Array("test", jobIdS) => test(jobIdS)
       case Array(int(n)) => stressTestData(n)
       case Array() => defaultData()
       case _ => sys.error("check your parameters")
