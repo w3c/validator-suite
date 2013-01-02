@@ -86,7 +86,7 @@ class HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor 
     def checkConfigExists: Boolean = new File(checkConfig).isFile
     lazy val ok: Boolean = checkBinaryExists && checkConfigExists
     if (enable && (!ok))
-      logger.warn("Issue with the configuration for a local Markup Validator, falling back to ${serviceUrl}")
+      logger.warn(s"Issue with the configuration for a local Markup Validator, falling back to ${serviceUrl}")
     enable && ok
   }
   lazy val checkBinary: String = configuration.getString("application.local-validator.markup-validator.check.binary").get
