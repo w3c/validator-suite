@@ -112,13 +112,13 @@ object User {
     import conf._
     val query = Json.obj("_id" -> toJson(userId))
     val cursor = collection.find[JsValue, JsValue](query)
-    cursor.toList map { _.headOption match {
+    cursor.headOption map {
       case Some(json) => {
         val userVo = json.as[UserVO]
         User(userId, userVo)
       }
       case None => sys.error("user not found")
-    }}
+    }
   }
   
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
@@ -142,14 +142,14 @@ object User {
     import conf._
     val query = Json.obj("email" -> JsString(email))
     val cursor: FlattenedCursor[JsValue] = collection.find[JsValue, JsValue](query)
-    cursor.toList map { _.headOption match {
+    cursor.headOption map {
       case Some(json) => {
         val id = (json \ "_id").as[UserId]
         val userVo = json.as[UserVO]
         User(id, userVo)
       }
       case None => throw UnknownUser
-    }}
+    }
   }
 
   /** saves a user in the store

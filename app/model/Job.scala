@@ -34,10 +34,8 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
   import conf._
 
   val creatorId = vo.creator
-  
-  def getCreator(): Future[User] =
-    User.get(creatorId)
 
+//  @deprecated("", "")
   def getRun(): Future[Run] = {
     (PathAware(usersRef, path) ? GetRun).mapTo[Run]
   }
@@ -173,11 +171,8 @@ object Job {
   def get(jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find[JsValue, JsValue](query)
-    cursor.toList map { list =>
-      val json: JsValue = list.headOption match {
-        case Some(json) => json
-        case _ => throw new NoSuchElementException("Invalid jobId: " + jobId)
-      }
+    cursor.headOption map { jsonOpt =>
+      val json: JsValue = jsonOpt.getOrElse(throw new NoSuchElementException("Invalid jobId: " + jobId))
       val jobId_ = (json \ "_id").as[JobId] // Is that necessary ? Why would it differ from the jobId parameter ? Why not an assert ?
       val jobVo = json.as[JobVO]
       Job(jobId_, jobVo)
@@ -209,35 +204,11 @@ object Job {
         "runId" -> BSONInteger(1),
         "_id" -> BSONInteger(0)) )
 
-    Run.collection.find[JsValue](lastCreatedRunQuery).toList flatMap { list =>
-      list.headOption match {
-        case None => Future.successful(None)
-        case Some(json) => 
-          val runId = (json \ "runId").as[RunId]
-          Run.get(runId) map Some.apply
-      }
-    }
-  }
-
-  def getLastCompletedRun(jobId: JobId)(implicit conf: VSConfiguration): Future[Option[(Run, Iterable[URL], Iterable[AssertorCall])]] = {
-    import conf._
-
-    val query = QueryBuilder().
-      query( Json.obj(
-        "jobId" -> toJson(jobId),
-        "event" -> toJson("create-event")) ).
-      sort( "completedOn" -> SortOrder.Descending ).
-      projection( BSONDocument(
-        "runId" -> BSONInteger(1),
-        "_id" -> BSONInteger(0)) )
-
-    Run.collection.find[JsValue](query).toList flatMap { list =>
-      list.headOption match {
-        case None => Future.successful(None)
-        case Some(json) => 
-          val runId = json.as[RunId]
-          Run.get(runId) map Some.apply
-      }
+    Run.collection.find[JsValue](lastCreatedRunQuery).headOption flatMap {
+      case None => Future.successful(None)
+      case Some(json) =>
+        val runId = (json \ "runId").as[RunId]
+        Run.get(runId) map Some.apply
     }
   }
 
@@ -252,8 +223,8 @@ object Job {
         "at" -> BSONInteger(1),
         "_id" -> BSONInteger(0)) )
     val cursor = Run.collection.find[JsValue](query)
-    cursor.toList map { list =>
-      list.headOption.flatMap(json => (json \ "at").as[Option[DateTime]])
+    cursor.headOption map { jsonOpt =>
+      jsonOpt.flatMap(json => (json \ "at").as[Option[DateTime]])
     }
   }
 
