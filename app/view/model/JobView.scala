@@ -8,6 +8,7 @@ import play.api.libs.json._
 import play.api.templates.Html
 import scala.concurrent._
 import org.w3.vs.view.Collection.Definition
+import org.w3.vs.VSConfiguration
 
 case class JobView(
     id: JobId,
@@ -49,7 +50,9 @@ object JobView {
     ("actions" -> false)
   ).map(a => Definition(a._1, a._2))
 
-  def apply(job: Job)(implicit ec: ExecutionContext): Future[JobView] = {
+  def apply(job: Job)(implicit conf: VSConfiguration): Future[JobView] = {
+    import ExecutionContext.Implicits.global
+    import conf._
     for {
       (run, completedOn) <- {
         import akka.dataflow._
@@ -75,10 +78,12 @@ object JobView {
     }
   }
 
-  def apply(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[Iterable[JobView]] = {
+  def apply(jobs: Iterable[Job])(implicit conf: VSConfiguration): Future[Iterable[JobView]] = {
+    import ExecutionContext.Implicits.global
     Future.sequence(jobs.map(apply _))
   }
 
+  // TODO: use same techniques as in Formats
   implicit val writes: Writes[JobView] = new Writes[JobView] {
     def writes(job: JobView): JsValue = {
       JsObject(Seq(

@@ -23,7 +23,7 @@ class WebsiteWithInvalidRedirectCrawlTest extends RunTestHelper with TestKitHelp
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
+  val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
 
   val servlet = new HttpServlet {
     override def doGet(req: HttpServletRequest, resp: HttpServletResponse) = {

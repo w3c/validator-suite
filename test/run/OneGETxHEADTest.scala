@@ -28,7 +28,7 @@ class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
+  val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
   
   val servers = Seq(
       Webserver(9001, (Website((1 to j) map { i => "/" --> ("http://localhost:9001/"+i) }).toServlet))

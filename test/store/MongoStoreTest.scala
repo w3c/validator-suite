@@ -58,35 +58,35 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     name = "job1",
     createdOn = now,
     strategy = strategy,
-    creator = user1.id)
+    creatorId = user1.id)
 
   val job2 = Job(
     id = JobId(),
     name = "job2",
     createdOn = now,
     strategy = strategy,
-    creator = user1.id)
+    creatorId = user1.id)
 
   val job3 = Job(
     id = JobId(),
     name = "job3",
     createdOn = now,
     strategy = strategy,
-    creator = user1.id)
+    creatorId = user1.id)
 
   val job4 = Job(
     id = JobId(),
     name = "job4",
     createdOn = now,
     strategy = strategy2,
-    creator = user2.id)
+    creatorId = user2.id)
 
   val job5 = Job(
     id = JobId(),
     name = "job5",
     createdOn = now,
     strategy = strategy,
-    creator = user1.id)
+    creatorId = user1.id)
 
   // a job may have never completed, for example if the user has forced a new run
   // is this assumption ok? -> yes

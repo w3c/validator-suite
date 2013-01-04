@@ -26,7 +26,7 @@ class FilteredTreeWebsiteTest extends RunTestHelper with TestKitHelper {
       filter=Filter.includePrefixes("http://localhost:9001/1", "http://localhost:9001/3"),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
+  val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
 
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 

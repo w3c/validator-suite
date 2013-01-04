@@ -28,34 +28,38 @@ import Json.toJson
 import org.w3.vs.store.Formats._
 import org.w3.vs.actor.AssertorCall
 
-case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
+case class Job(
+  id: JobId,
+  name: String,
+  createdOn: DateTime,
+  strategy: Strategy,
+  creatorId: UserId) {
 
   import Job.logger
-  import conf._
-
-  val creatorId = vo.creator
 
 //  @deprecated("", "")
-  def getRun(): Future[Run] = {
+  def getRun()(implicit conf: VSConfiguration): Future[Run] = {
+    import conf._
     (PathAware(usersRef, path) ? GetRun).mapTo[Run]
   }
 
-  def waitLastWrite(): Future[Unit] = {
+  def waitLastWrite()(implicit conf: VSConfiguration): Future[Unit] = {
+    import conf._
     val wait = (PathAware(usersRef, path) ? WaitLastWrite).mapTo[Future[Unit]]
     wait.flatMap(x => x)
   }
 
-  def getAssertions(): Future[Iterable[Assertion]] = {
+  def getAssertions()(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
     getRun() map {
       run => run.assertions.toIterable
     }
   }
 
-  def getActivity(): Future[RunActivity] = {
+  def getActivity()(implicit conf: VSConfiguration): Future[RunActivity] = {
     getRun().map(_.activity)
   }
 
-  def getData(): Future[JobData] = {
+  def getData()(implicit conf: VSConfiguration): Future[JobData] = {
     getRun().map(_.jobData)
   }
 
@@ -65,36 +69,42 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
     sys.error("")
   }
 
-  def getCompletedOn(): Future[Option[DateTime]] = {
+  def getCompletedOn()(implicit conf: VSConfiguration): Future[Option[DateTime]] = {
     Job.getLastCompleted(id)
   }
   
-  def save(): Future[Job] = Job.save(this)
+  def save()(implicit conf: VSConfiguration): Future[Job] =
+    Job.save(this)
   
-  def delete(): Future[Unit] = {
+  def delete()(implicit conf: VSConfiguration): Future[Unit] = {
     cancel()
     Job.delete(id)
   }
   
-  def run(): Future[(UserId, JobId, RunId)] =
+  def run()(implicit conf: VSConfiguration): Future[(UserId, JobId, RunId)] = {
+    import conf._
     (PathAware(usersRef, path) ? Refresh).mapTo[(UserId, JobId, RunId)]
+  }
   
-  def cancel(): Unit = 
+  def cancel()(implicit conf: VSConfiguration): Unit = 
     PathAware(usersRef, path) ! Stop
 
-  def on(): Unit = 
+  def on()(implicit conf: VSConfiguration): Unit = 
     PathAware(usersRef, path) ! BeProactive
 
-  def off(): Unit = 
+  def off()(implicit conf: VSConfiguration): Unit = 
     PathAware(usersRef, path) ! BeLazy
 
-  def resume(): Unit = 
+  def resume()(implicit conf: VSConfiguration): Unit = 
     PathAware(usersRef, path) ! Resume
 
-  def getSnapshot(): Future[JobData] =
+  def getSnapshot()(implicit conf: VSConfiguration): Future[JobData] = {
+    import conf._
     (PathAware(usersRef, path) ? GetSnapshot).mapTo[JobData]
+  }
 
-  lazy val enumerator: Enumerator[RunUpdate] = {
+  def enumerator()(implicit conf: VSConfiguration): Enumerator[RunUpdate] = {
+    import conf._
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
     val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
@@ -118,24 +128,31 @@ case class Job(id: JobId, vo: JobVO)(implicit conf: VSConfiguration) {
     _enumerator
   }
 
-  def listen(implicit listener: ActorRef): Unit =
+  def listen(listener: ActorRef)(implicit conf: VSConfiguration): Unit =
     PathAware(usersRef, path).tell(Listen(listener), listener)
   
-  def deafen(implicit listener: ActorRef): Unit =
+  def deafen(listener: ActorRef)(implicit conf: VSConfiguration): Unit =
     PathAware(usersRef, path).tell(Deafen(listener), listener)
   
-  private val usersRef = system.actorFor(system / "users")
+  private def usersRef(implicit conf: VSConfiguration) = {
+    import conf._
+    system.actorFor(system / "users")
+  }
 
-  private val path: ActorPath = {
-    system / "users" / vo.creator.id / "jobs" / id.id
+  private def path(implicit conf: VSConfiguration): ActorPath = {
+    import conf._
+    system / "users" / creatorId.id / "jobs" / id.id
   }
   
-  def !(message: Any)(implicit sender: ActorRef = null): Unit =
+  def !(message: Any)(implicit sender: ActorRef = null, conf: VSConfiguration): Unit =
     PathAware(usersRef, path) ! message
 
 }
 
 object Job {
+
+  def createNewJob(name: String, strategy: Strategy, creatorId: UserId): Job =
+    Job(JobId(), name, DateTime.now(DateTimeZone.UTC), strategy, creatorId)
 
   val logger = Logger.of(classOf[Job])
 
@@ -152,30 +169,17 @@ object Job {
       maxResources = 10,
       filter = Filter(include = Everything, exclude = Nothing),
       assertorsConfiguration = AssertorsConfiguration.default),
-    creator = User.sample.id
+    creatorId = User.sample.id
   )
-
-  def apply(
-    id: JobId = JobId(),
-    name: String,
-    createdOn: DateTime = DateTime.now(DateTimeZone.UTC),
-    strategy: Strategy,
-    creator: UserId)(
-    implicit conf: VSConfiguration): Job =
-      Job(id, JobVO(name, createdOn, strategy, creator))
-
-  implicit def toVO(job: Job): JobVO = job.vo
 
   // returns the Job with the jobId and optionally the latest Run* for this Job
   // the Run may not exist if the Job was never started
   def get(jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find[JsValue, JsValue](query)
-    cursor.headOption map { jsonOpt =>
-      val json: JsValue = jsonOpt.getOrElse(throw new NoSuchElementException("Invalid jobId: " + jobId))
-      val jobId_ = (json \ "_id").as[JobId] // Is that necessary ? Why would it differ from the jobId parameter ? Why not an assert ?
-      val jobVo = json.as[JobVO]
-      Job(jobId_, jobVo)
+    cursor.headOption map {
+      case None => throw new NoSuchElementException("Invalid jobId: " + jobId)
+      case Some(json) => json.as[Job]
     }
   }
 
@@ -183,11 +187,9 @@ object Job {
     import conf._
     val query = Json.obj("creator" -> toJson(userId))
     val cursor = collection.find[JsValue, JsValue](query)
-    cursor.toList map { list => list map { json =>
-      val jobId = (json \ "_id").as[JobId]
-      val jobVo = json.as[JobVO]
-      Job(jobId, jobVo)
-    }}
+    cursor.toList map { list =>
+      list map { json => json.as[Job] }
+    }
   }
 
   // TODO
@@ -230,7 +232,7 @@ object Job {
 
   def save(job: Job)(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
-    val jobJson = toJson(job.vo).asInstanceOf[JsObject] + ("_id" -> toJson(job.id))
+    val jobJson = toJson(job)
     collection.insert(jobJson) map { lastError => job }
   }
 

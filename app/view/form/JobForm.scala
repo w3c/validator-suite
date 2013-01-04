@@ -68,7 +68,7 @@ object JobForm {
       job.strategy.entrypoint,
       job.strategy.linkCheck,
       job.strategy.maxResources
-    ), job.vo.strategy.assertorsConfiguration
+    ), job.strategy.assertorsConfiguration
   )
 
   private def playForm: Form[Type] = Form(
@@ -109,16 +109,13 @@ class ValidJobForm private[view](
   val (name, entrypoint, linkCheck, maxResources) = bind
 
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
-    Job(
-      name = name,
-      creator = user.id,
-      strategy = Strategy(
-        entrypoint = org.w3.util.URL(entrypoint),
-        linkCheck = linkCheck,
-        filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
-        maxResources = maxResources,
-        assertorsConfiguration = assertorsConfiguration)
-)
+    val strategy = Strategy(
+      entrypoint = org.w3.util.URL(entrypoint),
+      linkCheck = linkCheck,
+      filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
+      maxResources = maxResources,
+      assertorsConfiguration = assertorsConfiguration)
+    Job.createNewJob(name, strategy, user.id)
   }
 
   def update(job: Job)(implicit conf: VSConfiguration): Job = {

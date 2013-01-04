@@ -23,7 +23,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
   
-  val job = Job(name = "@@", strategy = strategy, creator = userTest.id)
+  val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
 
   val circumference = 20
   

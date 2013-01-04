@@ -67,7 +67,7 @@ object OneTimeJobForm {
       job.name,
       job.strategy.entrypoint,
       Otoj1 // TODO
-    ), job.vo.strategy.assertorsConfiguration
+    ), job.strategy.assertorsConfiguration
   )
 
 
@@ -110,16 +110,13 @@ class ValidOneTimeJobForm private[view](
   val (name, entrypoint, otoj) = bind
 
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
-    Job(
-      name = name,
-      creator = user.id,
-      strategy = Strategy(
-        entrypoint = org.w3.util.URL(entrypoint),
-        linkCheck = false,
-        filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
-        maxResources = otoj.maxPages,
-        assertorsConfiguration = assertorsConfiguration)
-)
+    val strategy = Strategy(
+      entrypoint = org.w3.util.URL(entrypoint),
+      linkCheck = false,
+      filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
+      maxResources = otoj.maxPages,
+      assertorsConfiguration = assertorsConfiguration)
+    Job.createNewJob(name, strategy, user.id)
   }
 
 }

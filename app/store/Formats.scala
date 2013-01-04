@@ -119,12 +119,13 @@ object Formats {
     (__ \ 'assertorsConfiguration).format[AssertorsConfiguration]
   )(Strategy.apply _, unlift(Strategy.unapply _))
 
-  implicit val JobVOFormat: Format[JobVO] = (
+  implicit val JobFormat: Format[Job] = (
+    (__ \ '_id).format[JobId] and
     (__ \ 'name).format[String] and
     (__ \ 'createdOn).format[DateTime] and
     (__ \ 'strategy).format[Strategy] and
     (__ \ 'creator).format[UserId]
-  )(JobVO.apply _, unlift(JobVO.unapply _))
+  )(Job.apply _, unlift(Job.unapply _))
   
   implicit val ContextFormat: Format[Context] = (
     (__ \ 'content).format[String] and

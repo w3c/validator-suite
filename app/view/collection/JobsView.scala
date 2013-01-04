@@ -9,6 +9,7 @@ import play.api.templates.Html
 import scala.concurrent.{ExecutionContext, Future}
 import org.w3.vs.view.Collection
 import controllers.routes
+import org.w3.vs.VSConfiguration
 
 case class JobsView(
     source: Iterable[JobView],
@@ -92,14 +93,16 @@ case class JobsView(
 
 object JobsView {
 
-  def single(job: Job)(implicit ec: ExecutionContext): Future[JobsView] = {
+  def single(job: Job)(implicit conf: VSConfiguration): Future[JobsView] = {
+    import ExecutionContext.Implicits.global
     JobView(job).map(view => new JobsView(
       source = Iterable(view),
       classe = "single"
     ))
   }
 
-  def apply(jobs: Iterable[Job])(implicit ec: ExecutionContext): Future[JobsView] = {
+  def apply(jobs: Iterable[Job])(implicit conf: VSConfiguration): Future[JobsView] = {
+    import ExecutionContext.Implicits.global
     JobView(jobs).map(JobsView(_))
   }
 

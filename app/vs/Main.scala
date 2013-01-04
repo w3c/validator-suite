@@ -78,9 +78,10 @@ object Main {
     val w3team = User(userId = UserId(), email = "w3t@w3.org", name = "W3C Team", password = "w3team", isSubscriber = true)
     
     val w3 = Job(
+      id = JobId(),
       createdOn = DateTime.now(DateTimeZone.UTC),
       name = "W3C",
-      creator = tgambet.id,
+      creatorId = tgambet.id,
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/"),
         linkCheck = false,
@@ -89,9 +90,10 @@ object Main {
         assertorsConfiguration = AssertorsConfiguration.default))
         
     val tr = Job(
+      id = JobId(),
       createdOn = DateTime.now.plus(1000),
       name = "TR",
-      creator = bertails.id,
+      creatorId = bertails.id,
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/TR"),
         linkCheck = false,
@@ -101,9 +103,10 @@ object Main {
 
     val List(w3c1, w3c2, w3c3, w3c4, w3c5, w3c6) = List(1, 2, 3, 4, 5, 6) map { i =>
       Job(
+        id = JobId(),
         createdOn = DateTime.now.plus(1000),
         name = s"""w3c${i}""",
-        creator = bertails.id,
+        creatorId = bertails.id,
         strategy = Strategy(
           entrypoint = URL("http://www.w3.org"),
           linkCheck = false,
@@ -113,9 +116,10 @@ object Main {
     }
 
     val ibm = Job(
+      id = JobId(),
       createdOn = DateTime.now.plus(2000),
       name = "IBM",
-      creator = bertails.id,
+      creatorId = bertails.id,
       strategy = Strategy(
         entrypoint = URL("http://www.ibm.com"),
         linkCheck = false,
@@ -124,9 +128,10 @@ object Main {
         assertorsConfiguration = AssertorsConfiguration.default))
       
     val lemonde = Job(
+      id = JobId(),
       createdOn = DateTime.now.plus(3000),
       name = "Le Monde",
-      creator = tgambet.id,
+      creatorId = tgambet.id,
       strategy = Strategy(
         entrypoint = URL("http://www.lemonde.fr"),
         linkCheck = false,
@@ -175,7 +180,7 @@ object Main {
     args match {
       case Array("migration") => {
         val conf = new DefaultProdConfiguration { }
-        org.w3.vs.store.Formats26Dec.migration()(conf)
+        //org.w3.vs.store.Formats26Dec.migration()(conf)
         println("done")
       }
       case Array("test", jobIdS) => test(jobIdS)

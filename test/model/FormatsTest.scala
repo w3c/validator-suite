@@ -32,11 +32,10 @@ class FormatsTest extends WordSpec with MustMatchers {
       filter = Filter.includeEverything,
       assertorsConfiguration = AssertorsConfiguration.default)
 
-  val jobVo= JobVO(
+  val job= Job.createNewJob(
     name = "foo",
-    createdOn = DateTime.now(DateTimeZone.UTC),
     strategy = strategy,
-    creator = UserId())
+    creatorId = UserId())
 
   val context = Context(content = "foo", line = Some(42), column = None)
 
@@ -92,7 +91,7 @@ class FormatsTest extends WordSpec with MustMatchers {
     toJson(BeProactive).as[BeProactive.type] must be(BeProactive)
     toJson(BeLazy).as[BeLazy.type] must be(BeLazy)
     toJson(strategy).as[Strategy] must be(strategy)
-    toJson(jobVo).as[JobVO] must be(jobVo)
+    toJson(job).as[Job] must be(job)
     toJson(context).as[Context] must be(context)
     toJson(Error).as[AssertionSeverity] must be(Error)
     toJson(assertion).as[Assertion] must be(assertion)
