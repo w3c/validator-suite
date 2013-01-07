@@ -63,9 +63,9 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
                 logger.warn("Start URL required");
                 return "Start URL required";
             }
-            if (!attrs.maxResources || attrs.maxResources < 1 || attrs.maxResources > 500) {
-                logger.warn("Max resources must be between 1 and 500");
-                return "Max resources must be between 1 and 500";
+            if (!attrs.maxResources || attrs.maxResources < 1 || attrs.maxResources > 5000) {
+                logger.warn("Max resources must be between 1 and 5000");
+                return "Max resources must be between 1 and 5000";
             }
         },
 
