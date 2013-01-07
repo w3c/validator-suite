@@ -64,7 +64,7 @@ object OneTimeJob extends VSController {
           Redirect(routes.Jobs.index).withSession("email" -> user.vo.email)
         } else {
           logger.info(s"Redirected user ${user.vo.email} to store for jobId ${job.id}")
-          redirectToStore(form.otoj.index, job.id).withSession("email" -> user.vo.email)
+          redirectToStore(form.otoj.value, job.id).withSession("email" -> user.vo.email)
         }
       }
     }
@@ -90,7 +90,8 @@ object OneTimeJob extends VSController {
     }
   }
 
-  def redirectToStore(otojIndex: Int, jobId :JobId) = Redirect("https://sites.fastspring.com/ercim/instant/otoj" + otojIndex + "?referrer=" + jobId)
+  def redirectToStore(product: String, jobId :JobId) =
+    Redirect("https://sites.fastspring.com/ercim/instant/" + product + "?referrer=" + jobId)
 
   def callback = Action { req =>
     AsyncResult {

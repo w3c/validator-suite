@@ -18,38 +18,40 @@ package object view {
   object OTOJType {
     def fromOpt(o: Option[String]): OTOJType = {
       o match {
-        case Some("otoj2") => Otoj2
-        case Some("otoj3") => Otoj3
-        case _ => Otoj1
+        case Some("otoj500") => Otoj500
+        case Some("otoj2000") => Otoj2000
+        case Some("otoj5000") => Otoj5000
+        case _ => Otoj250
       }
     }
     def fromJob(job: Job): OTOJType = {
       job.strategy.maxResources match {
-        case n if n <= Otoj1.maxPages => Otoj1
-        case n if n <= Otoj2.maxPages => Otoj2
-        case n if n <= Otoj3.maxPages => Otoj3
+        case n if n <= Otoj250.maxPages => Otoj250
+        case n if n <= Otoj500.maxPages => Otoj500
+        case n if n <= Otoj2000.maxPages => Otoj2000
+        case n if n <= Otoj5000.maxPages => Otoj5000
         case _ => throw new Exception("this job max pages exceed the maximum one-time job value")
       }
     }
   }
   sealed trait OTOJType {
-    def index: Int
     def value: String
     def maxPages: Int
   }
-  case object Otoj1 extends OTOJType {
-    val index = 1
-    val value = "otoj1"
+  case object Otoj250 extends OTOJType {
+    val value = "otoj250"
+    val maxPages = 250
+  }
+  case object Otoj500 extends OTOJType {
+    val value = "otoj500"
     val maxPages = 500
   }
-  case object Otoj2 extends OTOJType{
-    val index = 2
-    val value = "otoj2"
+  case object Otoj2000 extends OTOJType{
+    val value = "otoj2000"
     val maxPages = 2000
   }
-  case object Otoj3 extends OTOJType{
-    val index = 3
-    val value = "otoj3"
+  case object Otoj5000 extends OTOJType{
+    val value = "otoj5000"
     val maxPages = 5000
   }
   implicit val Otojformater = new Formatter[OTOJType]{

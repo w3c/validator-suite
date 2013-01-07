@@ -62,15 +62,13 @@ object OneTimeJobForm {
     playForm fill(
       job.name,
       job.strategy.entrypoint,
-      Otoj1 // TODO
+      Otoj250 // TODO
     ), (
       job.name,
       job.strategy.entrypoint,
-      Otoj1 // TODO
+      Otoj250 // TODO
     ), job.strategy.assertorsConfiguration
   )
-
-
 
   private def playForm: Form[OneTimeJobType] = Form(
     tuple(
