@@ -79,12 +79,12 @@ class HttpTest extends RunTestHelper with Inside {
 
     val token = RunId()
 
-    http ! Fetch(URL("http://example.com/bar"), HEAD, token)
+    http ! Fetch(URL("http://example.co/bar"), HEAD, token)
 
     val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
 
     inside (fetchResponse) { case (tok, response: ErrorResponse) =>
-      response.url must be(URL("http://example.com/bar"))
+      response.url must be(URL("http://example.co/bar"))
       response.method must be(HEAD)
       tok must be(token)
     }
