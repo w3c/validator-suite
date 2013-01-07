@@ -6,7 +6,6 @@ import org.w3.vs.view.Helper
 import scala.io.Source
 import java.io._
 import org.w3.vs.http._
-import org.apache.commons.exec._
 import play.api.Configuration
 
 // defers all operations to $out but counts the written bytes

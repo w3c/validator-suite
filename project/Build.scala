@@ -38,6 +38,7 @@ object ApplicationBuild extends Build {
     libraryDependencies <+= scalaVersion {
       v => compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-RC1")
     },
+    libraryDependencies += "commons-io" % "commons-io" % "2.4",
     scalacOptions += "-P:continuations:enable",
 
     testOptions in Test := Nil,
