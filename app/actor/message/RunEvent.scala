@@ -25,6 +25,4 @@ case class AssertorResponseEvent(runId: RunId, ar: AssertorResponse, timestamp: 
 
 case class ResourceResponseEvent(runId: RunId, rr: ResourceResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
-case class BeProactiveEvent(runId: RunId, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
-
-case class BeLazyEvent(runId: RunId, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+case class CancelEvent(runId: RunId, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent

@@ -37,13 +37,13 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper {
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    val (userId, jobId, runId) = job.run().getOrFail(1.second)
+    val runningJob = job.run().getOrFail()
+    val Running(runId, actorPath) = runningJob.status
 
-    job.listen(testActor)
-    
+    runningJob.listen(testActor)
+
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, _, activity) if activity == Idle => {
-        job.waitLastWrite().getOrFail()
+      case _: RunCompleted => {
         val rrs = ResourceResponse.getFor(runId).getOrFail(3.seconds)
         rrs must have size (circumference + 1)
       }

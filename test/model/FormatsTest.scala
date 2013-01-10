@@ -32,10 +32,20 @@ class FormatsTest extends WordSpec with MustMatchers {
       filter = Filter.includeEverything,
       assertorsConfiguration = AssertorsConfiguration.default)
 
-  val job= Job.createNewJob(
+  val jobData = JobData(0, 0, 0, DateTime.now(DateTimeZone.UTC), Some(DateTime.now(DateTimeZone.UTC)))
+
+  val jobStatus = Running(RunId(), akka.actor.ActorPath.fromString("akka://system/user/foo"))
+
+  val done = Done(RunId(), Completed, DateTime.now(DateTimeZone.UTC), jobData)
+
+  val job = Job(
+    id = JobId(),
     name = "foo",
+    createdOn = DateTime.now(DateTimeZone.UTC),
     strategy = strategy,
-    creatorId = UserId())
+    creatorId = UserId(),
+    status = jobStatus,
+    latestDone = Some(done))
 
   val context = Context(content = "foo", line = Some(42), column = None)
 
@@ -72,8 +82,8 @@ class FormatsTest extends WordSpec with MustMatchers {
 
   val httpResponseEvent = ResourceResponseEvent(RunId(), httpResponse)
   val errorResponseEvent = ResourceResponseEvent(RunId(), errorResponse)
-  val beProactiveEvent = BeProactiveEvent(RunId())
-  val beLazyEvent = BeLazyEvent(RunId())
+  val cancelEvent = CancelEvent(RunId())
+  val completeRunEvent = CompleteRunEvent(UserId(), JobId(), RunId(), DateTime.now(DateTimeZone.UTC))
 
   val userVo = UserVO(
     name = "foo bar",
@@ -88,9 +98,10 @@ class FormatsTest extends WordSpec with MustMatchers {
   val userJobRunId = (UserId(), JobId(), RunId())
 
   "all domain must be serializable and then deserializable" in {
-    toJson(BeProactive).as[BeProactive.type] must be(BeProactive)
-    toJson(BeLazy).as[BeLazy.type] must be(BeLazy)
     toJson(strategy).as[Strategy] must be(strategy)
+    toJson(jobStatus).as[JobStatus] must be(jobStatus)
+    toJson(jobData).as[JobData] must be(jobData)
+    toJson(done).as[JobStatus] must be(done)
     toJson(job).as[Job] must be(job)
     toJson(context).as[Context] must be(context)
     toJson(Error).as[AssertionSeverity] must be(Error)
@@ -102,8 +113,8 @@ class FormatsTest extends WordSpec with MustMatchers {
     toJson(assertorFailure).as[AssertorResponse] must be(assertorFailure)
     toJson(httpResponseEvent).as[RunEvent] must be(httpResponseEvent)
     toJson(errorResponseEvent).as[RunEvent] must be(errorResponseEvent)
-    toJson(beProactiveEvent).as[RunEvent] must be(beProactiveEvent)
-    toJson(beLazyEvent).as[RunEvent] must be(beLazyEvent)
+    toJson(cancelEvent).as[RunEvent] must be(cancelEvent)
+    toJson(completeRunEvent).as[RunEvent] must be(completeRunEvent)
     toJson(userVo).as[UserVO] must be(userVo)
     toJson(userId).as[UserId] must be(userId)
     toJson(userJobId).as[(UserId, JobId)] must be(userJobId)

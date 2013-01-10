@@ -12,17 +12,14 @@ object UserActor {
 
 }
 
-class UserActor(user: User)(implicit val configuration: VSConfiguration)
-extends Actor with PathAwareActor with Listeners {
+class UserActor(userId: UserId)(implicit val configuration: VSConfiguration)
+extends Actor with Listeners {
 
   import UserActor.logger
 
-  val jobsRef: ActorRef = context.actorOf(Props(new JobsActor()).withDispatcher("user-dispatcher"), name = "jobs")
-  
   def receive: Actor.Receive = listenerHandler orElse {
-    case Tell(path, msg) if path == selfPath => self ! msg
-    case m: Tell => jobsRef.forward(m)
     case m: RunUpdate => tellListeners(m)
+    case a => logger.error(s"UserActor(%{userId}): unexpected %{a}")
   }
 
 }

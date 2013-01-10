@@ -7,12 +7,13 @@ import org.w3.vs.exception._
 import org.w3.vs._
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.libs.iteratee.{Concurrent, Enumerator}
+import play.api.libs.iteratee.{ Concurrent, Enumerator }
 import org.w3.vs.actor.message.RunUpdate
-import akka.actor.{Actor, Props, ActorRef}
+import akka.actor.{ Actor, Props, ActorRef }
 import java.nio.channels.ClosedChannelException
-import org.w3.util.akkaext.{Deafen, Listen, PathAware}
+import org.w3.util.akkaext.{ Deafen, Listen }
 import org.joda.time.DateTime
+import org.w3.vs.actor.UsersActor
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -29,15 +30,12 @@ import org.w3.vs.store.Formats._
 case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
 
   import User.logger
-  import conf.system
+  import conf.{ system, usersActorRef }
 
   def isSubscriber = vo.isSubscriber
 
-  // getJob with id only if owned by user. should probably be a db request directly.
   def getJob(jobId: JobId): Future[Job] = {
-    Job.getFor(id) map {
-      jobs => jobs.filter(_.id === jobId).headOption.getOrElse { throw UnknownJob(jobId) }
-    }
+    Job.getFor(id, jobId)
   }
 
   def getJobs(): Future[Iterable[Job]] = {
@@ -73,15 +71,11 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   }
 
   def listen(implicit listener: ActorRef): Unit =
-    PathAware(usersRef, path).tell(Listen(listener), listener)
+    usersActorRef.tell(UsersActor.Forward(msg = Listen(listener), to = id), listener)
 
   def deafen(implicit listener: ActorRef): Unit =
-    PathAware(usersRef, path).tell(Deafen(listener), listener)
+    usersActorRef.tell(UsersActor.Forward(msg = Deafen(listener), to = id), listener)
 
-  val usersRef = system.actorFor(system / "users")
-
-  private val path = system / "users" / id.toString
-  
 }
 
 object User {
@@ -91,7 +85,7 @@ object User {
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("users")
 
-  def sample(implicit conf: VSConfiguration) = User.apply(
+  def sample(implicit conf: VSConfiguration) = User(
     userId = UserId("50cb6a1c04ca20aa0283bc85"),
     name = "Test user",
     email = "sample@valid.w3.org",
@@ -104,8 +98,7 @@ object User {
     name: String,
     email: String,
     password: String,
-    isSubscriber: Boolean)(
-    implicit conf: VSConfiguration): User =
+    isSubscriber: Boolean)(implicit conf: VSConfiguration): User =
       User(userId, UserVO(name, email, password, isSubscriber))
 
   def get(userId: UserId)(implicit conf: VSConfiguration): Future[User] = {

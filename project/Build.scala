@@ -42,7 +42,8 @@ object ApplicationBuild extends Build {
     scalacOptions += "-P:continuations:enable",
 
     testOptions in Test := Nil,
-    testOptions in Test += Tests.Argument("""stdout(config="durations")"""),
+//    testOptions in Test += Tests.Argument("""stdout(config="durations")"""),
+    testOptions in Test += Tests.Argument("""-oDF"""),
     scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
     // activates full stacktrace and durations
     routesImport += "org.w3.vs.controllers._",

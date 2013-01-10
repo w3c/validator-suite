@@ -7,51 +7,37 @@ import org.w3.vs.model._
 import scala.util._
 import scalaz.Scalaz._
 
-case class CreateUserAndForward(user: User, tell: Tell)
-
 object UsersActor {
 
   val logger = play.Logger.of(classOf[UsersActor])
 
+  case class Forward(msg: Any, to: UserId)
+
 }
 
-class UsersActor()(implicit conf: VSConfiguration) extends Actor with PathAwareActor {
+class UsersActor()(implicit conf: VSConfiguration) extends Actor {
 
-  import UsersActor.logger
+  import UsersActor.{ logger, Forward }
 
-  def getUserRefOrCreate(user: User): ActorRef = {
-    val id = user.id
-    try {
-      context.actorOf(Props(new UserActor(user)).withDispatcher("user-dispatcher"), name = id.toString)
-    } catch {
-      case iane: InvalidActorNameException => context.actorFor(self.path / id.toString)
+  var map: Map[UserId, ActorRef] = Map.empty
+
+  def getUserRefOrCreate(userId: UserId): ActorRef = {
+    map.get(userId) getOrElse {
+      context.actorOf(Props(new UserActor(userId)))
     }
   }
 
   def receive = {
 
-    case tell @ Tell(Child(id), msg) => {
-      //println("passing message to child %s: %s" format (msg.toString, id.toString))
-      val from = sender
-      val to = self
-      context.children.find(_.path.name === id) match {
-        case Some(userRef) => userRef forward tell
-        case None => {
-          import scala.concurrent.ExecutionContext.Implicits.global
-          User.get(UserId(id)) onComplete {
-            case Success(user) => to.tell(CreateUserAndForward(user, tell), from)
-            case Failure(exception) => logger.error("Couldn't find user with id: " + id, exception)
-          }
-        }
-      }
+    case Forward(msg, userId) => {
+      // println(s"passing message to child ${msg}: ${id}")
+      val userActorRef = getUserRefOrCreate(userId)
+      userActorRef.forward(msg)
     }
 
-    case CreateUserAndForward(user, tell) => {
-      val userRef = getUserRefOrCreate(user)
-      userRef forward tell
+    case a => {
+      logger.error(s"users-actor: unexpected ${a}")
     }
-    
-    case a => {logger.error("unexpected message: " + a.toString)}
 
   }
 

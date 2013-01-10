@@ -21,7 +21,7 @@ import play.modules.reactivemongo.PlayBsonImplicits._
 import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
-import com.mongodb._
+import com.mongodb.{ QueryBuilder => _, _ }
 import com.mongodb.util.JSON
 import org.bson.types.ObjectId
 
@@ -36,6 +36,22 @@ object Run {
 
   def collection2(implicit conf: VSConfiguration): DBCollection =
     conf.mongoDb.getCollection("runs")
+
+  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+    import conf._
+    val query = QueryBuilder().
+      query( Json.obj(
+        "runId" -> toJson(runId),
+        "event" -> toJson("assertor-response"),
+        "ar.assertions" -> Json.obj("$exists" -> JsBoolean(true))) ).
+      projection( BSONDocument(
+        "ar.assertions" -> BSONInteger(1),
+        "_id" -> BSONInteger(0)) )
+    val cursor = Run.collection.find[JsValue](query)
+    cursor.toList map { list =>
+      list.map(json => (json \ "ar" \ "assertions").as[List[Assertion]]).flatten
+    }
+  }
 
   def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = Future {
     import scala.collection.JavaConverters._
@@ -132,8 +148,6 @@ object Run {
         run = newRun
         toBeFetched ++= urls
       }
-      case BeProactiveEvent(runId, _) => ()
-      case BeLazyEvent(runId, _) => ()
     }
     val result = (run, toBeFetched, toBeAsserted.values)
     val end = System.currentTimeMillis()
@@ -156,8 +170,6 @@ case class Run private (
   createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
   // from completion event, None at creation
   completedOn: Option[DateTime] = None,
-  // from user event, ProActive by default at creation
-  explorationMode: ExplorationMode = ProActive,
   // based on scheduled fetches
   toBeExplored: List[URL] = List.empty,
   pending: Set[URL] = Set.empty,
@@ -213,9 +225,9 @@ case class Run private (
 
   def isRunning: Boolean = !isIdle
 
-  def activity: RunActivity = if (isRunning) Running else Idle
-
-  def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
+//  def activity: RunActivity = if (isRunning) Running else Idle
+//
+//  def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
 
   private def shouldIgnore(url: URL): Boolean = {
     def notToBeFetched = IGNORE === strategy.getActionFor(url)
@@ -325,10 +337,7 @@ case class Run private (
 
   def withErrorResponse(errorResponse: ErrorResponse): (Run, Iterable[URL]) = {
     val runWithResponse = withResponse(errorResponse)._1
-    if (explorationMode === ProActive)
-      runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
-    else
-      (runWithResponse, Iterable.empty[URL])
+    runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
   }
 
   def withHttpResponse(httpResponse: HttpResponse): (Run, Iterable[URL], Iterable[AssertorCall]) = {
@@ -338,18 +347,15 @@ case class Run private (
       case Fetched(_) => {
         // extract the urls to be explored
         val (runWithPendingFetches, urlsToFetch) =
-          if (explorationMode === ProActive)
-            runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs).takeAtMost(Strategy.maxUrlsToFetch)
-          else
-            (runWithResponse, Set.empty[URL])
-       // extract the calls to the assertor to be made
-       val assertorCalls =
-         if (explorationMode === ProActive && httpResponse.method === GET) {
-           val assertors = strategy.getAssertors(httpResponse)
-           assertors map { assertor => AssertorCall(this.context, assertor, httpResponse) }
-         } else {
-           Set.empty[AssertorCall]
-         }
+          runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs).takeAtMost(Strategy.maxUrlsToFetch)
+        // extract the calls to the assertor to be made
+        val assertorCalls =
+          if (httpResponse.method === GET) {
+            val assertors = strategy.getAssertors(httpResponse)
+            assertors map { assertor => AssertorCall(this.context, assertor, httpResponse) }
+          } else {
+            Set.empty[AssertorCall]
+          }
         val runWithPendingAssertorCalls =
           runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.id, ac.response.url)))
         (runWithPendingAssertorCalls, urlsToFetch, assertorCalls)
@@ -357,18 +363,12 @@ case class Run private (
       case Redirect(_, url) => {
         // extract the urls to be explored
         val (runWithPendingFetches, urlsToFetch) =
-          if (explorationMode === ProActive)
-            runWithResponse.withNewUrlsToBeExplored(List(url)).takeAtMost(Strategy.maxUrlsToFetch)
-          else
-            (runWithResponse, Set.empty[URL])
+          runWithResponse.withNewUrlsToBeExplored(List(url)).takeAtMost(Strategy.maxUrlsToFetch)
         (runWithPendingFetches, urlsToFetch, List.empty)
       }
       case InfoError(why) => {
         val (runWithPendingFetches, urlsToFetch) =
-          if (explorationMode === ProActive)
-            runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
-          else
-            (runWithResponse, Set.empty[URL])
+          runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
         (runWithPendingFetches, urlsToFetch, List.empty)
       }
     }
@@ -396,10 +396,5 @@ case class Run private (
     this.copy(pendingAssertions = pendingAssertions - ((fail.assertor, fail.sourceUrl)))
   }
 
-  def stopMe(): Run =
-    this.copy(explorationMode = Lazy, toBeExplored = List.empty)
-
-  def withMode(mode: ExplorationMode) = this.copy(explorationMode = mode)
-    
 }
 

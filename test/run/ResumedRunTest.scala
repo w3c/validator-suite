@@ -4,6 +4,7 @@ import org.w3.util._
 import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
+import org.w3.vs.actor.RunsActor
 import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
@@ -31,43 +32,46 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
   
   "test cyclic + interruption + resuming job" in {
     
-    (for {
-      _ <- User.save(userTest)
-      _ <- Job.save(job)
-    } yield ()).getOrFail()
+    User.save(userTest).getOrFail()
+    Job.save(job).getOrFail()
+
+    val jobId = job.id
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-    job.listen(testActor)
+    val runningJob = job.run().getOrFail()
+    runningJob.id must be(jobId)
+    val Running(runId, actorPath) = runningJob.status
 
-    // subscribe to the death of the actor
-    // it's not perfect but it should be enough for now
-    val listener = system.actorOf(Props(new Actor {
-      def receive = {
-        case d: DeadLetter ⇒ testActor ! "got DeadLetter"
-      }
-    }))
-    system.eventStream.subscribe(listener, classOf[DeadLetter])
+    val jobActorRef = system.actorFor(actorPath)
 
-    val (userId, jobId, runId) = job.run().getOrFail()
+    // listen to the death of the jobActor
+    watch(jobActorRef)
 
-    job.waitLastWrite().getOrFail()
+    // kill the jobActor
+    jobActorRef ! PoisonPill
 
-    // kills the jobActor
-    job ! PoisonPill
+    // wait for the death notification
+    val terminated = expectMsgAnyClassOf(3.seconds, classOf[Terminated])
 
-    // wait for the actual death (it's more like discovering the body actually)
-    fishForMessagePF(3.seconds) { case "got DeadLetter" => () }
+    terminated.actor must be(jobActorRef)
 
     // then resume!
-    job.listen(testActor)
-    job.resume()
+    val rJob = Job.get(jobId).getOrFail()
+
+    // the database must know that the job was still Running
+    rJob.status must be(runningJob.status)
+
+    // now we revive the actor
+    val resume = rJob.resume().getOrFail()
+    resume must be(())
+
+    rJob.listen(testActor)
     
     // that's the same test as in cyclic
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, _, activity) if activity == Idle => {
-        job.waitLastWrite().getOrFail()
-        val rrs = ResourceResponse.getFor(runId).getOrFail()
+      case _: RunCompleted => {
+        val rrs = ResourceResponse.getFor(runId).getOrFail(3.seconds)
         rrs must have size (circumference + 1)
       }
     }

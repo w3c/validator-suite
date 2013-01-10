@@ -53,44 +53,54 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   
   val now = DateTime.now(DateTimeZone.UTC)
 
-  val job1 = Job(
+  var job1 = Job(
     id = JobId(),
     name = "job1",
     createdOn = now,
     strategy = strategy,
-    creatorId = user1.id)
+    creatorId = user1.id,
+    status = NeverStarted,
+    latestDone = None)
 
   val job2 = Job(
     id = JobId(),
     name = "job2",
     createdOn = now,
     strategy = strategy,
-    creatorId = user1.id)
+    creatorId = user1.id,
+    status = NeverStarted,
+    latestDone = None)
 
   val job3 = Job(
     id = JobId(),
     name = "job3",
     createdOn = now,
     strategy = strategy,
-    creatorId = user1.id)
+    creatorId = user1.id,
+    status = NeverStarted,
+    latestDone = None)
 
   val job4 = Job(
     id = JobId(),
     name = "job4",
     createdOn = now,
     strategy = strategy2,
-    creatorId = user2.id)
+    creatorId = user2.id,
+    status = NeverStarted,
+    latestDone = None)
+
+  val run5Id = RunId()
 
   val job5 = Job(
     id = JobId(),
     name = "job5",
     createdOn = now,
     strategy = strategy,
-    creatorId = user1.id)
+    creatorId = user1.id,
+    status = Running(run5Id, akka.actor.ActorPath.fromString("akka://system/user/foo")),
+    latestDone = None)
 
   // a job may have never completed, for example if the user has forced a new run
-  // is this assumption ok? -> yes
-  // or do we want to force a completeOn before switching to the new Job? this would be weird
   var run1 = Run((user1.id, job1.id, RunId()), job1.strategy, now)
 
   var run2 = Run((user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(5)).completeOn(now.plusMinutes(7))
@@ -99,7 +109,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   var run4 = Run((user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(15))
 
-  var run5 = Run((user1.id, job5.id, RunId()), job5.strategy, now)
+  var run5: Run = Run((user1.id, job5.id, run5Id), job5.strategy, now)
 
   val assertorIds = List(AssertorId("test_assertor_1"), AssertorId("test_assertor_2"))
 
@@ -135,8 +145,6 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       val assertorResult = AssertorResult(run1.context, assertorId, url, assertions)
       Run.saveEvent(AssertorResponseEvent(run1.runId, assertorResult)).getOrFail()
     }
-    Run.saveEvent(CompleteRunEvent(run2.userId, run2.jobId, run2.runId, run2.completedOn.get)).getOrFail()
-    Run.saveEvent(CompleteRunEvent(run3.userId, run3.jobId, run3.runId, run3.completedOn.get)).getOrFail()
   }
 
 
@@ -160,6 +168,17 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     } yield ()
     initScript.getOrFail()
     addAssertions() // <- already blocking
+    Run.saveEvent(CompleteRunEvent(run2.userId, run2.jobId, run2.runId, run2.completedOn.get)).getOrFail()
+    Run.saveEvent(CompleteRunEvent(run3.userId, run3.jobId, run3.runId, run3.completedOn.get)).getOrFail()
+    /* job1 is still running with run4, and lastestDone was run3 */
+    val status = Running(run4.runId, akka.actor.ActorPath.fromString("akka://system/user/foo"))
+    val latestDone = Done(run4.runId, Completed, run3.completedOn.get, run3.jobData)
+    Job.updateStatus(
+      job1.id,
+      status = status,
+      latestDone = latestDone).getOrFail()
+    job1 = job1.copy(status = status, latestDone = Some(latestDone))
+    /****/
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
     println("DEBUG: it took about " + durationInSeconds + " seconds to load all the entities for this test")
@@ -231,20 +250,10 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     run.assertions.size must be(run1.assertions.size)
   }
 
-//  "get history of JobDatas for a given jobId" in {
-//    // define test logic
-//  }
-
-  "get timestamp of latest completed Run for a given job" in {
-    val latestCompleted = job1.getCompletedOn().getOrFail(3.seconds)
-    latestCompleted must be (run3.completedOn)
+  "get all assertions for a run timestamp of latest completed Run for a given job" in {
+    val assertions = Run.getAssertions(run1.runId).getOrFail()
+    assertions must have length(nbAssertionsPerRun)
   }
-
-  "get timestamp for a job that has never been completed once" in {
-    val neverCompleted = job2.getCompletedOn().getOrFail(3.seconds)
-    neverCompleted must be(None)
-  }
-
 
 }
 

@@ -87,7 +87,9 @@ object Main {
         linkCheck = false,
         maxResources = 10,
         filter = Filter(include = Everything, exclude = Nothing),
-        assertorsConfiguration = AssertorsConfiguration.default))
+        assertorsConfiguration = AssertorsConfiguration.default),
+      status = NeverStarted,
+      latestDone = None)
         
     val tr = Job(
       id = JobId(),
@@ -99,7 +101,9 @@ object Main {
         linkCheck = false,
         maxResources = 10,
         filter=Filter.includePrefixes("http://www.w3.org/TR"),
-        assertorsConfiguration = AssertorsConfiguration.default))
+        assertorsConfiguration = AssertorsConfiguration.default),
+      status = NeverStarted,
+      latestDone = None)
 
     val List(w3c1, w3c2, w3c3, w3c4, w3c5, w3c6) = List(1, 2, 3, 4, 5, 6) map { i =>
       Job(
@@ -112,7 +116,9 @@ object Main {
           linkCheck = false,
           maxResources = 100,
           filter=Filter.includePrefixes("http://www.w3.org/TR"),
-          assertorsConfiguration = AssertorsConfiguration.default))
+          assertorsConfiguration = AssertorsConfiguration.default),
+      status = NeverStarted,
+      latestDone = None)
     }
 
     val ibm = Job(
@@ -125,7 +131,9 @@ object Main {
         linkCheck = false,
         maxResources = 20,
         filter = Filter(include=Everything, exclude=Nothing),
-        assertorsConfiguration = AssertorsConfiguration.default))
+        assertorsConfiguration = AssertorsConfiguration.default),
+      status = NeverStarted,
+      latestDone = None)
       
     val lemonde = Job(
       id = JobId(),
@@ -137,7 +145,9 @@ object Main {
         linkCheck = false,
         maxResources = 30,
         filter = Filter(include = Everything, exclude = Nothing),
-        assertorsConfiguration = AssertorsConfiguration.default))
+        assertorsConfiguration = AssertorsConfiguration.default),
+      status = NeverStarted,
+      latestDone = None)
 
     val script = for {
       _ <- MongoStore.reInitializeDb()

@@ -1,6 +1,6 @@
 package org.w3.vs
 
-import akka.actor.ActorSystem
+import akka.actor.{ ActorRef, ActorSystem }
 import scala.concurrent._
 import com.ning.http.client.AsyncHttpClient
 import org.w3.vs.http.Cache
@@ -12,6 +12,12 @@ trait VSConfiguration {
   
   implicit val system: ActorSystem
   
+  val usersActorRef: ActorRef
+
+  val runsActorRef: ActorRef
+
+  val httpActorRef: ActorRef
+
   implicit val timeout: Timeout
 
   val httpCacheOpt: Option[Cache]

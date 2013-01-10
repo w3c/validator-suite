@@ -50,10 +50,6 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
   def receive = {
 
-    case Stop => {
-      queue.dequeueAll(_ => true)
-    }
-
     case result: AssertorResult => {
       // not sure why this is done this way (Alex)
       context.parent ! result

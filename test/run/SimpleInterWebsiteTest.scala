@@ -35,13 +35,12 @@ class SimpleInterWebsiteTest extends RunTestHelper with TestKitHelper {
       _ <- Job.save(job)
     } yield ()).getOrFail()
 
-    val (userId, jobId, runId) = job.run().getOrFail()
-
-    job.listen(testActor)
+    val runningJob = job.run().getOrFail()
+    val Running(runId, actorPath) = runningJob.status
+    runningJob.listen(testActor)
 
     fishForMessagePF(3.seconds) {
-      case UpdateData(_, _, activity) if activity == Idle => {
-        job.waitLastWrite().getOrFail()
+      case _: RunCompleted => {
         val rrs = ResourceResponse.getFor(runId).getOrFail()
         rrs must have size (2)
       }

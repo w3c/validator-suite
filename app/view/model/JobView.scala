@@ -52,22 +52,17 @@ object JobView {
 
   def apply(job: Job)(implicit conf: VSConfiguration): Future[JobView] = {
     import ExecutionContext.Implicits.global
-    import conf._
-    for {
-      (run, completedOn) <- {
-        import akka.dataflow._
-        val run: Future[Run] = job.getRun()
-        val completedOn: Future[Option[DateTime]] = job.getCompletedOn()
-        flow { (run(), completedOn()) }
+    job.getJobData() map { data =>
+      val activity: String = job.status match {
+        case NeverStarted | Done(_, _, _, _) => "idle"
+        case Running(_, _) => "running"
       }
-    } yield {
-      val activity = run.activity
-      val data = run.jobData
+      val completedOn: Option[DateTime] = job.latestDone.map(_.completedOn)
       JobView(
         job.id,
         job.name,
         job.strategy.entrypoint,
-        activity.toString,
+        activity,
         completedOn,
         data.warnings,
         data.errors,
@@ -111,10 +106,10 @@ object JobView {
     }
   }
 
-  def toJobMessage(jobId: JobId, data: JobData, activity: RunActivity): JsValue = {
+  def toJobMessage(jobId: JobId, data: JobData): JsValue = {
     JsObject(Seq(
       ("id"           -> JsString(jobId.toString)),
-      ("status"       -> JsString(activity.toString)),
+      ("status"       -> JsString("running")),
       ("warnings"     -> JsNumber(data.warnings)),
       ("errors"       -> JsNumber(data.errors)),
       ("resources"    -> JsNumber(data.resources)),
@@ -125,7 +120,7 @@ object JobView {
   def toJobMessage(jobId: JobId, completedOn: DateTime): JsValue = {
     JsObject(Seq(
       ("id"           -> JsString(jobId.toString)),
-      ("status"       -> JsString(Idle.toString)),
+      ("status"       -> JsString("idle")),
       ("completedOn"  -> JsObject(Seq(
         ("timestamp"    -> JsString(completedOn.toString)),
         ("legend1"      -> JsString(Helper.formatTime(completedOn))),

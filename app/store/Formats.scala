@@ -95,10 +95,6 @@ object Formats {
 
   /***********/
 
-  implicit val BeProactiveFormat = constant[BeProactive.type]("beproactive", BeProactive)
-
-  implicit val BeLazyFormat = constant[BeLazy.type]("belazy", BeLazy)
-
   implicit val URLFormat = string[URL](URL(_), _.underlying.toString)
 
   implicit val AssertorIdFormat = string[AssertorId](AssertorId(_), _.id)
@@ -117,14 +113,64 @@ object Formats {
     (__ \ 'maxResources).format[Int] and
     (__ \ 'filter).format[Filter] and
     (__ \ 'assertorsConfiguration).format[AssertorsConfiguration]
-  )(Strategy.apply _, unlift(Strategy.unapply _))
+  )(Strategy.apply, unlift(Strategy.unapply))
+
+  import akka.actor.ActorPath
+  implicit val ActorPatchFormat = string[ActorPath](ActorPath.fromString, _.toString)
+
+  implicit val JobDataFormat: Format[JobData] = (
+    (__ \ 'resources).format[Int] and
+    (__ \ 'errors).format[Int] and
+    (__ \ 'warnings).format[Int] and
+    (__ \ 'createdAt).format[DateTime] and
+    (__ \ 'completedOn).formatOpt[DateTime]
+  )(JobData.apply, unlift(JobData.unapply))
+
+  implicit val NeverStartedFormat = constant("never-started", NeverStarted)
+
+  val StoppedFormat = constant("stopped", Stopped)
+  val CompletedFormat = constant("completed", Completed)
+  implicit object DoneReasonFormat extends Format[DoneReason] {
+    def reads(json: JsValue): JsResult[DoneReason] =
+      StoppedFormat.reads(json) orElse CompletedFormat.reads(json)
+    def writes(reason: DoneReason) = reason match {
+      case Stopped => StoppedFormat.writes(Stopped)
+      case Completed => CompletedFormat.writes(Completed)
+    }
+  }
+
+  val RunningFormat: Format[Running] = (
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'actorPath).format[ActorPath]
+  )(Running.apply, unlift(Running.unapply))
+
+  val DoneFormat: Format[Done] = (
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'reason).format[DoneReason] and
+    (__ \ 'completedOn).format[DateTime] and
+    (__ \ 'jobData).format[JobData]
+  )(Done.apply, unlift(Done.unapply))
+
+  implicit object JobStatusFormat extends Format[JobStatus] {
+    def reads(json: JsValue): JsResult[JobStatus] =
+      NeverStartedFormat.reads(json) orElse
+        RunningFormat.reads(json) orElse
+        DoneFormat.reads(json)
+    def writes(jobStatus: JobStatus) = jobStatus match {
+      case s@NeverStarted => NeverStartedFormat.writes(s)
+      case s@Running(_, _) => RunningFormat.writes(s)
+      case s@Done(_, _, _, _) => DoneFormat.writes(s)
+    }
+  }
 
   implicit val JobFormat: Format[Job] = (
     (__ \ '_id).format[JobId] and
     (__ \ 'name).format[String] and
     (__ \ 'createdOn).format[DateTime] and
     (__ \ 'strategy).format[Strategy] and
-    (__ \ 'creator).format[UserId]
+    (__ \ 'creator).format[UserId] and
+    (__ \ 'status).format[JobStatus] and
+    (__ \ 'latestDone).formatOpt[Done](DoneFormat)
   )(Job.apply _, unlift(Job.unapply _))
   
   implicit val ContextFormat: Format[Context] = (
@@ -252,6 +298,14 @@ object Formats {
     { case CompleteRunEvent(userId, jobId, runId, at, timestamp) => ("complete-run", userId, jobId, runId, at, timestamp) }
   )
 
+  val CancelEventFormat: Format[CancelEvent] = (
+    (__ \ 'event).format[String](pattern("cancel-run".r)) and
+    (__ \ 'runId).format[RunId] and
+    (__ \ 'timestamp).format[DateTime]
+  )({ case (_, runId, timestamp) => CancelEvent(runId, timestamp) },
+    { case CancelEvent(runId, timestamp) => ("cancel-run", runId, timestamp) }
+  )
+
   val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
     (__ \ 'event).format[String](pattern("assertor-response".r)) and
     (__ \ 'runId).format[RunId] and
@@ -266,20 +320,6 @@ object Formats {
     (__ \ 'timestamp).format[DateTime]
   )({ case (_, runId, timestamp, rr) => ResourceResponseEvent(runId, timestamp, rr) }, { case ResourceResponseEvent(runId, timestamp, ar) => ("resource-response", runId, timestamp, ar) })
 
-  val BeProactiveEventFormat: Format[BeProactiveEvent] = (
-    (__ \ 'event).format[String](pattern("be-proactive".r)) and
-    (__ \ 'runId).format[RunId] and
-    (__ \ 'timestamp).format[DateTime]
-  )({ case (event, runId, timestamp) => BeProactiveEvent(runId, timestamp) },
-    { case BeProactiveEvent(runId, timestamp) => ("be-proactive", runId, timestamp) })
-
-
-  val BeLazyEventFormat: Format[BeLazyEvent] = (
-    (__ \ 'event).format[String](pattern("be-lazy".r)) and
-    (__ \ 'runId).format[RunId] and
-    (__ \ 'timestamp).format[DateTime]
-  )({ case (event, runId, timestamp) if event == "be-lazy" => BeLazyEvent(runId, timestamp) },
-    { case BeLazyEvent(runId, timestamp) => ("be-lazy", runId, timestamp) })
 
   implicit object RunEventFormat extends Format[RunEvent] {
     def reads(json: JsValue): JsResult[RunEvent] =
@@ -287,15 +327,13 @@ object Formats {
         ResourceResponseEventFormat.reads(json) orElse
         CreateRunEventFormat.reads(json) orElse
         CompleteRunEventFormat.reads(json) orElse
-        BeProactiveEventFormat.reads(json) orElse
-        BeLazyEventFormat.reads(json)
+        CancelEventFormat.reads(json)
     def writes(event: RunEvent) = event match {
       case e@CreateRunEvent(_, _, _, _, _, _) => CreateRunEventFormat.writes(e)
       case e@CompleteRunEvent(_, _, _, _, _) => CompleteRunEventFormat.writes(e)
       case e@AssertorResponseEvent(_, _, _) => AssertorResponseEventFormat.writes(e)
       case e@ResourceResponseEvent(_, _, _) => ResourceResponseEventFormat.writes(e)
-      case e@BeProactiveEvent(_, _) => BeProactiveEventFormat.writes(e)
-      case e@BeLazyEvent(_, _) => BeLazyEventFormat.writes(e)
+      case e@CancelEvent(_, _) => CancelEventFormat.writes(e)
     }
   }
 

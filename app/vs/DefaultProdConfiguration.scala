@@ -63,8 +63,6 @@ trait DefaultProdConfiguration extends VSConfiguration {
 
   implicit val system: ActorSystem = {
     val vs = ActorSystem("vs", configuration.getConfig("application.vs").map(_.underlying) getOrElse sys.error("application.vs"))
-    vs.actorOf(Props(new UsersActor()(this)).withDispatcher("user-dispatcher"), "users")
-    vs.actorOf(Props(new Http(httpClient, vs.scheduler, httpCacheOpt)).withDispatcher("http-dispatcher"), "http")
     val listener = vs.actorOf(Props(new Actor {
       def receive = {
         case d: DeadLetter ⇒ DefaultProdConfiguration.logger.debug("DeadLetter - sender: %s, recipient: %s, message: %s" format(d.sender.toString, d.recipient.toString, d.message.toString))
@@ -73,7 +71,18 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs.eventStream.subscribe(listener, classOf[DeadLetter])
     vs
   }
-  
+
+  val usersActorRef: ActorRef = {
+    system.actorOf(Props(new UsersActor()(this)), "users")
+  }
+
+  val runsActorRef: ActorRef =
+    system.actorOf(Props(new RunsActor()(this)), "runs")
+
+  val httpActorRef: ActorRef =
+    system.actorOf(Props(new Http(httpClient, system.scheduler, httpCacheOpt)).withDispatcher("http-dispatcher"), "http")
+
+
   implicit val timeout: Timeout = {
     val r = """^(\d+)([^\d]+)$""".r
     val r(timeoutS, unitS) = configuration.getString("application.timeout") getOrElse sys.error("application.timeout")

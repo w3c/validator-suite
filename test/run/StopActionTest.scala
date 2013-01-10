@@ -35,19 +35,21 @@ class StopActionTest extends RunTestHelper with TestKitHelper {
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
-    val (userId, jobId, runId) = job.run().getOrFail()
+    val runningJob = job.run().getOrFail()
+    val Running(runId, actorPath) = runningJob.status
 
-    job.listen(testActor)
+    runningJob.listen(testActor)
 
     fishForMessagePF(3.seconds) {
       case NewResource(_, ri) => ri.url must be(URL("http://localhost:9001/"))
     }
 
-    job.cancel()
+    // note: you can block on that if you wanted
+    runningJob.cancel()
 
+    // but here we want to check that the message is sent
     fishForMessagePF(3.seconds) {
-      case UpdateData(jobData, _, activity) if activity == Idle => {
-        job.waitLastWrite().getOrFail()
+      case RunCancelled(_) => {
         val rrs = ResourceResponse.getFor(runId).getOrFail()
         rrs.size must be < (100)
       }

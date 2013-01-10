@@ -5,15 +5,17 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.akkaext._
 import org.w3.vs.actor.message._
 import akka.actor._
+import akka.pattern.ask
 import play.api.libs.iteratee._
 import play.Logger
 import org.w3.util._
 import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
-import org.w3.vs.actor.JobActor._
+import org.w3.vs.actor.{ RunsActor, JobActor }
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.w3.vs.exception.UnknownJob
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -32,47 +34,25 @@ case class Job(
   id: JobId,
   name: String,
   createdOn: DateTime,
+  /** the strategy to be used when creating the Run */
   strategy: Strategy,
-  creatorId: UserId) {
+  /** the identity of the the creator of this Job */
+  creatorId: UserId,
+  /** the status for this Job */
+  status: JobStatus,
+  /** if this job was ever done, the final state -- includes link to the concerned Run */
+  latestDone: Option[Done]) {
 
   import Job.logger
 
-//  @deprecated("", "")
-  def getRun()(implicit conf: VSConfiguration): Future[Run] = {
-    import conf._
-    (PathAware(usersRef, path) ? GetRun).mapTo[Run]
-  }
-
-  def waitLastWrite()(implicit conf: VSConfiguration): Future[Unit] = {
-    import conf._
-    val wait = (PathAware(usersRef, path) ? WaitLastWrite).mapTo[Future[Unit]]
-    wait.flatMap(x => x)
-  }
-
-  def getAssertions()(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
-    getRun() map {
-      run => run.assertions.toIterable
+  def getAssertions()(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+    status match {
+      case NeverStarted => Future.successful(List.empty)
+      case Done(runId, _, _, _) => Run.getAssertions(runId)
+      case Running(runId, _) => Run.getAssertions(runId)
     }
   }
 
-  def getActivity()(implicit conf: VSConfiguration): Future[RunActivity] = {
-    getRun().map(_.activity)
-  }
-
-  def getData()(implicit conf: VSConfiguration): Future[JobData] = {
-    getRun().map(_.jobData)
-  }
-
-
-  // Get all runVos for this job, group by id, and for each runId take the latest completed jobData if any
-  def getHistory(): Future[Iterable[JobData]] = {
-    sys.error("")
-  }
-
-  def getCompletedOn()(implicit conf: VSConfiguration): Future[Option[DateTime]] = {
-    Job.getLastCompleted(id)
-  }
-  
   def save()(implicit conf: VSConfiguration): Future[Job] =
     Job.save(this)
   
@@ -81,26 +61,46 @@ case class Job(
     Job.delete(id)
   }
   
-  def run()(implicit conf: VSConfiguration): Future[(UserId, JobId, RunId)] = {
+  def run()(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
-    (PathAware(usersRef, path) ? Refresh).mapTo[(UserId, JobId, RunId)]
+    (runsActorRef ? RunsActor.RunJob(this)).mapTo[Running] map { running =>
+      this.copy(status = running)
+    }
   }
-  
-  def cancel()(implicit conf: VSConfiguration): Unit = 
-    PathAware(usersRef, path) ! Stop
 
-  def on()(implicit conf: VSConfiguration): Unit = 
-    PathAware(usersRef, path) ! BeProactive
-
-  def off()(implicit conf: VSConfiguration): Unit = 
-    PathAware(usersRef, path) ! BeLazy
-
-  def resume()(implicit conf: VSConfiguration): Unit = 
-    PathAware(usersRef, path) ! Resume
-
-  def getSnapshot()(implicit conf: VSConfiguration): Future[JobData] = {
+  // TODO we can actually look at the status before sending the message
+  def resume()(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    (PathAware(usersRef, path) ? GetSnapshot).mapTo[JobData]
+    (runsActorRef ? RunsActor.ResumeJob(this)).mapTo[String] map { x =>
+      println("+++ " + x)
+      ()
+    }
+  }
+
+  def cancel()(implicit conf: VSConfiguration): Future[Unit] = {
+    import conf._
+    status match {
+      case NeverStarted => Future.successful(())
+      case Done(_, _, _, _) => Future.successful(())
+      case Running(_, actorPath) => {
+        val actorRef = system.actorFor(actorPath)
+        (actorRef ? JobActor.Cancel).mapTo[Unit]
+      }
+    }
+  }
+
+  // TODO: should be Future[Option[JobData]]
+  def getJobData()(implicit conf: VSConfiguration): Future[JobData] = {
+    import conf._
+    status match {
+      case NeverStarted =>
+        Future.successful(JobData(0, 0, 0, createdAt = createdOn, completedOn = None))
+      case Done(_, _, _, jobData) => Future.successful(jobData)
+      case Running(_, actorPath) => {
+        val actorRef = system.actorFor(actorPath)
+        (actorRef ? JobActor.GetJobData).mapTo[JobData]
+      }
+    }
   }
 
   def enumerator()(implicit conf: VSConfiguration): Enumerator[RunUpdate] = {
@@ -128,49 +128,88 @@ case class Job(
     _enumerator
   }
 
-  def listen(listener: ActorRef)(implicit conf: VSConfiguration): Unit =
-    PathAware(usersRef, path).tell(Listen(listener), listener)
-  
-  def deafen(listener: ActorRef)(implicit conf: VSConfiguration): Unit =
-    PathAware(usersRef, path).tell(Deafen(listener), listener)
-  
-  private def usersRef(implicit conf: VSConfiguration) = {
+  def listen(listener: ActorRef)(implicit conf: VSConfiguration): Unit = {
     import conf._
-    system.actorFor(system / "users")
-  }
-
-  private def path(implicit conf: VSConfiguration): ActorPath = {
-    import conf._
-    system / "users" / creatorId.id / "jobs" / id.id
+    status match {
+      case NeverStarted | Done(_, _, _, _) => logger.error("if the event is not started, you can't listen to events")
+      case Running(_, actorPath) => {
+        val actorRef = system.actorFor(actorPath)
+        actorRef.tell(Listen(listener), listener)
+      }
+    }
   }
   
-  def !(message: Any)(implicit sender: ActorRef = null, conf: VSConfiguration): Unit =
-    PathAware(usersRef, path) ! message
+  def deafen(listener: ActorRef)(implicit conf: VSConfiguration): Unit = {
+    import conf._
+    status match {
+      case NeverStarted | Done(_, _, _, _) => logger.error("if the event is not started, you can't listen to events")
+      case Running(_, actorPath) => {
+        val actorRef = system.actorFor(actorPath)
+        actorRef.tell(Deafen(listener), listener)
+      }
+    }
+  }
 
 }
 
 object Job {
 
   def createNewJob(name: String, strategy: Strategy, creatorId: UserId): Job =
-    Job(JobId(), name, DateTime.now(DateTimeZone.UTC), strategy, creatorId)
+    Job(JobId(), name, DateTime.now(DateTimeZone.UTC), strategy, creatorId, NeverStarted, None)
 
   val logger = Logger.of(classOf[Job])
 
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("jobs")
 
-  def sample(implicit conf: VSConfiguration) = Job.apply(
-    id = JobId("50cb698f04ca20aa0283bc84"),
-    name = "Sample report",
-    createdOn = DateTime.now(DateTimeZone.UTC),
-    strategy = Strategy(
+  def sample(implicit conf: VSConfiguration) = Job(
+    JobId("50cb698f04ca20aa0283bc84"),
+    "Sample report",
+    DateTime.now(DateTimeZone.UTC),
+    Strategy(
       entrypoint = URL("http://www.w3.org/"),
       linkCheck = false,
       maxResources = 10,
       filter = Filter(include = Everything, exclude = Nothing),
       assertorsConfiguration = AssertorsConfiguration.default),
-    creatorId = User.sample.id
-  )
+    User.sample.id,
+    NeverStarted,
+    None)
+
+  private def updateStatus(
+    jobId: JobId,
+    status: JobStatus,
+    latestDoneOpt: Option[Done])(
+    implicit conf: VSConfiguration): Future[Unit] = {
+    val selector = Json.obj("_id" -> toJson(jobId))
+    val update = latestDoneOpt match {
+      case Some(latestDone) =>
+        Json.obj(
+          "$set" -> Json.obj(
+            "status" -> toJson(status),
+            "latestDone" -> toJson(latestDone)))
+      case None =>
+        Json.obj(
+          "$set" -> Json.obj(
+            "status" -> toJson(status)))
+    }
+    collection.update[JsValue, JsValue](selector, update) map { lastError => () }
+  }
+
+  def updateStatus(
+    jobId: JobId,
+    status: JobStatus,
+    latestDone: Done)(
+    implicit conf: VSConfiguration): Future[Unit] = {
+    updateStatus(jobId, status, Some(latestDone))
+  }
+
+  def updateStatus(
+    jobId: JobId,
+    status: JobStatus)(
+    implicit conf: VSConfiguration): Future[Unit] = {
+    updateStatus(jobId, status, None)
+  }
 
   // returns the Job with the jobId and optionally the latest Run* for this Job
   // the Run may not exist if the Job was never started
@@ -189,6 +228,18 @@ object Job {
     val cursor = collection.find[JsValue, JsValue](query)
     cursor.toList map { list =>
       list map { json => json.as[Job] }
+    }
+  }
+
+  /** returns the Job for this JobId, if it belongs to the provided user
+    * if not, it throws an UnknownJob exception */
+  def getFor(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
+    import conf._
+    val query = Json.obj("_id" -> toJson(jobId), "creator" -> toJson(userId))
+    val cursor = collection.find[JsValue, JsValue](query)
+    cursor.headOption map {
+      case None => throw UnknownJob(jobId)
+      case Some(json) => json.as[Job]
     }
   }
 
