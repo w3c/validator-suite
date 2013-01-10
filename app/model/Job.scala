@@ -219,6 +219,12 @@ object Job {
     }
   }
 
+  def getRunningJobs()(implicit conf: VSConfiguration): Future[List[Job]] = {
+    val query = Json.obj("status.actorPath" -> Json.obj("$exists" -> JsBoolean(true)))
+    val cursor = collection.find[JsValue, JsValue](query)
+    cursor.toList map { list => list map { _.as[Job] } }
+  }
+
   def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
     import conf._
     val query = Json.obj("creator" -> toJson(userId))

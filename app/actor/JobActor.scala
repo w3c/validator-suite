@@ -128,6 +128,11 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
   whenUnhandled {
 
+    case Event(GetJobData, run) => {
+      sender ! run.jobData
+      stay()
+    }
+
     case Event(msg: ListenerMessage, run) => {
       logger.debug(s"${run.shortId}: ListenerMessage")
       listenerHandler(msg)
@@ -157,11 +162,6 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       executeCommands(startedRun, self, toBeFetched, List.empty, httpActorRef, assertionsActorRef)
       runningJobs.inc()
       goto(Started) using startedRun
-    }
-
-    case Event(GetJobData, run) => {
-      sender ! run.jobData
-      stay()
     }
 
     case Event(Resume(toBeFetched, toBeAsserted), run) => {

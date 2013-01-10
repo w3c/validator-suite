@@ -255,6 +255,13 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     assertions must have length(nbAssertionsPerRun)
   }
 
+  "get all running jobs" in {
+    val runningJobs = Job.getRunningJobs().getOrFail()
+    runningJobs must have size(2)
+    runningJobs must contain(job1)
+    runningJobs must contain(job5)
+  }
+
 }
 
 class MongoStoreTestLight extends MongoStoreTest(
