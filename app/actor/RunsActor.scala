@@ -93,7 +93,7 @@ class RunsActor()(implicit conf: VSConfiguration) extends Actor {
               val jobActorRef = context.actorOf(Props(new JobActor(job, run)), name = actorPath.name)
               // we can now tell the JobActor to resume its work
               jobActorRef ! JobActor.Resume(toBeFetched, toBeAsserted)
-              from ! "something"
+              from ! ()
             }
           }
         }

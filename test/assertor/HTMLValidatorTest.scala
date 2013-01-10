@@ -6,11 +6,11 @@ import org.w3.vs.model._
 import org.w3.util.URL
 import org.w3.vs.view.Helper
 
-class HTMLValidatorTest extends WordSpec with MustMatchers with AssertionResultMatcher {
+class HTMLValidatorTest extends WordSpec with MustMatchers with AssertionsMatchers {
 
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
-    val assertions: Iterable[Assertion] = HTMLValidator.assert(url, Map.empty)
+    val assertions = HTMLValidator.assert(url, Map.empty)
     assertions must (haveErrors)
   }
 

@@ -123,7 +123,7 @@ object Formats {
     (__ \ 'errors).format[Int] and
     (__ \ 'warnings).format[Int] and
     (__ \ 'createdAt).format[DateTime] and
-    (__ \ 'completedOn).formatOpt[DateTime]
+    (__ \ 'completedOn).formatNullable[DateTime]
   )(JobData.apply, unlift(JobData.unapply))
 
   implicit val NeverStartedFormat = constant("never-started", NeverStarted)
@@ -170,13 +170,13 @@ object Formats {
     (__ \ 'strategy).format[Strategy] and
     (__ \ 'creator).format[UserId] and
     (__ \ 'status).format[JobStatus] and
-    (__ \ 'latestDone).formatOpt[Done](DoneFormat)
+    (__ \ 'latestDone).formatNullable[Done](DoneFormat)
   )(Job.apply _, unlift(Job.unapply _))
   
   implicit val ContextFormat: Format[Context] = (
     (__ \ 'content).format[String] and
-    (__ \ 'line).formatOpt[Int] and
-    (__ \ 'column).formatOpt[Int]
+    (__ \ 'line).formatNullable[Int] and
+    (__ \ 'column).formatNullable[Int]
   )(Context.apply _, unlift(Context.unapply _))
 
   val ErrorFormat = constant[Error.type]("error", Error)
@@ -199,7 +199,7 @@ object Formats {
     (__ \ 'lang).format[String] and
     (__ \ 'title).format[String] and
     (__ \ 'severity).format[AssertionSeverity] and
-    (__ \ 'description).formatOpt[String] and
+    (__ \ 'description).formatNullable[String] and
     (__ \ 'timestamp).format[DateTime]
   )(Assertion.apply _, unlift(Assertion.unapply _))
 
@@ -234,7 +234,7 @@ object Formats {
     (__ \ 'status).format[Int] and
     (__ \ 'headers).format[Headers] and
     (__ \ 'extractedURLs).format[List[URL]] and
-    (__ \ 'doctype).formatOpt[Doctype]
+    (__ \ 'doctype).formatNullable[Doctype]
   )(HttpResponse.apply _, unlift(HttpResponse.unapply _))
 
   implicit object ResourceResponseFormat extends Format[ResourceResponse] {

@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import play.Project._
+import play.Project.{ fork => _, _ }
 //import org.ensime.sbt.Plugin.Settings.ensimeConfig
 //import org.ensime.sbt.util.SExp._
 
@@ -9,43 +9,46 @@ object ApplicationBuild extends Build {
   val appName         = "validator-suite"
   val appVersion      = "0.2"
 
+  val akkaVersion = "2.1.0"
+  val scalazVersion = "7.0.0-M7"
+  val scalatestVersion = "2.0.M5b"
+  val metricsVersion = "2.1.3"
+
   val appDependencies = Seq(
     // runtime dependencies
-    "org.scala-lang" % "scala-actors" % "2.10.0-RC1",
+    "org.scala-lang" % "scala-actors" % "2.10.0",
     "org.apache.commons" % "commons-lang3" % "3.1" intransitive(), // For StringUtils escaping functions
     "nu.validator.htmlparser" % "htmlparser" % "1.2.1" intransitive(),
-//    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://repo.typesafe.com/typesafe/scala-tools-snapshots/com/codecommit/anti-xml_2.9.1/0.4-SNAPSHOT/anti-xml_2.9.1-0.4-SNAPSHOT.jar",
-    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10-0.4-20121107.jar",
-    "com.yammer.metrics" % "metrics-core" % "2.1.3" excludeAll(ExclusionRule(organization = "org.slf4j")),
-    "com.yammer.metrics" % "metrics-graphite" % "2.1.3" excludeAll(ExclusionRule(organization = "org.slf4j")),
-    "play.modules.reactivemongo" %% "play2-reactivemongo" % "0.1-SNAPSHOT"  cross CrossVersion.full exclude("io.netty", "netty"),
-    "org.mongodb" % "mongo-java-driver" % "2.10.0",
-    "org.scalaz" % "scalaz-core_2.10.0-M7" % "7.0.0-M3",
-    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20121213.jar",
-//    "org.w3" % "validators" % "1.0-SNAPSHOT" from "file:///home/betehess/projects/validators/target/validators.jar",
+    "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10_20130110.jar",
+    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20130110.jar",
+    "com.yammer.metrics" % "metrics-core" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
+    "com.yammer.metrics" % "metrics-graphite" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
+    "play.modules.reactivemongo" % "play2-reactivemongo_2.10.0-RC2" % "0.1-SNAPSHOT" /*cross CrossVersion.full*/ exclude("io.netty", "netty"),
+    "org.mongodb" % "mongo-java-driver" % "2.10.0", // should disappear soon
+    "org.scalaz" %% "scalaz-core" % scalazVersion,
     // test dependencies
-    "com.typesafe.akka" % "akka-testkit_2.10.0-RC1" % "2.1.0-RC1" % "test",
-    "com.typesafe.akka" % "akka-dataflow_2.10.0-RC1" % "2.1.0-RC1",
-//    "com.typesafe.akka" % "akka-testkit" % "2.0.2" % "test",
-    "org.scalatest" % "scalatest_2.10.0-RC1" % "2.0.M4-2.10.0-RC1-B1"
+    "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
+    "com.typesafe.akka" %% "akka-dataflow" % akkaVersion,
+    "org.scalatest" %% "scalatest" % scalatestVersion
   )
 
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
 
-    autoCompilerPlugins := true,
-    libraryDependencies <+= scalaVersion {
-      v => compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-RC1")
-    },
+//    autoCompilerPlugins := true,
+//    libraryDependencies <+= scalaVersion {
+//      v => compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-RC1")
+//    },
     libraryDependencies += "commons-io" % "commons-io" % "2.4",
-    scalacOptions += "-P:continuations:enable",
 
-    testOptions in Test := Nil,
-//    testOptions in Test += Tests.Argument("""stdout(config="durations")"""),
-    testOptions in Test += Tests.Argument("""-oDF"""),
-    scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
     // activates full stacktrace and durations
+    testOptions in Test := Nil,
+    testOptions in Test += Tests.Argument("""-oDF"""),
+    // I believe it's a bug. see https://github.com/playframework/Play20/pull/654
+    fork in Test := false,
+
+    scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
     playAssetsDirectories <+= baseDirectory / "app/assets/scripts",

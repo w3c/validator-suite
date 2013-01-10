@@ -35,7 +35,7 @@ case class AssertionsView(
     val a = Ordering[AssertionSeverity].reverse
     val b = Ordering[Int].reverse
     val c = Ordering[String]
-    Ordering.Tuple3(a, b, c).on[AssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.title.text))
+    Ordering.Tuple3(a, b, c).on[AssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.title.body))
   }
 
   def filter(filter: Option[String]) =
@@ -83,7 +83,7 @@ object AssertionsView {
       val resources = assertions.map(_.url.underlying).toSeq.sortBy(_.toString)
       val occurrences = assertions.foldLeft(0)((count, assertion) => count + scala.math.max(1, assertion.contexts.size))
       AssertionView(
-        id = title.text.hashCode,
+        id = title.body.hashCode,
         jobId = id,
         assertor = assertorKey,
         severity = severity,

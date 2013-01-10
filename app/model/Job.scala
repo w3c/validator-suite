@@ -71,10 +71,7 @@ case class Job(
   // TODO we can actually look at the status before sending the message
   def resume()(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    (runsActorRef ? RunsActor.ResumeJob(this)).mapTo[String] map { x =>
-      println("+++ " + x)
-      ()
-    }
+    (runsActorRef ? RunsActor.ResumeJob(this)).mapTo[Unit]
   }
 
   def cancel()(implicit conf: VSConfiguration): Future[Unit] = {

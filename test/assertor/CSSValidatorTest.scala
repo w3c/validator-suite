@@ -8,26 +8,6 @@ import org.w3.vs.model._
 import org.w3.vs.http._
 import java.io.File
 
-trait ErrorMatchers {
-
-  val haveError: Matcher[Traversable[Assertion]] = new Matcher[Traversable[Assertion]] {
-    def apply(left: Traversable[Assertion]) = {
-      val failureMessageSuffix = "found errors"
-      val negatedFailureMessageSuffix = "didnt find errors"
-
-      MatchResult(
-        left exists { _.severity == Error },
-        failureMessageSuffix,
-        negatedFailureMessageSuffix,
-        failureMessageSuffix,
-        negatedFailureMessageSuffix
-      )
-
-    }
-  }
-
-}
-
 object CSSValidatorTest {
 
   val cacheDirectory = new File("test/resources/cache")
@@ -43,7 +23,7 @@ object CSSValidatorTest {
 
 }
 
-class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll with ErrorMatchers {
+class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll with AssertionsMatchers {
 
   import CSSValidatorTest.cache
 
@@ -64,7 +44,7 @@ class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll
   "there should be no CSS error in http://www.w3.org/2011/08/validator-test/no-error.css" in {
     val url = URL("http://www.w3.org/2011/08/validator-test/no-error.css")
     val assertion: Iterable[Assertion] = CSSValidator.assert(url, Map.empty)
-    assertion must not (haveError)
+    assertion must not (haveErrors)
   }
 
   "CSSValidator must accept optional parameters" in {
