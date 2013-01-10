@@ -4,6 +4,7 @@ import java.net.{ Socket, ResponseCache }
 import com.yammer.metrics._
 import com.yammer.metrics.reporting._
 import java.util.concurrent.TimeUnit
+import org.w3.vs.model.Job
 
 object Global extends GlobalSettings {
 
@@ -27,6 +28,8 @@ object Global extends GlobalSettings {
     }
     conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
     org.w3.vs.assertor.LocalValidators.start()
+
+    Job.resumeAllJobs()(conf)
 
     // Run the sample job on start
     /*import org.w3.vs.model.Job

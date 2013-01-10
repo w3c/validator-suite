@@ -225,6 +225,16 @@ object Job {
     cursor.toList map { list => list map { _.as[Job] } }
   }
 
+  /** be careful, this is blocking */
+  def resumeAllJobs()(implicit conf: VSConfiguration): Unit = {
+    import org.w3.util.Util.FutureF
+    val runningJobs = getRunningJobs().getOrFail()
+    runningJobs foreach { job =>
+      println(job)
+      job.resume().getOrFail()
+    }
+  }
+
   def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
     import conf._
     val query = Json.obj("creator" -> toJson(userId))
