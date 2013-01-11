@@ -30,6 +30,7 @@
   <logger name="org.w3.vs.assertor" level="DEBUG" />
   <logger name="org.w3.vs.controllers.OneTimeJob" level="DEBUG">
       <appender-ref ref="ORDERS" />
+      <appender-ref ref="STDOUT" />
   </logger>
   <logger name="org.eclipse.jetty.server" level="INFO">
       <appender-ref ref="STDOUT" />
