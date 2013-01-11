@@ -2,8 +2,6 @@ package org.w3.vs.model
 
 import java.nio.channels.ClosedChannelException
 import org.joda.time.{ DateTime, DateTimeZone }
-import org.w3.util.akkaext._
-import org.w3.vs.actor.message._
 import akka.actor._
 import akka.pattern.ask
 import play.api.libs.iteratee._
@@ -12,7 +10,7 @@ import org.w3.util._
 import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
-import org.w3.vs.actor.{ RunsActor, JobActor }
+import org.w3.vs.actor._
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.exception.UnknownJob
@@ -121,30 +119,8 @@ case class Job(
         case msg => logger.error("subscriber got " + msg)
       }
     }))
-    listen(subscriber)
+    vsEvents.subscribe(subscriber, FromJob(id))
     _enumerator
-  }
-
-  def listen(listener: ActorRef)(implicit conf: VSConfiguration): Unit = {
-    import conf._
-    status match {
-      case NeverStarted | Done(_, _, _, _) => logger.error("if the event is not started, you can't listen to events")
-      case Running(_, actorPath) => {
-        val actorRef = system.actorFor(actorPath)
-        actorRef.tell(Listen(listener), listener)
-      }
-    }
-  }
-  
-  def deafen(listener: ActorRef)(implicit conf: VSConfiguration): Unit = {
-    import conf._
-    status match {
-      case NeverStarted | Done(_, _, _, _) => logger.error("if the event is not started, you can't listen to events")
-      case Running(_, actorPath) => {
-        val actorRef = system.actorFor(actorPath)
-        actorRef.tell(Deafen(listener), listener)
-      }
-    }
   }
 
 }

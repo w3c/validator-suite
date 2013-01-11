@@ -1,29 +1,27 @@
 package controllers
 
 import java.net.URL
-import org.w3.vs.model
-import org.w3.vs.model.{User, JobId}
+import org.w3.vs.model.{ Job => ModelJob, _ }
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
+import org.w3.util.equaljURL
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.iteratee.{Iteratee, Enumeratee, Enumerator}
 import play.api.libs.json.{JsNull, JsValue}
-import org.w3.vs.actor.message.RunUpdate
 import play.api.libs.{EventSource, Comet}
-import scala.Some
-import org.w3.vs.actor.message.NewAssertorResult
+import scalaz.Scalaz._
 
 object Resources extends VSController  {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Resources")
 
   def index(id: JobId, url: Option[URL]): ActionA = {
-    if (id == model.Job.sample.id) {
+    if (id === ModelJob.sample.id) {
       VSAction { req => {
         case Html(_) => Redirect(routes.Resources.sample(url))
         case _ => sample(url)(req)
@@ -37,7 +35,7 @@ object Resources extends VSController  {
   }
 
   def sample(url: Option[URL]): ActionA = AsyncAction { implicit req =>
-    val sampleId = model.Job.sample.id
+    val sampleId = ModelJob.sample.id
     val sampleUser = User.sample
     url match {
       case Some(url) => Future.successful(index_(sampleId, url)(req)(sampleUser))
@@ -109,7 +107,7 @@ object Resources extends VSController  {
           }
           case Some(url) => {
             case NewAssertorResult(result, run, now) if result.assertions.map(_.url).toList.contains(url) => {
-              val assertionViews = AssertionsView(run.assertions.filter(_.url == url), jobId, url)
+              val assertionViews = AssertionsView(run.assertions.filter(_.url.underlying === url), jobId, url)
               ResourcesView.single(url, assertionViews, jobId).toJson
             }
           }

@@ -21,7 +21,9 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
   
   implicit val implicitConfiguration: VSConfiguration = configuration
 
-  val http = system.actorFor(system / "http")
+  val http = configuration.httpActorRef
+
+  val vsEvents = configuration.vsEvents
 
   val userTest = User(userId = UserId(), email = "", name = "", password = "", isSubscriber = true)
   

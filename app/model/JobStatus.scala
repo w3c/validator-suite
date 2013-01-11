@@ -3,7 +3,6 @@ package org.w3.vs.model
 import java.nio.channels.ClosedChannelException
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.akkaext._
-import org.w3.vs.actor.message._
 import akka.actor._
 import play.api.libs.iteratee._
 import play.Logger

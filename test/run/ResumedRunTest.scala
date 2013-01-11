@@ -4,8 +4,6 @@ import org.w3.util._
 import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
-import org.w3.vs.actor.RunsActor
-import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 import org.w3.vs.http.Http._
@@ -66,7 +64,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     val resume = rJob.resume().getOrFail()
     resume must be(())
 
-    rJob.listen(testActor)
+    vsEvents.subscribe(testActor, FromJob(job.id))
     
     // that's the same test as in cyclic
     fishForMessagePF(3.seconds) {

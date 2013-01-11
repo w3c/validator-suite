@@ -16,15 +16,14 @@ import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.JsValue
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
-import org.w3.vs.actor.message.{NewAssertorResult, RunUpdate}
-import org.w3.vs.model
+import org.w3.vs.model.{ Job => ModelJob, _ }
 
 object Assertions extends VSController  {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Assertions")
 
   def index(id: JobId, url: Option[URL]): ActionA = {
-    if (id === model.Job.sample.id) {
+    if (id === ModelJob.sample.id) {
       VSAction { req => {
         case Html(_) => Redirect(routes.Assertions.sample(url))
         case _ => sample(url)(req)
@@ -38,7 +37,7 @@ object Assertions extends VSController  {
   }
 
   def sample(url: Option[URL]): ActionA = AsyncAction { implicit req =>
-    val sampleId = model.Job.sample.id
+    val sampleId = ModelJob.sample.id
     val sampleUser = User.sample
     url match {
       case Some(url) => index_(sampleId, url)(req)(sampleUser)

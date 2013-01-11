@@ -4,7 +4,6 @@ import org.w3.util._
 import org.w3.vs.util._
 import org.w3.util.website._
 import org.w3.vs.model._
-import org.w3.vs.actor.message._
 import org.w3.util.akkaext._
 import org.w3.vs.http._
 import org.w3.vs.http.Http._
@@ -40,7 +39,7 @@ class MaxResourcesTest extends RunTestHelper with TestKitHelper {
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    runningJob.listen(testActor)
+    vsEvents.subscribe(testActor, FromJob(job.id))
 
     fishForMessagePF(3.seconds) {
       case _: RunCompleted => {

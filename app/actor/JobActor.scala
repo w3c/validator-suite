@@ -3,12 +3,10 @@ package org.w3.vs.actor
 import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.util._
-import org.w3.vs.actor.message._
 import akka.actor._
 import play.Logger
 import org.w3.vs.http._
 import org.joda.time.DateTime
-import org.w3.util.akkaext._
 import org.joda.time.DateTimeZone
 import com.yammer.metrics._
 import com.yammer.metrics.core._
@@ -87,7 +85,7 @@ case object Stopping extends JobActorState
 
 // TODO extract all pure function in a companion object
 class JobActor(job: Job, initialRun: Run)(implicit val conf: VSConfiguration)
-extends Actor with FSM[JobActorState, Run] with Listeners {
+extends Actor with FSM[JobActorState, Run] {
 
   import conf._
 
@@ -130,12 +128,6 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
 
     case Event(GetJobData, run) => {
       sender ! run.jobData
-      stay()
-    }
-
-    case Event(msg: ListenerMessage, run) => {
-      logger.debug(s"${run.shortId}: ListenerMessage")
-      listenerHandler(msg)
       stay()
     }
 
@@ -241,10 +233,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
   }
 
   private def tellEverybody(msg: RunUpdate): Unit = {
-    // tell the user
-    usersActorRef ! UsersActor.Forward(msg = msg, to = userId)
-    // tell all the listeners
-    tellListeners(msg)
+    vsEvents.publish(msg)
   }
 
 }

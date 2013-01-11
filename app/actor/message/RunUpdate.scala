@@ -1,6 +1,5 @@
-package org.w3.vs.actor.message
+package org.w3.vs.model
 
-import org.w3.vs.model._
 import org.joda.time._
 
 /**
@@ -33,3 +32,12 @@ case class NewAssertorResult(result: AssertorResult, run: Run, timestamp: DateTi
   val jobId: JobId = context._2
   val runId: RunId = context._3
 }
+
+
+
+
+
+sealed trait MessageProvenance
+case class FromUser(userId: UserId) extends MessageProvenance
+case class FromJob(jobId: JobId) extends MessageProvenance
+case class FromRun(runId: RunId) extends MessageProvenance

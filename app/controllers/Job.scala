@@ -2,7 +2,7 @@ package controllers
 
 import org.w3.vs.controllers._
 import org.w3.vs.exception.InvalidFormException
-import org.w3.vs.model.{Job => JobModel, User, JobId}
+import org.w3.vs.model.{ Job => JobModel, User, JobId, _}
 import org.w3.vs.view.form.JobForm
 import play.Logger.ALogger
 import play.api.i18n.Messages
@@ -16,11 +16,9 @@ import java.net.URL
 import play.api.libs.json.JsValue
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
-import org.w3.vs.actor.message.{RunCompleted, UpdateData, NewAssertorResult, RunUpdate}
 import org.w3.vs.view.collection.ResourcesView
 import org.w3.vs.view.model.JobView
 import org.w3.vs.view.OTOJType
-import org.w3.vs.model
 
 object Job extends VSController {
 
@@ -31,7 +29,7 @@ object Job extends VSController {
   def reportByResource(id: JobId): ActionA = Resources.index(id, None)
 
   def get(id: JobId): ActionA = Action { implicit req =>
-    if (id == model.Job.sample.id) {
+    if (id == JobModel.sample.id) {
       req.getQueryString("group") match {
         case Some("message") => Redirect(routes.Assertions.sample(None))
         case _ =>               Redirect(routes.Resources.sample(None))

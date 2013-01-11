@@ -72,8 +72,9 @@ trait DefaultProdConfiguration extends VSConfiguration {
     vs
   }
 
-  val usersActorRef: ActorRef = {
-    system.actorOf(Props(new UsersActor()(this)), "users")
+  val vsEvents: VSEvents = {
+    val actorRef = system.actorOf(Props(new VSEventsActor()), "vs-events")
+    VSEvents(actorRef)
   }
 
   val runsActorRef: ActorRef =

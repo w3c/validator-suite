@@ -8,12 +8,10 @@ import org.w3.vs._
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee.{ Concurrent, Enumerator }
-import org.w3.vs.actor.message.RunUpdate
 import akka.actor.{ Actor, Props, ActorRef }
 import java.nio.channels.ClosedChannelException
-import org.w3.util.akkaext.{ Deafen, Listen }
 import org.joda.time.DateTime
-import org.w3.vs.actor.UsersActor
+import org.w3.vs.actor._
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -30,7 +28,7 @@ import org.w3.vs.store.Formats._
 case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
 
   import User.logger
-  import conf.{ system, usersActorRef }
+  import conf.{ system, vsEvents }
 
   def isSubscriber = vo.isSubscriber
 
@@ -66,15 +64,9 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
         case msg => logger.error("subscriber got " + msg)
       }
     }))
-    listen(subscriber)
+    vsEvents.subscribe(subscriber, FromUser(id))
     _enumerator
   }
-
-  def listen(implicit listener: ActorRef): Unit =
-    usersActorRef.tell(UsersActor.Forward(msg = Listen(listener), to = id), listener)
-
-  def deafen(implicit listener: ActorRef): Unit =
-    usersActorRef.tell(UsersActor.Forward(msg = Deafen(listener), to = id), listener)
 
 }
 
