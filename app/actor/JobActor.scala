@@ -111,14 +111,14 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
       val now = DateTime.now(DateTimeZone.UTC)
       val completeRunEvent = CompleteRunEvent(run.userId, run.jobId, run.runId, now)
       Run.saveEvent(completeRunEvent) onSuccess { case () =>
-        tellEverybody(RunCompleted(job.id, now))
+        tellEverybody(RunCompleted(userId, job.id, run.runId, now))
       }
       stopThisActor()
       goto(Stopping) using run
     } else if (!run.jobData.sameAs(stateData.jobData)) {
       // Compare the state data and not the state of the fsm to tell if we must broadcast
       // sameAs() compares jobData objects ignoring createdAt
-      val msg = UpdateData(job.id, run.jobData)
+      val msg = UpdateData(userId, job.id, run.runId, run.jobData)
       tellEverybody(msg)
       stay() using run
     } else {
@@ -227,7 +227,7 @@ extends Actor with FSM[JobActorState, Run] with Listeners {
     case Event(Cancel, run) => {
       logger.debug(s"${run.shortId}: Cancel")
       Run.saveEvent(CancelEvent(run.runId)) onSuccess { case () =>
-        tellEverybody(RunCancelled(job.id))
+        tellEverybody(RunCancelled(userId, job.id, run.runId))
       }
       stopThisActor()
       goto(Stopping)

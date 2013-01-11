@@ -8,15 +8,28 @@ import org.joda.time._
  * 
  * Listening to updates lets you know everything about an Observation.
  */
-sealed trait RunUpdate 
+sealed trait RunUpdate {
+  def userId: UserId
+  def jobId: JobId
+  def runId: RunId
+}
 
-case class UpdateData(jobId: JobId, data: JobData) extends RunUpdate
-case class RunCompleted(jobId: JobId, completedOn: DateTime) extends RunUpdate
-case class RunCancelled(jobId: JobId) extends RunUpdate
+case class UpdateData(userId: UserId, jobId: JobId, runId: RunId, data: JobData) extends RunUpdate
+case class RunCompleted(userId: UserId, jobId: JobId, runId: RunId, completedOn: DateTime) extends RunUpdate
+case class RunCancelled(userId: UserId, jobId: JobId, runId: RunId) extends RunUpdate
 
 /**
  * A new Response was received during the exploration
  */
-case class NewResource(context: Run.Context, resource: ResourceResponse) extends RunUpdate
+case class NewResource(context: Run.Context, resource: ResourceResponse) extends RunUpdate {
+  val userId: UserId = context._1
+  val jobId: JobId = context._2
+  val runId: RunId = context._3
+}
 
-case class NewAssertorResult(result: AssertorResult, run: Run, timestamp: DateTime) extends RunUpdate
+case class NewAssertorResult(result: AssertorResult, run: Run, timestamp: DateTime) extends RunUpdate {
+  import result.context
+  val userId: UserId = context._1
+  val jobId: JobId = context._2
+  val runId: RunId = context._3
+}

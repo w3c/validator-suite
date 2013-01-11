@@ -49,7 +49,7 @@ class StopActionTest extends RunTestHelper with TestKitHelper {
 
     // but here we want to check that the message is sent
     fishForMessagePF(3.seconds) {
-      case RunCancelled(_) => {
+      case _: RunCancelled => {
         val rrs = ResourceResponse.getFor(runId).getOrFail()
         rrs.size must be < (100)
       }

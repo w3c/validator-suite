@@ -30,7 +30,7 @@ class UsersActor()(implicit conf: VSConfiguration) extends Actor {
   def receive = {
 
     case Forward(msg, userId) => {
-      // println(s"passing message to child ${msg}: ${id}")
+      logger.debug(s"passing ${msg} to ${id}")
       val userActorRef = getUserRefOrCreate(userId)
       userActorRef.forward(msg)
     }
