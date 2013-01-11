@@ -37,16 +37,17 @@ object MongoStore {
   }
 
   def initializeDb()(implicit conf: VSConfiguration): Future[Unit] = {
+    import IndexType.Ascending
     for {
       _ <- User.collection.create()
       _ <- Job.collection.create()
       _ <- Run.collection.create()
       indexesManager = conf.db.indexesManager
-      _ <- indexesManager.onCollection(User.collection.name).ensure(Index(List("email" -> true), unique = true))
-      _ <- indexesManager.onCollection(Job.collection.name).ensure(Index(List("creator" -> true)))
+      _ <- indexesManager.onCollection(User.collection.name).ensure(Index(List("email" -> Ascending), unique = true))
+      _ <- indexesManager.onCollection(Job.collection.name).ensure(Index(List("creator" -> Ascending)))
       runIndexesManager = indexesManager.onCollection(Run.collection.name)
-      _ <- runIndexesManager.ensure(Index(List("jobId" -> true, "event" -> true)))
-      _ <- runIndexesManager.ensure(Index(List("runId" -> true)))
+      _ <- runIndexesManager.ensure(Index(List("jobId" -> Ascending, "event" -> Ascending)))
+      _ <- runIndexesManager.ensure(Index(List("runId" -> Ascending)))
     } yield ()
   }
 

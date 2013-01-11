@@ -23,7 +23,7 @@ object ApplicationBuild extends Build {
     "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20130110.jar",
     "com.yammer.metrics" % "metrics-core" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
     "com.yammer.metrics" % "metrics-graphite" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
-    "play.modules.reactivemongo" % "play2-reactivemongo_2.10.0-RC2" % "0.1-SNAPSHOT" /*cross CrossVersion.full*/ exclude("io.netty", "netty"),
+    "play.modules.reactivemongo" %% "play2-reactivemongo" % "0.1-SNAPSHOT" cross CrossVersion.full exclude("io.netty", "netty"),
     "org.mongodb" % "mongo-java-driver" % "2.10.0", // should disappear soon
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     // test dependencies
@@ -45,8 +45,6 @@ object ApplicationBuild extends Build {
     // activates full stacktrace and durations
     testOptions in Test := Nil,
     testOptions in Test += Tests.Argument("""-oDF"""),
-    // I believe it's a bug. see https://github.com/playframework/Play20/pull/654
-    fork in Test := false,
 
     scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
     routesImport += "org.w3.vs.controllers._",
