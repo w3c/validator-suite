@@ -128,13 +128,13 @@ object Formats {
 
   implicit val NeverStartedFormat = constant("never-started", NeverStarted)
 
-  val StoppedFormat = constant("stopped", Stopped)
+  val CancelledFormat = constant("cancelled", Cancelled)
   val CompletedFormat = constant("completed", Completed)
   implicit object DoneReasonFormat extends Format[DoneReason] {
     def reads(json: JsValue): JsResult[DoneReason] =
-      StoppedFormat.reads(json) orElse CompletedFormat.reads(json)
+      CancelledFormat.reads(json) orElse CompletedFormat.reads(json)
     def writes(reason: DoneReason) = reason match {
-      case Stopped => StoppedFormat.writes(Stopped)
+      case Cancelled => CancelledFormat.writes(Cancelled)
       case Completed => CompletedFormat.writes(Completed)
     }
   }
@@ -298,12 +298,12 @@ object Formats {
     { case CompleteRunEvent(userId, jobId, runId, at, timestamp) => ("complete-run", userId, jobId, runId, at, timestamp) }
   )
 
-  val CancelEventFormat: Format[CancelEvent] = (
+  val CancelRunEventFormat: Format[CancelRunEvent] = (
     (__ \ 'event).format[String](pattern("cancel-run".r)) and
     (__ \ 'runId).format[RunId] and
     (__ \ 'timestamp).format[DateTime]
-  )({ case (_, runId, timestamp) => CancelEvent(runId, timestamp) },
-    { case CancelEvent(runId, timestamp) => ("cancel-run", runId, timestamp) }
+  )({ case (_, runId, timestamp) => CancelRunEvent(runId, timestamp) },
+    { case CancelRunEvent(runId, timestamp) => ("cancel-run", runId, timestamp) }
   )
 
   val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
@@ -327,13 +327,13 @@ object Formats {
         ResourceResponseEventFormat.reads(json) orElse
         CreateRunEventFormat.reads(json) orElse
         CompleteRunEventFormat.reads(json) orElse
-        CancelEventFormat.reads(json)
+        CancelRunEventFormat.reads(json)
     def writes(event: RunEvent) = event match {
       case e@CreateRunEvent(_, _, _, _, _, _) => CreateRunEventFormat.writes(e)
       case e@CompleteRunEvent(_, _, _, _, _) => CompleteRunEventFormat.writes(e)
       case e@AssertorResponseEvent(_, _, _) => AssertorResponseEventFormat.writes(e)
       case e@ResourceResponseEvent(_, _, _) => ResourceResponseEventFormat.writes(e)
-      case e@CancelEvent(_, _) => CancelEventFormat.writes(e)
+      case e@CancelRunEvent(_, _) => CancelRunEventFormat.writes(e)
     }
   }
 

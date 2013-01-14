@@ -2,7 +2,7 @@ package controllers
 
 import org.w3.vs.controllers._
 import org.w3.vs.exception.InvalidFormException
-import org.w3.vs.model.{ Job => JobModel, User, JobId, _}
+import org.w3.vs.model.{ Job => JobModel, User, JobId, _ }
 import org.w3.vs.view.form.JobForm
 import play.Logger.ALogger
 import play.api.i18n.Messages

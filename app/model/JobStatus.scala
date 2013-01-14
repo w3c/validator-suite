@@ -39,5 +39,5 @@ case class Done(
   jobData: JobData) extends JobStatus
 
 sealed trait DoneReason
-case object Stopped extends DoneReason
+case object Cancelled extends DoneReason
 case object Completed extends DoneReason

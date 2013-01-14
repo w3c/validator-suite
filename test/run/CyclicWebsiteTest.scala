@@ -10,8 +10,9 @@ import org.w3.vs.http.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
+import org.scalatest.Inside
 
-class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper {
+class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper with Inside {
 
   val strategy =
     Strategy( 
@@ -41,11 +42,19 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper {
 
     vsEvents.subscribe(testActor, FromJob(job.id))
 
-    fishForMessagePF(3.seconds) {
-      case _: RunCompleted => {
-        val rrs = ResourceResponse.getFor(runId).getOrFail(3.seconds)
-        rrs must have size (circumference + 1)
-      }
+    fishForMessagePF(3.seconds) { case _: RunCompleted => () }
+
+    val rrs = ResourceResponse.getFor(runId).getOrFail(3.seconds)
+    rrs must have size (circumference + 1)
+
+    // just checking that the data in the store is correct
+
+    val finalJob = Job.get(job.id).getOrFail()
+
+    finalJob.latestDone must be(Some(finalJob.status))
+
+    inside(finalJob.status ) { case Done(runId, reason, completedOn, jobData) =>
+      reason must be(Completed)
     }
 
   }

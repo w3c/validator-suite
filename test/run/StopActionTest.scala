@@ -10,8 +10,9 @@ import org.w3.vs.http.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
+import org.scalatest.Inside
 
-class StopActionTest extends RunTestHelper with TestKitHelper {
+class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
 
   val strategy =
     Strategy(
@@ -47,12 +48,20 @@ class StopActionTest extends RunTestHelper with TestKitHelper {
     runningJob.cancel()
 
     // but here we want to check that the message is sent
-    fishForMessagePF(3.seconds) {
-      case _: RunCancelled => {
-        val rrs = ResourceResponse.getFor(runId).getOrFail()
-        rrs.size must be < (100)
-      }
+    fishForMessagePF(3.seconds) { case _: RunCancelled => () }
+
+    val rrs = ResourceResponse.getFor(runId).getOrFail()
+    rrs.size must be < (100)
+
+    // just checking that the data in the store is correct
+
+    val finalJob = Job.get(job.id).getOrFail()
+
+    inside(finalJob.status ) { case Done(runId, reason, completedOn, jobData) =>
+      reason must be(Cancelled)
     }
+
+
   }
   
 }

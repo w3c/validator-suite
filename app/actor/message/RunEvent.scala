@@ -21,8 +21,8 @@ object CreateRunEvent {
 
 case class CompleteRunEvent(userId: UserId, jobId: JobId, runId: RunId, at: DateTime, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
+case class CancelRunEvent(runId: RunId, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+
 case class AssertorResponseEvent(runId: RunId, ar: AssertorResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
 case class ResourceResponseEvent(runId: RunId, rr: ResourceResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
-
-case class CancelEvent(runId: RunId, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent

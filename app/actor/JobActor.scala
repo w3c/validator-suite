@@ -14,6 +14,7 @@ import scalaz.Equal
 import scalaz.Scalaz._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util._
 
 object JobActor {
 
@@ -108,8 +109,12 @@ extends Actor with FSM[JobActorState, Run] {
       logger.debug(s"${run.shortId}: Assertion phase finished")
       val now = DateTime.now(DateTimeZone.UTC)
       val completeRunEvent = CompleteRunEvent(run.userId, run.jobId, run.runId, now)
-      Run.saveEvent(completeRunEvent) onSuccess { case () =>
-        tellEverybody(RunCompleted(userId, job.id, run.runId, now))
+      val done = Done(run.runId, Completed, now, run.jobData)
+      Job.updateStatus(run.jobId, status = done, latestDone = done) flatMap { _ =>
+        Run.saveEvent(completeRunEvent)
+      } onComplete {
+        case Failure(t) => logger.error("could not complete event", t)
+        case Success(_) => tellEverybody(RunCompleted(userId, job.id, run.runId, now))
       }
       stopThisActor()
       goto(Stopping) using run
@@ -218,8 +223,13 @@ extends Actor with FSM[JobActorState, Run] {
 
     case Event(Cancel, run) => {
       logger.debug(s"${run.shortId}: Cancel")
-      Run.saveEvent(CancelEvent(run.runId)) onSuccess { case () =>
-        tellEverybody(RunCancelled(userId, job.id, run.runId))
+      val now = DateTime.now(DateTimeZone.UTC)
+      val done = Done(run.runId, Cancelled, now, run.jobData)
+      Job.updateStatus(run.jobId, status = done, latestDone = done) flatMap { _ =>
+        Run.saveEvent(CancelRunEvent(run.runId))
+      } onComplete {
+        case Failure(t) => logger.error("could not cancel event", t)
+        case Success(_) => tellEverybody(RunCancelled(userId, job.id, run.runId))
       }
       stopThisActor()
       goto(Stopping)

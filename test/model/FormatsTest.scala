@@ -82,7 +82,7 @@ class FormatsTest extends WordSpec with MustMatchers {
 
   val httpResponseEvent = ResourceResponseEvent(RunId(), httpResponse)
   val errorResponseEvent = ResourceResponseEvent(RunId(), errorResponse)
-  val cancelEvent = CancelEvent(RunId())
+  val cancelRunEvent = CancelRunEvent(RunId())
   val completeRunEvent = CompleteRunEvent(UserId(), JobId(), RunId(), DateTime.now(DateTimeZone.UTC))
 
   val userVo = UserVO(
@@ -113,7 +113,7 @@ class FormatsTest extends WordSpec with MustMatchers {
     toJson(assertorFailure).as[AssertorResponse] must be(assertorFailure)
     toJson(httpResponseEvent).as[RunEvent] must be(httpResponseEvent)
     toJson(errorResponseEvent).as[RunEvent] must be(errorResponseEvent)
-    toJson(cancelEvent).as[RunEvent] must be(cancelEvent)
+    toJson(cancelRunEvent).as[RunEvent] must be(cancelRunEvent)
     toJson(completeRunEvent).as[RunEvent] must be(completeRunEvent)
     toJson(userVo).as[UserVO] must be(userVo)
     toJson(userId).as[UserId] must be(userId)
