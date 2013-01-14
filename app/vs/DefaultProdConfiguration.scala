@@ -7,7 +7,7 @@ import org.w3.util.Util
 import scala.concurrent._
 import scala.concurrent.duration._
 import akka.util.Timeout
-import java.util.concurrent.{ Executors, ExecutorService }
+import java.util.concurrent.ForkJoinPool
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
 import play.api.Configuration
@@ -33,7 +33,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
   val httpClient = {
     // in future version of Typesafe's Config: s/getConfig/atPath/
     val httpClientConf = configuration.getConfig("application.http-client") getOrElse sys.error("application.http-client")
-    val executor = Executors.newCachedThreadPool()
+    val executor = new ForkJoinPool()
     val builder = new AsyncHttpClientConfig.Builder()
     val config =
       builder.setMaximumConnectionsTotal(httpClientConf.getInt("maximum-connections-total") getOrElse sys.error("maximum-connections-total"))

@@ -4,12 +4,37 @@ import org.w3.util._
 import org.w3.util.Util.URLW
 import org.w3.vs.model._
 import scala.io.Source
+import play.api.Configuration
+import java.util.concurrent.{ Executors, ForkJoinPool }
+import java.io.File
+import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
+
+object FromURLAssertor {
+
+  private val client: AsyncHttpClient = {
+    val configuration = Configuration.load(new File("."))
+    val timeout =
+      configuration.getInt("application.assertor.http-client.timeout") getOrElse sys.error("application.assertor.http-client.timeout")
+    val executor = new ForkJoinPool()
+    val builder = new AsyncHttpClientConfig.Builder()
+    val config =
+      builder
+        .setExecutorService(executor)
+        .setFollowRedirects(true)
+        .setConnectionTimeoutInMs(timeout)
+        .build()
+    new AsyncHttpClient(config)
+  }
+
+}
 
 /**
  * An assertor that returns assertions about a document pointed by a URL
  */
 trait FromURLAssertor extends FromSourceAssertor {
   
+  import FromURLAssertor.client
+
   /**
    * returns the URL to be used by a machine to validate
    * the given URL against this assertor
@@ -28,7 +53,9 @@ trait FromURLAssertor extends FromSourceAssertor {
    *  @return the assertion
    */
   def assert(url: URL, configuration: AssertorConfiguration): Iterable[Assertion] = {
-    val source = Source.fromURL(validatorURLForMachine(url, configuration))
+    val inputStream =
+      client.prepareGet(validatorURLForMachine(url, configuration).toString).execute().get().getResponseBodyAsStream()
+    val source = Source.fromInputStream(inputStream)
     assert(source)
   }
   

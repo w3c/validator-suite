@@ -42,8 +42,7 @@ object Run {
     val query = QueryBuilder().
       query( Json.obj(
         "runId" -> toJson(runId),
-        "event" -> toJson("assertor-response"),
-        "ar.assertions" -> Json.obj("$exists" -> JsBoolean(true))) ).
+        "event" -> toJson("assertor-response")) ).
       projection( BSONDocument(
         "ar.assertions" -> BSONInteger(1),
         "_id" -> BSONInteger(0)) )
