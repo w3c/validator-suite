@@ -8,44 +8,6 @@ import java.io._
 import org.w3.vs.http._
 import play.api.Configuration
 
-// defers all operations to $out but counts the written bytes
-class CountingOutputStream(out: OutputStream) extends OutputStream {
-
-  var counter: Int = 0
-
-  override def close(): Unit = out.close()
-
-  override def flush(): Unit = out.flush()
-
-  override def write(b: Array[Byte]): Unit = {
-    out.write(b)
-    counter += b.length
-  }
-
-  override def write(b: Array[Byte], off: Int, len: Int): Unit = {
-    out.write(b, off, len)
-    counter += len
-  }
-
-  def write(b: Int): Unit = {
-    out.write(b)
-    counter += 1
-  }
-
-}
-
-object OutputStreamW {
-
-  implicit def pimp(out: OutputStream) = new OutputStreamW(out)
-
-}
-
-class OutputStreamW(val out: OutputStream) extends AnyVal {
-  def write(s: String)(implicit charset: String = "UTF-8"): Unit =
-    out.write(s.getBytes(charset))
-  def writeCRLN(s: String)(implicit charset: String = "UTF-8"): Unit =
-    write(s + "\r\n")
-}
 
 object MarkupValidator extends MarkupValidator {
 
@@ -59,8 +21,25 @@ object MarkupValidator extends MarkupValidator {
         assertion.copy(title = UsesHtml5Syntax)
       case assertion => assertion
     }
+  }
 
-
+  def consumeHeaders(is: InputStream): Unit = {
+    var continue = true
+    var newline = true
+    var counter = 0
+    while(continue && counter <= 300) {
+      counter += 1
+      val c = is.read().toChar
+      if (c == '\n') {
+        if (newline) {
+          continue = false
+        } else {
+          newline = true
+        }
+      } else {
+        newline = false
+      }
+    }
   }
 
 }
@@ -71,7 +50,7 @@ object MarkupValidator extends MarkupValidator {
 class MarkupValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   import OutputStreamW.pimp
-  import MarkupValidator.{ fix, logger }
+  import MarkupValidator.{ fix, logger, consumeHeaders }
 
   val id = AssertorId("markup_validator")
 
@@ -100,28 +79,6 @@ class MarkupValidator extends FromHttpResponseAssertor with UnicornFormatAsserto
     val queryString = Helper.queryString(assertorConfiguration + ("uri" -> Seq(encoded)))
     val validatorURL = URL(serviceUrl + "?" + queryString)
     validatorURL
-  }
-
-  /**
-    * 
-    */
-  private def consumeHeaders(is: InputStream): Unit = {
-    var continue = true
-    var newline = true
-    var counter = 0
-    while(continue && counter <= 300) {
-      counter += 1
-      val c = is.read().toChar
-      if (c == '\n') {
-        if (newline) {
-          continue = false
-        } else {
-          newline = true
-        }
-      } else {
-        newline = false
-      }
-    }
   }
 
   override def assert(url: URL, configuration: AssertorConfiguration): Iterable[Assertion] = {
