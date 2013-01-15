@@ -46,7 +46,8 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
     }
   }
 
-  private val client: AsyncHttpClient = {
+  // this HAS to stay lazy, in case we're using the distant MarkupValidator
+  private lazy val client: AsyncHttpClient = {
     val Local(_, timeout, _, _) = configuration
     val executor = new ForkJoinPool()
     val jdkProvider = new JDKAsyncHttpProviderConfig()
