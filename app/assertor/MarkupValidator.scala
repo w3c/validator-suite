@@ -9,6 +9,8 @@ import org.w3.vs.http._
 import play.api.Configuration
 import java.util.concurrent.{ Executors, ForkJoinPool }
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
+import com.ning.http.client.providers.jdk.JDKAsyncHttpProviderConfig
+import org.w3.util.HeadersHelper.extractCharset
 
 object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
 
@@ -24,6 +26,7 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
     }
   }
 
+  /** consumes the header section of an InputStream */
   def consumeHeaders(is: InputStream): Unit = {
     var continue = true
     var newline = true
@@ -44,13 +47,13 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
   }
 
   private val client: AsyncHttpClient = {
-    val configuration = Configuration.load(new File("."))
-    val timeout =
-      configuration.getInt("application.assertor.http-client.timeout") getOrElse sys.error("application.assertor.http-client.timeout")
+    val Local(_, timeout, _, _) = configuration
     val executor = new ForkJoinPool()
+    val jdkProvider = new JDKAsyncHttpProviderConfig()
     val builder = new AsyncHttpClientConfig.Builder()
     val config =
       builder
+        .setAsyncHttpClientProviderConfig(jdkProvider)
         .setExecutorService(executor)
         .setFollowRedirects(true)
         .setConnectionTimeoutInMs(timeout)
@@ -66,7 +69,7 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
 class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   import OutputStreamW.pimp
-  import MarkupValidator.{ fix, consumeHeaders }
+  import MarkupValidator.{ fix, consumeHeaders, client }
 
   val id = AssertorId("markup_validator")
 
@@ -89,9 +92,8 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
 
       // if the content is cached, then this will work just fine
       // if not, then we're accessing the web
-      val urlConnection = url.underlying.openConnection()
-      val headers = urlConnection.getHeaderFields()
-      val content = urlConnection.getInputStream()
+      val response = client.prepareGet(url.toString).execute().get()
+      val content = response.getResponseBodyAsStream()
 
       // multiform data, read the result here after flush
       val data = new ByteArrayOutputStream()
@@ -112,7 +114,7 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
 
       // other POST parameters
 
-      val charset: Option[String] = Option(urlConnection.getHeaderField("Content-Type")) flatMap org.w3.util.HeadersHelper.extractCharset
+      val charset: Option[String] = Option(response.getContentType) flatMap extractCharset
 
       val params = Map(
         "charset" -> (charset getOrElse "(detect automatically)"),
@@ -135,7 +137,7 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
 
       // starts the process
       // this is blocking, but it's fine as we considerer
-      //that it's the user's responsability to fork the process
+      // that it's the user's responsability to fork the process
 
       val pb = new ProcessBuilder(markupValBinary.getAbsolutePath)
 
