@@ -47,11 +47,11 @@ class OutputStreamW(val out: OutputStream) extends AnyVal {
     write(s + "\r\n")
 }
 
-object HTMLValidator extends HTMLValidator {
+object MarkupValidator extends MarkupValidator {
 
   val UsesHtml5Syntax = "This page uses HTML5 syntax"
 
-  val logger = play.Logger.of(classOf[HTMLValidator])
+  val logger = play.Logger.of(classOf[MarkupValidator])
 
   def fix(assertions: Iterable[Assertion]): Iterable[Assertion] = {
     assertions map {
@@ -65,15 +65,15 @@ object HTMLValidator extends HTMLValidator {
 
 }
 
-/** An instance of the HTMLValidator
+/** An instance of the MarkupValidator
   *
   */
-class HTMLValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
+class MarkupValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   import OutputStreamW.pimp
-  import HTMLValidator.{ fix, logger }
+  import MarkupValidator.{ fix, logger }
 
-  val id = AssertorId("validator_html")
+  val id = AssertorId("markup_validator")
 
   val supportedMimeTypes = List("text/html", "application/xhtml+xml", "application/xml", "image/svg+xml", "application/mathml+xml", "application/smil+xml")
 

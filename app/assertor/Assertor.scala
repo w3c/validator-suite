@@ -21,7 +21,7 @@ object Assertor {
 
   val names = Iterable(
     CSSValidator.name,
-    HTMLValidator.name,
+    MarkupValidator.name,
     ValidatorNu.name,
     I18nChecker.name,
     MobileOk.name
@@ -29,7 +29,7 @@ object Assertor {
 
   val all: Iterable[Assertor] = Iterable(
     CSSValidator,
-    HTMLValidator,
+    MarkupValidator,
     ValidatorNu,
     I18nChecker,
     MobileOk
@@ -37,14 +37,14 @@ object Assertor {
 
   val get: PartialFunction[String, FromHttpResponseAssertor] = Map[String, FromHttpResponseAssertor](
     ValidatorNu.name -> ValidatorNu,
-    HTMLValidator.name -> HTMLValidator,
+    MarkupValidator.name -> MarkupValidator,
     I18nChecker.name -> I18nChecker,
     CSSValidator.name -> CSSValidator,
     MobileOk.name -> MobileOk)
 
   val getById: PartialFunction[AssertorId, FromHttpResponseAssertor] = Map[AssertorId, FromHttpResponseAssertor](
     ValidatorNu.id -> ValidatorNu,
-    HTMLValidator.id -> HTMLValidator,
+    MarkupValidator.id -> MarkupValidator,
     I18nChecker.id -> I18nChecker,
     CSSValidator.id -> CSSValidator,
     MobileOk.id -> MobileOk)

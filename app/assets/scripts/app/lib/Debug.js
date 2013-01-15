@@ -16,7 +16,7 @@ define(["lib/Logger", "collection/jobs", "model/job"], function (Logger, Jobs, J
             jobs.push(new Job.Model({
                 name: "job" + i,
                 entrypoint: "http://w3.org/" + (new Date()).getMilliseconds(),
-                assertor: ["validator_html"],
+                assertor: ["markup_validator"],
                 maxResources: i % 2 + 1,
                 errors: i % 3,
                 warnings: i % 4,
