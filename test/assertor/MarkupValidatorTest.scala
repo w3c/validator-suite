@@ -20,9 +20,9 @@ class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatc
 
     val urlForMachine = MarkupValidator.validatorURLForMachine(url, assertorConfiguration).toString
 
-    urlForMachine must startWith(MarkupValidator.serviceUrl)
+    urlForMachine must startWith(MarkupValidator.configuration.serviceUrl)
 
-    val queryString: String = urlForMachine.substring(MarkupValidator.serviceUrl.length)
+    val queryString: String = urlForMachine.substring(MarkupValidator.configuration.serviceUrl.length)
 
     Helper.parseQueryString(queryString) must be (assertorConfiguration
       + ("output" -> List("ucn"))
@@ -32,12 +32,14 @@ class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatc
   }
 
   "http://www.w3.org/TR/html5 should not be valid because it's using HTML5" in {
-    if (MarkupValidator.enable) {
-      val url = URL("http://www.w3.org/TR/html5")
-      val assertions: Iterable[Assertion] = MarkupValidator.assert(url, Map.empty)
-      assertions must have size(1)
-      val assertion = assertions.head
-      assertion.title must be(MarkupValidator.UsesHtml5Syntax)
+    MarkupValidator.configuration match {
+      case _: Distant => ()
+      case _: Local =>
+        val url = URL("http://www.w3.org/TR/html5")
+        val assertions: Iterable[Assertion] = MarkupValidator.assert(url, Map.empty)
+        assertions must have size(1)
+        val assertion = assertions.head
+        assertion.title must be(MarkupValidator.UsesHtml5Syntax)
     }
   }
 

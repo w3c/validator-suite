@@ -7,9 +7,10 @@ import scala.io.Source
 import java.io._
 import org.w3.vs.http._
 import play.api.Configuration
+import java.util.concurrent.{ Executors, ForkJoinPool }
+import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
 
-
-object MarkupValidator extends MarkupValidator {
+object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
 
   val UsesHtml5Syntax = "This page uses HTML5 syntax"
 
@@ -42,12 +43,27 @@ object MarkupValidator extends MarkupValidator {
     }
   }
 
+  private val client: AsyncHttpClient = {
+    val configuration = Configuration.load(new File("."))
+    val timeout =
+      configuration.getInt("application.assertor.http-client.timeout") getOrElse sys.error("application.assertor.http-client.timeout")
+    val executor = new ForkJoinPool()
+    val builder = new AsyncHttpClientConfig.Builder()
+    val config =
+      builder
+        .setExecutorService(executor)
+        .setFollowRedirects(true)
+        .setConnectionTimeoutInMs(timeout)
+        .build()
+    new AsyncHttpClient(config)
+  }
+
 }
 
 /** An instance of the MarkupValidator
   *
   */
-class MarkupValidator extends FromHttpResponseAssertor with UnicornFormatAssertor {
+class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   import OutputStreamW.pimp
   import MarkupValidator.{ fix, logger, consumeHeaders }
@@ -56,20 +72,6 @@ class MarkupValidator extends FromHttpResponseAssertor with UnicornFormatAsserto
 
   val supportedMimeTypes = List("text/html", "application/xhtml+xml", "application/xml", "image/svg+xml", "application/mathml+xml", "application/smil+xml")
 
-  lazy val configuration = Configuration.load(new File("."))
-  lazy val serviceUrl: String = configuration.getString("application.local-validator.markup-validator.url") getOrElse sys.error("application.local-validator.markup-validator.url")
-  lazy val enable: Boolean = {
-    val enable: Boolean = configuration.getBoolean("application.local-validator.markup-validator.check.enable") getOrElse false
-    def checkBinaryExists: Boolean = new File(checkBinary).isFile
-    def checkConfigExists: Boolean = new File(checkConfig).isFile
-    lazy val ok: Boolean = checkBinaryExists && checkConfigExists
-    if (enable && (!ok))
-      logger.warn(s"Issue with the configuration for a local Markup Validator, falling back to ${serviceUrl}")
-    enable && ok
-  }
-  lazy val checkBinary: String = configuration.getString("application.local-validator.markup-validator.check.binary").get
-  lazy val checkConfig: String = configuration.getString("application.local-validator.markup-validator.check.conf").get
-  
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     validatorURLForHuman(url, assertorConfiguration + ("output" -> List("ucn")))
   }
@@ -77,12 +79,12 @@ class MarkupValidator extends FromHttpResponseAssertor with UnicornFormatAsserto
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
     val encoded = url.encode("UTF-8")
     val queryString = Helper.queryString(assertorConfiguration + ("uri" -> Seq(encoded)))
-    val validatorURL = URL(serviceUrl + "?" + queryString)
+    val validatorURL = URL(configuration.serviceUrl + "?" + queryString)
     validatorURL
   }
 
-  override def assert(url: URL, configuration: AssertorConfiguration): Iterable[Assertion] = {
-    if (enable) {
+  override def assert(url: URL, assertorConfig: AssertorConfiguration): Iterable[Assertion] = configuration match {
+    case Local(serviceUrl, timeout, markupValBinary, markupValConf) =>
       val boundary = "------"
 
       // if the content is cached, then this will work just fine
@@ -135,14 +137,14 @@ class MarkupValidator extends FromHttpResponseAssertor with UnicornFormatAsserto
       // this is blocking, but it's fine as we considerer
       //that it's the user's responsability to fork the process
 
-      val pb = new ProcessBuilder(checkBinary)
+      val pb = new ProcessBuilder(markupValBinary.getAbsolutePath)
 
       // that's how we fake the CGI environment for the script
       // TODO: check if CONTENT_LENGTH is mandatory for performance improvements
       val env = pb.environment()
-      env.put("W3C_VALIDATOR_CFG", checkConfig)
+      env.put("W3C_VALIDATOR_CFG", markupValConf.getAbsolutePath)
       env.put("REQUEST_METHOD", "POST")
-      val queryString = Helper.queryString(configuration + ("output" -> List("ucn")))
+      val queryString = Helper.queryString(assertorConfig + ("output" -> List("ucn")))
       env.put("QUERY_STRING", queryString)
       env.put("HTTP_HOST", "valid.w3.org")
       env.put("CONTENT_TYPE", "multipart/form-data; boundary=---")
@@ -166,10 +168,9 @@ class MarkupValidator extends FromHttpResponseAssertor with UnicornFormatAsserto
       p.waitFor()
       val assertions = assert(source)
       fix(assertions)
-    } else {
-      val source = Source.fromURL(validatorURLForMachine(url, configuration))
+    case Distant(serviceUrl) =>
+      val source = Source.fromURL(validatorURLForMachine(url, assertorConfig))
       assert(source)
-    }
   }
   
 }
