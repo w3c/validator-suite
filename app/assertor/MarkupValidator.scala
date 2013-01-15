@@ -14,7 +14,7 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
 
   val UsesHtml5Syntax = "This page uses HTML5 syntax"
 
-  val logger = play.Logger.of(classOf[MarkupValidator])
+  lazy val logger = play.Logger.of(classOf[MarkupValidator])
 
   def fix(assertions: Iterable[Assertion]): Iterable[Assertion] = {
     assertions map {
