@@ -13,6 +13,8 @@ case class Local(serviceUrl: String, timeout: Int, binary: File, conf: File) ext
 
 object MarkupValidatorConfiguration {
 
+  val logger = play.Logger.of(classOf[MarkupValidatorConfiguration])
+
   def apply(): MarkupValidatorConfiguration = {
     val confPath = "application.local-validator.markup-validator"
     val conf = Configuration.load(new File(".")).getConfig(confPath) getOrElse sys.error(confPath)
@@ -30,7 +32,7 @@ object MarkupValidatorConfiguration {
       if (ok) {
         Local(serviceUrl, timeout, binary, config)
       } else {
-        MarkupValidator.logger.warn(s"Issue with the configuration for a local Markup Validator, falling back to ${serviceUrl}")
+        logger.warn(s"Issue with the configuration for a local Markup Validator, falling back to ${serviceUrl}")
         Distant(serviceUrl)
       }
     } else {

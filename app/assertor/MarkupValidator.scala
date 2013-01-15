@@ -14,7 +14,7 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
 
   val UsesHtml5Syntax = "This page uses HTML5 syntax"
 
-  lazy val logger = play.Logger.of(classOf[MarkupValidator])
+  val logger = play.Logger.of(classOf[MarkupValidator])
 
   def fix(assertions: Iterable[Assertion]): Iterable[Assertion] = {
     assertions map {
@@ -66,7 +66,7 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
 class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   import OutputStreamW.pimp
-  import MarkupValidator.{ fix, logger, consumeHeaders }
+  import MarkupValidator.{ fix, consumeHeaders }
 
   val id = AssertorId("markup_validator")
 
