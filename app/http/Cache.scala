@@ -9,6 +9,7 @@ import scala.util.Try
 import java.io.InputStream
 import scalax.io._
 import scalax.io.JavaConverters._
+import play.api.Configuration
 
 sealed trait CachedResourceState
 case object OK extends CachedResourceState
@@ -21,6 +22,24 @@ object Cache {
   val metaRegex = """^(OK|ERROR) (\d+) (.*)$""".r
 
   val headerRegex = """^([^:]+):\s*(.*)$""".r
+
+  /** retrieve and set up the cache (side-effects!) */
+  def apply(configuration: Configuration): Option[Cache] = {
+    val httpCacheConf = configuration.getConfig("application.http-cache") getOrElse sys.error("application.http-cache")
+    if (httpCacheConf.getBoolean("enable") getOrElse sys.error("enable")) {
+      val directory = new File(httpCacheConf.getString("directory") getOrElse sys.error("directory"))
+      if (httpCacheConf.getBoolean("clean-at-startup") getOrElse sys.error("clean-at-startup")) {
+        if (directory.exists) Util.delete(directory)
+        if (! directory.mkdir()) sys.error("could not create HTTP Cache directory " + directory.getAbsolutePath)
+      }
+      assert(directory.exists, "directory [" + directory.getAbsolutePath + "] for the HTTP Cache must exist")
+      val cache = Cache(directory)
+      Some(cache)
+    } else {
+      None
+    }
+
+  }
 
 }
 
@@ -45,8 +64,10 @@ case class Cache(directory: File) extends ResponseCache {
     CachedResource(this, url, method).toOption
 
   def get(uri: URI, rqstMethod: String, rqstHeaders: jMap[String, jList[String]]): CacheResponse = {
-    val userAgent = rqstHeaders.get("User-Agent")
-    logger.debug(s"${userAgent} ${rqstMethod} ${uri}")
+    val userAgent: String = {
+      val uas = rqstHeaders.get("User-Agent")
+      if (uas == null || uas.isEmpty) "unknown-user-agent" else uas.get(0)
+    }
     val url = URL(uri.toURL)
     val cacheResponseOpt = for {
       method <- HttpMethod.fromString(rqstMethod)
@@ -56,6 +77,14 @@ case class Cache(directory: File) extends ResponseCache {
       logger.debug(rqstMethod + " " + uri)
       cacheResponse
     }
+    //println(s"[${userAgent}] ${rqstMethod} ${uri}")
+    val hitmiss = if (cacheResponseOpt.isDefined) "hit" else "miss"
+    if (userAgent.startsWith("markup-val"))
+      logger.debug(s"markup-val: cache $hitmiss for $uri")
+    else if (userAgent.startsWith("Jigsaw"))
+      logger.debug(s"css-val: cache $hitmiss for $uri")
+    else if (userAgent.startsWith("markup-val"))
+      logger.debug(s"validator.nu: cache $hitmiss for $uri")
     cacheResponseOpt getOrElse null
   }
 
@@ -91,8 +120,7 @@ case class Cache(directory: File) extends ResponseCache {
     cr.metaFile.asBinaryWriteChars(Codec.UTF8).write("OK " + System.currentTimeMillis() + " " + hr.url)
     cr.responseHeadersFile.asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>
       val wc = owc.asWriteChars
-      // wc.write("null: " + hr.status + "\n")
-      wc.write("null: HTTP/1.0 " + hr.status + " FIXED STATUS TEXT\n")
+      wc.write(s"null: HTTP/1.0 ${hr.status} FIXED STATUS TEXT\n")
       hr.headers foreach { case (header, values) =>
         wc.write(header + ": " + values.mkString(",") + "\n")
       }

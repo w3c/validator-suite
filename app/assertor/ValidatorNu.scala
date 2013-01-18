@@ -11,7 +11,6 @@ import play.api.libs.json.JsString
 import play.api.libs.json.JsNumber
 import org.w3.vs.model.Context
 
-
 /**
  *  Validator.nu
  * 

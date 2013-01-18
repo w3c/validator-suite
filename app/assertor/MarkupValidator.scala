@@ -9,7 +9,7 @@ import org.w3.vs.http._
 import play.api.Configuration
 import java.util.concurrent.{ Executors, ForkJoinPool }
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
-import com.ning.http.client.providers.jdk.JDKAsyncHttpProviderConfig
+import com.ning.http.client.providers.jdk._
 import org.w3.util.HeadersHelper.extractCharset
 
 object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
@@ -55,11 +55,12 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
     val config =
       builder
         .setAsyncHttpClientProviderConfig(jdkProvider)
+        .setUserAgent("markup-val")
         .setExecutorService(executor)
         .setFollowRedirects(true)
         .setConnectionTimeoutInMs(timeout)
         .build()
-    new AsyncHttpClient(config)
+    new AsyncHttpClient(new JDKAsyncHttpProvider(config))
   }
 
 }

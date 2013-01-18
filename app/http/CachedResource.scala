@@ -85,6 +85,21 @@ class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod) 
     (status, headers)
   }
 
+  def getCachedData(): Try[(Int, Headers, InputStream)] = Try {
+    if (isError) {
+      val errorMessage = errorFile.asBinaryReadChars(Codec.UTF8).string
+      throw new IOException(errorMessage)
+    } else {
+      val (status, headers) = getStatusHeaders()
+      val bodyContent: InputStream = method match {
+        case HEAD => new ByteArrayInputStream(Array.empty[Byte])
+        case GET => new BufferedInputStream(new FileInputStream(bodyFile))
+      }
+      (status, headers, bodyContent)
+    }
+  }
+
+
   def get(): Try[ResourceResponse] = Try {
     if (isError) {
       val errorMessage = errorFile.asBinaryReadChars(Codec.UTF8).string

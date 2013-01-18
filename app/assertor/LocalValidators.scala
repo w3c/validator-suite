@@ -3,25 +3,48 @@ package org.w3.vs.assertor
 import play.api._
 import java.io.File
 import org.w3.validator._
+import org.w3.vs.http.Cache
+import java.lang.reflect.{ Field, Modifier }
+import org.apache.commons.httpclient.CacheOnlyHttpClient
 
-object LocalValidators extends LocalValidators({
+object LocalValidators extends LocalValidators ({
   val configuration = Configuration.load(new File("."))
   val port = configuration.getInt("application.local-validator.port") getOrElse sys.error("application.local-validator.port")
-  port
+  val cacheOpt = Cache(configuration)
+  (port, cacheOpt)
 }) {
 
   val logger = play.Logger.of(classOf[LocalValidators])
 
+  def setFinalStatic(field: Field, newValue: Any): Unit = {
+    field.setAccessible(true)
+    val modifiersField: Field = classOf[Field].getDeclaredField("modifiers")
+    modifiersField.setAccessible(true)
+    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL)
+    field.set(null, newValue)
+  }
+
 }
 
-class LocalValidators(port: Int) {
+class LocalValidators(port: Int, cacheOpt: Option[Cache]) {
 
-  import LocalValidators.logger
+  def this(args: (Int, Option[Cache])) = this(args._1, args._2)
+
+  import LocalValidators.{ logger, setFinalStatic }
 
   var validators: Validators = null
 
   def start(): Unit =
     if (validators == null) {
+      // activate the cache
+      cacheOpt foreach { cache =>
+        cache.setAsDefaultCache()
+        // make sure that validator.nu will use the cache, always
+        setFinalStatic(
+          classOf[_root_.nu.validator.xml.PrudentHttpEntityResolver].getDeclaredField("client"),
+          new CacheOnlyHttpClient(cache))
+      }
+      // start the validators
       try {
         logger.debug("starting on port " + port)
         validators = new Validators(port, new nu.ValidatorNu("/nu"), new org.w3.validator.css.CSSValidator("/css"))
@@ -33,6 +56,7 @@ class LocalValidators(port: Int) {
 
   def stop(): Unit =
     if (validators != null) {
+      cacheOpt foreach { _.setAsDefaultCache() }
       logger.debug("stopping")
       validators.stop()
       validators = null

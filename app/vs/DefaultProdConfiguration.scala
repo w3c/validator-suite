@@ -45,21 +45,7 @@ trait DefaultProdConfiguration extends VSConfiguration {
     new AsyncHttpClient(config)
   }
 
-  val httpCacheOpt: Option[Cache] = {
-    val httpCacheConf = configuration.getConfig("application.http-cache") getOrElse sys.error("application.http-cache")
-    if (httpCacheConf.getBoolean("enable") getOrElse sys.error("enable")) {
-      val directory = new File(httpCacheConf.getString("directory") getOrElse sys.error("directory"))
-      if (httpCacheConf.getBoolean("clean-at-startup") getOrElse sys.error("clean-at-startup")) {
-        if (directory.exists) Util.delete(directory)
-        if (! directory.mkdir()) sys.error("could not create HTTP Cache directory " + directory.getAbsolutePath)
-      }
-      assert(directory.exists, "directory [" + directory.getAbsolutePath + "] for the HTTP Cache must exist")
-      val cache = Cache(directory)
-      Some(cache)
-    } else {
-      None
-    }
-  }
+  val httpCacheOpt: Option[Cache] = Cache(configuration)
 
   implicit val system: ActorSystem = {
     val vs = ActorSystem("vs", configuration.getConfig("application.vs").map(_.underlying) getOrElse sys.error("application.vs"))

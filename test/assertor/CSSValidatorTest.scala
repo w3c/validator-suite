@@ -18,6 +18,7 @@ object CSSValidatorTest {
   def main(args: Array[String]): Unit = {
     cache.reset()
     cache.retrieveAndCache(URL("http://www.google.com"), GET)
+    cache.retrieveAndCache(URL("http://www.google.com/"), GET)
     cache.retrieveAndCache(URL("http://www.w3.org/2011/08/validator-test/no-error.css"), GET)
   }
 
@@ -27,17 +28,15 @@ class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll
 
   import CSSValidatorTest.cache
 
-  val localValidators = new LocalValidators(2719)
+  val localValidators = new LocalValidators(2719, Some(cache))
 
   import localValidators.CSSValidator
 
   override def beforeAll(): Unit = {
-    cache.setAsDefaultCache()
     localValidators.start()
   }
   
   override def afterAll(): Unit = {
-    localValidators.stop()
     cache.restorePreviousCache()
   }
 
