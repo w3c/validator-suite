@@ -11,7 +11,7 @@ import java.io.IOException
   * goes wrong, an IOException is raised */
 class CacheOnlyHttpClient(cache: Cache) extends HttpClient {
 
-  class CacheMissException(uri: String) extends IOException(s"cache miss %{uri}")
+  class CacheMissException(uri: String) extends IOException(s"cache miss ${uri}")
 
   override def executeMethod(method: HttpMethod): Int = try {
     val m = method.asInstanceOf[GetMethod]
