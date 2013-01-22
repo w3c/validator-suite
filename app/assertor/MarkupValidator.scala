@@ -57,7 +57,7 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
         .setAsyncHttpClientProviderConfig(jdkProvider)
         .setUserAgent("markup-val")
 //        .setExecutorService(executor)
-//        .setFollowRedirects(true)
+        .setFollowRedirects(true)
         .setConnectionTimeoutInMs(timeout)
         .build()
     new AsyncHttpClient(new JDKAsyncHttpProvider(config))
