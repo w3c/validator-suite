@@ -238,7 +238,7 @@ extends Actor with FSM[JobActorState, Run] {
   }
 
   def stopThisActor(): Unit = {
-    context.stop(assertionsActorRef)
+//    context.stop(assertionsActorRef)
     context.stop(self)
   }
 
