@@ -37,7 +37,7 @@ class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll
   }
   
   override def afterAll(): Unit = {
-    cache.restorePreviousCache()
+    localValidators.stop()
   }
 
   "there should be no CSS error in http://www.w3.org/2011/08/validator-test/no-error.css" in {

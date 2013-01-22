@@ -56,7 +56,7 @@ class LocalValidators(port: Int, cacheOpt: Option[Cache]) {
 
   def stop(): Unit =
     if (validators != null) {
-      cacheOpt foreach { _.setAsDefaultCache() }
+      cacheOpt foreach { _.restorePreviousCache() }
       logger.debug("stopping")
       validators.stop()
       validators = null

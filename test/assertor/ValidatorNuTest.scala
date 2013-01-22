@@ -28,7 +28,7 @@ class ValidatorNuTest extends WordSpec with MustMatchers with AssertionsMatchers
   }
   
   override def afterAll(): Unit = {
-    cache.restorePreviousCache()
+    localValidators.stop()
   }
 
   "http://www.google.com should have at least one error" in {
