@@ -49,15 +49,15 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
   // this HAS to stay lazy, in case we're using the distant MarkupValidator
   private lazy val client: AsyncHttpClient = {
     val Local(_, timeout, _, _) = configuration
-    val executor = new ForkJoinPool()
+//    val executor = new ForkJoinPool()
     val jdkProvider = new JDKAsyncHttpProviderConfig()
     val builder = new AsyncHttpClientConfig.Builder()
     val config =
       builder
         .setAsyncHttpClientProviderConfig(jdkProvider)
         .setUserAgent("markup-val")
-        .setExecutorService(executor)
-        .setFollowRedirects(true)
+//        .setExecutorService(executor)
+//        .setFollowRedirects(true)
         .setConnectionTimeoutInMs(timeout)
         .build()
     new AsyncHttpClient(new JDKAsyncHttpProvider(config))

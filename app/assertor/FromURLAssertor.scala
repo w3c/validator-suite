@@ -15,11 +15,11 @@ object FromURLAssertor {
     val configuration = Configuration.load(new File("."))
     val timeout =
       configuration.getInt("application.assertor.http-client.timeout") getOrElse sys.error("application.assertor.http-client.timeout")
-    val executor = new ForkJoinPool()
+//    val executor = new ForkJoinPool()
     val builder = new AsyncHttpClientConfig.Builder()
     val config =
       builder
-        .setExecutorService(executor)
+//        .setExecutorService(executor)
         .setFollowRedirects(true)
         .setConnectionTimeoutInMs(timeout)
         .build()

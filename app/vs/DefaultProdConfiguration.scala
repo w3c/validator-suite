@@ -33,15 +33,27 @@ trait DefaultProdConfiguration extends VSConfiguration {
   val httpClient = {
     // in future version of Typesafe's Config: s/getConfig/atPath/
     val httpClientConf = configuration.getConfig("application.http-client") getOrElse sys.error("application.http-client")
-    val executor = new ForkJoinPool()
+//    val executor = new ForkJoinPool()
+    val maxConnectionsTotal = httpClientConf.getInt("maximum-connections-total") getOrElse sys.error("maximum-connections-total")
+    val maxConnectionsPerHost = httpClientConf.getInt("maximum-connectionsper-host") getOrElse sys.error("maximum-connectionsper-host")
+    val timeout = httpClientConf.getInt("timeout") getOrElse sys.error("timeout")
     val builder = new AsyncHttpClientConfig.Builder()
     val config =
-      builder.setMaximumConnectionsTotal(httpClientConf.getInt("maximum-connections-total") getOrElse sys.error("maximum-connections-total"))
-      .setMaximumConnectionsPerHost(httpClientConf.getInt("maximum-connectionsper-host") getOrElse sys.error("maximum-connectionsper-host"))
-      .setExecutorService(executor)
-      .setFollowRedirects(false)
-      .setConnectionTimeoutInMs(httpClientConf.getInt("timeout") getOrElse sys.error("timeout"))
-      .build
+      builder
+        // no redirect, we handle them in the crawler ourselved
+        .setFollowRedirects(false)
+        // concurrent connections
+        .setMaximumConnectionsTotal(maxConnectionsTotal)
+        .setMaximumConnectionsPerHost(maxConnectionsPerHost)
+        // looks like there is a big issue when targetting w3.org using a custom executor
+        // .setExecutorService(executor)
+        // timeouts
+        .setIdleConnectionTimeoutInMs(timeout)
+        .setIdleConnectionInPoolTimeoutInMs(timeout)
+        .setRequestTimeoutInMs(timeout)
+        .setWebSocketIdleTimeoutInMs(timeout)
+        .setConnectionTimeoutInMs(timeout)
+        .build
     new AsyncHttpClient(config)
   }
 
