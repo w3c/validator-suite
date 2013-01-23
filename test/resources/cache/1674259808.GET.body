@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<title>Mobile Web for Social Development (MW4D) | The MW4D Interest Group explores how to use the potential of Information and Communication Technologies (ICTs) on Mobile phones as a solution to bridge the Digital Divide and provide minimal services (health, education, governance, business,&#8230;) to rural communities and under-privileged populations of Developing Countries.</title>
+<meta name="viewport" content="width=device-width" />	
+<link rel="profile" href="http://gmpg.org/xfn/11" />
+<link rel="stylesheet" type="text/css" media="all" href="http://www.w3.org/blog/MWIDC/wp-content/themes/sw_blog/style.css" />
+<link rel="stylesheet" type="text/css" media="handheld, only screen and (max-device-width: 480px)"  href="http://www.w3.org/blog/SW/wp-content/themes/sw_blog/mstyle.css" />
+<link rel="stylesheet" type="text/css" media="screen and (min-device-width: 481px) and (max-device-width: 799px)" href="http://www.w3.org/blog/SW/wp-content/themes/sw_blog/mstyle.css" />	
+<link rel="pingback" href="http://www.w3.org/blog/MWIDC/xmlrpc.php" />
+<!--[if lt IE 9]>
+<script src="http://www.w3.org/blog/MWIDC/wp-content/themes/sw_blog/html5.js" type="text/javascript"></script>
+<![endif]-->
+
+<link rel="alternate" type="application/rss+xml" title="Mobile Web for Social Development (MW4D) &raquo; Feed" href="http://www.w3.org/blog/MWIDC/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Mobile Web for Social Development (MW4D) &raquo; Comments Feed" href="http://www.w3.org/blog/MWIDC/comments/feed/" />
+<script type='text/javascript' src='http://www.w3.org/blog/MWIDC/wp-includes/js/jquery/jquery.js?ver=1.7.1'></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://www.w3.org/blog/MWIDC/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://www.w3.org/blog/MWIDC/wp-includes/wlwmanifest.xml" /> 
+<meta name="generator" content="WordPress 3.3.2" />
+<style type='text/css'></style>
+<style type='text/css'>
+</style>
+<meta id="syntaxhighlighteranchor" name="syntaxhighlighter-version" content="3.1.3" />
+</head>
+
+<body class="home blog">
+	<header id="branding" role="banner">		
+		
+					<a href="http://www.w3.org/blog/MWIDC/" title="Mobile Web for Social Development (MW4D)" rel="home"><img src="http://www.w3.org/blog/MWIDC/wp-content/themes/sw_blog/images/headers/w3c-header.jpg" width="940" height="198" alt="" /></a>
+				</header><!-- #branding -->
+			
+<div id="wrapper" class="hfeed">
+	<div id="header">
+		<div id="masthead">			
+					
+		<h1 id="site-title">		
+			<a href="http://www.w3.org/blog/MWIDC/" title="Mobile Web for Social Development (MW4D)" rel="home">Mobile Web for Social Development (MW4D)</a>
+		</h1>			
+			<div id="site-description">		
+			The MW4D Interest Group explores how to use the potential of Information and Communication Technologies (ICTs) on Mobile phones as a solution to bridge the Digital Divide and provide minimal services (health, education, governance, business,&#8230;) to rural communities and under-privileged populations of Developing Countries.			</div>
+			<nav id="access" role="navigation">
+			  				<div class="skip-link screen-reader-text"><a href="#content" title="Skip to content">Skip to content</a></div>
+								<div class="menu"><ul><li class="current_page_item"><a href="http://www.w3.org/blog/MWIDC/" title="Home">Home</a></li></ul></div>
+			</nav><!-- #access -->
+			<div class="triangle-l"></div>
+			<div class="triangle-r"></div>
+		</div><!-- #masthead -->
+	</div><!-- #header -->
+
+	<div id="main">
+		<section id="container">
+			<div id="content" role="main">
+
+			
+
+			
+<!--	<div id="nav-above" class="navigation">
+		<div class="nav-previous"><a href="http://www.w3.org/blog/MWIDC/page/2/" ><span class="meta-nav">&larr;</span> Older posts</a></div>
+		<div class="nav-next"></div>
+	</div>
+-->
+
+
+
+
+			<article id="post-99" class="post-99 post type-post status-publish format-standard hentry category-uncategorized">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2011/12/05/new-blog-engine-pour-mw4d-ig/" title="Permalink to New blog engine pour MW4D IG" rel="bookmark">New blog engine pour MW4D IG</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2011/12/05/new-blog-engine-pour-mw4d-ig/" title="1:02 pm" rel="bookmark"><span class="entry-date">December 5, 2011</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>As people can see, we have just moved from our old blog engine to the new ones. We lost a bit of pictures, but more funcitonalities.</p>
+<p>Stephane</p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/uncategorized/" title="View all posts in Uncategorized" rel="category tag">Uncategorized</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2011/12/05/new-blog-engine-pour-mw4d-ig/#respond" title="Comment on New blog engine pour MW4D IG">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-4" class="post-4 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2011/07/11/joint_workshop_on_mobile_and_web_technol/" title="Permalink to Joint Workshop on Mobile and Web Technologies in Social and Economic Development Report Available" rel="bookmark">Joint Workshop on Mobile and Web Technologies in Social and Economic Development Report Available</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2011/07/11/joint_workshop_on_mobile_and_web_technol/" title="6:05 am" rel="bookmark"><span class="entry-date">July 11, 2011</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>W3C together with <a href="http://www.webfoundation.org">the Web Foundation</a> today published <a href="http://public.webfoundation.org/2011/01/MW4D_WS/report">the report</a> from the <a href="http://public.webfoundation.org/2011/01/MW4D_WS/">W3C/Web Foundation Workshop on Mobile and Web Technologies in Social and Economic Development</a> held in Dar es Salaam, Tanzania in June. The large and diverse group representing more than 30 different nationalities had engaging discussions on voice-based services for underprivileged communities, mobile entrepreneurship and data collection tools. The results of these discussions, as well as the actions identified will be investigated  by the <a href="/2008/MW4D/">W3C Mobile Web for Social Development Interest Group</a> and the <a href="http://www.webfoundation.org">Web Foundation</a>.</p>
+<p>W3C and the Web Foundation thanks the participants and appreciates the support of the Workshop sponsors: <a href="http://www.spidercenter.org/">Spider</a> (Gold Sponsor), <a href="http://www.twaweza.org/">Twaweza</a> (Gold Sponsor) and <a href="http://www.comviva.com/">Comviva</a> (silver sponsor).</p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2011/07/11/joint_workshop_on_mobile_and_web_technol/#respond" title="Comment on Joint Workshop on Mobile and Web Technologies in Social and Economic Development Report Available">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-5" class="post-5 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2011/04/04/fourth_workshop_on_mobile_and_web_techno/" title="Permalink to Fourth Workshop on Mobile and Web Technologies For Social and Economic Development" rel="bookmark">Fourth Workshop on Mobile and Web Technologies For Social and Economic Development</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2011/04/04/fourth_workshop_on_mobile_and_web_techno/" title="4:04 pm" rel="bookmark"><span class="entry-date">April 4, 2011</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>I realized i forgot to announce the organization of the <a href="http://public.webfoundation.org/2011/01/MW4D_WS/">fourth workshop on Mobile and Web Technologies for Social and Economic Development</a>.</p>
+<p>This event will take place in <strong>Dar es Salam, Tanzania, 4-5 June 2011</strong>. This event is co-organized by W3C and <a href="http://www.webfoundation.org">the Web Foundation</a>. A <a href="http://public.webfoundation.org/2011/01/MW4D_WS/">call for participation</a> has been issued last February, and submission of statements of interest is open till April 15 2011.</p>
+<p>Like for the <a href="http://www.w3.org/2008/MW4D/#workshops">three previous instances</a>, we also have a <a href="http://public.webfoundation.org/2011/01/MW4D_WS/sponsors.html">call for sponsors</a> in order to offer travel grants to enable NGOs and field experts to attend and share their experience. If you are interested, feel free to contact <a href="mailto:boyera@w3.org">Stephane Boyera</a>.</p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2011/04/04/fourth_workshop_on_mobile_and_web_techno/#respond" title="Comment on Fourth Workshop on Mobile and Web Technologies For Social and Economic Development">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-6" class="post-6 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2010/11/15/inutes_of_november_15_teleconference_pub/" title="Permalink to Minutes of November 15 teleconference published" rel="bookmark">Minutes of November 15 teleconference published</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2010/11/15/inutes_of_november_15_teleconference_pub/" title="2:08 pm" rel="bookmark"><span class="entry-date">November 15, 2010</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>The MW4D IG held the 7th teleconference of its <a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html">second charter</a> on November 15 2010.</p>
+<p>The minutes are available at <a href="http://www.w3.org/2010/11/15-mw4d-minutes.html">http://www.w3.org/2010/11/15-mw4d-minutes.html</a></p>
+<p>Previous meeting minutes are available from the <a href="http://www.w3.org/2008/MW4D/teleconference.html#archives">teleconference archives</a></p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2010/11/15/inutes_of_november_15_teleconference_pub/#respond" title="Comment on Minutes of November 15 teleconference published">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-7" class="post-7 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2010/11/12/minutes_of_october_11_teleconference_pub/" title="Permalink to Minutes of October 11 teleconference published" rel="bookmark">Minutes of October 11 teleconference published</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2010/11/12/minutes_of_october_11_teleconference_pub/" title="1:51 pm" rel="bookmark"><span class="entry-date">November 12, 2010</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>The MW4D IG held the 6th teleconference of its <a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html">second charter</a> on October 11 2010.</p>
+<p>The minutes are available at <a href="http://www.w3.org/2010/10/11-mw4d-minutes.html">http://www.w3.org/2010/10/11-mw4d-minutes.html</a></p>
+<p>Previous meeting minutes are available from the <a href="http://www.w3.org/2008/MW4D/teleconference.html#archives">teleconference archives</a></p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2010/11/12/minutes_of_october_11_teleconference_pub/#respond" title="Comment on Minutes of October 11 teleconference published">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-8" class="post-8 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2010/09/13/minutes_of_september_13_teleconference_p/" title="Permalink to Minutes of September 13 teleconference published" rel="bookmark">Minutes of September 13 teleconference published</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2010/09/13/minutes_of_september_13_teleconference_p/" title="1:29 pm" rel="bookmark"><span class="entry-date">September 13, 2010</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>The MW4D IG held the 5th teleconference of its <a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html">second charter</a> on September 13 2010.</p>
+<p>The minutes are available at <a href="http://www.w3.org/2010/09/13-mw4d-minutes.html">http://www.w3.org/2010/09/13-mw4d-minutes.html</a></p>
+<p>Previous meeting minutes are available from the <a href="http://www.w3.org/2008/MW4D/teleconference.html#archives">teleconference archives</a></p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2010/09/13/minutes_of_september_13_teleconference_p/#respond" title="Comment on Minutes of September 13 teleconference published">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-9" class="post-9 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2010/09/06/minutes_of_september_6_teleconference_pu/" title="Permalink to Minutes of September 6 teleconference published" rel="bookmark">Minutes of September 6 teleconference published</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2010/09/06/minutes_of_september_6_teleconference_pu/" title="1:14 pm" rel="bookmark"><span class="entry-date">September 6, 2010</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>The MW4D IG held the 4th teleconference of its <a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html">second charter</a> on September 6 2010.</p>
+<p>The minutes are available at <a href="http://www.w3.org/2010/09/06-mw4d-minutes.html">http://www.w3.org/2010/09/06-mw4d-minutes.html</a></p>
+<p>Previous meeting minutes are available from the <a href="http://www.w3.org/2008/MW4D/teleconference.html#archives">teleconference archives</a></p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2010/09/06/minutes_of_september_6_teleconference_pu/#respond" title="Comment on Minutes of September 6 teleconference published">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-10" class="post-10 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2010/08/23/minutes_of_august_23_teleconference_publ/" title="Permalink to Minutes of August 23 teleconference published" rel="bookmark">Minutes of August 23 teleconference published</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2010/08/23/minutes_of_august_23_teleconference_publ/" title="1:09 pm" rel="bookmark"><span class="entry-date">August 23, 2010</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>The MW4D IG held the 3rd teleconference of its <a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html">second charter</a> on August 23 2010.<br />The minutes are available at <a href="http://www.w3.org/2010/08/23-mw4d-minutes.html">http://www.w3.org/2010/08/23-mw4d-minutes.html</a></p>
+<p>Previous meeting minutes are available from the <a href="http://www.w3.org/2008/MW4D/teleconference.html#archives">teleconference archives</a></p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2010/08/23/minutes_of_august_23_teleconference_publ/#respond" title="Comment on Minutes of August 23 teleconference published">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-11" class="post-11 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2010/08/02/minutes_of_august_2_teleconference_publi/" title="Permalink to Minutes of August 2 teleconference published" rel="bookmark">Minutes of August 2 teleconference published</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2010/08/02/minutes_of_august_2_teleconference_publi/" title="2:09 pm" rel="bookmark"><span class="entry-date">August 2, 2010</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>The MW4D IG held the 2nd teleconference of its <a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html">second charter</a> on August 2 2010.<br />The minutes are available at <a href="http://www.w3.org/2010/08/02-mw4d-minutes.html">http://www.w3.org/2010/08/02-mw4d-minutes.html</a></p>
+<p>Previous meeting minutes are available from the <a href="http://www.w3.org/2008/MW4D/teleconference.html#archives">teleconference archives</a></p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2010/08/02/minutes_of_august_2_teleconference_publi/#respond" title="Comment on Minutes of August 2 teleconference published">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+
+			<article id="post-12" class="post-12 post type-post status-publish format-standard hentry category-news">
+			<header><h2 class="entry-title"><a href="http://www.w3.org/blog/MWIDC/2010/07/05/minutes_of_july_5_teleconference_publish/" title="Permalink to Minutes of July 5 teleconference published" rel="bookmark">Minutes of July 5 teleconference published</a></h2></header>
+
+			<div class="entry-meta">
+				<span class="meta-prep meta-prep-author">Posted on</span> <a href="http://www.w3.org/blog/MWIDC/2010/07/05/minutes_of_july_5_teleconference_publish/" title="3:01 pm" rel="bookmark"><span class="entry-date">July 5, 2010</span></a> <span class="meta-sep">by</span> <span class="author vcard"><a class="url fn n" href="http://www.w3.org/blog/MWIDC/author/sboyera/" title="View all posts by Stéphane Boyera">Stéphane Boyera</a></span>			</div><!-- .entry-meta -->
+
+				<div class="entry-content">
+				<p>The MW4D IG held its 1st teleconference of its <a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html">second charter</a> on July 5 2010.<br />The minutes are available at <a href="http://www.w3.org/2010/07/05-mw4d-minutes.html">http://www.w3.org/2010/07/05-mw4d-minutes.html</a></p>
+<p>Previous meeting minutes are available from the <a href="http://www.w3.org/2008/MW4D/teleconference.html#archives">teleconference archives</a></p>
+							</div><!-- .entry-content -->
+	
+			<footer class="entry-utility">
+									<span class="cat-links">
+						<span class="entry-utility-prep entry-utility-prep-cat-links">Posted in</span> <a href="http://www.w3.org/blog/MWIDC/category/news/" title="View all posts in News" rel="category tag">News</a>					</span>
+					<span class="meta-sep">|</span>
+												<span class="comments-link"><a href="http://www.w3.org/blog/MWIDC/2010/07/05/minutes_of_july_5_teleconference_publish/#respond" title="Comment on Minutes of July 5 teleconference published">Leave a comment</a></span>
+							</footer><!-- .entry-utility -->
+		</article><!-- #post-## -->
+
+		
+	
+
+				<nav id="nav-below" class="navigation">
+					<div class="nav-previous"><a href="http://www.w3.org/blog/MWIDC/page/2/" ><span class="meta-nav">&larr;</span> Older posts</a></div>
+					<div class="nav-next"></div>
+				</nav><!-- #nav-below -->
+				<div id="first-wide">
+						<aside id="text-3" class="widget-container widget_text">			<div class="textwidget"><hr/>
+<div>
+<h3 id="docs">Documents and Resources</h3>
+<p>The MW4D IG has published the following documents:</p>
+<ul>
+	<li>08 December 2009: <a href="http://www.w3.org/TR/2009/NOTE-mw4d-roadmap-20091208/">Mobile Web for Social Development Roadmap (HTML version)</a>
+<ul>
+	<li>See also the <a href="http://www.w3.org/2008/MW4D/docs/mw4d_roadmap_color.pdf">PDF (color) version of the roadmap</a></li>
+	<li>See also the <a href="http://www.w3.org/2008/MW4D/docs/mw4d_roadmap_bw.pdf">PDF (black and white) version of the roadmap</a></li>
+</ul>
+</li>
+</ul>
+<p>The MW4D plans to develop a set of documents which are described in <a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html#deliverables">the Deliverables section of the charter</a>.</p>
+<p>The draft version of these documents are developed collaboratively on <a href="http://www.w3.org/2008/MW4D/wiki/">the group’s  wiki</a>.</p>
+<p>There is also a set of ressources relevant to the activity of the MW4D and which have been developped by W3C since 2006:</p>
+<ul>
+	<li><a href="http://www.w3.org/2008/10/MW4D_WS/exec_summary.html">Executive Summary of the Workshop on the Role of Mobile Technology in Fostering Social Development - Africa perspective</a></li>
+	<li><a href="http://www.w3.org/2008/02/MS4D_WS/exec_summary.html">Executive Summary of the Workshop on the Role of Mobile Technology in Fostering Social Development</a></li>
+	<li><a href="http://www.w3.org/2006/07/MWI-EC/exec_summary.html">Executive Summary of the Workshop on the Mobile Web in Developing Countries</a></li>
+	<li><a href="http://www.w3.org/2006/12/digital_divide/ajc">a White Paper on Mobile Web for Social Development</a></li>
+	<li> <a href="http://www.w3.org/2006/12/digital_divide/public.html"> The previous home page of this work with ressources</a></li>
+</ul>
+
+<h3 id="why">Reasons for joining</h3>
+<p>The objective of MW4D IG is to gather all stakeholders in a global forum in order to identify the key challenges of using mobile phones as an ICT-platform in Developing regions.</p>
+<p>The targeted players are Web experts, Mobile specialists, Academics from Developed and Developing regions, NGOs with field expertise, and International organizations working on reducing the Digital Divide. W3C believes that only a joint coordinated
+action could lead to the identification of all challenges and also to
+the identification of the right actions to be launched to have a real
+impact. The MW4D IG, while not limited to these topics, will investigate the following areas:</p>
+<ul>
+	<li> technical issues related to the mean of deployment (sms, voice, web,...)</li>
+	<li> technical issues related to accessibility for illiterate people, people without technological background, people without prior dewsktop experience,...</li>
+	<li> technical issues related to specific types of applications (m-health, mgov, ...)</li>
+	<li> Social issues: how to capture the real needs from the targeted populations, how to have a bottom-up approach that will integrate NGOs into international organization agenda and work</li>
+	<li> Social issues related to empowerment: how to enable local people to master the technology to develop and deploy the applications they need, how to leverage local contant and applications development</li>
+	<li> Social issues related to sustainability, entrepreneurship, ...</li>
+</ul>
+<p>The following types of actors should be able to contribute to the mission of MW4D, and learn from other participants:</p>
+<ul>
+	<li>Charitable Foundations funding and/or managing Development projects
+using ICTs</li>
+	<li>Companies or Organizations providing ICT-related products, services,
+content, applications or infrastructure in Developing Countries.</li>
+	<li>People with grassroots experience on the use of ICT in Development</li>
+	<li>People from the ICT for Development (ICT4D) domain</li>
+	<li>People with a mobile background</li>
+	<li>Web experts</li>
+	<li>Accessibility experts</li>
+	<li>Digital Divide experts</li>
+	<li>People expert in mobile HCI in Developing Countries</li>
+	<li>People expert in the use of mobile phones in Development</li>
+</ul>
+
+<h3 id="feedback">How to give feedback?</h3>
+<p>
+Feedback on MW4D documents is very welcome on the <a href="mailto:public-mw4d@w3.org">public-mw4d@w3.org</a> list (<a href="http://lists.w3.org/Archives/Public/public-mw4d/">archive</a>).
+To subscribe to this list, Send an email to <a href="mailto:public-mw4d-request@w3.org">public-mw4d-request@w3.org</a> with the word subscribe in the email subject header. To unsubscribe, send an email to the same address with the word unsubscribe in the email subject header. For additional help, consult the <a href="http://www.w3.org/Mail/Request">W3C's public email list pages</a>.
+</p>
+
+<p>Feel free To contact either <a href="http://www.kiwanja.net/contact.htm#contact">Ken Banks</a>, co-Chair of the group, or <a href="mailto:boyera@w3.org">Stephane Boyera</a> co-Chair and W3C Staff Contact.</p>
+
+<h3 id="telcos">Teleconferences</h3>
+<p>The <a href="/2008/MW4D/participation.html#participant">Participants of MW4D</a> are meeting regularly by phones. The teleconferences are taking place the first and the third monday of each month at 8:00am EST time (Boston time). This schedule follows the Daylight saving time of Boston (i.e. it is always 8:00am EST time any day of the year). To find what time this is in your region, you can check <a href="http://www.timeanddate.com/worldclock/meeting.html">the world clock meeting planner</a>.</p>
+
+<p><a href="http://www.w3.org/2008/MW4D/teleconference.html#archives"> The archives of the meeting minutes are available online</a></p>
+
+<p>Teleconference and IRC Information:</p>
+<ul>
+	<li>Teleconference bridge :
+<ul>
+	<li>+1.617.761.6200</li>
+	<li>Conference code: 6493 ("M4WD")</li>
+</ul>
+</li>
+	<li>IRC: <a href="http://irc.w3.org/?channels=mw4d">Access Directly the MW4D IRC channel through the W3C IRC Web Interface</a></li>
+	<li>IRC Raw information:
+<ul style="list-style-type: circle; margin-bottom: inherit">
+	<li>Channel: #mw4d</li>
+	<li>Server: irc.w3.org</li>
+	<li>Port: 6665</li>
+</ul>
+</li>
+	<li><strong>It is mandatory to read the <a href="/2008/MW4D/w3circ"> Teleconference How-to</a> before joining your first teleconference</strong></li>
+	<li>Read the instruction about <a href="http://www.w3.org/2001/12/zakim-irc-bot.html"> the irc bot zakim managing the teleconference</a></li>
+	<li>Read <a href="/2008/MW4D/teleconference.html">the detailed instruction on how to use IRC and the W3C teleconference system</a></li>
+</ul>
+
+<h3 id="f2f">Face-to-face Meetings</h3>
+<p>The first MW4D Face-to-face meeting took place during the <a href="http://www.w3.org/2008/10/TPAC/">W3C TPAC 2008</a> on Friday 24 October.
+Read the <a href="http://www.w3.org/2008/10/24-mw4d-minutes.html">minutes</a>.</p>
+
+<h3 id="workshops">Workshops</h3>
+<p>One of the MW4D IG objectives is to create an inter-disciplinary forum involving Web and Mobile experts, NGOs with field expertise and experience, academics from Developed and Developing regions, and International organizations involved in reducing the Digital Divide and providing services to under-privileged populations.
+Some of these actors are not yet connected or working with W3C, and it is  essential to outreach these communities. Organizing public workshops is one of the most easiest and effective ways of gathering people from different background at the same place, and agree of the issues.</p>
+<h4>Future Workshops</h4>
+<p>The future workshop on Mobile and Web Technologies in Social and Economic Development will take place in <strong>Dar Es Salam, Tanzania, 4-5 June 2011</strong>. See <a href="http://public.webfoundation.org/2011/01/MW4D_WS/">the Call for Participation</a>.</p>
+<h4>Past Workshops</h4>
+<p>W3C organized <a href="/2006/07/MWI-EC/cfp.html">a first workshop in December 2006, in Bangalore, India </a> as a preliminary action which led to the creation of MW4D IG.</p>
+<p>A second <a href="http://www.w3.org/2008/02/MS4D_WS/">workshop on the Role of Mobile Techonologies on Fostering Social Development</a> was held in Sao Paulo, Brazil, June 2nd and 3rd 2008. Read <a href="http://www.w3.org/2008/02/MS4D_WS/exec_summary.html">the executive summary report</a>.</p>
+<p>A third <a href="http://www.w3.org/2008/10/MW4D_WS/">workshop on the Role of Mobile Techonologies on Fostering Social Development - Africa perspective</a> was held in Maputo, Mozambique, April 1st and 2nd 2009. Read <a href="http://www.w3.org/2008/10/MW4D_WS/exec_summary.html">the executive summary report</a>.</p>
+
+</div>
+</div>
+		</aside>				</div><!-- #first-wide .widget-area -->
+			</div><!-- #content -->
+		</section><!-- #container -->
+
+
+		<div id="primary" class="widget-area" role="complementary">
+			
+
+<aside id="search-2" class="widget-container widget_search"><form role="search" method="get" id="searchform" action="http://www.w3.org/blog/MWIDC/" >
+	<div><label class="screen-reader-text" for="s">Search for:</label>
+	<input type="text" value="" name="s" id="s" />
+	<input type="submit" id="searchsubmit" value="Search" />
+	</div>
+	</form></aside><aside id="linkcat-5" class="widget-container widget_links"><header><h3 class="widget-title">Nearby</h3></header>
+	<ul class='xoxo blogroll'>
+<li><a href="http://www.w3.org/2000/09/dbwg/details?group=42462&#038;public=1">Current Members</a></li>
+<li><a href="#docs">Documents and resources</a></li>
+<li><a href="#f2f">Face to Face meetings</a></li>
+<li><a href="http://www.w3.org/2008/MW4D/participation.html">How to join MW4D IG?</a></li>
+<li><a href="http://www.w3.org/2010/05/MW4Dcharter2.1.html">MW4D Charter</a></li>
+<li><a href="http://www.w3.org/2004/01/pp-impl/42462/">MW4D Status Page</a></li>
+<li><a href="http://lists.w3.org/Archives/Public/public-mw4d/">Public archive</a></li>
+<li><a href="http://www.w3.org/2008/MW4D/wiki/">Public Wiki</a></li>
+<li><a href="#telcos">Teleconferences</a></li>
+<li><a href="#workshops">Workshops</a></li>
+
+	</ul>
+</aside>
+<aside id="collapsarch-3" class="widget-container widget_collapsarch"><header><h3 class="widget-title">Archives</h3></header><ul id='widget-collapsarch-3-top' class='collapsing archives list'>
+  <li class='collapsing archives expand'><span title='click to expand' class='collapsing archives expand'><span class='sym'>[+] </span></span><a href='http://www.w3.org/blog/MWIDC/2011/'>2011 </a>
+    <div style='display:none' id='collapsArch-2011:3'>
+    <ul>
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2011/12/' title='December'>December </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2011/07/' title='July'>July </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2011/04/' title='April'>April </a>
+      </li> <!-- close month --> 
+  </ul>
+     </div>
+  </li> <!-- end year -->
+  <li class='collapsing archives expand'><span title='click to expand' class='collapsing archives expand'><span class='sym'>[+] </span></span><a href='http://www.w3.org/blog/MWIDC/2010/'>2010 </a>
+    <div style='display:none' id='collapsArch-2010:3'>
+    <ul>
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2010/11/' title='November'>November </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2010/09/' title='September'>September </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2010/08/' title='August'>August </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2010/07/' title='July'>July </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2010/06/' title='June'>June </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2010/02/' title='February'>February </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2010/01/' title='January'>January </a>
+      </li> <!-- close month --> 
+  </ul>
+     </div>
+  </li> <!-- end year -->
+  <li class='collapsing archives expand'><span title='click to expand' class='collapsing archives expand'><span class='sym'>[+] </span></span><a href='http://www.w3.org/blog/MWIDC/2009/'>2009 </a>
+    <div style='display:none' id='collapsArch-2009:3'>
+    <ul>
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/12/' title='December'>December </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/11/' title='November'>November </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/10/' title='October'>October </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/09/' title='September'>September </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/08/' title='August'>August </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/07/' title='July'>July </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/06/' title='June'>June </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/05/' title='May'>May </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/04/' title='April'>April </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/02/' title='February'>February </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2009/01/' title='January'>January </a>
+      </li> <!-- close month --> 
+  </ul>
+     </div>
+  </li> <!-- end year -->
+  <li class='collapsing archives expand'><span title='click to expand' class='collapsing archives expand'><span class='sym'>[+] </span></span><a href='http://www.w3.org/blog/MWIDC/2008/'>2008 </a>
+    <div style='display:none' id='collapsArch-2008:3'>
+    <ul>
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2008/12/' title='December'>December </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2008/11/' title='November'>November </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2008/10/' title='October'>October </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2008/09/' title='September'>September </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2008/08/' title='August'>August </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2008/07/' title='July'>July </a>
+      </li> <!-- close month --> 
+      <li class='collapsing archives '><a href='http://www.w3.org/blog/MWIDC/2008/06/' title='June'>June </a>
+  </li> <!-- close month --></div><!-- close year -->
+</li> <!-- end of collapsing archives --><li style='display:none'><script type="text/javascript">
+// <![CDATA[
+/* These variables are part of the Collapsing Archives Plugin
+   * version: 2.0
+   * revision: $Id: collapsArch.php 529121 2012-04-09 17:07:49Z robfelty $
+   * Copyright 2008 Robert Felty (robfelty.com)
+           */
+try { collapsItems['catTest'] = 'test'; } catch (err) { collapsItems = new Object(); }
+collapsItems['collapsArch-2011-12:3'] = '';
+collapsItems['collapsArch-2011-7:3'] = '';
+collapsItems['collapsArch-2011-4:3'] = '';
+collapsItems['collapsArch-2010-11:3'] = '';
+collapsItems['collapsArch-2010-9:3'] = '';
+collapsItems['collapsArch-2010-8:3'] = '';
+collapsItems['collapsArch-2010-7:3'] = '';
+collapsItems['collapsArch-2010-6:3'] = '';
+collapsItems['collapsArch-2010-2:3'] = '';
+collapsItems['collapsArch-2010-1:3'] = '';
+collapsItems['collapsArch-2009-12:3'] = '';
+collapsItems['collapsArch-2009-11:3'] = '';
+collapsItems['collapsArch-2009-10:3'] = '';
+collapsItems['collapsArch-2009-9:3'] = '';
+collapsItems['collapsArch-2009-8:3'] = '';
+collapsItems['collapsArch-2009-7:3'] = '';
+collapsItems['collapsArch-2009-6:3'] = '';
+collapsItems['collapsArch-2009-5:3'] = '';
+collapsItems['collapsArch-2009-4:3'] = '';
+collapsItems['collapsArch-2009-2:3'] = '';
+collapsItems['collapsArch-2009-1:3'] = '';
+collapsItems['collapsArch-2008-12:3'] = '';
+collapsItems['collapsArch-2008-11:3'] = '';
+collapsItems['collapsArch-2008-10:3'] = '';
+collapsItems['collapsArch-2008-9:3'] = '';
+collapsItems['collapsArch-2008-8:3'] = '';
+collapsItems['collapsArch-2008-7:3'] = '';
+collapsItems['collapsArch-2008-6:3'] = 'collapsArch-2008-6:3';
+/*  Collapse Functions, version 2.0
+ *
+ *--------------------------------------------------------------------------*/
+String.prototype.trim = function() {
+  return this.replace(/^\s+|\s+$/g,"");
+}
+
+function createCookie(name,value,days) {
+  if (days) {
+    var date = new Date();
+    date.setTime(date.getTime()+(days*24*60*60*1000));
+    var expires = "; expires="+date.toGMTString();
+  } else {
+    var expires = "";
+  }
+  document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function readCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(';');
+  for(var i=0;i < ca.length;i++) {
+    var c = ca[i];
+    while (c.charAt(0)==' ') {
+      c = c.substring(1,c.length);
+    }
+    if (c.indexOf(nameEQ) == 0) {
+      return c.substring(nameEQ.length,c.length);
+    }
+  }
+  return null;
+}
+
+function eraseCookie(name) {
+  createCookie(name,"",-1);
+}
+
+function addExpandCollapse(id, expandSym, collapseSym, accordion) {
+  jQuery('#' + id + ' span.expand').live('click', function() {
+    if (accordion==1) {
+      var theDiv = jQuery(this).parent().parent().find('span.collapse').parent().children('div');
+      jQuery(theDiv).hide('normal');
+      jQuery(this).parent().parent().find('span.collapse').removeClass('collapse').addClass('expand');
+      createCookie(theDiv.attr('id'), 0, 7);
+      jQuery(this).parent().parent().find('span.sym').html(expandSym);
+      //jQuery('#' + id + ' .expand .sym').html(expandSym);
+    }
+    expandArch(this, expandSym, collapseSym);
+    return false;
+  });
+  jQuery('#' + id + ' span.collapse').live('click', function() {
+    collapseArch(this, expandSym, collapseSym);
+    return false;
+  });
+}
+
+function expandArch(symbol, expandSym, collapseSym) {
+    var theDiv = jQuery(symbol).parent().children('div');
+    try {
+      if (collapsItems[jQuery(theDiv).attr('id')]!='') {
+        jQuery(theDiv).html(collapsItems[jQuery(theDiv).attr('id')]).show('normal');
+      } else {
+        jQuery(theDiv).show('normal');
+      }
+    } catch (err) {
+      jQuery(theDiv).show('normal');
+    }
+    jQuery(symbol).removeClass('expand').addClass('collapse');
+    jQuery(symbol).children('.sym').html(collapseSym);
+  createCookie(theDiv.attr('id'), 1, 7);
+}
+function collapseArch(symbol, expandSym, collapseSym) {
+    var theDiv = jQuery(symbol).parent().children('div');
+    jQuery(theDiv).hide('normal');
+    jQuery(symbol).removeClass('collapse').addClass('expand');
+    jQuery(symbol).children('.sym').html(expandSym);
+  createCookie(theDiv.attr('id'), 0, 7);
+}
+addExpandCollapse('widget-collapsarch-3-top','[+] ', '[-] ', 0)// ]]>
+</script></li>
+</ul>
+</aside><aside id="meta-2" class="widget-container widget_meta"><header><h3 class="widget-title">Meta</h3></header>			<ul>
+						<li><a href="https://www.w3.org/blog/MWIDC/wp-login.php">Log in</a></li>
+			<li><a href="http://www.w3.org/blog/MWIDC/feed/" title="Syndicate this site using RSS 2.0">Entries <abbr title="Really Simple Syndication">RSS</abbr></a></li>
+			<li><a href="http://www.w3.org/blog/MWIDC/comments/feed/" title="The latest comments to all posts in RSS">Comments <abbr title="Really Simple Syndication">RSS</abbr></a></li>
+			<li><a href="http://wordpress.org/" title="Powered by WordPress, state-of-the-art semantic personal publishing platform.">WordPress.org</a></li>
+						</ul>
+</aside>			
+		</div><!-- #primary .widget-area -->
+
+	</div><!-- #main -->
+
+	<footer id="footer" role="contentinfo">
+		<div id="colophon">
+
+
+
+			<div id="footer-widget-area" role="complementary">
+
+
+
+
+
+			</div><!-- #footer-widget-area -->
+
+			<div id="site-info">
+				&nbsp; &nbsp;<a href="http://www.w3.org/blog/MWIDC/" title="Mobile Web for Social Development (MW4D)" rel="home">
+					Mobile Web for Social Development (MW4D)				</a>
+			</div><!-- #site-info -->
+
+			<div id="site-generator">
+								<a href="http://wordpress.org/"
+						title="Semantic Personal Publishing Platform" rel="generator">
+					Powered by WordPress.				</a>
+			</div><!-- #site-generator -->
+		</div><!-- #colophon -->
+	</footer><!-- #footer -->
+
+</div><!-- #wrapper -->
+
+
+</body>
+</html>

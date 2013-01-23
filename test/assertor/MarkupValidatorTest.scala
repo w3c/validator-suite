@@ -50,11 +50,11 @@ class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatc
 
   }
 
-  "http://www.w3.org/TR/html5 should not be valid because it's using HTML5" in {
+  "http://www.w3.org/2008/MW4D/ should not be valid because it's using HTML5" in {
     MarkupValidator.configuration match {
       case _: Distant => ()
       case _: Local =>
-        val url = URL("http://www.w3.org/TR/html5")
+        val url = URL("http://www.w3.org/2008/MW4D/")
         val assertions: Iterable[Assertion] = MarkupValidator.assert(url, Map.empty)
         assertions must have size(1)
         val assertion = assertions.head

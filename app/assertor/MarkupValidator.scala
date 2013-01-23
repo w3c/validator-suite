@@ -90,7 +90,7 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
 
   override def assert(url: URL, assertorConfig: AssertorConfiguration): Iterable[Assertion] = configuration match {
     case Local(serviceUrl, timeout, markupValBinary, markupValConf) =>
-      val boundary = "------"
+      val boundary = java.util.UUID.randomUUID().toString
 
       // if the content is cached, then this will work just fine
       // if not, then we're accessing the web
@@ -106,7 +106,7 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
 
       // uploaded_file
 
-      buffer.writeCRLN(boundary)
+      buffer.writeCRLN("--" + boundary)
       // looks like the markup-validator uses blindly $filename as the URL that was checked
       buffer.writeCRLN(s"""Content-Disposition: form-data; name="uploaded_file"; filename="${url}"""")
       buffer.writeCRLN("Content-Type: text/html")
@@ -126,7 +126,7 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
         "output" -> "ucn")
 
       params foreach { case (k, v) =>
-          buffer.writeCRLN(boundary)
+          buffer.writeCRLN("--" + boundary)
           buffer.writeCRLN(s"""Content-Disposition: form-data; name="${k}"""")
           buffer.writeCRLN("")
           buffer.writeCRLN(v)
@@ -134,7 +134,7 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
 
       // ends the multidata form
 
-      buffer.writeCRLN(boundary + "--")
+      buffer.writeCRLN("--" + boundary + "--")
       buffer.flush()
 
       // starts the process
@@ -148,10 +148,8 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
       val env = pb.environment()
       env.put("W3C_VALIDATOR_CFG", markupValConf.getAbsolutePath)
       env.put("REQUEST_METHOD", "POST")
-      val queryString = Helper.queryString(assertorConfig + ("output" -> List("ucn")))
-      env.put("QUERY_STRING", queryString)
       env.put("HTTP_HOST", "valid.w3.org")
-      env.put("CONTENT_TYPE", "multipart/form-data; boundary=---")
+      env.put("CONTENT_TYPE", s"multipart/form-data; boundary=${boundary}")
       env.put("CONTENT_LENGTH", cos.counter.toString) // size in bytes
 //      env.put("HTTP_ACCEPT_ENCODING", "UTF-8")
       val p = pb.start()
@@ -159,6 +157,7 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
       // sends the content of the POST to stdin
 
       val stdin = new BufferedOutputStream(p.getOutputStream())
+//      data.writeTo(System.err)
       data.writeTo(stdin)
       stdin.flush()
       stdin.close()
@@ -166,6 +165,9 @@ class MarkupValidator(val configuration: MarkupValidatorConfiguration) extends F
       // gives the output to the parser
 
       val stdout = new BufferedInputStream(p.getInputStream())
+      // left here for debugging purposes
+      // println("stderr = " + Source.fromInputStream(new BufferedInputStream(p.getErrorStream())).getLines().mkString("\n"))
+
       // we need to ignore the HTTP headers before the XML parser gets to the datastream
       consumeHeaders(stdout)
       val source = Source.fromInputStream(stdout)
