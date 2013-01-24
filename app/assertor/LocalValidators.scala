@@ -16,6 +16,7 @@ object LocalValidators extends LocalValidators ({
 
   val logger = play.Logger.of(classOf[LocalValidators])
 
+  /* http://stackoverflow.com/questions/3301635/change-private-static-final-field-using-java-reflection */
   def setFinalStatic(field: Field, newValue: Any): Unit = {
     field.setAccessible(true)
     val modifiersField: Field = classOf[Field].getDeclaredField("modifiers")
