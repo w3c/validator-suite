@@ -35,10 +35,10 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
+    vsEvents.subscribe(testActor, FromJob(job.id))
+
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
-
-    vsEvents.subscribe(testActor, FromJob(job.id))
 
     fishForMessagePF(3.seconds) {
       case NewResource(_, ri) => ri.url must be(URL("http://localhost:9001/"))
