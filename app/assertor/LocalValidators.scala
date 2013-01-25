@@ -9,7 +9,7 @@ import org.apache.commons.httpclient.CacheOnlyHttpClient
 
 object LocalValidators extends LocalValidators ({
   val configuration = Configuration.load(new File("."))
-  val port = configuration.getInt("application.local-validator.port") getOrElse sys.error("application.local-validator.port")
+  val port = configuration.getInt("application.assertor.local-validator.port") getOrElse sys.error("application.assertor.local-validator.port")
   val cacheOpt = Cache(configuration)
   (port, cacheOpt)
 }) {

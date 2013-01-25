@@ -16,7 +16,7 @@ object MarkupValidatorConfiguration {
   val logger = play.Logger.of(classOf[MarkupValidatorConfiguration])
 
   def apply(): MarkupValidatorConfiguration = {
-    val confPath = "application.local-validator.markup-validator"
+    val confPath = "application.assertor.local-validator.markup-validator"
     val conf = Configuration.load(new File(".")).getConfig(confPath) getOrElse sys.error(confPath)
     MarkupValidatorConfiguration(conf)
   }
