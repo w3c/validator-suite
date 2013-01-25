@@ -7,14 +7,12 @@ import org.w3.vs.model._
  *
  *  It speaks with the instance deployed at [[http://qa-dev.w3.org/wmvs/HEAD http://qa-dev.w3.org/wmvs/HEAD]]
  */
-object I18nChecker extends FromHttpResponseAssertor with UnicornFormatAssertor {
+class I18nChecker(val serviceUrl: String) extends FromHttpResponseAssertor with UnicornFormatAssertor {
 
   val id = AssertorId("checker_i18n")
 
   val supportedMimeTypes = List("text/html", "application/xhtml+xml")
 
-  val serviceUrl = "http://qa-dev.w3.org/i18n-checker-test/check"
-  
   def validatorURL(encodedURL: String, assertorConfiguration: AssertorConfiguration) =
     "http://qa-dev.w3.org/i18n-checker-test/check?uri=" + encodedURL + "&format=xml"
   
@@ -28,3 +26,8 @@ object I18nChecker extends FromHttpResponseAssertor with UnicornFormatAssertor {
   }
   
 }
+
+object I18nChecker extends I18nChecker({
+  val serviceUrl = "http://qa-dev.w3.org/i18n-checker-test/check"
+  serviceUrl
+})

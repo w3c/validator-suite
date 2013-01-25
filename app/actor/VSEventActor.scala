@@ -41,7 +41,7 @@ object VSEventsActor {
 
   val logger = play.Logger.of(classOf[VSEventsActor])
 
-  case class Listen(subscriber: ActorRef, provenance: MessageProvenance)
+  case class Listen(subscriber: ActorRef, provenance: MessageProvenance, ackOpt: Option[Any])
   case class Deafen(subscriber: ActorRef)
   case class Publish(message: RunUpdate)
 
@@ -57,9 +57,10 @@ class VSEventsActor() extends Actor {
     case Publish(message) => {
       eventbus.publish(message)
     }
-    case Listen(subscriber, provenance) => {
+    case Listen(subscriber, provenance, ackOpt) => {
       context.watch(subscriber)
       eventbus.subscribe(subscriber, provenance)
+      ackOpt foreach { ack => subscriber ! ack }
     }
     case Deafen(subscriber) => {
       context.unwatch(subscriber)
@@ -79,8 +80,8 @@ object VSEvents {
   def apply(actorRef: ActorRef) = new VSEvents {
     def publish(message: RunUpdate): Unit =
       actorRef ! Publish(message)
-    def subscribe(subscriber: ActorRef, provenance: MessageProvenance): Unit =
-      actorRef ! Listen(subscriber, provenance)
+    def subscribe(subscriber: ActorRef, provenance: MessageProvenance, ackOpt: Option[Any]): Unit =
+      actorRef ! Listen(subscriber, provenance, ackOpt)
     def unsubscribe(subscriber: ActorRef): Unit =
       actorRef ! Deafen(subscriber)
   }
@@ -89,6 +90,6 @@ object VSEvents {
 
 trait VSEvents {
   def publish(message: RunUpdate): Unit
-  def subscribe(subscriber: ActorRef, provenance: MessageProvenance): Unit
+  def subscribe(subscriber: ActorRef, provenance: MessageProvenance, ackOpt: Option[Any] = None): Unit
   def unsubscribe(subscriber: ActorRef): Unit
 }
