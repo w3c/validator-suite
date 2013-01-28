@@ -23,6 +23,8 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val http = configuration.httpActorRef
 
+  implicit val timeout = configuration.timeout
+
   val vsEvents = configuration.vsEvents
 
   val userTest = User(userId = UserId(), email = "", name = "", password = "", isSubscriber = true)

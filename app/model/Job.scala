@@ -119,7 +119,8 @@ case class Job(
         case msg => logger.error("subscriber got " + msg)
       }
     }))
-    vsEvents.subscribe(subscriber, FromJob(id))
+    // TODO
+    Await.result(vsEvents.subscribe(subscriber, FromJob(id)), atMost = timeout.duration)
     _enumerator
   }
 

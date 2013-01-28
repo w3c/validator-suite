@@ -45,6 +45,7 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
   def delete(): Future[Unit] = User.delete(this)
 
   lazy val enumerator: Enumerator[RunUpdate] = {
+    import conf._
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
     val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
@@ -64,7 +65,8 @@ case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
         case msg => logger.error("subscriber got " + msg)
       }
     }))
-    vsEvents.subscribe(subscriber, FromUser(id))
+    // TODO
+    Await.result(vsEvents.subscribe(subscriber, FromUser(id)), atMost = timeout.duration)
     _enumerator
   }
 

@@ -35,8 +35,7 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
-    vsEvents.subscribe(testActor, FromJob(job.id), ackOpt = Some("subscribed"))
-    expectMsg("subscribed")
+    vsEvents.subscribe(testActor, FromJob(job.id)).getOrFail()
 
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
