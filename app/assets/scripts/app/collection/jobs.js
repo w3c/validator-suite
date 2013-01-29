@@ -47,7 +47,7 @@ define(["lib/Logger", "model/job", "collection/collection"], function (Logger, J
         },
 
         emptyMessage: function () {
-            return "No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>";
+            return "No jobs have been configured yet. <a href='" + this.collection.url + "new" + "'>Create your first job.</a>";
         }
 
     });
