@@ -163,7 +163,7 @@ sort.descending=Sort in descending order
 
 # Form
 name.error.required=Name cannot be empty
-form.email.duplicate=Email already in use. Choose another one.
+form.email.duplicate=Email already in use. Choose another one or login with an existing account.
 
 form.email.error.email=Invalid email address
 form.email.error.required=Email is required
@@ -174,4 +174,11 @@ form.entrypoint.error.url=Start URL must be a valid URL
 form.assertor.error.required=No assertors selected
 form.maxResources.error.max=Invalid max pages value
 form.maxResources.error.min=Invalid max pages value
+
+form.userName.error.required=A user name is required.
+
+form.password.error.minLength=Password too short. Minimum is 6 characters.
+# There is no key for this one hence the '..' (cf RegisterForm.scala)
+form..password.dont_match=Passwords do not match.
+form.terms.not_accepted=You must read and agree to the Terms and Conditions to purchase a job.
 

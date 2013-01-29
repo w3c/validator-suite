@@ -14,10 +14,11 @@ import scala.concurrent._
 
 import OneTimeJobForm.OneTimeJobType
 import play.api.data
+import play.api.i18n.Messages
 
 object OneTimeJobForm {
 
-  type OneTimeJobType = (String, URL, OTOJType)
+  type OneTimeJobType = (String, URL, OTOJType, Boolean)
 
   def assertors()(implicit req: Request[AnyContent]): Seq[Assertor] = try {
     req.body.asFormUrlEncoded.get.get("assertor[]").get.map(Assertor.get)
@@ -62,11 +63,13 @@ object OneTimeJobForm {
     playForm fill(
       job.name,
       job.strategy.entrypoint,
-      Otoj250 // TODO
+      Otoj250, // TODO
+      false
     ), (
       job.name,
       job.strategy.entrypoint,
-      Otoj250 // TODO
+      Otoj250, // TODO
+      false
     ), job.strategy.assertorsConfiguration
   )
 
@@ -74,7 +77,8 @@ object OneTimeJobForm {
     tuple(
       "name" -> nonEmptyText,
       "entrypoint" -> of[URL],
-      "otoj" -> of[OTOJType]
+      "otoj" -> of[OTOJType],
+      "terms" -> of[Boolean](booleanFormatter).verifying("not_accepted", _ == true)
     )
   )
 
@@ -86,7 +90,7 @@ case class OneTimeJobForm private[view](
 
   def apply(s: String) = form(s)
 
-  def errors: Seq[(String, String)] = form.errors.map{case error => ("error", s"${error.key}.${error.message}")}
+  def errors: Seq[(String, String)] = form.errors.map{case error => ("error", Messages(s"form.${error.key}.${error.message}"))}
 
   def withError(key: String, message: String) = copy(form = form.withError(key, message))
 
@@ -105,7 +109,7 @@ class ValidOneTimeJobForm private[view](
     bind: OneTimeJobType,
     assertorsConfiguration: AssertorsConfiguration) extends OneTimeJobForm(form, assertorsConfiguration) with VSForm {
 
-  val (name, entrypoint, otoj) = bind
+  val (name, entrypoint, otoj, terms) = bind
 
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
     val strategy = Strategy(

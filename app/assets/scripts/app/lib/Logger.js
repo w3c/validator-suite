@@ -2,11 +2,13 @@ define([""], function () {
 
     "use strict";
 
+    //var console;
+
     var Logger = function (name, active) {
 
         return {
             log: function (msg) {
-                console.log("[" + name + "] " + msg);
+                if (console && console.log) { console.log("[" + name + "] " + msg); }
             },
             info: function (msg) {
                 /*console.log(arguments);

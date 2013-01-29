@@ -25,7 +25,7 @@
 
         <br class="userName">
         <label for="userName" class="userName">Name</label>
-        <input type="text" id="userName" name="userName" placeholder="Name" value='@form("userName").value' class="userName" required/>
+        <input type="text" id="userName" name="userName" placeholder="Name" value='@form("userName").value' class="userName" />
 
         <br>
         <label for="email">Email</label>
@@ -34,6 +34,10 @@
         <br>
         <label for="password">Password</label>
         <input type="password" id="password" name="password" placeholder="Password" required="required"/>
+
+        <br>
+        <label for="repeatPassword" class="repeatPassword">Repeat password</label>
+        <input type="password" id="repeatPassword" class="repeatPassword" name="repeatPassword" placeholder="Repeat password"/>
 
         }
 
@@ -69,7 +73,7 @@
         @**assertors.formCheckerMobile(form.assertorsConfiguration)**@
 
         <div>
-            <input id="terms" type="checkbox" required="required">
+            <input id="terms" type="checkbox" required="required" name="terms">
             <label for="terms">I agree to the <a href="https://www.w3.org/Consortium/Legal/2012/validator/general-conditions.html">Terms and Conditions</a></label>
         </div>
         <button type="submit" name="action" value="create">Purchase</button>
@@ -90,9 +94,13 @@
                 if (this.value === "new") {
                     $('.userName').show();
                     $('.userName').attr("required", "required");
+                    $('.repeatPassword').show();
+                    $('.repeatPassword').attr("required", "required");
                 } else {
                     $('.userName').hide();
                     $('.userName').removeAttr("required");
+                    $('.repeatPassword').hide();
+                    $('.repeatPassword').removeAttr("required");
                 }
             });
             $('input[value="known"]').change();

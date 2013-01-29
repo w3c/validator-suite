@@ -46,7 +46,7 @@ object JobForm {
       f => Left(new JobForm(f, assertorParameters())),
       s => {
         if (assertors().isEmpty)
-          Left(new JobForm(form.withError("assertor", "error.required"), assertorParameters())) // TODO
+          Left(new JobForm(form.withError("assertor", "required"), assertorParameters())) // TODO
         else
           Right(new ValidJobForm(form, s, assertorParameters()))
       }

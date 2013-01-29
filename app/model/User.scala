@@ -116,6 +116,7 @@ object User {
   }
 
   def register(name: String, email: String, password: String, isSubscriber: Boolean)(implicit conf: VSConfiguration): Future[User] = {
+    logger.info("Registering user: " + name + ":" + password + ", " + email)
     val user = User(
       userId = UserId(),
       name = name,
