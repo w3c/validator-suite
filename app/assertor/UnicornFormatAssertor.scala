@@ -55,10 +55,10 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
       val linkedResources = assertions.collect{
         case assertion if (assertion.url.toString != obversationRef && assertion.severity == Error) => assertion.url
       }.distinct
-      val (description, severity) = linkedResources.isEmpty match {
-        case true => (None, Info)
-        case false => (Some({
-          """<p>%s</p>""".format(Messages("assertor.externalResourcesWarning")) +
+      val (title, description, severity) = linkedResources.isEmpty match {
+        case true => (Messages("assertor.noissues", Messages("assertor." + name)), None, Info)
+        case false => (Messages("assertor.invalid.linked.resources"), Some({
+          """<p>%s</p>""".format(Messages("assertor.invalid.linked.resources.desc")) +
           linkedResources.map{ case url =>
             """<li class="url">
               |    <a href="%s" class="report" title="%s">
@@ -70,7 +70,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
               |</li>"""
             .stripMargin
             .format(
-              url.encode("UTF-8"),
+              "?resource=" + url.encode("UTF-8"), // I would need to jobId here to find the full route
               Messages("report.link"),
               Messages("resource.report.for"),
               url.shorten(100),
@@ -81,7 +81,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
           }.mkString("<ul>", " ", "</ul>")}),
           Warning)
       }
-      Assertion(URL(obversationRef), id, List.empty, "en-US", Messages("assertor.noissues", Messages("assertor." + name)), severity, description) +: assertions
+      Assertion(URL(obversationRef), id, List.empty, "en-US", title, severity, description) +: assertions
     } else
       assertions
   }

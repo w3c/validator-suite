@@ -125,7 +125,8 @@ assertor.validator_css=CSS Validator
 assertor.markup_validator=HTML4/XHTML Validator
 
 assertor.noissues=The {0} found no issues to report
-assertor.externalResourcesWarning=However this document points to the following invalid resources:
+assertor.invalid.linked.resources=Invalid linked resources
+assertor.invalid.linked.resources.desc=This document links to the following resources that contain warnings or errors:
 
 pagination.legend=Viewing {0}-{1} of {2} results
 pagination.legend.one=1 result
