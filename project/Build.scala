@@ -23,7 +23,7 @@ object ApplicationBuild extends Build {
     "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20130110.jar",
     "com.yammer.metrics" % "metrics-core" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
     "com.yammer.metrics" % "metrics-graphite" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
-    "play.modules.reactivemongo" %% "play2-reactivemongo" % "0.1-SNAPSHOT" cross CrossVersion.full exclude("io.netty", "netty"),
+    "org.reactivemongo" % "play2-reactivemongo_2.10" % "0.9-SNAPSHOT" /*cross CrossVersion.full*/ exclude("io.netty", "netty"),
     "org.mongodb" % "mongo-java-driver" % "2.10.0", // should disappear soon
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     // test dependencies
@@ -61,7 +61,8 @@ object ApplicationBuild extends Build {
     templatesImport += "scala.util._",
     logLevel := Level.Debug,
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    resolvers += "sgodbillon" at "https://bitbucket.org/sgodbillon/repository/raw/master/snapshots/"
+//    resolvers += "sgodbillon" at "https://bitbucket.org/sgodbillon/repository/raw/master/snapshots/"
+    resolvers += "jay-bertails" at "http://jay.w3.org/~bertails/ivy/"
 //    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
 //    resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
 //    ensimeConfig := sexp(
