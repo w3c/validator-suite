@@ -14,20 +14,20 @@ object Main {
   def test(jobIdS: String): Unit = {
     implicit val conf = new DefaultProdConfiguration { }
 
-    val jobId = JobId(jobIdS)
-    val Some((run, urls, assertorCalls)) = Job.getLastRun(jobId).getOrFail()
-//    println("3 " + run.toBeExplored)
-
-    if (urls.size < 10)
-      println("urls: " + urls)
-    else
-      println("urls: " + urls.size)
-    println("assertorCalls: " + assertorCalls.size)
-
-    conf.system.shutdown()
-    conf.system.awaitTermination()
-    conf.httpClient.close()
-    conf.connection.close()
+//    val jobId = JobId(jobIdS)
+//    val Some((run, urls, assertorCalls)) = Job.getLastRun(jobId).getOrFail()
+////    println("3 " + run.toBeExplored)
+//
+//    if (urls.size < 10)
+//      println("urls: " + urls)
+//    else
+//      println("urls: " + urls.size)
+//    println("assertorCalls: " + assertorCalls.size)
+//
+//    conf.system.shutdown()
+//    conf.system.awaitTermination()
+//    conf.httpClient.close()
+//    conf.connection.close()
 
     println("you need to press ctrl-c")
 

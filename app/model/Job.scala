@@ -233,44 +233,6 @@ object Job {
     }
   }
 
-  // TODO
-  // indexes: event && runId
-  def getLastRun(jobId: JobId)(implicit conf: VSConfiguration): Future[Option[(Run, Iterable[URL], Iterable[AssertorCall])]] = {
-    import conf._
-    // we first look for the latest runId for the given jobId
-    val lastCreatedRunQuery = QueryBuilder().
-      query( Json.obj(
-        "jobId" -> toJson(jobId),
-        "event" -> toJson("create-run")) ).
-      sort( "createdAt" -> SortOrder.Descending ).
-      projection( BSONDocument(
-        "runId" -> BSONInteger(1),
-        "_id" -> BSONInteger(0)) )
-
-    Run.collection.find[JsValue](lastCreatedRunQuery).headOption flatMap {
-      case None => Future.successful(None)
-      case Some(json) =>
-        val runId = (json \ "runId").as[RunId]
-        Run.get(runId) map Some.apply
-    }
-  }
-
-  def getLastCompleted(jobId: JobId)(implicit conf: VSConfiguration): Future[Option[DateTime]] = {
-    import conf._
-    val query= QueryBuilder().
-      query( Json.obj(
-        "jobId" -> toJson(jobId),
-        "event" -> toJson("complete-run")) ).
-      sort("at" -> SortOrder.Descending).
-      projection( BSONDocument(
-        "at" -> BSONInteger(1),
-        "_id" -> BSONInteger(0)) )
-    val cursor = Run.collection.find[JsValue](query)
-    cursor.headOption map { jsonOpt =>
-      jsonOpt.flatMap(json => (json \ "at").as[Option[DateTime]])
-    }
-  }
-
   def save(job: Job)(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
     val jobJson = toJson(job)
