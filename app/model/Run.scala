@@ -45,11 +45,22 @@ object Run {
         "event" -> toJson("assertor-response"),
         "ar.assertions" -> Json.obj("$exists" -> JsBoolean(true))) ).
       projection( BSONDocument(
+        "ar.sourceUrl" -> BSONInteger(1),
         "ar.assertions" -> BSONInteger(1),
         "_id" -> BSONInteger(0)) )
     val cursor = Run.collection.find[JsValue](query)
     cursor.toList map { list =>
-      list.map(json => (json \ "ar" \ "assertions").as[List[Assertion]]).flatten
+      val assertionsByURL = list.foldLeft(Map.empty[URL, List[Assertion]]) { case (acc, json) =>
+        val sourceUrl = (json \ "ar" \ "sourceUrl").as[URL]
+        val assertions = (json \ "ar" \ "assertions").as[List[Assertion]].groupBy(_.url)
+        assertions.foldLeft(acc) { case (acc, ass@(url, assertions)) =>
+          if (acc.isDefinedAt(url))
+            acc
+          else
+            acc + ass
+        }
+      }
+      assertionsByURL.values.toList.flatten
     }
   }
 

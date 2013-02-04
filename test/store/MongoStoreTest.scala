@@ -132,7 +132,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       i <- 1 to nbUrlsPerAssertions
     } {
       // Only one AssertorResult for every unique (assertor, url). No partial validations.
-      val url = URL("http://example.com/foo/"+i)
+      val url = URL("http://example.com/foo/"+java.util.UUID.randomUUID().toString)
       val assertions = for {
         severity <- List(Error, Warning, Info)
         nb = severities(severity)
