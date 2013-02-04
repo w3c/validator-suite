@@ -37,7 +37,7 @@ object Run {
   def collection2(implicit conf: VSConfiguration): DBCollection =
     conf.mongoDb.getCollection("runs")
 
-  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+  def getAssertionsByURL(runId: RunId)(implicit conf: VSConfiguration): Future[Map[URL, List[Assertion]]] = {
     import conf._
     val query = QueryBuilder().
       query( Json.obj(
@@ -59,7 +59,11 @@ object Run {
         else
           acc + ass
       }
-    } map { assertionsByURL =>
+    }
+  }
+
+  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+    getAssertionsByURL(runId) map { assertionsByURL =>
       assertionsByURL.values.toList.flatten
     }
   }
