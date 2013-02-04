@@ -49,17 +49,17 @@ object Run {
         "ar.assertions" -> BSONInteger(1),
         "_id" -> BSONInteger(0)) )
     val cursor = Run.collection.find[JsValue](query)
-    cursor.toList map { list =>
-      val assertionsByURL = list.foldLeft(Map.empty[URL, List[Assertion]]) { case (acc, json) =>
-        val sourceUrl = (json \ "ar" \ "sourceUrl").as[URL]
-        val assertions = (json \ "ar" \ "assertions").as[List[Assertion]].groupBy(_.url)
-        assertions.foldLeft(acc) { case (acc, ass@(url, assertions)) =>
-          if (acc.isDefinedAt(url))
-            acc
-          else
-            acc + ass
-        }
+    import play.api.libs.iteratee._
+    cursor.enumerate() |>>> Iteratee.fold(Map.empty[URL, List[Assertion]]) { case (acc, json) =>
+      val sourceUrl = (json \ "ar" \ "sourceUrl").as[URL]
+      val assertions = (json \ "ar" \ "assertions").as[List[Assertion]].groupBy(_.url)
+      assertions.foldLeft(acc) { case (acc, ass@(url, assertions)) =>
+        if (acc.isDefinedAt(url))
+          acc
+        else
+          acc + ass
       }
+    } map { assertionsByURL =>
       assertionsByURL.values.toList.flatten
     }
   }
