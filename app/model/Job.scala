@@ -51,6 +51,14 @@ case class Job(
     }
   }
 
+  def getAssertionsForURL(url: URL)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+    status match {
+      case NeverStarted => Future.successful(List.empty)
+      case Done(runId, _, _, _) => Run.getAssertionsForURL(runId, url)
+      case Running(runId, _) => Run.getAssertionsForURL(runId, url)
+    }
+  }
+
   def save()(implicit conf: VSConfiguration): Future[Job] =
     Job.save(this)
   

@@ -77,8 +77,7 @@ object Assertions extends VSController  {
   def index_(id: JobId, url: URL) = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
-      // TODO
-      assertions_ <- job_.getAssertions().map(_.filter(_.url.underlying === url))
+      assertions_ <- job_.getAssertionsForURL(org.w3.util.URL(url))
     } yield {
       case Html(_) => {
         val assertors = AssertorsView(assertions_)

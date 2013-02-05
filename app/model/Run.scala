@@ -9,6 +9,7 @@ import org.joda.time._
 import org.w3.vs.actor.AssertorCall
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.iteratee._
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -49,7 +50,6 @@ object Run {
         "ar.assertions" -> BSONInteger(1),
         "_id" -> BSONInteger(0)) )
     val cursor = Run.collection.find[JsValue](query)
-    import play.api.libs.iteratee._
     cursor.enumerate() |>>> Iteratee.fold(Map.empty[URL, List[Assertion]]) { case (acc, json) =>
       val sourceUrl = (json \ "ar" \ "sourceUrl").as[URL]
       val assertions = (json \ "ar" \ "assertions").as[List[Assertion]].groupBy(_.url)
@@ -66,6 +66,29 @@ object Run {
     getAssertionsGroupedByURL(runId) map { assertionsByURL =>
       assertionsByURL.values.toList.flatten
     }
+  }
+
+  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+    getAssertions(runId).map(_.filter(_.url.underlying === url))
+    // TODO write a test before using this better implementation
+//    import conf._
+//    val query = QueryBuilder().
+//      query( Json.obj(
+//        "runId" -> toJson(runId),
+//        "event" -> toJson("assertor-response"),
+//        "ar.assertions" -> Json.obj("$elemMatch" -> Json.obj("url" -> toJson(url)))) ).
+//      projection( BSONDocument(
+//        "ar.sourceUrl" -> BSONInteger(1),
+//        "ar.assertions" -> BSONInteger(1),
+//        "_id" -> BSONInteger(0)) )
+//    val cursor = Run.collection.find[JsValue](query)
+//    cursor.enumerate() |>>> Iteratee.fold(Map.empty[URL, List[Assertion]]) { case (acc, json) =>
+//      val sourceUrl = (json \ "ar" \ "sourceUrl").as[URL]
+//      val assertions = (json \ "ar" \ "assertions").as[List[Assertion]]
+//      acc + (sourceUrl -> assertions)
+//    } map { assertionsGroupedByURL =>
+//      assertionsGroupedByURL.get(url).orElse(assertionsGroupedByURL.headOption.map(_._2)).getOrElse(List.empty)
+//    }
   }
 
 //  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = Future {
