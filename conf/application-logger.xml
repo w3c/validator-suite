@@ -35,6 +35,10 @@
       <appender-ref ref="STDOUT" />
   </logger>
 
+  <!-- activate those loggers for more resource fetching info -->
+  <!--logger name="org.w3.vs.actor.JobActor" level="DEBUG" />  
+  <logger name="org.w3.vs.http.Cache" level="DEBUG" /-->
+
   <root level="INFO">
     <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />

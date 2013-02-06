@@ -74,7 +74,7 @@ case class Cache(directory: File) extends ResponseCache {
       cachedResource <- resource(url, method)
       cacheResponse <- cachedResource.asCacheResponse().toOption
     } yield {
-      logger.debug(rqstMethod + " " + uri)
+//      logger.debug(rqstMethod + " " + uri)
       cacheResponse
     }
     //println(s"[${userAgent}] ${rqstMethod} ${uri}")
