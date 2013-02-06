@@ -36,6 +36,7 @@ object JobActor {
 //  val logger = new Object {
 //    def debug(msg: String): Unit = println("== " + msg)
 //    def error(msg: String): Unit = println("== " + msg)
+//    def error(msg: String, t: Throwable): Unit = println("== " + msg)
 //    def warn(msg: String): Unit = println("== " + msg)
 //  }
 
@@ -181,9 +182,10 @@ extends Actor with FSM[JobActorState, Run] {
     case Event(result: AssertorResult, run) => {
       logger.debug(s"${run.shortId}: ${result.assertor} produced AssertorResult for ${result.sourceUrl}")
       val now = DateTime.now(DateTimeZone.UTC)
-      val newRun = run.withAssertorResult(result)
-      Run.saveEvent(AssertorResponseEvent(run.runId, result, now)) onSuccess { case () =>
-        tellEverybody(NewAssertorResult(result, newRun, now))
+      val (newRun, filteredAssertions) = run.withAssertorResult(result)
+      val newResult = result.copy(assertions = filteredAssertions)
+      Run.saveEvent(AssertorResponseEvent(run.runId, newResult, now)) onSuccess { case () =>
+        tellEverybody(NewAssertorResult(newResult, newRun, now))
       }
       stateOf(newRun)
     }

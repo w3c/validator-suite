@@ -38,7 +38,7 @@ object Run {
   def collection2(implicit conf: VSConfiguration): DBCollection =
     conf.mongoDb.getCollection("runs")
 
-  def getAssertionsGroupedByURL(runId: RunId)(implicit conf: VSConfiguration): Future[Map[URL, List[Assertion]]] = {
+  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
     import conf._
     val query = QueryBuilder().
       query( Json.obj(
@@ -46,26 +46,13 @@ object Run {
         "event" -> toJson("assertor-response"),
         "ar.assertions" -> Json.obj("$exists" -> JsBoolean(true))) ).
       projection( BSONDocument(
-        "ar.sourceUrl" -> BSONInteger(1),
         "ar.assertions" -> BSONInteger(1),
         "_id" -> BSONInteger(0)) )
     val cursor = Run.collection.find[JsValue](query)
-    cursor.enumerate() |>>> Iteratee.fold(Map.empty[URL, List[Assertion]]) { case (acc, json) =>
-      val sourceUrl = (json \ "ar" \ "sourceUrl").as[URL]
-      val assertions = (json \ "ar" \ "assertions").as[List[Assertion]].groupBy(_.url)
-      assertions.foldLeft(acc) { case (acc, ass@(url, assertions)) =>
-        if (acc.isDefinedAt(url))
-          acc
-        else
-          acc + ass
-      }
-    }
-  }
-
-  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
-    getAssertionsGroupedByURL(runId) map { assertionsByURL =>
-      assertionsByURL.values.toList.flatten
-    }
+    cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
+      val assertions = (json \ "ar" \ "assertions").as[List[Assertion]]
+      assertions
+    } |>>> Iteratee.consume[List[Assertion]]()
   }
 
   def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
@@ -159,7 +146,7 @@ object Run {
       }
       case AssertorResponseEvent(runId, ar@AssertorResult(_, assertor, url, _), _) => {
         toBeAsserted -= ((url, assertor))
-        run = run.withAssertorResult(ar)
+        run = run.withAssertorResult(ar)._1
       }
       case AssertorResponseEvent(runId, af@AssertorFailure(_, assertor, url, _), _) => {
         toBeAsserted -= ((url, assertor))
@@ -407,7 +394,7 @@ case class Run private (
 
   }
 
-  def withAssertorResult(result: AssertorResult): Run = {
+  def withAssertorResult(result: AssertorResult): (Run, List[Assertion]) = {
     val filteredAssertions = result.assertions filter { rAssertion =>
       ! assertions.exists { assertion =>
         assertion.assertor === result.assertor && assertion.url === rAssertion.url
@@ -422,7 +409,7 @@ case class Run private (
       warnings = this.warnings + nbWarnings,
       pendingAssertions = pendingAssertions - ((result.assertor, result.sourceUrl)))
 
-    newRun
+    (newRun, filteredAssertions)
   }
 
   def withAssertorFailure(fail: AssertorFailure): Run = {
