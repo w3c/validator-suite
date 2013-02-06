@@ -18,6 +18,12 @@ case object ERROR extends CachedResourceState
 object Cache {
 
   val logger = play.Logger.of(classOf[Cache])
+//  val logger = new Object {
+//    def debug(msg: String): Unit = println("== " + msg)
+//    def error(msg: String): Unit = println("== " + msg)
+//    def error(msg: String, t: Throwable): Unit = println("== " + msg)
+//    def warn(msg: String): Unit = println("== " + msg)
+//  }
 
   val metaRegex = """^(OK|ERROR) (\d+) (.*)$""".r
 

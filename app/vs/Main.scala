@@ -11,23 +11,50 @@ import org.w3.vs.store.MongoStore
 
 object Main {
 
+  def cacheW3C(): Unit = {
+    import org.w3.vs.http._
+    val urls = List(
+      "http://www.w3.org",
+      "http://www.w3.org/",
+      "http://www.w3.org/2008/site/css/advanced",
+      "http://www.w3.org/2008/site/css/minimum",
+      "http://www.w3.org/2008/site/css/minimum.css",
+      "http://www.w3.org/2008/site/css/print",
+      "http://www.w3.org/2008/site/css/print.css",
+      "http://www.w3.org/2008/site/css/realprint.css",
+      "http://www.w3.org/2008/site/images/favicon.ico",
+      "http://www.w3.org/Consortium/membership",
+      "http://www.w3.org/Help/",
+      "http://www.w3.org/News/atom.xml",
+      "http://www.w3.org/participate/",
+      "http://www.w3.org/standards/"
+    )
+    val cacheDirectory = new File("http-cache")
+    val cache = Cache(cacheDirectory)
+    cache.reset()
+    urls foreach { url => cache.retrieveAndCache(URL(url), GET) }
+  }
+
   def test(jobIdS: String): Unit = {
     implicit val conf = new DefaultProdConfiguration { }
 
-//    val jobId = JobId(jobIdS)
-//    val Some((run, urls, assertorCalls)) = Job.getLastRun(jobId).getOrFail()
-////    println("3 " + run.toBeExplored)
-//
-//    if (urls.size < 10)
-//      println("urls: " + urls)
-//    else
-//      println("urls: " + urls.size)
-//    println("assertorCalls: " + assertorCalls.size)
-//
-//    conf.system.shutdown()
-//    conf.system.awaitTermination()
-//    conf.httpClient.close()
-//    conf.connection.close()
+    val jobId = JobId(jobIdS)
+    val job = Job.get(jobId).getOrFail()
+    job.latestDone match {
+      case None => println("nothing to do")
+      case Some(Done(runId, reason, completedOn, jobData)) =>
+        val (run, urls, assertorCalls) = Run.get(runId).getOrFail(60.seconds)
+        if (urls.size < 10)
+          println("urls: " + urls)
+        else
+          println("urls: " + urls.size)
+        println("assertorCalls: " + assertorCalls.size)
+    }
+
+    conf.system.shutdown()
+    conf.system.awaitTermination()
+    conf.httpClient.close()
+    conf.connection.close()
 
     println("you need to press ctrl-c")
 
@@ -188,6 +215,9 @@ object Main {
     }
 
     args match {
+      case Array("cache") => {
+        cacheW3C()
+      }
       case Array("migration") => {
         val conf = new DefaultProdConfiguration { }
         //org.w3.vs.store.Formats26Dec.migration()(conf)
