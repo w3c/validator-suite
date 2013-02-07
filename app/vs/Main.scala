@@ -98,6 +98,8 @@ object Main {
 
     val bertails = User(userId = UserId(), email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", isSubscriber = true)
 
+    val ted = User(userId = UserId(), email = "ted@w3.org", name = "Ted Guild", password = "secret", isSubscriber = true)
+
     val bernard = User(userId = UserId(), email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar", isSubscriber = true)
 
     val ralph = User(userId = UserId(), email = "swick@w3.org", name = "Ralph R. Swick", password = "secret", isSubscriber = true)
@@ -180,6 +182,7 @@ object Main {
       _ <- MongoStore.reInitializeDb()
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
+      _ <- User.save(ted)
       _ <- User.save(bernard)
       _ <- User.save(ralph)
       _ <- User.save(w3team)
