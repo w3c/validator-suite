@@ -53,7 +53,7 @@ object Administration extends VSController {
       }
     } yield {
       case Html(_) => SeeOther(routes.Administration.index()).flashing(
-        ("success" -> "User ${email} succesfully saved with account type subscriber=${isSubscriber}")
+        ("success" -> s"User ${email} succesfully saved with account type subscriber=${isSubscriber}")
       )
     }
 
