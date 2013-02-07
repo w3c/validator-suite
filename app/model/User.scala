@@ -151,6 +151,7 @@ object User {
     * if an error happens, we assume it's because there was already a user with the same email
     * looks like the driver is buggy as it does not return a specific error code
     */
+  // Tom: This method should be called create.
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     val userId = user.id
@@ -159,6 +160,14 @@ object User {
     collection.insert(userJ) map { lastError => () } recover {
       case LastError(_, _, Some(11000), _, _) => throw DuplicatedEmail(user.vo.email)
     }
+  }
+
+  def update(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
+    import conf._
+    val userId = user.id
+    val selector = Json.obj("_id" -> toJson(userId))
+    val update = toJson(user.vo).asInstanceOf[JsObject] + ("_id" -> toJson(userId))
+    collection.update[JsValue, JsValue](selector, update) map { lastError => () }
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): Future[Unit] =

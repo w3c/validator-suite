@@ -4,10 +4,20 @@
 
   @libs.messages(messages)
 
-  <form action="@routes.Administration.jobs" method="post">
+  <form action="@routes.Administration.jobsPost" method="post">
       <h1>Delete a job</h1>
       <input type="text" placeholder="JobId to delete" name="jobId" required/>
       <button type="submit">Delete</button>
+  </form>
+
+  <form action="@routes.Administration.usersPost" method="post">
+      <h1>Change a user account type</h1>
+      <input type="text" placeholder="Email" name="email" required/>
+      <select name="userType">
+          <option value="oneTime">One-Time user</option>
+          <option value="subscriber">Subscriber</option>
+      </select>
+      <button type="submit">Submit</button>
   </form>
 
 }{ @***** Footer *****@
