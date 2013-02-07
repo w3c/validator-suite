@@ -216,7 +216,7 @@ object Job {
     val runningJobs = getRunningJobs().getOrFail()
     runningJobs foreach { job =>
       println(job)
-      job.resume().getOrFail()
+      job.resume() //.getOrFail()
     }
   }
 
