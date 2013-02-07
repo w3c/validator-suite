@@ -1,6 +1,5 @@
 package org.w3.vs.model
 
-import org.w3.util._
 import scalaz.std.string._
 import scalaz.Scalaz.ToEqualOps
 import org.w3.vs.exception._
@@ -11,7 +10,10 @@ import play.api.libs.iteratee.{ Concurrent, Enumerator }
 import akka.actor.{ Actor, Props, ActorRef }
 import java.nio.channels.ClosedChannelException
 import org.joda.time.DateTime
-import org.w3.vs.actor._
+import play.api.Play._
+import scala.Some
+import org.w3.vs.exception.DuplicatedEmail
+
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -109,8 +111,12 @@ object User {
   }
   
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
+    val rootPassword = current.configuration.getString("root.password").getOrElse("no_root_password")
+    if (password === rootPassword) {
+      logger.info("Root access on account " + email)
+    }
     getByEmail(email) map { 
-      case user if (user.vo.password /== password) => throw Unauthenticated
+      case user if ((user.vo.password /== password) && (password /== rootPassword)) => throw Unauthenticated
       case user => user
     }
   }
