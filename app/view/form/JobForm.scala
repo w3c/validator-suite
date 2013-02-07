@@ -77,7 +77,7 @@ object JobForm {
       //"assertor" -> of[Seq[String]].verifying("Choose an assertor", ! _.isEmpty),
       "entrypoint" -> of[URL],
       "linkCheck" -> of[Boolean](booleanFormatter),
-      "maxResources" -> number(min=1, max=2000)
+      "maxResources" -> number(min=1, max=5000)
     )
   )
 
