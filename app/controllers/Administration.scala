@@ -52,7 +52,9 @@ object Administration extends VSController {
         User.update(user.copy(vo = user.vo.copy(isSubscriber = isSubscriber)))
       }
     } yield {
-      case Html(_) => SeeOther(routes.Administration.index()).flashing(("success" -> ("User succesfully saved with new account type subscriber=" + isSubscriber)))
+      case Html(_) => SeeOther(routes.Administration.index()).flashing(
+        ("success" -> "User ${email} succesfully saved with account type subscriber=${isSubscriber}")
+      )
     }
 
     f recover {
