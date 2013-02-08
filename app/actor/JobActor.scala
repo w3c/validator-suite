@@ -115,7 +115,10 @@ extends Actor with FSM[JobActorState, Run] {
         Run.saveEvent(completeRunEvent)
       } onComplete {
         case Failure(t) => logger.error("could not complete event", t)
-        case Success(_) => tellEverybody(RunCompleted(userId, job.id, run.runId, now))
+        case Success(_) => {
+          tellEverybody(UpdateData(userId, job.id, run.runId, run.jobData))
+          tellEverybody(RunCompleted(userId, job.id, run.runId, now))
+        }
       }
       stopThisActor()
       goto(Stopping) using run
