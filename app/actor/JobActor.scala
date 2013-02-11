@@ -231,6 +231,7 @@ extends Actor with FSM[JobActorState, Run] {
       val now = DateTime.now(DateTimeZone.UTC)
       val done = Done(run.runId, Cancelled, now, run.jobData)
       Job.updateStatus(run.jobId, status = done, latestDone = done) flatMap { _ =>
+        tellEverybody(UpdateData(userId, job.id, run.runId, run.jobData))
         Run.saveEvent(CancelRunEvent(run.runId))
       } onComplete {
         case Failure(t) => logger.error("could not cancel event", t)
