@@ -11,9 +11,8 @@ import akka.actor.{ Actor, Props, ActorRef }
 import java.nio.channels.ClosedChannelException
 import org.joda.time.DateTime
 import play.api.Play._
-import scala.Some
 import org.w3.vs.exception.DuplicatedEmail
-
+import play.api.Configuration
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -78,6 +77,12 @@ object User {
 
   val logger = play.Logger.of(classOf[User])
 
+  lazy val rootPassword: String = {
+    val key = "root.password"
+    val configuration = Configuration.load(new java.io.File("."))
+    configuration.getString(key) getOrElse sys.error("could not find root password")
+  }
+
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("users")
 
@@ -111,12 +116,11 @@ object User {
   }
   
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
-    val rootPassword = current.configuration.getString("root.password").getOrElse("no_root_password")
     if (password === rootPassword) {
       logger.info("Root access on account " + email)
     }
     getByEmail(email) map { 
-      case user if ((user.vo.password /== password) && (password /== rootPassword)) => throw Unauthenticated
+      case user if (user.vo.password /== password) && (password /== rootPassword) => throw Unauthenticated
       case user => user
     }
   }
