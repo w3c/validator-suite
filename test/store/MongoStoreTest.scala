@@ -262,6 +262,39 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     runningJobs must contain(job5)
   }
 
+  "reInitialize a job" in {
+    val jobId = JobId()
+    val runId = RunId()
+    val job = job1.copy(id = jobId, status = Running(runId, akka.actor.ActorPath.fromString("akka://123456")))
+    val run = run1.copy(jobId = jobId, runId = runId)
+    val url = URL("http://example.com/foo")
+    val assertion = Assertion(
+      url = url,
+      assertor = AssertorId("foo"),
+      contexts = List.empty,
+      lang = "fr",
+      title = "some title",
+      severity = Warning,
+      description = Some("some description"))
+    val assertorResult = AssertorResult(run.context, AssertorId("foo"), url, List(assertion))
+    val script = for {
+      _ <- Job.save(job)
+      _ <- Run.saveEvent(CreateRunEvent(run))
+      _ <- Run.saveEvent(AssertorResponseEvent(run.runId, assertorResult))
+      assertionsBefore <- Run.getAssertions(run.runId)
+      _ <- Job.reInitialize(job.id, removeRunData = true)
+      rebornJob <- Job.get(job.id)
+      assertionsAfter <- Run.getAssertions(run.runId)
+    } yield {
+      rebornJob.id must be(job.id)
+      rebornJob.status must be(NeverStarted)
+      rebornJob.latestDone must be(None)
+      assertionsBefore must have size(1)
+      assertionsAfter must be('empty)
+    }
+    script.getOrFail()
+  }
+
 }
 
 class MongoStoreTestLight extends MongoStoreTest(
