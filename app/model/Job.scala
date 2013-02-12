@@ -63,8 +63,9 @@ case class Job(
     Job.save(this)
   
   def delete()(implicit conf: VSConfiguration): Future[Unit] = {
-    cancel()
-    Job.delete(id)
+    cancel() flatMap { case () =>
+      Job.delete(id)
+    }
   }
   
   def run()(implicit conf: VSConfiguration): Future[Job] = {
@@ -248,9 +249,25 @@ object Job {
   }
 
   def delete(jobId: JobId)(implicit conf: VSConfiguration): Future[Unit] = {
-    import conf._
     val query = Json.obj("_id" -> toJson(jobId))
     collection.remove[JsValue](query) map { lastError => () }
+  }
+
+  def reInitialize(jobId: JobId, removeRunData: Boolean = true)(implicit conf: VSConfiguration): Future[Unit] = {
+    Job.get(jobId) flatMap { job =>
+      val rebornJob = job.copy(status = NeverStarted, latestDone = None)
+      // as we don't change the jobId, this will override the previous one
+      val update = collection.update(
+        selector = Json.obj("_id" -> toJson(jobId)),
+        update = toJson(rebornJob) ) map { lastError => job }
+      update flatMap {  case job =>
+        job.status match {
+          case Done(runId, _, _, _) if removeRunData => Run.removeAll(runId)
+          case Running(runId, _) if removeRunData => Run.removeAll(runId)
+          case _ => Future.successful(())
+        }
+      }
+    }
   }
 
 }

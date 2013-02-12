@@ -112,6 +112,12 @@ object Run {
   def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
     sys.error("")
 
+  /** removes all the [[RunEvent]]s with the given runId */
+  def removeAll(runId: RunId)(implicit conf: VSConfiguration): Future[Unit] = {
+    val query = Json.obj("runId" -> toJson(runId))
+    collection.remove[JsValue](query) map { lastError => () }
+  }
+
   def apply(context: Run.Context, strategy: Strategy): Run =
     new Run(context._1, context._2, context._3, strategy)
 
