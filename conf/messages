@@ -109,6 +109,7 @@ jobs.off=Job {0} deactivated
 jobs.run=Job {0} started
 jobs.stop=Job {0} stopped
 jobs.deleted=Job {0} deleted
+jobs.reset=Job {0} reset
 
 # Exceptions
 exceptions.store=Store Exception: {0}

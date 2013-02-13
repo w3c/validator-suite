@@ -5,9 +5,10 @@
   @libs.messages(messages)
 
   <form action="@routes.Administration.jobsPost" method="post">
-      <h1>Delete a job</h1>
-      <input type="text" placeholder="JobId to delete" name="jobId" required/>
-      <button type="submit">Delete</button>
+      <h1>Delete/Reset a job</h1>
+      <input type="text" placeholder="JobId" name="jobId" required/>
+      <button type="submit" name="action" value="reset">Reset</button>
+      <button type="submit" name="action" value="delete">Delete</button>
   </form>
 
   <form action="@routes.Administration.usersPost" method="post">

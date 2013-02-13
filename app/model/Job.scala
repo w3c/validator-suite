@@ -67,7 +67,10 @@ case class Job(
       Job.delete(id)
     }
   }
-  
+
+  def reset(removeRunData: Boolean = true)(implicit conf: VSConfiguration): Future[Unit] =
+    Job.reset(this.id, removeRunData)
+
   def run()(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
     (runsActorRef ? RunsActor.RunJob(this)).mapTo[Running] map { running =>
@@ -253,7 +256,7 @@ object Job {
     collection.remove[JsValue](query) map { lastError => () }
   }
 
-  def reInitialize(jobId: JobId, removeRunData: Boolean = true)(implicit conf: VSConfiguration): Future[Unit] = {
+  def reset(jobId: JobId, removeRunData: Boolean = true)(implicit conf: VSConfiguration): Future[Unit] = {
     Job.get(jobId) flatMap { job =>
       val rebornJob = job.copy(status = NeverStarted, latestDone = None)
       // as we don't change the jobId, this will override the previous one

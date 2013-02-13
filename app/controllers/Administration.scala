@@ -19,17 +19,27 @@ object Administration extends VSController {
   }
 
   def jobsPost: ActionA = AsyncAction { implicit req =>
-    val jobId = (for {
+    // Really don't like that lenghty code to get just a few parameters from the body. Consider a helper function
+    val (jobId, action) = (for {
       body <- req.body.asFormUrlEncoded
-      param <- body.get("jobId")
-      jobId <- param.headOption
-    } yield jobId).get
+      param1 <- body.get("jobId")
+      param2 <- body.get("action")
+      jobId <- param1.headOption
+      action <- param2.headOption
+    } yield (jobId, action)).get
 
     for {
       job <- org.w3.vs.model.Job.get(JobId(jobId))
-      _ <- job.delete() // there's only a delete action for now
+      msg <- {
+        action match {
+          case "delete" => job.delete().map(_ => "jobs.deleted")
+          case "reset" => job.reset().map(_ => "jobs.reset")
+        }
+      }
     } yield {
-      case Html(_) => SeeOther(routes.Administration.index()).flashing(("success" -> Messages("jobs.deleted", jobId + " (" + job.name + ")")))
+      case Html(_) => SeeOther(routes.Administration.index()).flashing(
+        ("success" -> Messages(msg, jobId + " (" + job.name + ")"))
+      )
     }
   }
 
