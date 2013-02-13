@@ -282,7 +282,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       _ <- Run.saveEvent(CreateRunEvent(run))
       _ <- Run.saveEvent(AssertorResponseEvent(run.runId, assertorResult))
       assertionsBefore <- Run.getAssertions(run.runId)
-      _ <- Job.reInitialize(job.id, removeRunData = true)
+      _ <- Job.reset(job.id, removeRunData = true)
       rebornJob <- Job.get(job.id)
       assertionsAfter <- Run.getAssertions(run.runId)
     } yield {
