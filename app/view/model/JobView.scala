@@ -54,7 +54,7 @@ object JobView {
     import ExecutionContext.Implicits.global
     job.getJobData() map { data =>
       val activity: String = job.status match {
-        case NeverStarted | Done(_, _, _, _) => "idle"
+        case NeverStarted | Zombie | Done(_, _, _, _) => "idle"
         case Running(_, _) => "running"
       }
       val completedOn: Option[DateTime] = job.latestDone.map(_.completedOn)

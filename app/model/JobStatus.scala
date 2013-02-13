@@ -30,6 +30,7 @@ import org.w3.vs.actor.AssertorCall
 sealed trait JobStatus
 
 case object NeverStarted extends JobStatus
+case object Zombie extends JobStatus
 case class Running(runId: RunId, actorPath: ActorPath) extends JobStatus
 case class Done(
   runId: RunId,

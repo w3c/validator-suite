@@ -41,7 +41,7 @@ class RunsActor()(implicit conf: VSConfiguration) extends Actor {
       // then update the job status
       // then tells the sender
       val actions = job.status match {
-        case NeverStarted => {
+        case NeverStarted | Zombie => {
           Run.saveEvent(createRunEvent) flatMap { _ =>
             Job.updateStatus(job.id, status = running)(conf)
           }
@@ -80,7 +80,7 @@ class RunsActor()(implicit conf: VSConfiguration) extends Actor {
       val from = sender
       job.status match {
         // this is a valid message only if it was already Running
-        case NeverStarted => sys.error("not valid here")
+        case NeverStarted | Zombie => sys.error("not valid here")
         case Done(_, _, _, _) => sys.error("not valid here")
         case running @ Running(runId, actorPath) => {
           // recover a coherent state from the database

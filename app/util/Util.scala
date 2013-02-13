@@ -45,7 +45,7 @@ object Util {
 
   implicit class FutureF[+T](val future: Future[T]) extends AnyVal {
 
-    def getOrFail(duration: Duration = Duration("15s")): T = {
+    def getOrFail(duration: Duration = Duration("6s")): T = {
       Await.result(future, duration)
     }
 

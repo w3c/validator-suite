@@ -11,6 +11,8 @@ import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
 import org.w3.vs.actor._
+import scala.util.{ Success, Failure, Try }
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.exception.UnknownJob
@@ -45,7 +47,7 @@ case class Job(
 
   def getAssertions()(implicit conf: VSConfiguration): Future[List[Assertion]] = {
     status match {
-      case NeverStarted => Future.successful(List.empty)
+      case NeverStarted | Zombie => Future.successful(List.empty)
       case Done(runId, _, _, _) => Run.getAssertions(runId)
       case Running(runId, _) => Run.getAssertions(runId)
     }
@@ -53,7 +55,7 @@ case class Job(
 
   def getAssertionsForURL(url: URL)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
     status match {
-      case NeverStarted => Future.successful(List.empty)
+      case NeverStarted | Zombie => Future.successful(List.empty)
       case Done(runId, _, _, _) => Run.getAssertionsForURL(runId, url)
       case Running(runId, _) => Run.getAssertionsForURL(runId, url)
     }
@@ -87,7 +89,7 @@ case class Job(
   def cancel()(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     status match {
-      case NeverStarted => Future.successful(())
+      case NeverStarted | Zombie => Future.successful(())
       case Done(_, _, _, _) => Future.successful(())
       case Running(_, actorPath) => {
         val actorRef = system.actorFor(actorPath)
@@ -100,7 +102,7 @@ case class Job(
   def getJobData()(implicit conf: VSConfiguration): Future[JobData] = {
     import conf._
     status match {
-      case NeverStarted =>
+      case NeverStarted | Zombie =>
         Future.successful(JobData(0, 0, 0, createdAt = createdOn, completedOn = None))
       case Done(_, _, _, jobData) => Future.successful(jobData)
       case Running(_, actorPath) => {
@@ -214,13 +216,30 @@ object Job {
     cursor.toList map { list => list map { _.as[Job] } }
   }
 
-  /** be careful, this is blocking */
+  /** Resumes all the pending jobs (Running status) in the system.
+    * The function itself is blocking and intended to be called when VS is (re-)started.
+    * If resuming a Run fails (either an exception or a timeout) then the Job's status is updated to Zombie.
+    */
   def resumeAllJobs()(implicit conf: VSConfiguration): Unit = {
     import org.w3.util.Util.FutureF
     val runningJobs = getRunningJobs().getOrFail()
+    val duration = Duration("15s")
     runningJobs foreach { job =>
-      println(job)
-      job.resume() //.getOrFail()
+      val future = job.resume()
+      try {
+        logger.info(s"${job.id}: resuming -- wait up to ${duration}")
+        Await.result(future, duration)
+        logger.info(s"${job.id}: successfuly resumed")
+      } catch {
+        case t: Throwable =>
+          logger.error(s"failed to resume ${job}", t)
+          updateStatus(job.id, Zombie) onComplete {
+            case Failure(f) =>
+              logger.error(s"failed to update status of ${job.id} to Zombie", f)
+            case Success(_) =>
+              logger.info(s"${job.id} status is now Zombie. Restart the server to clean the global state.")
+          }
+      }
     }
   }
 

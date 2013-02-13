@@ -128,6 +128,8 @@ object Formats {
 
   implicit val NeverStartedFormat = constant("never-started", NeverStarted)
 
+  implicit val ZombieFormat = constant("zombie", Zombie)
+
   val CancelledFormat = constant("cancelled", Cancelled)
   val CompletedFormat = constant("completed", Completed)
   implicit object DoneReasonFormat extends Format[DoneReason] {
@@ -153,13 +155,15 @@ object Formats {
 
   implicit object JobStatusFormat extends Format[JobStatus] {
     def reads(json: JsValue): JsResult[JobStatus] =
-      NeverStartedFormat.reads(json) orElse
-        RunningFormat.reads(json) orElse
-        DoneFormat.reads(json)
+      RunningFormat.reads(json) orElse
+        NeverStartedFormat.reads(json) orElse
+        DoneFormat.reads(json) orElse
+        ZombieFormat.reads(json)
     def writes(jobStatus: JobStatus) = jobStatus match {
-      case s@NeverStarted => NeverStartedFormat.writes(s)
       case s@Running(_, _) => RunningFormat.writes(s)
+      case NeverStarted => NeverStartedFormat.writes(NeverStarted)
       case s@Done(_, _, _, _) => DoneFormat.writes(s)
+      case Zombie => ZombieFormat.writes(Zombie)
     }
   }
 

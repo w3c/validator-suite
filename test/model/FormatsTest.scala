@@ -102,6 +102,8 @@ class FormatsTest extends WordSpec with MustMatchers {
     toJson(jobStatus).as[JobStatus] must be(jobStatus)
     toJson(jobData).as[JobData] must be(jobData)
     toJson(done).as[JobStatus] must be(done)
+    toJson(NeverStarted)(NeverStartedFormat).as[JobStatus] must be(NeverStarted)
+    toJson(Zombie)(ZombieFormat).as[JobStatus] must be(Zombie)
     toJson(job).as[Job] must be(job)
     toJson(context).as[Context] must be(context)
     toJson(Error).as[AssertionSeverity] must be(Error)
