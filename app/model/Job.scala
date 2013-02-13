@@ -258,6 +258,7 @@ object Job {
 
   def reset(jobId: JobId, removeRunData: Boolean = true)(implicit conf: VSConfiguration): Future[Unit] = {
     Job.get(jobId) flatMap { job =>
+      job.cancel() // <- do not block!
       val rebornJob = job.copy(status = NeverStarted, latestDone = None)
       // as we don't change the jobId, this will override the previous one
       val update = collection.update(
