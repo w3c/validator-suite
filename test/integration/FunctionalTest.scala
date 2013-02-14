@@ -48,12 +48,6 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       click("#submit-login")
       url must be === ("http://localhost:9001/suite/login")
 
-      // can't log in with wrong password
-      fill("#email").`with`("bertails@w3.org")
-      fill("#password").`with`(current.configuration.getString("root.password").get)
-      click("#submit-login")
-      url must be === ("http://localhost:9001/suite/jobs/")
-
     }
   }
 }

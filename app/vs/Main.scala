@@ -65,7 +65,7 @@ object Main {
   def stressTestData(n: Int): Unit = {
     implicit val conf = new DefaultProdConfiguration { }
 
-    def makeUser(name: String): User = User(id = UserId(), email = name + "@w3.org", name = name, password = "secret", isSubscriber = true)
+    def makeUser(name: String): User = User.create(name = name, email = s"${name}@w3.org", password = "secret", isSubscriber = true)
 
     val script = for {
       _ <- MongoStore.reInitializeDb()
@@ -94,17 +94,17 @@ object Main {
     
     implicit val conf = new DefaultProdConfiguration { }
 
-    val tgambet = User(id = UserId(), email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", isSubscriber = false)
+    val tgambet = User.create(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", isSubscriber = false)
 
-    val bertails = User(id = UserId(), email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", isSubscriber = true)
+    val bertails = User.create(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", isSubscriber = true)
 
-    val ted = User(id = UserId(), email = "ted@w3.org", name = "Ted Guild", password = "secret", isSubscriber = true)
+    val ted = User.create(email = "ted@w3.org", name = "Ted Guild", password = "secret", isSubscriber = true)
 
-    val bernard = User(id = UserId(), email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar", isSubscriber = true)
+    val bernard = User.create(email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar", isSubscriber = true)
 
-    val ralph = User(id = UserId(), email = "swick@w3.org", name = "Ralph R. Swick", password = "secret", isSubscriber = true)
+    val ralph = User.create(email = "swick@w3.org", name = "Ralph R. Swick", password = "secret", isSubscriber = true)
 
-    val w3team = User(id = UserId(), email = "w3t@w3.org", name = "W3C Team", password = "w3team", isSubscriber = true)
+    val w3team = User.create(email = "w3t@w3.org", name = "W3C Team", password = "w3team", isSubscriber = true)
     
     val w3 = Job(
       id = JobId(),

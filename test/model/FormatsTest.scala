@@ -85,8 +85,7 @@ class FormatsTest extends WordSpec with MustMatchers {
   val cancelRunEvent = CancelRunEvent(RunId())
   val completeRunEvent = CompleteRunEvent(UserId(), JobId(), RunId(), DateTime.now(DateTimeZone.UTC))
 
-  val user = User(
-    id = UserId(),
+  val user = User.create(
     name = "foo bar",
     email = "foo@example.com",
     password = "secret",

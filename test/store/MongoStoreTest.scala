@@ -29,11 +29,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   import conf._
 
-  val user1: User = User(UserId(), "foo", "foo@example.com", "secret", isSubscriber = true)
+  val user1: User = User.create("foo", "foo@example.com", "secret", isSubscriber = true)
 
-  val user2 = User(UserId(), "bar", "bar@example.com", "secret", isSubscriber = true)
+  val user2 = User.create("bar", "bar@example.com", "secret", isSubscriber = true)
 
-  val user3 = User(UserId(), "baz", "baz@example.com", "secret", isSubscriber = true)
+  val user3 = User.create("baz", "baz@example.com", "secret", isSubscriber = true)
   
   val strategy =
     Strategy( 
@@ -203,7 +203,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "a User can't have an email already in use" in {
-    val user = User(UserId(), "FOO", "foo@example.com", "secret", isSubscriber = true)
+    val user = User.create("FOO", "foo@example.com", "secret", isSubscriber = true)
     Try { User.save(user).getOrFail() } must be (Failure(DuplicatedEmail("foo@example.com")))
     Try { User.register("FOO", "foo@example.com", "secret", true).getOrFail() } must be (Failure(DuplicatedEmail("foo@example.com")))
   }

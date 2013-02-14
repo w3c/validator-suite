@@ -13,6 +13,7 @@ import org.joda.time.DateTime
 import play.api.Play._
 import org.w3.vs.exception.DuplicatedEmail
 import play.api.Configuration
+import org.mindrot.jbcrypt.BCrypt
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -26,6 +27,10 @@ import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
 
+/** A User.
+  * Be careful when creating a User direclty with `new User` or `User.apply` as you'll have to hash the password yourself.
+  * Prefer `User.create` (or `User.register`) instead.
+  */
 case class User(
   id: UserId,
   name: String,
@@ -79,6 +84,14 @@ object User {
 
   val logger = play.Logger.of(classOf[User])
 
+  /** the root password, from the configuration file.
+    * We're actually the password to be hashed.
+    * Here is how you can easily hash a password from the REPL:
+    * ```
+    * scala> org.mindrot.jbcrypt.BCrypt.hashpw("the password", BCrypt.gensalt())
+    * res1: String = $2a$10$Iz9jrqrtT4VzV7s4.3l2bew/C3PZh52wDzc5GWlhYxvYa3cVk5u8i
+    * ```
+    */
   lazy val rootPassword: String = {
     val key = "root.password"
     val configuration = Configuration.load(new java.io.File("."))
@@ -91,7 +104,7 @@ object User {
   def sample(implicit conf: VSConfiguration): User = User(
     id = UserId("50cb6a1c04ca20aa0283bc85"),
     name = "Test user",
-    email = "sample@valid.w3.org",
+    email = BCrypt.hashpw("sample@valid.w3.org", BCrypt.gensalt()),
     password = DateTime.now().toString,
     isSubscriber = false
   )
@@ -106,24 +119,45 @@ object User {
     }
   }
   
+  /** Attemps to authenticate a user based on the couple email/password.
+    * The password is checked against the hash in the database.
+    */
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
-    if (password === rootPassword) {
-      logger.info("Root access on account " + email)
-    }
-    getByEmail(email) map { 
-      case user if (user.password /== password) && (password /== rootPassword) => throw Unauthenticated
-      case user => user
+    getByEmail(email) map {
+      case user if BCrypt.checkpw(password, user.password) => user
+      case user if BCrypt.checkpw(password, rootPassword) =>
+        logger.info(s"Root access on account ${email}")
+        user
+      case _ => throw Unauthenticated
     }
   }
 
+  /** Creates a User
+    * 
+    * @param name the name of this user as UTF8
+    * @param email the email of the user
+    * @password the plain-text password of the user
+    * @isSubscriber
+    */
+  def create(
+    name: String,
+    email: String,
+    password: String,
+    isSubscriber: Boolean): User = {
+    val hash = BCrypt.hashpw(password, BCrypt.gensalt())
+    val id = UserId()
+    val user = new User(id, name, email, hash, isSubscriber)
+    user
+  }
+
+  /** Creates a valid user based on characterics and saves it in the database.
+    * The password is hashed.
+    * 
+    * @returns the User created within a Future
+    */
   def register(name: String, email: String, password: String, isSubscriber: Boolean)(implicit conf: VSConfiguration): Future[User] = {
-    logger.info("Registering user: " + name + ", " + email)
-    val user = User(
-      id = UserId(),
-      name = name,
-      email = email,
-      password = password,
-      isSubscriber = isSubscriber)
+    logger.info(s"Registering user: ${name}, ${email}")
+    val user = User.create(name, email, password, isSubscriber)
     user.save().map(_ => user)
   }
   
