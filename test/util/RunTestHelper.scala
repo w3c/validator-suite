@@ -27,7 +27,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
 
   val vsEvents = configuration.vsEvents
 
-  val userTest = User(userId = UserId(), email = "", name = "", password = "", isSubscriber = true)
+  val userTest = User(id = UserId(), email = "", name = "", password = "", isSubscriber = true)
   
   val logger = play.Logger.of(classOf[RunTestHelper])
   

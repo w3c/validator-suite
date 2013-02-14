@@ -341,11 +341,12 @@ object Formats {
     }
   }
 
-  implicit val UserVOFormat: Format[UserVO] = (
+  implicit val UserFormat: Format[User] = (
+    (__ \ '_id).format[UserId] and
     (__ \ 'name).format[String] and
     (__ \ 'email).format[String] and
     (__ \ 'password).format[String] and
     (__ \ 'isSubscriber).format[Boolean]
-  )(UserVO.apply _, unlift(UserVO.unapply _))
+  )(User.apply _, unlift(User.unapply _))
 
 }

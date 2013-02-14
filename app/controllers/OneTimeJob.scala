@@ -61,10 +61,10 @@ object OneTimeJob extends VSController {
     } yield {
       case Html(_) => {
         if (user.isSubscriber) {
-          Redirect(routes.Jobs.index).withSession("email" -> user.vo.email)
+          Redirect(routes.Jobs.index).withSession("email" -> user.email)
         } else {
-          logger.info(s"Redirected user ${user.vo.email} to store for job ${routes.Job.get(job.id).toString}")
-          redirectToStore(form.otoj.value, job.id).withSession("email" -> user.vo.email)
+          logger.info(s"Redirected user ${user.email} to store for job ${routes.Job.get(job.id).toString}")
+          redirectToStore(form.otoj.value, job.id).withSession("email" -> user.email)
         }
       }
     }

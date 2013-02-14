@@ -26,26 +26,28 @@ import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
 
-case class User(id: UserId, vo: UserVO)(implicit conf: VSConfiguration) {
+case class User(
+  id: UserId,
+  name: String,
+  email: String,
+  password: String,
+  isSubscriber: Boolean) {
 
   import User.logger
-  import conf.{ system, vsEvents }
 
-  def isSubscriber = vo.isSubscriber
-
-  def getJob(jobId: JobId): Future[Job] = {
+  def getJob(jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
     Job.getFor(id, jobId)
   }
 
-  def getJobs(): Future[Iterable[Job]] = {
+  def getJobs()(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
     Job.getFor(id)
   }
   
-  def save(): Future[Unit] = User.save(this)
+  def save()(implicit conf: VSConfiguration): Future[Unit] = User.save(this)
   
-  def delete(): Future[Unit] = User.delete(this)
+  def delete()(implicit conf: VSConfiguration): Future[Unit] = User.delete(this)
 
-  lazy val enumerator: Enumerator[RunUpdate] = {
+  def enumerator()(implicit conf: VSConfiguration): Enumerator[RunUpdate] = {
     import conf._
     val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
     val subscriber: ActorRef = system.actorOf(Props(new Actor {
@@ -86,31 +88,20 @@ object User {
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("users")
 
-  def sample(implicit conf: VSConfiguration) = User(
-    userId = UserId("50cb6a1c04ca20aa0283bc85"),
+  def sample(implicit conf: VSConfiguration): User = User(
+    id = UserId("50cb6a1c04ca20aa0283bc85"),
     name = "Test user",
     email = "sample@valid.w3.org",
     password = DateTime.now().toString,
     isSubscriber = false
   )
 
-  def apply(
-    userId: UserId,
-    name: String,
-    email: String,
-    password: String,
-    isSubscriber: Boolean)(implicit conf: VSConfiguration): User =
-      User(userId, UserVO(name, email, password, isSubscriber))
-
   def get(userId: UserId)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
     val query = Json.obj("_id" -> toJson(userId))
     val cursor = collection.find[JsValue, JsValue](query)
     cursor.headOption map {
-      case Some(json) => {
-        val userVo = json.as[UserVO]
-        User(userId, userVo)
-      }
+      case Some(json) => json.as[User]
       case None => sys.error("user not found")
     }
   }
@@ -120,7 +111,7 @@ object User {
       logger.info("Root access on account " + email)
     }
     getByEmail(email) map { 
-      case user if (user.vo.password /== password) && (password /== rootPassword) => throw Unauthenticated
+      case user if (user.password /== password) && (password /== rootPassword) => throw Unauthenticated
       case user => user
     }
   }
@@ -128,7 +119,7 @@ object User {
   def register(name: String, email: String, password: String, isSubscriber: Boolean)(implicit conf: VSConfiguration): Future[User] = {
     logger.info("Registering user: " + name + ", " + email)
     val user = User(
-      userId = UserId(),
+      id = UserId(),
       name = name,
       email = email,
       password = password,
@@ -141,11 +132,7 @@ object User {
     val query = Json.obj("email" -> JsString(email))
     val cursor: FlattenedCursor[JsValue] = collection.find[JsValue, JsValue](query)
     cursor.headOption map {
-      case Some(json) => {
-        val id = (json \ "_id").as[UserId]
-        val userVo = json.as[UserVO]
-        User(id, userVo)
-      }
+      case Some(json) => json.as[User]
       case None => throw UnknownUser
     }
   }
@@ -159,18 +146,17 @@ object User {
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     val userId = user.id
-    val userJ = toJson(user.vo).asInstanceOf[JsObject] + ("_id" -> toJson(userId))
+    val userJ = toJson(user)
     import reactivemongo.core.commands.LastError
     collection.insert(userJ) map { lastError => () } recover {
-      case LastError(_, _, Some(11000), _, _) => throw DuplicatedEmail(user.vo.email)
+      case LastError(_, _, Some(11000), _, _) => throw DuplicatedEmail(user.email)
     }
   }
 
   def update(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    val userId = user.id
-    val selector = Json.obj("_id" -> toJson(userId))
-    val update = toJson(user.vo).asInstanceOf[JsObject] + ("_id" -> toJson(userId))
+    val selector = Json.obj("_id" -> toJson(user.id))
+    val update = toJson(user)
     collection.update[JsValue, JsValue](selector, update) map { lastError => () }
   }
 

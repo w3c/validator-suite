@@ -53,8 +53,8 @@ object Application extends VSController {
           param <- body.get("uri")
           uri <- param.headOption
         } yield uri) match {
-          case Some(uri) => SeeOther(uri).withSession("email" -> user.vo.email) // Redirect to "uri" param if specified
-          case None => SeeOther(routes.Jobs.index).withSession("email" -> user.vo.email)
+          case Some(uri) => SeeOther(uri).withSession("email" -> user.email) // Redirect to "uri" param if specified
+          case None => SeeOther(routes.Jobs.index).withSession("email" -> user.email)
         }
       }) recover {
         case  _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession
@@ -85,7 +85,7 @@ object Application extends VSController {
         // TODO The registration form should be protected. Registration for one-time users is done through its own form
         // and subscribers registration is done manually. If this form is protected for admins isSubscriber could be set to true
       } yield {
-        SeeOther(routes.Jobs.index).withSession("email" -> user.vo.email)
+        SeeOther(routes.Jobs.index).withSession("email" -> user.email)
       }) recover {
         case DuplicatedEmail(email: String) => BadRequest(views.html.register(RegisterForm.blank, List(("error" -> Messages("form.email.duplicate")))))
         case InvalidFormException(form: RegisterForm, _) => BadRequest(views.html.register(form))

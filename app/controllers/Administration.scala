@@ -59,7 +59,7 @@ object Administration extends VSController {
       user <- org.w3.vs.model.User.getByEmail(email)
       _ <- {
         Cache.remove(email)
-        User.update(user.copy(vo = user.vo.copy(isSubscriber = isSubscriber)))
+        User.update(user.copy(isSubscriber = isSubscriber))
       }
     } yield {
       case Html(_) => SeeOther(routes.Administration.index()).flashing(

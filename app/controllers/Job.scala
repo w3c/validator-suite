@@ -104,7 +104,7 @@ object Job extends VSController {
           job.run()
           SeeOther(routes.Job.get(job.id)) //.flashing(("success" -> Messages("jobs.run", job.name)))
         } else {
-          logger.info(s"Redirected user ${user.vo.email} to store for jobId ${job.id}")
+          logger.info(s"Redirected user ${user.email} to store for jobId ${job.id}")
           controllers.OneTimeJob.redirectToStore(OTOJType.fromJob(job).value, job.id)
         }
       }
