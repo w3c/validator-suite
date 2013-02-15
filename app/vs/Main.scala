@@ -223,7 +223,7 @@ object Main {
       }
       case Array("migration") => {
         val conf = new DefaultProdConfiguration { }
-        //org.w3.vs.store.Formats26Dec.migration()(conf)
+        org.w3.vs.store.MigrationFeb15.updatePasswords()(conf)
         println("done")
       }
       case Array("test", jobIdS) => test(jobIdS)
