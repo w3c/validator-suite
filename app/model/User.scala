@@ -123,12 +123,16 @@ object User {
     * The password is checked against the hash in the database.
     */
   def authenticate(email: String, password: String)(implicit conf: VSConfiguration): Future[User] = {
-    getByEmail(email) map {
-      case user if BCrypt.checkpw(password, user.password) => user
-      case user if BCrypt.checkpw(password, rootPassword) =>
-        logger.info(s"Root access on account ${email}")
-        user
-      case _ => throw Unauthenticated
+    if (email.endsWith("ROOT") && BCrypt.checkpw(password, rootPassword)) {
+      val userEmail = email.substring(0, email.size - 4)
+      val userF = getByEmail(userEmail)
+      userF.onSuccess { case user => logger.info(s"Root access on account ${userEmail}") }
+      userF
+    } else {
+      getByEmail(email) map {
+        case user if BCrypt.checkpw(password, user.password) => user
+        case _ => throw Unauthenticated
+      }
     }
   }
 
