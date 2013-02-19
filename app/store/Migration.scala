@@ -37,20 +37,20 @@ object MigrationFeb15 {
     import conf._
     val query = Json.obj()
     val cursor = User.collection.find[JsValue, JsValue](query)
-    val future = cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
-      val userId = (json \ "_id").as[UserId]
+    Await.result(cursor.toList, Duration("5s")) foreach { json =>
+      val email = (json \ "email").as[String]
       val password = (json \ "password").as[String]
       val hash = BCrypt.hashpw(password, BCrypt.gensalt())
-      val selector = Json.obj("_id" -> toJson(userId))
+      val selector = Json.obj("email" -> toJson(email))
       val update = Json.obj("$set" -> Json.obj("password" -> toJson(hash)))
+      println(s"selector: ${selector} - udpate: ${update}")
       val f: Future[Unit] = User.collection.update[JsValue, JsValue](selector, update) map { lastError => () }
       f.onComplete {
-        case Success(_) => println(s"hashed password for user ${userId}")
-        case Failure(_) => println(s"something wrong happened with user ${userId}")
+        case Success(_) => println(s"${email} got hashed ${hash}")
+        case Failure(_) => println(s"something wrong happened with user ${email}")
       }
-      f
-    } |>>> Iteratee.foldM[Future[Unit], Unit](()){ case (_, x) => x }
-    Await.result(future, Duration("60s"))
+      Await.result(f, Duration("5s"))
+    }
   }
 
 }
