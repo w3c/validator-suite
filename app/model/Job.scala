@@ -103,7 +103,7 @@ case class Job(
     import conf._
     status match {
       case NeverStarted | Zombie =>
-        Future.successful(JobData(0, 0, 0, createdAt = createdOn, completedOn = None))
+        Future.successful(JobData())
       case Done(_, _, _, jobData) => Future.successful(jobData)
       case Running(_, actorPath) => {
         val actorRef = system.actorFor(actorPath)

@@ -121,9 +121,7 @@ object Formats {
   implicit val JobDataFormat: Format[JobData] = (
     (__ \ 'resources).format[Int] and
     (__ \ 'errors).format[Int] and
-    (__ \ 'warnings).format[Int] and
-    (__ \ 'createdAt).format[DateTime] and
-    (__ \ 'completedOn).formatNullable[DateTime]
+    (__ \ 'warnings).format[Int]
   )(JobData.apply, unlift(JobData.unapply))
 
   implicit val NeverStartedFormat = constant("never-started", NeverStarted)

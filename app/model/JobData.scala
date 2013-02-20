@@ -4,15 +4,11 @@ import org.joda.time.DateTime
 import scala.math._
 
 case class JobData (
-    resources: Int,
-    errors: Int,
-    warnings: Int,
-    createdAt: DateTime,
-    completedOn: Option[DateTime]) {
+    resources: Int = 0,
+    errors: Int = 0,
+    warnings: Int = 0) {
   
   def health: Int = JobData.health(resources, errors, warnings)
-  
-  def isCompleted: Boolean = completedOn.isDefined
 
   def sameAs(data: JobData): Boolean = {
     errors == data.errors &&

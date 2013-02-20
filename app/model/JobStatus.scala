@@ -35,7 +35,6 @@ case class Running(runId: RunId, actorPath: ActorPath) extends JobStatus
 case class Done(
   runId: RunId,
   reason: DoneReason,
-  // TODO: this is repeated in jobData <- to be fixed
   completedOn: DateTime,
   jobData: JobData) extends JobStatus
 

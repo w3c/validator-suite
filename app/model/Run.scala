@@ -214,7 +214,7 @@ case class Run private (
 
   val shortId: String = jobId.shortId + "/" + runId.shortId
 
-  def jobData: JobData = JobData(numberOfFetchedResources, errors, warnings, createdAt, completedOn)
+  def jobData: JobData = JobData(numberOfFetchedResources, errors, warnings)
   
   def health: Int = jobData.health
 

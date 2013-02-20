@@ -32,7 +32,7 @@ class FormatsTest extends WordSpec with MustMatchers {
       filter = Filter.includeEverything,
       assertorsConfiguration = AssertorsConfiguration.default)
 
-  val jobData = JobData(0, 0, 0, DateTime.now(DateTimeZone.UTC), Some(DateTime.now(DateTimeZone.UTC)))
+  val jobData = JobData()
 
   val jobStatus = Running(RunId(), akka.actor.ActorPath.fromString("akka://system/user/foo"))
 
