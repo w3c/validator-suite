@@ -32,6 +32,8 @@ class FormatsTest extends WordSpec with MustMatchers {
       filter = Filter.includeEverything,
       assertorsConfiguration = AssertorsConfiguration.default)
 
+  val resourceData = ResourceData(URL("http://example.com/foo"), DateTime.now(DateTimeZone.UTC), 27, 19)
+
   val runData = RunData()
 
   val jobStatus = Running(RunId(), akka.actor.ActorPath.fromString("akka://system/user/foo"))
@@ -100,6 +102,7 @@ class FormatsTest extends WordSpec with MustMatchers {
   "all domain must be serializable and then deserializable" in {
     toJson(strategy).as[Strategy] must be(strategy)
     toJson(jobStatus).as[JobStatus] must be(jobStatus)
+    toJson(resourceData).as[ResourceData] must be(resourceData)
     toJson(runData).as[RunData] must be(runData)
     toJson(done).as[JobStatus] must be(done)
     toJson(NeverStarted)(NeverStartedFormat).as[JobStatus] must be(NeverStarted)

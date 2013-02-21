@@ -3,36 +3,13 @@ package org.w3.vs.store
 import org.w3.vs.model._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.{ Headers, URL }
-import org.w3.util.html.Doctype
 import org.w3.vs._
 import org.w3.vs.actor.JobActor._
 import org.w3.vs.actor.AssertorCall
 import scala.util._
-import play.api.libs.json.JsArray
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsString
-import play.api.libs.json.JsNumber
+import play.api.libs.json._
+import org.w3.vs.model._
 import org.w3.util.html.Doctype
-import play.api.libs.json.JsArray
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsString
-import play.api.libs.json.JsNumber
-import org.w3.util.html.Doctype
-import org.w3.vs.model.AssertorResult
-import play.api.libs.json.JsArray
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsString
-import org.w3.vs.model.AssertorResponseEvent
-import play.api.libs.json.JsNumber
-import org.w3.vs.model.Running
-import org.w3.vs.model.ResourceResponseEvent
-import org.w3.vs.model.Context
-import org.w3.vs.model.CompleteRunEvent
-import org.w3.util.html.Doctype
-import org.w3.vs.model.ErrorResponse
-import org.w3.vs.model.Done
-import org.w3.vs.model.CancelRunEvent
-import org.w3.vs.model.AssertorFailure
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -142,6 +119,15 @@ object Formats {
 
   import akka.actor.ActorPath
   implicit val ActorPatchFormat = string[ActorPath](ActorPath.fromString, _.toString)
+
+  implicit val ResourceDataFormat: Format[ResourceData] = new Format[ResourceData] {
+    def reads(json: JsValue): JsResult[ResourceData] = {
+      val arr = json.asInstanceOf[JsArray]
+      val rd = ResourceData(arr(0).as[URL], arr(1).as[DateTime], arr(2).as[Int], arr(3).as[Int])
+      JsSuccess(rd)
+    }
+    def writes(o: ResourceData): JsValue = Json.arr(toJson(o.url), toJson(o.lastValidated), toJson(o.warnings), toJson(o.errors))
+  }
 
   implicit val RunDataFormat: Format[RunData] = (
     (__ \ 'resources).format[Int] and
