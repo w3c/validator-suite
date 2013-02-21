@@ -110,24 +110,15 @@ extends Actor with FSM[JobActorState, Run] {
       logger.debug(s"${run.shortId}: Assertion phase finished")
       val now = DateTime.now(DateTimeZone.UTC)
       val completeRunEvent = CompleteRunEvent(run.userId, run.jobId, run.runId, now)
-      val done = Done(run.runId, Completed, now, run.jobData)
+      val done = Done(run.runId, Completed, now, run.data)
       Job.updateStatus(run.jobId, status = done, latestDone = done) flatMap { _ =>
         Run.saveEvent(completeRunEvent)
       } onComplete {
         case Failure(t) => logger.error("could not complete event", t)
-        case Success(_) => {
-          tellEverybody(UpdateData(userId, job.id, run.runId, run.jobData))
-          tellEverybody(RunCompleted(userId, job.id, run.runId, now))
-        }
+        case Success(_) => tellEverybody(RunCompleted(Run.Context(userId, job.id, run.runId), run.data, now))
       }
       stopThisActor()
       goto(Stopping) using run
-    } else if (!run.jobData.sameAs(stateData.jobData)) {
-      // Compare the state data and not the state of the fsm to tell if we must broadcast
-      // sameAs() compares jobData objects ignoring createdAt
-      val msg = UpdateData(userId, job.id, run.runId, run.jobData)
-      tellEverybody(msg)
-      stay() using run
     } else {
       stay() using run
     }
@@ -136,7 +127,7 @@ extends Actor with FSM[JobActorState, Run] {
   whenUnhandled {
 
     case Event(GetJobData, run) => {
-      sender ! run.jobData
+      sender ! run.data
       stay()
     }
 
@@ -188,7 +179,7 @@ extends Actor with FSM[JobActorState, Run] {
       val (newRun, filteredAssertions) = run.withAssertorResult(result)
       val newResult = result.copy(assertions = filteredAssertions)
       Run.saveEvent(AssertorResponseEvent(run.runId, newResult, now)) onSuccess { case () =>
-        tellEverybody(NewAssertorResult(newResult, newRun, now))
+        tellEverybody(NewAssertorResult(Run.Context(userId, job.id, run.runId), newResult, newRun, now, run.data))
       }
       stateOf(newRun)
     }
@@ -208,7 +199,7 @@ extends Actor with FSM[JobActorState, Run] {
       logger.debug(s"${run.shortId}: <<< ${httpResponse.url}")
       extractedUrls.update(httpResponse.extractedURLs.size)
       Run.saveEvent(ResourceResponseEvent(run.runId, httpResponse)) onSuccess { case () =>
-        tellEverybody(NewResource(run.context, httpResponse))
+        tellEverybody(NewResource(run.context, httpResponse, run.data))
       }
       val (newRun, urlsToFetch, assertorCalls) =
         run.withHttpResponse(httpResponse)
@@ -219,7 +210,7 @@ extends Actor with FSM[JobActorState, Run] {
     case Event((_: RunId, error: ErrorResponse), run) => {
       logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
       Run.saveEvent(ResourceResponseEvent(run.runId, error)) onSuccess { case () =>
-        tellEverybody(NewResource(run.context, error))
+        tellEverybody(NewResource(run.context, error, run.data))
       }
       val (runWithErrorResponse, urlsToFetch) = run.withErrorResponse(error)
       executeCommands(runWithErrorResponse, self, urlsToFetch, Iterable.empty, httpActorRef, assertionsActorRef)
@@ -229,13 +220,12 @@ extends Actor with FSM[JobActorState, Run] {
     case Event(Cancel, run) => {
       logger.debug(s"${run.shortId}: Cancel")
       val now = DateTime.now(DateTimeZone.UTC)
-      val done = Done(run.runId, Cancelled, now, run.jobData)
+      val done = Done(run.runId, Cancelled, now, run.data)
       Job.updateStatus(run.jobId, status = done, latestDone = done) flatMap { _ =>
-        tellEverybody(UpdateData(userId, job.id, run.runId, run.jobData))
         Run.saveEvent(CancelRunEvent(run.runId))
       } onComplete {
         case Failure(t) => logger.error("could not cancel event", t)
-        case Success(_) => tellEverybody(RunCancelled(userId, job.id, run.runId))
+        case Success(_) => tellEverybody(RunCancelled(Run.Context(userId, job.id, run.runId), run.data))
       }
       stopThisActor()
       goto(Stopping)

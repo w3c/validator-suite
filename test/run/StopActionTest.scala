@@ -41,7 +41,7 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
     val Running(runId, actorPath) = runningJob.status
 
     fishForMessagePF(3.seconds) {
-      case NewResource(_, ri) => ri.url must be(URL("http://localhost:9001/"))
+      case NewResource(_, ri, _) => ri.url must be(URL("http://localhost:9001/"))
     }
 
     // note: you can block on that if you wanted

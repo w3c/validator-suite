@@ -32,7 +32,7 @@ class FormatsTest extends WordSpec with MustMatchers {
       filter = Filter.includeEverything,
       assertorsConfiguration = AssertorsConfiguration.default)
 
-  val jobData = JobData()
+  val jobData = RunData()
 
   val jobStatus = Running(RunId(), akka.actor.ActorPath.fromString("akka://system/user/foo"))
 
@@ -75,10 +75,10 @@ class FormatsTest extends WordSpec with MustMatchers {
       extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")), Some(Doctype("html", "", "")))
 
   val assertorResult =
-    AssertorResult((UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), List(assertion))
+    AssertorResult(Run.Context(UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), List(assertion))
 
   val assertorFailure =
-    AssertorFailure((UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
+    AssertorFailure(Run.Context(UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
 
   val httpResponseEvent = ResourceResponseEvent(RunId(), httpResponse)
   val errorResponseEvent = ResourceResponseEvent(RunId(), errorResponse)
@@ -100,7 +100,7 @@ class FormatsTest extends WordSpec with MustMatchers {
   "all domain must be serializable and then deserializable" in {
     toJson(strategy).as[Strategy] must be(strategy)
     toJson(jobStatus).as[JobStatus] must be(jobStatus)
-    toJson(jobData).as[JobData] must be(jobData)
+    toJson(jobData).as[RunData] must be(jobData)
     toJson(done).as[JobStatus] must be(done)
     toJson(NeverStarted)(NeverStartedFormat).as[JobStatus] must be(NeverStarted)
     toJson(Zombie)(ZombieFormat).as[JobStatus] must be(Zombie)

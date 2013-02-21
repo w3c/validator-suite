@@ -2,23 +2,20 @@ package org.w3.vs.model
 
 import org.joda.time.DateTime
 import scala.math._
+import scalaz.Equal
 
-case class JobData (
+case class RunData (
     resources: Int = 0,
     errors: Int = 0,
     warnings: Int = 0) {
   
-  def health: Int = JobData.health(resources, errors, warnings)
-
-  def sameAs(data: JobData): Boolean = {
-    errors == data.errors &&
-    warnings == data.warnings &&
-    resources == data.resources
-  }
+  def health: Int = RunData.health(resources, errors, warnings)
 
 }
 
-object JobData {
+object RunData {
+
+  implicit val equal = Equal.equalA[RunData]
 
   def health(resources: Int, errors: Int, warnings: Int): Int = {
     if (resources == 0) -1

@@ -30,7 +30,13 @@ object Run {
 
   val logger = play.Logger.of(classOf[Run])
 
-  type Context = (UserId, JobId, RunId)
+  case class Context(userId: UserId, jobId: JobId, runId: RunId) {
+    val shortId: String = jobId.shortId + "/" + runId.shortId
+  }
+
+  object Context {
+    implicit val equal = Equal.equalA[Context]
+  }
 
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("runs")
@@ -112,20 +118,20 @@ object Run {
   def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
     sys.error("")
 
-  /** removes all the [[RunEvent]]s with the given runId */
+  /** removes all the [[org.w3.vs.model.RunEvent]]s with the given runId */
   def removeAll(runId: RunId)(implicit conf: VSConfiguration): Future[Unit] = {
     val query = Json.obj("runId" -> toJson(runId))
     collection.remove[JsValue](query) map { lastError => () }
   }
 
   def apply(context: Run.Context, strategy: Strategy): Run =
-    new Run(context._1, context._2, context._3, strategy)
+    new Run(context, strategy)
 
   def apply(context:Run.Context, strategy: Strategy, createdAt: DateTime): Run =
-    new Run(context._1, context._2, context._3, strategy, createdAt)
+    new Run(context, strategy, createdAt)
 
   def freshRun(userId: UserId, jobId: JobId, strategy: Strategy): Run = {
-    new Run(userId, jobId, RunId(), strategy = strategy)
+    new Run(Run.Context(userId, jobId, RunId()), strategy = strategy)
   }
 
   /* addResourceResponse */
@@ -143,7 +149,7 @@ object Run {
     val start = System.currentTimeMillis()
     var toBeFetched = Set.empty[URL]
     var toBeAsserted = Map.empty[(URL, AssertorId), AssertorCall]
-    val (initialRun, urls) = Run((userId, jobId, runId), strategy, createdAt).newlyStartedRun
+    val (initialRun, urls) = Run(Run.Context(userId, jobId, runId), strategy, createdAt).newlyStartedRun
     var run = initialRun
     toBeFetched ++= urls
     events.toList.sortBy(_.timestamp) foreach {
@@ -188,9 +194,10 @@ object Run {
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
 case class Run private (
-  userId: UserId,
+  context: Run.Context,
+  /*userId: UserId,
   jobId: JobId,
-  runId: RunId,
+  runId: RunId,*/
   strategy: Strategy,
   createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
   // from completion event, None at creation
@@ -210,13 +217,15 @@ case class Run private (
 
   import Run.logger
 
-  val context: Run.Context = (userId, jobId, runId)
+  val runId = context.runId
+  val jobId = context.jobId
+  val userId = context.userId
 
-  val shortId: String = jobId.shortId + "/" + runId.shortId
+  val shortId = context.shortId
 
-  def jobData: JobData = JobData(numberOfFetchedResources, errors, warnings)
+  def data: RunData = RunData(numberOfFetchedResources, errors, warnings)
   
-  def health: Int = jobData.health
+  def health: Int = data.health
 
   /* combinators */
 

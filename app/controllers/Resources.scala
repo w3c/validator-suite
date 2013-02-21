@@ -81,7 +81,7 @@ object Resources extends VSController  {
       job.enumerator &> Enumeratee.collect[RunUpdate] {
         url match {
           case None => {
-            case NewAssertorResult(result, run, now) => {
+            case NewAssertorResult(context, result, run, now, data) => {
               // URLs part of this assertorResult
               val urls = result.assertions.groupBy(_.url).map(_._1).toList
               // Get all the assertions we received for this urls
@@ -90,7 +90,7 @@ object Resources extends VSController  {
             }
           }
           case Some(url) => {
-            case NewAssertorResult(result, run, now) if result.assertions.map(_.url).toList.contains(url) => {
+            case NewAssertorResult(context, result, run, now, data) if result.assertions.map(_.url).toList.contains(url) => {
               val assertionViews = AssertionsView(run.assertions.filter(_.url.underlying === url), jobId, url)
               ResourcesView.single(url, assertionViews, jobId).toJson
             }

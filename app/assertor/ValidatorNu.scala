@@ -34,7 +34,9 @@ class ValidatorNu(serviceUrl: String) extends FromHttpResponseAssertor {
   }
 
   def assert(source: Source): Iterable[Assertion] = {
-    val json = Json.parse(source.getLines.mkString("\n"))
+    val s = source.getLines.mkString("\n")
+    println(s)
+    val json = Json.parse(s)
     val url = URL((json \ "url").asInstanceOf[JsString].value)
     val messages = json \ "messages"
     messages.asInstanceOf[JsArray].value.map { obj =>

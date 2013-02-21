@@ -10,7 +10,11 @@ import java.io.File
 
 object ValidatorNuTest {
 
-  val cacheDirectory = new File("test/resources/cache")
+  val cacheDirectory = {
+    val f = new File("test/resources/cache")
+    println(f.getAbsolutePath)
+    f
+  }
   val cache = Cache(cacheDirectory)
 
 }

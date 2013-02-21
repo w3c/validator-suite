@@ -101,15 +101,15 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     latestDone = None)
 
   // a job may have never completed, for example if the user has forced a new run
-  var run1 = Run((user1.id, job1.id, RunId()), job1.strategy, now)
+  var run1 = Run(Run.Context(user1.id, job1.id, RunId()), job1.strategy, now)
 
-  var run2 = Run((user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(5)).completeOn(now.plusMinutes(7))
+  var run2 = Run(Run.Context(user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(5)).completeOn(now.plusMinutes(7))
 
-  var run3 = Run((user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(10)).completeOn(now.plusMinutes(12))
+  var run3 = Run(Run.Context(user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(10)).completeOn(now.plusMinutes(12))
 
-  var run4 = Run((user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(15))
+  var run4 = Run(Run.Context(user1.id, job1.id, RunId()), job1.strategy, now.plusMinutes(15))
 
-  var run5: Run = Run((user1.id, job5.id, run5Id), job5.strategy, now)
+  var run5: Run = Run(Run.Context(user1.id, job5.id, run5Id), job5.strategy, now)
 
   val assertorIds = List(AssertorId("test_assertor_1"), AssertorId("test_assertor_2"))
 
@@ -172,7 +172,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     Run.saveEvent(CompleteRunEvent(run3.userId, run3.jobId, run3.runId, run3.completedOn.get)).getOrFail()
     /* job1 is still running with run4, and lastestDone was run3 */
     val status = Running(run4.runId, akka.actor.ActorPath.fromString("akka://system/user/foo"))
-    val latestDone = Done(run4.runId, Completed, run3.completedOn.get, run3.jobData)
+    val latestDone = Done(run4.runId, Completed, run3.completedOn.get, run3.data)
     Job.updateStatus(
       job1.id,
       status = status,
@@ -266,7 +266,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val jobId = JobId()
     val runId = RunId()
     val job = job1.copy(id = jobId, status = Running(runId, akka.actor.ActorPath.fromString("akka://123456")))
-    val run = run1.copy(jobId = jobId, runId = runId)
+    val run = run1.copy(context = run1.context.copy(jobId = jobId, runId = runId))
     val url = URL("http://example.com/foo")
     val assertion = Assertion(
       url = url,

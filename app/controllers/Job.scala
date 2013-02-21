@@ -147,12 +147,11 @@ object Job extends VSController {
     case Stream => Ok.stream(enumerator(jobId, user) &> EventSource())
   }}
 
-  // TODO it's ignoring many message!
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
     Enumerator.flatten(user.getJob(jobId).map(
-      _.enumerator &> Enumeratee.collect[RunUpdate] {
-        case UpdateData(_, id, _, data) => JobView.toJobMessage(jobId, data)
-        case RunCompleted(_, id, _, completedOn) => JobView.toJobMessage(jobId, completedOn)
+      _.enumerator &> Enumeratee.map[RunUpdate] {
+        case RunCompleted(_, data, completedOn) => JobView.toJobMessage(jobId, data, completedOn)
+        case runUpdate => JobView.toJobMessage(jobId, runUpdate.data)
       }
     ))
   }

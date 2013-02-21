@@ -106,7 +106,7 @@ object JobView {
     }
   }
 
-  def toJobMessage(jobId: JobId, data: JobData): JsValue = {
+  def toJobMessage(jobId: JobId, data: RunData): JsValue = {
     JsObject(Seq(
       ("id"           -> JsString(jobId.toString)),
       ("status"       -> JsString("running")),
@@ -117,10 +117,14 @@ object JobView {
     ))
   }
 
-  def toJobMessage(jobId: JobId, completedOn: DateTime): JsValue = {
+  def toJobMessage(jobId: JobId,data: RunData, completedOn: DateTime): JsValue = {
     JsObject(Seq(
       ("id"           -> JsString(jobId.toString)),
       ("status"       -> JsString("idle")),
+      ("warnings"     -> JsNumber(data.warnings)),
+      ("errors"       -> JsNumber(data.errors)),
+      ("resources"    -> JsNumber(data.resources)),
+      ("health"       -> JsNumber(data.health)),
       ("completedOn"  -> JsObject(Seq(
         ("timestamp"    -> JsString(completedOn.toString)),
         ("legend1"      -> JsString(Helper.formatTime(completedOn))),

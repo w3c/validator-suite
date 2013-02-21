@@ -98,16 +98,16 @@ case class Job(
     }
   }
 
-  // TODO: should be Future[Option[JobData]]
-  def getJobData()(implicit conf: VSConfiguration): Future[JobData] = {
+  // TODO: should be Future[Option[RunData]]
+  def getJobData()(implicit conf: VSConfiguration): Future[RunData] = {
     import conf._
     status match {
       case NeverStarted | Zombie =>
-        Future.successful(JobData())
+        Future.successful(RunData())
       case Done(_, _, _, jobData) => Future.successful(jobData)
       case Running(_, actorPath) => {
         val actorRef = system.actorFor(actorPath)
-        (actorRef ? JobActor.GetJobData).mapTo[JobData]
+        (actorRef ? JobActor.GetJobData).mapTo[RunData]
       }
     }
   }

@@ -8,6 +8,31 @@ import org.w3.vs._
 import org.w3.vs.actor.JobActor._
 import org.w3.vs.actor.AssertorCall
 import scala.util._
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsString
+import play.api.libs.json.JsNumber
+import org.w3.util.html.Doctype
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsString
+import play.api.libs.json.JsNumber
+import org.w3.util.html.Doctype
+import org.w3.vs.model.AssertorResult
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsString
+import org.w3.vs.model.AssertorResponseEvent
+import play.api.libs.json.JsNumber
+import org.w3.vs.model.Running
+import org.w3.vs.model.ResourceResponseEvent
+import org.w3.vs.model.Context
+import org.w3.vs.model.CompleteRunEvent
+import org.w3.util.html.Doctype
+import org.w3.vs.model.ErrorResponse
+import org.w3.vs.model.Done
+import org.w3.vs.model.CancelRunEvent
+import org.w3.vs.model.AssertorFailure
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -118,11 +143,11 @@ object Formats {
   import akka.actor.ActorPath
   implicit val ActorPatchFormat = string[ActorPath](ActorPath.fromString, _.toString)
 
-  implicit val JobDataFormat: Format[JobData] = (
+  implicit val JobDataFormat: Format[RunData] = (
     (__ \ 'resources).format[Int] and
     (__ \ 'errors).format[Int] and
     (__ \ 'warnings).format[Int]
-  )(JobData.apply, unlift(JobData.unapply))
+  )(RunData.apply, unlift(RunData.unapply))
 
   implicit val NeverStartedFormat = constant("never-started", NeverStarted)
 
@@ -148,7 +173,7 @@ object Formats {
     (__ \ 'runId).format[RunId] and
     (__ \ 'reason).format[DoneReason] and
     (__ \ 'completedOn).format[DateTime] and
-    (__ \ 'jobData).format[JobData]
+    (__ \ 'runData).format[RunData]
   )(Done.apply, unlift(Done.unapply))
 
   implicit object JobStatusFormat extends Format[JobStatus] {
@@ -248,15 +273,26 @@ object Formats {
     }
   }
 
+  implicit val RunContextFormat: Format[Run.Context] = new Format[Run.Context] {
+    def reads(json: JsValue): JsResult[Run.Context] = {
+      val a: JsArray = json.asInstanceOf[JsArray]
+      JsSuccess(Run.Context(userId = a(0).as[UserId], jobId = a(1).as[JobId], runId = a(2).as[RunId]))
+    }
+
+    def writes(o: Run.Context): JsValue = {
+      Json.arr(Json.toJson(o.userId), Json.toJson(o.jobId), Json.toJson(o.runId))
+    }
+  }
+
   val AssertorFailureFormat: Format[AssertorFailure] = (
-    (__ \ 'context).format[(UserId, JobId, RunId)] and
+    (__ \ 'context).format[Run.Context] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'sourceUrl).format[URL] and
     (__ \ 'why).format[String]
   )(AssertorFailure.apply _, unlift(AssertorFailure.unapply _))
 
   val AssertorResultFormat: Format[AssertorResult] = (
-    (__ \ 'context).format[(UserId, JobId, RunId)] and
+    (__ \ 'context).format[Run.Context] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'sourceUrl).format[URL] and
     (__ \ 'assertions).format[List[Assertion]]
