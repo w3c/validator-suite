@@ -21,25 +21,9 @@ object Resources extends VSController  {
   val logger = play.Logger.of("org.w3.vs.controllers.Resources")
 
   def index(id: JobId, url: Option[URL]): ActionA = {
-    if (id === ModelJob.sample.id) {
-      VSAction { req => {
-        case Html(_) => Redirect(routes.Resources.sample(url))
-        case _ => sample(url)(req)
-      }}
-    } else {
-      url match {
-        case Some(url) => AuthAction { index_(id, url) }
-        case None => AuthAsyncAction { index_(id) }
-      }
-    }
-  }
-
-  def sample(url: Option[URL]): ActionA = AsyncAction { implicit req =>
-    val sampleId = ModelJob.sample.id
-    val sampleUser = User.sample
     url match {
-      case Some(url) => Future.successful(index_(sampleId, url)(req)(sampleUser))
-      case None => index_(sampleId)(req)(sampleUser)
+      case Some(url) => AuthAction { index_(id, url) }
+      case None => AuthAsyncAction { index_(id) }
     }
   }
 

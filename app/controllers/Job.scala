@@ -29,24 +29,10 @@ object Job extends VSController {
   def reportByResource(id: JobId): ActionA = Resources.index(id, None)
 
   def get(id: JobId): ActionA = Action { implicit req =>
-    if (id == JobModel.sample.id) {
-      req.getQueryString("group") match {
-        case Some("message") => Redirect(routes.Assertions.sample(None))
-        case _ =>               Redirect(routes.Resources.sample(None))
-      }
-    } else {
       req.getQueryString("group") match {
         case Some("message") => Redirect(routes.Assertions.index(id, None))
         case _ =>               Redirect(routes.Resources.index(id, None))
       }
-    }
-  }
-
-  def sample: ActionA = Action { implicit req =>
-    req.getQueryString("group") match {
-      case Some("message") => Redirect(routes.Assertions.sample(None))
-      case _ =>               Redirect(routes.Resources.sample(None))
-    }
   }
 
   /*def edit(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>

@@ -19,25 +19,9 @@ object Assertors extends VSController {
   val logger = play.Logger.of("org.w3.vs.controllers.Assertors")
 
   def index(id: JobId, url: Option[URL]): ActionA = {
-    if (id === model.Job.sample.id) {
-      VSAction { req => {
-        case Html(_) => Redirect(routes.Assertors.sample(url))
-        case _ => sample(url)(req)
-      }}
-    } else {
-      url match {
-        case Some(url) => AuthAsyncAction { index_(id, url) }
-        case None => AuthAsyncAction { index_(id) }
-      }
-    }
-  }
-
-  def sample(url: Option[URL]): ActionA = AsyncAction { implicit req =>
-    val sampleId = model.Job.sample.id
-    val sampleUser = User.sample
     url match {
-      case Some(url) => index_(sampleId, url)(req)(sampleUser)
-      case None => index_(sampleId)(req)(sampleUser)
+      case Some(url) => AuthAsyncAction { index_(id, url) }
+      case None => AuthAsyncAction { index_(id) }
     }
   }
 

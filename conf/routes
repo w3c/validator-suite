@@ -20,24 +20,20 @@ POST    /jobs/purchase                              controllers.OneTimeJob.purch
 POST    /purchase/callback                          controllers.OneTimeJob.callback
 
 # Job
-GET     /jobs/sample/                               controllers.Job.sample()
 GET     /jobs/:job/                                 controllers.Job.get(job: JobId)
 POST    /jobs/:job/                                 controllers.Job.dispatcher(job: JobId)
 # GET     /jobs/:job/edit                           controllers.Job.edit(job: JobId)
 GET     /jobs/:job/socket/:socket                   controllers.Job.socket(job: JobId, socket: SocketType)
 
 # Job/assertions
-GET     /jobs/sample/assertions/                    controllers.Assertions.sample(resource: Option[URL])
 GET     /jobs/:job/assertions/                      controllers.Assertions.index(job: JobId, resource: Option[URL])
 GET     /jobs/:job/assertions/socket/:socket        controllers.Assertions.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Job/assertors
-GET     /jobs/sample/assertors/                     controllers.Assertors.sample(resource: Option[URL])
 GET     /jobs/:job/assertors/                       controllers.Assertors.index(job: JobId, resource: Option[URL])
 GET     /jobs/:job/assertors/socket/:socket         controllers.Assertors.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Job/resources
-GET     /jobs/sample/resources/                     controllers.Resources.sample(resource: Option[URL])
 GET     /jobs/:job/resources/                       controllers.Resources.index(job: JobId, resource: Option[URL])
 GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
