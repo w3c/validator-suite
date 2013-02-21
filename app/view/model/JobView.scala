@@ -52,7 +52,7 @@ object JobView {
 
   def apply(job: Job)(implicit conf: VSConfiguration): Future[JobView] = {
     import ExecutionContext.Implicits.global
-    job.getJobData() map { data =>
+    job.getRunData() map { data =>
       val activity: String = job.status match {
         case NeverStarted | Zombie | Done(_, _, _, _) => "idle"
         case Running(_, _) => "running"

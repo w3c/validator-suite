@@ -36,7 +36,7 @@ case class Done(
   runId: RunId,
   reason: DoneReason,
   completedOn: DateTime,
-  jobData: RunData) extends JobStatus
+  runData: RunData) extends JobStatus
 
 sealed trait DoneReason
 case object Cancelled extends DoneReason

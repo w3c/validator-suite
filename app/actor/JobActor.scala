@@ -30,7 +30,7 @@ object JobActor {
   case object Start
   case object Cancel
   case class Resume(toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall])
-  case object GetJobData
+  case object GetRunData
 
   val logger = Logger.of(classOf[JobActor])
 //  val logger = new Object {
@@ -126,7 +126,7 @@ extends Actor with FSM[JobActorState, Run] {
 
   whenUnhandled {
 
-    case Event(GetJobData, run) => {
+    case Event(GetRunData, run) => {
       sender ! run.data
       stay()
     }

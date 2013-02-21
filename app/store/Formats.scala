@@ -143,7 +143,7 @@ object Formats {
   import akka.actor.ActorPath
   implicit val ActorPatchFormat = string[ActorPath](ActorPath.fromString, _.toString)
 
-  implicit val JobDataFormat: Format[RunData] = (
+  implicit val RunDataFormat: Format[RunData] = (
     (__ \ 'resources).format[Int] and
     (__ \ 'errors).format[Int] and
     (__ \ 'warnings).format[Int]

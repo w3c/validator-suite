@@ -32,11 +32,11 @@ class FormatsTest extends WordSpec with MustMatchers {
       filter = Filter.includeEverything,
       assertorsConfiguration = AssertorsConfiguration.default)
 
-  val jobData = RunData()
+  val runData = RunData()
 
   val jobStatus = Running(RunId(), akka.actor.ActorPath.fromString("akka://system/user/foo"))
 
-  val done = Done(RunId(), Completed, DateTime.now(DateTimeZone.UTC), jobData)
+  val done = Done(RunId(), Completed, DateTime.now(DateTimeZone.UTC), runData)
 
   val job = Job(
     id = JobId(),
@@ -100,7 +100,7 @@ class FormatsTest extends WordSpec with MustMatchers {
   "all domain must be serializable and then deserializable" in {
     toJson(strategy).as[Strategy] must be(strategy)
     toJson(jobStatus).as[JobStatus] must be(jobStatus)
-    toJson(jobData).as[RunData] must be(jobData)
+    toJson(runData).as[RunData] must be(runData)
     toJson(done).as[JobStatus] must be(done)
     toJson(NeverStarted)(NeverStartedFormat).as[JobStatus] must be(NeverStarted)
     toJson(Zombie)(ZombieFormat).as[JobStatus] must be(Zombie)

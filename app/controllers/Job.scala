@@ -151,7 +151,7 @@ object Job extends VSController {
     Enumerator.flatten(user.getJob(jobId).map(
       _.enumerator &> Enumeratee.map[RunUpdate] {
         case RunCompleted(_, data, completedOn) => JobView.toJobMessage(jobId, data, completedOn)
-        case runUpdate => JobView.toJobMessage(jobId, runUpdate.data)
+        case update => JobView.toJobMessage(jobId, update.data)
       }
     ))
   }

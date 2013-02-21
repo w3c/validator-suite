@@ -53,7 +53,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper with Insid
 
     finalJob.latestDone must be(Some(finalJob.status))
 
-    inside(finalJob.status ) { case Done(runId, reason, completedOn, jobData) =>
+    inside(finalJob.status ) { case Done(runId, reason, completedOn, runData) =>
       reason must be(Completed)
     }
 

@@ -42,7 +42,7 @@ object Main {
     val job = Job.get(jobId).getOrFail()
     job.latestDone match {
       case None => println("nothing to do")
-      case Some(Done(runId, reason, completedOn, jobData)) =>
+      case Some(Done(runId, reason, completedOn, runData)) =>
         val (run, urls, assertorCalls) = Run.get(runId).getOrFail(60.seconds)
         if (urls.size < 10)
           println("urls: " + urls)

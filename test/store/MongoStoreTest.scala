@@ -18,7 +18,7 @@ abstract class MongoStoreTest(
   severities: Map[AssertionSeverity, Int],
   nbHttpErrorsPerAssertions: Int,
   nbHttpResponsesPerAssertions: Int,
-  nbJobDatas: Int)
+  nbRunDatas: Int)
 extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   val nbAssertionsPerRunPerAssertor = nbUrlsPerAssertions * ( severities(Error) + severities(Warning) + severities(Info) ) /* nb of contexts */
@@ -302,4 +302,4 @@ class MongoStoreTestLight extends MongoStoreTest(
   severities = Map(Error -> 2, Warning -> 3, Info -> 4),
   nbHttpErrorsPerAssertions = 2,
   nbHttpResponsesPerAssertions = 5,
-  nbJobDatas = 3)
+  nbRunDatas = 3)

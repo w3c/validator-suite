@@ -57,7 +57,7 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
 
     val finalJob = Job.get(job.id).getOrFail()
 
-    inside(finalJob.status ) { case Done(runId, reason, completedOn, jobData) =>
+    inside(finalJob.status ) { case Done(runId, reason, completedOn, runData) =>
       reason must be(Cancelled)
     }
 
