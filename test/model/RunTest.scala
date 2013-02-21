@@ -17,7 +17,7 @@ class RunTest extends WordSpec with MustMatchers {
       assertorsConfiguration = Map.empty)
 
   "A fresh run" must {
-    val fresh: Run = Run.freshRun(UserId(), JobId(), strategy)
+    val fresh: Run = Run.freshRun(strategy)
     "be really fresh" in {
       fresh.completedOn must be('empty)
       fresh.pending must be('empty)
@@ -37,8 +37,8 @@ class RunTest extends WordSpec with MustMatchers {
         severity = Warning,
         description = None,
         timestamp = DateTime.now(DateTimeZone.UTC))
-    val ar = AssertorResult(Run.Context(UserId(), JobId(), RunId()), assertorId, URL("http://example.com"), List(assertion))
-    val run = Run.freshRun(UserId(), JobId(), strategy)
+    val ar = AssertorResult(RunId(), assertorId, URL("http://example.com"), List(assertion))
+    val run = Run.freshRun(strategy)
     run.withAssertorResult(ar)._1.withAssertorResult(ar)._1 must be(run.withAssertorResult(ar)._1)
   }
 

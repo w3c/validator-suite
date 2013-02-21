@@ -29,19 +29,19 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
 
   val queue = Queue[AssertorCall]()
 
-  private def scheduleAssertion(context: Run.Context, assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
+  private def scheduleAssertion(runId: RunId, assertor: FromHttpResponseAssertor, response: HttpResponse): Unit = {
 
     atomic { implicit txn => pendingAssertions += 1 }
     val sender = self
     
     Future {
-      assertor.assert(context, response, job.strategy.assertorsConfiguration(assertor.id))
+      assertor.assert(runId, response, job.strategy.assertorsConfiguration(assertor.id))
     } andThen { case _ =>
       atomic { implicit txn => pendingAssertions -= 1 }
     } andThen {
       case Failure(t) => {
-        logger.error(s"${context.shortId}: ${assertor} failed to assert ${response.url} because [${t.getMessage}]", t)
-        sender ! AssertorFailure(context, assertor.id, response.url, why = t.getMessage)
+        logger.error(s"${runId.shortId}: ${assertor} failed to assert ${response.url} because [${t.getMessage}]", t)
+        sender ! AssertorFailure(runId, assertor.id, response.url, why = t.getMessage)
       }
       case Success(assertorResponse) => sender ! assertorResponse
     }
@@ -54,25 +54,25 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
       // not sure why this is done this way (Alex)
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
-        val AssertorCall(context, assertorId, nextRI) = queue.dequeue()
-        scheduleAssertion(context, assertorId, nextRI)
+        val AssertorCall(runId, assertorId, nextRI) = queue.dequeue()
+        scheduleAssertion(runId, assertorId, nextRI)
       }
     }
 
     case result: AssertorFailure => {
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
-        val AssertorCall(context, assertorId, nextRI) = queue.dequeue()
-        scheduleAssertion(context, assertorId, nextRI)
+        val AssertorCall(runId, assertorId, nextRI) = queue.dequeue()
+        scheduleAssertion(runId, assertorId, nextRI)
       }
     }
 
-    case call @ AssertorCall(context, assertorId, response) => {
+    case call @ AssertorCall(runId, assertorId, response) => {
       
       if (pendingAssertions.single() > MAX_PENDING_ASSERTION) {
         queue.enqueue(call)
       } else {
-        scheduleAssertion(context, assertorId, response)
+        scheduleAssertion(runId, assertorId, response)
       }
     }
 

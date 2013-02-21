@@ -108,8 +108,8 @@ object Jobs extends VSController {
 
   private def enumerator(user: User): Enumerator[JsValue] = {
     user.enumerator &> Enumeratee.map {
-      case RunCompleted(Run.Context(_, jobId, _), data, completedOn) => JsArray(List(JobView.toJobMessage(jobId, data, completedOn)))
-      case update => JsArray(List(JobView.toJobMessage(update.context.jobId, update.data)))
+      case RunCompleted(_, jobId, _, data, completedOn) => JsArray(List(JobView.toJobMessage(jobId, data, completedOn)))
+      case update => JsArray(List(JobView.toJobMessage(update.jobId, update.data)))
     }/*.recover{ case _ => Enumerator.eof[JsValue] }*/
   }
 

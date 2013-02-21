@@ -259,26 +259,15 @@ object Formats {
     }
   }
 
-  implicit val RunContextFormat: Format[Run.Context] = new Format[Run.Context] {
-    def reads(json: JsValue): JsResult[Run.Context] = {
-      val a: JsArray = json.asInstanceOf[JsArray]
-      JsSuccess(Run.Context(userId = a(0).as[UserId], jobId = a(1).as[JobId], runId = a(2).as[RunId]))
-    }
-
-    def writes(o: Run.Context): JsValue = {
-      Json.arr(Json.toJson(o.userId), Json.toJson(o.jobId), Json.toJson(o.runId))
-    }
-  }
-
   val AssertorFailureFormat: Format[AssertorFailure] = (
-    (__ \ 'context).format[Run.Context] and
+    (__ \ 'runId).format[RunId] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'sourceUrl).format[URL] and
     (__ \ 'why).format[String]
   )(AssertorFailure.apply _, unlift(AssertorFailure.unapply _))
 
   val AssertorResultFormat: Format[AssertorResult] = (
-    (__ \ 'context).format[Run.Context] and
+    (__ \ 'runId).format[RunId] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'sourceUrl).format[URL] and
     (__ \ 'assertions).format[List[Assertion]]
@@ -295,39 +284,36 @@ object Formats {
 
   val CreateRunEventFormat: Format[CreateRunEvent] = (
     (__ \ 'event).format[String](pattern("create-run".r)) and
-    (__ \ 'userId).format[UserId] and
-    (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
     (__ \ 'strategy).format[Strategy] and
     (__ \ 'createdAt).format[DateTime] and
     (__ \ 'timestamp).format[DateTime]
   )({
-    case (_, userId, jobId, runId, strategy, createdAt, timestamp) =>
-      CreateRunEvent(userId, jobId, runId, strategy, createdAt, timestamp)
+    case (_, runId, strategy, createdAt, timestamp) =>
+      CreateRunEvent(runId, strategy, createdAt, timestamp)
   },
     {
-      case CreateRunEvent(userId, jobId, runId, strategy, createdAt, timestamp) =>
-        ("create-run", userId, jobId, runId, strategy, createdAt, timestamp)
+      case CreateRunEvent(runId, strategy, createdAt, timestamp) =>
+        ("create-run", runId, strategy, createdAt, timestamp)
     }
   )
 
   val CompleteRunEventFormat: Format[CompleteRunEvent] = (
     (__ \ 'event).format[String](pattern("complete-run".r)) and
-    (__ \ 'userId).format[UserId] and
-    (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
-    (__ \ 'at).format[DateTime] and
+    (__ \ 'rd).format[Iterable[ResourceData]] and
     (__ \ 'timestamp).format[DateTime]
-  )({ case (_, userId, jobId, runId, at, timestamp) => CompleteRunEvent(userId, jobId, runId, at, timestamp) },
-    { case CompleteRunEvent(userId, jobId, runId, at, timestamp) => ("complete-run", userId, jobId, runId, at, timestamp) }
+  )({ case (_, runId, resourceDatas, timestamp) => CompleteRunEvent(runId, resourceDatas, timestamp) },
+    { case CompleteRunEvent(runId, resourceDatas, timestamp) => ("complete-run", runId, resourceDatas, timestamp) }
   )
 
   val CancelRunEventFormat: Format[CancelRunEvent] = (
     (__ \ 'event).format[String](pattern("cancel-run".r)) and
     (__ \ 'runId).format[RunId] and
+    (__ \ 'rd).format[Iterable[ResourceData]] and
     (__ \ 'timestamp).format[DateTime]
-  )({ case (_, runId, timestamp) => CancelRunEvent(runId, timestamp) },
-    { case CancelRunEvent(runId, timestamp) => ("cancel-run", runId, timestamp) }
+  )({ case (_, runId, resourceDatas, timestamp) => CancelRunEvent(runId, resourceDatas, timestamp) },
+    { case CancelRunEvent(runId, resourceDatas, timestamp) => ("cancel-run", runId, resourceDatas, timestamp) }
   )
 
   val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
@@ -353,11 +339,11 @@ object Formats {
         CompleteRunEventFormat.reads(json) orElse
         CancelRunEventFormat.reads(json)
     def writes(event: RunEvent) = event match {
-      case e@CreateRunEvent(_, _, _, _, _, _) => CreateRunEventFormat.writes(e)
-      case e@CompleteRunEvent(_, _, _, _, _) => CompleteRunEventFormat.writes(e)
+      case e@CreateRunEvent(_, _, _, _) => CreateRunEventFormat.writes(e)
+      case e@CompleteRunEvent(_, _, _) => CompleteRunEventFormat.writes(e)
       case e@AssertorResponseEvent(_, _, _) => AssertorResponseEventFormat.writes(e)
       case e@ResourceResponseEvent(_, _, _) => ResourceResponseEventFormat.writes(e)
-      case e@CancelRunEvent(_, _) => CancelRunEventFormat.writes(e)
+      case e@CancelRunEvent(_, _, _) => CancelRunEventFormat.writes(e)
     }
   }
 

@@ -9,7 +9,7 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
 
   def supportedMimeTypes: List[String]
 
-  def assert(context: Run.Context, response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
+  def assert(runId: RunId, response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
     val start = System.currentTimeMillis()
     val result = try {
       val assertions = assert(response.url, configuration)
@@ -19,9 +19,9 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
             val contexts = assertions.foldLeft(Iterable[Context]()){case (contexts, a) => contexts ++ a.contexts}
             assertions.head.copy(contexts = contexts.toList)
           }
-      AssertorResult(context = context, assertor = id, sourceUrl = response.url, assertions = assertions.toList)
+      AssertorResult(runId = runId, assertor = id, sourceUrl = response.url, assertions = assertions.toList)
     } catch { case t: Throwable =>
-      AssertorFailure(context = context, assertor = id, sourceUrl = response.url, why = t.getMessage)
+      AssertorFailure(runId = runId, assertor = id, sourceUrl = response.url, why = t.getMessage)
     }
     val end = System.currentTimeMillis()
     logger.debug("%s took %dms to assert %s" format (this.name, end - start, response.url))

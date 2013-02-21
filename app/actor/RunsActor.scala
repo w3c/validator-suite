@@ -31,11 +31,11 @@ class RunsActor()(implicit conf: VSConfiguration) extends Actor {
     case RunJob(job) => {
       val from = sender
       // start with a fresh job
-      val run = Run.freshRun(job.creatorId, job.id, job.strategy)
+      val run = Run.freshRun(job.strategy)
       // create the corresponding actor
       val jobActorRef = context.actorOf(Props(new JobActor(job, run)), name = createActorName())
       val running = Running(run.runId, jobActorRef.path)
-      val createRunEvent = CreateRunEvent(job.creatorId, job.id, run.runId, job.strategy, job.createdOn)
+      val createRunEvent = CreateRunEvent(run.runId, job.strategy, job.createdOn)
 
       // save the first RunEvent
       // then update the job status

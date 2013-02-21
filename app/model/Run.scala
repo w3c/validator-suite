@@ -30,14 +30,6 @@ object Run {
 
   val logger = play.Logger.of(classOf[Run])
 
-  case class Context(userId: UserId, jobId: JobId, runId: RunId) {
-    val shortId: String = jobId.shortId + "/" + runId.shortId
-  }
-
-  object Context {
-    implicit val equal = Equal.equalA[Context]
-  }
-
   def collection(implicit conf: VSConfiguration): DefaultCollection =
     conf.db("runs")
 
@@ -108,7 +100,7 @@ object Run {
       // the sort is done client-side
       val orderedEvents = list.map(_.as[RunEvent]).sortBy(_.timestamp)
       val (createRun, events) = orderedEvents match {
-        case (createRun@CreateRunEvent(_, _, _, _, _, _)) :: events => (createRun, events)
+        case (createRun@CreateRunEvent(_, _, _, _)) :: events => (createRun, events)
         case _ => sys.error("CreateRunEvent MUST be the first event")
       }
       Run.replayEvents(createRun, events)
@@ -124,14 +116,14 @@ object Run {
     collection.remove[JsValue](query) map { lastError => () }
   }
 
-  def apply(context: Run.Context, strategy: Strategy): Run =
-    new Run(context, strategy)
+  def apply(runId: RunId, strategy: Strategy): Run =
+    new Run(runId, strategy)
 
-  def apply(context:Run.Context, strategy: Strategy, createdAt: DateTime): Run =
-    new Run(context, strategy, createdAt)
+  def apply(runId: RunId, strategy: Strategy, createdAt: DateTime): Run =
+    new Run(runId, strategy, createdAt)
 
-  def freshRun(userId: UserId, jobId: JobId, strategy: Strategy): Run = {
-    new Run(Run.Context(userId, jobId, RunId()), strategy = strategy)
+  def freshRun(strategy: Strategy): Run = {
+    new Run(RunId(), strategy = strategy)
   }
 
   /* addResourceResponse */
@@ -149,12 +141,12 @@ object Run {
     val start = System.currentTimeMillis()
     var toBeFetched = Set.empty[URL]
     var toBeAsserted = Map.empty[(URL, AssertorId), AssertorCall]
-    val (initialRun, urls) = Run(Run.Context(userId, jobId, runId), strategy, createdAt).newlyStartedRun
+    val (initialRun, urls) = Run(runId, strategy, createdAt).newlyStartedRun
     var run = initialRun
     toBeFetched ++= urls
     events.toList.sortBy(_.timestamp) foreach {
-      case CompleteRunEvent(userId, jobId, runId, at, _) => {
-        run = run.completeOn(at)
+      case CompleteRunEvent(runId, resourceDatas, timestamp) => {
+        run = run.completeOn(timestamp)
       }
       case AssertorResponseEvent(runId, ar@AssertorResult(_, assertor, url, _), _) => {
         toBeAsserted -= ((url, assertor))
@@ -194,10 +186,7 @@ object Run {
  * see http://akka.io/docs/akka/snapshot/scala/fsm.html
  */
 case class Run private (
-  context: Run.Context,
-  /*userId: UserId,
-  jobId: JobId,
-  runId: RunId,*/
+  runId: RunId,
   strategy: Strategy,
   createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
   // from completion event, None at creation
@@ -217,15 +206,35 @@ case class Run private (
 
   import Run.logger
 
-  val runId = context.runId
-  val jobId = context.jobId
-  val userId = context.userId
-
-  val shortId = context.shortId
+  def shortId: String = runId.shortId.toString
 
   def data: RunData = RunData(numberOfFetchedResources, errors, warnings)
   
   def health: Int = data.health
+
+  def resourceDatas: Iterable[ResourceData] = {
+    val rds: Iterable[ResourceData] = assertions.groupBy(_.url).map {
+      case (url, assertions) => {
+        val last = assertions.maxBy(_.timestamp).timestamp
+        val errors = assertions.foldLeft(0) {
+          case (count, assertion) =>
+            count + (assertion.severity match {
+              case Error => scala.math.max(assertion.contexts.size, 1)
+              case _ => 0
+            })
+        }
+        val warnings = assertions.foldLeft(0) {
+          case (count, assertion) =>
+            count + (assertion.severity match {
+              case Warning => scala.math.max(assertion.contexts.size, 1)
+              case _ => 0
+            })
+        }
+        ResourceData(url, last, warnings, errors)
+      }
+    }
+    rds
+  }
 
   /* combinators */
 
@@ -386,7 +395,7 @@ case class Run private (
         val assertorCalls =
           if (httpResponse.method === GET) {
             val assertors = strategy.getAssertors(httpResponse)
-            assertors map { assertor => AssertorCall(this.context, assertor, httpResponse) }
+            assertors map { assertor => AssertorCall(runId, assertor, httpResponse) }
           } else {
             Set.empty[AssertorCall]
           }

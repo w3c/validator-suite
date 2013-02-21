@@ -115,12 +115,12 @@ object Assertions extends VSController  {
       job.enumerator &> Enumeratee.collect[RunUpdate] {
         url match {
           case None => {
-            case NewAssertorResult(context, result, run, now, data) => {
+            case NewAssertorResult(userId, jobId, runId, result, run, now, data) => {
               AssertionsView.grouped(result.assertions, jobId).toJson
             }
           }
           case Some(url) => {
-            case NewAssertorResult(context, result, run, now, data) if result.assertions.map(_.url).toList.contains(url) => {
+            case NewAssertorResult(userId, jobId, runId, result, run, now, data) if result.assertions.map(_.url).toList.contains(url) => {
               AssertionsView(run.assertions.filter(_.url.underlying === url), jobId, url).toJson
             }
           }

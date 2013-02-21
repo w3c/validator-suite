@@ -33,6 +33,7 @@ class FormatsTest extends WordSpec with MustMatchers {
       assertorsConfiguration = AssertorsConfiguration.default)
 
   val resourceData = ResourceData(URL("http://example.com/foo"), DateTime.now(DateTimeZone.UTC), 27, 19)
+  val resourceData2 = ResourceData(URL("http://example.com/bar"), DateTime.now(DateTimeZone.UTC), 27, 19)
 
   val runData = RunData()
 
@@ -77,15 +78,15 @@ class FormatsTest extends WordSpec with MustMatchers {
       extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")), Some(Doctype("html", "", "")))
 
   val assertorResult =
-    AssertorResult(Run.Context(UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), List(assertion))
+    AssertorResult(RunId(), AssertorId("test_assertor"), URL("http://example.com"), List(assertion))
 
   val assertorFailure =
-    AssertorFailure(Run.Context(UserId(), JobId(), RunId()), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
+    AssertorFailure(RunId(), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
 
   val httpResponseEvent = ResourceResponseEvent(RunId(), httpResponse)
   val errorResponseEvent = ResourceResponseEvent(RunId(), errorResponse)
-  val cancelRunEvent = CancelRunEvent(RunId())
-  val completeRunEvent = CompleteRunEvent(UserId(), JobId(), RunId(), DateTime.now(DateTimeZone.UTC))
+  val cancelRunEvent = CancelRunEvent(RunId(), Array(resourceData, resourceData2))
+  val completeRunEvent = CompleteRunEvent(RunId(), Array(resourceData, resourceData2), DateTime.now(DateTimeZone.UTC))
 
   val user = User.create(
     name = "foo bar",

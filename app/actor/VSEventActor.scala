@@ -31,9 +31,9 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
   protected def matches(classifier: MessageProvenance, event: RunUpdate): Boolean =
     classifier match {
-      case FromUser(userId) => userId === event.context.userId
-      case FromJob(jobId) => jobId === event.context.jobId
-      case FromRun(runId) => runId === event.context.runId
+      case FromUser(userId) => userId === event.userId
+      case FromJob(jobId) => jobId === event.jobId
+      case FromRun(runId) => runId === event.runId
     }
 
   protected def publish(event: Event, subscriber: ActorRef): Unit =
