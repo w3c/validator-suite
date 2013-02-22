@@ -25,6 +25,7 @@ case class NewResource(userId: UserId, jobId: JobId, runId: RunId, resource: Res
 case class NewAssertorResult(userId: UserId, jobId: JobId, runId: RunId, result: AssertorResult, run: Run, timestamp: DateTime, data: RunData) extends RunUpdate
 
 sealed trait MessageProvenance
+case object FromAll extends MessageProvenance
 case class FromUser(userId: UserId) extends MessageProvenance
 case class FromJob(jobId: JobId) extends MessageProvenance
 case class FromRun(runId: RunId) extends MessageProvenance

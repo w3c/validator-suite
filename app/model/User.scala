@@ -73,8 +73,7 @@ case class User(
         case msg => logger.error("subscriber got " + msg)
       }
     }))
-    // TODO
-    Await.result(vsEvents.subscribe(subscriber, FromUser(id)), atMost = timeout.duration)
+    runEventBus.subscribe(subscriber, FromUser(id))
     _enumerator
   }
 

@@ -36,12 +36,11 @@ class SimpleInterWebsiteTest extends RunTestHelper with TestKitHelper {
 
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
-    vsEvents.subscribe(testActor, FromJob(job.id))
+    runEventBus.subscribe(testActor, FromJob(job.id))
 
     fishForMessagePF(3.seconds) {
-      case _: RunCompleted => {
-        val rrs = ResourceResponse.getFor(runId).getOrFail()
-        rrs must have size (2)
+      case event: CompleteRunEvent => {
+        event.runData.resources must be(2)
       }
     }
 

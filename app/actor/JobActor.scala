@@ -31,6 +31,7 @@ object JobActor {
   case object Cancel
   case class Resume(toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall])
   case object GetRunData
+  case object GetResourceDatas
 
   val logger = Logger.of(classOf[JobActor])
 //  val logger = new Object {
@@ -108,15 +109,8 @@ extends Actor with FSM[JobActorState, Run] {
     } else if (run.hasNoPendingAction) {
       // if there is no more assertions, that's the end for this Run
       logger.debug(s"${run.shortId}: Assertion phase finished")
-      val now = DateTime.now(DateTimeZone.UTC)
-      val completeRunEvent = CompleteRunEvent(run.runId, run.resourceDatas)
-      val done = Done(run.runId, Completed, now, run.data)
-      Job.updateStatus(jobId, status = done, latestDone = done) flatMap { _ =>
-        Run.saveEvent(completeRunEvent)
-      } onComplete {
-        case Failure(t) => logger.error("could not complete event", t)
-        case Success(_) => tellEverybody(RunCompleted(userId, jobId, run.runId, run.data, now))
-      }
+      val completeRunEvent = CompleteRunEvent(userId, jobId, run.runId, run.data, run.resourceDatas)
+      publish(completeRunEvent)
       stopThisActor()
       goto(Stopping) using run
     } else {
@@ -150,6 +144,11 @@ extends Actor with FSM[JobActorState, Run] {
   when(NotYetStarted) {
 
     case Event(Start, run) => {
+      val event = CreateRunEvent(userId, jobId, run.runId, self.path, job.strategy, job.createdOn)
+      publish(event)
+      // Q: we could make running part of CreateRunEvent
+      val running = Running(run.runId, self.path)
+      sender ! running
       val (startedRun, toBeFetched) = run.newlyStartedRun
       executeCommands(startedRun, self, toBeFetched, List.empty, httpActorRef, assertionsActorRef)
       runningJobs.inc()
@@ -157,6 +156,7 @@ extends Actor with FSM[JobActorState, Run] {
     }
 
     case Event(Resume(toBeFetched, toBeAsserted), run) => {
+      sender ! ()
       executeCommands(run, self, toBeFetched, toBeAsserted, httpActorRef, assertionsActorRef)
       runningJobs.inc()
       goto(Started)
@@ -173,20 +173,20 @@ extends Actor with FSM[JobActorState, Run] {
       stay()
     }
 
+    // Run + Event ---> Run' + Actions
+    // List[Events] ---> Run + Actions
+
     case Event(result: AssertorResult, run) => {
       logger.debug(s"${run.shortId}: ${result.assertor} produced AssertorResult for ${result.sourceUrl}")
-      val now = DateTime.now(DateTimeZone.UTC)
       val (newRun, filteredAssertions) = run.withAssertorResult(result)
       val newResult = result.copy(assertions = filteredAssertions)
-      Run.saveEvent(AssertorResponseEvent(run.runId, newResult, now)) onSuccess { case () =>
-        tellEverybody(NewAssertorResult(userId, jobId, run.runId, newResult, newRun, now, run.data))
-      }
+      val event = AssertorResponseEvent(userId, jobId, run.runId, newResult)
+      publish(event)
       stateOf(newRun)
     }
 
     case Event(failure: AssertorFailure, run) => {
-      // TODO dispatch AssertorFailure as well?
-      Run.saveEvent(AssertorResponseEvent(run.runId, failure))
+      publish(AssertorResponseEvent(userId, jobId, run.runId, failure))
       stateOf(run.withAssertorFailure(failure))
     }
 
@@ -198,9 +198,11 @@ extends Actor with FSM[JobActorState, Run] {
     case Event((_: RunId, httpResponse: HttpResponse), run) => {
       logger.debug(s"${run.shortId}: <<< ${httpResponse.url}")
       extractedUrls.update(httpResponse.extractedURLs.size)
-      Run.saveEvent(ResourceResponseEvent(run.runId, httpResponse)) onSuccess { case () =>
-        tellEverybody(NewResource(userId, jobId, run.runId, httpResponse, run.data))
-      }
+//      Run.saveEvent(ResourceResponseEvent(run.runId, httpResponse)) onSuccess { case () =>
+//        tellEverybody(NewResource(userId, jobId, run.runId, httpResponse, run.data))
+//      }
+      val event = ResourceResponseEvent(userId, jobId, run.runId, httpResponse)
+      publish(event)
       val (newRun, urlsToFetch, assertorCalls) =
         run.withHttpResponse(httpResponse)
       executeCommands(newRun, self, urlsToFetch, assertorCalls, httpActorRef, assertionsActorRef)
@@ -209,9 +211,11 @@ extends Actor with FSM[JobActorState, Run] {
 
     case Event((_: RunId, error: ErrorResponse), run) => {
       logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
-      Run.saveEvent(ResourceResponseEvent(run.runId, error)) onSuccess { case () =>
-        tellEverybody(NewResource(userId, jobId, run.runId, error, run.data))
-      }
+//      Run.saveEvent(ResourceResponseEvent(run.runId, error)) onSuccess { case () =>
+//        tellEverybody(NewResource(userId, jobId, run.runId, error, run.data))
+//      }
+      val event = ResourceResponseEvent(userId, jobId, run.runId, error)
+      publish(event)
       val (runWithErrorResponse, urlsToFetch) = run.withErrorResponse(error)
       executeCommands(runWithErrorResponse, self, urlsToFetch, Iterable.empty, httpActorRef, assertionsActorRef)
       stateOf(runWithErrorResponse)
@@ -219,14 +223,8 @@ extends Actor with FSM[JobActorState, Run] {
 
     case Event(Cancel, run) => {
       logger.debug(s"${run.shortId}: Cancel")
-      val now = DateTime.now(DateTimeZone.UTC)
-      val done = Done(run.runId, Cancelled, now, run.data)
-      Job.updateStatus(jobId, status = done, latestDone = done) flatMap { _ =>
-        Run.saveEvent(CancelRunEvent(run.runId, run.resourceDatas))
-      } onComplete {
-        case Failure(t) => logger.error("could not cancel event", t)
-        case Success(_) => tellEverybody(RunCancelled(userId, jobId, run.runId, run.data))
-      }
+      val event = CancelRunEvent(userId, jobId, run.runId, run.data, run.resourceDatas)
+      publish(event)
       stopThisActor()
       goto(Stopping)
     }
@@ -234,12 +232,11 @@ extends Actor with FSM[JobActorState, Run] {
   }
 
   def stopThisActor(): Unit = {
-//    context.stop(assertionsActorRef)
     context.stop(self)
   }
 
-  private def tellEverybody(msg: RunUpdate): Unit = {
-    vsEvents.publish(msg)
+  def publish(event: RunEvent): Unit = {
+    runEventBus.publish(event)
   }
 
 }

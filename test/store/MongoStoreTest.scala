@@ -12,6 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
+import akka.actor.ActorPath
 
 abstract class MongoStoreTest(
   nbUrlsPerAssertions: Int,
@@ -28,6 +29,9 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   implicit val conf: VSConfiguration = new DefaultTestConfiguration { }
 
   import conf._
+
+  // just for the sake of this test :-)
+  val actorPath = ActorPath.fromString("akka://system/user/foo")
 
   val user1: User = User.create("foo", "foo@example.com", "secret", isSubscriber = true)
 
@@ -97,7 +101,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     createdOn = now,
     strategy = strategy,
     creatorId = user1.id,
-    status = Running(run5Id, akka.actor.ActorPath.fromString("akka://system/user/foo")),
+    status = Running(run5Id, actorPath),
     latestDone = None)
 
   // a job may have never completed, for example if the user has forced a new run
@@ -143,7 +147,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         assertion
       }
       val assertorResult = AssertorResult(run1.runId, assertorId, url, assertions)
-      Run.saveEvent(AssertorResponseEvent(run1.runId, assertorResult)).getOrFail()
+      Run.saveEvent(AssertorResponseEvent(user1.id, job1.id, run1.runId, assertorResult)).getOrFail()
     }
   }
 
@@ -160,16 +164,16 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       _ <- Job.save(job3)
       _ <- Job.save(job4)
       _ <- Job.save(job5)
-      _ <- Run.saveEvent(CreateRunEvent(run1))
-      _ <- Run.saveEvent(CreateRunEvent(run2))
-      _ <- Run.saveEvent(CreateRunEvent(run3))
-      _ <- Run.saveEvent(CreateRunEvent(run4))
-      _ <- Run.saveEvent(CreateRunEvent(run5))
+      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run1.runId, actorPath, run1.strategy, now))
+      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run2.runId, actorPath, run2.strategy, now))
+      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run3.runId, actorPath, run3.strategy, now))
+      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run4.runId, actorPath, run4.strategy, now))
+      _ <- Run.saveEvent(CreateRunEvent(user1.id, job5.id, run5.runId, actorPath, run5.strategy, now))
     } yield ()
     initScript.getOrFail()
     addAssertions() // <- already blocking
-    Run.saveEvent(CompleteRunEvent(run2.runId, run2.resourceDatas, run2.completedOn.get)).getOrFail()
-    Run.saveEvent(CompleteRunEvent(run3.runId, run3.resourceDatas, run3.completedOn.get)).getOrFail()
+    Run.saveEvent(CompleteRunEvent(user1.id, job1.id, run2.runId, run2.data, run2.resourceDatas, run2.completedOn.get)).getOrFail()
+    Run.saveEvent(CompleteRunEvent(user1.id, job1.id, run3.runId, run3.data, run3.resourceDatas, run3.completedOn.get)).getOrFail()
     /* job1 is still running with run4, and lastestDone was run3 */
     val status = Running(run4.runId, akka.actor.ActorPath.fromString("akka://system/user/foo"))
     val latestDone = Done(run4.runId, Completed, run3.completedOn.get, run3.data)
@@ -279,8 +283,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val assertorResult = AssertorResult(run.runId, AssertorId("foo"), url, List(assertion))
     val script = for {
       _ <- Job.save(job)
-      _ <- Run.saveEvent(CreateRunEvent(run))
-      _ <- Run.saveEvent(AssertorResponseEvent(run.runId, assertorResult))
+      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run.runId, actorPath, run.strategy, run.createdAt))
+      _ <- Run.saveEvent(AssertorResponseEvent(user1.id, job1.id, run.runId, assertorResult))
       assertionsBefore <- Run.getAssertions(run.runId)
       _ <- Job.reset(job.id, removeRunData = true)
       rebornJob <- Job.get(job.id)

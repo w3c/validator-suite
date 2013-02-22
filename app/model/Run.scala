@@ -100,7 +100,7 @@ object Run {
       // the sort is done client-side
       val orderedEvents = list.map(_.as[RunEvent]).sortBy(_.timestamp)
       val (createRun, events) = orderedEvents match {
-        case (createRun@CreateRunEvent(_, _, _, _)) :: events => (createRun, events)
+        case (createRun@CreateRunEvent(_, _, _, _, _, _, _)) :: events => (createRun, events)
         case _ => sys.error("CreateRunEvent MUST be the first event")
       }
       Run.replayEvents(createRun, events)
@@ -145,18 +145,18 @@ object Run {
     var run = initialRun
     toBeFetched ++= urls
     events.toList.sortBy(_.timestamp) foreach {
-      case CompleteRunEvent(runId, resourceDatas, timestamp) => {
+      case CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => {
         run = run.completeOn(timestamp)
       }
-      case AssertorResponseEvent(runId, ar@AssertorResult(_, assertor, url, _), _) => {
+      case AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), _) => {
         toBeAsserted -= ((url, assertor))
         run = run.withAssertorResult(ar)._1
       }
-      case AssertorResponseEvent(runId, af@AssertorFailure(_, assertor, url, _), _) => {
+      case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(_, assertor, url, _), _) => {
         toBeAsserted -= ((url, assertor))
         run = run.withAssertorFailure(af)
       }
-      case ResourceResponseEvent(runId, hr@HttpResponse(url, _, _, _, _, _), _) => {
+      case ResourceResponseEvent(userId, jobId, runId, hr@HttpResponse(url, _, _, _, _, _), _) => {
         toBeFetched -= url
         val (newRun, urls, assertorCalls) = run.withHttpResponse(hr)
         run = newRun
@@ -165,7 +165,7 @@ object Run {
           toBeAsserted += ((ac.response.url, ac.assertor.id) -> ac)
         }
       }
-      case ResourceResponseEvent(runId, er@ErrorResponse(url, _, _), _) => {
+      case ResourceResponseEvent(userId, jobId, runId, er@ErrorResponse(url, _, _), _) => {
         toBeFetched -= url
         val (newRun, urls) = run.withErrorResponse(er)
         run = newRun

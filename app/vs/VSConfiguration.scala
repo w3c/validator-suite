@@ -7,13 +7,13 @@ import org.w3.vs.http.Cache
 import akka.util.Timeout
 import reactivemongo.api.{ DefaultDB, MongoConnection }
 import com.mongodb.{ MongoClient, DB }
-import org.w3.vs.actor.VSEvents
+import org.w3.vs.actor.RunEventBus
 
 trait VSConfiguration {
   
   implicit val system: ActorSystem
 
-  val vsEvents: VSEvents
+  val runEventBus: RunEventBus
   
   val runsActorRef: ActorRef
 

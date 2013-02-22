@@ -9,91 +9,108 @@ import org.w3.vs.model._
 import scala.util._
 import scalaz.Scalaz._
 import scala.concurrent._
-// import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 
-/** an [[EventBus]] specialized for [[RunUpdate]]s */
-class VSEventBus() extends EventBus
-with ActorEventBus /* Represents an EventBus where the Subscriber type is ActorRef */
-with ScanningClassification /* Maps Classifiers to Subscribers */ {
-
-  type Event = RunUpdate
-  type Classifier = MessageProvenance
-
-  protected def compareClassifiers(a: MessageProvenance, b: MessageProvenance): Int = (a, b) match {
-    case (FromUser(u1), FromUser(u2)) => u1.toString compareTo u2.toString
-    case (FromUser(_), _) => -1
-    case (FromJob(j1), FromJob(j2)) => j1.toString compareTo j2.toString
-    case (FromJob(_), FromUser(_)) => 1
-    case (FromJob(_), FromRun(_)) => -1
-    case (FromRun(r1), FromRun(r2)) => r1.toString compareTo r2.toString
-    case (FromRun(_), _) => 1
-  }
-
-  protected def matches(classifier: MessageProvenance, event: RunUpdate): Boolean =
-    classifier match {
-      case FromUser(userId) => userId === event.userId
-      case FromJob(jobId) => jobId === event.jobId
-      case FromRun(runId) => runId === event.runId
-    }
-
-  protected def publish(event: Event, subscriber: ActorRef): Unit =
-    subscriber ! event
-
-}
-
-object VSEventsActor {
-
-  val logger = play.Logger.of(classOf[VSEventsActor])
+object RunEventBusActor {
 
   case class Listen(subscriber: ActorRef, provenance: MessageProvenance)
   case class Deafen(subscriber: ActorRef)
-  case class Publish(message: RunUpdate)
+  case class Publish(event: RunEvent)
 
 }
 
-class VSEventsActor() extends Actor {
+class RunEventBusActor() extends Actor {
 
-  import VSEventsActor.{ logger, Listen, Deafen, Publish }
+  import RunEventBusActor.{ Listen, Deafen, Publish }
 
-  val eventbus = new VSEventBus
+  val underlying =
+    new EventBus
+    with ActorEventBus /* Represents an EventBus where the Subscriber type is ActorRef */
+    with ScanningClassification /* Maps Classifiers to Subscribers */ {
+
+      type Classifier = MessageProvenance
+      type Event = RunEvent
+
+      protected def compareClassifiers(a: MessageProvenance, b: MessageProvenance): Int = (a, b) match {
+        case (FromAll, _) => -1
+        case (_, FromAll) => 1
+        case (FromUser(u1), FromUser(u2)) => u1.toString compareTo u2.toString
+        case (FromUser(_), _) => -1
+        case (FromJob(j1), FromJob(j2)) => j1.toString compareTo j2.toString
+        case (FromJob(_), FromUser(_)) => 1
+        case (FromJob(_), FromRun(_)) => -1
+        case (FromRun(r1), FromRun(r2)) => r1.toString compareTo r2.toString
+        case (FromRun(_), _) => 1
+      }
+
+      protected def matches(classifier: MessageProvenance, event: RunEvent): Boolean =
+        classifier match {
+          case FromAll => true
+          case FromUser(userId) => userId === event.userId
+          case FromJob(jobId) => jobId === event.jobId
+          case FromRun(runId) => runId === event.runId
+        }
+
+      protected def publish(event: Event, subscriber: ActorRef): Unit =
+        subscriber ! event
+
+    }
 
   def receive = {
-    case Publish(message) => {
-      eventbus.publish(message)
+    case Publish(event) => {
+      underlying.publish(event)
     }
     case Listen(subscriber, provenance) => {
       context.watch(subscriber)
-      eventbus.subscribe(subscriber, provenance)
-      sender ! ()
+      val b = underlying.subscribe(subscriber, provenance)
+      sender ! b
     }
     case Deafen(subscriber) => {
       context.unwatch(subscriber)
-      eventbus.unsubscribe(subscriber)
+      underlying.unsubscribe(subscriber)
     }
     case Terminated(ref) => {
-      eventbus.unsubscribe(ref)
+      underlying.unsubscribe(ref)
     }
   }
 
 }
 
-object VSEvents {
+object RunEventBus {
 
-  import VSEventsActor.{ Listen, Deafen, Publish }
+  import RunEventBusActor.{ Listen, Deafen, Publish }
 
-  def apply(actorRef: ActorRef) = new VSEvents {
-    def publish(message: RunUpdate): Unit =
-      actorRef ! Publish(message)
-    def subscribe(subscriber: ActorRef, provenance: MessageProvenance)(implicit ec: ExecutionContext, timeout: Timeout): Future[Unit] =
-      (actorRef ? Listen(subscriber, provenance)).mapTo[Unit]
-    def unsubscribe(subscriber: ActorRef): Unit =
-      actorRef ! Deafen(subscriber)
-  }
+  def apply(actorRef: ActorRef): RunEventBus = new RunEventBus(actorRef)
 
 }
 
-trait VSEvents {
-  def publish(message: RunUpdate): Unit
-  def subscribe(subscriber: ActorRef, provenance: MessageProvenance)(implicit ec: ExecutionContext, timeout: Timeout): Future[Unit]
-  def unsubscribe(subscriber: ActorRef): Unit
+class RunEventBus(actorRef: ActorRef) extends EventBus {
+
+  type Classifier = MessageProvenance
+  type Event = RunEvent
+  type Subscriber = ActorRef
+
+  import RunEventBusActor._
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+  val duration = Duration(1, "s")
+  implicit val timeout = akka.util.Timeout(duration)
+
+  def publish(event: RunEvent): Unit =
+    actorRef ! Publish(event)
+
+  def subscribe(subscriber: ActorRef): Boolean =
+    subscribe(subscriber, FromAll)
+
+  def subscribe(subscriber: ActorRef, provenance: MessageProvenance): Boolean = {
+    val f = (actorRef ? Listen(subscriber, provenance)).mapTo[Boolean]
+    Await.result(f, duration)
+  }
+
+  def unsubscribe(subscriber: ActorRef): Unit = {
+    actorRef ! Deafen(subscriber)
+  }
+
+  def unsubscribe(subscriber: ActorRef, provenance: MessageProvenance): Boolean = ???
+
 }

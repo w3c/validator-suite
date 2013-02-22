@@ -58,7 +58,7 @@ try {
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    vsEvents.subscribe(testActor, FromJob(job.id))
+    runEventBus.subscribe(testActor, FromJob(job.id))
 
     fishForMessagePF(10.seconds) { case _: RunCompleted => () }
 

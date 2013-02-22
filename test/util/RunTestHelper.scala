@@ -25,7 +25,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
 
   implicit val timeout = configuration.timeout
 
-  val vsEvents = configuration.vsEvents
+  val runEventBus = configuration.runEventBus
 
   val userTest = User.create(email = "", name = "", password = "", isSubscriber = true)
   

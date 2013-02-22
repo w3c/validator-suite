@@ -41,15 +41,14 @@ class FilteredTreeWebsiteTest extends RunTestHelper with TestKitHelper {
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    vsEvents.subscribe(testActor, FromJob(job.id))
+    runEventBus.subscribe(testActor, FromJob(job.id))
 
     fishForMessagePF(3.seconds) {
-      case _: RunCompleted => {
-        val rrs = ResourceResponse.getFor(runId).getOrFail(3.seconds)
-        rrs must have size (50)
-        rrs foreach { rr =>
-          rr.url.toString must startWith regex ("http://localhost:9001/[13]")
-        }
+      case event: CompleteRunEvent => {
+        event.runData.resources must be(50)
+//        rrs foreach { rr =>
+//          rr.url.toString must startWith regex ("http://localhost:9001/[13]")
+//        }
       }
     }
 

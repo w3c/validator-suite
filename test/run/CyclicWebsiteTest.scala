@@ -40,22 +40,21 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper with Insid
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    vsEvents.subscribe(testActor, FromJob(job.id))
+    runEventBus.subscribe(testActor, FromJob(job.id))
 
-    fishForMessagePF(3.seconds) { case _: RunCompleted => () }
+    val event = fishForMessagePF(3.seconds) { case event: CompleteRunEvent => event }
 
-    val rrs = ResourceResponse.getFor(runId).getOrFail(3.seconds)
-    rrs must have size (circumference + 1)
+    event.runData.resources must be(circumference + 1)
 
     // just checking that the data in the store is correct
 
-    val finalJob = Job.get(job.id).getOrFail()
-
-    finalJob.latestDone must be(Some(finalJob.status))
-
-    inside(finalJob.status ) { case Done(runId, reason, completedOn, runData) =>
-      reason must be(Completed)
-    }
+//    val finalJob = Job.get(job.id).getOrFail()
+//
+//    finalJob.latestDone must be(Some(finalJob.status))
+//
+//    inside(finalJob.status ) { case Done(runId, reason, completedOn, runData) =>
+//      reason must be(Completed)
+//    }
 
   }
   

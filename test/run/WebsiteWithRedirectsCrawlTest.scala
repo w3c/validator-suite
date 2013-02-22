@@ -39,13 +39,11 @@ class WebsiteWithRedirectsCrawlTest extends RunTestHelper with TestKitHelper {
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    vsEvents.subscribe(testActor, FromJob(job.id))
+    runEventBus.subscribe(testActor, FromJob(job.id))
 
     fishForMessagePF(3.seconds) {
-      case _: RunCompleted => {
-        val rrs = ResourceResponse.getFor(runId).getOrFail()
-        // the redirect URLs are not counted
-        rrs.filterNot(_.url.toString endsWith ",redirect") must have size (circumference + 1)
+      case event: CompleteRunEvent => {
+        event.runData.resources must be(circumference + 1)
       }
     }
 

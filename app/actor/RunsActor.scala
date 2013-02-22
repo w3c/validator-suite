@@ -34,44 +34,7 @@ class RunsActor()(implicit conf: VSConfiguration) extends Actor {
       val run = Run.freshRun(job.strategy)
       // create the corresponding actor
       val jobActorRef = context.actorOf(Props(new JobActor(job, run)), name = createActorName())
-      val running = Running(run.runId, jobActorRef.path)
-      val createRunEvent = CreateRunEvent(run.runId, job.strategy, job.createdOn)
-
-      // save the first RunEvent
-      // then update the job status
-      // then tells the sender
-      val actions = job.status match {
-        case NeverStarted | Zombie => {
-          Run.saveEvent(createRunEvent) flatMap { _ =>
-            Job.updateStatus(job.id, status = running)(conf)
-          }
-        }
-        case running @ Running(_, actorPath) => {
-          // in this case, we also need to stop the current JobActor supporting this run
-          val actorRef = conf.system.actorFor(actorPath)
-          context.stop(actorRef) // <- this is non-blocking at all
-          Run.saveEvent(createRunEvent) flatMap { _ =>
-            Job.updateStatus(job.id, status = running)(conf)
-          }
-        }
-        case done @ Done(_, _, _, _) => {
-          Run.saveEvent(createRunEvent) flatMap { _ =>
-            // let's not forget to udpate the latestDone
-            Job.updateStatus(job.id, status = running, latestDone = done)(conf)
-          }
-        }
-      }
-
-      // when the actions are done, we send the new JobStatus to the sender
-      // and we tell the JobActor to start the run
-      actions onComplete {
-        case f @ Failure(t) => from ! f
-        case Success(_) => {
-          jobActorRef ! JobActor.Start
-          from ! running
-        }
-      }
-
+      jobActorRef.forward(JobActor.Start)
     }
 
     // this is supposed to be sent only when we restart the application
@@ -92,8 +55,7 @@ class RunsActor()(implicit conf: VSConfiguration) extends Actor {
               // it should be safe as we're starting from scratch
               val jobActorRef = context.actorOf(Props(new JobActor(job, run)), name = actorPath.name)
               // we can now tell the JobActor to resume its work
-              jobActorRef ! JobActor.Resume(toBeFetched, toBeAsserted)
-              from ! ()
+              jobActorRef.tell(JobActor.Resume(toBeFetched, toBeAsserted), from)
             }
           }
         }

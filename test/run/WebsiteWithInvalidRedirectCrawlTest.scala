@@ -59,15 +59,14 @@ class WebsiteWithInvalidRedirectCrawlTest extends RunTestHelper with TestKitHelp
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    vsEvents.subscribe(testActor, FromJob(job.id))
+    runEventBus.subscribe(testActor, FromJob(job.id))
 
     fishForMessagePF(3.seconds) {
-      case _: RunCompleted => {
-        val rrs = ResourceResponse.getFor(runId).getOrFail()
-        rrs must have size(3)
-        val codes = rrs.toList.collect{ case HttpResponse(_, _, code, _, _, _) => code }
-        codes.count(_ == 200) must be(2)
-        codes.count(_ == 302) must be(1)
+      case event: CompleteRunEvent => {
+        event.runData.resources must be(2)
+//        val codes = rrs.toList.collect{ case HttpResponse(_, _, code, _, _, _) => code }
+//        codes.count(_ == 200) must be(2)
+//        codes.count(_ == 302) must be(1)
       }
     }
 

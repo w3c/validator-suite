@@ -64,13 +64,12 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     val resume = rJob.resume().getOrFail()
     resume must be(())
 
-    vsEvents.subscribe(testActor, FromJob(job.id))
+    runEventBus.subscribe(testActor, FromJob(job.id))
     
     // that's the same test as in cyclic
     fishForMessagePF(3.seconds) {
-      case _: RunCompleted => {
-        val rrs = ResourceResponse.getFor(runId).getOrFail(3.seconds)
-        rrs must have size (circumference + 1)
+      case event: CompleteRunEvent => {
+        event.runData.resources must be(circumference + 1)
       }
     }
 

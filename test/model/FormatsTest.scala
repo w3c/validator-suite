@@ -83,10 +83,10 @@ class FormatsTest extends WordSpec with MustMatchers {
   val assertorFailure =
     AssertorFailure(RunId(), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
 
-  val httpResponseEvent = ResourceResponseEvent(RunId(), httpResponse)
-  val errorResponseEvent = ResourceResponseEvent(RunId(), errorResponse)
-  val cancelRunEvent = CancelRunEvent(RunId(), Array(resourceData, resourceData2))
-  val completeRunEvent = CompleteRunEvent(RunId(), Array(resourceData, resourceData2), DateTime.now(DateTimeZone.UTC))
+  val httpResponseEvent = ResourceResponseEvent(UserId(), JobId(), RunId(), httpResponse)
+  val errorResponseEvent = ResourceResponseEvent(UserId(), JobId(), RunId(), errorResponse)
+  val cancelRunEvent = CancelRunEvent(UserId(), JobId(), RunId(), runData, Array(resourceData, resourceData2))
+  val completeRunEvent = CompleteRunEvent(UserId(), JobId(), RunId(), runData, Array(resourceData, resourceData2), DateTime.now(DateTimeZone.UTC))
 
   val user = User.create(
     name = "foo bar",
