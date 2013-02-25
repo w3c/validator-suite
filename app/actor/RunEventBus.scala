@@ -52,7 +52,7 @@ class RunEventBusActor()(implicit conf: VSConfiguration) extends Actor {
           case FromRun(runId) => runId === event.runId
         }
 
-      protected def publish(event: Event, subscriber: ActorRef): Unit = {
+      override def publish(event: RunEvent): Unit = {
         val f = event match {
           case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) => {
             Run.saveEvent(event) flatMap { _ =>
@@ -79,8 +79,11 @@ class RunEventBusActor()(implicit conf: VSConfiguration) extends Actor {
             Run.saveEvent(event)
           }
         }
-        f onSuccess { case () => subscriber ! event }
+        f onSuccess { case () => super.publish(event) }
       }
+
+      protected def publish(event: Event, subscriber: ActorRef): Unit =
+        subscriber ! event
 
     }
 

@@ -35,35 +35,29 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
 
     val jobId = job.id
     
-    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(200)
-
-    runEventBus.subscribe(testActor, FromJob(job.id))
+    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
     val runningJob = job.run().getOrFail()
-
-    val event = fishForMessagePF(3.seconds) { case event: CreateRunEvent => event }
-
-    runningJob.status must be(Running(event.runId, event.actorPath))
-
     val Running(runId, actorPath) = runningJob.status
+    runningJob.id must be(job.id)
 
     val jobActorRef = system.actorFor(actorPath)
-
     // listen to the death of the jobActor
     // this could fail if the jobActor sends a message in the mean time (watch is waiting for a Watch)
     // but it should not happen if the SleepTime is big enough
     watch(jobActorRef)
 
+    runEventBus.subscribe(testActor, FromJob(job.id))
+
+    val event = fishForMessagePF(3.seconds) { case event: ResourceResponseEvent => event }
+
     // kill the jobActor
     jobActorRef ! PoisonPill
 
     // wait for the death notification
-    val terminated = expectMsgAnyClassOf(3.seconds, classOf[Terminated])
+    val terminated = fishForMessagePF(3.seconds) { case event: Terminated => event }
 
     terminated.actor must be(jobActorRef)
-
-    // no need to have a sleep time at this point
-    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
     // then resume!
     val rJob = Job.get(jobId).getOrFail()
