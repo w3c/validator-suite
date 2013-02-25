@@ -16,6 +16,8 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.exception.UnknownJob
+import org.w3.vs.view.model.JobView
+import scalaz.Scalaz._
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -125,12 +127,39 @@ case class Job(
     }
   }
 
-  def enumerator()(implicit conf: VSConfiguration): Enumerator[RunUpdate] = {
+  case class EnumerateeState(
+    errors: Int = 0,
+    warnings: Int = 0,
+    resources: Int = 0,
+    status: JobDataStatus = JobDataIdle,
+    completedOn: Option[DateTime] = None)
+
+  // Let's assume that all events will be replayed for the current run
+  val runEventToState: Enumeratee[RunEvent, EnumerateeState] =
+    Enumeratee.filter[RunEvent]{_.jobId === id} ><> Enumeratee.scanLeft(EnumerateeState(completedOn = latestDone.map(_.completedOn))){
+      case (state, CreateRunEvent(_, _, _, _, _, _, timestamp)) => EnumerateeState(status = JobDataRunning ,completedOn = state.completedOn)
+      case (state, CompleteRunEvent(_, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
+      case (state, CancelRunEvent(_, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
+      case (state, ResourceResponseEvent(_, _, _, rr: HttpResponse, timestamp)) => state.copy(resources = state.resources + 1)
+      case (state, AssertorResponseEvent(_, _, _, ar: AssertorResult, timestamp)) =>
+        state.copy(
+          errors = state.errors + ar.errors,
+          warnings = state.warnings + ar.warnings)
+      case (state, _) => state
+    }
+
+  val enumeratee: Enumeratee[EnumerateeState, JobData] = {
+     Enumeratee.map{ case EnumerateeState(errors, warnings, resources, status, completedOn) =>
+       JobData(id, name, strategy.entrypoint, status, completedOn, warnings, errors, resources, strategy.maxResources, RunData.health(resources, errors, warnings))
+     }
+  }
+
+  def enumerator()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     import conf._
-    val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
+    val (_enumerator, channel) = Concurrent.broadcast[RunEvent]
     val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
-        case msg: RunUpdate =>
+        case msg: RunEvent =>
           try {
             channel.push(msg)
           } catch { 
@@ -150,6 +179,8 @@ case class Job(
     runEventBus.subscribe(subscriber, FromJob(id))
     _enumerator
   }
+
+  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = enumerator() &> runEventToState &> enumeratee
 
 }
 

@@ -37,8 +37,14 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
+    runEventBus.subscribe(testActor, FromJob(job.id))
+
     val runningJob = job.run().getOrFail()
-    runningJob.id must be(jobId)
+
+    val event = fishForMessagePF(3.seconds) { case event: CreateRunEvent => event }
+
+    runningJob.status must be(Running(event.runId, event.actorPath))
+
     val Running(runId, actorPath) = runningJob.status
 
     val jobActorRef = system.actorFor(actorPath)

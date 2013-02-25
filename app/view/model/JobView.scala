@@ -117,7 +117,7 @@ object JobView {
     ))
   }
 
-  def toJobMessage(jobId: JobId,data: RunData, completedOn: DateTime): JsValue = {
+  def toJobMessage(jobId: JobId, data: RunData, completedOn: DateTime): JsValue = {
     JsObject(Seq(
       ("id"           -> JsString(jobId.toString)),
       ("status"       -> JsString("idle")),

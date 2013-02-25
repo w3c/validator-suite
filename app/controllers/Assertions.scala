@@ -12,7 +12,7 @@ import org.w3.util.equaljURL
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsNull, JsValue}
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
 import org.w3.vs.model.{ Job => ModelJob, _ }
@@ -112,19 +112,20 @@ object Assertions extends VSController  {
 
   private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
     Enumerator.flatten(user.getJob(jobId).map(job =>
-      job.enumerator &> Enumeratee.collect[RunUpdate] {
-        url match {
-          case None => {
-            case NewAssertorResult(userId, jobId, runId, result, run, now, data) => {
-              AssertionsView.grouped(result.assertions, jobId).toJson
-            }
-          }
-          case Some(url) => {
-            case NewAssertorResult(userId, jobId, runId, result, run, now, data) if result.assertions.map(_.url).toList.contains(url) => {
-              AssertionsView(run.assertions.filter(_.url.underlying === url), jobId, url).toJson
-            }
-          }
-        }
+      job.enumerator &> Enumeratee.collect[RunEvent] {
+        case _ => JsNull
+//        url match {
+//          case None => {
+//            case NewAssertorResult(userId, jobId, runId, result, run, now, data) => {
+//              AssertionsView.grouped(result.assertions, jobId).toJson
+//            }
+//          }
+//          case Some(url) => {
+//            case NewAssertorResult(userId, jobId, runId, result, run, now, data) if result.assertions.map(_.url).toList.contains(url) => {
+//              AssertionsView(run.assertions.filter(_.url.underlying === url), jobId, url).toJson
+//            }
+//          }
+//        }
       }/*.recover{ case _ => Enumerator.eof }*/ // Need help here
     ))
   }

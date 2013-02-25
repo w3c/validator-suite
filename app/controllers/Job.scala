@@ -149,9 +149,11 @@ object Job extends VSController {
 
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
     Enumerator.flatten(user.getJob(jobId).map(
-      _.enumerator &> Enumeratee.map[RunUpdate] {
-        case RunCompleted(_, _, _, data, completedOn) => JobView.toJobMessage(jobId, data, completedOn)
-        case update => JobView.toJobMessage(jobId, update.data)
+      _.enumerator &> Enumeratee.map[RunEvent] {
+        //case CreateRunEvent(_, _, _)
+        case CompleteRunEvent(_, _, _, data, resources, completedOn) => JobView.toJobMessage(jobId, data, completedOn)
+        case CancelRunEvent(_, _, _, data, resources, completedOn) => JobView.toJobMessage(jobId, data, completedOn)
+        //case AssertorResponseEvent()
       }
     ))
   }

@@ -71,13 +71,9 @@ trait DefaultProdConfiguration extends VSConfiguration {
   }
 
   val runEventBus: RunEventBus = {
-    val actorRef = system.actorOf(Props(new RunEventBusActor()), "runevent-bus")
+    val actorRef = system.actorOf(Props(new RunEventBusActor()(this)), "runevent-bus")
     RunEventBus(actorRef)
   }
-
-  val dbActor: ActorRef = system.actorOf(Props(new DbActor()(this)), "db")
-
-  runEventBus.subscribe(dbActor)
 
   val runsActorRef: ActorRef =
     system.actorOf(Props(new RunsActor()(this)), "runs")

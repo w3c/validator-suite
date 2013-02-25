@@ -78,24 +78,25 @@ object Resources extends VSController  {
 
   private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
     Enumerator.flatten(user.getJob(jobId).map(job =>
-      job.enumerator &> Enumeratee.collect[RunUpdate] {
-        url match {
-          case None => {
-            case NewAssertorResult(userId, jobId, runId, result, run, now, data) => {
-              // URLs part of this assertorResult
-              val urls = result.assertions.groupBy(_.url).map(_._1).toList
-              // Get all the assertions we received for this urls
-              val allAssertions = run.assertions.filter(a => urls.contains(a.url))
-              ResourcesView(allAssertions, jobId).toJson
-            }
-          }
-          case Some(url) => {
-            case NewAssertorResult(userId, jobId, runId, result, run, now, data) if result.assertions.map(_.url).toList.contains(url) => {
-              val assertionViews = AssertionsView(run.assertions.filter(_.url.underlying === url), jobId, url)
-              ResourcesView.single(url, assertionViews, jobId).toJson
-            }
-          }
-        }
+      job.enumerator &> Enumeratee.collect[RunEvent] {
+        case _ => JsNull
+//        url match {
+//          case None => {
+//            case NewAssertorResult(userId, jobId, runId, result, run, now, data) => {
+//              // URLs part of this assertorResult
+//              val urls = result.assertions.groupBy(_.url).map(_._1).toList
+//              // Get all the assertions we received for this urls
+//              val allAssertions = run.assertions.filter(a => urls.contains(a.url))
+//              ResourcesView(allAssertions, jobId).toJson
+//            }
+//          }
+//          case Some(url) => {
+//            case NewAssertorResult(userId, jobId, runId, result, run, now, data) if result.assertions.map(_.url).toList.contains(url) => {
+//              val assertionViews = AssertionsView(run.assertions.filter(_.url.underlying === url), jobId, url)
+//              ResourcesView.single(url, assertionViews, jobId).toJson
+//            }
+//          }
+//        }
       }/*.recover[Enumerator[JsArray]]{ case _ => Enumerator.eof[JsArray] }*/ // Need help here
     ))
   }

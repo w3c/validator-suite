@@ -6,7 +6,7 @@ import org.w3.vs.exception._
 import org.w3.vs._
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.libs.iteratee.{ Concurrent, Enumerator }
+import play.api.libs.iteratee.{Enumeratee, Concurrent, Enumerator}
 import akka.actor.{ Actor, Props, ActorRef }
 import java.nio.channels.ClosedChannelException
 import org.joda.time.DateTime
@@ -14,6 +14,7 @@ import play.api.Play._
 import org.w3.vs.exception.DuplicatedEmail
 import play.api.Configuration
 import org.mindrot.jbcrypt.BCrypt
+import play.api.libs.iteratee
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -52,12 +53,12 @@ case class User(
   
   def delete()(implicit conf: VSConfiguration): Future[Unit] = User.delete(this)
 
-  def enumerator()(implicit conf: VSConfiguration): Enumerator[RunUpdate] = {
+  def enumerator()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     import conf._
-    val (_enumerator, channel) = Concurrent.broadcast[RunUpdate]
+    val (_enumerator, channel) = Concurrent.broadcast[RunEvent]
     val subscriber: ActorRef = system.actorOf(Props(new Actor {
       def receive = {
-        case msg: RunUpdate =>
+        case msg: RunEvent =>
           try {
             channel.push(msg)
           } catch {
@@ -75,6 +76,13 @@ case class User(
     }))
     runEventBus.subscribe(subscriber, FromUser(id))
     _enumerator
+  }
+
+  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
+    val e: Future[Enumerator[JobData]] = Job.getFor(id).map(
+      jobs => Enumerator.interleave(jobs.toSeq.map(_.jobDatas()))
+    )
+    Enumerator.flatten(e)
   }
 
 }

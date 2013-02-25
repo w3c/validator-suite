@@ -187,6 +187,7 @@ extends Actor with FSM[JobActorState, Run] {
 
     case Event(failure: AssertorFailure, run) => {
       publish(AssertorResponseEvent(userId, jobId, run.runId, failure))
+      //publish(RunUpdate())
       stateOf(run.withAssertorFailure(failure))
     }
 

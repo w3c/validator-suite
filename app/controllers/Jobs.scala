@@ -9,7 +9,7 @@ import play.Logger.ALogger
 import play.api.libs.iteratee.Enumeratee
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Iteratee
-import play.api.libs.json.{JsArray, JsValue}
+import play.api.libs.json.{JsNull, JsArray, JsValue}
 import play.api.libs.{EventSource, Comet}
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -108,8 +108,9 @@ object Jobs extends VSController {
 
   private def enumerator(user: User): Enumerator[JsValue] = {
     user.enumerator &> Enumeratee.map {
-      case RunCompleted(_, jobId, _, data, completedOn) => JsArray(List(JobView.toJobMessage(jobId, data, completedOn)))
-      case update => JsArray(List(JobView.toJobMessage(update.jobId, update.data)))
+      case _ => JsNull
+//      case RunCompleted(_, jobId, _, data, completedOn) => JsArray(List(JobView.toJobMessage(jobId, data, completedOn)))
+//      case update => JsArray(List(JobView.toJobMessage(update.jobId, update.data)))
     }/*.recover{ case _ => Enumerator.eof[JsValue] }*/
   }
 

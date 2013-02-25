@@ -10,6 +10,7 @@ import scala.util._
 import scalaz.Scalaz._
 import scala.concurrent._
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object RunEventBusActor {
 
@@ -19,7 +20,7 @@ object RunEventBusActor {
 
 }
 
-class RunEventBusActor() extends Actor {
+class RunEventBusActor()(implicit conf: VSConfiguration) extends Actor {
 
   import RunEventBusActor.{ Listen, Deafen, Publish }
 
@@ -51,8 +52,35 @@ class RunEventBusActor() extends Actor {
           case FromRun(runId) => runId === event.runId
         }
 
-      protected def publish(event: Event, subscriber: ActorRef): Unit =
-        subscriber ! event
+      protected def publish(event: Event, subscriber: ActorRef): Unit = {
+        val f = event match {
+          case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) => {
+            Run.saveEvent(event) flatMap { _ =>
+              val running = Running(runId, actorPath)
+              Job.updateStatus(jobId, status = running)
+            }
+          }
+          case event@CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => {
+            Run.saveEvent(event) flatMap { _ =>
+              val done = Done(runId, Completed, timestamp, runData)
+              Job.updateStatus(jobId, status = done, latestDone = done)
+            }
+          }
+          case event@CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => {
+            Run.saveEvent(event) flatMap { _ =>
+              val done = Done(runId, Cancelled, timestamp, runData)
+              Job.updateStatus(jobId, status = done, latestDone = done)
+            }
+          }
+          case event@AssertorResponseEvent(userId, jobId, runId, ar, timestamp) => {
+            Run.saveEvent(event)
+          }
+          case event@ResourceResponseEvent(userId, jobId, runId, rr, timestamp) => {
+            Run.saveEvent(event)
+          }
+        }
+        f onSuccess { case () => subscriber ! event }
+      }
 
     }
 
