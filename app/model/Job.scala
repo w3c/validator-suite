@@ -136,7 +136,15 @@ case class Job(
 
   // Let's assume that all events will be replayed for the current run
   val runEventToState: Enumeratee[RunEvent, EnumerateeState] =
-    Enumeratee.filter[RunEvent]{_.jobId === id} ><> Enumeratee.scanLeft(EnumerateeState(completedOn = latestDone.map(_.completedOn))){
+    Enumeratee.filter[RunEvent] {
+      case CreateRunEvent(_, `id`, _, _, _, _, _) => true
+      case CompleteRunEvent(_, `id`, _, _, _, _) => true
+      case CancelRunEvent(_, `id`, _, _, _, _) => true
+      case ResourceResponseEvent(_, `id`, _, _: HttpResponse, _) => true
+      case AssertorResponseEvent(_, `id`, _, ar: AssertorResult, _) => ar.errors != 0 && ar.warnings != 0
+      case _ => false
+    } ><>
+    Enumeratee.scanLeft(EnumerateeState(completedOn = latestDone.map(_.completedOn))){
       case (state, CreateRunEvent(_, _, _, _, _, _, timestamp)) => EnumerateeState(status = JobDataRunning ,completedOn = state.completedOn)
       case (state, CompleteRunEvent(_, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
       case (state, CancelRunEvent(_, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
