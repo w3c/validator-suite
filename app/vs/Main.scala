@@ -227,6 +227,10 @@ object Main {
         println("done")
       }
       case Array("test", jobIdS) => test(jobIdS)
+      case Array("run") =>  {
+        val conf = new DefaultProdConfiguration { }
+        runJob()(conf)
+      }
       case Array(int(n)) => stressTestData(n)
       case Array() => defaultData()
       case _ => sys.error("check your parameters")
@@ -234,5 +238,28 @@ object Main {
 
   }
   
+  def runJob()(implicit conf: VSConfiguration): Unit = {
+    val strategy =
+      Strategy(
+        entrypoint=URL("http://www.w3.org/"),
+        linkCheck=false,
+        maxResources = 20,
+        filter=Filter(include=Everything, exclude=Nothing),
+        assertorsConfiguration = AssertorsConfiguration.default)
+
+    val job = Job.createNewJob(name = "w3c", strategy = strategy, creatorId = UserId())
+
+    org.w3.vs.assertor.LocalValidators.start()
+
+    Job.save(job).getOrFail()
+
+    job.run()
+
+    job.resourceDatas() |>>> play.api.libs.iteratee.Iteratee.foreach(event => println("==========> " + event))
+
+    job.jobDatas() |>>> play.api.libs.iteratee.Iteratee.foreach(jobData => println("&&&&&&&&> " + jobData))
+
+
+  }
   
 }

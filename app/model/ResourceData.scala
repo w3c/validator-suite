@@ -9,7 +9,9 @@ case class ResourceData(
   url: URL,
   lastValidated: DateTime,
   warnings: Int,
-  errors: Int)
+  errors: Int) {
+
+}
 
 object ResourceData {
 

@@ -182,6 +182,32 @@ case class Job(
 
   def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = enumerator() &> runEventToState &> enumeratee
 
+  def enumeratee2: Enumeratee[RunEvent, (Map[URL, ResourceData], List[ResourceData])] = Enumeratee.scanLeft((Map.empty[URL, ResourceData], List.empty[ResourceData])) {
+    case ((state, _), AssertorResponseEvent(_, _, _, ar: AssertorResult, timestamp)) => {
+      var m = state
+      var resourceDatas = List.empty[ResourceData]
+      ar.assertions.groupBy(_.url) foreach { case (url, assertions) =>
+        val (errors, warnings) = Assertion.countErrorsAndWarnings(assertions)
+        m.get(url) match {
+          case None => {
+            val rd = ResourceData(url, timestamp, warnings, errors)
+            resourceDatas ::= rd
+            m += (url -> rd)
+          }
+          case Some(rd) => {
+            val newRd = ResourceData(url, timestamp, rd.warnings + warnings, rd.errors + errors)
+            resourceDatas ::= newRd
+            m += (url -> newRd)
+          }
+        }
+      }
+      (m, resourceDatas)
+    }
+    case ((state, _), _) => (state, List.empty)
+  }
+
+  def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] = enumerator() &> enumeratee2 &> Enumeratee.mapConcat(_._2)
+
 }
 
 object Job {
