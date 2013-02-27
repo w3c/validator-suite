@@ -4,12 +4,10 @@ import org.w3.vs.exception._
 import org.w3.vs.model._
 import org.w3.vs.view.collection._
 import org.w3.vs.view.form._
-import org.w3.vs.view.model._
-import play.Logger.ALogger
 import play.api.libs.iteratee.Enumeratee
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.iteratee.Iteratee
-import play.api.libs.json.{JsNull, JsArray, JsValue}
+import play.api.libs.json.{Json => PlayJson, JsNull, JsArray, JsValue}
 import play.api.libs.{EventSource, Comet}
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -18,6 +16,7 @@ import scala.concurrent.Future
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
+import org.w3.vs.store.Formats._
 
 object Jobs extends VSController {
   
@@ -107,11 +106,8 @@ object Jobs extends VSController {
   }}
 
   private def enumerator(user: User): Enumerator[JsValue] = {
-    user.enumerator &> Enumeratee.map {
-      case _ => JsNull
-//      case RunCompleted(_, jobId, _, data, completedOn) => JsArray(List(JobView.toJobMessage(jobId, data, completedOn)))
-//      case update => JsArray(List(JobView.toJobMessage(update.jobId, update.data)))
-    }/*.recover{ case _ => Enumerator.eof[JsValue] }*/
+    user.jobDatas() &> Enumeratee.map {j => PlayJson.toJson(j)}
+
   }
 
 }

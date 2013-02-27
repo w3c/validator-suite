@@ -4,7 +4,6 @@ import org.w3.vs.controllers._
 import org.w3.vs.exception.InvalidFormException
 import org.w3.vs.model.{ Job => JobModel, User, JobId, _ }
 import org.w3.vs.view.form.JobForm
-import play.Logger.ALogger
 import play.api.i18n.Messages
 import play.api.mvc.{WebSocket, Result, Handler, Action}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -12,13 +11,12 @@ import scala.concurrent.Future
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
-import java.net.URL
 import play.api.libs.json.JsValue
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
-import org.w3.vs.view.collection.ResourcesView
-import org.w3.vs.view.model.JobView
 import org.w3.vs.view.OTOJType
+import play.api.libs.json.{ Json => PlayJson }
+import org.w3.vs.store.Formats._
 
 object Job extends VSController {
 
@@ -148,14 +146,9 @@ object Job extends VSController {
   }}
 
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(user.getJob(jobId).map(
-      _.enumerator &> Enumeratee.map[RunEvent] {
-        //case CreateRunEvent(_, _, _)
-        case CompleteRunEvent(_, _, _, data, resources, completedOn) => JobView.toJobMessage(jobId, data, completedOn)
-        case CancelRunEvent(_, _, _, data, resources, completedOn) => JobView.toJobMessage(jobId, data, completedOn)
-        //case AssertorResponseEvent()
-      }
-    ))
+    Enumerator.flatten(
+      user.getJob(jobId).map(_.jobDatas())
+    ) &> Enumeratee.map {j => PlayJson.toJson(j)}
   }
 
   private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>
