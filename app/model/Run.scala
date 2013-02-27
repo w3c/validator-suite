@@ -120,9 +120,6 @@ object Run {
   def apply(runId: RunId, strategy: Strategy): Run =
     new Run(runId, strategy)
 
-  def apply(runId: RunId, strategy: Strategy, createdAt: DateTime): Run =
-    new Run(runId, strategy, createdAt)
-
   def freshRun(strategy: Strategy): Run = {
     new Run(RunId(), strategy = strategy)
   }
@@ -136,7 +133,7 @@ object Run {
 
   def firstStep(event: CreateRunEvent): ResultStep = {
     import event._
-    val (run, fetches) = Run(runId, strategy, createdAt).newlyStartedRun
+    val (run, fetches) = Run(runId, strategy).newlyStartedRun
     ResultStep(run, fetches, event)
   }
 
@@ -150,8 +147,8 @@ object Run {
     events foreach { event =>
       run = run.step(event).run
     }
-    val toBeFetched = run.pending.values
-    var toBeAsserted = run.pendingAssertions.values
+    val toBeFetched = run.pendingFetches.values
+    var toBeAsserted = run.pendingAssertorCalls.values
     val result = (run, toBeFetched, toBeAsserted)
     val end = System.currentTimeMillis()
     logger.debug("Run deserialized in %dms (found %d events)" format (end - start, events.size))
@@ -168,21 +165,19 @@ object Run {
 case class Run private (
   runId: RunId,
   strategy: Strategy,
-  createdAt: DateTime = DateTime.now(DateTimeZone.UTC),
   // from completion event, None at creation
   completedOn: Option[DateTime] = None,
   // based on scheduled fetches
   toBeExplored: List[URL] = List.empty,
-  pending: Map[URL, Fetch] = Map.empty,
+  pendingFetches: Map[URL, Fetch] = Map.empty,
   // based on added resources
   knownResources: Map[URL, ResourceInfo] = Map.empty,
   // based on added assertions
   assertions: Set[Assertion] = Set.empty,
   errors: Int = 0,
   warnings: Int = 0,
-  invalidated: Int = 0,
   // based on scheduled assertions
-  pendingAssertions: Map[(AssertorId, URL), AssertorCall] = Map.empty) {
+  pendingAssertorCalls: Map[(AssertorId, URL), AssertorCall] = Map.empty) {
 
   import Run.logger
 
@@ -231,18 +226,18 @@ case class Run private (
     }
   }
 
-  def knownUrls: Iterable[URL] = pending.keys ++ toBeExplored ++ knownResources.keys
+  def knownUrls: Iterable[URL] = pendingFetches.keys ++ toBeExplored ++ knownResources.keys
 
   // same question here: what about Errors and Redirects?
-  def numberOfKnownUrls: Int = numberOfFetchedResources + toBeExplored.size + pending.size
+  def numberOfKnownUrls: Int = numberOfFetchedResources + toBeExplored.size + pendingFetches.size
 
   /**
    * An exploration is over when there are no more urls to explore and no pending url
    */
 
-  def noMoreUrlToExplore: Boolean = (numberOfRemainingAllowedFetches == 0) || (pending.isEmpty && toBeExplored.isEmpty)
+  def noMoreUrlToExplore: Boolean = (numberOfRemainingAllowedFetches === 0) || (pendingFetches.isEmpty && toBeExplored.isEmpty)
 
-  def hasNoPendingAction: Boolean = noMoreUrlToExplore && pendingAssertions.isEmpty
+  def hasNoPendingAction: Boolean = noMoreUrlToExplore && pendingAssertorCalls.isEmpty
 
   def isIdle: Boolean = (noMoreUrlToExplore && hasNoPendingAction) || completedOn.isDefined
 
@@ -265,7 +260,7 @@ case class Run private (
   /**
    * A consolidated view of all the authorities for the pending urls
    */
-  lazy val pendingAuthorities: Set[Authority] = pending.keySet map { _.authority }
+  lazy val pendingAuthorities: Set[Authority] = pendingFetches.keySet map { _.authority }
 
   def actionFor(url: URL): Option[Fetch] = {
     val action = strategy.getActionFor(url)
@@ -285,12 +280,12 @@ case class Run private (
    */
   private def takeFromMainAuthority: Option[(Run, Fetch)] = {
     for {
-      url <- toBeExplored.find { _.authority == mainAuthority }
+      url <- toBeExplored.find { _.authority === mainAuthority }
       fetch <- actionFor(url)
     } yield {
       val run = this.copy(
-        pending = pending + (url -> fetch),
-        toBeExplored = toBeExplored.filterNot { _ == url }
+        pendingFetches = pendingFetches + (url -> fetch),
+        toBeExplored = toBeExplored.filterNot { _ === url }
       )
       (run, fetch)
     }
@@ -309,14 +304,14 @@ case class Run private (
       fetch <- actionFor(url)
     } yield {
       val run = this.copy(
-        pending = pending + (url -> fetch),
+        pendingFetches = pendingFetches + (url -> fetch),
         toBeExplored = toBeExplored.filterNot { _ === url }
       )
       (run, fetch)
     }
   }
 
-  lazy val mainAuthorityIsBeingFetched = pending.keys.exists { _.authority === mainAuthority }
+  lazy val mainAuthorityIsBeingFetched = pendingFetches.keys.exists { _.authority === mainAuthority }
 
   /**
    * Returns (if possible, hence the Option) the first Explore that could
@@ -341,7 +336,7 @@ case class Run private (
     var current: Run = this
     var fetches: List[Fetch] = List.empty
     for {
-      i <- 1 to math.min(numberOfRemainingAllowedFetches, n - pending.size)
+      i <- 1 to math.min(numberOfRemainingAllowedFetches, n - pendingFetches.size)
       (run, fetch) <- current.take
     } {
       current = run
@@ -393,7 +388,7 @@ case class Run private (
   private def withResponse(response: ResourceResponse): (Run, ResourceInfo) = {
     val resourceInfo = ResourceInfo(response)
     val run = this.copy(
-      pending = pending - response.url,
+      pendingFetches = pendingFetches - response.url,
       knownResources = this.knownResources + (response.url -> resourceInfo)
     )
     (run, resourceInfo)
@@ -424,7 +419,7 @@ case class Run private (
             Set.empty[AssertorCall]
           }
         val runWithPendingAssertorCalls =
-          runWithPendingFetches.copy(pendingAssertions = runWithPendingFetches.pendingAssertions ++ assertorCalls.map(ac => (ac.assertor.id, ac.response.url) -> ac))
+          runWithPendingFetches.copy(pendingAssertorCalls = runWithPendingFetches.pendingAssertorCalls ++ assertorCalls.map(ac => (ac.assertor.id, ac.response.url) -> ac))
         (runWithPendingAssertorCalls, urlsToFetch, assertorCalls)
       }
       case Redirect(_, url) => {
@@ -455,13 +450,13 @@ case class Run private (
       assertions = this.assertions ++ filteredAssertions,
       errors = this.errors + nbErrors,
       warnings = this.warnings + nbWarnings,
-      pendingAssertions = pendingAssertions - ((result.assertor, result.sourceUrl)))
+      pendingAssertorCalls = pendingAssertorCalls - ((result.assertor, result.sourceUrl)))
 
     (newRun, filteredAssertions)
   }
 
   def withAssertorFailure(fail: AssertorFailure): Run = {
-    this.copy(pendingAssertions = pendingAssertions - ((fail.assertor, fail.sourceUrl)))
+    this.copy(pendingAssertorCalls = pendingAssertorCalls - ((fail.assertor, fail.sourceUrl)))
   }
 
 }

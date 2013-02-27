@@ -105,15 +105,15 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     latestDone = None)
 
   // a job may have never completed, for example if the user has forced a new run
-  var run1 = Run(RunId(), job1.strategy, now)
+  var run1 = Run(RunId(), job1.strategy)
 
-  var run2 = Run(RunId(), job1.strategy, now.plusMinutes(5)).completeOn(now.plusMinutes(7))
+  var run2 = Run(RunId(), job1.strategy).completeOn(now.plusMinutes(7))
 
-  var run3 = Run(RunId(), job1.strategy, now.plusMinutes(10)).completeOn(now.plusMinutes(12))
+  var run3 = Run(RunId(), job1.strategy).completeOn(now.plusMinutes(12))
 
-  var run4 = Run(RunId(), job1.strategy, now.plusMinutes(15))
+  var run4 = Run(RunId(), job1.strategy)
 
-  var run5: Run = Run(run5Id, job5.strategy, now)
+  var run5: Run = Run(run5Id, job5.strategy)
 
   val assertorIds = List(AssertorId("test_assertor_1"), AssertorId("test_assertor_2"))
 
@@ -283,7 +283,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val assertorResult = AssertorResult(run.runId, AssertorId("foo"), url, List(assertion))
     val script = for {
       _ <- Job.save(job)
-      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run.runId, actorPath, run.strategy, run.createdAt))
+      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run.runId, actorPath, run.strategy, now))
       _ <- Run.saveEvent(AssertorResponseEvent(user1.id, job1.id, run.runId, assertorResult))
       assertionsBefore <- Run.getAssertions(run.runId)
       _ <- Job.reset(job.id, removeRunData = true)

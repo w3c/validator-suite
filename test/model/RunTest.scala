@@ -20,7 +20,7 @@ class RunTest extends WordSpec with MustMatchers {
     val fresh: Run = Run.freshRun(strategy)
     "be really fresh" in {
       fresh.completedOn must be('empty)
-      fresh.pending must be('empty)
+      fresh.pendingFetches must be('empty)
       fresh.knownResources must be('empty)
     }
   }

@@ -91,7 +91,7 @@ extends Actor with FSM[JobActorState, Run] {
   def stateOf(run: Run): State = {
     // if there is still some pending assertions but nore more URLs to explore
     // that's only for debugging purposes
-    if (run.pendingAssertions.nonEmpty && run.noMoreUrlToExplore) {
+    if (run.pendingAssertorCalls.nonEmpty && run.noMoreUrlToExplore) {
       logger.debug(s"${run.shortId}: Exploration phase finished. Fetched ${run.numberOfFetchedResources} pages")
       stay() using run
     } else if (run.hasNoPendingAction) {
