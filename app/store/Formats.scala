@@ -120,7 +120,14 @@ object Formats {
   import akka.actor.ActorPath
   implicit val ActorPatchFormat = string[ActorPath](ActorPath.fromString, _.toString)
 
-  implicit val ResourceDataFormat: Format[ResourceData] = new Format[ResourceData] {
+  implicit val ResourceDataFormat: Format[ResourceData] = (
+    (__ \ 'url).format[URL] and
+    (__ \ 'lastValidated).format[DateTime] and
+    (__ \ 'warnings).format[Int] and
+    (__ \ 'errors).format[Int]
+  )(ResourceData.apply, unlift(ResourceData.unapply))
+
+ new Format[ResourceData] {
     def reads(json: JsValue): JsResult[ResourceData] = {
       val arr = json.asInstanceOf[JsArray]
       val rd = ResourceData(arr(0).as[URL], arr(1).as[DateTime], arr(2).as[Int], arr(3).as[Int])
