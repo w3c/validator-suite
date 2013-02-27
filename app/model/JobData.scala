@@ -1,10 +1,10 @@
 package org.w3.vs.model
 
-import java.net.URL
+import org.w3.util.URL
 import org.joda.time.DateTime
 
 case class JobData (
-  id: JobId,
+  jobId: JobId,
   name: String,
   entrypoint: URL,
   status: JobDataStatus,

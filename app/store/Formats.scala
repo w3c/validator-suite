@@ -129,6 +129,31 @@ object Formats {
     def writes(o: ResourceData): JsValue = Json.arr(toJson(o.url), toJson(o.lastValidated), toJson(o.warnings), toJson(o.errors))
   }
 
+  implicit val JobDataRunningFormat = constant("running", JobDataRunning)
+  implicit val JobDataIdleFormat = constant("idle", JobDataIdle)
+
+  implicit object JobDataStatusFormat extends Format[JobDataStatus] {
+    def reads(json: JsValue): JsResult[JobDataStatus] =
+      JobDataRunningFormat.reads(json) orElse JobDataIdleFormat.reads(json)
+    def writes(jobDataStatus: JobDataStatus) = jobDataStatus match {
+      case JobDataRunning => JobDataRunningFormat.writes(JobDataRunning)
+      case JobDataIdle => JobDataIdleFormat.writes(JobDataIdle)
+    }
+  }
+
+  implicit val JobDataFormat: Format[JobData] = (
+    (__ \ '_id).format[JobId] and
+    (__ \ 'name).format[String] and
+    (__ \ 'entrypoint).format[URL] and
+    (__ \ 'status).format[JobDataStatus] and
+    (__ \ 'completedOn).formatNullable[DateTime] and
+    (__ \ 'warnings).format[Int] and
+    (__ \ 'errors).format[Int] and
+    (__ \ 'resources).format[Int] and
+    (__ \ 'maxResources).format[Int] and
+    (__ \ 'health).format[Int]
+  )(JobData.apply, unlift(JobData.unapply))
+
   implicit val RunDataFormat: Format[RunData] = (
     (__ \ 'resources).format[Int] and
     (__ \ 'errors).format[Int] and

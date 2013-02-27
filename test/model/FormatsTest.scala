@@ -100,6 +100,9 @@ class FormatsTest extends WordSpec with MustMatchers {
   
   val userJobRunId = (UserId(), JobId(), RunId())
 
+  val jobData =
+    JobData(JobId(), "foo", URL("http://example.com"), JobDataRunning, Some(DateTime.now(DateTimeZone.UTC)), 1, 2, 3, 4, 5)
+
   "all domain must be serializable and then deserializable" in {
     toJson(strategy).as[Strategy] must be(strategy)
     toJson(jobStatus).as[JobStatus] must be(jobStatus)
@@ -124,6 +127,7 @@ class FormatsTest extends WordSpec with MustMatchers {
     toJson(user).as[User] must be(user)
     toJson(userJobId).as[(UserId, JobId)] must be(userJobId)
     toJson(userJobRunId).as[(UserId, JobId, RunId)] must be(userJobRunId)
+    toJson(jobData).as[JobData] must be(jobData)
   }
 
   
