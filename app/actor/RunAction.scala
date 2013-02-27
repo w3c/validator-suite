@@ -9,7 +9,7 @@ sealed trait RunAction
 case class AssertorCall(
   runId: RunId,
   assertor: FromHttpResponseAssertor,
-  response: HttpResponse) {
+  response: HttpResponse) extends RunAction {
 
   override def toString =
     s"AssertorCall[${runId.shortId} ${assertor.id} ${response.url}} assertor]"

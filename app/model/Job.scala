@@ -113,19 +113,6 @@ case class Job(
     }
   }
 
-  def getResourceDatas()(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = {
-    import conf._
-    status match {
-      case NeverStarted | Zombie =>
-        Future.successful(Iterable.empty)
-      case Done(runId, _, _, _) => ResourceData.getForRun(runId)
-      case Running(_, actorPath) => {
-        val actorRef = system.actorFor(actorPath)
-        (actorRef ? JobActor.GetResourceDatas).mapTo[Iterable[ResourceData]]
-      }
-    }
-  }
-
   case class EnumerateeState(
     errors: Int = 0,
     warnings: Int = 0,
