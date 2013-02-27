@@ -7,14 +7,8 @@ import org.w3.vs.VSConfiguration
 
 case class ResourceData(
   url: URL,
-  lastValidated: DateTime,
-  warnings: Int,
-  errors: Int) {
-
-}
-
-object ResourceData {
-
-  def getForRun(runId: RunId)(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = ???
+  last: DateTime,
+  w: Int,
+  e: Int) {
 
 }

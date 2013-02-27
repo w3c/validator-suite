@@ -30,7 +30,6 @@ import play.modules.reactivemongo.PlayBsonImplicits._
 import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
-import org.w3.vs.actor.AssertorCall
 
 case class Job(
   id: JobId,
@@ -201,7 +200,7 @@ case class Job(
             m += (url -> rd)
           }
           case Some(rd) => {
-            val newRd = ResourceData(url, timestamp, rd.warnings + warnings, rd.errors + errors)
+            val newRd = ResourceData(url, timestamp, rd.w + warnings, rd.e + errors)
             resourceDatas ::= newRd
             m += (url -> newRd)
           }

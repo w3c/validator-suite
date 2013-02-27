@@ -6,7 +6,6 @@ import org.w3.util.{ Headers, URL }
 import org.w3.util.html.Doctype
 import org.w3.vs._
 import org.w3.vs.actor.JobActor._
-import org.w3.vs.actor.AssertorCall
 
 import scala.util._
 import scala.concurrent.{ Future, Await }

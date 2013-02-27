@@ -48,11 +48,11 @@ object JobActor {
       action match {
         case GET => {
           logger.debug(s"${run.shortId}: >>> GET ${url}")
-          http ! Http.Fetch(url, GET, run.runId)
+          http ! Fetch(url, GET, run.runId)
         }
         case HEAD => {
           logger.debug(s"${run.shortId}: >>> HEAD ${url}")
-          http ! Http.Fetch(url, HEAD, run.runId)
+          http ! Fetch(url, HEAD, run.runId)
         }
         case IGNORE => {
           logger.debug(s"${run.shortId}: Ignoring ${url}. If you're here, remember that you have to remove that url is not pending anymore...")

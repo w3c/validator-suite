@@ -6,7 +6,6 @@ import org.w3.vs.assertor._
 import scalaz.{ Free, Equal }
 import scalaz.Scalaz._
 import org.joda.time._
-import org.w3.vs.actor.AssertorCall
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._

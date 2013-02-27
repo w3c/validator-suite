@@ -13,29 +13,9 @@ object Http {
 
   val logger = Logger.of(classOf[Http])
 
-  /**
-   * a Fetch command message for an Http actor
-   *
-   * The type for token could be anything (the Http actor just passes it to the
-   * response) but this gives little type-safety
-   *
-   * @param url the URL of the Web resource to fetch
-   * @param action the kind of HTTP action
-   * @token a token that will be included in the response from the actor
-   */
-  case class Fetch(url: URL, method: HttpMethod, token: RunId)
-
   case class SetSleepTime(value: Long)
 
   case object HowManyPendingRequests
-
-  case object GetOn
-
-  case object GetOff
-
-  case object PutOn
-
-  case object PutOff
 
 }
 

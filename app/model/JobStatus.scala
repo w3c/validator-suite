@@ -14,19 +14,6 @@ import org.w3.vs.actor.JobActor._
 import scala.concurrent.{ ops => _, _ }
 import scala.concurrent.ExecutionContext.Implicits.global
 
-// Reactive Mongo imports
-import reactivemongo.api._
-import reactivemongo.bson._
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
-// Reactive Mongo plugin
-import play.modules.reactivemongo._
-import play.modules.reactivemongo.PlayBsonImplicits._
-// Play Json imports
-import play.api.libs.json._
-import Json.toJson
-import org.w3.vs.store.Formats._
-import org.w3.vs.actor.AssertorCall
-
 sealed trait JobStatus
 
 case object NeverStarted extends JobStatus
