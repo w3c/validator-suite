@@ -70,7 +70,7 @@ object AssertionView {
       occurrences = scala.math.max(1, assertion.contexts.size),
       resources = Iterable.empty,
       contexts = assertion.contexts.toSeq.sorted(
-        Ordering[(Int, Int)].on[ContextModel](context => (context.line.getOrElse(1000000), context.column.getOrElse(1000000)))
+        Ordering[(Int, Int)].on[ContextModel](context => (context.line.getOrElse(Int.MaxValue), context.column.getOrElse(Int.MaxValue)))
       ).map(context =>
         new Context(
           line = context.line,

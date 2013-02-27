@@ -188,8 +188,6 @@ case class Job(
     _enumerator
   }
 
-  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = enumerator() &> runEventToState &> enumeratee
-
   def enumeratee2: Enumeratee[RunEvent, (Map[URL, ResourceData], List[ResourceData])] = Enumeratee.scanLeft((Map.empty[URL, ResourceData], List.empty[ResourceData])) {
     case ((state, _), AssertorResponseEvent(_, _, _, ar: AssertorResult, timestamp)) => {
       var m = state
@@ -214,7 +212,16 @@ case class Job(
     case ((state, _), _) => (state, List.empty)
   }
 
-  def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] = enumerator() &> enumeratee2 &> Enumeratee.mapConcat(_._2)
+  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = enumerator() &> runEventToState &> enumeratee
+
+  def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] =
+    enumerator() &> enumeratee2 &> Enumeratee.mapConcat(_._2)
+
+  def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = ???
+
+  def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] = ???
+
+  def assertionDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = ???
 
 }
 
