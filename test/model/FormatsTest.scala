@@ -63,6 +63,15 @@ class FormatsTest extends WordSpec with MustMatchers {
       description = None,
       timestamp = DateTime.now(DateTimeZone.UTC))
 
+  val groupedAssertionData =
+    GroupedAssertionData(
+      assertor = AssertorId("test_assertor"),
+      lang = "fr",
+      title = "bar",
+      severity = Warning,
+      occurrences = 2,
+      resources = List(URL("http://example.com/foo"), URL("http://example.com/bar")))
+
   val errorResponse =
     ErrorResponse(
       url = URL("http://example.com/foo"),
@@ -115,6 +124,7 @@ class FormatsTest extends WordSpec with MustMatchers {
     toJson(context).as[Context] must be(context)
     toJson(Error).as[AssertionSeverity] must be(Error)
     toJson(assertion).as[Assertion] must be(assertion)
+    toJson(groupedAssertionData).as[GroupedAssertionData] must be(groupedAssertionData)
     toJson(GET).as[HttpMethod] must be(GET)
     toJson(errorResponse).as[ResourceResponse] must be(errorResponse)
     toJson(httpResponse).as[ResourceResponse] must be(httpResponse)

@@ -1,23 +1,12 @@
 package org.w3.vs.store
 
-import org.w3.vs.model._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util.{ Headers, URL }
-import org.w3.vs._
-import org.w3.vs.actor.JobActor._
-import org.w3.vs.actor.AssertorCall
-import scala.util._
-import play.api.libs.json._
 import org.w3.vs.model._
 import org.w3.util.html.Doctype
 
 // Reactive Mongo imports
-import reactivemongo.api._
 import reactivemongo.bson._
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
-// Reactive Mongo plugin
-import play.modules.reactivemongo._
-import play.modules.reactivemongo.PlayBsonImplicits._
 // Play Json imports
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -126,15 +115,6 @@ object Formats {
     (__ \ 'warnings).format[Int] and
     (__ \ 'errors).format[Int]
   )(ResourceData.apply, unlift(ResourceData.unapply))
-
- new Format[ResourceData] {
-    def reads(json: JsValue): JsResult[ResourceData] = {
-      val arr = json.asInstanceOf[JsArray]
-      val rd = ResourceData(arr(0).as[URL], arr(1).as[DateTime], arr(2).as[Int], arr(3).as[Int])
-      JsSuccess(rd)
-    }
-    def writes(o: ResourceData): JsValue = Json.arr(toJson(o.url), toJson(o.lastValidated), toJson(o.warnings), toJson(o.errors))
-  }
 
   implicit val JobDataRunningFormat = constant("running", JobDataRunning)
   implicit val JobDataIdleFormat = constant("idle", JobDataIdle)
@@ -247,6 +227,15 @@ object Formats {
     (__ \ 'description).formatNullable[String] and
     (__ \ 'timestamp).format[DateTime]
   )(Assertion.apply _, unlift(Assertion.unapply _))
+
+  implicit val GroupedAssertionDataFormat: Format[GroupedAssertionData] = (
+    (__ \ 'assertor).format[AssertorId] and
+    (__ \ 'lang).format[String] and
+    (__ \ 'title).format[String] and
+    (__ \ 'severity).format[AssertionSeverity] and
+    (__ \ 'occurrences).format[Int] and
+    (__ \ 'resources).format[List[URL]]
+  )(GroupedAssertionData.apply _, unlift(GroupedAssertionData.unapply _))
 
   val GETFormat = constant[GET.type]("GET", GET)
   val HEADFormat = constant[HEAD.type]("HEAD", HEAD)
