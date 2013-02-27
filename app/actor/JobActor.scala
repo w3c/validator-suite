@@ -29,7 +29,7 @@ object JobActor {
   /* actor events */
   case object Start
   case object Cancel
-  case class Resume(toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall])
+  case class Resume(toBeFetched: Iterable[Fetch], toBeAsserted: Iterable[AssertorCall])
   case object GetRunData
   case object GetResourceDatas
 
@@ -41,23 +41,11 @@ object JobActor {
 //    def warn(msg: String): Unit = println("== " + msg)
 //  }
 
-  def executeCommands(run: Run, runActor: ActorRef, toBeFetched: Iterable[URL], toBeAsserted: Iterable[AssertorCall], http: ActorRef, assertionsActorRef: ActorRef)(implicit sender: ActorRef): Unit = {
+  def executeCommands(run: Run, runActor: ActorRef, toBeFetched: Iterable[Fetch], toBeAsserted: Iterable[AssertorCall], http: ActorRef, assertionsActorRef: ActorRef)(implicit sender: ActorRef): Unit = {
     
-    def fetch(url: URL): Unit = {
-      val action = run.strategy.getActionFor(url)
-      action match {
-        case GET => {
-          logger.debug(s"${run.shortId}: >>> GET ${url}")
-          http ! Fetch(url, GET, run.runId)
-        }
-        case HEAD => {
-          logger.debug(s"${run.shortId}: >>> HEAD ${url}")
-          http ! Fetch(url, HEAD, run.runId)
-        }
-        case IGNORE => {
-          logger.debug(s"${run.shortId}: Ignoring ${url}. If you're here, remember that you have to remove that url is not pending anymore...")
-        }
-      }
+    def fetch(fetch: Fetch): Unit = {
+      logger.debug(s"${run.shortId}: >>> ${fetch.method} ${fetch.url}")
+      http ! fetch
     }
 
     if (! toBeFetched.isEmpty) {
