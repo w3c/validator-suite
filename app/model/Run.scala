@@ -256,7 +256,7 @@ case class Run private (
    */
   lazy val pendingAuthorities: Set[Authority] = pendingFetches.keySet map { _.authority }
 
-  def actionFor(url: URL): Option[Fetch] = {
+  private def actionFor(url: URL): Option[Fetch] = {
     val action = strategy.getActionFor(url)
     action match {
       case GET => Some(Fetch(url, GET, runId))
@@ -311,7 +311,7 @@ case class Run private (
    * Returns (if possible, hence the Option) the first Explore that could
    * be fetched, giving priority to the main authority.
    */
-  def take: Option[(Run, Fetch)] = {
+  private def take: Option[(Run, Fetch)] = {
     val take =
       if (mainAuthorityIsBeingFetched) {
         takeFromOtherAuthorities
@@ -404,15 +404,15 @@ case class Run private (
     (run, resourceInfo)
   }
 
-  def newlyStartedRun: (Run, List[Fetch]) =
+  private def newlyStartedRun: (Run, List[Fetch]) =
     this.withNewUrlsToBeExplored(List(strategy.entrypoint)).takeAtMost(Strategy.maxUrlsToFetch)
 
-  def withErrorResponse(errorResponse: ErrorResponse): (Run, List[Fetch]) = {
+  private def withErrorResponse(errorResponse: ErrorResponse): (Run, List[Fetch]) = {
     val runWithResponse = withResponse(errorResponse)._1
     runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
   }
 
-  def withHttpResponse(httpResponse: HttpResponse): (Run, List[Fetch], Iterable[AssertorCall]) = {
+  private def withHttpResponse(httpResponse: HttpResponse): (Run, List[Fetch], Iterable[AssertorCall]) = {
     // add the new response
     val (runWithResponse, resourceInfo) = withResponse(httpResponse)
     resourceInfo match {
@@ -447,7 +447,7 @@ case class Run private (
 
   }
 
-  def withAssertorResult(result: AssertorResult): (Run, List[Assertion]) = {
+  private def withAssertorResult(result: AssertorResult): (Run, List[Assertion]) = {
     val filteredAssertions = result.assertions filter { rAssertion =>
       ! assertions.exists { assertion =>
         assertion.assertor === result.assertor && assertion.url === rAssertion.url
@@ -465,7 +465,7 @@ case class Run private (
     (newRun, filteredAssertions)
   }
 
-  def withAssertorFailure(fail: AssertorFailure): Run = {
+  private def withAssertorFailure(fail: AssertorFailure): Run = {
     this.copy(pendingAssertorCalls = pendingAssertorCalls - ((fail.assertor, fail.sourceUrl)))
   }
 
