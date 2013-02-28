@@ -11,7 +11,7 @@ import scalaz.Scalaz._
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
-import play.api.libs.json.{Json => PlayJson, JsNull, JsValue}
+import play.api.libs.json.{Json => PlayJson, JsObject, JsNull, JsValue}
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
 import org.w3.vs.model.{ Job => ModelJob, _ }
@@ -111,14 +111,20 @@ object Assertions extends VSController  {
   }}
 
   private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
+    import PlayJson.toJson
     Enumerator.flatten(user.getJob(jobId).map(job =>
-      url match {
+      (url match {
         case Some(url) =>
-          job.assertionDatas(org.w3.util.URL(url)) &> Enumeratee.map {j => PlayJson.toJson(j)}
+          job.assertionDatas(org.w3.util.URL(url)) &> Enumeratee.map { assertion => toJson(assertion) }
         case None =>
-          job.groupedAssertionDatas() &> Enumeratee.map {j => PlayJson.toJson(j)}
-      })
-    )
+          job.groupedAssertionDatas() &> Enumeratee.map { assertion => toJson(assertion) }
+      }) &> Enumeratee.map { json =>
+        val assertor = (json \ "assertor").as[String]
+        val title = (json \ "title").as[String]
+        val id = (assertor + title).hashCode
+        json.asInstanceOf[JsObject] + ("id", PlayJson.toJson(id))
+      }
+    ))
   }
 
   val indexName = (new controllers.javascript.ReverseAssertions).index.name

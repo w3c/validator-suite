@@ -12,10 +12,14 @@ import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.iteratee.{Iteratee, Enumeratee, Enumerator}
-import play.api.libs.json.{Json => PlayJson, JsNull, JsValue}
+import play.api.libs.json.{Json => PlayJson, _}
 import play.api.libs.{EventSource, Comet}
 import scalaz.Scalaz._
 import org.w3.vs.store.Formats._
+import org.w3.vs.view.Helper
+import org.joda.time.DateTime
+import play.api.libs.json.JsUndefined
+import play.api.libs.json.JsObject
 
 object Resources extends VSController  {
 
@@ -78,12 +82,30 @@ object Resources extends VSController  {
   }}
 
   private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
+    import PlayJson.toJson
     Enumerator.flatten(user.getJob(jobId).map(job =>
       url match {
-        case Some(url) => job.resourceDatas(org.w3.util.URL(url)) &> Enumeratee.map {j => PlayJson.toJson(j)}
-        case None => job.resourceDatas() &> Enumeratee.map {j => PlayJson.toJson(j)}
+        case Some(url) => job.resourceDatas(org.w3.util.URL(url))
+        case None => job.resourceDatas()
       }
-    ))
+    )) &> Enumeratee.map {resource =>
+      val json = toJson(resource)
+      val id = toJson((json \ "url").hashCode())
+      // TODO: This must be implemented client side. temporary
+      val lastValidated = if (!(json \ "lastValidated").isInstanceOf[JsUndefined]) {
+        val timestamp = new DateTime((json \ "lastValidated").as[Long])
+        PlayJson.obj(
+          "timestamp" -> toJson(timestamp.toString()),
+          "legend1" -> toJson(Helper.formatTime(timestamp)),
+          "legend2" -> toJson("") /* the legend is hidden for now. Doesn't make sense to compute it here anyway */
+        )
+      } else {
+        PlayJson.obj("legend1" -> toJson("Never"))
+      }
+      json.asInstanceOf[JsObject] +
+        ("id", id) +
+        ("lastValidated", lastValidated)
+    }
   }
 
   val indexName = (new controllers.javascript.ReverseResources).index.name

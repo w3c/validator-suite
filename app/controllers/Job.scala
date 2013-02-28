@@ -1,7 +1,6 @@
 package controllers
 
 import org.w3.vs.controllers._
-import org.w3.vs.exception.InvalidFormException
 import org.w3.vs.model.{ Job => JobModel, User, JobId, _ }
 import org.w3.vs.view.form.JobForm
 import play.api.i18n.Messages
@@ -12,11 +11,10 @@ import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.JsValue
-import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
+import play.api.libs.iteratee.{Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
-import org.w3.vs.view.OTOJType
-import play.api.libs.json.{ Json => PlayJson }
-import org.w3.vs.store.Formats._
+import org.w3.vs.view.{Helper, OTOJType}
+import org.w3.vs.exception.InvalidFormException
 
 object Job extends VSController {
 
@@ -146,9 +144,7 @@ object Job extends VSController {
   }}
 
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(
-      user.getJob(jobId).map(_.jobDatas())
-    ) &> Enumeratee.map {j => PlayJson.toJson(j)}
+    Enumerator.flatten(user.getJob(jobId).map(_.jobDatas())) &> JobData.viewEnumeratee
   }
 
   private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>
