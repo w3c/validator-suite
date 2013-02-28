@@ -25,7 +25,7 @@ import com.mongodb.{ QueryBuilder => _, _ }
 import com.mongodb.util.JSON
 import org.bson.types.ObjectId
 
-case class ResultStep(run: Run, actions: Seq[RunAction], event: RunEvent)
+case class ResultStep(run: Run, actions: Seq[RunAction], events: List[RunEvent])
 
 object Run {
 
@@ -94,7 +94,7 @@ object Run {
 //    Run.replayEvents(createRun, events)
 //  }  
 
-  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[Fetch], Iterable[AssertorCall])] = {
+  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[RunAction])] = {
     val query = Json.obj("runId" -> toJson(runId))
     val cursor = collection.find[JsValue, JsValue](query)
     cursor.toList map { list =>
@@ -131,25 +131,19 @@ object Run {
     collection.insert(toJson(event)) map { lastError => () }
   }
 
-  def firstStep(event: CreateRunEvent): ResultStep = {
-    import event._
-    val (run, fetches) = Run(runId, strategy).newlyStartedRun
-    ResultStep(run, fetches, event)
-  }
-
   /** replays all the events that define a run, starting with the CreateRunEvent
     * assumption: all events share the same runId and are ordered by their timestamp
     */
-  def replayEvents(createRun: CreateRunEvent, events: Iterable[RunEvent]): (Run, Iterable[Fetch], Iterable[AssertorCall]) = {
+  def replayEvents(createRun: CreateRunEvent, events: Iterable[RunEvent]): (Run, Iterable[RunAction]) = {
     import createRun._
     val start = System.currentTimeMillis()
-    var run = firstStep(createRun).run
+    var run = Run(runId, strategy).step(createRun).run
     events foreach { event =>
       run = run.step(event).run
     }
     val toBeFetched = run.pendingFetches.values
-    var toBeAsserted = run.pendingAssertorCalls.values
-    val result = (run, toBeFetched, toBeAsserted)
+    val toBeAsserted = run.pendingAssertorCalls.values
+    val result = (run, toBeFetched ++ toBeAsserted)
     val end = System.currentTimeMillis()
     logger.debug("Run deserialized in %dms (found %d events)" format (end - start, events.size))
     result
@@ -345,37 +339,53 @@ case class Run private (
     (current, fetches)
   }
 
-  def step(event: RunEvent): ResultStep = event match {
-//    case CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
-//      val (run, fetches) = Run(runId, strategy, createdAt).newlyStartedRun
-//      ResultStep(run, fetches, event)
-    case CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
-      val run = this.completeOn(timestamp)
-      ResultStep(run, Seq.empty, event)
-    case CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
-      val run = this.completeOn(timestamp)
-      ResultStep(run, Seq.empty, event)
-    case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), _) =>
-      val (run, filteredAssertions) = this.withAssertorResult(ar)
-      val fixedEvent = {
-        val newResult = ar.copy(assertions = filteredAssertions)
-        are.copy(ar = newResult)
-      }
-      ResultStep(run, Seq.empty, fixedEvent)
-    case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(_, assertor, url, _), _) =>
-      val run = this.withAssertorFailure(af)
-      ResultStep(run, Seq.empty, event)
-    case ResourceResponseEvent(userId, jobId, runId, hr@HttpResponse(url, _, _, _, _, _), _) =>
-      val (run, fetches, assertorCalls) = this.withHttpResponse(hr)
-      val actions = fetches ++ assertorCalls
-      ResultStep(run, actions, event)
-    case ResourceResponseEvent(userId, jobId, runId, er@ErrorResponse(url, _, _), _) =>
-      val (run, fetches) = this.withErrorResponse(er)
-      ResultStep(run, fetches, event)
+  /** apply one event to the current Run. This targets both the
+    * JobActor -- which generates the RunEvents -- and any external
+    * process that wants to retrieve a consistent state.
+    * 
+    * @returns the new Run with some potential actions
+    */
+  def step(event: RunEvent): ResultStep = {
+    val resultStep = event match {
+      case CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
+        val (run, fetches) = this.newlyStartedRun
+        ResultStep(run, fetches, List(event))
+      case CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
+        val run = this.completeOn(timestamp)
+        ResultStep(run, Seq.empty, List(event))
+      case CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
+        val run = this.completeOn(timestamp)
+        ResultStep(run, Seq.empty, List(event))
+      case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), _) =>
+        val (run, filteredAssertions) = this.withAssertorResult(ar)
+        /* fix because of CSS Validator. See http://www.w3.org/mid/511910CB.6050608@w3.org */
+        val fixedEvent = {
+          val newResult = ar.copy(assertions = filteredAssertions)
+          are.copy(ar = newResult)
+        }
+        ResultStep(run, Seq.empty, List(fixedEvent))
+      case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(_, assertor, url, _), _) =>
+        val run = this.withAssertorFailure(af)
+        ResultStep(run, Seq.empty, List(event))
+      case ResourceResponseEvent(userId, jobId, runId, hr@HttpResponse(url, _, _, _, _, _), _) =>
+        val (run, fetches, assertorCalls) = this.withHttpResponse(hr)
+        val actions = fetches ++ assertorCalls
+        ResultStep(run, actions, List(event))
+      case ResourceResponseEvent(userId, jobId, runId, er@ErrorResponse(url, _, _), _) =>
+        val (run, fetches) = this.withErrorResponse(er)
+        ResultStep(run, fetches, List(event))
+    }
+    def notCancel = resultStep.events(0) match { case _: CancelRunEvent => false ; case _ => true }
+    if (resultStep.run.hasNoPendingAction && notCancel ) {
+      val completeRunEvent = CompleteRunEvent(event.userId, event.jobId, runId, resultStep.run.data, resultStep.run.resourceDatas)
+      resultStep.copy(events = resultStep.events :+ completeRunEvent)
+    } else {
+      resultStep
+    }
   }
 
   /**
-   * Returns an Observation with the new urls to be explored
+   * Returns an Run with the new urls to be explored
    */
   private def withNewUrlsToBeExplored(urls: List[URL]): Run = {
     val filteredUrls = urls.filterNot{ url => shouldIgnore(url) }.distinct

@@ -29,7 +29,7 @@ object JobActor {
   /* actor events */
   case object Start
   case object Cancel
-  case class Resume(toBeFetched: Iterable[Fetch], toBeAsserted: Iterable[AssertorCall])
+  case class Resume(actions: Iterable[RunAction])
   case object GetRunData
   case object GetResourceDatas
 
@@ -40,23 +40,6 @@ object JobActor {
 //    def error(msg: String, t: Throwable): Unit = println("== " + msg)
 //    def warn(msg: String): Unit = println("== " + msg)
 //  }
-
-  def executeCommands(run: Run, runActor: ActorRef, toBeFetched: Iterable[Fetch], toBeAsserted: Iterable[AssertorCall], http: ActorRef, assertionsActorRef: ActorRef)(implicit sender: ActorRef): Unit = {
-    
-    def fetch(fetch: Fetch): Unit = {
-      logger.debug(s"${run.shortId}: >>> ${fetch.method} ${fetch.url}")
-      http ! fetch
-    }
-
-    if (! toBeFetched.isEmpty) {
-      toBeFetched foreach { url => fetch(url) }
-    }
-
-    if (! toBeAsserted.isEmpty) {
-      toBeAsserted foreach { call => assertionsActorRef ! call }
-    }
-
-  }
 
 }
 
@@ -82,28 +65,82 @@ extends Actor with FSM[JobActorState, Run] {
 
   val userId = job.creatorId
   val jobId = job.id
+  val runId = initialRun.runId
   implicit val strategy = job.strategy
 
   val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
 
   startWith(NotYetStarted, initialRun)
 
-  def stateOf(run: Run): State = {
-    // if there is still some pending assertions but nore more URLs to explore
-    // that's only for debugging purposes
-    if (run.pendingAssertorCalls.nonEmpty && run.noMoreUrlToExplore) {
-      logger.debug(s"${run.shortId}: Exploration phase finished. Fetched ${run.numberOfFetchedResources} pages")
-      stay() using run
-    } else if (run.hasNoPendingAction) {
-      // if there is no more assertions, that's the end for this Run
-      logger.debug(s"${run.shortId}: Assertion phase finished")
-      val completeRunEvent = CompleteRunEvent(userId, jobId, run.runId, run.data, run.resourceDatas)
-      publish(completeRunEvent)
-      stopThisActor()
-      goto(Stopping) using run
-    } else {
-      stay() using run
+  def executeActions(actions: Iterable[RunAction]): Unit = {
+    actions foreach {
+      case fetch: Fetch =>
+        logger.debug(s"${runId.shortId}: >>> ${fetch.method} ${fetch.url}")
+        httpActorRef ! fetch
+      case call: AssertorCall =>
+        assertionsActorRef ! call
     }
+  }
+
+  def saveEvent(event: RunEvent): Future[Unit] = event match {
+    case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) => {
+      Run.saveEvent(event) flatMap { _ =>
+        val running = Running(runId, actorPath)
+        Job.updateStatus(jobId, status = running)
+      }
+    }
+    case event@CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => {
+      Run.saveEvent(event) flatMap { _ =>
+        val done = Done(runId, Completed, timestamp, runData)
+        Job.updateStatus(jobId, status = done, latestDone = done)
+      }
+    }
+    case event@CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => {
+      Run.saveEvent(event) flatMap { _ =>
+        val done = Done(runId, Cancelled, timestamp, runData)
+        Job.updateStatus(jobId, status = done, latestDone = done)
+      }
+    }
+    case event@AssertorResponseEvent(userId, jobId, runId, ar, timestamp) => {
+      Run.saveEvent(event)
+    }
+    case event@ResourceResponseEvent(userId, jobId, runId, rr, timestamp) => {
+      Run.saveEvent(event)
+    }
+  }
+
+  def handleResultStep(resultStep: ResultStep): State = {
+    import resultStep.{ run, actions, events }
+
+    executeActions(actions)
+
+    // the next state for the JobActor's state machine
+    var state = stay() using run
+
+    events foreach { event =>
+      // save event
+      val f = saveEvent(event)
+      // publish the event when it's actually saved
+      f onSuccess { case () => publish(event) }
+      // compute the next step and do side-effects
+      event match {
+        case CreateRunEvent(_, _, _, _, _, _, _) =>
+          runningJobs.inc()
+          val running = Running(run.runId, self.path)
+          sender ! running
+          state = goto(Started) using run
+        case CompleteRunEvent(_, _, _, _, _, _) =>
+          logger.debug(s"${run.shortId}: Assertion phase finished")
+          stopThisActor()
+          state = goto(Stopping) using run
+        case CancelRunEvent(_, _, _, _, _, _) =>
+          stopThisActor()
+          state = goto(Stopping) using run
+        case _ => ()
+      }
+    }
+
+    state
   }
 
   whenUnhandled {
@@ -133,20 +170,13 @@ extends Actor with FSM[JobActorState, Run] {
 
     case Event(Start, run) => {
       val event = CreateRunEvent(userId, jobId, run.runId, self.path, job.strategy, job.createdOn)
-      publish(event)
-      // Q: we could make running part of CreateRunEvent
-      val running = Running(run.runId, self.path)
-      sender ! running
-      val (startedRun, toBeFetched) = run.newlyStartedRun
-      executeCommands(startedRun, self, toBeFetched, List.empty, httpActorRef, assertionsActorRef)
-      runningJobs.inc()
-      goto(Started) using startedRun
+      handleResultStep(run.step(event))
     }
 
-    case Event(Resume(toBeFetched, toBeAsserted), run) => {
+    case Event(Resume(actions), run) => {
       sender ! ()
-      executeCommands(run, self, toBeFetched, toBeAsserted, httpActorRef, assertionsActorRef)
       runningJobs.inc()
+      executeActions(actions)
       goto(Started)
     }
 
@@ -154,68 +184,40 @@ extends Actor with FSM[JobActorState, Run] {
 
   when(Started) {
 
-    case Event(ar: AssertorResponse, run) if ar.runId /== run.runId => {
-      logger.error(s"${run.shortId} (previous run): received assertor response")
-      logger.error(s"assertorResponse.runId = ${ar.runId}")
-      logger.error(s"run.runId =              ${run.runId}")
-      stay()
-    }
-
-    // Run + Event ---> Run' + Actions
-    // List[Events] ---> Run + Actions
-
     case Event(result: AssertorResult, run) => {
       logger.debug(s"${run.shortId}: ${result.assertor} produced AssertorResult for ${result.sourceUrl}")
-      val (newRun, filteredAssertions) = run.withAssertorResult(result)
-      val newResult = result.copy(assertions = filteredAssertions)
-      val event = AssertorResponseEvent(userId, jobId, run.runId, newResult)
-      publish(event)
-      stateOf(newRun)
+      val event = AssertorResponseEvent(userId, jobId, run.runId, result)
+      handleResultStep(run.step(event))
     }
 
     case Event(failure: AssertorFailure, run) => {
-      publish(AssertorResponseEvent(userId, jobId, run.runId, failure))
-      //publish(RunUpdate())
-      stateOf(run.withAssertorFailure(failure))
-    }
-
-    case Event((runId: RunId, response: ResourceResponse), run) if runId /== run.runId => {
-      logger.error(s"${run.shortId} (previous run): <<< ${response.url}")
-      stay()
+      val event = AssertorResponseEvent(userId, jobId, run.runId, failure)
+      handleResultStep(run.step(event))
     }
 
     case Event((_: RunId, httpResponse: HttpResponse), run) => {
+      // logging/monitoring
       logger.debug(s"${run.shortId}: <<< ${httpResponse.url}")
       extractedUrls.update(httpResponse.extractedURLs.size)
-//      Run.saveEvent(ResourceResponseEvent(run.runId, httpResponse)) onSuccess { case () =>
-//        tellEverybody(NewResource(userId, jobId, run.runId, httpResponse, run.data))
-//      }
+      // logic
       val event = ResourceResponseEvent(userId, jobId, run.runId, httpResponse)
-      publish(event)
-      val (newRun, urlsToFetch, assertorCalls) =
-        run.withHttpResponse(httpResponse)
-      executeCommands(newRun, self, urlsToFetch, assertorCalls, httpActorRef, assertionsActorRef)
-      stateOf(newRun)
+      handleResultStep(run.step(event))
     }
 
     case Event((_: RunId, error: ErrorResponse), run) => {
+      // logging/monitoring
       logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
-//      Run.saveEvent(ResourceResponseEvent(run.runId, error)) onSuccess { case () =>
-//        tellEverybody(NewResource(userId, jobId, run.runId, error, run.data))
-//      }
+      // logic
       val event = ResourceResponseEvent(userId, jobId, run.runId, error)
-      publish(event)
-      val (runWithErrorResponse, urlsToFetch) = run.withErrorResponse(error)
-      executeCommands(runWithErrorResponse, self, urlsToFetch, Iterable.empty, httpActorRef, assertionsActorRef)
-      stateOf(runWithErrorResponse)
+      handleResultStep(run.step(event))
     }
 
     case Event(Cancel, run) => {
+      // logging/monitoring
       logger.debug(s"${run.shortId}: Cancel")
+      // logic
       val event = CancelRunEvent(userId, jobId, run.runId, run.data, run.resourceDatas)
-      publish(event)
-      stopThisActor()
-      goto(Stopping)
+      handleResultStep(run.step(event))
     }
 
   }

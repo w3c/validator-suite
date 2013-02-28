@@ -49,13 +49,13 @@ class RunsActor()(implicit conf: VSConfiguration) extends Actor {
           // recover a coherent state from the database
           Run.get(runId) onComplete {
             case f @ Failure(t) => from ! f
-            case Success((run, toBeFetched, toBeAsserted)) => {
+            case Success((run, actions)) => {
               // re-create the corresponding actor
               // we force the actor name to avoid having to update the actorPath in the job record
               // it should be safe as we're starting from scratch
               val jobActorRef = context.actorOf(Props(new JobActor(job, run)), name = actorPath.name)
               // we can now tell the JobActor to resume its work
-              jobActorRef.tell(JobActor.Resume(toBeFetched, toBeAsserted), from)
+              jobActorRef.tell(JobActor.Resume(actions), from)
             }
           }
         }

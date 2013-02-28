@@ -43,12 +43,13 @@ object Main {
     job.latestDone match {
       case None => println("nothing to do")
       case Some(Done(runId, reason, completedOn, runData)) =>
-        val (run, urls, assertorCalls) = Run.get(runId).getOrFail(60.seconds)
-        if (urls.size < 10)
-          println("urls: " + urls)
-        else
-          println("urls: " + urls.size)
-        println("assertorCalls: " + assertorCalls.size)
+        val (run, actions) = Run.get(runId).getOrFail(60.seconds)
+        ()
+//        if (urls.size < 10)
+//          println("urls: " + urls)
+//        else
+//          println("urls: " + urls.size)
+//        println("assertorCalls: " + assertorCalls.size)
     }
 
     conf.system.shutdown()
