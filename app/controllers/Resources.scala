@@ -103,7 +103,8 @@ object Resources extends VSController  {
         PlayJson.obj("legend1" -> toJson("Never"))
       }
       json.asInstanceOf[JsObject] +
-        ("id", id) +
+        ("id", id) -
+        "lastValidated" +
         ("lastValidated", lastValidated)
     }
   }

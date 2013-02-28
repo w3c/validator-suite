@@ -1,6 +1,5 @@
 require([
     "lib/Util",
-    "lib/Loader",
     "lib/Logger",
     "lib/Socket",
     "model/model",
@@ -14,7 +13,6 @@ require([
     "collection/assertions"],
     function (
         Util,
-        Loader,
         Logger,
         Socket,
         Model,

@@ -11,7 +11,7 @@
                     <span>@Messages("resource.report.for")</span>
                     <span>@Helper.shorten(resource.url, 80)</span>
                 </a>
-                <br><a href="@resource.url" data-resourceUrl="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@resource.url</a>}
+                <br><a href="@resource.url" data-url="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@resource.url</a>}
 
                 case "validated" => {
                 <time datetime="@resource.lastValidated" data-lastValidated="@resource.lastValidated" data-lastValidated-legend1="">@Helper.formatTime(resource.lastValidated)</time>

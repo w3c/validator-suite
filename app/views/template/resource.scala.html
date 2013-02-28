@@ -8,9 +8,9 @@
                 case "url" => {
                 <a href="<%= reportUrl %>" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>
-                    <span><%= Util.shortenUrl(resourceUrl, 80) %></span>
+                    <span><%= Util.shortenUrl(model.get("url"), 80) %></span>
                 </a>
-                <br><a href="<%= resourceUrl %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= resourceUrl %></a>}
+                <br><a href="<%= url %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= url %></a>}
 
                 case "validated" => {
                 <time datetime="<%= lastValidated.timestamp %>"><%= lastValidated.legend1 %></time>

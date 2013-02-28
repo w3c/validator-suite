@@ -1,4 +1,4 @@
-define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], function (Logger, Backbone, Util, Loader, Socket) {
+define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Socket"], function (Logger, Backbone, Util, Socket) {
 
     "use strict";
 
@@ -60,9 +60,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
         configure: function (options) {
             options = this.options = (options || {});
             this.view = new this.constructor.prototype.constructor.View(_.extend({ collection: this }, options));
-            if (options.load || (_.isUndefined(options.load) && this.view.isList())) {
-                this.load();
-            }
             if (options.listen || (_.isUndefined(options.listen))) {
                 if (this.view.isList()) {
                     this.listen();
@@ -75,44 +72,16 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
             return this;
         },
 
-        load: function () {
-            var loader = this.loader = new Loader(this);
-                //view = this.view();
-            loader.start({
-                sort: this.view.getSortParam().string,
-                offset: this.length // for assertions add the implicit filter parameter
-            });
-            //loader.on('stopped', view.updateLegend, view);
-        },
-
-/*        listen: function () {
-            //var socket = new Util.Socket(this.url);
-            var self = this;
-            this.socket = new Socket(this.url);
-            this.socket.on("message", function (data) {
-                var model = self.get(data.id);
-                if (!_.isUndefined(model)) {
-                    model.set(data);
-                } else {
-                    logger.warn("Unknown model with id: " + data.id);
-                    logger.debug(data);
-                }
-            });
-        }*/
         listen: function () {
             var self = this;
             this.socket = new Socket(this.url);
             self.socket.on("message", function (data) {
-                _.each(data, function (data) {
-                    logger.debug(data);
-                    var model = self.get(data.id);
-                    if (!_.isUndefined(model)) {
-                        model.set(data);
-                    } else {
-                        self.add(new self.model(data));
-                        logger.debug(data);
-                    }
-                });
+                var model = self.get(data.id);
+                if (!_.isUndefined(model)) {
+                    model.set(data);
+                } else {
+                    self.add(new self.model(data, {collection: self}));
+                }
             });
         }
 
@@ -129,15 +98,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
         sortParams: [],
 
         search: function (search, searchInput) {
-            var loader = this.collection.loader;
-            if (loader) {
-                loader.setData({ search: search });
-                if (loader.isSearching() && searchInput && $(searchInput).parent().find('.loader').size() === 0) {
-                    var loading = $('<span class="loader"></span>');
-                    $(searchInput).after(loading);
-                    loader.on('stopSearching', function () { loading.remove(); });
-                }
-            }
             this.currentSearch = search;
             this.search_ = (_.isString(search) && search !== "") ? function (model) { return model.search(search); } : undefined;
             this.render();
@@ -275,15 +235,10 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
 
                 if (this.collection.expected === 0) {
                     empty.html(emptyMessage);
-                } else if (this.collection.loader && this.collection.loader.isLoading()) {
-                    if (this.collection.loader.isSearching()) {
-                        empty.html("<span class='loader'></span>");
-                    } else {
-                        empty.html("No search result.");
-                    }
                 } else if (this.currentSearch && this.currentSearch !== "") {
                     empty.html("No search result.");
                 } else {
+                    // TODO: loading no?
                     empty.html(emptyMessage);
                 }
             }
@@ -306,7 +261,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
                     event.preventDefault();
                     sortLinks.removeClass("current");
                     $(this).addClass("current");
-                    if (self.loader) { self.loader.setData({ sort: "-" + param }, true); }
                     self.collection.sortByParam(param);
                     return false;
                 });
@@ -314,7 +268,6 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Loader", "lib/Socket"], 
                     event.preventDefault();
                     sortLinks.removeClass("current");
                     $(this).addClass("current");
-                    if (self.loader) { self.loader.setData({ sort: param }, true); }
                     self.collection.sortByParam(param, true);
                     return false;
                 });

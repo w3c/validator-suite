@@ -7,7 +7,7 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
     Resource = Model.extend({
 
         defaults: {
-            resourceUrl: "",
+            url: "",
             lastValidated: null,
             warnings: 0,
             errors: 0
@@ -16,15 +16,15 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
         assertions: new Assertions(),
 
         init: function () {
-            this.id = this.get("resourceUrl");
+            //this.id = this.get("resourceUrl");
         },
 
-        url: function () { return "../resources/?resource=" + this.get("resourceUrl"); },
+        url: function () { return "../resources/?resource=" + this.get("url"); },
 
-        reportUrl: function () { return "../assertions/?resource=" + this.get("resourceUrl"); },
+        reportUrl: function () { return "../assertions/?resource=" + this.get("url"); },
 
         search: function (search) {
-            return this.get("resourceUrl").toLowerCase().indexOf(search.toLowerCase()) > -1;
+            return this.get("url").toLowerCase().indexOf(search.toLowerCase()) > -1;
         }
 
         /*validate: function (attrs) {
@@ -66,7 +66,7 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
     Resource.fromHtml = function ($article) {
         var value = Util.valueFrom($article);
         return {
-            resourceUrl: value('data-resourceUrl'),
+            url: value('data-url'),
             lastValidated: {
                 timestamp: value('data-lastValidated'),
                 legend1: value('data-lastValidated-legend1'),

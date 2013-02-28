@@ -19,7 +19,7 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logg
             self.socket = new Socket(Util.getValue(this.url, this));
             self.socket.on("message", function (data) {
                 if (data.id !== self.id) {
-                    logger.error("Received an update with an incorrect id: " + data.id + ". Mine is: " + self.id);
+                    logger.error("Received an update with an incorrect id: " + data.id + ". Expected: " + self.id);
                     return;
                 }
                 self.set(data);
