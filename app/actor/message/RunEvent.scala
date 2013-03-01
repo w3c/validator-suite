@@ -20,11 +20,3 @@ case class CancelRunEvent(userId: UserId, jobId: JobId, runId: RunId, runData: R
 case class AssertorResponseEvent(userId: UserId, jobId: JobId, runId: RunId, ar: AssertorResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
 case class ResourceResponseEvent(userId: UserId, jobId: JobId, runId: RunId, rr: ResourceResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
-
-/*case class RunUpdate(
-  userId: UserId,
-  jobId: JobId,
-  runId: RunId,
-  runData: RunData,
-  timestamp: DateTime
-) extends RunEvent*/

@@ -375,6 +375,8 @@ case class Run private (
         val (run, fetches) = this.withErrorResponse(er)
         ResultStep(run, fetches, List(event))
     }
+    // if this is the end of the Run (not because of a Cancel), we
+    // need to generate an additional event
     def notCancel = resultStep.events(0) match { case _: CancelRunEvent => false ; case _ => true }
     if (resultStep.run.hasNoPendingAction && notCancel ) {
       val completeRunEvent = CompleteRunEvent(event.userId, event.jobId, runId, resultStep.run.data, resultStep.run.resourceDatas)

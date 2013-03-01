@@ -68,9 +68,10 @@ extends Actor with FSM[JobActorState, Run] {
   val runId = initialRun.runId
   implicit val strategy = job.strategy
 
+  // TODO: change the way it's done here
   val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
 
-  startWith(NotYetStarted, initialRun)
+  /* functions */
 
   def executeActions(actions: Iterable[RunAction]): Unit = {
     actions foreach {
@@ -109,15 +110,26 @@ extends Actor with FSM[JobActorState, Run] {
     }
   }
 
+  /** does in one single place all the side-effects resulting from a
+    * ResultStep
+    */
   def handleResultStep(resultStep: ResultStep): State = {
-    import resultStep.{ run, actions, events }
+    import resultStep.{ run, actions }
 
     executeActions(actions)
+
+    // remember the RunEvents seen so far
+    runEvents ++= resultStep.events
 
     // the next state for the JobActor's state machine
     var state = stay() using run
 
-    events foreach { event =>
+    // fire jobDatas
+    JobData.toFire(job, resultStep) foreach { jobData =>
+      publish(jobData)
+    }
+
+    resultStep.events foreach { event =>
       // save event
       val f = saveEvent(event)
       // publish the event when it's actually saved
@@ -142,6 +154,10 @@ extends Actor with FSM[JobActorState, Run] {
 
     state
   }
+
+  /* state machine */
+
+  startWith(NotYetStarted, initialRun)
 
   whenUnhandled {
 
@@ -226,8 +242,58 @@ extends Actor with FSM[JobActorState, Run] {
     context.stop(self)
   }
 
-  def publish(event: RunEvent): Unit = {
-    runEventBus.publish(event)
+  /* some variables */
+
+  var runEvents: Vector[RunEvent] = Vector.empty
+
+  /* EventBus */
+
+  var map: Map[Classifier[_], Set[ActorRef]] =
+    Classifier.all.map(c => c -> Set.empty[ActorRef]).toMap
+
+  def subscribe(subscriber: ActorRef, classifier: Classifier[_]): Boolean = {
+    map.get(classifier) match {
+      case Some(subscribers) =>
+        map += (classifier -> (subscribers + subscriber))
+        true
+      case None =>
+        false
+    }
+  }
+
+  def subscribe(subscriber: ActorRef): Unit = {
+    map.keys foreach { c =>
+      subscribe(subscriber, c)
+    }
+  }
+
+  def unsubscribe(subscriber: ActorRef, classifier: Classifier[_]): Boolean = {
+    map.get(classifier) match {
+      case Some(subscribers) =>
+        map += (classifier -> (subscribers - subscriber))
+        true
+      case None => false
+    }
+  }
+
+  def unsubscribe(subscriber: ActorRef): Unit = {
+    map foreach { case (classifier, subscribers) =>
+      if (subscribers.contains(subscriber)) {
+        map += (classifier -> (subscribers - subscriber))
+      }
+    }
+  }
+
+  /** this differs from akka.event.BusEvent as we want to make sure that
+    * a classifier exists for Event
+    */
+  def publish[Event](event: Event)(implicit classifier: Classifier[Event]): Unit = {
+    if (event.isInstanceOf[RunEvent])
+      runEventBus.publish(event.asInstanceOf[RunEvent])
+    val subscribers = map(classifier)
+    subscribers foreach { subscriber =>
+      subscriber ! event
+    }
   }
 
 }

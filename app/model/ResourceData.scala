@@ -7,8 +7,6 @@ import org.w3.vs.VSConfiguration
 
 case class ResourceData(
   url: URL,
-  last: DateTime,
-  w: Int,
-  e: Int) {
-
-}
+  lastValidated: DateTime,
+  warnings: Int,
+  errors: Int)

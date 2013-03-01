@@ -27,4 +27,3 @@ case class AssertorCall(
  * @token a token that will be included in the response from the actor
  */
 case class Fetch(url: URL, method: HttpMethod, token: RunId) extends RunAction
-

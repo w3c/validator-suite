@@ -187,7 +187,7 @@ case class Job(
             m += (url -> rd)
           }
           case Some(rd) => {
-            val newRd = ResourceData(url, timestamp, rd.w + warnings, rd.e + errors)
+            val newRd = ResourceData(url, timestamp, rd.warnings + warnings, rd.errors + errors)
             resourceDatas ::= newRd
             m += (url -> newRd)
           }

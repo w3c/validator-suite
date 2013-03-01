@@ -111,9 +111,9 @@ object Formats {
 
   implicit val ResourceDataFormat: Format[ResourceData] = (
     (__ \ 'url).format[URL] and
-    (__ \ 'lastValidated).format[DateTime] and
-    (__ \ 'warnings).format[Int] and
-    (__ \ 'errors).format[Int]
+    (__ \ 'last).format[DateTime] and
+    (__ \ 'w).format[Int] and
+    (__ \ 'e).format[Int]
   )(ResourceData.apply, unlift(ResourceData.unapply))
 
   implicit val JobDataRunningFormat = constant("running", JobDataRunning)
