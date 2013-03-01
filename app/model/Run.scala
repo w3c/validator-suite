@@ -94,6 +94,12 @@ object Run {
 //    Run.replayEvents(createRun, events)
 //  }  
 
+  def enumerateRunEvents(runId: RunId)(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
+    val query = Json.obj("runId" -> toJson(runId))
+    val cursor = collection.find[JsValue, JsValue](query)
+    cursor.enumerate &> Enumeratee.map[JsValue](_.as[RunEvent])
+  }
+
   def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[RunAction])] = {
     val query = Json.obj("runId" -> toJson(runId))
     val cursor = collection.find[JsValue, JsValue](query)

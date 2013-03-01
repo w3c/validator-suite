@@ -20,4 +20,4 @@ object Classifier {
 
 }
 
-sealed trait Classifier[Event]
+trait Classifier[+Event]

@@ -11,6 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
 import org.scalatest.Inside
+import play.api.libs.iteratee._
 
 class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper with Inside {
 
@@ -40,9 +41,9 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper with Insid
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    runEventBus.subscribe(testActor, FromJob(job.id))
+    val events: scala.concurrent.Future[List[RunEvent]] = runningJob.enumerator() /*&> Enumeratee.map[RunEvent]{ e => println("** "+e); e }*/ |>>> Iteratee.getChunks[RunEvent]
 
-    val event = fishForMessagePF(3.seconds) { case event: CompleteRunEvent => event }
+    val event = events.getOrFail().collectFirst { case event: CompleteRunEvent => event }.get
 
     event.runData.resources must be(circumference + 1)
 

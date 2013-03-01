@@ -33,6 +33,9 @@ object JobActor {
   case object GetRunData
   case object GetResourceDatas
 
+  case class Listen[Event](subscriber: ActorRef, classifier: Classifier[Event])
+  case class Deafen(subscriber: ActorRef)
+
   val logger = Logger.of(classOf[JobActor])
 //  val logger = new Object {
 //    def debug(msg: String): Unit = println("== " + msg)
@@ -84,30 +87,30 @@ extends Actor with FSM[JobActorState, Run] {
   }
 
   def saveEvent(event: RunEvent): Future[Unit] = event match {
-    case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) => {
+    case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
       Run.saveEvent(event) flatMap { _ =>
         val running = Running(runId, actorPath)
         Job.updateStatus(jobId, status = running)
       }
-    }
-    case event@CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => {
+
+    case event@CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
       Run.saveEvent(event) flatMap { _ =>
         val done = Done(runId, Completed, timestamp, runData)
         Job.updateStatus(jobId, status = done, latestDone = done)
       }
-    }
-    case event@CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => {
+
+    case event@CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
       Run.saveEvent(event) flatMap { _ =>
         val done = Done(runId, Cancelled, timestamp, runData)
         Job.updateStatus(jobId, status = done, latestDone = done)
       }
-    }
-    case event@AssertorResponseEvent(userId, jobId, runId, ar, timestamp) => {
+
+    case event@AssertorResponseEvent(userId, jobId, runId, ar, timestamp) =>
       Run.saveEvent(event)
-    }
-    case event@ResourceResponseEvent(userId, jobId, runId, rr, timestamp) => {
+
+    case event@ResourceResponseEvent(userId, jobId, runId, rr, timestamp) =>
       Run.saveEvent(event)
-    }
+
   }
 
   /** does in one single place all the side-effects resulting from a
@@ -161,84 +164,92 @@ extends Actor with FSM[JobActorState, Run] {
 
   whenUnhandled {
 
-    case Event(GetRunData, run) => {
+    case Event(GetRunData, run) =>
       sender ! run.data
       stay()
-    }
 
-    case Event(e, run) => {
+    case Event(Listen(subscriber, classifier), run) =>
+      import Classifier._
+      classifier match {
+        case SubscribeToRunEvent => subscriber ! runEvents
+        case _ => sender ! Iterable.empty
+      }
+      subscribe(subscriber, classifier)
+      stay()
+
+    case Event(Deafen(subscriber), run) =>
+      unsubscribe(subscriber)
+      stay()
+
+    case Event(e, run) =>
       logger.error(s"${run.shortId}: unexpected event ${e}")
       stay()
-    }
 
   }
 
   when(Stopping) {
 
-    case Event(e, run) => {
+    case Event(e, run) =>
       logger.debug(s"${run.shortId}: received ${e} while Stopping")
       stay()
-    }
 
   }
 
   when(NotYetStarted) {
 
-    case Event(Start, run) => {
+    case Event(Start, run) =>
       val event = CreateRunEvent(userId, jobId, run.runId, self.path, job.strategy, job.createdOn)
       handleResultStep(run.step(event))
-    }
 
-    case Event(Resume(actions), run) => {
+    case Event(Resume(actions), run) =>
       sender ! ()
       runningJobs.inc()
       executeActions(actions)
       goto(Started)
-    }
 
   }
 
   when(Started) {
 
-    case Event(result: AssertorResult, run) => {
+    case Event(result: AssertorResult, run) =>
       logger.debug(s"${run.shortId}: ${result.assertor} produced AssertorResult for ${result.sourceUrl}")
       val event = AssertorResponseEvent(userId, jobId, run.runId, result)
       handleResultStep(run.step(event))
-    }
 
-    case Event(failure: AssertorFailure, run) => {
+    case Event(failure: AssertorFailure, run) =>
       val event = AssertorResponseEvent(userId, jobId, run.runId, failure)
       handleResultStep(run.step(event))
-    }
 
-    case Event((_: RunId, httpResponse: HttpResponse), run) => {
+    case Event((_: RunId, httpResponse: HttpResponse), run) =>
       // logging/monitoring
       logger.debug(s"${run.shortId}: <<< ${httpResponse.url}")
       extractedUrls.update(httpResponse.extractedURLs.size)
       // logic
       val event = ResourceResponseEvent(userId, jobId, run.runId, httpResponse)
       handleResultStep(run.step(event))
-    }
 
-    case Event((_: RunId, error: ErrorResponse), run) => {
+    case Event((_: RunId, error: ErrorResponse), run) =>
       // logging/monitoring
       logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
       // logic
       val event = ResourceResponseEvent(userId, jobId, run.runId, error)
       handleResultStep(run.step(event))
-    }
 
-    case Event(Cancel, run) => {
+    case Event(Cancel, run) =>
       // logging/monitoring
       logger.debug(s"${run.shortId}: Cancel")
       // logic
       val event = CancelRunEvent(userId, jobId, run.runId, run.data, run.resourceDatas)
       handleResultStep(run.step(event))
-    }
 
   }
 
   def stopThisActor(): Unit = {
+    // there is a bug if the Channel gets that too fast
+    Thread.sleep(200)
+    map.values.flatten.toSet foreach { subscriber: ActorRef =>
+      subscriber ! ()
+    }
     context.stop(self)
   }
 
@@ -288,8 +299,6 @@ extends Actor with FSM[JobActorState, Run] {
     * a classifier exists for Event
     */
   def publish[Event](event: Event)(implicit classifier: Classifier[Event]): Unit = {
-    if (event.isInstanceOf[RunEvent])
-      runEventBus.publish(event.asInstanceOf[RunEvent])
     val subscribers = map(classifier)
     subscribers foreach { subscriber =>
       subscriber ! event
