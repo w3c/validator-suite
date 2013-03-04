@@ -13,11 +13,11 @@ import Formats._
 
 // Reactive Mongo imports
 import reactivemongo.api._
+import reactivemongo.api.collections.default._
 import reactivemongo.bson._
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
 // Reactive Mongo plugin
 import play.modules.reactivemongo._
-import play.modules.reactivemongo.PlayBsonImplicits._
+import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson

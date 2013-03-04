@@ -18,11 +18,11 @@ import play.api.libs.iteratee
 
 // Reactive Mongo imports
 import reactivemongo.api._
+import reactivemongo.api.collections.default._
 import reactivemongo.bson._
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
 // Reactive Mongo plugin
 import play.modules.reactivemongo._
-import play.modules.reactivemongo.PlayBsonImplicits._
+import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
@@ -105,7 +105,7 @@ object User {
     configuration.getString(key) getOrElse sys.error("could not find root password")
   }
 
-  def collection(implicit conf: VSConfiguration): DefaultCollection =
+  def collection(implicit conf: VSConfiguration): BSONCollection =
     conf.db("users")
 
   def sample(implicit conf: VSConfiguration): User = User(
@@ -119,8 +119,8 @@ object User {
   def get(userId: UserId)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
     val query = Json.obj("_id" -> toJson(userId))
-    val cursor = collection.find[JsValue, JsValue](query)
-    cursor.headOption map {
+    val cursor = collection.find(query).cursor[JsValue]
+    cursor.headOption() map {
       case Some(json) => json.as[User]
       case None => sys.error("user not found")
     }
@@ -175,8 +175,8 @@ object User {
   def getByEmail(email: String)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
     val query = Json.obj("email" -> JsString(email))
-    val cursor: FlattenedCursor[JsValue] = collection.find[JsValue, JsValue](query)
-    cursor.headOption map {
+    val cursor = collection.find(query).cursor[JsValue]
+    cursor.headOption() map {
       case Some(json) => json.as[User]
       case None => throw UnknownUser
     }
@@ -194,7 +194,7 @@ object User {
     val userJ = toJson(user)
     import reactivemongo.core.commands.LastError
     collection.insert(userJ) map { lastError => () } recover {
-      case LastError(_, _, Some(11000), _, _) => throw DuplicatedEmail(user.email)
+      case LastError(_, _, Some(11000), _, _, _, _) => throw DuplicatedEmail(user.email)
     }
   }
 
@@ -202,7 +202,7 @@ object User {
     import conf._
     val selector = Json.obj("_id" -> toJson(user.id))
     val update = toJson(user)
-    collection.update[JsValue, JsValue](selector, update) map { lastError => () }
+    collection.update(selector, update) map { lastError => () }
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): Future[Unit] =

@@ -224,8 +224,7 @@ object Main {
       }
       case Array("migration") => {
         val conf = new DefaultProdConfiguration { }
-        org.w3.vs.store.MigrationFeb15.updatePasswords()(conf)
-        println("done")
+        println("nothing planned right now")
       }
       case Array("test", jobIdS) => test(jobIdS)
       case Array("run") =>  {

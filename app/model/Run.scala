@@ -12,11 +12,11 @@ import play.api.libs.iteratee._
 
 // Reactive Mongo imports
 import reactivemongo.api._
+import reactivemongo.api.collections.default._
 import reactivemongo.bson._
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
 // Reactive Mongo plugin
 import play.modules.reactivemongo._
-import play.modules.reactivemongo.PlayBsonImplicits._
+import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
@@ -31,7 +31,7 @@ object Run {
 
   val logger = play.Logger.of(classOf[Run])
 
-  def collection(implicit conf: VSConfiguration): DefaultCollection =
+  def collection(implicit conf: VSConfiguration): BSONCollection =
     conf.db("runs")
 
   def collection2(implicit conf: VSConfiguration): DBCollection =
@@ -39,15 +39,14 @@ object Run {
 
   def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
     import conf._
-    val query = QueryBuilder().
-      query( Json.obj(
-        "runId" -> toJson(runId),
-        "event" -> toJson("assertor-response"),
-        "ar.assertions" -> Json.obj("$exists" -> JsBoolean(true))) ).
-      projection( BSONDocument(
-        "ar.assertions" -> BSONInteger(1),
-        "_id" -> BSONInteger(0)) )
-    val cursor = Run.collection.find[JsValue](query)
+    val query = Json.obj(
+      "runId" -> toJson(runId),
+      "event" -> toJson("assertor-response"),
+      "ar.assertions" -> Json.obj("$exists" -> JsBoolean(true)))
+    val projection = BSONDocument(
+      "ar.assertions" -> BSONInteger(1),
+      "_id" -> BSONInteger(0))
+    val cursor = Run.collection.find(query, projection).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
       val assertions = (json \ "ar" \ "assertions").as[List[Assertion]]
       assertions
@@ -96,14 +95,14 @@ object Run {
 
   def enumerateRunEvents(runId: RunId)(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     val query = Json.obj("runId" -> toJson(runId))
-    val cursor = collection.find[JsValue, JsValue](query)
-    cursor.enumerate &> Enumeratee.map[JsValue](_.as[RunEvent])
+    val cursor = collection.find[JsValue](query).cursor[JsValue]
+    cursor.enumerate() &> Enumeratee.map[JsValue](_.as[RunEvent])
   }
 
   def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[RunAction])] = {
     val query = Json.obj("runId" -> toJson(runId))
-    val cursor = collection.find[JsValue, JsValue](query)
-    cursor.toList map { list =>
+    val cursor = collection.find(query).cursor[JsValue]
+    cursor.toList() map { list =>
       // the sort is done client-side
       val orderedEvents = list.map(_.as[RunEvent]).sortBy(_.timestamp)
       val (createRun, events) = orderedEvents match {

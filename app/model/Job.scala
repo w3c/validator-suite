@@ -21,11 +21,11 @@ import scalaz.Scalaz._
 
 // Reactive Mongo imports
 import reactivemongo.api._
+import reactivemongo.api.collections.default.BSONCollection
 import reactivemongo.bson._
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
 // Reactive Mongo plugin
 import play.modules.reactivemongo._
-import play.modules.reactivemongo.PlayBsonImplicits._
+import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
@@ -230,7 +230,7 @@ object Job {
 
   val logger = Logger.of(classOf[Job])
 
-  def collection(implicit conf: VSConfiguration): DefaultCollection =
+  def collection(implicit conf: VSConfiguration): BSONCollection =
     conf.db("jobs")
 
   def sample(implicit conf: VSConfiguration) = Job(
@@ -286,8 +286,8 @@ object Job {
   // the Run may not exist if the Job was never started
   def get(jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
-    val cursor = collection.find[JsValue, JsValue](query)
-    cursor.headOption map {
+    val cursor = collection.find(query).cursor[JsValue]
+    cursor.headOption() map {
       case None => throw new NoSuchElementException("Invalid jobId: " + jobId)
       case Some(json) => json.as[Job]
     }
@@ -295,8 +295,8 @@ object Job {
 
   def getRunningJobs()(implicit conf: VSConfiguration): Future[List[Job]] = {
     val query = Json.obj("status.actorPath" -> Json.obj("$exists" -> JsBoolean(true)))
-    val cursor = collection.find[JsValue, JsValue](query)
-    cursor.toList map { list => list map { _.as[Job] } }
+    val cursor = collection.find(query).cursor[JsValue]
+    cursor.toList() map { list => list map { _.as[Job] } }
   }
 
   /** Resumes all the pending jobs (Running status) in the system.
@@ -329,8 +329,8 @@ object Job {
   def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
     import conf._
     val query = Json.obj("creator" -> toJson(userId))
-    val cursor = collection.find[JsValue, JsValue](query)
-    cursor.toList map { list =>
+    val cursor = collection.find(query).cursor[JsValue]
+    cursor.toList() map { list =>
       list map { json => json.as[Job] }
     }
   }
@@ -340,8 +340,8 @@ object Job {
   def getFor(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
     val query = Json.obj("_id" -> toJson(jobId), "creator" -> toJson(userId))
-    val cursor = collection.find[JsValue, JsValue](query)
-    cursor.headOption map {
+    val cursor = collection.find(query).cursor[JsValue]
+    cursor.headOption() map {
       case None => throw UnknownJob(jobId)
       case Some(json) => json.as[Job]
     }

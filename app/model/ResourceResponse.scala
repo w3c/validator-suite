@@ -11,11 +11,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 // Reactive Mongo imports
 import reactivemongo.api._
+import reactivemongo.api.collections.default._
 import reactivemongo.bson._
-import reactivemongo.bson.handlers.DefaultBSONHandlers._
 // Reactive Mongo plugin
 import play.modules.reactivemongo._
-import play.modules.reactivemongo.PlayBsonImplicits._
+import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
@@ -28,8 +28,8 @@ object ResourceResponse {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> toJson("resource-response") )
-    val cursor = Run.collection.find[JsValue, JsValue](query)
-    cursor.toList map { list =>
+    val cursor = Run.collection.find(query).cursor[JsValue]
+    cursor.toList() map { list =>
       list.map(json => json.as[ResourceResponseEvent](ResourceResponseEventFormat).rr).toSet
     }
   }
