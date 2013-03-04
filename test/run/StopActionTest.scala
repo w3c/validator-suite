@@ -11,6 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
 import org.scalatest.Inside
+import play.api.libs.iteratee.{ Done => ItDone, Error => ItError, _ }
 
 class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
 
@@ -40,17 +41,16 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    fishForMessagePF(3.seconds) {
-      case ResourceResponseEvent(_, _, _, rr, _) => rr.url must be(URL("http://localhost:9001/"))
+    def test(): Iteratee[RunEvent, Unit] = for {
+      rr <- waitFor[RunEvent] { case ResourceResponseEvent(_, _, _, rr, _) => rr }
+      _ = runningJob.cancel()
+      cancelEvent <- waitFor[RunEvent] { case event: CancelRunEvent => event }
+    } yield {
+      rr.url must be(URL("http://localhost:9001/"))
+      cancelEvent.runData.resources must be < (100)
     }
 
-    // note: you can block on that if you wanted
-    runningJob.cancel()
-
-    // but here we want to check that the message is sent
-    val cancelEvent = fishForMessagePF(3.seconds) { case event: CancelRunEvent => event }
-
-    cancelEvent.runData.resources must be < (100)
+    (runningJob.enumerator() |>>> test()).getOrFail(3.seconds)
 
     // just checking that the data in the store is correct
 

@@ -11,6 +11,7 @@ import akka.actor._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
+import play.api.libs.iteratee._
 
 class ResumedRunTest extends RunTestHelper with TestKitHelper {
 
@@ -41,15 +42,12 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     val Running(runId, actorPath) = runningJob.status
     runningJob.id must be(job.id)
 
+    // register to the death of the JobActor
     val jobActorRef = system.actorFor(actorPath)
-    // listen to the death of the jobActor
-    // this could fail if the jobActor sends a message in the mean time (watch is waiting for a Watch)
-    // but it should not happen if the SleepTime is big enough
     watch(jobActorRef)
 
-    runEventBus.subscribe(testActor, FromJob(job.id))
-
-    val event = fishForMessagePF(3.seconds) { case event: ResourceResponseEvent => event }
+    // wait for the first ResourceResponseEvent
+    (runningJob.enumerator() |>>> waitFor[RunEvent] { case _: ResourceResponseEvent => () }).getOrFail(3.seconds)
 
     // kill the jobActor
     jobActorRef ! PoisonPill
@@ -57,6 +55,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     // wait for the death notification
     val terminated = fishForMessagePF(3.seconds) { case event: Terminated => event }
 
+    // make sure we've seen the right death
     terminated.actor must be(jobActorRef)
 
     // then resume!
@@ -69,14 +68,10 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     val resume = rJob.resume().getOrFail()
     resume must be(())
 
-    runEventBus.subscribe(testActor, FromJob(job.id))
-    
-    // that's the same test as in cyclic
-    fishForMessagePF(3.seconds) {
-      case event: CompleteRunEvent => {
-        event.runData.resources must be(circumference + 1)
-      }
-    }
+    val completeRunEvent =
+      (runningJob.enumerator() |>>> waitFor[RunEvent]{ case e: CompleteRunEvent => e }).getOrFail(3.seconds)
+
+    completeRunEvent.runData.resources must be(circumference + 1)
 
   }
   

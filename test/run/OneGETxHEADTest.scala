@@ -10,6 +10,7 @@ import org.w3.vs.http.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
+import play.api.libs.iteratee._
 
 /**
   * Server 1 -> Server 2
@@ -44,13 +45,11 @@ class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    runEventBus.subscribe(testActor, FromJob(job.id))
+    val events = (runningJob.enumerator() |>>> Iteratee.getChunks[RunEvent]).getOrFail(3.seconds)
 
-    fishForMessagePF(3.seconds) {
-      case event: CompleteRunEvent => {
-        event.runData.resources must be(j + 1)
-      }
-    }
+    val completeRunEvent = events.collectFirst { case event: CompleteRunEvent => event }.get
+
+    completeRunEvent.runData.resources must be(j + 1)
 
   }
 

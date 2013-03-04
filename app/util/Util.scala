@@ -106,4 +106,14 @@ object Util {
 //     return strList;
 //   }
 
+  import play.api.libs.iteratee._
+
+  def waitFor[A] = new {
+    def apply[B](pf: PartialFunction[A, B]): Iteratee[A, B] = Cont {
+      case in @ Input.El(a) if pf.isDefinedAt(a) => Done(pf(a))
+      case in @ Input.EOF => Error("couln't find an element that matches the partial function", in)
+      case _ => apply(pf)
+    }
+  }
+
 }
