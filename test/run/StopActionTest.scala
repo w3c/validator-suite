@@ -41,14 +41,6 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    def waitFor[A] = new {
-      def apply[B](pf: PartialFunction[A, B]): Iteratee[A, B] = Cont {
-        case in @ Input.El(a) if pf.isDefinedAt(a) => ItDone(pf(a))
-        case in @ Input.EOF => ItError("couln't find an element that matches the partial function", in)
-        case _ => apply(pf)
-      }
-    }
-
     def test(): Iteratee[RunEvent, Unit] = for {
       rr <- waitFor[RunEvent] { case ResourceResponseEvent(_, _, _, rr, _) => rr }
       _ = runningJob.cancel()
