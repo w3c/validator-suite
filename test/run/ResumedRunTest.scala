@@ -11,6 +11,7 @@ import akka.actor._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
+import play.api.libs.iteratee._
 
 class ResumedRunTest extends RunTestHelper with TestKitHelper {
 

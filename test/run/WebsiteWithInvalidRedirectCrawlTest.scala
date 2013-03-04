@@ -11,6 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
 import javax.servlet.http._
+import play.api.libs.iteratee._
 
 class WebsiteWithInvalidRedirectCrawlTest extends RunTestHelper with TestKitHelper {
 
@@ -59,16 +60,16 @@ class WebsiteWithInvalidRedirectCrawlTest extends RunTestHelper with TestKitHelp
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    runEventBus.subscribe(testActor, FromJob(job.id))
+    val events = (runningJob.enumerator() |>>> Iteratee.getChunks[RunEvent]).getOrFail(3.seconds)
 
-    fishForMessagePF(3.seconds) {
-      case event: CompleteRunEvent => {
-        event.runData.resources must be(2)
-//        val codes = rrs.toList.collect{ case HttpResponse(_, _, code, _, _, _) => code }
-//        codes.count(_ == 200) must be(2)
-//        codes.count(_ == 302) must be(1)
-      }
-    }
+    val completeRunEvent = events.collectFirst { case event: CompleteRunEvent => event }.get
+
+    completeRunEvent.runData.resources must be(2)
+
+    val codes = events.collect { case ResourceResponseEvent(_, _, _, HttpResponse(_, _, code, _, _, _), _) => code }
+
+    codes.count(_ == 200) must be(2)
+    codes.count(_ == 302) must be(1)
 
   }
   
