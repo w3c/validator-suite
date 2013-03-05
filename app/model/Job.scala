@@ -157,10 +157,8 @@ case class Job(
       case Running(_, jobActorPath) => {
         val (_enumerator, channel) = Concurrent.broadcast[RunEvent]
         def push(msg: RunEvent): Unit = {
-          println("))))))))))))) push " + msg)
           try {
             channel.push(msg)
-            println("((((((((((((( pushed")
           } catch {
             case e: ClosedChannelException => {
               logger.error("ClosedChannel exception: ", e)
@@ -174,13 +172,12 @@ case class Job(
         }
         def subscriberActor(actorRef: ActorRef): Actor = new Actor {
           override def preStart(): Unit = {
-            println("################ just started!")
             actorRef ! JobActor.Listen(self, Classifier.SubscribeToRunEvent)
           }
           def receive = {
             case msg: RunEvent => push(msg)
-            case messages: Iterable[_] => println(s"%%%%%%% GOT ITERABLE $messages"); messages foreach { case msg: RunEvent => push(msg) }
-            case () => println("@@@@@ closing"); channel.push(Input.EOF)
+            case messages: Iterable[_] => messages foreach { case msg: RunEvent => push(msg) }
+            case () => channel.push(Input.EOF)
             case msg => logger.error("subscriber got " + msg)
           }
         }

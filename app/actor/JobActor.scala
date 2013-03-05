@@ -134,14 +134,10 @@ extends Actor with FSM[JobActorState, Run] {
 
     resultStep.events foreach { event =>
       // save event
-      println("+++++++++++++++1 " + event)
+      futureSideEffect { saveEvent(event) }
 
-      // asynchronous operations, but Akka makes sure that the order
-      // is preserved -- that's actually important for the database
-      // and the enumerator
-      lastSideEffect = lastSideEffect flatMap { case () => saveEvent(event) }
-
-      lastSideEffect = lastSideEffect andThen { case Success(()) => publish(event) }
+      // publish event
+      sideEffect { publish(event) }
 
       // compute the next step and do side-effects
       event match {
@@ -150,7 +146,7 @@ extends Actor with FSM[JobActorState, Run] {
           val running = Running(run.runId, self.path)
           // Job.run() is waiting for this value
           val from = sender
-          lastSideEffect andThen { case Success(()) => from ! running }
+          sideEffect { from ! running }
           state = goto(Started) using run
         case CompleteRunEvent(_, _, _, _, _, _) =>
           logger.debug(s"${run.shortId}: Assertion phase finished")
@@ -177,7 +173,6 @@ extends Actor with FSM[JobActorState, Run] {
       stay()
 
     case Event(Listen(subscriber, classifier), run) =>
-      println("RECEIVED LISTEN, finally")
       import Classifier._
       classifier match {
         case SubscribeToRunEvent => subscriber ! runEvents
@@ -198,8 +193,10 @@ extends Actor with FSM[JobActorState, Run] {
 
   when(Stopping) {
 
+    // we still answer Listen requests in the Stopping state, but we
+    // just send the termination message right away. There is no need
+    // to subscribe anybody.
     case Event(Listen(subscriber, classifier), run) =>
-      println("RECEIVED LISTEN while stopping")
       import Classifier._
       classifier match {
         case SubscribeToRunEvent => subscriber ! runEvents
@@ -264,19 +261,32 @@ extends Actor with FSM[JobActorState, Run] {
   }
 
   def stopThisActor(): Unit = {
-    println("STOPPING THIS ACTOR")
     val duration = scala.concurrent.duration.Duration(5, "s")
-    lastSideEffect = lastSideEffect andThen { case Success(()) =>
+    sideEffect {
       map.values.flatten.toSet foreach { subscriber: ActorRef =>
         subscriber ! ()
       }
+      // we stay a bit longer in the Stopping state. This lets the
+      // occasion for pending Enumerators to catch up
       system.scheduler.scheduleOnce(duration, self, PoisonPill)
     }
   }
 
-  /* some variables */
+  /* managing side-effects: use these functions for all side-effects
+   * that need to be ordered */
 
+  /** all side-effects are happening against this future. The invariant
+    * holds if you use sideEffect and futureSideEffect to schedule the
+    * asynchronous side-effects */
   var lastSideEffect: Future[Unit] = Future.successful(())
+
+  def sideEffect(block: => Unit): Unit =
+    lastSideEffect = lastSideEffect andThen { case Success(()) => block }
+
+  def futureSideEffect(block: => Future[Unit]): Unit =
+    lastSideEffect = lastSideEffect flatMap { case () => block }
+
+  /* some variables */
 
   var runEvents: Vector[RunEvent] = Vector.empty
 
