@@ -88,19 +88,19 @@ extends Actor with FSM[JobActorState, Run] {
 
   def saveEvent(event: RunEvent): Future[Unit] = event match {
     case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
-      Run.saveEvent(event) flatMap { _ =>
+      Run.saveEvent(event) flatMap { case () =>
         val running = Running(runId, actorPath)
         Job.updateStatus(jobId, status = running)
       }
 
     case event@CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
-      Run.saveEvent(event) flatMap { _ =>
+      Run.saveEvent(event) flatMap { case () =>
         val done = Done(runId, Completed, timestamp, runData)
         Job.updateStatus(jobId, status = done, latestDone = done)
       }
 
     case event@CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
-      Run.saveEvent(event) flatMap { _ =>
+      Run.saveEvent(event) flatMap { case () =>
         val done = Done(runId, Cancelled, timestamp, runData)
         Job.updateStatus(jobId, status = done, latestDone = done)
       }
@@ -134,15 +134,23 @@ extends Actor with FSM[JobActorState, Run] {
 
     resultStep.events foreach { event =>
       // save event
-      val f = saveEvent(event)
-      // publish the event when it's actually saved
-      f onSuccess { case () => publish(event) }
+      println("+++++++++++++++1 " + event)
+
+      // asynchronous operations, but Akka makes sure that the order
+      // is preserved -- that's actually important for the database
+      // and the enumerator
+      lastSideEffect = lastSideEffect flatMap { case () => saveEvent(event) }
+
+      lastSideEffect = lastSideEffect andThen { case Success(()) => publish(event) }
+
       // compute the next step and do side-effects
       event match {
         case CreateRunEvent(_, _, _, _, _, _, _) =>
           runningJobs.inc()
           val running = Running(run.runId, self.path)
-          sender ! running
+          // Job.run() is waiting for this value
+          val from = sender
+          lastSideEffect andThen { case Success(()) => from ! running }
           state = goto(Started) using run
         case CompleteRunEvent(_, _, _, _, _, _) =>
           logger.debug(s"${run.shortId}: Assertion phase finished")
@@ -169,6 +177,7 @@ extends Actor with FSM[JobActorState, Run] {
       stay()
 
     case Event(Listen(subscriber, classifier), run) =>
+      println("RECEIVED LISTEN, finally")
       import Classifier._
       classifier match {
         case SubscribeToRunEvent => subscriber ! runEvents
@@ -188,6 +197,16 @@ extends Actor with FSM[JobActorState, Run] {
   }
 
   when(Stopping) {
+
+    case Event(Listen(subscriber, classifier), run) =>
+      println("RECEIVED LISTEN while stopping")
+      import Classifier._
+      classifier match {
+        case SubscribeToRunEvent => subscriber ! runEvents
+        case _ => sender ! Iterable.empty
+      }
+      subscriber ! ()
+      stay()
 
     case Event(e, run) =>
       logger.debug(s"${run.shortId}: received ${e} while Stopping")
@@ -245,15 +264,19 @@ extends Actor with FSM[JobActorState, Run] {
   }
 
   def stopThisActor(): Unit = {
-    // there is a bug if the Channel gets that too fast
-    Thread.sleep(200)
-    map.values.flatten.toSet foreach { subscriber: ActorRef =>
-      subscriber ! ()
+    println("STOPPING THIS ACTOR")
+    val duration = scala.concurrent.duration.Duration(5, "s")
+    lastSideEffect = lastSideEffect andThen { case Success(()) =>
+      map.values.flatten.toSet foreach { subscriber: ActorRef =>
+        subscriber ! ()
+      }
+      system.scheduler.scheduleOnce(duration, self, PoisonPill)
     }
-    context.stop(self)
   }
 
   /* some variables */
+
+  var lastSideEffect: Future[Unit] = Future.successful(())
 
   var runEvents: Vector[RunEvent] = Vector.empty
 

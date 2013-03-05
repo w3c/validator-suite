@@ -6,7 +6,6 @@ import com.ning.http.client.AsyncHttpClient
 import org.w3.vs.http.Cache
 import akka.util.Timeout
 import reactivemongo.api.{ DefaultDB, MongoConnection }
-import com.mongodb.{ MongoClient, DB }
 import org.w3.vs.actor.RunEventBus
 
 trait VSConfiguration {
@@ -29,9 +28,4 @@ trait VSConfiguration {
 
   val db: DefaultDB
 
-  // these are only temporary because of a bug in Play
-
-  val mongoClient: MongoClient
-
-  val mongoDb: DB
 }

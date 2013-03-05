@@ -201,7 +201,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve User by email" in {
-    User.getByEmail("foo@example.com").getOrFail(3.seconds) must be(user1)
+    User.getByEmail("foo@example.com").getOrFail() must be(user1)
 
     Try { User.getByEmail("unknown@example.com").getOrFail() } must be (Failure(UnknownUser))
   }
@@ -236,7 +236,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "a user can only access the jobs that he created" in {
-    val jobs = Job.getFor(user1.id).getOrFail(3.seconds)
+    val jobs = Job.getFor(user1.id).getOrFail()
     jobs must have size(4)
     jobs must contain (job1)
     jobs must contain (job2)
@@ -245,7 +245,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "a user with no job should still be able to list his empty list of jobs" in {
-    val jobs = Job.getFor(user3.id).getOrFail(3.seconds)
+    val jobs = Job.getFor(user3.id).getOrFail()
     jobs must be ('empty)
   }
 

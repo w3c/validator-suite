@@ -2,6 +2,7 @@ package org.w3.vs.model
 
 import org.w3.vs._
 import org.w3.util._
+import org.w3.util.Util.journalCommit
 import org.w3.vs.assertor._
 import scalaz.{ Free, Equal }
 import scalaz.Scalaz._
@@ -21,9 +22,6 @@ import play.modules.reactivemongo.ReactiveBSONImplicits._
 import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
-import com.mongodb.{ QueryBuilder => _, _ }
-import com.mongodb.util.JSON
-import org.bson.types.ObjectId
 
 case class ResultStep(run: Run, actions: Seq[RunAction], events: List[RunEvent])
 
@@ -33,9 +31,6 @@ object Run {
 
   def collection(implicit conf: VSConfiguration): BSONCollection =
     conf.db("runs")
-
-  def collection2(implicit conf: VSConfiguration): DBCollection =
-    conf.mongoDb.getCollection("runs")
 
   def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
     import conf._
@@ -76,26 +71,9 @@ object Run {
 //    }
   }
 
-//  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[URL], Iterable[AssertorCall])] = Future {
-//    import scala.collection.JavaConverters._
-//    val query = new BasicDBObject("runId", new ObjectId(runId.toString))
-//    val orderedEvents =
-//      // needs to explicitly states the type to provide .asScala
-//      (collection2.find(query): java.lang.Iterable[DBObject]).asScala
-//        // bridge between Java driver and ReactiveMongo
-//        .map(dbObject => Json.parse(JSON.serialize(dbObject)))
-//        .map(_.as[RunEvent])
-//        .toList.sortBy(_.timestamp)
-//    val (createRun, events) = orderedEvents match {
-//      case (createRun@CreateRunEvent(_, _, _, _, _, _)) :: events => (createRun, events)
-//      case _ => sys.error("CreateRunEvent MUST be the first event")
-//    }
-//    Run.replayEvents(createRun, events)
-//  }  
-
   def enumerateRunEvents(runId: RunId)(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     val query = Json.obj("runId" -> toJson(runId))
-    val cursor = collection.find[JsValue](query).cursor[JsValue]
+    val cursor = collection.find(query).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue](_.as[RunEvent])
   }
 
@@ -133,7 +111,11 @@ object Run {
 
   def saveEvent(event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
-    collection.insert(toJson(event)) map { lastError => () }
+    // default writeConcern here as we don't care about waiting for
+    // the actual Write
+    collection.insert(toJson(event)) map { lastError =>
+      if (!lastError.ok) throw lastError
+    }
   }
 
   /** replays all the events that define a run, starting with the CreateRunEvent

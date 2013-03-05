@@ -24,7 +24,6 @@ object ApplicationBuild extends Build {
     "com.yammer.metrics" % "metrics-core" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
     "com.yammer.metrics" % "metrics-graphite" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
     "org.reactivemongo" %% "play2-reactivemongo" % "0.9-SNAPSHOT" /*cross CrossVersion.full*/ excludeAll(ExclusionRule(organization = "io.netty"), ExclusionRule(organization = "play")),
-    "org.mongodb" % "mongo-java-driver" % "2.10.0", // should disappear soon
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     "org.mindrot" % "jbcrypt" % "0.3m",
     // test dependencies

@@ -41,11 +41,10 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper with Insid
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    val events: scala.concurrent.Future[List[RunEvent]] = runningJob.enumerator() /*&> Enumeratee.map[RunEvent]{ e => println("** "+e); e }*/ |>>> Iteratee.getChunks[RunEvent]
+    val completeRunEvent =
+      (runningJob.enumerator() |>>> waitFor[RunEvent]{ case e: CompleteRunEvent => e }).getOrFail(3.seconds)
 
-    val event = events.getOrFail().collectFirst { case event: CompleteRunEvent => event }.get
-
-    event.runData.resources must be(circumference + 1)
+    completeRunEvent.runData.resources must be(circumference + 1)
 
     // just checking that the data in the store is correct
 

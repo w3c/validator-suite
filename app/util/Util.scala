@@ -116,4 +116,8 @@ object Util {
     }
   }
 
+  import reactivemongo.core.commands.GetLastError
+
+  val journalCommit = GetLastError(awaitJournalCommit = true)
+
 }

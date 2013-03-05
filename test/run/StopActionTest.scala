@@ -12,6 +12,7 @@ import scala.concurrent.duration.Duration
 import org.w3.util.Util._
 import org.scalatest.Inside
 import play.api.libs.iteratee.{ Done => ItDone, Error => ItError, _ }
+import scala.util.Try
 
 class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
 
@@ -41,16 +42,16 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    def test(): Iteratee[RunEvent, Unit] = for {
+    def test(): Iteratee[RunEvent, Try[Unit]] = for {
       rr <- waitFor[RunEvent] { case ResourceResponseEvent(_, _, _, rr, _) => rr }
       _ = runningJob.cancel()
       cancelEvent <- waitFor[RunEvent] { case event: CancelRunEvent => event }
-    } yield {
+    } yield Try {
       rr.url must be(URL("http://localhost:9001/"))
       cancelEvent.runData.resources must be < (100)
     }
 
-    (runningJob.enumerator() |>>> test()).getOrFail(3.seconds)
+    (runningJob.enumerator() |>>> test()).getOrFail().get
 
     // just checking that the data in the store is correct
 

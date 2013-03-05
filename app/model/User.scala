@@ -4,6 +4,7 @@ import scalaz.std.string._
 import scalaz.Scalaz.ToEqualOps
 import org.w3.vs.exception._
 import org.w3.vs._
+import org.w3.util.Util.journalCommit
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee.{Enumeratee, Concurrent, Enumerator}
@@ -193,7 +194,7 @@ object User {
     val userId = user.id
     val userJ = toJson(user)
     import reactivemongo.core.commands.LastError
-    collection.insert(userJ) map { lastError => () } recover {
+    collection.insert(userJ, writeConcern = journalCommit) map { lastError => () } recover {
       case LastError(_, _, Some(11000), _, _, _, _) => throw DuplicatedEmail(user.email)
     }
   }
@@ -202,7 +203,7 @@ object User {
     import conf._
     val selector = Json.obj("_id" -> toJson(user.id))
     val update = toJson(user)
-    collection.update(selector, update) map { lastError => () }
+    collection.update(selector, update, writeConcern = journalCommit) map { lastError => () }
   }
 
   def delete(user: User)(implicit conf: VSConfiguration): Future[Unit] =

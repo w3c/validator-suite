@@ -7,6 +7,7 @@ import akka.pattern.ask
 import play.api.libs.iteratee._
 import play.Logger
 import org.w3.util._
+import org.w3.util.Util.journalCommit
 import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
@@ -150,37 +151,41 @@ case class Job(
 
   def enumerator()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     import conf._
-    val (_enumerator, channel) = Concurrent.broadcast[RunEvent]
-    def push(msg: RunEvent): Unit = {
-//      println("push " + msg)
-      try {
-        channel.push(msg)
-//        println("pushed")
-      } catch {
-        case e: ClosedChannelException => {
-          logger.error("ClosedChannel exception: ", e)
-          channel.eofAndEnd()
-        }
-        case t: Throwable => {
-          logger.error("Enumerator exception: ", t)
-          channel.eofAndEnd()
-        }
-      }
-    }
-    val subscriber: ActorRef = system.actorOf(Props(new Actor {
-      def receive = {
-        case msg: RunEvent => push(msg)
-        case messages: Iterable[_] => messages foreach { case msg: RunEvent => push(msg) }
-        case () => channel.eofAndEnd()
-        case msg => logger.error("subscriber got " + msg)
-      }
-    }))
     this.status match {
       case NeverStarted | Zombie => Enumerator[RunEvent]()
       case Done(runId, _, _, _) => Run.enumerateRunEvents(runId)
-      case Running(_, actorPath) => {
-        val actorRef = system.actorFor(actorPath)
-        actorRef ! JobActor.Listen(subscriber, Classifier.SubscribeToRunEvent)
+      case Running(_, jobActorPath) => {
+        val (_enumerator, channel) = Concurrent.broadcast[RunEvent]
+        def push(msg: RunEvent): Unit = {
+          println("))))))))))))) push " + msg)
+          try {
+            channel.push(msg)
+            println("((((((((((((( pushed")
+          } catch {
+            case e: ClosedChannelException => {
+              logger.error("ClosedChannel exception: ", e)
+              channel.eofAndEnd()
+            }
+            case t: Throwable => {
+              logger.error("Enumerator exception: ", t)
+              channel.eofAndEnd()
+            }
+          }
+        }
+        def subscriberActor(actorRef: ActorRef): Actor = new Actor {
+          override def preStart(): Unit = {
+            println("################ just started!")
+            actorRef ! JobActor.Listen(self, Classifier.SubscribeToRunEvent)
+          }
+          def receive = {
+            case msg: RunEvent => push(msg)
+            case messages: Iterable[_] => println(s"%%%%%%% GOT ITERABLE $messages"); messages foreach { case msg: RunEvent => push(msg) }
+            case () => println("@@@@@ closing"); channel.push(Input.EOF)
+            case msg => logger.error("subscriber got " + msg)
+          }
+        }
+        val jobActorRef: ActorRef = system.actorFor(jobActorPath)
+        val subscriberActorRef: ActorRef = system.actorOf(Props(subscriberActor(jobActorRef)))
         _enumerator
       }
     }
@@ -264,7 +269,10 @@ object Job {
           "$set" -> Json.obj(
             "status" -> toJson(status)))
     }
-    collection.update[JsValue, JsValue](selector, update) map { lastError => () }
+    collection.update(selector, update, writeConcern = journalCommit) map { lastError =>
+      if (!lastError.ok) throw lastError
+    }
+
   }
 
   def updateStatus(
@@ -365,8 +373,10 @@ object Job {
       // as we don't change the jobId, this will override the previous one
       val update = collection.update(
         selector = Json.obj("_id" -> toJson(jobId)),
-        update = toJson(rebornJob) ) map { lastError => job }
-      update flatMap {  case job =>
+        update = toJson(rebornJob),
+        writeConcern = journalCommit
+      ) map { lastError => job }
+      update flatMap { case job =>
         job.status match {
           case Done(runId, _, _, _) if removeRunData => Run.removeAll(runId)
           case Running(runId, _) if removeRunData => Run.removeAll(runId)
