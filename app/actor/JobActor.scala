@@ -198,11 +198,13 @@ extends Actor with FSM[JobActorState, Run] {
     // to subscribe anybody.
     case Event(Listen(subscriber, classifier), run) =>
       import Classifier._
-      classifier match {
-        case SubscribeToRunEvent => subscriber ! runEvents
-        case _ => sender ! Iterable.empty
+      sideEffect {
+        classifier match {
+          case SubscribeToRunEvent => subscriber ! runEvents
+          case _ => sender ! Iterable.empty
+        }
+        subscriber ! ()
       }
-      subscriber ! ()
       stay()
 
     case Event(e, run) =>
