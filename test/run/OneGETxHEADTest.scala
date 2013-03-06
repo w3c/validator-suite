@@ -46,7 +46,7 @@ class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
     val Running(runId, actorPath) = runningJob.status
 
     val completeRunEvent =
-      (runningJob.enumerator() |>>> waitFor[RunEvent]{ case e: CompleteRunEvent => e }).getOrFail()
+      (runningJob.runEvents() |>>> waitFor[RunEvent]{ case e: CompleteRunEvent => e }).getOrFail()
 
     completeRunEvent.runData.resources must be(j + 1)
 

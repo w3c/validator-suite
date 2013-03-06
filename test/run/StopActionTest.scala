@@ -51,7 +51,7 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
       cancelEvent.runData.resources must be < (100)
     }
 
-    (runningJob.enumerator() |>>> test()).getOrFail().get
+    (runningJob.runEvents() |>>> test()).getOrFail().get
 
     // just checking that the data in the store is correct
 

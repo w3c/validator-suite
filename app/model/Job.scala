@@ -149,7 +149,7 @@ case class Job(
      }
   }
 
-  def enumerator()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
+  def runEvents()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Enumerator[RunEvent]()
@@ -212,10 +212,10 @@ case class Job(
     case ((state, _), _) => (state, List.empty)
   }
 
-  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = enumerator() &> runEventToState &> enumeratee
+  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = runEvents() &> runEventToState &> enumeratee
 
   def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] =
-    enumerator() &> enumeratee2 &> Enumeratee.mapConcat(_._2)
+    runEvents() &> enumeratee2 &> Enumeratee.mapConcat(_._2)
 
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = ???
 
