@@ -164,6 +164,8 @@ case class Run private (
 
   def shortId: String = runId.shortId.toString
 
+  def progress: Int = 42
+
   def data: RunData = RunData(numberOfFetchedResources, errors, warnings)
   
   def health: Int = data.health

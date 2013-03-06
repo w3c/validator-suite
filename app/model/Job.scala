@@ -132,7 +132,7 @@ case class Job(
       case _ => false
     } ><>
     Enumeratee.scanLeft(EnumerateeState(completedOn = latestDone.map(_.completedOn))){
-      case (state, CreateRunEvent(_, _, _, _, _, _, timestamp)) => EnumerateeState(status = JobDataRunning ,completedOn = state.completedOn)
+      case (state, CreateRunEvent(_, _, _, _, _, _, timestamp)) => EnumerateeState(status = JobDataRunning(2719) ,completedOn = state.completedOn)
       case (state, CompleteRunEvent(_, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
       case (state, CancelRunEvent(_, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
       case (state, ResourceResponseEvent(_, _, _, rr: HttpResponse, timestamp)) => state.copy(resources = state.resources + 1)

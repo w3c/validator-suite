@@ -116,14 +116,28 @@ object Formats {
     (__ \ 'e).format[Int]
   )(ResourceData.apply, unlift(ResourceData.unapply))
 
-  implicit val JobDataRunningFormat = constant("running", JobDataRunning)
-  implicit val JobDataIdleFormat = constant("idle", JobDataIdle)
+ 
+  implicit val JobDataRunningFormat: Format[JobDataRunning] = (
+    (__ \ 'status).format[String](pattern("running".r)) and
+    (__ \ 'progress).format[Int]
+  )(
+    { case (_, progress) => JobDataRunning(progress) },
+    { case JobDataRunning(progress) => ("running", progress) }
+  )
+
+  implicit val JobDataIdleFormat: Format[JobDataIdle.type] = new Format[JobDataIdle.type] {
+    def reads(json: JsValue): JsResult[JobDataIdle.type] = json \ "status" match {
+      case JsString("idle") => JsSuccess(JobDataIdle)
+      case _ => JsError("was expecting { status -> idle }")
+    }
+    def writes(idle: JobDataIdle.type): JsValue = Json.obj("status" -> "idle")
+  }
 
   implicit object JobDataStatusFormat extends Format[JobDataStatus] {
     def reads(json: JsValue): JsResult[JobDataStatus] =
       JobDataRunningFormat.reads(json) orElse JobDataIdleFormat.reads(json)
     def writes(jobDataStatus: JobDataStatus) = jobDataStatus match {
-      case JobDataRunning => JobDataRunningFormat.writes(JobDataRunning)
+      case s @ JobDataRunning(_) => JobDataRunningFormat.writes(s)
       case JobDataIdle => JobDataIdleFormat.writes(JobDataIdle)
     }
   }

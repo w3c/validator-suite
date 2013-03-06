@@ -32,7 +32,7 @@ object JobData {
     events flatMap { event =>
       def status: JobDataStatus = event match {
         case CompleteRunEvent(_, _, _, _, _, _) | CancelRunEvent(_, _, _, _, _, _) => JobDataIdle
-        case _ => JobDataRunning
+        case _ => JobDataRunning(resultStep.run.progress)
       }
       // the timestamp for an ending event
       // otherwise: defaults to the latest finished job
@@ -83,5 +83,5 @@ object JobData {
 
 sealed trait JobDataStatus
 
-case object JobDataRunning extends JobDataStatus
+case class JobDataRunning(progress: Int) extends JobDataStatus
 case object JobDataIdle extends JobDataStatus
