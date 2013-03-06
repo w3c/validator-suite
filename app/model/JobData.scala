@@ -23,34 +23,20 @@ case class JobData (
 
 object JobData {
 
-  /** computes the JobData-s to fire, resulting from a ResultStep */
-  def toFire(job: Job, resultStep: ResultStep): Seq[JobData] = {
-    import job.{ id => jobId, name, strategy }
-    import resultStep.{ run, events }
-    // there is at most one JobData per event
-    events flatMap { event =>
-      def status: JobDataStatus = event match {
-        case DoneRunEvent(_, _, _, _, _, _, _) => JobDataIdle
-        case _ => JobDataRunning(resultStep.run.progress)
-      }
-      // the timestamp for an ending event
-      // otherwise: defaults to the latest finished job
-      def completedOn: Option[DateTime] = event match {
-        case DoneRunEvent(_, _, _, _, _, _, t) => Some(t)
-        case _ => job.latestDone.map(_.completedOn)
-      }
-      def jobData: JobData =
-        JobData(jobId, name, strategy.entrypoint, status, completedOn, run.warnings, run.errors, run.numberOfKnownUrls, strategy.maxResources, run.health)
-      // tells if it's worth publishing this event
-      def shouldPublish =  event match {
-        case CreateRunEvent(_, _, _, _, _, _, _) => true
-        case DoneRunEvent(_, _, _, _, _, _, _) => true
-        case ResourceResponseEvent(_, _, _, _: HttpResponse, _) => true
-        case AssertorResponseEvent(_, _, _, ar: AssertorResult, _) => ar.errors != 0 && ar.warnings != 0
-        case _ => false
-      }
-      if (shouldPublish) Some(jobData) else None
-    }
+  def apply(job: Job, run: Run): JobData = {
+    val runData = run.data
+    JobData(
+      jobId = job.id,
+      name = job.name,
+      entrypoint = job.strategy.entrypoint,
+      status = run.jobDataStatus,
+      completedOn = run.completedOn,
+      warnings = runData.warnings,
+      errors = runData.errors,
+      resources = runData.resources,
+      maxResources = job.strategy.maxResources,
+      health = runData.health
+    )
   }
 
   // Rewrites the json serialization of a jobData to a form suited for the view

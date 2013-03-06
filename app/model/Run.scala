@@ -23,8 +23,6 @@ import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
 
-case class ResultStep(run: Run, actions: Seq[RunAction], events: List[RunEvent])
-
 object Run {
 
   val logger = play.Logger.of(classOf[Run])
@@ -71,24 +69,40 @@ object Run {
 //    }
   }
 
-//  def getPartialJobData(runId: RunId)(implicit conf: VSConfiguration): Future[Option[(JobDataStatus, DateTime, RunData)]] = {
-//    val query = Json.obj(
-//      "runId" -> toJson(runId),
-//      "event" -> "done-run")
-//    val cursor = collection.find(query).cursor[JsValue]
-//    cursor.headOption() map { jsonOpt =>
-//      jsonOpt map { json =>
-//        val status = json \ "event" match {
-//          case JsString("complete-run") => JobDataRunning.complete
-//          case JsString("cancel-run") => 
-//        }
-//
-//        val timestamp = (json \ 'timestamp).as[DateTime]
-//        json \ "event" =>
-//      }
-//    }
-//
-//  }
+  /** returns the data that defines the final state of a Run.
+    */
+  def getFinalRunData(runId: RunId)(implicit conf: VSConfiguration): Future[Option[RunData]] = {
+    val query = Json.obj(
+      "runId" -> toJson(runId),
+      "event" -> "done-run")
+    val projection = BSONDocument(
+      "runData" -> BSONInteger(1),
+      "_id" -> BSONInteger(0))
+    val cursor = collection.find(query, projection).cursor[JsValue]
+    cursor.headOption() map { jsonOpt =>
+      jsonOpt map { json => (json \ "runData").as[RunData] }
+    }
+  }
+
+  /** returns the data that defines the final state of a Run.
+    */
+  def getPartialJobData(runId: RunId)(implicit conf: VSConfiguration): Future[Option[(DateTime, RunData)]] = {
+    val query = Json.obj(
+      "runId" -> toJson(runId),
+      "event" -> "done-run")
+    val projection = BSONDocument(
+      "timestamp" -> BSONInteger(1),
+      "runData" -> BSONInteger(1),
+      "_id" -> BSONInteger(0))
+    val cursor = collection.find(query, projection).cursor[JsValue]
+    cursor.headOption() map { jsonOpt =>
+      jsonOpt map { json =>
+        val timestamp = (json \ "timestamp").as[DateTime]
+        val runData = (json \ "runData").as[RunData]
+        (timestamp, runData)
+      }
+    }
+  }
 
   def enumerateRunEvents(runId: RunId)(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     val query = Json.obj("runId" -> toJson(runId))
@@ -188,6 +202,9 @@ case class Run private (
   def data: RunData = RunData(numberOfFetchedResources, errors, warnings)
   
   def health: Int = data.health
+
+  def jobDataStatus: JobDataStatus =
+    if (completedOn.isDefined) JobDataIdle else JobDataRunning(progress)
 
   def resourceDatas: Iterable[ResourceData] = {
     val rds: Iterable[ResourceData] = assertions.groupBy(_.url).map {

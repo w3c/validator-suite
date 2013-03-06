@@ -107,6 +107,15 @@ extends Actor with FSM[JobActorState, Run] {
 
   }
 
+  def fireSomethingRightAway(subscriber: ActorRef, classifier: Classifier[_], run: Run): Unit = {
+    import Classifier._
+    classifier match {
+      case SubscribeToRunEvent => subscriber ! runEvents
+      case SubscribeToRunData => subscriber ! run.data
+      case SubscribeToJobData => subscriber ! JobData(job, run)
+    }
+  }
+
   /** does in one single place all the side-effects resulting from a
     * ResultStep
     */
@@ -122,9 +131,12 @@ extends Actor with FSM[JobActorState, Run] {
     var state = stay() using run
 
     // fire jobDatas
-    JobData.toFire(job, resultStep) foreach { jobData =>
+    resultStep.jobDataToFire(job) foreach { jobData =>
       publish(jobData)
     }
+
+    // fire runDatas
+    publish(run.data)
 
     resultStep.events foreach { event =>
       // save event
@@ -165,11 +177,7 @@ extends Actor with FSM[JobActorState, Run] {
       stay()
 
     case Event(Listen(subscriber, classifier), run) =>
-      import Classifier._
-      classifier match {
-        case SubscribeToRunEvent => subscriber ! runEvents
-        case _ => sender ! Iterable.empty
-      }
+      fireSomethingRightAway(subscriber, classifier, run)
       subscribe(subscriber, classifier)
       stay()
 
@@ -189,12 +197,8 @@ extends Actor with FSM[JobActorState, Run] {
     // just send the termination message right away. There is no need
     // to subscribe anybody.
     case Event(Listen(subscriber, classifier), run) =>
-      import Classifier._
       sideEffect {
-        classifier match {
-          case SubscribeToRunEvent => subscriber ! runEvents
-          case _ => sender ! Iterable.empty
-        }
+        fireSomethingRightAway(subscriber, classifier, run)
         subscriber ! ()
       }
       stay()

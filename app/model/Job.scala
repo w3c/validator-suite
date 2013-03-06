@@ -131,7 +131,7 @@ case class Job(
       case _ => false
     } ><>
     Enumeratee.scanLeft(EnumerateeState(completedOn = latestDone.map(_.completedOn))){
-      case (state, CreateRunEvent(_, _, _, _, _, _, timestamp)) => EnumerateeState(status = JobDataRunning(2719) ,completedOn = state.completedOn)
+      case (state, CreateRunEvent(_, _, _, _, _, _, timestamp)) => EnumerateeState(status = JobDataRunning(42) ,completedOn = state.completedOn)
       case (state, DoneRunEvent(_, _, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
       case (state, ResourceResponseEvent(_, _, _, rr: HttpResponse, timestamp)) => state.copy(resources = state.resources + 1)
       case (state, AssertorResponseEvent(_, _, _, ar: AssertorResult, timestamp)) =>
@@ -187,14 +187,66 @@ case class Job(
     }
   }
 
+  /** this is stateless, so if you're the Done case, you want to use
+    * Job.jobData() instead */
   def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Enumerator[JobData]()
-      case Done(runId, _, _, _) => ???
+      case Done(runId, _, _, _) => Enumerator[JobData]()
       case Running(_, jobActorPath) => actorBasedEnumerator[JobData](system, jobActorPath)
     }
   }
+
+  /** returns the most up-to-date JobData for the Job, if available */
+  def jobData()(implicit conf: VSConfiguration): Future[Option[JobData]] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Future.successful(None)
+      case Done(runId, _, _, _) =>
+        Run.getPartialJobData(runId) map {
+          case None => None
+          case Some((timestamp, runData)) =>
+            val jobData = JobData(
+              jobId = id,
+              name = name,
+              entrypoint = strategy.entrypoint,
+              status = JobDataIdle,
+              completedOn = Some(timestamp),
+              warnings = runData.warnings,
+              errors = runData.errors,
+              resources = runData.resources,
+              maxResources = strategy.maxResources,
+              health = runData.health
+            )
+            Some(jobData)
+        }
+      case Running(_, jobActorPath) => jobDatas() |>>> Iteratee.head
+    }
+  }
+
+  /** this is stateless, so if you're the Done case, you want to use
+    * Job.runData() instead */
+  def runDatas()(implicit conf: VSConfiguration): Enumerator[RunData] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Enumerator[RunData]()
+      case Done(runId, _, _, _) => Enumerator[RunData]()
+      case Running(_, jobActorPath) => actorBasedEnumerator[RunData](system, jobActorPath)
+    }
+  }
+
+  /** returns the most up-to-date RunData for the Job, if available */
+  def runData()(implicit conf: VSConfiguration): Future[Option[RunData]] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Future.successful(None)
+      case Done(runId, _, _, _) => Run.getFinalRunData(runId)
+      case Running(_, jobActorPath) => runDatas() |>>> Iteratee.head
+    }
+  }
+
+  /* *********** */
 
   def enumeratee2: Enumeratee[RunEvent, (Map[URL, ResourceData], List[ResourceData])] = Enumeratee.scanLeft((Map.empty[URL, ResourceData], List.empty[ResourceData])) {
     case ((state, _), AssertorResponseEvent(_, _, _, ar: AssertorResult, timestamp)) => {
