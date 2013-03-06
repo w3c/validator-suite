@@ -336,28 +336,17 @@ object Formats {
     }
   )
 
-  val CompleteRunEventFormat: Format[CompleteRunEvent] = (
-    (__ \ 'event).format[String](pattern("complete-run".r)) and
+  val DoneRunEventFormat: Format[DoneRunEvent] = (
+    (__ \ 'event).format[String](pattern("done-run".r)) and
     (__ \ 'userId).format[UserId] and
     (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
+    (__ \ 'doneReason).format[DoneReason] and
     (__ \ 'runData).format[RunData] and
     (__ \ 'rd).format[Iterable[ResourceData]] and
     (__ \ 'timestamp).format[DateTime]
-  )({ case (_, userId, jobId, runId, runData, resourceDatas, timestamp) => CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) },
-    { case CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => ("complete-run", userId, jobId, runId, runData, resourceDatas, timestamp) }
-  )
-
-  val CancelRunEventFormat: Format[CancelRunEvent] = (
-    (__ \ 'event).format[String](pattern("cancel-run".r)) and
-    (__ \ 'userId).format[UserId] and
-    (__ \ 'jobId).format[JobId] and
-    (__ \ 'runId).format[RunId] and
-    (__ \ 'runData).format[RunData] and
-    (__ \ 'rd).format[Iterable[ResourceData]] and
-    (__ \ 'timestamp).format[DateTime]
-  )({ case (_, userId, jobId, runId, runData, resourceDatas, timestamp) => CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) },
-    { case CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) => ("cancel-run", userId, jobId, runId, runData, resourceDatas, timestamp) }
+  )({ case (_, userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) => DoneRunEvent(userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) },
+    { case DoneRunEvent(userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) => ("done-run", userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) }
   )
 
   val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
@@ -384,14 +373,12 @@ object Formats {
       AssertorResponseEventFormat.reads(json) orElse
         ResourceResponseEventFormat.reads(json) orElse
         CreateRunEventFormat.reads(json) orElse
-        CompleteRunEventFormat.reads(json) orElse
-        CancelRunEventFormat.reads(json)
+        DoneRunEventFormat.reads(json)
     def writes(event: RunEvent) = event match {
-      case e@CreateRunEvent(_, _, _, _, _, _, _) => CreateRunEventFormat.writes(e)
-      case e@CompleteRunEvent(_, _, _, _, _, _) => CompleteRunEventFormat.writes(e)
       case e@AssertorResponseEvent(_, _, _, _, _) => AssertorResponseEventFormat.writes(e)
       case e@ResourceResponseEvent(_, _, _, _, _) => ResourceResponseEventFormat.writes(e)
-      case e@CancelRunEvent(_, _, _, _, _, _) => CancelRunEventFormat.writes(e)
+      case e@CreateRunEvent(_, _, _, _, _, _, _) => CreateRunEventFormat.writes(e)
+      case e@DoneRunEvent(_, _, _, _, _, _, _) => DoneRunEventFormat.writes(e)
     }
   }
 

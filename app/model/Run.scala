@@ -71,6 +71,25 @@ object Run {
 //    }
   }
 
+//  def getPartialJobData(runId: RunId)(implicit conf: VSConfiguration): Future[Option[(JobDataStatus, DateTime, RunData)]] = {
+//    val query = Json.obj(
+//      "runId" -> toJson(runId),
+//      "event" -> "done-run")
+//    val cursor = collection.find(query).cursor[JsValue]
+//    cursor.headOption() map { jsonOpt =>
+//      jsonOpt map { json =>
+//        val status = json \ "event" match {
+//          case JsString("complete-run") => JobDataRunning.complete
+//          case JsString("cancel-run") => 
+//        }
+//
+//        val timestamp = (json \ 'timestamp).as[DateTime]
+//        json \ "event" =>
+//      }
+//    }
+//
+//  }
+
   def enumerateRunEvents(runId: RunId)(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     val query = Json.obj("runId" -> toJson(runId))
     val cursor = collection.find(query).cursor[JsValue]
@@ -339,10 +358,7 @@ case class Run private (
       case CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
         val (run, fetches) = this.newlyStartedRun
         ResultStep(run, fetches, List(event))
-      case CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
-        val run = this.completeOn(timestamp)
-        ResultStep(run, Seq.empty, List(event))
-      case CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
+      case DoneRunEvent(userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) =>
         val run = this.completeOn(timestamp)
         ResultStep(run, Seq.empty, List(event))
       case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), _) =>
@@ -366,9 +382,12 @@ case class Run private (
     }
     // if this is the end of the Run (not because of a Cancel), we
     // need to generate an additional event
-    def notCancel = resultStep.events(0) match { case _: CancelRunEvent => false ; case _ => true }
+    def notCancel = resultStep.events(0) match {
+      case DoneRunEvent(_, _, _, Cancelled, _, _, _) => false
+      case _ => true
+    }
     if (resultStep.run.hasNoPendingAction && notCancel ) {
-      val completeRunEvent = CompleteRunEvent(event.userId, event.jobId, runId, resultStep.run.data, resultStep.run.resourceDatas)
+      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, resultStep.run.data, resultStep.run.resourceDatas)
       resultStep.copy(events = resultStep.events :+ completeRunEvent)
     } else {
       resultStep

@@ -6,7 +6,6 @@ import play.api.libs.iteratee.Enumeratee
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import org.w3.vs.view.Helper
-import play.api.libs.json.JsUndefined
 import org.w3.vs.store.Formats._
 
 case class JobData (
@@ -31,14 +30,13 @@ object JobData {
     // there is at most one JobData per event
     events flatMap { event =>
       def status: JobDataStatus = event match {
-        case CompleteRunEvent(_, _, _, _, _, _) | CancelRunEvent(_, _, _, _, _, _) => JobDataIdle
+        case DoneRunEvent(_, _, _, _, _, _, _) => JobDataIdle
         case _ => JobDataRunning(resultStep.run.progress)
       }
       // the timestamp for an ending event
       // otherwise: defaults to the latest finished job
       def completedOn: Option[DateTime] = event match {
-        case CompleteRunEvent(_, _, _, _, _, t) => Some(t)
-        case CancelRunEvent(_, _, _, _, _, t) => Some(t)
+        case DoneRunEvent(_, _, _, _, _, _, t) => Some(t)
         case _ => job.latestDone.map(_.completedOn)
       }
       def jobData: JobData =
@@ -46,8 +44,7 @@ object JobData {
       // tells if it's worth publishing this event
       def shouldPublish =  event match {
         case CreateRunEvent(_, _, _, _, _, _, _) => true
-        case CompleteRunEvent(_, _, _, _, _, _) => true
-        case CancelRunEvent(_, _, _, _, _, _) => true
+        case DoneRunEvent(_, _, _, _, _, _, _) => true
         case ResourceResponseEvent(_, _, _, _: HttpResponse, _) => true
         case AssertorResponseEvent(_, _, _, ar: AssertorResult, _) => ar.errors != 0 && ar.warnings != 0
         case _ => false
@@ -80,8 +77,3 @@ object JobData {
   }
 
 }
-
-sealed trait JobDataStatus
-
-case class JobDataRunning(progress: Int) extends JobDataStatus
-case object JobDataIdle extends JobDataStatus

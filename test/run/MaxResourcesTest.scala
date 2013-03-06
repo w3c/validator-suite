@@ -41,7 +41,7 @@ class MaxResourcesTest extends RunTestHelper with TestKitHelper {
     val Running(runId, actorPath) = runningJob.status
 
     val completeRunEvent =
-      (runningJob.runEvents() |>>> waitFor[RunEvent]{ case e: CompleteRunEvent => e }).getOrFail()
+      (runningJob.runEvents() |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
     completeRunEvent.runData.resources must be(maxResources)
 

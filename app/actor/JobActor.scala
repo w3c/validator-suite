@@ -93,15 +93,9 @@ extends Actor with FSM[JobActorState, Run] {
         Job.updateStatus(jobId, status = running)
       }
 
-    case event@CompleteRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
+    case event@DoneRunEvent(userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
-        val done = Done(runId, Completed, timestamp, runData)
-        Job.updateStatus(jobId, status = done, latestDone = done)
-      }
-
-    case event@CancelRunEvent(userId, jobId, runId, runData, resourceDatas, timestamp) =>
-      Run.saveEvent(event) flatMap { case () =>
-        val done = Done(runId, Cancelled, timestamp, runData)
+        val done = Done(runId, doneReason, timestamp, runData)
         Job.updateStatus(jobId, status = done, latestDone = done)
       }
 
@@ -148,11 +142,9 @@ extends Actor with FSM[JobActorState, Run] {
           val from = sender
           sideEffect { from ! running }
           state = goto(Started) using run
-        case CompleteRunEvent(_, _, _, _, _, _) =>
-          logger.debug(s"${run.shortId}: Assertion phase finished")
-          stopThisActor()
-          state = goto(Stopping) using run
-        case CancelRunEvent(_, _, _, _, _, _) =>
+        case DoneRunEvent(_, _, _, doneReason, _, _, _) =>
+          if (doneReason === Completed)
+            logger.debug(s"${run.shortId}: Assertion phase finished")
           stopThisActor()
           state = goto(Stopping) using run
         case _ => ()
@@ -257,7 +249,7 @@ extends Actor with FSM[JobActorState, Run] {
       // logging/monitoring
       logger.debug(s"${run.shortId}: Cancel")
       // logic
-      val event = CancelRunEvent(userId, jobId, run.runId, run.data, run.resourceDatas)
+      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data, run.resourceDatas)
       handleResultStep(run.step(event))
 
   }

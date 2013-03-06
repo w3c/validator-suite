@@ -69,7 +69,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     resume must be(())
 
     val completeRunEvent =
-      (rJob.runEvents() |>>> waitFor[RunEvent]{ case e: CompleteRunEvent => e }).getOrFail()
+      (rJob.runEvents() |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
     completeRunEvent.runData.resources must be(circumference + 1)
 

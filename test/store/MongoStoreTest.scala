@@ -172,8 +172,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     } yield ()
     initScript.getOrFail()
     addAssertions() // <- already blocking
-    Run.saveEvent(CompleteRunEvent(user1.id, job1.id, run2.runId, run2.data, run2.resourceDatas, run2.completedOn.get)).getOrFail()
-    Run.saveEvent(CompleteRunEvent(user1.id, job1.id, run3.runId, run3.data, run3.resourceDatas, run3.completedOn.get)).getOrFail()
+    Run.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data, run2.resourceDatas, run2.completedOn.get)).getOrFail()
+    Run.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data, run3.resourceDatas, run3.completedOn.get)).getOrFail()
     /* job1 is still running with run4, and lastestDone was run3 */
     val status = Running(run4.runId, akka.actor.ActorPath.fromString("akka://system/user/foo"))
     val latestDone = Done(run4.runId, Completed, run3.completedOn.get, run3.data)

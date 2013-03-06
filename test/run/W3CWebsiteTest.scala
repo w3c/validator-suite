@@ -60,7 +60,7 @@ try {
 
     runEventBus.subscribe(testActor, FromJob(job.id))
 
-    fishForMessagePF(10.seconds) { case _: CompleteRunEvent => () }
+    fishForMessagePF(10.seconds) { case _: DoneRunEvent => () }
 
     val rrs = ResourceResponse.getFor(runId).getOrFail()
     rrs must have size (10)
