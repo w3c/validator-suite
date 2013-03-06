@@ -125,16 +125,14 @@ case class Job(
   val runEventToState: Enumeratee[RunEvent, EnumerateeState] =
     Enumeratee.filter[RunEvent] {
       case CreateRunEvent(_, `id`, _, _, _, _, _) => true
-      case CompleteRunEvent(_, `id`, _, _, _, _) => true
-      case CancelRunEvent(_, `id`, _, _, _, _) => true
+      case DoneRunEvent(_, `id`, _, _, _, _, _) => true
       case ResourceResponseEvent(_, `id`, _, _: HttpResponse, _) => true
       case AssertorResponseEvent(_, `id`, _, ar: AssertorResult, _) => ar.errors != 0 && ar.warnings != 0
       case _ => false
     } ><>
     Enumeratee.scanLeft(EnumerateeState(completedOn = latestDone.map(_.completedOn))){
       case (state, CreateRunEvent(_, _, _, _, _, _, timestamp)) => EnumerateeState(status = JobDataRunning(2719) ,completedOn = state.completedOn)
-      case (state, CompleteRunEvent(_, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
-      case (state, CancelRunEvent(_, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
+      case (state, DoneRunEvent(_, _, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
       case (state, ResourceResponseEvent(_, _, _, rr: HttpResponse, timestamp)) => state.copy(resources = state.resources + 1)
       case (state, AssertorResponseEvent(_, _, _, ar: AssertorResult, timestamp)) =>
         state.copy(
@@ -149,42 +147,52 @@ case class Job(
      }
   }
 
+  import scala.reflect.ClassTag
+  def actorBasedEnumerator[T](system: ActorSystem, jobActorPath: ActorPath)(implicit classifier: Classifier[T], classTag: ClassTag[T]): Enumerator[T] = {
+    val (enumerator, channel) = Concurrent.broadcast[T]
+    def subscriberActor(actorRef: ActorRef): Actor = new Actor {
+      def stop(): Unit = {
+        channel.eofAndEnd()
+        context.stop(self)
+      }
+      def push(msg: T): Unit = {
+        try {
+          channel.push(msg)
+        } catch { case t: Throwable =>
+          logger.error("Enumerator exception", t)
+          stop()
+        }
+      }
+      override def preStart(): Unit = {
+        actorRef ! JobActor.Listen(self, classifier)
+      }
+      def receive = {
+        case msg: T => push(msg)
+        case messages: Iterable[_] => messages foreach { case msg: T => push(msg) }
+        case () => stop()
+        case msg => logger.error("subscriber got " + msg) ; stop()
+      }
+    }
+    val jobActorRef: ActorRef = system.actorFor(jobActorPath)
+    val subscriberActorRef: ActorRef = system.actorOf(Props(subscriberActor(jobActorRef)))
+    enumerator
+  }
+
   def runEvents()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Enumerator[RunEvent]()
       case Done(runId, _, _, _) => Run.enumerateRunEvents(runId)
-      case Running(_, jobActorPath) => {
-        val (_enumerator, channel) = Concurrent.broadcast[RunEvent]
-        def push(msg: RunEvent): Unit = {
-          try {
-            channel.push(msg)
-          } catch {
-            case e: ClosedChannelException => {
-              logger.error("ClosedChannel exception: ", e)
-              channel.eofAndEnd()
-            }
-            case t: Throwable => {
-              logger.error("Enumerator exception: ", t)
-              channel.eofAndEnd()
-            }
-          }
-        }
-        def subscriberActor(actorRef: ActorRef): Actor = new Actor {
-          override def preStart(): Unit = {
-            actorRef ! JobActor.Listen(self, Classifier.SubscribeToRunEvent)
-          }
-          def receive = {
-            case msg: RunEvent => push(msg)
-            case messages: Iterable[_] => messages foreach { case msg: RunEvent => push(msg) }
-            case () => channel.push(Input.EOF)
-            case msg => logger.error("subscriber got " + msg)
-          }
-        }
-        val jobActorRef: ActorRef = system.actorFor(jobActorPath)
-        val subscriberActorRef: ActorRef = system.actorOf(Props(subscriberActor(jobActorRef)))
-        _enumerator
-      }
+      case Running(_, jobActorPath) => actorBasedEnumerator[RunEvent](system, jobActorPath)
+    }
+  }
+
+  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Enumerator[JobData]()
+      case Done(runId, _, _, _) => ???
+      case Running(_, jobActorPath) => actorBasedEnumerator[JobData](system, jobActorPath)
     }
   }
 
@@ -211,8 +219,6 @@ case class Job(
     }
     case ((state, _), _) => (state, List.empty)
   }
-
-  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = runEvents() &> runEventToState &> enumeratee
 
   def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] =
     runEvents() &> enumeratee2 &> Enumeratee.mapConcat(_._2)
