@@ -14,7 +14,7 @@
             </a>}
 
             case "status" => {
-            <span class="<%= status %>"><%= status %></span>
+            <span class="<%= status.status %>"><%= view.getStatusString() %></span>
             <% if(isIdle) { %>
             <form method="post"><button class="run" name="action" value="run">@Messages("job.button.run")</button></form>
             <% } else { %>

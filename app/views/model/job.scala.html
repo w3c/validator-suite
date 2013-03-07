@@ -15,13 +15,17 @@
                 </a>}
 
                 case "status" => {
-                <span data-status="" class="@job.status">@job.status</span>
+
+                @job.status match {
+                case JobDataRunning(progress) => {<span data-status="running" data-progress="@progress" class="running">Running (@progress%)</span>}
+                case JobDataIdle       => {<span data-status="idle" class="idle">Idle</span>}
+                }
                 @if(!collection.isDefined) {
                 <form action="@routes.Job.dispatcher(job.id)" method="post">
                     <input type="hidden" name="uri" value="@routes.Jobs.index"/>
                     @job.status match {
-                    case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
-                    case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
+                    case JobDataRunning(_) => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
+                    case JobDataIdle       => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
                     }
                 </form>}}
 
@@ -54,8 +58,8 @@
                     <fieldset>
                         <legend>Controls</legend>
                         @job.status match {
-                        case "running" => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
-                        case "idle"    => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
+                        case JobDataRunning(_) => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
+                        case JobDataIdle       => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
                         }
                         <button type="submit" name="action" value="delete" class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
                     </fieldset>

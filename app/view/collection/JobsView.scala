@@ -1,7 +1,7 @@
 package org.w3.vs.view.collection
 
 import org.joda.time.DateTime
-import org.w3.vs.model.Job
+import org.w3.vs.model.{JobDataIdle => Idle, JobDataRunning => Running, JobDataStatus, Job}
 import org.w3.vs.view.Collection._
 import org.w3.vs.view.model.{ResourceView, AssertionView, JobView}
 import play.api.i18n.Messages
@@ -25,6 +25,24 @@ case class JobsView(
 
   def order(sort: SortParam): Ordering[JobView] = {
     implicit val d = org.w3.vs.view.datetimeOrdering
+
+    implicit val statusOrdering = new Ordering[JobDataStatus] {
+      def compare(x: JobDataStatus, y: JobDataStatus): Int = {
+        (x, y) match {
+          case (Idle, Idle) => 0
+          case (Idle, _) => 1
+          case (Running(p), Running(q)) => {
+            (p - q) match {
+              case a if a > 0 => 1
+              case 0 => 0
+              case _ => -1
+            }
+          }
+          case (_, Idle) => -1
+        }
+      }
+    }
+
     val params = List(
       "name",
       "entrypoint",
@@ -41,7 +59,7 @@ case class JobsView(
         val ord = param match {
           case "name"         => Ordering[(String, String)].on[JobView](job => (job.name, job.id.toString))
           case "entrypoint"   => Ordering[(String, String, String)].on[JobView](job => (job.entrypoint.toString, job.name, job.id.toString))
-          case "status"       => Ordering[(String, String, String)].on[JobView](job => (job.status, job.name, job.id.toString))
+          case "status"       => Ordering[(JobDataStatus, String, String)].on[JobView](job => (job.status, job.name, job.id.toString))
           case "completedOn"  => Ordering[(Option[DateTime], String, String)].on[JobView](job => (job.completedOn, job.name, job.id.toString))
           case "warnings"     => Ordering[(Int, String, String)].on[JobView](job => (job.warnings, job.name, job.id.toString))
           case "errors"       => Ordering[(Int, String, String)].on[JobView](job => (job.errors, job.name, job.id.toString))

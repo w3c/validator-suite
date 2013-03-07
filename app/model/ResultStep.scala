@@ -29,7 +29,7 @@ case class ResultStep(run: Run, actions: Seq[RunAction], events: List[RunEvent])
     }
 
     def jobData: JobData =
-      JobData(jobId, name, strategy.entrypoint, status, completedOn, run.warnings, run.errors, run.numberOfKnownUrls, strategy.maxResources, run.health)
+      JobData(jobId, name, strategy.entrypoint, status, completedOn, run.warnings, run.errors, run.numberOfFetchedResources, strategy.maxResources, run.health)
 
     // tells if it's worth publishing this event
     def shouldPublish =  mostInterestingEvent match {

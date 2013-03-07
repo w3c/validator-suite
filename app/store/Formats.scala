@@ -158,7 +158,9 @@ object Formats {
   implicit val RunDataFormat: Format[RunData] = (
     (__ \ 'resources).format[Int] and
     (__ \ 'errors).format[Int] and
-    (__ \ 'warnings).format[Int]
+    (__ \ 'warnings).format[Int] and
+    (__ \ 'progress).format[JobDataStatus] and
+    (__ \ 'completedOn).format[Option[DateTime]]
   )(RunData.apply, unlift(RunData.unapply))
 
   implicit val NeverStartedFormat = constant("never-started", NeverStarted)

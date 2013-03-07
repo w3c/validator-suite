@@ -7,7 +7,9 @@ import scalaz.Equal
 case class RunData (
     resources: Int = 0,
     errors: Int = 0,
-    warnings: Int = 0) {
+    warnings: Int = 0,
+    status: JobDataStatus = JobDataIdle,
+    completedOn: Option[DateTime] = None) {
   
   def health: Int = RunData.health(resources, errors, warnings)
 

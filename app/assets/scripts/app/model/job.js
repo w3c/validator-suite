@@ -10,7 +10,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
         defaults: {
             name: "New Job",
             entrypoint: "http://www.example.com",
-            status: "idle",
+            status: { status: "idle" }, // can be { status: "running", progress: 10 }
             completedOn: null, // .timestamp, .legend1, .legend2
             warnings: 0,
             errors: 0,
@@ -38,7 +38,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
         },
 
         isIdle: function () {
-            return this.get("status") === "idle";
+            return this.get("status").status === "idle";
         },
 
         isCompleted: function () {
@@ -157,6 +157,14 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
             };
         },
 
+        getStatusString: function () {
+            if (this.model.isIdle()) {
+                return "Idle";
+            } else {
+                return "Running (" + this.model.get("status").progress + "%)";
+            }
+        },
+
         stop: function () {
             this.model.stop({ wait: true });
             return false;
@@ -208,7 +216,10 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
             id: $article.attr("data-id"),
             name: value('data-name'),
             entrypoint: value('data-entrypoint'),
-            status: value('data-status'),
+            status: {
+                status: value('data-status'),
+                progress: value('data-progress')
+            },
             completedOn: _.isUndefined(value('data-completed')) ? null : {
                 timestamp: value('data-completed'),
                 legend1: value('data-completed-legend1'),

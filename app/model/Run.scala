@@ -191,15 +191,18 @@ case class Run private (
   errors: Int = 0,
   warnings: Int = 0,
   // based on scheduled assertions
-  pendingAssertorCalls: Map[(AssertorId, URL), AssertorCall] = Map.empty) {
+  pendingAssertorCalls: Map[(AssertorId, URL), AssertorCall] = Map.empty,
+  assertorResponsesReceived: Int = 0) {
 
   import Run.logger
 
   def shortId: String = runId.shortId.toString
 
-  def progress: Int = 42
+  def progress: Int = {
+    (assertorResponsesReceived.toDouble / (assertorResponsesReceived + pendingAssertorCalls.size).toDouble * 100).toInt
+  }
 
-  def data: RunData = RunData(numberOfFetchedResources, errors, warnings)
+  def data: RunData = RunData(numberOfFetchedResources, errors, warnings, jobDataStatus, completedOn)
   
   def health: Int = data.health
 
@@ -404,8 +407,13 @@ case class Run private (
       case _ => true
     }
     if (resultStep.run.hasNoPendingAction && notCancel ) {
-      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, resultStep.run.data, resultStep.run.resourceDatas)
-      resultStep.copy(events = resultStep.events :+ completeRunEvent)
+      val timestamp = DateTime.now(DateTimeZone.UTC)
+      val completedRun = resultStep.run.completeOn(timestamp)
+      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, completedRun.data, completedRun.resourceDatas, timestamp)
+      resultStep.copy(
+        run = completedRun,
+        events = resultStep.events :+ completeRunEvent
+      )
     } else {
       resultStep
     }
@@ -487,13 +495,17 @@ case class Run private (
       assertions = this.assertions ++ filteredAssertions,
       errors = this.errors + nbErrors,
       warnings = this.warnings + nbWarnings,
-      pendingAssertorCalls = pendingAssertorCalls - ((result.assertor, result.sourceUrl)))
+      pendingAssertorCalls = pendingAssertorCalls - ((result.assertor, result.sourceUrl)),
+      assertorResponsesReceived = assertorResponsesReceived + 1)
 
     (newRun, filteredAssertions)
   }
 
   private def withAssertorFailure(fail: AssertorFailure): Run = {
-    this.copy(pendingAssertorCalls = pendingAssertorCalls - ((fail.assertor, fail.sourceUrl)))
+    this.copy(
+      pendingAssertorCalls = pendingAssertorCalls - ((fail.assertor, fail.sourceUrl)),
+      assertorResponsesReceived = assertorResponsesReceived + 1
+    )
   }
 
 }

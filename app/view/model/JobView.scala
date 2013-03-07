@@ -9,12 +9,13 @@ import play.api.templates.Html
 import scala.concurrent._
 import org.w3.vs.view.Collection.Definition
 import org.w3.vs.VSConfiguration
+import org.w3.vs.store.Formats._
 
 case class JobView(
     id: JobId,
     name: String,
     entrypoint: URL,
-    status: String,
+    status: JobDataStatus,
     completedOn: Option[DateTime],
     warnings: Int,
     errors: Int,
@@ -53,16 +54,12 @@ object JobView {
   def apply(job: Job)(implicit conf: VSConfiguration): Future[JobView] = {
     import ExecutionContext.Implicits.global
     job.getRunData() map { data =>
-      val activity: String = job.status match {
-        case NeverStarted | Zombie | Done(_, _, _, _) => "idle"
-        case Running(_, _) => "running"
-      }
       val completedOn: Option[DateTime] = job.latestDone.map(_.completedOn)
       JobView(
         job.id,
         job.name,
         job.strategy.entrypoint,
-        activity,
+        data.status,
         completedOn,
         data.warnings,
         data.errors,
@@ -80,56 +77,10 @@ object JobView {
 
   // TODO: use same techniques as in Formats
   implicit val writes: Writes[JobView] = new Writes[JobView] {
-    def writes(job: JobView): JsValue = {
-      JsObject(Seq(
-        ("id"           -> JsString(job.id.toString)),
-        ("name"         -> JsString(job.name)),
-        ("entrypoint"   -> JsString(job.entrypoint.toString)),
-        ("status"       -> JsString(job.status)),
-        ("completedOn"  -> {
-          job.completedOn match {
-            case Some(d) =>
-              JsObject(
-                Seq(
-                  ("timestamp"    -> JsString(d.toString)),
-                  ("legend1"      -> JsString(Helper.formatTime(d))),
-                  ("legend2"      -> JsString(Helper.formatLegendTime(d)))))
-            case None => JsNull
-          }
-        }),
-        ("warnings"     -> JsNumber(job.warnings)),
-        ("errors"       -> JsNumber(job.errors)),
-        ("resources"    -> JsNumber(job.resources)),
-        ("maxResources" -> JsNumber(job.maxResources)),
-        ("health"       -> JsNumber(job.health))
-      ))
-    }
-  }
-
-  def toJobMessage(jobId: JobId, data: RunData): JsValue = {
-    JsObject(Seq(
-      ("id"           -> JsString(jobId.toString)),
-      ("status"       -> JsString("running")),
-      ("warnings"     -> JsNumber(data.warnings)),
-      ("errors"       -> JsNumber(data.errors)),
-      ("resources"    -> JsNumber(data.resources)),
-      ("health"       -> JsNumber(data.health))
-    ))
-  }
-
-  def toJobMessage(jobId: JobId, data: RunData, completedOn: DateTime): JsValue = {
-    JsObject(Seq(
-      ("id"           -> JsString(jobId.toString)),
-      ("status"       -> JsString("idle")),
-      ("warnings"     -> JsNumber(data.warnings)),
-      ("errors"       -> JsNumber(data.errors)),
-      ("resources"    -> JsNumber(data.resources)),
-      ("health"       -> JsNumber(data.health)),
-      ("completedOn"  -> JsObject(Seq(
-        ("timestamp"    -> JsString(completedOn.toString)),
-        ("legend1"      -> JsString(Helper.formatTime(completedOn))),
-        ("legend2"      -> JsString(Helper.formatLegendTime(completedOn))))))
-    ))
+    def writes(job: JobView): JsValue = Json.toJson(
+      // This will disappear soon
+      new JobData(job.id, job.name, org.w3.util.URL(job.entrypoint), job.status, job.completedOn, job.warnings, job.errors, job.resources, job.maxResources, job.health)
+    )
   }
 
 }
