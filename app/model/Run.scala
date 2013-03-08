@@ -198,8 +198,25 @@ case class Run private (
 
   def shortId: String = runId.shortId.toString
 
+  /**
+   * Note: This indicator is implemented for user feedback and its exact semantic is up to
+   * the implementation. Hence no logic should rely on this value.
+   * @return an indication of the progress of the Run, between 0 and 100
+   */
   def progress: Int = {
-    (assertorResponsesReceived.toDouble / (assertorResponsesReceived + pendingAssertorCalls.size).toDouble * 100).toInt
+    val crawlProgress =
+      if (pendingFetches.size > 0) {
+        // How many have we fetched compared to the max we can go
+        (numberOfFetchedResources.toDouble / strategy.maxResources.toDouble * 100).toInt
+      } else {
+        // No pending fetches. We have either reached the limit of knownUrls or the max number of pages.
+        100
+      }
+
+    val assertionProgress =
+     (assertorResponsesReceived.toDouble / (assertorResponsesReceived + pendingAssertorCalls.size).toDouble * 100).toInt
+
+    scala.math.min(crawlProgress, assertionProgress)
   }
 
   def data: RunData = RunData(numberOfFetchedResources, errors, warnings, jobDataStatus, completedOn)
