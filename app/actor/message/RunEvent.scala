@@ -13,7 +13,7 @@ sealed trait RunEvent {
 
 case class CreateRunEvent(userId: UserId, jobId: JobId, runId: RunId, actorPath: ActorPath, strategy: Strategy, createdAt: DateTime, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
-case class DoneRunEvent(userId: UserId, jobId: JobId, runId: RunId, doneReason: DoneReason, runData: RunData, resourceDatas: Iterable[ResourceData], timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+case class DoneRunEvent(userId: UserId, jobId: JobId, runId: RunId, doneReason: DoneReason, resources: Int = 0, errors: Int = 0,  warnings: Int = 0, resourceDatas: Iterable[ResourceData], timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
 case class AssertorResponseEvent(userId: UserId, jobId: JobId, runId: RunId, ar: AssertorResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 

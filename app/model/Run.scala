@@ -377,10 +377,10 @@ case class Run private (
     val resultStep = event match {
       case CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
         val (run, fetches) = this.newlyStartedRun
-        ResultStep(run, fetches, List(event))
-      case DoneRunEvent(userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) =>
+        ResultStep(run, fetches)
+      case DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) =>
         val run = this.completeOn(timestamp)
-        ResultStep(run, Seq.empty, List(event))
+        ResultStep(run, Seq.empty)
       case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), _) =>
         val (run, filteredAssertions) = this.withAssertorResult(ar)
         /* fix because of CSS Validator. See http://www.w3.org/mid/511910CB.6050608@w3.org */
@@ -388,35 +388,19 @@ case class Run private (
           val newResult = ar.copy(assertions = filteredAssertions)
           are.copy(ar = newResult)
         }
-        ResultStep(run, Seq.empty, List(fixedEvent))
+        ResultStep(run, Seq.empty)
       case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(_, assertor, url, _), _) =>
         val run = this.withAssertorFailure(af)
-        ResultStep(run, Seq.empty, List(event))
+        ResultStep(run, Seq.empty)
       case ResourceResponseEvent(userId, jobId, runId, hr@HttpResponse(url, _, _, _, _, _), _) =>
         val (run, fetches, assertorCalls) = this.withHttpResponse(hr)
         val actions = fetches ++ assertorCalls
-        ResultStep(run, actions, List(event))
+        ResultStep(run, actions)
       case ResourceResponseEvent(userId, jobId, runId, er@ErrorResponse(url, _, _), _) =>
         val (run, fetches) = this.withErrorResponse(er)
-        ResultStep(run, fetches, List(event))
+        ResultStep(run, fetches)
     }
-    // if this is the end of the Run (not because of a Cancel), we
-    // need to generate an additional event
-    def notCancel = resultStep.events(0) match {
-      case DoneRunEvent(_, _, _, Cancelled, _, _, _) => false
-      case _ => true
-    }
-    if (resultStep.run.hasNoPendingAction && notCancel ) {
-      val timestamp = DateTime.now(DateTimeZone.UTC)
-      val completedRun = resultStep.run.completeOn(timestamp)
-      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, completedRun.data, completedRun.resourceDatas, timestamp)
-      resultStep.copy(
-        run = completedRun,
-        events = resultStep.events :+ completeRunEvent
-      )
-    } else {
-      resultStep
-    }
+    resultStep
   }
 
   /**

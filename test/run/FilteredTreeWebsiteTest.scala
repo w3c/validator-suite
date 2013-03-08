@@ -45,7 +45,7 @@ class FilteredTreeWebsiteTest extends RunTestHelper with TestKitHelper {
     val events = (runningJob.runEvents() |>>> Iteratee.getChunks[RunEvent]).getOrFail(3.seconds)
 
     val completeRunEvent = events.collectFirst { case e: DoneRunEvent => e }.get
-    completeRunEvent.runData.resources must be(50)
+    completeRunEvent.resources must be(50)
 
     val rrs = events.collect { case ResourceResponseEvent(_, _, _, rr, _) => rr }
     rrs foreach { rr =>

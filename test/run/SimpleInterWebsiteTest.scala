@@ -41,7 +41,7 @@ class SimpleInterWebsiteTest extends RunTestHelper with TestKitHelper {
     val completeRunEvent =
       (runningJob.runEvents() |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail(3.seconds)
 
-    completeRunEvent.runData.resources must be(2)
+    completeRunEvent.resources must be(2)
 
   }
   

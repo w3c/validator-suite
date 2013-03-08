@@ -1,3 +1,3 @@
 package org.w3.vs.model
 
-case class ResultStep(run: Run, actions: Seq[RunAction], events: List[RunEvent])
+case class ResultStep(run: Run, actions: Seq[RunAction])

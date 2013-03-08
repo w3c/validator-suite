@@ -48,7 +48,7 @@ class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
     val completeRunEvent =
       (runningJob.runEvents() |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
-    completeRunEvent.runData.resources must be(j + 1)
+    completeRunEvent.resources must be(j + 1)
 
   }
 

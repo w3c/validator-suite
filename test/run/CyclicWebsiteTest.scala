@@ -44,7 +44,7 @@ class CyclicWebsiteCrawlTest extends RunTestHelper with TestKitHelper with Insid
     val completeRunEvent =
       (runningJob.runEvents() |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail(3.seconds)
 
-    completeRunEvent.runData.resources must be(circumference + 1)
+    completeRunEvent.resources must be(circumference + 1)
 
     // just checking that the data in the store is correct
 

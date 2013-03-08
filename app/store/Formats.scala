@@ -344,11 +344,13 @@ object Formats {
     (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
     (__ \ 'doneReason).format[DoneReason] and
-    (__ \ 'runData).format[RunData] and
+    (__ \ 'resources).format[Int] and
+    (__ \ 'errors).format[Int] and
+    (__ \ 'warnings).format[Int] and
     (__ \ 'rd).format[Iterable[ResourceData]] and
     (__ \ 'timestamp).format[DateTime]
-  )({ case (_, userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) => DoneRunEvent(userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) },
-    { case DoneRunEvent(userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) => ("done-run", userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) }
+  )({ case (_, userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) => DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) },
+    { case DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) => ("done-run", userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) }
   )
 
   val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
@@ -380,7 +382,7 @@ object Formats {
       case e@AssertorResponseEvent(_, _, _, _, _) => AssertorResponseEventFormat.writes(e)
       case e@ResourceResponseEvent(_, _, _, _, _) => ResourceResponseEventFormat.writes(e)
       case e@CreateRunEvent(_, _, _, _, _, _, _) => CreateRunEventFormat.writes(e)
-      case e@DoneRunEvent(_, _, _, _, _, _, _) => DoneRunEventFormat.writes(e)
+      case e@DoneRunEvent(_, _, _, _, _, _, _, _, _) => DoneRunEventFormat.writes(e)
     }
   }
 

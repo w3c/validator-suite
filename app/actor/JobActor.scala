@@ -93,9 +93,9 @@ extends Actor with FSM[JobActorState, Run] {
         Job.updateStatus(jobId, status = running)
       }
 
-    case event@DoneRunEvent(userId, jobId, runId, doneReason, runData, resourceDatas, timestamp) =>
+    case event@DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
-        val done = Done(runId, doneReason, timestamp, runData)
+        val done = Done(runId, doneReason, timestamp, RunData(resources, errors, warnings, JobDataIdle, Some(timestamp)))
         Job.updateStatus(jobId, status = done, latestDone = done)
       }
 
@@ -116,46 +116,51 @@ extends Actor with FSM[JobActorState, Run] {
     }
   }
 
-  /** does in one single place all the side-effects resulting from a
-    * ResultStep
-    */
-  def handleResultStep(resultStep: ResultStep): State = {
-    import resultStep.{ run, actions }
+  // Computes the new state of this actor for a given RunEvent and executes all the side effects
+  // (signature could be (State, RunEvent) => State)?
+  def handleRunEvent(_run: Run, event: RunEvent): State = {
 
-    executeActions(actions)
+    // Get the new run and actions resulting from this this event
+    // (The ResultStep class isn't really needed here)
+    val ResultStep(run, actions) = _run.step(event)
 
     // remember the RunEvents seen so far
-    runEvents ++= resultStep.events
-
-    // the next state for the JobActor's state machine
-    var state = stay() using run
+    runEvents :+= event
 
     // fire runDatas
     publish(run.data)
 
-    resultStep.events foreach { event =>
-      // save event
-      futureSideEffect { saveEvent(event) }
+    // pure side-effect
+    executeActions(actions)
 
-      // publish event
-      sideEffect { publish(event) }
+    // save event
+    futureSideEffect { saveEvent(event) }
 
-      // compute the next step and do side-effects
-      event match {
-        case CreateRunEvent(_, _, _, _, _, _, _) =>
-          runningJobs.inc()
-          val running = Running(run.runId, self.path)
-          // Job.run() is waiting for this value
-          val from = sender
-          sideEffect { from ! running }
-          state = goto(Started) using run
-        case DoneRunEvent(_, _, _, doneReason, _, _, _) =>
-          if (doneReason === Completed)
-            logger.debug(s"${run.shortId}: Assertion phase finished")
-          stopThisActor()
-          state = goto(Stopping) using run
-        case _ => ()
-      }
+    // publish event
+    sideEffect { publish(event) }
+
+    // compute the next step and do side-effects
+    var state = stay() using run
+    event match {
+      case CreateRunEvent(_, _, _, _, _, _, _) =>
+        runningJobs.inc()
+        val running = Running(run.runId, self.path)
+        // Job.run() is waiting for this value
+        val from = sender
+        sideEffect { from ! running }
+        state = goto(Started) using run
+      case DoneRunEvent(_, _, _, doneReason, _, _, _, _, _) =>
+        if (doneReason === Completed)
+          logger.debug(s"${run.shortId}: Assertion phase finished")
+        stopThisActor()
+        state = goto(Stopping) using run
+      case _ =>
+        // Anything else than a CreateRunEvent and a DoneRunEvent has a chance of finishing this run
+        if (run.hasNoPendingAction) {
+          val doneEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas)
+          // Recurse to handle the generated Done event
+          state = handleRunEvent(run, doneEvent)
+        }
     }
 
     state
@@ -208,7 +213,7 @@ extends Actor with FSM[JobActorState, Run] {
 
     case Event(Start, run) =>
       val event = CreateRunEvent(userId, jobId, run.runId, self.path, job.strategy, job.createdOn)
-      handleResultStep(run.step(event))
+      handleRunEvent(run, event)
 
     case Event(Resume(actions), run) =>
       sender ! ()
@@ -223,11 +228,11 @@ extends Actor with FSM[JobActorState, Run] {
     case Event(result: AssertorResult, run) =>
       logger.debug(s"${run.shortId}: ${result.assertor} produced AssertorResult for ${result.sourceUrl}")
       val event = AssertorResponseEvent(userId, jobId, run.runId, result)
-      handleResultStep(run.step(event))
+      handleRunEvent(run, event)
 
     case Event(failure: AssertorFailure, run) =>
       val event = AssertorResponseEvent(userId, jobId, run.runId, failure)
-      handleResultStep(run.step(event))
+      handleRunEvent(run, event)
 
     case Event((_: RunId, httpResponse: HttpResponse), run) =>
       // logging/monitoring
@@ -235,21 +240,21 @@ extends Actor with FSM[JobActorState, Run] {
       extractedUrls.update(httpResponse.extractedURLs.size)
       // logic
       val event = ResourceResponseEvent(userId, jobId, run.runId, httpResponse)
-      handleResultStep(run.step(event))
+      handleRunEvent(run, event)
 
     case Event((_: RunId, error: ErrorResponse), run) =>
       // logging/monitoring
       logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
       // logic
       val event = ResourceResponseEvent(userId, jobId, run.runId, error)
-      handleResultStep(run.step(event))
+      handleRunEvent(run, event)
 
     case Event(Cancel, run) =>
       // logging/monitoring
       logger.debug(s"${run.shortId}: Cancel")
       // logic
-      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data, run.resourceDatas)
-      handleResultStep(run.step(event))
+      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas)
+      handleRunEvent(run, event)
 
   }
 

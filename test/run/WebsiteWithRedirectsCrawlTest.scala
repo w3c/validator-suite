@@ -43,7 +43,7 @@ class WebsiteWithRedirectsCrawlTest extends RunTestHelper with TestKitHelper {
     val completeRunEvent =
       (runningJob.runEvents() |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail(3.seconds)
 
-    completeRunEvent.runData.resources must be(circumference + 1)
+    completeRunEvent.resources must be(circumference + 1)
 
   }
   
