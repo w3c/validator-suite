@@ -32,4 +32,4 @@ occupop
 data
 http-cache
 RUNNING_PID
-test/resources/w3c-cache
+test/resources/w3c-cache/*

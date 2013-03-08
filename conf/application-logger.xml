@@ -18,7 +18,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%coloredLevel %logger{15} - %message%n%xException{40}</pattern>
+      <pattern>%coloredLevel %logger - %message%n%xException{40}</pattern>
     </encoder>
   </appender>
   
@@ -31,9 +31,8 @@
   <logger name="org.w3.vs.controllers.OneTimeJob" level="DEBUG">
       <appender-ref ref="ORDERS" />
   </logger>
-  <logger name="org.eclipse.jetty.server" level="INFO">
-      <appender-ref ref="STDOUT" />
-  </logger>
+  <logger name="org.eclipse.jetty.server" level="INFO"/>
+  <logger name="com.gargoylesoftware.htmlunit" level="OFF" />
 
   <!-- activate those loggers for more resource fetching info -->
   <!--logger name="org.w3.vs.actor.JobActor" level="DEBUG" />  
