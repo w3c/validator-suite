@@ -114,39 +114,6 @@ case class Job(
     }
   }
 
-  case class EnumerateeState(
-    errors: Int = 0,
-    warnings: Int = 0,
-    resources: Int = 0,
-    status: JobDataStatus = JobDataIdle,
-    completedOn: Option[DateTime] = None)
-
-  // Let's assume that all events will be replayed for the current run
-  val runEventToState: Enumeratee[RunEvent, EnumerateeState] =
-    Enumeratee.filter[RunEvent] {
-      case CreateRunEvent(_, `id`, _, _, _, _, _) => true
-      case DoneRunEvent(_, `id`, _, _, _, _, _) => true
-      case ResourceResponseEvent(_, `id`, _, _: HttpResponse, _) => true
-      case AssertorResponseEvent(_, `id`, _, ar: AssertorResult, _) => ar.errors != 0 && ar.warnings != 0
-      case _ => false
-    } ><>
-    Enumeratee.scanLeft(EnumerateeState(completedOn = latestDone.map(_.completedOn))){
-      case (state, CreateRunEvent(_, _, _, _, _, _, timestamp)) => EnumerateeState(status = JobDataRunning(42) ,completedOn = state.completedOn)
-      case (state, DoneRunEvent(_, _, _, _, data, _, timestamp)) => EnumerateeState(data.errors, data.warnings, data.resources, JobDataIdle, Some(timestamp))
-      case (state, ResourceResponseEvent(_, _, _, rr: HttpResponse, timestamp)) => state.copy(resources = state.resources + 1)
-      case (state, AssertorResponseEvent(_, _, _, ar: AssertorResult, timestamp)) =>
-        state.copy(
-          errors = state.errors + ar.errors,
-          warnings = state.warnings + ar.warnings)
-      case (state, _) => state
-    }
-
-  val enumeratee: Enumeratee[EnumerateeState, JobData] = {
-     Enumeratee.map{ case EnumerateeState(errors, warnings, resources, status, completedOn) =>
-       JobData(id, name, strategy.entrypoint, status, completedOn, warnings, errors, resources, strategy.maxResources, RunData.health(resources, errors, warnings))
-     }
-  }
-
   import scala.reflect.ClassTag
   def actorBasedEnumerator[T](system: ActorSystem, jobActorPath: ActorPath)(implicit classifier: Classifier[T], classTag: ClassTag[T]): Enumerator[T] = {
     val (enumerator, channel) = Concurrent.broadcast[T]
@@ -189,12 +156,22 @@ case class Job(
 
   /** this is stateless, so if you're the Done case, you want to use
     * Job.jobData() instead */
-  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
+  def jobDatas_()(implicit conf: VSConfiguration): Enumerator[JobData] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Enumerator[JobData]()
       case Done(runId, _, _, _) => Enumerator[JobData]()
       case Running(_, jobActorPath) => actorBasedEnumerator[JobData](system, jobActorPath)
+    }
+  }
+
+  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Enumerator[JobData]()
+      case Done(runId, _, _, _) => Enumerator[JobData]()
+      case Running(_, jobActorPath) => actorBasedEnumerator[RunData](system, jobActorPath) &>
+        Enumeratee.map(runData => JobData(this, runData))
     }
   }
 

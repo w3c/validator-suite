@@ -39,20 +39,37 @@ object JobData {
     )
   }
 
+  def apply(job: Job, runData: RunData): JobData = {
+    new JobData(
+      jobId = job.id,
+      name = job.name,
+      entrypoint = job.strategy.entrypoint,
+      status = runData.status,
+      completedOn = if (runData.completedOn.isDefined) runData.completedOn else job.latestDone.map(_.completedOn),
+      warnings = runData.warnings,
+      errors = runData.errors,
+      resources = runData.resources,
+      maxResources = job.strategy.maxResources,
+      health = runData.health
+    )
+  }
+
   // Rewrites the json serialization of a jobData to a form suited for the view
   val viewEnumeratee: Enumeratee[JobData, JsValue] = Enumeratee.map {job =>
     val json: JsValue = Json.toJson(job)
     val id = json \ "_id" \ "$oid"
     // TODO: This must be implemented client side. temporary
-    val completedOn = if (!(json \ "completedOn").isInstanceOf[JsUndefined]) {
-      val timestamp = new DateTime((json \ "completedOn").as[Long])
-      Json.obj(
-        "timestamp" -> toJson(timestamp.toString()),
-        "legend1" -> toJson(Helper.formatTime(timestamp)),
-        "legend2" -> toJson("") /* the legend is hidden for now. Doesn't make sense to compute it here anyway */
-      )
-    } else {
-      Json.obj("legend1" -> toJson("Never"))
+    val completedOn = {
+      if (!(json \ "completedOn").isInstanceOf[JsUndefined]) {
+        val timestamp = new DateTime((json \ "completedOn").as[Long])
+        Json.obj(
+          "timestamp" -> toJson(timestamp.toString()),
+          "legend1" -> toJson(Helper.formatTime(timestamp)),
+          "legend2" -> toJson("") /* the legend is hidden for now. Doesn't make sense to compute it here anyway */
+        )
+      } else {
+        Json.obj("legend1" -> toJson("Never"))
+      }
     }
     // Replace the _id field with id and replace completedOn by its object
     json.asInstanceOf[JsObject] -
