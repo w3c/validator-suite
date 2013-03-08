@@ -156,15 +156,6 @@ case class Job(
 
   /** this is stateless, so if you're the Done case, you want to use
     * Job.jobData() instead */
-  def jobDatas_()(implicit conf: VSConfiguration): Enumerator[JobData] = {
-    import conf._
-    this.status match {
-      case NeverStarted | Zombie => Enumerator[JobData]()
-      case Done(runId, _, _, _) => Enumerator[JobData]()
-      case Running(_, jobActorPath) => actorBasedEnumerator[JobData](system, jobActorPath)
-    }
-  }
-
   def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
     import conf._
     this.status match {

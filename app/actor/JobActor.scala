@@ -130,11 +130,6 @@ extends Actor with FSM[JobActorState, Run] {
     // the next state for the JobActor's state machine
     var state = stay() using run
 
-    // fire jobDatas
-    resultStep.jobDataToFire(job) foreach { jobData =>
-      publish(jobData)
-    }
-
     // fire runDatas
     publish(run.data)
 
