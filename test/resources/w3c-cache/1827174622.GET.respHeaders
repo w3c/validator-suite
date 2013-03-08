@@ -1,4 +1,0 @@
-null: HTTP/1.0 200 FIXED STATUS TEXT
-Content-Length: 130
-Content-Type: text/html;charset=ISO-8859-1
-Server: Jetty(8.y.z-SNAPSHOT)
