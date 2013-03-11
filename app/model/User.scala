@@ -107,7 +107,7 @@ object User {
   }
 
   def collection(implicit conf: VSConfiguration): BSONCollection =
-    conf.db("users")
+    conf.db("users", failoverStrategy = FailoverStrategy(retries = 0))
 
   def sample(implicit conf: VSConfiguration): User = User(
     id = UserId("50cb6a1c04ca20aa0283bc85"),
@@ -188,7 +188,6 @@ object User {
     * if an error happens, we assume it's because there was already a user with the same email
     * looks like the driver is buggy as it does not return a specific error code
     */
-  // Tom: This method should be called create.
   def save(user: User)(implicit conf: VSConfiguration): Future[Unit] = {
     import conf._
     val userId = user.id
