@@ -399,12 +399,7 @@ case class Run private (
         val run = this.completeOn(timestamp)
         ResultStep(run, Seq.empty)
       case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), _) =>
-        val (run, filteredAssertions) = this.withAssertorResult(ar)
-        /* fix because of CSS Validator. See http://www.w3.org/mid/511910CB.6050608@w3.org */
-        val fixedEvent = {
-          val newResult = ar.copy(assertions = filteredAssertions)
-          are.copy(ar = newResult)
-        }
+        val run = this.withAssertorResult(ar)
         ResultStep(run, Seq.empty)
       case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(_, assertor, url, _), _) =>
         val run = this.withAssertorFailure(af)
@@ -417,7 +412,25 @@ case class Run private (
         val (run, fetches) = this.withErrorResponse(er)
         ResultStep(run, fetches)
     }
-    resultStep
+
+    def notCancel = event match {
+      case DoneRunEvent(_, _, _, Cancelled, _, _, _, _, _) => false
+      case _ => true
+    }
+
+    if (resultStep.run.hasNoPendingAction && notCancel ) {
+      val timestamp = DateTime.now(DateTimeZone.UTC)
+      val completedRun = resultStep.run.completeOn(timestamp)
+      val data = completedRun.data
+      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, resourceDatas, timestamp)
+      resultStep.copy(
+        run = completedRun,
+        actions = resultStep.actions :+ EmitEvent(completeRunEvent)
+      )
+    } else {
+      resultStep
+    }
+
   }
 
   /**
@@ -483,23 +496,30 @@ case class Run private (
 
   }
 
-  private def withAssertorResult(result: AssertorResult): (Run, List[Assertion]) = {
+  /** fix because of CSS Validator. See http://www.w3.org/mid/511910CB.6050608@w3.org
+    * remark: this implements a general case, we could make it specialized in the case of the CSS Validator
+    */
+  def fixedAssertorResult(result: AssertorResult): AssertorResult = {
     val filteredAssertions = result.assertions filter { rAssertion =>
       ! assertions.exists { assertion =>
         assertion.assertor === result.assertor && assertion.url === rAssertion.url
       }
     }
+    result.copy(assertions = filteredAssertions)
+  }
 
-    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(filteredAssertions)
+  private def withAssertorResult(result: AssertorResult): Run = {
+
+    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions)
 
     val newRun = this.copy(
-      assertions = this.assertions ++ filteredAssertions,
+      assertions = this.assertions ++ result.assertions,
       errors = this.errors + nbErrors,
       warnings = this.warnings + nbWarnings,
       pendingAssertorCalls = pendingAssertorCalls - ((result.assertor, result.sourceUrl)),
       assertorResponsesReceived = assertorResponsesReceived + 1)
 
-    (newRun, filteredAssertions)
+    newRun
   }
 
   private def withAssertorFailure(fail: AssertorFailure): Run = {

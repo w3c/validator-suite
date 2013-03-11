@@ -83,6 +83,8 @@ extends Actor with FSM[JobActorState, Run] {
         httpActorRef ! fetch
       case call: AssertorCall =>
         assertionsActorRef ! call
+      case EmitEvent(event) =>
+        self ! event
     }
   }
 
@@ -140,27 +142,21 @@ extends Actor with FSM[JobActorState, Run] {
     sideEffect { publish(event) }
 
     // compute the next step and do side-effects
-    var state = stay() using run
-    event match {
+    val state = event match {
       case CreateRunEvent(_, _, _, _, _, _, _) =>
         runningJobs.inc()
         val running = Running(run.runId, self.path)
         // Job.run() is waiting for this value
         val from = sender
         sideEffect { from ! running }
-        state = goto(Started) using run
+        goto(Started) using run
       case DoneRunEvent(_, _, _, doneReason, _, _, _, _, _) =>
         if (doneReason === Completed)
           logger.debug(s"${run.shortId}: Assertion phase finished")
         stopThisActor()
-        state = goto(Stopping) using run
+        goto(Stopping) using run
       case _ =>
-        // Anything else than a CreateRunEvent and a DoneRunEvent has a chance of finishing this run
-        if (run.hasNoPendingAction) {
-          val doneEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas)
-          // Recurse to handle the generated Done event
-          state = handleRunEvent(run, doneEvent)
-        }
+        stay() using run
     }
 
     state
@@ -227,7 +223,8 @@ extends Actor with FSM[JobActorState, Run] {
 
     case Event(result: AssertorResult, run) =>
       logger.debug(s"${run.shortId}: ${result.assertor} produced AssertorResult for ${result.sourceUrl}")
-      val event = AssertorResponseEvent(userId, jobId, run.runId, result)
+      val fixedAssertorResult = run.fixedAssertorResult(result)
+      val event = AssertorResponseEvent(userId, jobId, run.runId, fixedAssertorResult)
       handleRunEvent(run, event)
 
     case Event(failure: AssertorFailure, run) =>
@@ -254,6 +251,9 @@ extends Actor with FSM[JobActorState, Run] {
       logger.debug(s"${run.shortId}: Cancel")
       // logic
       val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas)
+      handleRunEvent(run, event)
+
+    case Event(event: DoneRunEvent, run) =>
       handleRunEvent(run, event)
 
   }
