@@ -66,6 +66,7 @@ define(["model/model", "collection/assertions", "lib/Util"], function (Model, As
     Resource.fromHtml = function ($article) {
         var value = Util.valueFrom($article);
         return {
+            id: $article.attr("data-id"),
             url: value('data-url'),
             lastValidated: {
                 timestamp: value('data-lastValidated'),

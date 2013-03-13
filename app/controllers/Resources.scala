@@ -90,7 +90,7 @@ object Resources extends VSController  {
       }
     )) &> Enumeratee.map {resource =>
       val json = toJson(resource)
-      val id = toJson((json \ "url").hashCode())
+      val id = toJson((json \ "url").as[String].hashCode())
       // TODO: This must be implemented client side. temporary
       val lastValidated = if (!(json \ "lastValidated").isInstanceOf[JsUndefined]) {
         val timestamp = new DateTime((json \ "lastValidated").as[Long])

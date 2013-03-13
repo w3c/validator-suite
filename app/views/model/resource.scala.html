@@ -1,5 +1,5 @@
 @(resource: ResourceView, assertions: Option[Collection[AssertionView]])
-    <article>
+    <article data-id="@resource.url.toString.hashCode()">
         <dl>
             @ResourceView.definitions.map { definition =>
             <dt>@Messages(s"resources.${definition.name}")</dt>
