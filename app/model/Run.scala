@@ -179,6 +179,8 @@ object Run {
 case class Run private (
   runId: RunId,
   strategy: Strategy,
+  // part of the state that we maintain
+  resourceDatas: Map[URL, ResourceData] = Map.empty,
   // from completion event, None at creation
   completedOn: Option[DateTime] = None,
   // based on scheduled fetches
@@ -187,12 +189,16 @@ case class Run private (
   // based on added resources
   knownResources: Map[URL, ResourceInfo] = Map.empty,
   // based on added assertions
-  assertions: Set[Assertion] = Set.empty,
+  assertions: Map[URL, Map[AssertorId, Vector[Assertion]]] = Map.empty,
   errors: Int = 0,
   warnings: Int = 0,
   // based on scheduled assertions
   pendingAssertorCalls: Map[(AssertorId, URL), AssertorCall] = Map.empty,
   assertorResponsesReceived: Int = 0) {
+
+  // Map[URL, ResourceData]
+  // Map[URL, Vector[Assertion]]
+  // Map[URL, GroupedAssertionData]
 
   import Run.logger
 
@@ -225,30 +231,6 @@ case class Run private (
 
   def jobDataStatus: JobDataStatus =
     if (completedOn.isDefined) JobDataIdle else JobDataRunning(progress)
-
-  def resourceDatas: Iterable[ResourceData] = {
-    val rds: Iterable[ResourceData] = assertions.groupBy(_.url).map {
-      case (url, assertions) => {
-        val last = assertions.maxBy(_.timestamp).timestamp
-        val errors = assertions.foldLeft(0) {
-          case (count, assertion) =>
-            count + (assertion.severity match {
-              case Error => scala.math.max(assertion.contexts.size, 1)
-              case _ => 0
-            })
-        }
-        val warnings = assertions.foldLeft(0) {
-          case (count, assertion) =>
-            count + (assertion.severity match {
-              case Warning => scala.math.max(assertion.contexts.size, 1)
-              case _ => 0
-            })
-        }
-        ResourceData(url, last, warnings, errors)
-      }
-    }
-    rds
-  }
 
   /* combinators */
 
@@ -398,8 +380,8 @@ case class Run private (
       case DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) =>
         val run = this.completeOn(timestamp)
         ResultStep(run, Seq.empty)
-      case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), _) =>
-        val run = this.withAssertorResult(ar)
+      case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), timestamp) =>
+        val run = this.withAssertorResult(ar, timestamp)
         ResultStep(run, Seq.empty)
       case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(_, assertor, url, _), _) =>
         val run = this.withAssertorFailure(af)
@@ -422,7 +404,7 @@ case class Run private (
       val timestamp = DateTime.now(DateTimeZone.UTC)
       val completedRun = resultStep.run.completeOn(timestamp)
       val data = completedRun.data
-      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, resourceDatas, timestamp)
+      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, resourceDatas.values, timestamp)
       resultStep.copy(
         run = completedRun,
         actions = resultStep.actions :+ EmitEvent(completeRunEvent)
@@ -500,20 +482,56 @@ case class Run private (
     * remark: this implements a general case, we could make it specialized in the case of the CSS Validator
     */
   def fixedAssertorResult(result: AssertorResult): AssertorResult = {
-    val filteredAssertions = result.assertions filter { rAssertion =>
-      ! assertions.exists { assertion =>
-        assertion.assertor === result.assertor && assertion.url === rAssertion.url
-      }
+    val filteredAssertions = result.assertions filterNot { rAssertion =>
+      // see if there are assertions for this url
+      assertions.get(rAssertion.url)
+      // then see there are assertions for this assertor
+        .map(_.isDefinedAt(rAssertion.assertor))
+      // if not
+        .getOrElse(false)
     }
     result.copy(assertions = filteredAssertions)
   }
 
-  private def withAssertorResult(result: AssertorResult): Run = {
+  private def withAssertorResult(result: AssertorResult, timestamp: DateTime): Run = {
+
+    // just factor assertions by URL and then AssertorId
+    val m: Map[URL, Map[AssertorId, Vector[Assertion]]] =
+      result.assertions.groupBy(_.url).mapValues(_.groupBy(_.assertor))
+
+    // accumulate assertions and take care of the keys
+    var newAssertions = this.assertions
+    m.foreach { case (url, am) =>
+      am.foreach { case assertorIdAssertions @ (assertorId, assertions) =>
+        this.assertions.get(url) match {
+          case None => newAssertions += (url -> Map(assertorId -> assertions))
+          case Some(existingAAMap) =>
+            existingAAMap.get(assertorId) match {
+              case None =>
+                newAssertions += (url -> (existingAAMap + assertorIdAssertions))
+              case Some(_) =>
+                logger.error(s"Got assertions for existing ($url, $assertorId). This should have been filtered and will be ignored.")
+            }
+        }
+      }
+    }
 
     val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions)
 
+    var newResourceDatas = this.resourceDatas
+    m.foreach { case (url, am) =>
+      val resourceData = newResourceDatas.get(url) match {
+        case None =>
+          ResourceData(url, timestamp, nbWarnings, nbErrors)
+        case Some(ResourceData(_, _, w, e)) =>
+          ResourceData(url, timestamp, w + nbWarnings, e + nbErrors)
+      }
+      newResourceDatas += (url -> resourceData)
+    }
+
     val newRun = this.copy(
-      assertions = this.assertions ++ result.assertions,
+      assertions = newAssertions,
+      resourceDatas = newResourceDatas,
       errors = this.errors + nbErrors,
       warnings = this.warnings + nbWarnings,
       pendingAssertorCalls = pendingAssertorCalls - ((result.assertor, result.sourceUrl)),

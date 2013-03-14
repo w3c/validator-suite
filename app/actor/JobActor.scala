@@ -114,7 +114,8 @@ extends Actor with FSM[JobActorState, Run] {
     classifier match {
       case SubscribeToRunEvent => subscriber ! runEvents
       case SubscribeToRunData => subscriber ! run.data
-      case SubscribeToJobData => subscriber ! JobData(job, run)
+//      case 
+      case _ => sys.error("not yet implemented")
     }
   }
 
@@ -173,8 +174,11 @@ extends Actor with FSM[JobActorState, Run] {
       stay()
 
     case Event(Listen(subscriber, classifier), run) =>
-      fireSomethingRightAway(subscriber, classifier, run)
-      subscribe(subscriber, classifier)
+      if (subscriber == null) {
+        fireSomethingRightAway(sender, classifier, run)
+      } else if (subscribe(subscriber, classifier)) {
+        fireSomethingRightAway(subscriber, classifier, run)
+      }
       stay()
 
     case Event(Deafen(subscriber), run) =>
@@ -250,7 +254,7 @@ extends Actor with FSM[JobActorState, Run] {
       // logging/monitoring
       logger.debug(s"${run.shortId}: Cancel")
       // logic
-      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas)
+      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas.values)
       handleRunEvent(run, event)
 
     case Event(event: DoneRunEvent, run) =>
@@ -296,8 +300,12 @@ extends Actor with FSM[JobActorState, Run] {
   def subscribe(subscriber: ActorRef, classifier: Classifier[_]): Boolean = {
     map.get(classifier) match {
       case Some(subscribers) =>
-        map += (classifier -> (subscribers + subscriber))
-        true
+        if (subscribers.contains(subscriber))
+          false
+        else {
+          map += (classifier -> (subscribers + subscriber))
+          true
+        }
       case None =>
         false
     }
@@ -330,6 +338,12 @@ extends Actor with FSM[JobActorState, Run] {
     * a classifier exists for Event
     */
   def publish[Event](event: Event)(implicit classifier: Classifier[Event]): Unit = {
+    event match {
+      case CreateRunEvent(userId, jobId, runId, actorPath, _, _, _) =>
+        system.eventStream.publish(JobActorStarted(userId, jobId, runId, self))
+      case _ => ()
+    }
+
     val subscribers = map(classifier)
     subscribers foreach { subscriber =>
       subscriber ! event

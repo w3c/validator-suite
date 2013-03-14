@@ -20,10 +20,10 @@ case class AssertorResult(
     runId: RunId,
     assertor: AssertorId,
     sourceUrl: URL,
-    assertions: List[Assertion]) extends AssertorResponse {
+    assertions: Vector[Assertion]) extends AssertorResponse {
   
-  val (errors, warnings) = Assertion.countErrorsAndWarnings(assertions)
+//  val (errors, warnings) = Assertion.countErrorsAndWarnings(assertions)
 
-  def isValid = (errors === 0) && (warnings === 0)
+//  def isValid = (errors === 0) && (warnings === 0)
   
 }

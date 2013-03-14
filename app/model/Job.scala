@@ -3,7 +3,7 @@ package org.w3.vs.model
 import java.nio.channels.ClosedChannelException
 import org.joda.time.{ DateTime, DateTimeZone }
 import akka.actor._
-import akka.pattern.ask
+import akka.pattern.{ ask, AskTimeoutException }
 import play.api.libs.iteratee._
 import play.Logger
 import org.w3.util._
@@ -43,7 +43,7 @@ case class Job(
   /** the status for this Job */
   status: JobStatus,
   /** if this job was ever done, the final state -- includes link to the concerned Run */
-  latestDone: Option[Done]) {
+  latestDone: Option[Done]) { thisJob =>
 
   import Job.logger
 
@@ -100,24 +100,11 @@ case class Job(
     }
   }
 
-  // TODO: should be Future[Option[RunData]]
-  def getRunData()(implicit conf: VSConfiguration): Future[RunData] = {
-    import conf._
-    status match {
-      case NeverStarted | Zombie =>
-        Future.successful(RunData())
-      case Done(_, _, _, runData) => Future.successful(runData)
-      case Running(_, actorPath) => {
-        val actorRef = system.actorFor(actorPath)
-        (actorRef ? JobActor.GetRunData).mapTo[RunData]
-      }
-    }
-  }
-
   import scala.reflect.ClassTag
-  def actorBasedEnumerator[T](system: ActorSystem, jobActorPath: ActorPath)(implicit classifier: Classifier[T], classTag: ClassTag[T]): Enumerator[T] = {
+  def actorBasedEnumerator[T](forever: Boolean)(implicit classifier: Classifier[T], classTag: ClassTag[T], conf: VSConfiguration): Enumerator[T] = {
+    import conf._
     val (enumerator, channel) = Concurrent.broadcast[T]
-    def subscriberActor(actorRef: ActorRef): Actor = new Actor {
+    def subscriberActor(): Actor = new Actor {
       def stop(): Unit = {
         channel.eofAndEnd()
         context.stop(self)
@@ -130,18 +117,43 @@ case class Job(
           stop()
         }
       }
-      override def preStart(): Unit = {
+      def subscribeToJobActor(actorRef: ActorRef): Unit = {
         actorRef ! JobActor.Listen(self, classifier)
       }
+      override def preStart(): Unit = {
+        // subscribe to the EventStream to be notified of new started runs
+        if (forever) {
+          system.eventStream.subscribe(self, classOf[JobActorStarted])
+        }
+        // subscribe to the JobActor itself
+        thisJob.status match {
+          // if the Job is currently running, just talk to it directly
+          case Running(_, jobActorPath) => subscribeToJobActor(system.actorFor(jobActorPath))
+          // but if it's not running right now, then the status may
+          // have changed. Let's give it a chance. Note that we
+          // shouldn't be missing anything at this point as we've
+          // already subscribed to the EventStream
+          case _ => Job.get(id).onSuccess { _.status match {
+            case Running(_, jobActorPath) => subscribeToJobActor(system.actorFor(jobActorPath))
+            case _ => ()
+          }}
+        }
+      }
+      /** the actor's main method... */
       def receive = {
+        // the normal messages that we're expecting
         case msg: T => push(msg)
+        // the actor can group the messages in an iterable
         case messages: Iterable[_] => messages foreach { case msg: T => push(msg) }
-        case () => stop()
+        // this can come from the EventStream
+        case JobActorStarted(_, `id`, _, jobActorRef) => subscribeToJobActor(jobActorRef)
+        // that's the signal that a run just ended
+        case () => if (forever) channel.push(Input.Empty) else stop()
         case msg => logger.error("subscriber got " + msg) ; stop()
       }
     }
-    val jobActorRef: ActorRef = system.actorFor(jobActorPath)
-    val subscriberActorRef: ActorRef = system.actorOf(Props(subscriberActor(jobActorRef)))
+    // create (and start) the actor
+    system.actorOf(Props(subscriberActor()))
     enumerator
   }
 
@@ -150,98 +162,51 @@ case class Job(
     this.status match {
       case NeverStarted | Zombie => Enumerator[RunEvent]()
       case Done(runId, _, _, _) => Run.enumerateRunEvents(runId)
-      case Running(_, jobActorPath) => actorBasedEnumerator[RunEvent](system, jobActorPath)
+      case Running(_, jobActorPath) => actorBasedEnumerator[RunEvent](forever = false)
     }
   }
 
-  /** this is stateless, so if you're the Done case, you want to use
-    * Job.jobData() instead */
+  /** Enumerator for all the JobData-s, even for future runs.  This is
+    * stateless.  If you just want the most up-to-date JobData, use
+    * Job.jobData() instead. */
   def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
     import conf._
-    this.status match {
-      case NeverStarted | Zombie => Enumerator[JobData]()
-      case Done(runId, _, _, _) => Enumerator[JobData]()
-      case Running(_, jobActorPath) => actorBasedEnumerator[RunData](system, jobActorPath) &>
-        Enumeratee.map(runData => JobData(this, runData))
-    }
+    val enumerator = actorBasedEnumerator[RunData](true)
+    enumerator &> Enumeratee.map(runData => JobData(this, runData))
   }
 
   /** returns the most up-to-date JobData for the Job, if available */
-  def jobData()(implicit conf: VSConfiguration): Future[Option[JobData]] = {
-    import conf._
-    this.status match {
-      case NeverStarted | Zombie => Future.successful(None)
-      case Done(runId, _, _, _) =>
-        Run.getPartialJobData(runId) map {
-          case None => None
-          case Some((timestamp, runData)) =>
-            val jobData = JobData(
-              jobId = id,
-              name = name,
-              entrypoint = strategy.entrypoint,
-              status = JobDataIdle,
-              completedOn = Some(timestamp),
-              warnings = runData.warnings,
-              errors = runData.errors,
-              resources = runData.resources,
-              maxResources = strategy.maxResources,
-              health = runData.health
-            )
-            Some(jobData)
-        }
-      case Running(_, jobActorPath) => jobDatas() |>>> Iteratee.head
-    }
+  def getJobData()(implicit conf: VSConfiguration): Future[JobData] = {
+    getRunData().map { JobData(this, _) }
   }
 
   /** this is stateless, so if you're the Done case, you want to use
     * Job.runData() instead */
   def runDatas()(implicit conf: VSConfiguration): Enumerator[RunData] = {
-    import conf._
-    this.status match {
-      case NeverStarted | Zombie => Enumerator[RunData]()
-      case Done(runId, _, _, _) => Enumerator[RunData]()
-      case Running(_, jobActorPath) => actorBasedEnumerator[RunData](system, jobActorPath)
-    }
+    actorBasedEnumerator[RunData](true)
   }
 
   /** returns the most up-to-date RunData for the Job, if available */
-  def runData()(implicit conf: VSConfiguration): Future[Option[RunData]] = {
+  def getRunData()(implicit conf: VSConfiguration): Future[RunData] = {
     import conf._
     this.status match {
-      case NeverStarted | Zombie => Future.successful(None)
-      case Done(runId, _, _, _) => Run.getFinalRunData(runId)
-      case Running(_, jobActorPath) => runDatas() |>>> Iteratee.head
+      case NeverStarted | Zombie => Future.successful(RunData())
+      case Done(_, _, _, runData) => Future.successful(runData)
+      case Running(_, jobActorPath) =>
+        val actorRef = system.actorFor(jobActorPath)
+        val message = JobActor.Listen(null, Classifier.SubscribeToRunData)
+        val shortTimeout = Duration(1, "s")
+        ask(actorRef, message)(shortTimeout).mapTo[RunData] recover {
+          case _: AskTimeoutException => RunData()
+        }
     }
   }
 
   /* *********** */
 
-  def enumeratee2: Enumeratee[RunEvent, (Map[URL, ResourceData], List[ResourceData])] = Enumeratee.scanLeft((Map.empty[URL, ResourceData], List.empty[ResourceData])) {
-    case ((state, _), AssertorResponseEvent(_, _, _, ar: AssertorResult, timestamp)) => {
-      var m = state
-      var resourceDatas = List.empty[ResourceData]
-      ar.assertions.groupBy(_.url) foreach { case (url, assertions) =>
-        val (errors, warnings) = Assertion.countErrorsAndWarnings(assertions)
-        m.get(url) match {
-          case None => {
-            val rd = ResourceData(url, timestamp, warnings, errors)
-            resourceDatas ::= rd
-            m += (url -> rd)
-          }
-          case Some(rd) => {
-            val newRd = ResourceData(url, timestamp, rd.warnings + warnings, rd.errors + errors)
-            resourceDatas ::= newRd
-            m += (url -> newRd)
-          }
-        }
-      }
-      (m, resourceDatas)
-    }
-    case ((state, _), _) => (state, List.empty)
+  def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
+    actorBasedEnumerator[ResourceData](true)
   }
-
-  def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] =
-    runEvents() &> enumeratee2 &> Enumeratee.mapConcat(_._2)
 
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = ???
 

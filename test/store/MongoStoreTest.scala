@@ -143,10 +143,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         j <- 1 to nb
       } yield {
         val assertion = newAssertion(url, assertorId, severity)
-        run1 = run1.copy(assertions = run1.assertions + assertion)
         assertion
       }
-      val assertorResult = AssertorResult(run1.runId, assertorId, url, assertions)
+      val assertorResult = AssertorResult(run1.runId, assertorId, url, assertions.toVector)
+      val are = AssertorResponseEvent(user1.id, job1.id, run1.runId, assertorResult)
+      run1 = run1.step(are).run
       Run.saveEvent(AssertorResponseEvent(user1.id, job1.id, run1.runId, assertorResult)).getOrFail()
     }
   }
@@ -172,8 +173,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     } yield ()
     initScript.getOrFail()
     addAssertions() // <- already blocking
-    Run.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas, run2.completedOn.get)).getOrFail()
-    Run.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.completedOn.get)).getOrFail()
+    Run.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas.values, run2.completedOn.get)).getOrFail()
+    Run.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas.values, run3.completedOn.get)).getOrFail()
     /* job1 is still running with run4, and lastestDone was run3 */
     val status = Running(run4.runId, akka.actor.ActorPath.fromString("akka://system/user/foo"))
     val latestDone = Done(run4.runId, Completed, run3.completedOn.get, run3.data)
@@ -280,7 +281,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       title = "some title",
       severity = Warning,
       description = Some("some description"))
-    val assertorResult = AssertorResult(run.runId, AssertorId("foo"), url, List(assertion))
+    val assertorResult = AssertorResult(run.runId, AssertorId("foo"), url, Vector(assertion))
     val script = for {
       _ <- Job.save(job)
       _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run.runId, actorPath, run.strategy, now))

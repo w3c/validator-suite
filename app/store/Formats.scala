@@ -307,7 +307,7 @@ object Formats {
     (__ \ 'runId).format[RunId] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'sourceUrl).format[URL] and
-    (__ \ 'assertions).format[List[Assertion]]
+    (__ \ 'assertions).format[Vector[Assertion]]
   )(AssertorResult.apply _, unlift(AssertorResult.unapply _))
 
   implicit object AssertorResponseFormat extends Format[AssertorResponse] {
