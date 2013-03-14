@@ -2,13 +2,18 @@ package org.w3.vs.view.collection
 
 import java.net.URL
 import org.joda.time.DateTime
-import org.w3.vs.model.{Assertion, JobId, Warning, Error}
+import org.w3.vs.model._
 import org.w3.vs.view.Collection._
 import org.w3.vs.view._
 import org.w3.vs.view.model.{AssertionView, ResourceView}
 import play.api.templates.Html
 import controllers.routes
 import play.api.i18n.Messages
+import org.w3.vs.view.Collection.Parameters
+import org.w3.vs.view.Collection.SortParam
+import scala.concurrent.Future
+import org.w3.vs.store.Formats._
+import play.api.libs.json.JsValue
 
 case class ResourcesView (
     jobId: JobId,
@@ -65,55 +70,64 @@ case class ResourcesView (
 
   def copyWith(params: Parameters) = copy(params = params)
 
+  protected def toJson(a: ResourceView): JsValue = ???
 }
 
 object ResourcesView {
 
-  def single(url: URL, assertions: Collection[AssertionView], jobId: JobId): ResourcesView = {
-    val last = assertions.source.maxBy(_.validated).validated
-    val errors = assertions.source.foldLeft(0) {
-      case (count, assertion) =>
-        count + (assertion.severity match {
-          case Error => scala.math.max(assertion.contexts.size, 1)
-          case _ => 0
-        })
-    }
-    val warnings = assertions.source.foldLeft(0) {
-      case (count, assertion) =>
-        count + (assertion.severity match {
-          case Warning => scala.math.max(assertion.contexts.size, 1)
-          case _ => 0
-        })
-    }
-    val view = ResourceView(jobId, url, last, warnings, errors, Some(assertions))
-    ResourcesView(
-      jobId = jobId,
-      source = Iterable(view),
-      classe = "single"
-    )
+  def apply(job: Job): Future[ResourcesView] = {
+    Future.successful(null)
   }
 
-  def apply(assertions: Iterable[Assertion], jobId: JobId): ResourcesView = {
-    val views = assertions.groupBy(_.url).map {
-      case (url, assertions) => {
-        val last = assertions.maxBy(_.timestamp).timestamp
-        val errors = assertions.foldLeft(0) {
-          case (count, assertion) =>
-            count + (assertion.severity match {
-              case Error => scala.math.max(assertion.contexts.size, 1)
-              case _ => 0
-            })
-        }
-        val warnings = assertions.foldLeft(0) {
-          case (count, assertion) =>
-            count + (assertion.severity match {
-              case Warning => scala.math.max(assertion.contexts.size, 1)
-              case _ => 0
-            })
-        }
-        ResourceView(jobId, url, last, warnings, errors, None)
-      }
-    }
-    ResourcesView(jobId = jobId, source = views)
+  def apply(job: Job, url: URL): Future[ResourcesView] = {
+    ???
   }
+
+//  def single(url: URL, assertions: Collection[AssertionView], jobId: JobId): ResourcesView = {
+//    val last = assertions.source.maxBy(_.validated).validated
+//    val errors = assertions.source.foldLeft(0) {
+//      case (count, assertion) =>
+//        count + (assertion.severity match {
+//          case Error => scala.math.max(assertion.contexts.size, 1)
+//          case _ => 0
+//        })
+//    }
+//    val warnings = assertions.source.foldLeft(0) {
+//      case (count, assertion) =>
+//        count + (assertion.severity match {
+//          case Warning => scala.math.max(assertion.contexts.size, 1)
+//          case _ => 0
+//        })
+//    }
+//    val view = ResourceView(jobId, url, last, warnings, errors, Some(assertions))
+//    ResourcesView(
+//      jobId = jobId,
+//      source = Iterable(view),
+//      classe = "single"
+//    )
+//  }
+//
+//  def apply(assertions: Iterable[Assertion], jobId: JobId): ResourcesView = {
+//    val views = assertions.groupBy(_.url).map {
+//      case (url, assertions) => {
+//        val last = assertions.maxBy(_.timestamp).timestamp
+//        val errors = assertions.foldLeft(0) {
+//          case (count, assertion) =>
+//            count + (assertion.severity match {
+//              case Error => scala.math.max(assertion.contexts.size, 1)
+//              case _ => 0
+//            })
+//        }
+//        val warnings = assertions.foldLeft(0) {
+//          case (count, assertion) =>
+//            count + (assertion.severity match {
+//              case Warning => scala.math.max(assertion.contexts.size, 1)
+//              case _ => 0
+//            })
+//        }
+//        ResourceView(jobId, url, last, warnings, errors, None)
+//      }
+//    }
+//    ResourcesView(jobId = jobId, source = views)
+//  }
 }

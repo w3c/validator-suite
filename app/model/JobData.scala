@@ -9,7 +9,7 @@ import org.w3.vs.view.Helper
 import org.w3.vs.store.Formats._
 
 case class JobData (
-  jobId: JobId,
+  id: JobId,
   name: String,
   entrypoint: URL,
   status: JobDataStatus,
@@ -26,7 +26,7 @@ object JobData {
   def apply(job: Job, run: Run): JobData = {
     val runData = run.data
     JobData(
-      jobId = job.id,
+      id = job.id,
       name = job.name,
       entrypoint = job.strategy.entrypoint,
       status = run.jobDataStatus,
@@ -41,7 +41,7 @@ object JobData {
 
   def apply(job: Job, runData: RunData): JobData = {
     new JobData(
-      jobId = job.id,
+      id = job.id,
       name = job.name,
       entrypoint = job.strategy.entrypoint,
       status = runData.status,

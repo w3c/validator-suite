@@ -17,35 +17,3 @@
 </section>}
 
 @views.html.collection.generic(collection)
-
-@**(page: Page[JobView])(implicit req: Request[_])
-
-<aside>
-    <h3>Definitions</h3>
-    <dl>
-        @JobView.params.map {param =>
-        <dt class="@param"><dfn>@Messages("job.%s" format param)</dfn>@libs.sort(page, param)</dt>
-        <dd>@Messages("job.%s.detail" format param)</dd>}
-        <dt class="actions"><dfn>@Messages("job.actions")</dfn></dt>
-        <dd>@Messages("job.actions.detail")</dd>
-    </dl>
-    <hr/>
-</aside>
-
-@page.iterator.map { case job => @models.job(job) }
-
-@if(page.iterator.size < 1) {
-<p class="empty">
-    @if(req.getQueryString("search") != None) {
-    @Messages("search.empty.jobs")
-    @** <a href="@Helper.clearParam("search")">@Messages("search.clear")</a> ** @
-    } else {
-    @Messages("jobs.empty")
-    <a href="@routes.Jobs.newJob">@Messages("jobs.create.first")</a>
-    }
-</p>
-}
-
-@models.template_job()
-
-**@

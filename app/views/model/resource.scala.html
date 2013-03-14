@@ -7,7 +7,7 @@
             @definition.name match {
 
                 case "url" => {
-                <a href="@routes.Assertions.index(resource.jobId, Some(resource.url)) @**Helper.encode(resource.url)**@" class="report" title="@Messages("report.link")">
+                <a href="@routes.Assertions.index(resource.jobId, Some(resource.url))" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>
                     <span>@Helper.shorten(resource.url, 80)</span>
                 </a>

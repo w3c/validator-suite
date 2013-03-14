@@ -31,12 +31,12 @@ object Assertions extends VSController  {
   def index_(id: JobId) = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
-      assertions_ <- job_.getAssertions()
-      job <- JobsView.single(job_)
+      //assertions_ <- job_.getAssertions()
+      job <- JobsView(job_)
+      assertions <- AssertionsView(job_)
+      assertors <- AssertorsView(assertions)
     } yield {
       case Html(_) => {
-        val assertors = AssertorsView(assertions_)
-        val assertions = AssertionsView.grouped(assertions_, id).filterOn(assertors.firstAssertor).bindFromRequest
         Ok(views.html.main(
           user = user,
           title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
@@ -44,14 +44,14 @@ object Assertions extends VSController  {
           script = "test",
           crumbs = Seq(job_.name -> ""),
           collections = Seq(
-            job.withAssertions(assertions.groupBy("message")),
+            job.withAssertions(assertions), //.groupBy("message")),
             assertors.withAssertions(assertions),
-            assertions
+            assertions.filterOn(assertors.firstAssertor).bindFromRequest
           )))
       }
       case Json => {
-        val assertions = AssertionsView.grouped(assertions_, id).bindFromRequest
-        Ok(assertions.toJson)
+        //val assertions = AssertionsView.grouped(assertions_, id).bindFromRequest
+        Ok(assertions.bindFromRequest.toJson)
       }
     }
     f.timer(indexName).timer(indexTimer)
@@ -60,12 +60,12 @@ object Assertions extends VSController  {
   def index_(id: JobId, url: URL) = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
-      assertions_ <- job_.getAssertionsForURL(org.w3.util.URL(url))
+      //assertions_ <- job_.getAssertionsForURL(org.w3.util.URL(url))
+      resource <- ResourcesView(job_, url)
+      assertions <- AssertionsView(job_, url)
+      assertors <- AssertorsView(assertions)
     } yield {
       case Html(_) => {
-        val assertors = AssertorsView(assertions_)
-        val assertions = AssertionsView(assertions_, id, url).filterOn(assertors.firstAssertor).bindFromRequest
-        val resource = ResourcesView.single(url, assertions, job_.id)
         Ok(views.html.main(
           user = user,
           title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
@@ -77,12 +77,11 @@ object Assertions extends VSController  {
           collections = Seq(
             resource.withAssertions(assertions),
             assertors.withAssertions(assertions),
-            assertions
+            assertions.filterOn(assertors.firstAssertor).bindFromRequest
         )))
       }
       case Json => {
-        val assertions = AssertionsView(assertions_, id, url).bindFromRequest
-        Ok(assertions.toJson)
+        Ok(assertions.bindFromRequest.toJson)
       }
     }
     f.timer(indexUrlName).timer(indexUrlTimer)

@@ -3,12 +3,11 @@ package org.w3.vs.view.collection
 import org.w3.vs.view.Collection._
 import org.w3.vs.view._
 import play.api.i18n.Messages
-import play.api.libs.json.JsArray
+import play.api.libs.json.{JsValue, Json}
 import play.api.templates.Html
 import scala.math
 import scalaz.Scalaz._
 import play.api.mvc.{RequestHeader}
-import controllers.routes
 
 abstract class CollectionImpl[A <: Model] extends Collection[A] {
 
@@ -140,8 +139,13 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
     }
   }
 
-  def toJson: JsArray =
-    JsArray(iterable.map(_.toJson))
+//  def toJson()(implicit format: Format[A]): JsValue =
+//    Json.toJson(iterable.map(o => Json.toJson(o)))
+
+  protected def toJson(a: A): JsValue
+
+  def toJson: JsValue =
+    Json.toJson(iterable.map(o => toJson(o)))
 
   def toHtml: Html =
     views.html.collection.generic(this)

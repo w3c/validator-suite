@@ -1,7 +1,7 @@
 package org.w3.vs.view.collection
 
 import org.joda.time.DateTime
-import org.w3.vs.model.{JobDataIdle => Idle, JobDataRunning => Running, JobDataStatus, Job}
+import org.w3.vs.model.{JobDataIdle => Idle, JobDataRunning => Running, JobData, JobDataStatus, Job}
 import org.w3.vs.view.Collection._
 import org.w3.vs.view.model.{ResourceView, AssertionView, JobView}
 import play.api.i18n.Messages
@@ -10,6 +10,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import org.w3.vs.view.Collection
 import controllers.routes
 import org.w3.vs.VSConfiguration
+import org.w3.vs.store.Formats._
+import play.api.libs.json.JsValue
 
 case class JobsView(
     source: Iterable[JobView],
@@ -97,31 +99,37 @@ case class JobsView(
 
   def jsTemplate: Option[Html] = Some(views.html.template.job())
 
-  def withAssertions(assertions: Collection[AssertionView]): JobsView =
-    copy(source = source.map(_.copy(collection = Some(Left(assertions)))))
-
   def withResources(resources: Collection[ResourceView]): JobsView =
-    copy(source = source.map(_.copy(collection = Some(Right(resources)))))
+    copy(source = source.map(_.withCollection(Right(resources))))
+
+  def withAssertions(assertions: Collection[AssertionView]): JobsView =
+    copy(source = source.map(_.withCollection(Left(assertions))))
 
   def copyWith(params: Parameters) = copy(params = params)
 
   override def toHtml: Html = views.html.collection.jobs(this)
 
+  protected def toJson(a: JobView): JsValue = ???
 }
 
 object JobsView {
 
-  def single(job: Job)(implicit conf: VSConfiguration): Future[JobsView] = {
-    import ExecutionContext.Implicits.global
-    JobView(job).map(view => new JobsView(
-      source = Iterable(view),
-      classe = "single"
-    ))
+//  def single(job: Job)(implicit conf: VSConfiguration): Future[JobsView] = {
+//    import ExecutionContext.Implicits.global
+//    job.jobData().map(data => new JobsView(
+//      source = Iterable(JobView(data)),
+//      classe = "single"
+//    ))
+//  }
+
+  def apply(job: Job)(implicit conf: VSConfiguration): Future[JobsView] = {
+    apply(Iterable(job))
   }
 
   def apply(jobs: Iterable[Job])(implicit conf: VSConfiguration): Future[JobsView] = {
     import ExecutionContext.Implicits.global
-    JobView(jobs).map(JobsView(_))
+    val f = Future.sequence(jobs.map(_.jobData()))
+    f.map(datas => JobsView(datas.map(data => JobView(data))))
   }
 
 }

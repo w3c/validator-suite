@@ -1,15 +1,17 @@
 package org.w3.vs.view.collection
 
 import org.joda.time.DateTime
-import org.w3.vs.model.{JobId, AssertionSeverity, Assertion}
+import org.w3.vs.model.{Job, JobId, AssertionSeverity, Assertion}
 import org.w3.vs.view.Collection._
 import org.w3.vs.view.model.AssertionView
 import play.api.templates.{HtmlFormat, Html}
-import controllers.routes
 import play.api.mvc.Call
 import java.net.URL
 import scalaz.Scalaz._
 import play.api.i18n.Messages
+import scala.concurrent.Future
+import org.w3.vs.store.Formats._
+import play.api.libs.json.JsValue
 
 case class AssertionsView(
     source: Iterable[AssertionView],
@@ -63,38 +65,48 @@ case class AssertionsView(
 
   def copyWith(params: Parameters) = copy(params = params)
 
+  protected def toJson(a: AssertionView): JsValue = ???
+
 }
 
 object AssertionsView {
 
-  def apply(assertions: Iterable[Assertion], id: JobId, url: URL): AssertionsView = {
-    AssertionsView(source = assertions.map(assertion => AssertionView(assertion, id)), route = routes.Assertions.index(id, Some(url)))
+  def apply(job: Job, url: URL): Future[AssertionsView] = {
+    ???
   }
 
-  def grouped(assertions: Iterable[Assertion], id: JobId): AssertionsView = {
-    val now = DateTime.now()
-    // group by title + assertorId
-    val views = assertions.groupBy(e => e.title + e.assertor).map { case (_, assertions) =>
-      // /!\ assuming that the severity is the same for all assertions sharing the same title.
-      val assertorKey = assertions.head.assertor
-      val severity = assertions.head.severity
-      val title = HtmlFormat.raw(assertions.head.title)
-      val description = None //assertions.head.description.map(HtmlFormat.raw)
-      val resources = assertions.map(_.url.underlying).toSeq.sortBy(_.toString)
-      val occurrences = assertions.foldLeft(0)((count, assertion) => count + scala.math.max(1, assertion.contexts.size))
-      AssertionView(
-        id = title.body.hashCode,
-        jobId = id,
-        assertor = assertorKey,
-        severity = severity,
-        validated = now,
-        title = title,
-        description = description,
-        occurrences = occurrences,
-        resources = resources
-      )
-    }
-    AssertionsView(source = views, route = routes.Assertions.index(id, None))
+  def apply(job: Job): Future[AssertionsView] = {
+    ???
   }
+
+//  def apply(assertions: Iterable[Assertion], id: JobId, url: URL): AssertionsView = {
+//    AssertionsView(source = assertions.map(assertion => AssertionView(assertion, id)), route = routes.Assertions.index(id, Some(url)))
+//  }
+//
+//  def grouped(assertions: Iterable[Assertion], id: JobId): AssertionsView = {
+//    val now = DateTime.now()
+//    // group by title + assertorId
+//    val views = assertions.groupBy(e => e.title + e.assertor).map { case (_, assertions) =>
+//      // /!\ assuming that the severity is the same for all assertions sharing the same title.
+//      val assertorKey = assertions.head.assertor
+//      val severity = assertions.head.severity
+//      val title = HtmlFormat.raw(assertions.head.title)
+//      val description = None //assertions.head.description.map(HtmlFormat.raw)
+//      val resources = assertions.map(_.url.underlying).toSeq.sortBy(_.toString)
+//      val occurrences = assertions.foldLeft(0)((count, assertion) => count + scala.math.max(1, assertion.contexts.size))
+//      AssertionView(
+//        id = title.body.hashCode,
+//        jobId = id,
+//        assertor = assertorKey,
+//        severity = severity,
+//        validated = now,
+//        title = title,
+//        description = description,
+//        occurrences = occurrences,
+//        resources = resources
+//      )
+//    }
+//    AssertionsView(source = views, route = routes.Assertions.index(id, None))
+//  }
 
 }

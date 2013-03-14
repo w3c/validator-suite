@@ -3,15 +3,12 @@ package org.w3.vs
 import org.joda.time.DateTime
 import org.w3.vs.view.model._
 import play.api.libs.json.{Json, JsNull, JsValue, Writes}
-import play.api.templates.Html
-import scala.Some
+import play.api.templates.{HtmlFormat, Html}
 import play.api.data.format.Formatter
-import play.api.data.FormError
 import java.net.URL
 import play.api.data.format.Formats._
 import play.api.data.FormError
-import scala.Some
-import org.w3.vs.model.Job
+import org.w3.vs.model.{JobData, Job}
 
 package object view {
 
@@ -111,7 +108,5 @@ package object view {
     }
     def unbind(key: String, url: URL) = Map(key -> url.toString)
   }
-
-  implicit val jobToJson: Writes[JobView] = JobView.writes
 
 }

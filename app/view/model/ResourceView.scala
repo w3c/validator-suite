@@ -4,20 +4,23 @@ import java.net.URL
 import org.joda.time.DateTime
 import org.w3.vs.model._
 import org.w3.vs.view._
+import org.w3.vs.store.Formats._
 import play.api.libs.json._
 import play.api.templates.Html
 import org.w3.vs.view.Collection.Definition
 
 case class ResourceView(
     jobId: JobId,
-    url: URL,
-    lastValidated: DateTime,
-    warnings: Int,
-    errors: Int,
+    data: ResourceData,
     assertions: Option[Collection[AssertionView]]) extends Model {
 
+  def url = data.url
+  def warnings = data.warnings
+  def errors = data.errors
+  def lastValidated = data.lastValidated
+
   def toJson: JsValue =
-    Json.toJson(this)(ResourceView.writes)
+    Json.toJson(data)
 
   def toHtml: Html =
     views.html.model.resource(this, assertions)
@@ -33,19 +36,5 @@ object ResourceView {
     ("errors" -> true),
     ("actions" -> false)
   ).map(a => Definition(a._1, a._2))
-
-  implicit val writes: Writes[ResourceView] = new Writes[ResourceView] {
-    def writes(resource: ResourceView): JsValue = {
-      JsObject(Seq(
-        ("resourceUrl"   -> JsString(resource.url.toString)),
-        ("lastValidated" -> JsObject(Seq(
-          ("timestamp"     -> JsString(resource.lastValidated.toString)),
-          ("legend1"       -> JsString(Helper.formatTime(resource.lastValidated))),
-          ("legend2"       -> JsString(Helper.formatLegendTime(resource.lastValidated)))))),
-        ("warnings"      -> JsNumber(resource.warnings)),
-        ("errors"        -> JsNumber(resource.errors))
-      ))
-    }
-  }
 
 }

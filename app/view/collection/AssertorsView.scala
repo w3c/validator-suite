@@ -1,12 +1,15 @@
 package org.w3.vs.view.collection
 
-import org.w3.vs.model.{Assertion, Error, Warning}
+import org.w3.vs.model.{Job, Assertion, Error, Warning}
 import org.w3.vs.view.Collection._
 import org.w3.vs.view._
 import org.w3.vs.view.model.{AssertionView, AssertorView}
 import play.api.i18n.Messages
 import play.api.templates.Html
 import controllers.routes
+import scala.concurrent.Future
+import org.w3.vs.store.Formats._
+import play.api.libs.json.JsValue
 
 case class AssertorsView(
     source: Iterable[AssertorView],
@@ -40,9 +43,14 @@ case class AssertorsView(
 
   def copyWith(params: Parameters) = copy(params = params)
 
+  protected def toJson(a: AssertorView): JsValue = ???
 }
 
 object AssertorsView {
+
+  def apply(assertions: AssertionsView): Future[AssertorsView] = {
+    ???
+  }
 
   def apply(assertions: Iterable[Assertion]): AssertorsView = {
     val views = assertions.groupBy(_.assertor).map {
