@@ -15,6 +15,7 @@ import scalaz.Scalaz._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
+import akka.event._
 
 object JobActor {
 
@@ -33,7 +34,7 @@ object JobActor {
   case object GetRunData
   case object GetResourceDatas
 
-  case class Listen[Event](subscriber: ActorRef, classifier: Classifier[Event])
+  case class Listen[Event](subscriber: ActorRef, classifier: Classifier)
   case class Deafen(subscriber: ActorRef)
 
   val logger = Logger.of(classOf[JobActor])
@@ -62,7 +63,13 @@ case object Stopping extends JobActorState
 
 // TODO extract all pure function in a companion object
 class JobActor(job: Job, initialRun: Run)(implicit val conf: VSConfiguration)
-extends Actor with FSM[JobActorState, Run] {
+extends Actor with FSM[JobActorState, Run]
+with EventBus
+with ActorEventBus /* Represents an EventBus where the Subscriber type is ActorRef */
+with ScanningClassification /* Maps Classifiers to Subscribers */ {
+
+  type Classifier = org.w3.vs.actor.Classifier
+  type Event = Any
 
   import conf._
 
@@ -109,11 +116,12 @@ extends Actor with FSM[JobActorState, Run] {
 
   }
 
-  def fireSomethingRightAway(subscriber: ActorRef, classifier: Classifier[_], run: Run): Unit = {
+  def fireSomethingRightAway(subscriber: ActorRef, classifier: Classifier, run: Run): Unit = {
     import Classifier._
+    // @@@
     classifier match {
-      case SubscribeToRunEvent => subscriber ! runEvents
-      case SubscribeToRunData => subscriber ! run.data
+      case AllRunEvents => subscriber ! runEvents
+      case AllRunDatas => subscriber ! run.data
 //      case 
       case _ => sys.error("not yet implemented")
     }
@@ -265,9 +273,12 @@ extends Actor with FSM[JobActorState, Run] {
   def stopThisActor(): Unit = {
     val duration = scala.concurrent.duration.Duration(5, "s")
     sideEffect {
-      map.values.flatten.toSet foreach { subscriber: ActorRef =>
+      val it = subscribers.iterator()
+      while(it.hasNext) {
+        val subscriber: ActorRef = it.next()._2
         subscriber ! ()
       }
+
       // we stay a bit longer in the Stopping state. This lets the
       // occasion for pending Enumerators to catch up
       system.scheduler.scheduleOnce(duration, self, PoisonPill)
@@ -294,60 +305,13 @@ extends Actor with FSM[JobActorState, Run] {
 
   /* EventBus */
 
-  var map: Map[Classifier[_], Set[ActorRef]] =
-    Classifier.all.map(c => c -> Set.empty[ActorRef]).toMap
+  protected def compareClassifiers(a: Classifier, b: Classifier): Int =
+    Classifier.ordering.compare(a, b)
 
-  def subscribe(subscriber: ActorRef, classifier: Classifier[_]): Boolean = {
-    map.get(classifier) match {
-      case Some(subscribers) =>
-        if (subscribers.contains(subscriber))
-          false
-        else {
-          map += (classifier -> (subscribers + subscriber))
-          true
-        }
-      case None =>
-        false
-    }
-  }
+  protected def matches(classifier: Classifier, event: Any): Boolean =
+    classifier.matches(event)
 
-  def subscribe(subscriber: ActorRef): Unit = {
-    map.keys foreach { c =>
-      subscribe(subscriber, c)
-    }
-  }
-
-  def unsubscribe(subscriber: ActorRef, classifier: Classifier[_]): Boolean = {
-    map.get(classifier) match {
-      case Some(subscribers) =>
-        map += (classifier -> (subscribers - subscriber))
-        true
-      case None => false
-    }
-  }
-
-  def unsubscribe(subscriber: ActorRef): Unit = {
-    map foreach { case (classifier, subscribers) =>
-      if (subscribers.contains(subscriber)) {
-        map += (classifier -> (subscribers - subscriber))
-      }
-    }
-  }
-
-  /** this differs from akka.event.BusEvent as we want to make sure that
-    * a classifier exists for Event
-    */
-  def publish[Event](event: Event)(implicit classifier: Classifier[Event]): Unit = {
-    event match {
-      case CreateRunEvent(userId, jobId, runId, actorPath, _, _, _) =>
-        system.eventStream.publish(JobActorStarted(userId, jobId, runId, self))
-      case _ => ()
-    }
-
-    val subscribers = map(classifier)
-    subscribers foreach { subscriber =>
-      subscriber ! event
-    }
-  }
+  protected def publish(event: Event, subscriber: ActorRef): Unit =
+    subscriber ! event
 
 }

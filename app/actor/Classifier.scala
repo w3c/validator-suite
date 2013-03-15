@@ -1,25 +1,30 @@
 package org.w3.vs.actor
 
 import org.w3.vs.model._
+import scala.math.Ordering
 
 object Classifier {
 
-  val all: List[Classifier[_]] = List(
-    SubscribeToRunEvent,
-    SubscribeToJobData,
-    SubscribeToRunData,
-    SubscribeToResourceData,
-    SubscribeToAssertion,
-    SubscribeToGroupedAssertionData
-  )
+  val ordering: Ordering[Classifier] = ???
 
-  implicit case object SubscribeToRunEvent extends Classifier[RunEvent]
-  implicit case object SubscribeToJobData extends Classifier[JobData]
-  implicit case object SubscribeToRunData extends Classifier[RunData]
-  implicit case object SubscribeToResourceData extends Classifier[ResourceData]
-  implicit case object SubscribeToAssertion extends Classifier[Assertion]
-  implicit case object SubscribeToGroupedAssertionData extends Classifier[GroupedAssertionData]
+  case object AllRunEvents extends Classifier
+  case object AllRunDatas extends Classifier
+  case object AllResourceDatas extends Classifier
+  case object AllAssertions extends Classifier
+  case object AllGroupedAssertionDatas extends Classifier
 
 }
 
-trait Classifier[+Event]
+trait Classifier {
+
+  import Classifier._
+
+  def matches(event: Any): Boolean = this match {
+    case AllRunEvents => event.isInstanceOf[RunEvent]
+    case AllRunDatas => event.isInstanceOf[RunData]
+    case AllResourceDatas => event.isInstanceOf[ResourceData]
+    case AllAssertions => event.isInstanceOf[Assertion]
+    case AllGroupedAssertionDatas => event.isInstanceOf[GroupedAssertionData]
+  }
+
+}

@@ -101,7 +101,7 @@ case class Job(
   }
 
   import scala.reflect.ClassTag
-  def actorBasedEnumerator[T](forever: Boolean)(implicit classifier: Classifier[T], classTag: ClassTag[T], conf: VSConfiguration): Enumerator[T] = {
+  def actorBasedEnumerator[T](classifier: Classifier, forever: Boolean)(implicit classTag: ClassTag[T], conf: VSConfiguration): Enumerator[T] = {
     import conf._
     val (enumerator, channel) = Concurrent.broadcast[T]
     def subscriberActor(): Actor = new Actor {
@@ -162,7 +162,8 @@ case class Job(
     this.status match {
       case NeverStarted | Zombie => Enumerator[RunEvent]()
       case Done(runId, _, _, _) => Run.enumerateRunEvents(runId)
-      case Running(_, jobActorPath) => actorBasedEnumerator[RunEvent](forever = false)
+      case Running(_, jobActorPath) =>
+        actorBasedEnumerator[RunEvent](Classifier.AllRunEvents, forever = false)
     }
   }
 
@@ -171,7 +172,7 @@ case class Job(
     * Job.jobData() instead. */
   def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
     import conf._
-    val enumerator = actorBasedEnumerator[RunData](true)
+    val enumerator = actorBasedEnumerator[RunData](Classifier.AllRunDatas, forever = true)
     enumerator &> Enumeratee.map(runData => JobData(this, runData))
   }
 
@@ -183,7 +184,7 @@ case class Job(
   /** this is stateless, so if you're the Done case, you want to use
     * Job.runData() instead */
   def runDatas()(implicit conf: VSConfiguration): Enumerator[RunData] = {
-    actorBasedEnumerator[RunData](true)
+    actorBasedEnumerator[RunData](Classifier.AllRunDatas, forever = true)
   }
 
   /** returns the most up-to-date RunData for the Job, if available */
@@ -194,7 +195,7 @@ case class Job(
       case Done(_, _, _, runData) => Future.successful(runData)
       case Running(_, jobActorPath) =>
         val actorRef = system.actorFor(jobActorPath)
-        val message = JobActor.Listen(null, Classifier.SubscribeToRunData)
+        val message = JobActor.Listen(null, Classifier.AllRunDatas)
         val shortTimeout = Duration(1, "s")
         ask(actorRef, message)(shortTimeout).mapTo[RunData] recover {
           case _: AskTimeoutException => RunData()
@@ -205,7 +206,7 @@ case class Job(
   /* *********** */
 
   def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
-    actorBasedEnumerator[ResourceData](true)
+    actorBasedEnumerator[ResourceData](Classifier.AllResourceDatas, forever = true)
   }
 
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = ???
