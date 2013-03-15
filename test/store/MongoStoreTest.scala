@@ -145,7 +145,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
         val assertion = newAssertion(url, assertorId, severity)
         assertion
       }
-      val assertorResult = AssertorResult(run1.runId, assertorId, url, assertions.toVector)
+      val assertorResult = AssertorResult(run1.runId, assertorId, url, Map(url -> assertions.toVector))
       val are = AssertorResponseEvent(user1.id, job1.id, run1.runId, assertorResult)
       run1 = run1.step(are).run
       Run.saveEvent(AssertorResponseEvent(user1.id, job1.id, run1.runId, assertorResult)).getOrFail()
@@ -281,7 +281,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       title = "some title",
       severity = Warning,
       description = Some("some description"))
-    val assertorResult = AssertorResult(run.runId, AssertorId("foo"), url, Vector(assertion))
+    val assertorResult = AssertorResult(run.runId, AssertorId("foo"), url, Map(url -> Vector(assertion)))
     val script = for {
       _ <- Job.save(job)
       _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run.runId, actorPath, run.strategy, now))

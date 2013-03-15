@@ -27,8 +27,8 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
             assertionsWithGroupedTitles :+= newAssertion
           }
           assertionsWithGroupedTitles
-        }.values.flatten
-      AssertorResult(runId = runId, assertor = id, sourceUrl = response.url, assertions = assertions.toVector)
+        }
+      AssertorResult(runId = runId, assertor = id, sourceUrl = response.url, assertions = assertions)
     } catch { case t: Throwable =>
       AssertorFailure(runId = runId, assertor = id, sourceUrl = response.url, why = t.getMessage)
     }

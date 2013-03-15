@@ -47,17 +47,17 @@ case class Job(
 
   import Job.logger
 
-  def getAssertions()(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+  def getAssertions()(implicit conf: VSConfiguration): Future[Vector[Assertion]] = {
     status match {
-      case NeverStarted | Zombie => Future.successful(List.empty)
+      case NeverStarted | Zombie => Future.successful(Vector.empty)
       case Done(runId, _, _, _) => Run.getAssertions(runId)
       case Running(runId, _) => Run.getAssertions(runId)
     }
   }
 
-  def getAssertionsForURL(url: URL)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+  def getAssertionsForURL(url: URL)(implicit conf: VSConfiguration): Future[Vector[Assertion]] = {
     status match {
-      case NeverStarted | Zombie => Future.successful(List.empty)
+      case NeverStarted | Zombie => Future.successful(Vector.empty)
       case Done(runId, _, _, _) => Run.getAssertionsForURL(runId, url)
       case Running(runId, _) => Run.getAssertionsForURL(runId, url)
     }

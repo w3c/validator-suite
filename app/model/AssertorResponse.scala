@@ -20,8 +20,8 @@ case class AssertorResult(
     runId: RunId,
     assertor: AssertorId,
     sourceUrl: URL,
-    /** assumption: the assertions are grouped by URL */
-    assertions: /*Map[URL,*/ Vector[Assertion]) extends AssertorResponse {
+    /** assumptionb: the assertions are grouped by URL */
+    assertions: Map[URL, Vector[Assertion]]) extends AssertorResponse {
   
 //  val (errors, warnings) = Assertion.countErrorsAndWarnings(assertions)
 

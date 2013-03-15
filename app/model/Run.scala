@@ -30,7 +30,7 @@ object Run {
   def collection(implicit conf: VSConfiguration): BSONCollection =
     conf.db("runs")
 
-  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[Vector[Assertion]] = {
     import conf._
     val query = Json.obj(
       "runId" -> toJson(runId),
@@ -41,12 +41,12 @@ object Run {
       "_id" -> BSONInteger(0))
     val cursor = Run.collection.find(query, projection).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
-      val assertions = (json \ "ar" \ "assertions").as[List[Assertion]]
-      assertions
-    } |>>> Iteratee.consume[List[Assertion]]()
+      val assertions = (json \ "ar" \ "assertions").as[Map[URL, Vector[Assertion]]]
+      assertions.values.flatten.toVector
+    } |>>> Iteratee.consume[Vector[Assertion]]()
   }
 
-  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[List[Assertion]] = {
+  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[Vector[Assertion]] = {
     getAssertions(runId).map(_.filter(_.url.underlying === url))
     // TODO write a test before using this better implementation
 //    import conf._
@@ -476,25 +476,28 @@ case class Run private (
   }
 
   /** fix because of CSS Validator. See http://www.w3.org/mid/511910CB.6050608@w3.org
-    * remark: this implements a general case, we could make it specialized in the case of the CSS Validator
     */
   def fixedAssertorResult(result: AssertorResult): AssertorResult = {
-    val filteredAssertions = result.assertions filterNot { rAssertion =>
-      // see if there are assertions for this url
-      assertions.get(rAssertion.url)
-      // then see there are assertions for this assertor
-        .map(_.isDefinedAt(rAssertion.assertor))
-      // if not
-        .getOrElse(false)
+    import LocalValidators.CSSValidator.{ id => cssValId }
+    if (result.assertor === LocalValidators.CSSValidator.id) {
+      // we don't want the assertions that were already received
+      val filteredAssertions =
+        result.assertions filterNot { case (url, _) =>
+          val alreadyReceived =
+            assertions.get(url).map(_.isDefinedAt(cssValId)).getOrElse(false)
+          alreadyReceived
+        }
+      result.copy(assertions = filteredAssertions)
+    } else {
+      result
     }
-    result.copy(assertions = filteredAssertions)
   }
 
   private def withAssertorResult(result: AssertorResult, timestamp: DateTime): Run = {
 
     // just factor assertions by URL and then AssertorId
     val m: Map[URL, Map[AssertorId, Vector[Assertion]]] =
-      result.assertions.groupBy(_.url).mapValues(_.groupBy(_.assertor))
+      result.assertions.mapValues(_.groupBy(_.assertor))
 
     // accumulate assertions and take care of the keys
     var newAssertions = this.assertions
@@ -513,7 +516,7 @@ case class Run private (
       }
     }
 
-    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions)
+    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions.values.flatten)
 
     var newResourceDatas = this.resourceDatas
     m.foreach { case (url, am) =>
