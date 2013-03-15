@@ -181,6 +181,7 @@ case class Run private (
   strategy: Strategy,
   // part of the state that we maintain
   resourceDatas: Map[URL, ResourceData] = Map.empty,
+  groupedAssertionsDatas: Map[URL, GroupedAssertionData] = Map.empty,
   // from completion event, None at creation
   completedOn: Option[DateTime] = None,
   // based on scheduled fetches
@@ -195,10 +196,6 @@ case class Run private (
   // based on scheduled assertions
   pendingAssertorCalls: Map[(AssertorId, URL), AssertorCall] = Map.empty,
   assertorResponsesReceived: Int = 0) {
-
-  // Map[URL, ResourceData]
-  // Map[URL, Vector[Assertion]]
-  // Map[URL, GroupedAssertionData]
 
   import Run.logger
 
@@ -264,9 +261,9 @@ case class Run private (
 
   def isRunning: Boolean = !isIdle
 
-//  def activity: RunActivity = if (isRunning) Running else Idle
-//
-//  def state: (RunActivity, ExplorationMode) = (activity, explorationMode)
+  def allAssertions: Iterable[Assertion] = {
+    assertions.values.flatMap(_.values.flatten)
+  }
 
   private def shouldIgnore(url: URL): Boolean = {
     def notToBeFetched = IGNORE === strategy.getActionFor(url)

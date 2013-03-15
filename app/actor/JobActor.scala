@@ -116,14 +116,19 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
   }
 
-  def fireSomethingRightAway(subscriber: ActorRef, classifier: Classifier, run: Run): Unit = {
+  def fireSomethingRightAway(sender: ActorRef, classifier: Classifier, run: Run): Unit = {
     import Classifier._
-    // @@@
     classifier match {
-      case AllRunEvents => subscriber ! runEvents
-      case AllRunDatas => subscriber ! run.data
-//      case 
-      case _ => sys.error("not yet implemented")
+      case AllRunEvents => sender ! runEvents
+      case AllRunDatas => sender ! run.data
+      case AllResourceDatas => sender ! run.resourceDatas.values
+      case ResourceDatasFor(url) =>
+        sender ! run.resourceDatas.get(url).getOrElse(Iterable.empty)
+      case AllAssertions => sender ! run.allAssertions
+      case AssertionsFor(url) =>
+        sender ! run.assertions.get(url).map(_.values.flatten).getOrElse(Iterable.empty)
+      case AllGroupedAssertionDatas =>
+        sender ! run.groupedAssertionsDatas.values
     }
   }
 
@@ -138,17 +143,24 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // remember the RunEvents seen so far
     runEvents :+= event
 
-    // fire runDatas
-    publish(run.data)
-
-    // pure side-effect
+    // pure side-effect, no need for synchronization
     executeActions(actions)
 
     // save event
     futureSideEffect { saveEvent(event) }
 
-    // publish event
-    sideEffect { publish(event) }
+    // publish events, this will happen asynchronously, but still
+    // *after* the event is saved in the database
+    sideEffect {
+      publish(run.data)
+
+      publish(event)
+
+//      event match {
+//        case AssertorResponseEvent(@@@)
+//      }
+
+    }
 
     // compute the next step and do side-effects
     val state = event match {

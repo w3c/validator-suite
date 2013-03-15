@@ -53,6 +53,11 @@ case class URL(url: String) {
 
 object URL {
 
+  implicit val ordering: Ordering[URL] = new Ordering[URL] {
+    def compare(x: URL, y: URL): Int = 
+       scala.math.Ordering.String.compare(x.url, y.url)
+  }
+
   def apply(url: jURL): URL = URL(url.toString)
   
   implicit def unwrap(url: URL): jURL = url.underlying

@@ -209,7 +209,9 @@ case class Job(
     actorBasedEnumerator[ResourceData](Classifier.AllResourceDatas, forever = true)
   }
 
-  def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = ???
+  def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
+    actorBasedEnumerator[ResourceData](Classifier.ResourceDatasFor(url), forever = true)
+  }
 
   def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] = ???
 
