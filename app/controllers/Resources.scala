@@ -1,6 +1,5 @@
 package controllers
 
-import java.net.URL
 import org.w3.vs.model.{ Job => ModelJob, _ }
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,7 +45,7 @@ object Resources extends VSController  {
         script = "test",
         crumbs = Seq(job_.name -> ""),
         collections = Seq(
-          job.withResources(resources),
+          job.withCollection(resources),
           resources.bindFromRequest
         )))
     }

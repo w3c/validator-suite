@@ -7,7 +7,7 @@ import org.w3.vs.view.model.{ResourceView, AssertionView, JobView}
 import play.api.i18n.Messages
 import play.api.templates.Html
 import scala.concurrent.{ExecutionContext, Future}
-import org.w3.vs.view.Collection
+import org.w3.vs.view.{Model, Collection}
 import controllers.routes
 import org.w3.vs.VSConfiguration
 import org.w3.vs.store.Formats._
@@ -99,28 +99,22 @@ case class JobsView(
 
   def jsTemplate: Option[Html] = Some(views.html.template.job())
 
-  def withResources(resources: Collection[ResourceView]): JobsView =
-    copy(source = source.map(_.withCollection(Right(resources))))
+  def withCollection(collection: Collection[Model]): JobsView =
+    copy(source = source.map(_.withCollection(collection)))
 
-  def withAssertions(assertions: Collection[AssertionView]): JobsView =
-    copy(source = source.map(_.withCollection(Left(assertions))))
+//  def withResources(resources: Collection[ResourceView]): JobsView =
+//    copy(source = source.map(_.withCollection(Right(resources))))
+//
+//  def withAssertions(assertions: Collection[AssertionView]): JobsView =
+//    copy(source = source.map(_.withCollection(Left(assertions))))
 
   def copyWith(params: Parameters) = copy(params = params)
 
   override def toHtml: Html = views.html.collection.jobs(this)
 
-  protected def toJson(a: JobView): JsValue = ???
 }
 
 object JobsView {
-
-//  def single(job: Job)(implicit conf: VSConfiguration): Future[JobsView] = {
-//    import ExecutionContext.Implicits.global
-//    job.jobData().map(data => new JobsView(
-//      source = Iterable(JobView(data)),
-//      classe = "single"
-//    ))
-//  }
 
   def apply(job: Job)(implicit conf: VSConfiguration): Future[JobsView] = {
     apply(Iterable(job))
@@ -128,7 +122,7 @@ object JobsView {
 
   def apply(jobs: Iterable[Job])(implicit conf: VSConfiguration): Future[JobsView] = {
     import ExecutionContext.Implicits.global
-    val f = Future.sequence(jobs.map(_.jobData()))
+    val f = Future.sequence(jobs.map(_.getJobData()))
     f.map(datas => JobsView(datas.map(data => JobView(data))))
   }
 

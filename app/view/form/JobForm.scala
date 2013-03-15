@@ -1,6 +1,6 @@
 package org.w3.vs.view.form
 
-import java.net.URL
+import org.w3.util.URL
 import org.w3.vs.VSConfiguration
 import org.w3.vs.assertor.Assertor
 import org.w3.vs.model._

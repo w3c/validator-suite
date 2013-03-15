@@ -5,22 +5,26 @@ import play.api.libs.json.{Writes, Json, JsValue}
 import play.api.templates.Html
 import org.w3.vs.view.Collection.Definition
 import org.w3.vs.model.AssertorId
-import org.w3.vs.assertor.Assertor
 import play.api.i18n.Messages
 
 case class AssertorView(
     id: AssertorId,
     errors: Int,
     warnings: Int,
-    assertions: Option[Collection[AssertionView]] = None) extends Model {
+    collection: Option[Collection[Model]] = None) extends Model {
+
+  val name: String = Messages(s"assertor.${id.id}")
+
+  def withCollection(collection: Collection[Model]): AssertorView =
+    copy(collection = Some(collection))
+
+  def isValid = errors + warnings == 0
 
   def toJson: JsValue =
     Json.toJson(this)(AssertorView.writes)
 
   def toHtml: Html =
-    views.html.model.assertor(this, assertions)
-
-  val name: String = Messages(s"assertor.${id.id}")
+    views.html.model.assertor(this, collection)
 
 }
 

@@ -1,11 +1,10 @@
 package org.w3.vs.view
 
-import java.net.URL
-import java.net.URLEncoder
 import org.joda.time._
 import org.joda.time.format._
 import play.api.Play._
 import play.api.i18n.Messages
+import org.w3.util.URL
 
 object Helper {
 

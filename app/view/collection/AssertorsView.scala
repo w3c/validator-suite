@@ -38,17 +38,20 @@ case class AssertorsView(
     if (iterable.size > 0) iterable.maxBy(_.errors).id.toString else ""
   }
 
-  def withAssertions(assertions: Collection[AssertionView]): AssertorsView =
-    copy(source = source.map(_.copy(assertions = Some(assertions))))
+  def withCollection(collection: Collection[Model]): AssertorsView =
+    copy(source = source.map(_.withCollection(collection)))
 
   def copyWith(params: Parameters) = copy(params = params)
 
-  protected def toJson(a: AssertorView): JsValue = ???
 }
 
 object AssertorsView {
 
   def apply(assertions: AssertionsView): Future[AssertorsView] = {
+    ???
+  }
+
+  def apply(groupedAssertions: GroupedAssertionsView): Future[AssertorsView] = {
     ???
   }
 

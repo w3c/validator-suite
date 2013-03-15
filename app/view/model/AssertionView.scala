@@ -1,6 +1,6 @@
 package org.w3.vs.view.model
 
-import java.net.URL
+import org.w3.util.URL
 import org.joda.time.DateTime
 import org.w3.vs.model.{Context => ContextModel, _}
 import org.w3.vs.view._
@@ -8,9 +8,6 @@ import play.api.i18n.Messages
 import play.api.libs.json.{JsNull, Writes, Json, JsValue}
 import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.view.Collection.Definition
-import org.w3.vs.view.Collection.Definition
-import org.w3.vs.model.Context
-import scala.Some
 
 case class AssertionView(
     id: Int,

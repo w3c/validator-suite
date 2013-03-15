@@ -1,4 +1,4 @@
-@(job: JobView, collection: Option[Either[Collection[AssertionView], Collection[ResourceView]]])
+@(job: JobView, collection: Option[Collection[Model]])
     <article data-id="@job.id">
         <dl>
             @JobView.definitions.map { definition =>
@@ -66,7 +66,7 @@
                 </form>
 
                 @if(collection.isDefined) {
-                @defining(collection.get.fold(a => a, r => r)) { collection =>
+                @defining(collection.get) { collection =>
                 <form class="group" action="@routes.Job.dispatcher(job.id)" method="get">
                     <fieldset class="dropdown">
                         <legend>Report by</legend>

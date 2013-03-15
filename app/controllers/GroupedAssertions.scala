@@ -16,24 +16,17 @@ import play.api.libs.{EventSource, Comet}
 import org.w3.vs.model.{ Job => ModelJob, _ }
 import org.w3.vs.store.Formats._
 
-object Assertions extends VSController  {
+object GroupedAssertions extends VSController  {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Assertions")
+  val logger = play.Logger.of("org.w3.vs.controllers.GroupedAssertions")
 
-  def index(id: JobId, url: Option[URL]): ActionA = {
-    url match {
-      case Some(url) => AuthAsyncAction { index_(id, url) }
-      case None => AuthAsyncAction { index_(id) }
-    }
-  }
-
-  def index_(id: JobId) = { implicit req: RequestHeader => user: User =>
+  def index(id: JobId) = AuthAsyncAction { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       //assertions_ <- job_.getAssertions()
       job <- JobsView(job_)
-      assertions <- AssertionsView(job_)
-      assertors <- AssertorsView(assertions)
+      groupedAssertions <- GroupedAssertionsView(job_)
+      assertors <- AssertorsView(groupedAssertions)
     } yield {
       case Html(_) => {
         Ok(views.html.main(
@@ -43,47 +36,17 @@ object Assertions extends VSController  {
           script = "test",
           crumbs = Seq(job_.name -> ""),
           collections = Seq(
-            job.withCollection(assertions), //.groupBy("message")),
-            assertors.withCollection(assertions),
-            assertions.filterOn(assertors.firstAssertor).bindFromRequest
+            job.withCollection(groupedAssertions), //.groupBy("message")),
+            assertors.withCollection(groupedAssertions),
+            groupedAssertions.filterOn(assertors.firstAssertor).bindFromRequest
           )))
       }
       case Json => {
         //val assertions = AssertionsView.grouped(assertions_, id).bindFromRequest
-        Ok(assertions.bindFromRequest.toJson)
+        Ok(groupedAssertions.bindFromRequest.toJson)
       }
     }
     f.timer(indexName).timer(indexTimer)
-  }
-
-  def index_(id: JobId, url: URL) = { implicit req: RequestHeader => user: User =>
-    val f: Future[PartialFunction[Format, Result]] = for {
-      job_ <- user.getJob(id)
-      //assertions_ <- job_.getAssertionsForURL(org.w3.util.URL(url))
-      resource <- ResourcesView(job_, url)
-      assertions <- AssertionsView(job_, url)
-      assertors <- AssertorsView(assertions)
-    } yield {
-      case Html(_) => {
-        Ok(views.html.main(
-          user = user,
-          title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
-          style = "",
-          script = "test",
-          crumbs = Seq(
-            job_.name -> routes.Job.get(job_.id),
-            Helper.shorten(url, 50) -> ""),
-          collections = Seq(
-            resource.withAssertions(assertions),
-            assertors.withCollection(assertions),
-            assertions.filterOn(assertors.firstAssertor).bindFromRequest
-        )))
-      }
-      case Json => {
-        Ok(assertions.bindFromRequest.toJson)
-      }
-    }
-    f.timer(indexUrlName).timer(indexUrlTimer)
   }
 
   def socket(jobId: JobId, url: Option[URL], typ: SocketType): Handler = {

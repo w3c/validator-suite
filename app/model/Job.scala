@@ -265,17 +265,29 @@ case class Job(
     actorBasedEnumerator[ResourceData](Classifier.AllResourceDatas, forever = true)
   }
 
+  // all ResourceDatas updates for url
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
     actorBasedEnumerator[ResourceData](Classifier.ResourceDatasFor(url), forever = true)
   }
+  // the most up-to-date ResourceData for url
+  def getResourceData(url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = ???
 
+  // all current ResourceDatas
+  def getResourceDatas()(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = ???
+
+  // all GroupedAssertionDatas updates
   def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] =  {
     actorBasedEnumerator[GroupedAssertionData](Classifier.AllGroupedAssertionDatas, forever = true)
   }
+  // all current GroupedAssertionDatas
+  def getGroupedAssertionDatas()(implicit conf: VSConfiguration): Future[Iterable[GroupedAssertionData]] = ???
 
+  // all Assertions updatesfor url
   def assertionDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = {
     actorBasedEnumerator[Assertion](Classifier.AssertionsFor(url), forever = true)
   }
+  // all current Assertions for url
+  def getAssertionDatas(url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = ???
 
 }
 

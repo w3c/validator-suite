@@ -1,6 +1,5 @@
 package controllers
 
-import java.net.URL
 import org.w3.vs.model._
 import org.w3.vs.view.collection.AssertorsView
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -8,11 +7,10 @@ import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
 import org.w3.util.Util._
+import org.w3.util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
-import org.w3.vs.model
 import scalaz.Scalaz._
-import org.w3.util.equaljURL
 
 object Assertors extends VSController {
 

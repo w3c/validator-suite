@@ -1,9 +1,8 @@
 package org.w3.vs.view.collection
 
-import java.net.URL
+import org.w3.util.URL
 import org.joda.time.DateTime
 import org.w3.vs.model._
-import org.w3.vs.view.Collection._
 import org.w3.vs.view._
 import org.w3.vs.view.model.{AssertionView, ResourceView}
 import play.api.templates.Html
@@ -12,8 +11,8 @@ import play.api.i18n.Messages
 import org.w3.vs.view.Collection.Parameters
 import org.w3.vs.view.Collection.SortParam
 import scala.concurrent.Future
-import org.w3.vs.store.Formats._
-import play.api.libs.json.JsValue
+import org.w3.vs.VSConfiguration
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class ResourcesView (
     jobId: JobId,
@@ -70,17 +69,26 @@ case class ResourcesView (
 
   def copyWith(params: Parameters) = copy(params = params)
 
-  protected def toJson(a: ResourceView): JsValue = ???
 }
 
 object ResourcesView {
 
-  def apply(job: Job): Future[ResourcesView] = {
-    Future.successful(null)
+  def apply(job: Job)(implicit conf: VSConfiguration): Future[ResourcesView] = {
+    for {
+      datas <- job.getResourceDatas()
+    } yield {
+      val views = datas.map(data => ResourceView(job.id, data))
+      ResourcesView(job.id, views)
+    }
   }
 
-  def apply(job: Job, url: URL): Future[ResourcesView] = {
-    ???
+  def apply(job: Job, url: URL)(implicit conf: VSConfiguration): Future[ResourcesView] = {
+    for {
+      data <- job.getResourceData(url)
+    } yield {
+      val views = Iterable(ResourceView(job.id, data))
+      ResourcesView(job.id, views)
+    }
   }
 
 //  def single(url: URL, assertions: Collection[AssertionView], jobId: JobId): ResourcesView = {

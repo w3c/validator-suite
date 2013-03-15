@@ -1,6 +1,5 @@
 package org.w3.vs
 
-import java.net.URL
 import java.net.URLDecoder
 import java.net.URLEncoder
 import org.w3.vs.model._
@@ -9,7 +8,7 @@ import play.api.mvc.QueryStringBindable.Parsing
 
 package object controllers {
 
-  type URL = java.net.URL
+  type URL = org.w3.util.URL
   type SocketType = SocketType.SocketType
   type ActionA = Action[AnyContent]
 

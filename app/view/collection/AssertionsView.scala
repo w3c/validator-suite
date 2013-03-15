@@ -6,7 +6,7 @@ import org.w3.vs.view.Collection._
 import org.w3.vs.view.model.AssertionView
 import play.api.templates.{HtmlFormat, Html}
 import play.api.mvc.Call
-import java.net.URL
+import org.w3.util.URL
 import scalaz.Scalaz._
 import play.api.i18n.Messages
 import scala.concurrent.Future
@@ -19,7 +19,6 @@ case class AssertionsView(
     classe: String = "folds",
     params: Parameters = Parameters(),
     route: Call) extends CollectionImpl[AssertionView] {
-
 
   /*override def attributes = Iterable(
     //("url1" -> routes.Assertions.index(jobId)),
@@ -64,8 +63,6 @@ case class AssertionsView(
   def jsTemplate: Option[Html] = Some(views.html.template.assertion())
 
   def copyWith(params: Parameters) = copy(params = params)
-
-  protected def toJson(a: AssertionView): JsValue = ???
 
 }
 

@@ -1,5 +1,5 @@
-@(assertor: AssertorView, assertions: Option[Collection[AssertionView]])
-<article data-id="@assertor.id" class="@if(assertions.isDefined && assertions.get.isFilteredOn(assertor.id.toString)){current} @if(assertor.warnings + assertor.errors == 0){valid}">
+@(assertor: AssertorView, collection: Option[Collection[Model]])
+<article data-id="@assertor.id" class="@if(collection.isDefined && collection.get.isFilteredOn(assertor.id.toString)){current} @if(assertor.isValid){valid}">
         <dl>
             @AssertorView.definitions.map { definition =>
             <dt>@Messages(s"assertors.${definition.name}")</dt>
@@ -16,8 +16,8 @@
                 <span data-errors>@assertor.errors</span>}
 
                 case "actions" => {
-                @if(assertions.isDefined) {
-                <a href="@assertions.get.filterOn(assertor.id.toString).goToPage(1).queryString" class="filter">filter</a>}}
+                @if(collection.isDefined) {
+                <a href="@collection.get.filterOn(assertor.id.toString).goToPage(1).queryString" class="filter">filter</a>}}
 
             }}
         </dl>

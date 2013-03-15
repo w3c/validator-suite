@@ -142,10 +142,10 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
 //  def toJson()(implicit format: Format[A]): JsValue =
 //    Json.toJson(iterable.map(o => Json.toJson(o)))
 
-  protected def toJson(a: A): JsValue
+  //protected def toJson(a: A): JsValue
 
   def toJson: JsValue =
-    Json.toJson(iterable.map(o => toJson(o)))
+    Json.toJson(iterable.map(_.toJson))
 
   def toHtml: Html =
     views.html.collection.generic(this)
