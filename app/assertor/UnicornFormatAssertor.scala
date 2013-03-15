@@ -49,7 +49,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
             Context(content, line, column)
           }
         val descriptionOpt = (message \ "description").headOption map (htmlString)
-        Assertion(url, this.id, contexts.toList, lang, title, severity, descriptionOpt)
+        Assertion(url, this.id, contexts.toVector, lang, title, severity, descriptionOpt)
       }
     if (!assertions.exists(_.url.toString == obversationRef) && status != Some("undef")) {
       val linkedResources = assertions.collect{
@@ -81,7 +81,7 @@ trait UnicornFormatAssertor extends FromSourceAssertor {
           }.mkString("<ul>", " ", "</ul>")}),
           Warning)
       }
-      Assertion(URL(obversationRef), id, List.empty, "en-US", title, severity, description) +: assertions
+      Assertion(URL(obversationRef), id, Vector.empty, "en-US", title, severity, description) +: assertions
     } else
       assertions
   }

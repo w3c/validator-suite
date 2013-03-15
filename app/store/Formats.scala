@@ -236,7 +236,7 @@ object Formats {
   implicit val AssertionFormat: Format[Assertion] = (
     (__ \ 'url).format[URL] and
     (__ \ 'assertor).format[AssertorId] and
-    (__ \ 'contexts).format[List[Context]] and
+    (__ \ 'contexts).format[Vector[Context]] and
     (__ \ 'lang).format[String] and
     (__ \ 'title).format[String] and
     (__ \ 'severity).format[AssertionSeverity] and

@@ -31,7 +31,7 @@ class RunTest extends WordSpec with MustMatchers {
       Assertion(
         url = URL("http://example.com/foo"),
         assertor = assertorId,
-        contexts = List(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
+        contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
         lang = "fr",
         title = "bar",
         severity = Warning,

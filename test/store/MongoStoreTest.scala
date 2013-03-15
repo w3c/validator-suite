@@ -118,7 +118,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   val assertorIds = List(AssertorId("test_assertor_1"), AssertorId("test_assertor_2"))
 
   def newAssertion(url: URL, assertor: AssertorId, severity: AssertionSeverity): Assertion = {
-    val contexts = List(Context("blah", Some(42), None), Context("blarf", None, Some(42)))
+    val contexts = Vector(Context("blah", Some(42), None), Context("blarf", None, Some(42)))
     Assertion(
       url = url,
       assertor = assertor,
@@ -276,7 +276,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val assertion = Assertion(
       url = url,
       assertor = AssertorId("foo"),
-      contexts = List.empty,
+      contexts = Vector.empty,
       lang = "fr",
       title = "some title",
       severity = Warning,

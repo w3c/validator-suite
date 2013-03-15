@@ -10,7 +10,7 @@ import org.w3.vs._
 case class Assertion(
     url: URL,
     assertor: AssertorId,
-    contexts: List[Context],
+    contexts: Vector[Context],
     lang: String,
     title: String,
     severity: AssertionSeverity,

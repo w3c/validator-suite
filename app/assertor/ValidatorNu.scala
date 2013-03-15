@@ -55,9 +55,9 @@ class ValidatorNu(serviceUrl: String) extends FromHttpResponseAssertor {
       val lastLine = (obj \ "lastLine") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
       val lastCol = (obj \ "lastColumn") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
       val extract = (obj \ "extract") match {case JsString(s) => Some(HtmlFormat.escape(s).body); case _ => None}
-      val contexts = extract match {
-        case Some(code) => List(Context(code.trim, lastLine, lastCol)) // The model needs to accept a range of lines/column
-        case _ => List()
+      val contexts: Vector[Context] = extract match {
+        case Some(code) => Vector(Context(code.trim, lastLine, lastCol)) // The model needs to accept a range of lines/column
+        case _ => Vector.empty
       }
       Assertion(url, id, contexts, "en", title, severity, None)
     }
