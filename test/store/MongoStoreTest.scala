@@ -257,7 +257,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   "get all assertions for a run timestamp of latest completed Run for a given job" in {
     val assertions = Run.getAssertions(run1.runId).getOrFail()
-    assertions must have length(nbAssertionsPerRun)
+    assertions.toList must have length(nbAssertionsPerRun)
   }
 
   "get all running jobs" in {

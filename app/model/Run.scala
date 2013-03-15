@@ -30,7 +30,7 @@ object Run {
   def collection(implicit conf: VSConfiguration): BSONCollection =
     conf.db("runs")
 
-  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[Vector[Assertion]] = {
+  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
     import conf._
     val query = Json.obj(
       "runId" -> toJson(runId),
@@ -42,11 +42,11 @@ object Run {
     val cursor = Run.collection.find(query, projection).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
       val assertions = (json \ "ar" \ "assertions").as[Map[URL, Vector[Assertion]]]
-      assertions.values.flatten.toVector
-    } |>>> Iteratee.consume[Vector[Assertion]]()
+      assertions.values.flatten
+    } |>>> Iteratee.consume[Iterable[Assertion]]()
   }
 
-  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[Vector[Assertion]] = {
+  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
     getAssertions(runId).map(_.filter(_.url.underlying === url))
     // TODO write a test before using this better implementation
 //    import conf._
