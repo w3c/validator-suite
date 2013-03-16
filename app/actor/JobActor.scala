@@ -45,6 +45,27 @@ object JobActor {
 //    def warn(msg: String): Unit = println("== " + msg)
 //  }
 
+  def saveEvent(event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = event match {
+    case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
+      Run.saveEvent(event) flatMap { case () =>
+        val running = Running(runId, actorPath)
+        Job.updateStatus(jobId, status = running)
+      }
+
+    case event@DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) =>
+      Run.saveEvent(event) flatMap { case () =>
+        val done = Done(runId, doneReason, timestamp, RunData(resources, errors, warnings, JobDataIdle, Some(timestamp)))
+        Job.updateStatus(jobId, status = done, latestDone = done)
+      }
+
+    case event@AssertorResponseEvent(userId, jobId, runId, ar, timestamp) =>
+      Run.saveEvent(event)
+
+    case event@ResourceResponseEvent(userId, jobId, runId, rr, timestamp) =>
+      Run.saveEvent(event)
+
+  }
+
 }
 
 import JobActor._
@@ -93,27 +114,6 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       case EmitEvent(event) =>
         self ! event
     }
-  }
-
-  def saveEvent(event: RunEvent): Future[Unit] = event match {
-    case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
-      Run.saveEvent(event) flatMap { case () =>
-        val running = Running(runId, actorPath)
-        Job.updateStatus(jobId, status = running)
-      }
-
-    case event@DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) =>
-      Run.saveEvent(event) flatMap { case () =>
-        val done = Done(runId, doneReason, timestamp, RunData(resources, errors, warnings, JobDataIdle, Some(timestamp)))
-        Job.updateStatus(jobId, status = done, latestDone = done)
-      }
-
-    case event@AssertorResponseEvent(userId, jobId, runId, ar, timestamp) =>
-      Run.saveEvent(event)
-
-    case event@ResourceResponseEvent(userId, jobId, runId, rr, timestamp) =>
-      Run.saveEvent(event)
-
   }
 
   def fireSomethingRightAway(sender: ActorRef, classifier: Classifier, run: Run): Unit = {
