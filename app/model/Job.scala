@@ -157,20 +157,27 @@ case class Job(
     enumerator
   }
 
-  /* Conventions/guidelines in the naming for the following methods
-   * `X` is the type that we're interested in.
+  /* Conventions/guidelines in the naming for the following methods.
+   * 
+   * `X` denotes the type/message that we're interested in.
+   * 
    * - def Xs(): Enumerator[X] --> an Enumerator for the X-s. The
    *   JobActor will try to respond as quickly as possible with
    *   something up-to-date, or with the entire history (it depends on
    *   the kind of X). Note: the Enumerator stays up even for new
    *   runs! (not the case for RunEvent). When that happens, it emits
-   *   an Input.Empty. The Enumerator should terminates with Input.EOF
-   *   only when the Job is deleted (that's a TODO).
+   *   an Input.Empty. The Enumerator should terminate with Input.EOF
+   *   only when the Job is deleted (that's a TODO for now).
+   * 
    * - def getX(): Future[X] --> the most up-to-date value for this
-   *   X. This is adapted for the stateless events.
+   *   X. This is used for the stateless events.
+   * 
    * - def getXs(): Future[Iterable[X]] --> the history of Xs for the
    *   latest Run. This is intended to be as fast as possible, so it
    *   can be used for static pages.
+   * 
+   *  Note: of course, the methods can be further constrained with
+   *  parameters (eg. filter X-s for a specific URL).
    */
 
   def runEvents()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
@@ -229,9 +236,13 @@ case class Job(
     actorBasedEnumerator[ResourceData](Classifier.ResourceDatasFor(url), forever = true)
   }
 
-  def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] = ???
+  def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] =  {
+    actorBasedEnumerator[GroupedAssertionData](Classifier.AllGroupedAssertionDatas, forever = true)
+  }
 
-  def assertionDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = ???
+  def assertionDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = {
+    actorBasedEnumerator[Assertion](Classifier.AssertionsFor(url), forever = true)
+  }
 
 }
 

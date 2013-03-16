@@ -94,10 +94,8 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
   import conf._
 
-  val userId = job.creatorId
-  val jobId = job.id
-  val runId = initialRun.runId
-  implicit val strategy = job.strategy
+  import job.{ creatorId => userId, id => jobId }
+  import initialRun.runId
 
   // TODO: change the way it's done here
   val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
@@ -156,9 +154,19 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
       publish(event)
 
-//      event match {
-//        case AssertorResponseEvent(@@@)
-//      }
+      event match {
+        case AssertorResponseEvent(_, _, _, AssertorResult(_, assertorId, sourceUrl, arAssertions), _) =>
+          arAssertions.keys foreach { url =>
+            publish(run.resourceDatas(url))
+            publish(run.groupedAssertionsDatas(url))
+            run.assertions(url).values foreach { assertions =>
+              assertions foreach { assertion =>
+                publish(assertion)
+              }
+            }
+          }
+        case _ => ()
+      }
 
     }
 
