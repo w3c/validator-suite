@@ -6,6 +6,7 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.util._
 import org.w3.vs._
 import org.w3.vs.model._
+import org.w3.vs.actor.JobActor
 import org.w3.vs.exception._
 import org.w3.vs.util._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -129,8 +130,9 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       description = Some("some description"))
   }
 
-  // these assertions are for job1, in run1
-  def addAssertions(): Unit = {
+  def createRun1(): Unit = {
+    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run1.runId, actorPath, run1.strategy, now)).getOrFail()
+    // add assertions
     for {
       assertorId <- assertorIds
       i <- 1 to nbUrlsPerAssertions
@@ -148,10 +150,29 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       val assertorResult = AssertorResult(run1.runId, assertorId, url, Map(url -> assertions.toVector))
       val are = AssertorResponseEvent(user1.id, job1.id, run1.runId, assertorResult)
       run1 = run1.step(are).run
-      Run.saveEvent(AssertorResponseEvent(user1.id, job1.id, run1.runId, assertorResult)).getOrFail()
+      JobActor.saveEvent(AssertorResponseEvent(user1.id, job1.id, run1.runId, assertorResult)).getOrFail()
     }
   }
 
+  def createRun2(): Unit = {
+    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run2.runId, actorPath, run2.strategy, now)).getOrFail()
+    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas.values, run2.completedOn.get)).getOrFail()
+  }
+
+  def createRun3(): Unit = {
+    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run3.runId, actorPath, run3.strategy, now)).getOrFail()
+    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas.values, run3.completedOn.get)).getOrFail()
+  }
+
+  def createRun4(): Unit = {
+    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run4.runId, actorPath, run4.strategy, now)).getOrFail()
+    // time to get the latest value for job1 here
+    job1 = Job.get(job1.id).getOrFail()
+  }
+
+  def createRun5(): Unit = {
+    JobActor.saveEvent(CreateRunEvent(user1.id, job5.id, run5.runId, actorPath, run5.strategy, now)).getOrFail()
+  }
 
   override def beforeAll(): Unit = {
     val start = System.currentTimeMillis
@@ -165,24 +186,13 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       _ <- Job.save(job3)
       _ <- Job.save(job4)
       _ <- Job.save(job5)
-      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run1.runId, actorPath, run1.strategy, now))
-      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run2.runId, actorPath, run2.strategy, now))
-      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run3.runId, actorPath, run3.strategy, now))
-      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run4.runId, actorPath, run4.strategy, now))
-      _ <- Run.saveEvent(CreateRunEvent(user1.id, job5.id, run5.runId, actorPath, run5.strategy, now))
     } yield ()
     initScript.getOrFail()
-    addAssertions() // <- already blocking
-    Run.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas.values, run2.completedOn.get)).getOrFail()
-    Run.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas.values, run3.completedOn.get)).getOrFail()
-    /* job1 is still running with run4, and lastestDone was run3 */
-    val status = Running(run4.runId, akka.actor.ActorPath.fromString("akka://system/user/foo"))
-    val latestDone = Done(run4.runId, Completed, run3.completedOn.get, run3.data)
-    Job.updateStatus(
-      job1.id,
-      status = status,
-      latestDone = latestDone).getOrFail()
-    job1 = job1.copy(status = status, latestDone = Some(latestDone))
+    createRun1()
+    createRun2()
+    createRun3()
+    createRun4()
+    createRun5()
     /****/
     val end = System.currentTimeMillis
     val durationInSeconds = (end - start) / 1000.0
