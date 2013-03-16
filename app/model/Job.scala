@@ -101,13 +101,53 @@ case class Job(
   }
 
   import scala.reflect.ClassTag
+
+  /** asks the actor at `actorPath` for the value corresponding to
+    * `classifier`. If nothing comes back on time, `defaultT` is
+    * returned. */
+  def getFutureT[T](actorPath: ActorPath, classifier: Classifier, defaultT: T)(implicit classTag: ClassTag[T], conf: VSConfiguration): Future[T] = {
+    import conf._
+    val actorRef = system.actorFor(actorPath)
+    val message = JobActor.Get(classifier)
+    val shortTimeout = Duration(1, "s")
+    ask(actorRef, message)(shortTimeout).mapTo[T] recover {
+      case _: AskTimeoutException => defaultT
+    }
+  }
+
+  /** asks the actor at `actorPath` for the optional value corresponding
+    * to `classifier`. The actor sends back () to signal that no value
+    * can be provided. If nothing comes back on time, None is
+    * returned.*/
+  def getFutureT[T](actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[T], conf: VSConfiguration): Future[Option[T]] = {
+    import conf._
+    val actorRef = system.actorFor(actorPath)
+    val message = JobActor.Get(classifier)
+    val shortTimeout = Duration(1, "s")
+    ask(actorRef, message)(shortTimeout) map {
+      case result: T => Some(result)
+      case () => None
+    } recover {
+      case _: AskTimeoutException => None
+    }
+  }
+
+  /** enumerates the values of type T (according to the
+    * `classifier`). This will spawn an anonymous actor which will
+    * subscribe to the current JobActor (if available) and future
+    * ones. This actor detects the new runs/JobActor by subscribing to
+    * the system's EventStream. The JobActor sends () values when runs
+    * are over, and depending on the value for `forever`, this
+    * enumerator will either terminates (Input.EOF) or just emit a
+    * Input.Empty.
+    */
   def actorBasedEnumerator[T](classifier: Classifier, forever: Boolean)(implicit classTag: ClassTag[T], conf: VSConfiguration): Enumerator[T] = {
     import conf._
     val (enumerator, channel) = Concurrent.broadcast[T]
     def subscriberActor(): Actor = new Actor {
       def stop(): Unit = {
-        channel.eofAndEnd()
         context.stop(self)
+        channel.eofAndEnd()
       }
       def push(msg: T): Unit = {
         try {
@@ -118,7 +158,7 @@ case class Job(
         }
       }
       def subscribeToJobActor(actorRef: ActorRef): Unit = {
-        actorRef ! JobActor.Listen(self, classifier)
+        actorRef ! JobActor.Listen(classifier)
       }
       override def preStart(): Unit = {
         // subscribe to the EventStream to be notified of new started runs
@@ -139,7 +179,7 @@ case class Job(
           }}
         }
       }
-      /** the actor's main method... */
+      /* the actor's main method... */
       def receive = {
         // the normal messages that we're expecting
         case msg: T => push(msg)
@@ -217,16 +257,9 @@ case class Job(
       case NeverStarted | Zombie => Future.successful(RunData())
       case Done(_, _, _, runData) => Future.successful(runData)
       case Running(_, jobActorPath) =>
-        val actorRef = system.actorFor(jobActorPath)
-        val message = JobActor.Listen(null, Classifier.AllRunDatas)
-        val shortTimeout = Duration(1, "s")
-        ask(actorRef, message)(shortTimeout).mapTo[RunData] recover {
-          case _: AskTimeoutException => RunData()
-        }
+        getFutureT(jobActorPath, Classifier.AllRunDatas, RunData())
     }
   }
-
-  /* *********** */
 
   def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
     actorBasedEnumerator[ResourceData](Classifier.AllResourceDatas, forever = true)

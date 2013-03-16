@@ -31,11 +31,10 @@ object JobActor {
   case object Start
   case object Cancel
   case class Resume(actions: Iterable[RunAction])
-  case object GetRunData
-  case object GetResourceDatas
 
-  case class Listen[Event](subscriber: ActorRef, classifier: Classifier)
-  case class Deafen(subscriber: ActorRef)
+  case class Get(classifier: Classifier)
+  case class Listen(classifier: Classifier)
+  case object Deafen
 
   val logger = Logger.of(classOf[JobActor])
 //  val logger = new Object {
@@ -114,19 +113,28 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     }
   }
 
-  def fireSomethingRightAway(sender: ActorRef, classifier: Classifier, run: Run): Unit = {
+  def fireRightAway(sender: ActorRef, classifier: Classifier, run: Run, alwaysFireSomething: Boolean): Unit = {
     import Classifier._
     classifier match {
       case AllRunEvents => sender ! runEvents
       case AllRunDatas => sender ! run.data
       case AllResourceDatas => sender ! run.resourceDatas.values
       case ResourceDatasFor(url) =>
-        sender ! run.resourceDatas.get(url).getOrElse(Iterable.empty)
-      case AllAssertions => sender ! run.allAssertions
+        run.resourceDatas.get(url) match {
+          case Some(resourceData) => sender ! resourceData
+          case None => if (alwaysFireSomething) sender ! () else ()
+        }
+      case AllAssertions =>
+        val allAssertions: Iterable[Assertion] = run.allAssertions
+        sender ! allAssertions
       case AssertionsFor(url) =>
-        sender ! run.assertions.get(url).map(_.values.flatten).getOrElse(Iterable.empty)
+        val assertions: Iterable[Assertion] =
+          run.assertions.get(url).map(_.values.flatten).getOrElse(Iterable.empty)
+        sender ! assertions
       case AllGroupedAssertionDatas =>
-        sender ! run.groupedAssertionsDatas.values
+        val gad: Iterable[GroupedAssertionData] =
+          run.groupedAssertionsDatas.values
+        sender ! gad
     }
   }
 
@@ -197,20 +205,19 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
   whenUnhandled {
 
-    case Event(GetRunData, run) =>
-      sender ! run.data
+    case Event(Get(classifier), run) =>
+      fireRightAway(sender, classifier, run, alwaysFireSomething = true)
       stay()
 
-    case Event(Listen(subscriber, classifier), run) =>
-      if (subscriber == null) {
-        fireSomethingRightAway(sender, classifier, run)
-      } else if (subscribe(subscriber, classifier)) {
-        fireSomethingRightAway(subscriber, classifier, run)
+    case Event(Listen(classifier), run) =>
+      val from = sender
+      if (subscribe(from, classifier)) {
+        fireRightAway(from, classifier, run, alwaysFireSomething = false)
       }
       stay()
 
-    case Event(Deafen(subscriber), run) =>
-      unsubscribe(subscriber)
+    case Event(Deafen, run) =>
+      unsubscribe(sender)
       stay()
 
     case Event(e, run) =>
@@ -224,10 +231,11 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // we still answer Listen requests in the Stopping state, but we
     // just send the termination message right away. There is no need
     // to subscribe anybody.
-    case Event(Listen(subscriber, classifier), run) =>
+    case Event(Listen(classifier), run) =>
+      val from = sender
       sideEffect {
-        fireSomethingRightAway(subscriber, classifier, run)
-        subscriber ! ()
+        fireRightAway(from, classifier, run, alwaysFireSomething = false)
+        from ! ()
       }
       stay()
 

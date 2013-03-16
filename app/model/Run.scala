@@ -46,6 +46,7 @@ object Run {
     } |>>> Iteratee.consume[Iterable[Assertion]]()
   }
 
+  // @@@@@@@@@@@@@@@@@@@
   def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
     getAssertions(runId).map(_.filter(_.url.underlying === url))
     // TODO write a test before using this better implementation
