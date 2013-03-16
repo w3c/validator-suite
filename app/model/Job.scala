@@ -157,6 +157,22 @@ case class Job(
     enumerator
   }
 
+  /* Conventions/guidelines in the naming for the following methods
+   * `X` is the type that we're interested in.
+   * - def Xs(): Enumerator[X] --> an Enumerator for the X-s. The
+   *   JobActor will try to respond as quickly as possible with
+   *   something up-to-date, or with the entire history (it depends on
+   *   the kind of X). Note: the Enumerator stays up even for new
+   *   runs! (not the case for RunEvent). When that happens, it emits
+   *   an Input.Empty. The Enumerator should terminates with Input.EOF
+   *   only when the Job is deleted (that's a TODO).
+   * - def getX(): Future[X] --> the most up-to-date value for this
+   *   X. This is adapted for the stateless events.
+   * - def getXs(): Future[Iterable[X]] --> the history of Xs for the
+   *   latest Run. This is intended to be as fast as possible, so it
+   *   can be used for static pages.
+   */
+
   def runEvents()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
     import conf._
     this.status match {
