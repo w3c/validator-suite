@@ -102,33 +102,19 @@ case class Job(
 
   import scala.reflect.ClassTag
 
-  /** asks the actor at `actorPath` for the value corresponding to
-    * `classifier`. If nothing comes back on time, `defaultT` is
-    * returned. */
-  def getFutureT[T](actorPath: ActorPath, classifier: Classifier, defaultT: T)(implicit classTag: ClassTag[T], conf: VSConfiguration): Future[T] = {
-    import conf._
-    val actorRef = system.actorFor(actorPath)
-    val message = JobActor.Get(classifier)
-    val shortTimeout = Duration(1, "s")
-    ask(actorRef, message)(shortTimeout).mapTo[T] recover {
-      case _: AskTimeoutException => defaultT
-    }
-  }
-
   /** asks the actor at `actorPath` for the optional value corresponding
-    * to `classifier`. The actor sends back () to signal that no value
-    * can be provided. If nothing comes back on time, None is
-    * returned.*/
-  def getFutureT[T](actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[T], conf: VSConfiguration): Future[Option[T]] = {
+    * to `classifier`. The actor sends back a NoSuchElementException
+    * to signal that no value can be provided. If nothing comes back
+    * on time, the TimeoutException is mapped to a
+    * NoSuchElementException.
+    */
+  def getFutureT[T](actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[T], conf: VSConfiguration): Future[T] = {
     import conf._
     val actorRef = system.actorFor(actorPath)
     val message = JobActor.Get(classifier)
     val shortTimeout = Duration(1, "s")
-    ask(actorRef, message)(shortTimeout) map {
-      case result: T => Some(result)
-      case () => None
-    } recover {
-      case _: AskTimeoutException => None
+    ask(actorRef, message)(shortTimeout).mapTo[T] recoverWith {
+      case _: AskTimeoutException => Future.failed[T](new NoSuchElementException)
     }
   }
 
@@ -257,7 +243,9 @@ case class Job(
       case NeverStarted | Zombie => Future.successful(RunData())
       case Done(_, _, _, runData) => Future.successful(runData)
       case Running(_, jobActorPath) =>
-        getFutureT(jobActorPath, Classifier.AllRunDatas, RunData())
+        getFutureT(jobActorPath, Classifier.AllRunDatas) recover {
+          case _: NoSuchElementException => RunData()
+        }
     }
   }
 
@@ -270,24 +258,58 @@ case class Job(
     actorBasedEnumerator[ResourceData](Classifier.ResourceDatasFor(url), forever = true)
   }
   // the most up-to-date ResourceData for url
-  def getResourceData(url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = ???
+  def getResourceData(url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Future.failed(new NoSuchElementException)
+      case Done(_, _, _, runData) => ???
+      case Running(_, jobActorPath) =>
+        getFutureT(jobActorPath, Classifier.ResourceDatasFor(url))
+    }
+  }
 
   // all current ResourceDatas
-  def getResourceDatas()(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = ???
+  def getResourceDatas()(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Future.successful(Iterable.empty)
+      case Done(_, _, _, runData) => ???
+      case Running(_, jobActorPath) =>
+        getFutureT(jobActorPath, Classifier.AllResourceDatas)
+    }
+  }
 
   // all GroupedAssertionDatas updates
   def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] =  {
     actorBasedEnumerator[GroupedAssertionData](Classifier.AllGroupedAssertionDatas, forever = true)
   }
+
   // all current GroupedAssertionDatas
-  def getGroupedAssertionDatas()(implicit conf: VSConfiguration): Future[Iterable[GroupedAssertionData]] = ???
+  def getGroupedAssertionDatas()(implicit conf: VSConfiguration): Future[Iterable[GroupedAssertionData]] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Future.successful(Iterable.empty)
+      case Done(_, _, _, runData) => ???
+      case Running(_, jobActorPath) =>
+        getFutureT(jobActorPath, Classifier.AllGroupedAssertionDatas)
+    }
+  }
 
   // all Assertions updatesfor url
   def assertionDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = {
     actorBasedEnumerator[Assertion](Classifier.AssertionsFor(url), forever = true)
   }
+
   // all current Assertions for url
-  def getAssertionDatas(url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = ???
+  def getAssertionDatas(url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
+    import conf._
+    this.status match {
+      case NeverStarted | Zombie => Future.successful(Iterable.empty)
+      case Done(_, _, _, runData) => ???
+      case Running(_, jobActorPath) =>
+        getFutureT(jobActorPath, Classifier.AssertionsFor(url))
+    }
+  }
 
 }
 

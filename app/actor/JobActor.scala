@@ -122,15 +122,22 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       case ResourceDatasFor(url) =>
         run.resourceDatas.get(url) match {
           case Some(resourceData) => sender ! resourceData
-          case None => if (alwaysFireSomething) sender ! () else ()
+          case None =>
+            if (alwaysFireSomething)
+              sender ! Failure(new NoSuchElementException(url.toString))
+            else ()
         }
       case AllAssertions =>
         val allAssertions: Iterable[Assertion] = run.allAssertions
         sender ! allAssertions
       case AssertionsFor(url) =>
-        val assertions: Iterable[Assertion] =
-          run.assertions.get(url).map(_.values.flatten).getOrElse(Iterable.empty)
-        sender ! assertions
+        run.assertions.get(url) match {
+          case Some(assertions) => sender ! assertions.values.flatten
+          case None =>
+            if (alwaysFireSomething)
+              sender ! Failure(new NoSuchElementException(url.toString))
+            else ()
+        }
       case AllGroupedAssertionDatas =>
         val gad: Iterable[GroupedAssertionData] =
           run.groupedAssertionsDatas.values
