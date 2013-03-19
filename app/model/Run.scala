@@ -501,31 +501,29 @@ case class Run private (
 
   private def withAssertorResult(result: AssertorResult, timestamp: DateTime): Run = {
 
-    // just factor assertions by URL and then AssertorId
-    val m: Map[URL, Map[AssertorId, Vector[Assertion]]] =
-      result.assertions.mapValues(_.groupBy(_.assertor))
+    import result.{ assertor => assertorId }
+
+    // could be optimized
+    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions.values.flatten)
 
     // accumulate assertions and take care of the keys
     var newAssertions = this.assertions
-    m.foreach { case (url, am) =>
-      am.foreach { case assertorIdAssertions @ (assertorId, assertions) =>
-        this.assertions.get(url) match {
-          case None => newAssertions += (url -> Map(assertorId -> assertions))
-          case Some(existingAAMap) =>
-            existingAAMap.get(assertorId) match {
-              case None =>
-                newAssertions += (url -> (existingAAMap + assertorIdAssertions))
-              case Some(_) =>
-                logger.error(s"Got assertions for existing ($url, $assertorId). This should have been filtered and will be ignored.")
-            }
-        }
-      }
-    }
-
-    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions.values.flatten)
-
     var newResourceDatas = this.resourceDatas
-    m.foreach { case (url, am) =>
+    var newGroupedAssertionDatas = this.groupedAssertionDatas
+
+    result.assertions foreach { case (url, assertions) =>
+      // Assertion
+      this.assertions.get(url) match {
+        case None => newAssertions += (url -> Map(assertorId -> assertions))
+        case Some(existingAAMap) =>
+          existingAAMap.get(assertorId) match {
+            case None =>
+              newAssertions += (url -> (existingAAMap + (assertorId -> assertions)))
+            case Some(_) =>
+              logger.error(s"Got assertions for existing ($url, $assertorId). This should have been filtered and will be ignored.")
+          }
+      }
+      // ResourceData
       val resourceData = newResourceDatas.get(url) match {
         case None =>
           ResourceData(url, timestamp, nbWarnings, nbErrors)
@@ -533,11 +531,22 @@ case class Run private (
           ResourceData(url, timestamp, w + nbWarnings, e + nbErrors)
       }
       newResourceDatas += (url -> resourceData)
+      // GroupedAssertionData
+      assertions foreach { assertion =>
+        val assertionTypeId = AssertionTypeId(assertion)
+        newGroupedAssertionDatas.get(assertionTypeId) match {
+          case None =>
+            newGroupedAssertionDatas += (assertionTypeId -> GroupedAssertionData(assertion))
+          case Some(gad) =>
+            newGroupedAssertionDatas += (assertionTypeId -> (gad + assertion))
+        }
+      }
     }
 
     val newRun = this.copy(
       assertions = newAssertions,
       resourceDatas = newResourceDatas,
+      groupedAssertionDatas = newGroupedAssertionDatas,
       errors = this.errors + nbErrors,
       warnings = this.warnings + nbWarnings,
       pendingAssertorCalls = pendingAssertorCalls - ((result.assertor, result.sourceUrl)),

@@ -245,12 +245,13 @@ object Formats {
   )(Assertion.apply _, unlift(Assertion.unapply _))
 
   implicit val GroupedAssertionDataFormat: Format[GroupedAssertionData] = (
+//    (__ \ 'id).format[AssertionTypeId] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'lang).format[String] and
     (__ \ 'title).format[String] and
     (__ \ 'severity).format[AssertionSeverity] and
     (__ \ 'occurrences).format[Int] and
-    (__ \ 'resources).format[List[URL]]
+    (__ \ 'resources).format[Vector[URL]]
   )(GroupedAssertionData.apply _, unlift(GroupedAssertionData.unapply _))
 
   val GETFormat = constant[GET.type]("GET", GET)
