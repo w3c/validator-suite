@@ -156,12 +156,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   def createRun2(): Unit = {
     JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run2.runId, actorPath, run2.strategy, now)).getOrFail()
-    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas.values, run2.completedOn.get)).getOrFail()
+    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas, run2.groupedAssertionDatas, run2.completedOn.get)).getOrFail()
   }
 
   def createRun3(): Unit = {
     JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run3.runId, actorPath, run3.strategy, now)).getOrFail()
-    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas.values, run3.completedOn.get)).getOrFail()
+    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas, run3.completedOn.get)).getOrFail()
   }
 
   def createRun4(): Unit = {
@@ -269,6 +269,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val assertions = Run.getAssertions(run1.runId).getOrFail()
     assertions.toList must have length(nbAssertionsPerRun)
   }
+
+//  "get all assertions for a run timestamp of latest completed Run for a given job" in {
+//    val assertions = Run.getAssertionsForURL(run1.runId, @@@).getOrFail()
+//    assertions.toList must have length(nbAssertionsPerRun)
+//  }
 
   "get all running jobs" in {
     val runningJobs = Job.getRunningJobs().getOrFail()

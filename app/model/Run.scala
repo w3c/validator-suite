@@ -182,7 +182,7 @@ case class Run private (
   strategy: Strategy,
   // part of the state that we maintain
   resourceDatas: Map[URL, ResourceData] = Map.empty,
-  groupedAssertionsDatas: Map[URL, GroupedAssertionData] = Map.empty,
+  groupedAssertionDatas: Map[AssertionTypeId, GroupedAssertionData] = Map.empty,
   // from completion event, None at creation
   completedOn: Option[DateTime] = None,
   // based on scheduled fetches
@@ -375,26 +375,31 @@ case class Run private (
       case CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
         val (run, fetches) = this.newlyStartedRun
         ResultStep(run, fetches)
-      case DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) =>
+
+      case DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) =>
         val run = this.completeOn(timestamp)
         ResultStep(run, Seq.empty)
+
       case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), timestamp) =>
         val run = this.withAssertorResult(ar, timestamp)
         ResultStep(run, Seq.empty)
+
       case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(_, assertor, url, _), _) =>
         val run = this.withAssertorFailure(af)
         ResultStep(run, Seq.empty)
+
       case ResourceResponseEvent(userId, jobId, runId, hr@HttpResponse(url, _, _, _, _, _), _) =>
         val (run, fetches, assertorCalls) = this.withHttpResponse(hr)
         val actions = fetches ++ assertorCalls
         ResultStep(run, actions)
+
       case ResourceResponseEvent(userId, jobId, runId, er@ErrorResponse(url, _, _), _) =>
         val (run, fetches) = this.withErrorResponse(er)
         ResultStep(run, fetches)
     }
 
     def notCancel = event match {
-      case DoneRunEvent(_, _, _, Cancelled, _, _, _, _, _) => false
+      case DoneRunEvent(_, _, _, Cancelled, _, _, _, _, _, _) => false
       case _ => true
     }
 
@@ -402,7 +407,7 @@ case class Run private (
       val timestamp = DateTime.now(DateTimeZone.UTC)
       val completedRun = resultStep.run.completeOn(timestamp)
       val data = completedRun.data
-      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, resourceDatas.values, timestamp)
+      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, resourceDatas, groupedAssertionDatas, timestamp)
       resultStep.copy(
         run = completedRun,
         actions = resultStep.actions :+ EmitEvent(completeRunEvent)

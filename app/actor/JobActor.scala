@@ -51,7 +51,7 @@ object JobActor {
         Job.updateStatus(jobId, status = running)
       }
 
-    case event@DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) =>
+    case event@DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
         val done = Done(runId, doneReason, timestamp, RunData(resources, errors, warnings, JobDataIdle, Some(timestamp)))
         Job.updateStatus(jobId, status = done, latestDone = done)
@@ -140,7 +140,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
         }
       case AllGroupedAssertionDatas =>
         val gad: Iterable[GroupedAssertionData] =
-          run.groupedAssertionsDatas.values
+          run.groupedAssertionDatas.values
         sender ! gad
     }
   }
@@ -171,14 +171,28 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
       event match {
         case AssertorResponseEvent(_, _, _, AssertorResult(_, assertorId, sourceUrl, arAssertions), _) =>
-          arAssertions.keys foreach { url =>
+          arAssertions foreach { case (url, assertions) =>
+            // ResourceData
             publish(run.resourceDatas(url))
-            publish(run.groupedAssertionsDatas(url))
+            // Assertion
             run.assertions(url).values foreach { assertions =>
               assertions foreach { assertion =>
                 publish(assertion)
               }
             }
+            // GroupedAssertionData: we exploit here the fact that
+            // these assertions are grouped by title (that's an
+            // invariant enforced by FromHttpResponseAssertor) and
+            // that this is coming from a single Assertor. That makes
+            // it easy to find which AssertionTypeId-s were impacted.
+            assertions foreach { assertion =>
+              val assertionTypeId = AssertionTypeId(assertion)
+              publish(run.groupedAssertionDatas(assertionTypeId))
+            }
+          }
+          // we exploit here the fact that 
+          arAssertions.values foreach { assertions =>
+            
           }
         case _ => ()
       }
@@ -194,7 +208,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
         val from = sender
         sideEffect { from ! running }
         goto(Started) using run
-      case DoneRunEvent(_, _, _, doneReason, _, _, _, _, _) =>
+      case DoneRunEvent(_, _, _, doneReason, _, _, _, _, _, _) =>
         if (doneReason === Completed)
           logger.debug(s"${run.shortId}: Assertion phase finished")
         stopThisActor()
@@ -297,7 +311,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       // logging/monitoring
       logger.debug(s"${run.shortId}: Cancel")
       // logic
-      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas.values)
+      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas, run.groupedAssertionDatas)
       handleRunEvent(run, event)
 
     case Event(event: DoneRunEvent, run) =>

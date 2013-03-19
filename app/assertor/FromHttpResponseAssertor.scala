@@ -9,14 +9,18 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
 
   def supportedMimeTypes: List[String]
 
-  /** this function is the occasion to fix some problems coming from the assertors */
+  /** this function is the occasion to fix some problems coming from the
+    * assertors. We do that here because this property is not enforced
+    * at the Unicorn level.
+    * 
+    * we group the assertions per url, then by title, then we merge
+    * the assertions sharing the same contexts into one single
+    * assertion. One can then assume that all returned Assertion-s
+    * will have a different AssertionTypeId.
+    */
   def assert(runId: RunId, response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
     val start = System.currentTimeMillis()
     val result = try {
-      // we group the assertions per url, then by title, then we merge
-      // the assertions sharing the same contexts into one single
-      // assertions. We do that here because this property is not
-      // enforced at the Unicorn level.
       val assertions =
         assert(response.url, configuration).groupBy(_.url).mapValues[Vector[Assertion]] { assertionsCommonURL =>
           var assertionsWithGroupedTitles = Vector.empty[Assertion]

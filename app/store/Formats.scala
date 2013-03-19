@@ -338,6 +338,8 @@ object Formats {
     }
   )
 
+  implicit val AssertionTypeIdFormat = string[AssertionTypeId](AssertionTypeId(_), _.uniqueId)
+
   val DoneRunEventFormat: Format[DoneRunEvent] = (
     (__ \ 'event).format[String](pattern("done-run".r)) and
     (__ \ 'userId).format[UserId] and
@@ -347,10 +349,11 @@ object Formats {
     (__ \ 'resources).format[Int] and
     (__ \ 'errors).format[Int] and
     (__ \ 'warnings).format[Int] and
-    (__ \ 'rd).format[Iterable[ResourceData]] and
+    (__ \ 'rd).format[Map[URL, ResourceData]] and
+    (__ \ 'gad).format[Map[AssertionTypeId, GroupedAssertionData]] and
     (__ \ 'timestamp).format[DateTime]
-  )({ case (_, userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) => DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) },
-    { case DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) => ("done-run", userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, timestamp) }
+  )({ case (_, userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) => DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) },
+    { case DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) => ("done-run", userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) }
   )
 
   val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
@@ -382,7 +385,7 @@ object Formats {
       case e@AssertorResponseEvent(_, _, _, _, _) => AssertorResponseEventFormat.writes(e)
       case e@ResourceResponseEvent(_, _, _, _, _) => ResourceResponseEventFormat.writes(e)
       case e@CreateRunEvent(_, _, _, _, _, _, _) => CreateRunEventFormat.writes(e)
-      case e@DoneRunEvent(_, _, _, _, _, _, _, _, _) => DoneRunEventFormat.writes(e)
+      case e@DoneRunEvent(_, _, _, _, _, _, _, _, _, _) => DoneRunEventFormat.writes(e)
     }
   }
 

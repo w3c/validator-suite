@@ -55,6 +55,7 @@ case class Job(
     }
   }
 
+  @deprecated("use Job.getAssertions(url)", "")
   def getAssertionsForURL(url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
     status match {
       case NeverStarted | Zombie => Future.successful(Iterable.empty)
@@ -257,6 +258,7 @@ case class Job(
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
     actorBasedEnumerator[ResourceData](Classifier.ResourceDatasFor(url), forever = true)
   }
+
   // the most up-to-date ResourceData for url
   def getResourceData(url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
     import conf._

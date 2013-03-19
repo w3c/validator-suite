@@ -45,7 +45,7 @@ class StopActionTest extends RunTestHelper with TestKitHelper with Inside {
     def test(): Iteratee[RunEvent, Try[Unit]] = for {
       rr <- waitFor[RunEvent] { case ResourceResponseEvent(_, _, _, rr, _) => rr }
       _ = runningJob.cancel()
-      cancelEvent <- waitFor[RunEvent] { case e @ DoneRunEvent(_, _, _, Cancelled, _, _, _, _, _) => e }
+      cancelEvent <- waitFor[RunEvent] { case e @ DoneRunEvent(_, _, _, Cancelled, _, _, _, _, _, _) => e }
     } yield Try {
       rr.url must be(URL("http://localhost:9001/"))
       cancelEvent.resources must be < (100)

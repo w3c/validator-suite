@@ -2,6 +2,7 @@ package org.w3.vs.model
 
 import org.joda.time._
 import akka.actor.ActorPath
+import org.w3.util.URL
 
 /* any event that has an impact on the state of a run */
 sealed trait RunEvent {
@@ -13,7 +14,17 @@ sealed trait RunEvent {
 
 case class CreateRunEvent(userId: UserId, jobId: JobId, runId: RunId, actorPath: ActorPath, strategy: Strategy, createdAt: DateTime, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
-case class DoneRunEvent(userId: UserId, jobId: JobId, runId: RunId, doneReason: DoneReason, resources: Int, errors: Int,  warnings: Int, resourceDatas: Iterable[ResourceData], timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+case class DoneRunEvent(
+  userId: UserId,
+  jobId: JobId,
+  runId: RunId,
+  doneReason: DoneReason,
+  resources: Int,
+  errors: Int,
+  warnings: Int,
+  resourceDatas: Map[URL, ResourceData],
+  groupedAssertionsDatas: Map[AssertionTypeId, GroupedAssertionData],
+  timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
 case class AssertorResponseEvent(userId: UserId, jobId: JobId, runId: RunId, ar: AssertorResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
