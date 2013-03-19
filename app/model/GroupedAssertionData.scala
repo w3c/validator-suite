@@ -3,7 +3,7 @@ package org.w3.vs.model
 import org.w3.util.URL
 
 case class GroupedAssertionData(
-//  id: AssertionTypeId,
+  id: AssertionTypeId,
   assertor: AssertorId,
   lang: String,
   title: String,
@@ -25,7 +25,7 @@ object GroupedAssertionData {
 
   def apply(assertion: Assertion): GroupedAssertionData = {
     import assertion._
-    GroupedAssertionData(/*AssertionTypeId(assertion), */assertor, lang, title, severity, contexts.size, Vector(url))
+    GroupedAssertionData(AssertionTypeId(assertion), assertor, lang, title, severity, contexts.size, Vector(url))
   }
 
 }

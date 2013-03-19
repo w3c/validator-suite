@@ -67,7 +67,7 @@ class FormatsTest extends WordSpec with MustMatchers {
 
   val groupedAssertionData =
     GroupedAssertionData(
-//      id = AssertionTypeId("unique-id"),
+      id = AssertionTypeId("unique-id"),
       assertor = AssertorId("test_assertor"),
       lang = "fr",
       title = "bar",
@@ -128,9 +128,6 @@ class FormatsTest extends WordSpec with MustMatchers {
     toJson(Error).as[AssertionSeverity] must be(Error)
     toJson(assertion).as[Assertion] must be(assertion)
     toJson(assertionTypeId).as[AssertionTypeId] must be(assertionTypeId)
-    println("0 "+groupedAssertionData)
-    println("1 "+toJson(groupedAssertionData))
-    println("2 "+toJson(groupedAssertionData).as[GroupedAssertionData])
     toJson(groupedAssertionData).as[GroupedAssertionData] must be(groupedAssertionData)
     toJson(GET).as[HttpMethod] must be(GET)
     toJson(errorResponse).as[ResourceResponse] must be(errorResponse)

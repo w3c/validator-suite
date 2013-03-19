@@ -244,8 +244,10 @@ object Formats {
     (__ \ 'timestamp).format[DateTime]
   )(Assertion.apply _, unlift(Assertion.unapply _))
 
+  implicit val AssertionTypeIdFormat = string[AssertionTypeId](AssertionTypeId(_), _.uniqueId)
+
   implicit val GroupedAssertionDataFormat: Format[GroupedAssertionData] = (
-//    (__ \ 'id).format[AssertionTypeId] and
+    (__ \ 'id).format[AssertionTypeId] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'lang).format[String] and
     (__ \ 'title).format[String] and
@@ -338,8 +340,6 @@ object Formats {
         ("create-run", userId, jobId, runId, actorPath, strategy, createdAt, timestamp)
     }
   )
-
-  implicit val AssertionTypeIdFormat = string[AssertionTypeId](AssertionTypeId(_), _.uniqueId)
 
   val DoneRunEventFormat: Format[DoneRunEvent] = (
     (__ \ 'event).format[String](pattern("done-run".r)) and
