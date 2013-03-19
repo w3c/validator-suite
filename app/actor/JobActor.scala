@@ -184,15 +184,13 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
             // these assertions are grouped by title (that's an
             // invariant enforced by FromHttpResponseAssertor) and
             // that this is coming from a single Assertor. That makes
-            // it easy to find which AssertionTypeId-s were impacted.
+            // it easy to find which AssertionTypeId-s were
+            // impacted. There is basically exactly one for each
+            // assertion.
             assertions foreach { assertion =>
               val assertionTypeId = AssertionTypeId(assertion)
               publish(run.groupedAssertionDatas(assertionTypeId))
             }
-          }
-          // we exploit here the fact that 
-          arAssertions.values foreach { assertions =>
-            
           }
         case _ => ()
       }
