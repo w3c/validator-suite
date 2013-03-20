@@ -14,7 +14,7 @@ case class GroupedAssertionData(
   /** incorporates `assertion` in this GroupedAssertionData. It expects the assertion to be  */
   def +(assertion: Assertion): GroupedAssertionData = {
     this.copy(
-      occurrences = this.occurrences + assertion.contexts.size,
+      occurrences = this.occurrences + GroupedAssertionData.occurences(assertion),
       resources = this.resources :+ assertion.url
     )
   }
@@ -23,9 +23,19 @@ case class GroupedAssertionData(
 
 object GroupedAssertionData {
 
+  def occurences(assertion: Assertion): Int =
+    math.max(1, assertion.contexts.size)
+
   def apply(assertion: Assertion): GroupedAssertionData = {
     import assertion._
-    GroupedAssertionData(AssertionTypeId(assertion), assertor, lang, title, severity, contexts.size, Vector(url))
+    GroupedAssertionData(
+      AssertionTypeId(assertion),
+      assertor,
+      lang,
+      title,
+      severity,
+      occurences(assertion),
+      Vector(url))
   }
 
 }
