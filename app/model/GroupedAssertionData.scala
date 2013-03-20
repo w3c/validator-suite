@@ -11,7 +11,10 @@ case class GroupedAssertionData(
   occurrences: Int,
   resources: Vector[URL]) {
 
-  /** incorporates `assertion` in this GroupedAssertionData. It expects the assertion to be  */
+  /** incorporates `assertion` in this GroupedAssertionData. It expects
+    * the assertion to share the same AssertionTypeId than this
+    * GroupedAssertionData
+    */
   def +(assertion: Assertion): GroupedAssertionData = {
     this.copy(
       occurrences = this.occurrences + GroupedAssertionData.occurences(assertion),
