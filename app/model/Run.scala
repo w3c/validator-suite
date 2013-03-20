@@ -42,7 +42,7 @@ object Run {
     val cursor = Run.collection.find(query, projection).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
       val assertions: Iterable[Iterable[Assertion]] =
-        (json \ "ar" \ "assertions").as[JsArray].value.map(_.as[JsArray].apply(1).as[Iterable[Assertion]])
+        (json \ "ar" \ "assertions").as[JsArray].value.map(_.\("assertions").as[Iterable[Assertion]])
       assertions.flatten
     } |>>> Iteratee.consume[Iterable[Assertion]]()
   }
@@ -52,20 +52,50 @@ object Run {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> toJson("assertor-response"),
-      "ar.assertions" -> Json.obj("$elemMatch" -> Json.obj("0" -> toJson(url))))
-    val projection = BSONDocument(
-      "ar.assertions" -> BSONInteger(1),
-      "_id" -> BSONInteger(0))
+      "ar.assertions" -> Json.obj("$elemMatch" -> Json.obj("url" -> toJson(url))))
+    val projection = Json.obj(
+      // sadly, the following projection is not supported:
+      // "ar.assertions" -> Json.obj("$elemMatch" -> Json.obj("url" -> toJson(url))),
+      // this ends with: MongoError['Cannot use $elemMatch projection on a nested field (currently unsupported).' (code = 16344)]
+      // see https://jira.mongodb.org/browse/SERVER-831
+      "ar.assertions" -> toJson(1),
+      "_id" -> toJson(0))
     val cursor = Run.collection.find(query, projection).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
-      val assertions =  (json \ "ar" \ "assertions").as[Map[URL, Vector[Assertion]]](AssertionsFormat)
-      assertions(url).toIterable
+      val assertions: Iterable[Iterable[Assertion]] =
+        (json \ "ar" \ "assertions").as[JsArray].value.collect { case json if (json \ "url") == toJson(url) =>
+          (json \ "assertions").as[Iterable[Assertion]]
+        }
+      assertions.flatten
     } |>>> Iteratee.consume[Iterable[Assertion]]()
+  }
+
+  /** gets the final ResourceData for the given `run`
+    */
+  def getResourceDatas(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
+    val query = Json.obj(
+      "runId" -> toJson(runId),
+      "event" -> "done-run")
+    val projection = BSONDocument(
+      "rd" -> BSONInteger(1),
+      "_id" -> BSONInteger(0))
+    val cursor = collection.find(query, projection).cursor[JsValue]
+    cursor.headOption() flatMap {
+      case None => Future.failed(new NoSuchElementException(s"${runId} does not exist or is not in Done state"))
+      case Some(json) =>
+        (json \ "rd").as[JsArray].value.collectFirst { case json if (json \ "url") == toJson(url) =>
+          (json \ "rd").as[ResourceData]
+        } match {
+          case None => Future.failed(new NoSuchElementException(url.toString))
+          case Some(rd) => Future.successful(rd)
+        }
+    }
   }
 
   /** returns the data that defines the final state of a Run.
     */
-  def getFinalRunData(runId: RunId)(implicit conf: VSConfiguration): Future[Option[RunData]] = {
+  @deprecated("if the Job is Done, then RunData is already available there", "")
+  def getFinalRunData(runId: RunId)(implicit conf: VSConfiguration): Future[RunData] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -73,14 +103,16 @@ object Run {
       "runData" -> BSONInteger(1),
       "_id" -> BSONInteger(0))
     val cursor = collection.find(query, projection).cursor[JsValue]
-    cursor.headOption() map { jsonOpt =>
-      jsonOpt map { json => (json \ "runData").as[RunData] }
+    cursor.headOption() flatMap {
+      case None => Future.failed(new NoSuchElementException(runId.toString))
+      case Some(json) => Future.successful((json \ "runData").as[RunData])
     }
   }
 
   /** returns the data that defines the final state of a Run.
     */
-  def getPartialJobData(runId: RunId)(implicit conf: VSConfiguration): Future[Option[(DateTime, RunData)]] = {
+  @deprecated("already in Job's Done state", "")
+  def getPartialJobData(runId: RunId)(implicit conf: VSConfiguration): Future[(DateTime, RunData)] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -89,8 +121,9 @@ object Run {
       "runData" -> BSONInteger(1),
       "_id" -> BSONInteger(0))
     val cursor = collection.find(query, projection).cursor[JsValue]
-    cursor.headOption() map { jsonOpt =>
-      jsonOpt map { json =>
+    cursor.headOption() flatMap {
+      case None => Future.failed(new NoSuchElementException(runId.toString))
+      case Some(json) => Future.successful {
         val timestamp = (json \ "timestamp").as[DateTime]
         val runData = (json \ "runData").as[RunData]
         (timestamp, runData)

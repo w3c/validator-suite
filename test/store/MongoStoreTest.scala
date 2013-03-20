@@ -163,7 +163,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   def createRun3(): Unit = {
     JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run3.runId, actorPath, run3.strategy, now)).getOrFail()
-    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas, run3.completedOn.get)).getOrFail()
+    val run3RD = Map(
+      URL("http://example.com/foo/1") -> ResourceData(URL("http://example.com/foo/1"), now, 27, 19),
+      URL("http://example.com/foo/2") -> ResourceData(URL("http://example.com/foo/2"), now, 27, 19)
+    )
+    run3 = run3.copy(resourceDatas = run3RD)
+    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3RD, run3.groupedAssertionDatas, run3.completedOn.get)).getOrFail()
   }
 
   def createRun4(): Unit = {
@@ -277,6 +282,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val assertions = Run.getAssertionsForURL(run1.runId, url).getOrFail()
     assertions.toList must have size(severities(Error) + severities(Warning) + severities(Info))
     assertions.map(_.url).toSet must be(Set(URL("http://example.com/foo/1")))
+  }
+
+  "get final ResourceData for a given run" in {
+    val url = URL("http://example.com/foo/1")
+    val rd = Run.getResourceDatas(run3.runId, url).getOrFail()
+    rd must be(run3.resourceDatas(url))
   }
 
   "get all running jobs" in {

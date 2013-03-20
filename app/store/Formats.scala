@@ -306,13 +306,30 @@ object Formats {
     (__ \ 'why).format[String]
   )(AssertorFailure.apply _, unlift(AssertorFailure.unapply _))
 
-  implicit object AssertionsFormat extends Format[Map[URL, Vector[Assertion]]] {
-    val format = implicitly[Format[Iterable[(URL, Vector[Assertion])]]]
-    def reads(json: JsValue): JsResult[Map[URL, Vector[Assertion]]] =
-      format.reads(json).map(_.toMap)
-    def writes(assertions: Map[URL, Vector[Assertion]]) =
-      format.writes(assertions)
+  def reifiedMapFormat[A, B](key: String, value: String)(implicit aFormat: StringLikeFormat[A], bFormat: Format[B]) = new Format[Map[A, B]] {
+
+    def reads(json: JsValue): JsResult[Map[A, B]] = {
+      var map: Map[A, B] = Map.empty
+      json.as[JsArray].value foreach { entry =>
+        val k = (entry \ key).as[A]
+        val v = (entry \ value).as[B]
+        map += (k -> v)
+      }
+      JsSuccess(map)
+    }
+
+    def writes(m: Map[A, B]): JsValue = {
+      var entries: Vector[JsObject] = Vector.empty
+      m foreach { case (k, v) =>
+        entries :+= Json.obj(key -> toJson(k), value -> toJson(v))
+      }
+      JsArray(entries)
+    }
+
   }
+
+  implicit val AssertionsFormat: Format[Map[URL, Vector[Assertion]]] =
+    reifiedMapFormat[URL, Vector[Assertion]](key = "url", value = "assertions")
 
   val AssertorResultFormat: Format[AssertorResult] = (
     (__ \ 'runId).format[RunId] and
@@ -349,6 +366,9 @@ object Formats {
     }
   )
 
+  val ResourceDatasFormat: Format[Map[URL, ResourceData]] =
+    reifiedMapFormat[URL, ResourceData](key = "url", value = "rd")
+
   val DoneRunEventFormat: Format[DoneRunEvent] = (
     (__ \ 'event).format[String](pattern("done-run".r)) and
     (__ \ 'userId).format[UserId] and
@@ -358,7 +378,7 @@ object Formats {
     (__ \ 'resources).format[Int] and
     (__ \ 'errors).format[Int] and
     (__ \ 'warnings).format[Int] and
-    (__ \ 'rd).format[Map[URL, ResourceData]] and
+    (__ \ 'rd).format[Map[URL, ResourceData]](ResourceDatasFormat) and
     (__ \ 'gad).format[Map[AssertionTypeId, GroupedAssertionData]] and
     (__ \ 'timestamp).format[DateTime]
   )({ case (_, userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) => DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) },
