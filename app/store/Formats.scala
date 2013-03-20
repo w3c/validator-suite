@@ -306,11 +306,19 @@ object Formats {
     (__ \ 'why).format[String]
   )(AssertorFailure.apply _, unlift(AssertorFailure.unapply _))
 
+  implicit object AssertionsFormat extends Format[Map[URL, Vector[Assertion]]] {
+    val format = implicitly[Format[Iterable[(URL, Vector[Assertion])]]]
+    def reads(json: JsValue): JsResult[Map[URL, Vector[Assertion]]] =
+      format.reads(json).map(_.toMap)
+    def writes(assertions: Map[URL, Vector[Assertion]]) =
+      format.writes(assertions)
+  }
+
   val AssertorResultFormat: Format[AssertorResult] = (
     (__ \ 'runId).format[RunId] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'sourceUrl).format[URL] and
-    (__ \ 'assertions).format[Map[URL, Vector[Assertion]]]
+    (__ \ 'assertions).format[Map[URL, Vector[Assertion]]](AssertionsFormat)
   )(AssertorResult.apply _, unlift(AssertorResult.unapply _))
 
   implicit object AssertorResponseFormat extends Format[AssertorResponse] {

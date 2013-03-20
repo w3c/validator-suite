@@ -133,12 +133,14 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   def createRun1(): Unit = {
     JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run1.runId, actorPath, run1.strategy, now)).getOrFail()
     // add assertions
+    var counter = 0
     for {
       assertorId <- assertorIds
       i <- 1 to nbUrlsPerAssertions
     } {
       // Only one AssertorResult for every unique (assertor, url). No partial validations.
-      val url = URL("http://example.com/foo/"+java.util.UUID.randomUUID().toString)
+      counter += 1
+      val url = URL(s"http://example.com/foo/${counter}")
       val assertions = for {
         severity <- List(Error, Warning, Info)
         nb = severities(severity)
@@ -265,15 +267,17 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     run.assertions.size must be(run1.assertions.size)
   }
 
-  "get all assertions for a run timestamp of latest completed Run for a given job" in {
+  "get all assertions for a completed Run" in {
     val assertions = Run.getAssertions(run1.runId).getOrFail()
     assertions.toList must have length(nbAssertionsPerRun)
   }
 
-//  "get all assertions for a run timestamp of latest completed Run for a given job" in {
-//    val assertions = Run.getAssertionsForURL(run1.runId, @@@).getOrFail()
-//    assertions.toList must have length(nbAssertionsPerRun)
-//  }
+  "get all assertions for a completed Run for a given url" in {
+    val url = URL("http://example.com/foo/1")
+    val assertions = Run.getAssertionsForURL(run1.runId, url).getOrFail()
+    assertions.toList must have size(severities(Error) + severities(Warning) + severities(Info))
+    assertions.map(_.url).toSet must be(Set(URL("http://example.com/foo/1")))
+  }
 
   "get all running jobs" in {
     val runningJobs = Job.getRunningJobs().getOrFail()

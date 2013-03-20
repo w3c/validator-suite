@@ -20,11 +20,11 @@ case class AssertorResult(
     runId: RunId,
     assertor: AssertorId,
     sourceUrl: URL,
-    /** assumptionb: the assertions are grouped by URL */
-    assertions: Map[URL, Vector[Assertion]]) extends AssertorResponse {
-  
-//  val (errors, warnings) = Assertion.countErrorsAndWarnings(assertions)
+    /** assumption: the assertions are grouped by URL */
+    assertions: Map[URL, Vector[Assertion]]) extends AssertorResponse
 
-//  def isValid = (errors === 0) && (warnings === 0)
-  
-}
+//case class GroupedAssertions(grouped: Map[URL, Vector[Assertion]]) extends AnyVal {
+//
+//  def toIterable: Iterable[(URL, Vector[Assertion])] = grouped
+//
+//}

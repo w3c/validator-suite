@@ -41,33 +41,26 @@ object Run {
       "_id" -> BSONInteger(0))
     val cursor = Run.collection.find(query, projection).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
-      val assertions = (json \ "ar" \ "assertions").as[Map[URL, Vector[Assertion]]]
-      assertions.values.flatten
+      val assertions: Iterable[Iterable[Assertion]] =
+        (json \ "ar" \ "assertions").as[JsArray].value.map(_.as[JsArray].apply(1).as[Iterable[Assertion]])
+      assertions.flatten
     } |>>> Iteratee.consume[Iterable[Assertion]]()
   }
 
-  // @@@@@@@@@@@@@@@@@@@
   def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
-    getAssertions(runId).map(_.filter(_.url.underlying === url))
-    // TODO write a test before using this better implementation
-//    import conf._
-//    val query = QueryBuilder().
-//      query( Json.obj(
-//        "runId" -> toJson(runId),
-//        "event" -> toJson("assertor-response"),
-//        "ar.assertions" -> Json.obj("$elemMatch" -> Json.obj("url" -> toJson(url)))) ).
-//      projection( BSONDocument(
-//        "ar.sourceUrl" -> BSONInteger(1),
-//        "ar.assertions" -> BSONInteger(1),
-//        "_id" -> BSONInteger(0)) )
-//    val cursor = Run.collection.find[JsValue](query)
-//    cursor.enumerate() |>>> Iteratee.fold(Map.empty[URL, List[Assertion]]) { case (acc, json) =>
-//      val sourceUrl = (json \ "ar" \ "sourceUrl").as[URL]
-//      val assertions = (json \ "ar" \ "assertions").as[List[Assertion]]
-//      acc + (sourceUrl -> assertions)
-//    } map { assertionsGroupedByURL =>
-//      assertionsGroupedByURL.get(url).orElse(assertionsGroupedByURL.headOption.map(_._2)).getOrElse(List.empty)
-//    }
+    import conf._
+    val query = Json.obj(
+      "runId" -> toJson(runId),
+      "event" -> toJson("assertor-response"),
+      "ar.assertions" -> Json.obj("$elemMatch" -> Json.obj("0" -> toJson(url))))
+    val projection = BSONDocument(
+      "ar.assertions" -> BSONInteger(1),
+      "_id" -> BSONInteger(0))
+    val cursor = Run.collection.find(query, projection).cursor[JsValue]
+    cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
+      val assertions =  (json \ "ar" \ "assertions").as[Map[URL, Vector[Assertion]]](AssertionsFormat)
+      assertions(url).toIterable
+    } |>>> Iteratee.consume[Iterable[Assertion]]()
   }
 
   /** returns the data that defines the final state of a Run.

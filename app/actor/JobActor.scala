@@ -171,7 +171,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
       event match {
         case AssertorResponseEvent(_, _, _, AssertorResult(_, assertorId, sourceUrl, arAssertions), _) =>
-          arAssertions foreach { case (url, assertions) =>
+          arAssertions.toIterable foreach { case (url, assertions) =>
             // ResourceData
             publish(run.resourceDatas(url))
             // Assertion

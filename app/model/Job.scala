@@ -55,15 +55,6 @@ case class Job(
     }
   }
 
-  @deprecated("use Job.getAssertions(url)", "")
-  def getAssertionsForURL(url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
-    status match {
-      case NeverStarted | Zombie => Future.successful(Iterable.empty)
-      case Done(runId, _, _, _) => Run.getAssertionsForURL(runId, url)
-      case Running(runId, _) => Run.getAssertionsForURL(runId, url)
-    }
-  }
-
   def save()(implicit conf: VSConfiguration): Future[Job] =
     Job.save(this)
   
@@ -302,12 +293,12 @@ case class Job(
     actorBasedEnumerator[Assertion](Classifier.AssertionsFor(url), forever = true)
   }
 
-  // all current Assertions for url
-  def getAssertionDatas(url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
+  // all current Assertions for `url`
+  def getAssertions(url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.successful(Iterable.empty)
-      case Done(_, _, _, runData) => ???
+      case Done(runId, _, _, _) => Run.getAssertionsForURL(runId, url)
       case Running(_, jobActorPath) =>
         getFutureT(jobActorPath, Classifier.AssertionsFor(url))
     }
