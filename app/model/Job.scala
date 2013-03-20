@@ -255,7 +255,7 @@ case class Job(
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.failed(new NoSuchElementException)
-      case Done(runId, _, _, _) => Run.getResourceDatas(runId, url)
+      case Done(runId, _, _, _) => Run.getResourceDatasForURL(runId, url)
       case Running(_, jobActorPath) =>
         getFutureT(jobActorPath, Classifier.ResourceDatasFor(url))
     }

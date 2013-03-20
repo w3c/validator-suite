@@ -70,9 +70,9 @@ object Run {
     } |>>> Iteratee.consume[Iterable[Assertion]]()
   }
 
-  /** gets the final ResourceData for the given `run`
+  /** gets the final ResourceData for the given `run` and `url`
     */
-  def getResourceDatas(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
+  def getResourceDatasForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -89,6 +89,26 @@ object Run {
           case None => Future.failed(new NoSuchElementException(url.toString))
           case Some(rd) => Future.successful(rd)
         }
+    }
+  }
+
+  /** gets the final ResourceData for the given `run` and `url`
+    */
+  def getResourceDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = {
+    val query = Json.obj(
+      "runId" -> toJson(runId),
+      "event" -> "done-run")
+    val projection = BSONDocument(
+      "rd" -> BSONInteger(1),
+      "_id" -> BSONInteger(0))
+    val cursor = collection.find(query, projection).cursor[JsValue]
+    cursor.headOption() flatMap {
+      case None => Future.failed(new NoSuchElementException(s"${runId} does not exist or is not in Done state"))
+      case Some(json) => Future.successful {
+        val rds: Iterable[ResourceData] =
+          (json \ "rd").as[JsArray].value.map(json => (json \ "rd").as[ResourceData])
+        rds
+      }
     }
   }
 

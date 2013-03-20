@@ -284,9 +284,14 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     assertions.map(_.url).toSet must be(Set(URL("http://example.com/foo/1")))
   }
 
-  "get final ResourceData for a given run" in {
+  "get final ResourceData-s for a given run" in {
+    val rds = Run.getResourceDatas(run3.runId).getOrFail()
+    rds.toSet must be(run3.resourceDatas.values.toSet)
+  }
+
+  "get final ResourceData for a given run and url" in {
     val url = URL("http://example.com/foo/1")
-    val rd = Run.getResourceDatas(run3.runId, url).getOrFail()
+    val rd = Run.getResourceDatasForURL(run3.runId, url).getOrFail()
     rd must be(run3.resourceDatas(url))
   }
 
