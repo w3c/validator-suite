@@ -96,6 +96,10 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
   import job.{ creatorId => userId, id => jobId }
   import initialRun.runId
 
+  /* some variables */
+
+  var runEvents: Vector[RunEvent] = Vector.empty
+
   // TODO: change the way it's done here
   val assertionsActorRef = context.actorOf(Props(new AssertionsActor(job)), "assertions")
 
@@ -116,7 +120,8 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
   def fireRightAway(sender: ActorRef, classifier: Classifier, run: Run, alwaysFireSomething: Boolean): Unit = {
     import Classifier._
     classifier match {
-      case AllRunEvents => sender ! runEvents
+      case AllRunEvents =>
+        sender ! runEvents
       case AllRunDatas => sender ! run.data
       case AllResourceDatas => sender ! run.resourceDatas.values
       case ResourceDatasFor(url) =>
@@ -345,10 +350,6 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
   def futureSideEffect(block: => Future[Unit]): Unit =
     lastSideEffect = lastSideEffect flatMap { case () => block }
-
-  /* some variables */
-
-  var runEvents: Vector[RunEvent] = Vector.empty
 
   /* EventBus */
 

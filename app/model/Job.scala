@@ -123,22 +123,31 @@ case class Job(
     import conf._
     val (enumerator, channel) = Concurrent.broadcast[T]
     def subscriberActor(): Actor = new Actor {
+
+      var channel: Concurrent.Channel[T] = null
+
       def stop(): Unit = {
         context.stop(self)
-        channel.eofAndEnd()
+        if (channel != null)
+          channel.eofAndEnd()
       }
+
       def push(msg: T): Unit = {
         try {
-          channel.push(msg)
+          if (channel != null)
+            channel.push(msg)
         } catch { case t: Throwable =>
           logger.error("Enumerator exception", t)
           stop()
         }
       }
+
       def subscribeToJobActor(actorRef: ActorRef): Unit = {
         actorRef ! JobActor.Listen(classifier)
       }
-      override def preStart(): Unit = {
+
+      def subscribeToChannel(channel: Concurrent.Channel[T]): Unit = {
+        this.channel = channel
         // subscribe to the EventStream to be notified of new started runs
         if (forever) {
           system.eventStream.subscribe(self, classOf[JobActorStarted])
@@ -162,17 +171,26 @@ case class Job(
         // the normal messages that we're expecting
         case msg: T => push(msg)
         // the actor can group the messages in an iterable
-        case messages: Iterable[_] => messages foreach { case msg: T => push(msg) }
+        case messages: Iterable[_] =>
+          messages foreach { case msg: T => push(msg) }
         // this can come from the EventStream
         case JobActorStarted(_, `id`, _, jobActorRef) => subscribeToJobActor(jobActorRef)
         // that's the signal that a run just ended
         case () => if (forever) channel.push(Input.Empty) else stop()
+        case channel: Concurrent.Channel[T] => subscribeToChannel(channel)
         case msg => logger.error("subscriber got " + msg) ; stop()
       }
     }
     // create (and start) the actor
-    system.actorOf(Props(subscriberActor()))
-    enumerator
+    val actor = system.actorOf(Props(subscriberActor()))
+    Concurrent.unicast(
+      onStart = { channel => actor ! channel },
+      onComplete = { actor ! PoisonPill },
+      onError = { case (error, input) =>
+        logger.error(s"$input: $error")
+        actor ! PoisonPill
+      }
+    )
   }
 
   /* Conventions/guidelines in the naming for the following methods.
