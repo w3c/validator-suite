@@ -282,7 +282,7 @@ case class Job(
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.successful(Iterable.empty)
-      case Done(_, _, _, runData) => ???
+      case Done(runId, _, _, _) => Run.getGroupedAssertionDatas(runId)
       case Running(_, jobActorPath) =>
         getFutureT(jobActorPath, Classifier.AllGroupedAssertionDatas)
     }

@@ -158,7 +158,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   def createRun2(): Unit = {
     JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run2.runId, actorPath, run2.strategy, now)).getOrFail()
-    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas, run2.groupedAssertionDatas, run2.completedOn.get)).getOrFail()
+    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas, run2.groupedAssertionDatas.values, run2.completedOn.get)).getOrFail()
   }
 
   def createRun3(): Unit = {
@@ -167,8 +167,12 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       URL("http://example.com/foo/1") -> ResourceData(URL("http://example.com/foo/1"), now, 27, 19),
       URL("http://example.com/foo/2") -> ResourceData(URL("http://example.com/foo/2"), now, 27, 19)
     )
-    run3 = run3.copy(resourceDatas = run3RD)
-    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3RD, run3.groupedAssertionDatas, run3.completedOn.get)).getOrFail()
+    val run3GADs = Map(
+      AssertionTypeId("id1") -> GroupedAssertionData(AssertionTypeId("id1"), AssertorId("test_assertor"),"fr", "bar", Warning, 2, Vector(URL("http://example.com/foo"), URL("http://example.com/bar"))),
+      AssertionTypeId("id2") -> GroupedAssertionData(AssertionTypeId("id2"), AssertorId("test_assertor"),"fr", "bar", Warning, 2, Vector(URL("http://example.com/foo"), URL("http://example.com/bar")))
+    )
+    run3 = run3.copy(resourceDatas = run3RD, groupedAssertionDatas = run3GADs)
+    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)).getOrFail()
   }
 
   def createRun4(): Unit = {
@@ -293,6 +297,11 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val url = URL("http://example.com/foo/1")
     val rd = Run.getResourceDatasForURL(run3.runId, url).getOrFail()
     rd must be(run3.resourceDatas(url))
+  }
+
+  "get final GroupedAssertionData-s for a given run" in {
+    val gads = Run.getGroupedAssertionDatas(run3.runId).getOrFail()
+    gads.toSet must be(run3.groupedAssertionDatas.values.toSet)
   }
 
   "get all running jobs" in {

@@ -379,7 +379,7 @@ object Formats {
     (__ \ 'errors).format[Int] and
     (__ \ 'warnings).format[Int] and
     (__ \ 'rd).format[Map[URL, ResourceData]](ResourceDatasFormat) and
-    (__ \ 'gad).format[Map[AssertionTypeId, GroupedAssertionData]] and
+    (__ \ 'gad).format[Iterable[GroupedAssertionData]] and
     (__ \ 'timestamp).format[DateTime]
   )({ case (_, userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) => DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) },
     { case DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) => ("done-run", userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) }

@@ -23,7 +23,7 @@ case class DoneRunEvent(
   errors: Int,
   warnings: Int,
   resourceDatas: Map[URL, ResourceData],
-  groupedAssertionsDatas: Map[AssertionTypeId, GroupedAssertionData],
+  groupedAssertionsDatas: Iterable[GroupedAssertionData],
   timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
 case class AssertorResponseEvent(userId: UserId, jobId: JobId, runId: RunId, ar: AssertorResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent

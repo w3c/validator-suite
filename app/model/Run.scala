@@ -92,7 +92,7 @@ object Run {
     }
   }
 
-  /** gets the final ResourceData for the given `run` and `url`
+  /** gets all final ResourceData-s for the given `run` and `url`
     */
   def getResourceDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = {
     val query = Json.obj(
@@ -108,6 +108,24 @@ object Run {
         val rds: Iterable[ResourceData] =
           (json \ "rd").as[JsArray].value.map(json => (json \ "rd").as[ResourceData])
         rds
+      }
+    }
+  }
+
+  /** gets all final ResourceData-s for the given `run` and `url`
+    */
+  def getGroupedAssertionDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Iterable[GroupedAssertionData]] = {
+    val query = Json.obj(
+      "runId" -> toJson(runId),
+      "event" -> "done-run")
+    val projection = BSONDocument(
+      "gad" -> BSONInteger(1),
+      "_id" -> BSONInteger(0))
+    val cursor = collection.find(query, projection).cursor[JsValue]
+    cursor.headOption() flatMap {
+      case None => Future.failed(new NoSuchElementException(s"${runId} does not exist or is not in Done state"))
+      case Some(json) => Future.successful {
+        (json \ "gad").as[Iterable[GroupedAssertionData]]
       }
     }
   }
@@ -453,7 +471,7 @@ case class Run private (
       val timestamp = DateTime.now(DateTimeZone.UTC)
       val completedRun = resultStep.run.completeOn(timestamp)
       val data = completedRun.data
-      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, resourceDatas, groupedAssertionDatas, timestamp)
+      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, resourceDatas, groupedAssertionDatas.values, timestamp)
       resultStep.copy(
         run = completedRun,
         actions = resultStep.actions :+ EmitEvent(completeRunEvent)

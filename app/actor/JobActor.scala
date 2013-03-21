@@ -309,7 +309,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       // logging/monitoring
       logger.debug(s"${run.shortId}: Cancel")
       // logic
-      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas, run.groupedAssertionDatas)
+      val event = DoneRunEvent(userId, jobId, run.runId, Cancelled, run.data.resources, run.data.errors, run.data.warnings, run.resourceDatas, run.groupedAssertionDatas.values)
       handleRunEvent(run, event)
 
     case Event(event: DoneRunEvent, run) =>
