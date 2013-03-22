@@ -348,8 +348,8 @@ case class Run private (
   private def actionFor(url: URL): Option[Fetch] = {
     val action = strategy.getActionFor(url)
     action match {
-      case GET => Some(Fetch(url, GET, runId))
-      case HEAD => Some(Fetch(url, HEAD, runId))
+      case GET => Some(Fetch(url, GET))
+      case HEAD => Some(Fetch(url, HEAD))
       case IGNORE => None
     }
   }

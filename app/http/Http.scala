@@ -44,7 +44,7 @@ class Http(httpClient: AsyncHttpClient, scheduler: Scheduler, cacheOpt: Option[C
       val authorityManagerRef = getAuthorityManagerRefOrCreate(name)
       authorityManagerRef forward msg
     }
-    case fetch @ Fetch(url, _, _) => {
+    case fetch @ Fetch(url, _) => {
       val authority = url.authority
       val authorityManagerRef = getAuthorityManagerRefOrCreate(authority)
       authorityManagerRef forward fetch

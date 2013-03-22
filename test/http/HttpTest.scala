@@ -20,18 +20,14 @@ class HttpTest extends RunTestHelper with Inside {
 
   "testing HEAD on existing URL" in {
 
-    val token = RunId()
+    http ! Fetch(URL("http://localhost:9001/"), HEAD)
 
-    http ! Fetch(URL("http://localhost:9001/"), HEAD, token)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
 
-    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
-
-    inside (fetchResponse) { case (tok, response: HttpResponse) =>
+    inside (fetchResponse) { case response: HttpResponse =>
       response.url must be(URL("http://localhost:9001/"))
       response.method must be(HEAD)
       response.status must be(200)
-      //body must be === ""
-      tok must be(token)
     }
 
   }
@@ -40,18 +36,14 @@ class HttpTest extends RunTestHelper with Inside {
 
   "testing GET on existing URL" in {
 
-    val token = RunId()
-    
-    http ! Fetch(URL("http://localhost:9001/"), GET, token)
+    http ! Fetch(URL("http://localhost:9001/"), GET)
 
-    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
 
-    inside (fetchResponse) { case (tok, response: HttpResponse) =>
+    inside (fetchResponse) { case response: HttpResponse =>
       response.url must be(URL("http://localhost:9001/"))
       response.method must be(GET)
       response.status must be(200)
-      //body must not be ('empty)
-      tok must be(token)
     }
 
   }
@@ -59,17 +51,14 @@ class HttpTest extends RunTestHelper with Inside {
 
   "testing HEAD on non-existing URL (404)" in {
 
-    val token = RunId()
-      
-    http ! Fetch(URL("http://localhost:9001/404/foo"), HEAD, token)
+    http ! Fetch(URL("http://localhost:9001/404/foo"), HEAD)
 
-    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
 
-    inside (fetchResponse) { case (tok, response: HttpResponse) =>
+    inside (fetchResponse) { case response: HttpResponse =>
       response.url must be(URL("http://localhost:9001/404/foo"))
       response.method must be(HEAD)
       response.status must be(404)
-      tok must be(token)
     }
 
   }
@@ -77,16 +66,13 @@ class HttpTest extends RunTestHelper with Inside {
   
   "testing HEAD on non-existing domain example.com must fail" in {
 
-    val token = RunId()
+    http ! Fetch(URL("http://example.co/bar"), HEAD)
 
-    http ! Fetch(URL("http://example.co/bar"), HEAD, token)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
 
-    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
-
-    inside (fetchResponse) { case (tok, response: ErrorResponse) =>
+    inside (fetchResponse) { case response: ErrorResponse =>
       response.url must be(URL("http://example.co/bar"))
       response.method must be(HEAD)
-      tok must be(token)
     }
 
   }
@@ -95,13 +81,11 @@ class HttpTest extends RunTestHelper with Inside {
 
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(200)
 
-    val token = RunId()
-
     for(i <- 1 to 100) {
-      http ! Fetch(URL("http://localhost:9001/"+i), HEAD, token)
+      http ! Fetch(URL("http://localhost:9001/"+i), HEAD)
     }
 
-    val fetchResponse = expectMsgType[(RunId, ResourceResponse)](3.seconds)
+    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
 
     implicit val timeout = akka.util.Timeout(3, java.util.concurrent.TimeUnit.SECONDS)
 
@@ -110,7 +94,7 @@ class HttpTest extends RunTestHelper with Inside {
 
     pendingFetches() must be(99)
 
-    val secondResponse =  expectMsgType[(RunId, ResourceResponse)](3.seconds)
+    val secondResponse =  expectMsgType[ResourceResponse](3.seconds)
 
     pendingFetches() must be(98)
 

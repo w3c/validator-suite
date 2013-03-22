@@ -30,6 +30,7 @@
   </logger>
   <logger name="org.eclipse.jetty.server" level="INFO"/>
   <logger name="com.gargoylesoftware.htmlunit" level="OFF" />
+  <logger name="reactivemongo" level="ERROR"/>
 
   <!-- activate those loggers for more resource fetching info -->
   <!--logger name="org.w3.vs.actor.JobActor" level="DEBUG" />  

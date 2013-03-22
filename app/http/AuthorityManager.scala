@@ -67,8 +67,8 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
       scheduleTick()
     }
 
-    case fetch @ Fetch(url, action, token) => {
-      doFetch(sender, url, action, token)
+    case fetch @ Fetch(url, action) => {
+      doFetch(sender, url, action)
     }
 
     case 'Tick if queue.isEmpty => {
@@ -76,8 +76,8 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
     }
 
     case 'Tick => {
-      val (thesender, Fetch(url, action, token)) = queue.dequeue()
-      doFetch(thesender, url, action, token)
+      val (thesender, Fetch(url, action)) = queue.dequeue()
+      doFetch(thesender, url, action)
       if (queue.nonEmpty)
         scheduleTick()
       else
@@ -91,7 +91,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
   }
 
 
-  def doFetch(to: ActorRef, url: URL, method: HttpMethod, token: Any): Unit = {
+  def doFetch(to: ActorRef, url: URL, method: HttpMethod): Unit = {
 
     lastFetchTimestamp = current()
     
@@ -111,7 +111,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
           } catch {
             case t: Throwable => {
               val errorResponse = ErrorResponse(url = url, method = method, why = t.getMessage)
-              to ! (token, errorResponse)
+              to ! errorResponse
               cacheOpt foreach { _.save(errorResponse) }
               throw t // rethrow for benefit of AsyncHttpClient
             }
@@ -153,7 +153,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
           val bodyAsBytes = response.getResponseBodyAsBytes()
           def resource = Resource.fromInputStream(new ByteArrayInputStream(bodyAsBytes))
           val httpResponse = HttpResponse(url, method, status, headers, resource)
-          to ! (token, httpResponse)
+          to ! httpResponse
           cacheOpt foreach { _.save(httpResponse, resource) }
         }
       }
@@ -167,7 +167,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
     } catch { case t: Throwable =>
         logger.error("that's unexpected: AsyncHttpClient had failed", t)
         val errorResponse = ErrorResponse(url = url, method = method, why = t.getMessage)
-        to ! (token, errorResponse)
+        to ! errorResponse
         cacheOpt foreach { _.save(errorResponse) }
     }
 

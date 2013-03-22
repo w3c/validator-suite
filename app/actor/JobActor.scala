@@ -295,7 +295,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       val event = AssertorResponseEvent(userId, jobId, run.runId, failure)
       handleRunEvent(run, event)
 
-    case Event((_: RunId, httpResponse: HttpResponse), run) =>
+    case Event(httpResponse: HttpResponse, run) =>
       // logging/monitoring
       logger.debug(s"${run.shortId}: <<< ${httpResponse.url}")
       extractedUrls.update(httpResponse.extractedURLs.size)
@@ -303,7 +303,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       val event = ResourceResponseEvent(userId, jobId, run.runId, httpResponse)
       handleRunEvent(run, event)
 
-    case Event((_: RunId, error: ErrorResponse), run) =>
+    case Event(error: ErrorResponse, run) =>
       // logging/monitoring
       logger.debug(s"""${run.shortId}: <<< error when fetching ${error.url} because ${error.why}""")
       // logic
