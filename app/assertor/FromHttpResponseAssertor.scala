@@ -18,7 +18,7 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
     * assertion. One can then assume that all returned Assertion-s
     * will have a different AssertionTypeId.
     */
-  def assert(runId: RunId, response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
+  def assert(response: HttpResponse, configuration: AssertorConfiguration): AssertorResponse = {
     val start = System.currentTimeMillis()
     val result = try {
       val assertions =
@@ -32,9 +32,9 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
           }
           assertionsWithGroupedTitles
         }
-      AssertorResult(runId = runId, assertor = id, sourceUrl = response.url, assertions = assertions)
+      AssertorResult(assertor = id, sourceUrl = response.url, assertions = assertions)
     } catch { case t: Throwable =>
-      AssertorFailure(runId = runId, assertor = id, sourceUrl = response.url, why = t.getMessage)
+      AssertorFailure(assertor = id, sourceUrl = response.url, why = t.getMessage)
     }
     val end = System.currentTimeMillis()
     logger.debug("%s took %dms to assert %s" format (this.name, end - start, response.url))

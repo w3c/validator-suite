@@ -90,9 +90,9 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
       headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
       extractedURLs = List(foo, foo, bar), Some(Doctype("html", "", "")))
 
-    val ar1 = AssertorResult(runId, AssertorId("id1"), foo, Map(foo -> Vector(assertion1)))
-    val ar2 = AssertorResult(runId, AssertorId("id2"), foo, Map(foo -> Vector(assertion2)))
-    val ar3 = AssertorResult(runId, AssertorId("id3"), foo, Map(bar -> Vector(assertion3)))
+    val ar1 = AssertorResult(AssertorId("id1"), foo, Map(foo -> Vector(assertion1)))
+    val ar2 = AssertorResult(AssertorId("id2"), foo, Map(foo -> Vector(assertion2)))
+    val ar3 = AssertorResult(AssertorId("id3"), foo, Map(bar -> Vector(assertion3)))
 
     def test(): Iteratee[RunEvent, Try[Unit]] = for {
       e1 <- Iteratee.head[RunEvent]
@@ -107,11 +107,11 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
       e6 <- Iteratee.head[RunEvent]
     } yield Try {
       val Some(CreateRunEvent(_, jobId, _, _, _, _)) = e1
-      val Some(ResourceResponseEvent(_, _, _, hr2: HttpResponse, _)) = e2
-      val Some(ResourceResponseEvent(_, _, _, hr3: HttpResponse, _)) = e3
-      val Some(AssertorResponseEvent(_, _, _, a4: AssertorResult, _)) = e4
-      val Some(AssertorResponseEvent(_, _, _, a5: AssertorResult, _)) = e5
-      val Some(AssertorResponseEvent(_, _, _, a6: AssertorResult, _)) = e6
+      val Some(ResourceResponseEvent(_, _, `runId`, hr2: HttpResponse, _)) = e2
+      val Some(ResourceResponseEvent(_, _, `runId`, hr3: HttpResponse, _)) = e3
+      val Some(AssertorResponseEvent(_, _, `runId`, a4: AssertorResult, _)) = e4
+      val Some(AssertorResponseEvent(_, _, `runId`, a5: AssertorResult, _)) = e5
+      val Some(AssertorResponseEvent(_, _, `runId`, a6: AssertorResult, _)) = e6
       jobId must be(job.id)
       hr2.url must be(URL("http://localhost:9001/"))
       hr3 must be(httpResponse)

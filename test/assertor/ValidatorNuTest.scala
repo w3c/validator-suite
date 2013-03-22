@@ -37,7 +37,7 @@ class ValidatorNuTest extends WordSpec with MustMatchers with AssertionsMatchers
 
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
-    val assertions = ValidatorNu.assert(url, Map.empty)
+    val assertions = ValidatorNu.assert(url, Map.empty: AssertorConfiguration)
     assertions must (haveErrors)
   }
 

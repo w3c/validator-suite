@@ -29,7 +29,7 @@ class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatc
 
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
-    val assertions = MarkupValidator.assert(url, Map.empty)
+    val assertions = MarkupValidator.assert(url, Map.empty: AssertorConfiguration)
     assertions must (haveErrors)
   }
 

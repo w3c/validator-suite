@@ -90,10 +90,10 @@ class FormatsTest extends WordSpec with MustMatchers {
       extractedURLs = List(URL("http://example.com/foo"), URL("http://example.com/foo"), URL("http://example.com/bar")), Some(Doctype("html", "", "")))
 
   val assertorResult =
-    AssertorResult(RunId(), AssertorId("test_assertor"), URL("http://example.com"), Map(URL("http://example.com") -> Vector(assertion)))
+    AssertorResult(AssertorId("test_assertor"), URL("http://example.com"), Map(URL("http://example.com") -> Vector(assertion)))
 
   val assertorFailure =
-    AssertorFailure(RunId(), AssertorId("test_assertor"), URL("http://example.com"), "parceke")
+    AssertorFailure(AssertorId("test_assertor"), URL("http://example.com"), "parceke")
 
   val httpResponseEvent = ResourceResponseEvent(UserId(), JobId(), RunId(), httpResponse)
   val errorResponseEvent = ResourceResponseEvent(UserId(), JobId(), RunId(), errorResponse)

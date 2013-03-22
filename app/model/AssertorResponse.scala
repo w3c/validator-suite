@@ -6,18 +6,15 @@ import scalaz._
 import scalaz.Scalaz._
 
 sealed trait AssertorResponse {
-  val runId: RunId
   val assertor: AssertorId
   val sourceUrl: URL
 }
 case class AssertorFailure(
-    runId: RunId,
     assertor: AssertorId,
     sourceUrl: URL,
     why: String) extends AssertorResponse
 
 case class AssertorResult(
-    runId: RunId,
     assertor: AssertorId,
     sourceUrl: URL,
     /** assumption: the assertions are grouped by URL */

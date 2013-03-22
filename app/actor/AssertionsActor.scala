@@ -35,13 +35,13 @@ class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
     val sender = self
     
     Future {
-      assertor.assert(runId, response, job.strategy.assertorsConfiguration(assertor.id))
+      assertor.assert(response, job.strategy.assertorsConfiguration(assertor.id))
     } andThen { case _ =>
       atomic { implicit txn => pendingAssertions -= 1 }
     } andThen {
       case Failure(t) => {
         logger.error(s"${runId.shortId}: ${assertor} failed to assert ${response.url} because [${t.getMessage}]", t)
-        sender ! AssertorFailure(runId, assertor.id, response.url, why = t.getMessage)
+        sender ! AssertorFailure(assertor.id, response.url, why = t.getMessage)
       }
       case Success(assertorResponse) => sender ! assertorResponse
     }

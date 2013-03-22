@@ -300,7 +300,6 @@ object Formats {
   }
 
   val AssertorFailureFormat: Format[AssertorFailure] = (
-    (__ \ 'runId).format[RunId] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'sourceUrl).format[URL] and
     (__ \ 'why).format[String]
@@ -332,7 +331,6 @@ object Formats {
     reifiedMapFormat[URL, Vector[Assertion]](key = "url", value = "assertions")
 
   val AssertorResultFormat: Format[AssertorResult] = (
-    (__ \ 'runId).format[RunId] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'sourceUrl).format[URL] and
     (__ \ 'assertions).format[Map[URL, Vector[Assertion]]](AssertionsFormat)
@@ -342,8 +340,8 @@ object Formats {
     def reads(json: JsValue): JsResult[AssertorResponse] =
       AssertorResultFormat.reads(json) orElse AssertorFailureFormat.reads(json)
     def writes(ar: AssertorResponse) = ar match {
-      case result@AssertorResult(_, _, _, _) => AssertorResultFormat.writes(result)
-      case failure@AssertorFailure(_, _, _, _) => AssertorFailureFormat.writes(failure)
+      case result@AssertorResult(_, _, _) => AssertorResultFormat.writes(result)
+      case failure@AssertorFailure(_, _, _) => AssertorFailureFormat.writes(failure)
     }
   }
 

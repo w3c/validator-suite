@@ -444,11 +444,11 @@ case class Run private (
         val run = this.completeOn(timestamp)
         ResultStep(run, Seq.empty)
 
-      case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(_, assertor, url, _), timestamp) =>
+      case are@AssertorResponseEvent(userId, jobId, runId, ar@AssertorResult(assertor, url, _), timestamp) =>
         val run = this.withAssertorResult(ar, timestamp)
         ResultStep(run, Seq.empty)
 
-      case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(_, assertor, url, _), _) =>
+      case AssertorResponseEvent(userId, jobId, runId, af@AssertorFailure(assertor, url, _), _) =>
         val run = this.withAssertorFailure(af)
         ResultStep(run, Seq.empty)
 

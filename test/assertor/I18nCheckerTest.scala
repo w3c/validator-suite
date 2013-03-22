@@ -29,13 +29,13 @@ class I18nCheckerTest extends WordSpec with MustMatchers with AssertionsMatchers
 
   "http://www.w3.org/International/tests/i18n-checker/utf16/utf16be-html.html should have at least one error" in {
     val url = URL("http://www.w3.org/International/tests/i18n-checker/utf16/utf16be-html.html")
-    val assertions = I18nChecker.assert(url, Map.empty)
+    val assertions = I18nChecker.assert(url, Map.empty: AssertorConfiguration)
     assertions must (haveErrors)
   }
 
   "http://www.w3.com/ should have at least one error" in {
     val url = URL("http://www.w3.org/")
-    val assertions = I18nChecker.assert(url, Map.empty)
+    val assertions = I18nChecker.assert(url, Map.empty: AssertorConfiguration)
     assertions must not (haveErrors)
   }
 
