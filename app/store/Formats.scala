@@ -354,15 +354,14 @@ object Formats {
     (__ \ 'runId).format[RunId] and
     (__ \ 'actorPath).format[ActorPath] and
     (__ \ 'strategy).format[Strategy] and
-    (__ \ 'createdAt).format[DateTime] and
     (__ \ 'timestamp).format[DateTime]
   )({
-    case (_, userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
-      CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp)
+    case (_, userId, jobId, runId, actorPath, strategy, timestamp) =>
+      CreateRunEvent(userId, jobId, runId, actorPath, strategy, timestamp)
   },
     {
-      case CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
-        ("create-run", userId, jobId, runId, actorPath, strategy, createdAt, timestamp)
+      case CreateRunEvent(userId, jobId, runId, actorPath, strategy, timestamp) =>
+        ("create-run", userId, jobId, runId, actorPath, strategy, timestamp)
     }
   )
 
@@ -413,7 +412,7 @@ object Formats {
     def writes(event: RunEvent) = event match {
       case e@AssertorResponseEvent(_, _, _, _, _) => AssertorResponseEventFormat.writes(e)
       case e@ResourceResponseEvent(_, _, _, _, _) => ResourceResponseEventFormat.writes(e)
-      case e@CreateRunEvent(_, _, _, _, _, _, _) => CreateRunEventFormat.writes(e)
+      case e@CreateRunEvent(_, _, _, _, _, _) => CreateRunEventFormat.writes(e)
       case e@DoneRunEvent(_, _, _, _, _, _, _, _, _, _) => DoneRunEventFormat.writes(e)
     }
   }

@@ -45,7 +45,7 @@ object JobActor {
 //  }
 
   def saveEvent(event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = event match {
-    case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
+    case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
         val running = Running(runId, actorPath)
         Job.updateStatus(jobId, status = running)
@@ -204,7 +204,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
     // compute the next step and do side-effects
     val state = event match {
-      case CreateRunEvent(_, _, _, _, _, _, _) =>
+      case CreateRunEvent(_, _, _, _, _, _) =>
         runningJobs.inc()
         val running = Running(run.runId, self.path)
         // Job.run() is waiting for this value

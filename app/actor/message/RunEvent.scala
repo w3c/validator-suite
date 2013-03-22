@@ -12,7 +12,7 @@ sealed trait RunEvent {
   def timestamp: DateTime
 }
 
-case class CreateRunEvent(userId: UserId, jobId: JobId, runId: RunId, actorPath: ActorPath, strategy: Strategy, createdAt: DateTime, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+case class CreateRunEvent(userId: UserId, jobId: JobId, runId: RunId, actorPath: ActorPath, strategy: Strategy, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
 case class DoneRunEvent(
   userId: UserId,

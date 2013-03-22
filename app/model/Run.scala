@@ -182,7 +182,7 @@ object Run {
       // the sort is done client-side
       val orderedEvents = list.map(_.as[RunEvent]).sortBy(_.timestamp)
       val (createRun, events) = orderedEvents match {
-        case (createRun@CreateRunEvent(_, _, _, _, _, _, _)) :: events => (createRun, events)
+        case (createRun@CreateRunEvent(_, _, _, _, _, _)) :: events => (createRun, events)
         case _ => sys.error("CreateRunEvent MUST be the first event")
       }
       Run.replayEvents(createRun, events)
@@ -436,7 +436,7 @@ case class Run private (
     */
   def step(event: RunEvent): ResultStep = {
     val resultStep = event match {
-      case CreateRunEvent(userId, jobId, runId, actorPath, strategy, createdAt, timestamp) =>
+      case CreateRunEvent(userId, jobId, runId, actorPath, strategy, timestamp) =>
         val (run, fetches) = this.newlyStartedRun
         ResultStep(run, fetches)
 
