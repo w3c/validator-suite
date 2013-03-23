@@ -5,13 +5,13 @@ import org.joda.time.DateTime
 import org.w3.vs.model.{Context => ContextModel, _}
 import org.w3.vs.view._
 import play.api.i18n.Messages
-import play.api.libs.json.{JsNull, Writes, Json, JsValue}
+import play.api.libs.json._
 import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.view.Collection.Definition
 import org.w3.vs.store.Formats._
+import org.w3.vs.view.Collection.Definition
 
 case class AssertionView(
-  id: Int,
   jobId: JobId,
   data: Assertion) extends Model {
 
@@ -26,9 +26,10 @@ case class AssertionView(
   def title = HtmlFormat.raw(data.title)
   def url = data.url
   def occurrences = data.occurrences
+  def id = data.id.toString
 
   def toJson: JsValue =
-    Json.toJson(data)
+    Json.toJson(data).asInstanceOf[JsObject] + ("id" -> Json.toJson(id))
 
   def toHtml: Html =
     views.html.model.assertion(this)
@@ -51,16 +52,14 @@ object AssertionView {
     ("occurrences" -> true),
     ("title" -> true),
     ("description" -> true),
-    ("contexts" -> true),
-    ("resources" -> true)
+    ("contexts" -> true)
   ).map(a => Definition(a._1, a._2))
 
-  def apply(jobId: JobId, assertion: Assertion): AssertionView = {
-    AssertionView(
-      id = assertion.title.hashCode,
-      jobId = jobId,
-      data = assertion)
-  }
+//  def apply(jobId: JobId, assertion: Assertion): AssertionView = {
+//    AssertionView(
+//      jobId = jobId,
+//      data = assertion)
+//  }
 
   /*def apply(jobId: JobId, assertion: Assertion): AssertionView = {
     AssertionView(

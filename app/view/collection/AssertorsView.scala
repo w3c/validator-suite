@@ -1,6 +1,6 @@
 package org.w3.vs.view.collection
 
-import org.w3.vs.model.{Job, Assertion, Error, Warning}
+import org.w3.vs.model._
 import org.w3.vs.view.Collection._
 import org.w3.vs.view._
 import org.w3.vs.view.model.{AssertionView, AssertorView}
@@ -8,16 +8,24 @@ import play.api.i18n.Messages
 import play.api.templates.Html
 import controllers.routes
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.store.Formats._
 import play.api.libs.json.JsValue
+import scala.Some
+import org.w3.vs.view.Collection.Parameters
+import org.w3.vs.view.Collection.SortParam
+import play.api.mvc.Call
+import org.w3.util.URL
 
 case class AssertorsView(
     source: Iterable[AssertorView],
-    id: String = "assertors",
-    classe: String = "tabs",
+    route: Call,
     params: Parameters = Parameters()) extends CollectionImpl[AssertorView] {
 
-  def route = ??? //routes.Assertors.Jobs.index
+  //def route = routes.Assertors.index()
+
+  val id = "assertors"
+  val classe = "tabs"
 
   def definitions = AssertorView.definitions
 
@@ -47,28 +55,41 @@ case class AssertorsView(
 
 object AssertorsView {
 
-  def apply(assertions: AssertionsView): Future[AssertorsView] = {
-    ???
+  def apply(jobId: JobId, url: URL, assertions: AssertionsView): Future[AssertorsView] = {
+    Future.successful(new AssertorsView(
+      source = getAssertors(assertions.source),
+      route = assertions.route
+    ))
   }
 
-  def apply(groupedAssertions: GroupedAssertionsView): Future[AssertorsView] = {
-    ???
+  def apply(jobId: JobId, groupedAssertions: GroupedAssertionsView): Future[AssertorsView] = {
+    Future.successful(new AssertorsView(
+      source = getAssertors(groupedAssertions.source),
+      route = groupedAssertions.route
+    ))
   }
 
-  def apply(assertions: Iterable[Assertion]): AssertorsView = {
-    val views = assertions.groupBy(_.assertor).map {
+  // a quick surtype of AssertionView, GroupedAssertionView, or just Assertion
+  type A = {
+    def assertor: AssertorId
+    def severity: AssertionSeverity
+    def occurrences: Int
+  }
+
+  def getAssertors[AA <: A](assertions: Iterable[A]): Iterable[AssertorView] = {
+    assertions.groupBy(_.assertor).map {
       case (assertor, assertions) => {
         val errors = assertions.foldLeft(0) {
           case (count, assertion) =>
             count + (assertion.severity match {
-              case Error => scala.math.max(assertion.contexts.size, 1)
+              case Error => assertion.occurrences
               case _ => 0
             })
         }
         val warnings = assertions.foldLeft(0) {
           case (count, assertion) =>
             count + (assertion.severity match {
-              case Warning => scala.math.max(assertion.contexts.size, 1)
+              case Warning => assertion.occurrences
               case _ => 0
             })
         }
@@ -79,7 +100,6 @@ object AssertorsView {
         )
       }
     }
-    new AssertorsView(views)
   }
 
 }

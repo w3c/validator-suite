@@ -62,7 +62,7 @@ object Assertions extends VSController  {
       //assertions_ <- job_.getAssertionsForURL(org.w3.util.URL(url))
       resource <- ResourcesView(job_, url)
       assertions <- AssertionsView(job_, url)
-      assertors <- AssertorsView(assertions)
+      assertors <- AssertorsView(id, url, assertions)
     } yield {
       case Html(_) => {
         Ok(views.html.main(
@@ -71,7 +71,7 @@ object Assertions extends VSController  {
           style = "",
           script = "test",
           crumbs = Seq(
-            job_.name -> routes.Job.get(job_.id),
+            job_.name -> routes.Job.get(id),
             Helper.shorten(url, 50) -> ""),
           collections = Seq(
             resource.withAssertions(assertions),

@@ -16,7 +16,7 @@ object Assertors extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Assertors")
 
-  def index(id: JobId, url: Option[URL]): ActionA = {
+  /*def index(id: JobId, url: Option[URL]): ActionA = {
     url match {
       case Some(url) => AuthAsyncAction { index_(id, url) }
       case None => AuthAsyncAction { index_(id) }
@@ -27,7 +27,7 @@ object Assertors extends VSController {
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       assertions_ <- job_.getAssertions()
-      assertors = AssertorsView(assertions_)
+      assertors = AssertorsView(id, assertions_)
     } yield {
       case Json => Ok(assertors.bindFromRequest.toJson)
     }
@@ -43,9 +43,9 @@ object Assertors extends VSController {
       case Json => Ok(assertors.bindFromRequest.toJson)
     }
     f.timer(indexName).timer(indexTimer)
-  }
+  }*/
 
-  def socket(jobId: JobId, url: Option[URL], typ: SocketType): Handler = {
+  /*def socket(jobId: JobId, url: Option[URL], typ: SocketType): Handler = {
     typ match {
       case SocketType.ws => Action{Ok} //webSocket()
       case SocketType.events => Action{Ok} //eventsSocket()
@@ -56,6 +56,6 @@ object Assertors extends VSController {
   val indexName = (new controllers.javascript.ReverseAssertors).index.name
   val indexTimer = Metrics.newTimer(Assertors.getClass, indexName, MILLISECONDS, SECONDS)
   val indexUrlName = indexName + "+url"
-  val indexUrlTimer = Metrics.newTimer(Assertors.getClass, indexUrlName, MILLISECONDS, SECONDS)
+  val indexUrlTimer = Metrics.newTimer(Assertors.getClass, indexUrlName, MILLISECONDS, SECONDS)*/
 
 }

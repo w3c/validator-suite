@@ -10,7 +10,6 @@ import org.w3.vs.view.Collection.Definition
 import org.w3.vs.store.Formats._
 
 case class GroupedAssertionView(
-  id: Int,
   jobId: JobId,
   data: GroupedAssertionData) extends Model {
 
@@ -20,24 +19,25 @@ case class GroupedAssertionView(
   def resources = data.resources
   def severity = data.severity
   def title = data.title
+  def id = data.id.toString
 
   def toJson: JsValue =
     Json.toJson(data).asInstanceOf[JsObject] + ("id" -> Json.toJson(id))
 
   def toHtml: Html =
-    ??? //views.html.model.groupedAssertion(this)
+    views.html.model.groupedAssertion(this)
 
   def isEmpty: Boolean = resources.isEmpty
 
   def occurrencesLegend: String = {
-    if (resources.size > 1) {
+    //if (resources.size > 1) {
       val occ = if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
       else Messages("assertion.occurrences.count.one")
       Messages("assertion.occurrences.count.resources", occ, resources.size)
-    } else {
+    /*} else {
       if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
       else Messages("assertion.occurrences.count.one")
-    }
+    }*/
   }
 }
 
@@ -50,15 +50,12 @@ object GroupedAssertionView {
     ("severity" -> true),
     ("occurrences" -> true),
     ("title" -> true),
-    ("description" -> true),
-    //("contexts" -> true),
     ("resources" -> true)
   ).map(a => Definition(a._1, a._2))
 
-  def apply(jobId: JobId, data: GroupedAssertionData): GroupedAssertionView = {
-    val id = data.title.hashCode
-    GroupedAssertionView(id, jobId, data)
-  }
+//  def apply(jobId: JobId, data: GroupedAssertionData): GroupedAssertionView = {
+//    GroupedAssertionView(jobId, data)
+//  }
 
 //  def apply(assertion: Assertion, jobId: JobId): AssertionView = {
 //    AssertionView(

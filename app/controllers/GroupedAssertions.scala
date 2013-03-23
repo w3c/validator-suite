@@ -26,7 +26,7 @@ object GroupedAssertions extends VSController  {
       //assertions_ <- job_.getAssertions()
       job <- JobsView(job_)
       groupedAssertions <- GroupedAssertionsView(job_)
-      assertors <- AssertorsView(groupedAssertions)
+      assertors <- AssertorsView(id, groupedAssertions)
     } yield {
       case Html(_) => {
         Ok(views.html.main(

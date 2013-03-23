@@ -1,7 +1,9 @@
 package org.w3.vs.model
 
 /** an unique id to identify the type/class/kind of an Assertion */
-case class AssertionTypeId(uniqueId: String) extends AnyVal
+case class AssertionTypeId(uniqueId: String) extends AnyVal {
+  override def toString = uniqueId
+}
 
 object AssertionTypeId {
 
