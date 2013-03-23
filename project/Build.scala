@@ -35,11 +35,7 @@ object ApplicationBuild extends Build {
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
-
-//    autoCompilerPlugins := true,
-//    libraryDependencies <+= scalaVersion {
-//      v => compilerPlugin("org.scala-lang.plugins" % "continuations" % "2.10.0-RC1")
-//    },
+    scalaVersion := "2.10.1",
     libraryDependencies += "commons-io" % "commons-io" % "2.4",
 
     // activates full stacktrace and durations
