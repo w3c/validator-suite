@@ -9,7 +9,11 @@ object AssertionTypeId {
     * we have a better proposal for the Assertor API
     */
   def apply(assertion: Assertion): AssertionTypeId = {
-    val uniqueId = (assertion.assertor, assertion.title).hashCode.toString
+    apply(assertion.assertor, assertion.title)
+  }
+
+  def apply(assertor: AssertorId, title: String): AssertionTypeId = {
+    val uniqueId = (assertor, title).hashCode.toString
     new AssertionTypeId(uniqueId)
   }
 

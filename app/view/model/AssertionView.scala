@@ -8,36 +8,36 @@ import play.api.i18n.Messages
 import play.api.libs.json.{JsNull, Writes, Json, JsValue}
 import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.view.Collection.Definition
+import org.w3.vs.store.Formats._
 
 case class AssertionView(
-    id: Int,
-    jobId: JobId,
-    assertor: AssertorId,
-    severity: AssertionSeverity,
-    validated: DateTime,
-    title: Html,
-    description: Option[Html],
-    occurrences: Int,
-    contexts: Iterable[AssertionView.Context] = Iterable.empty,
-    resources: Iterable[URL] = Iterable.empty) extends Model {
+  id: Int,
+  jobId: JobId,
+  data: Assertion) extends Model {
+
+  def assertor = data.assertor
+  val contexts = data.contexts.toSeq.sorted(
+    Ordering[(Int, Int)].on[ContextModel](context => (context.line.getOrElse(Int.MaxValue), context.column.getOrElse(Int.MaxValue)))
+  )
+  def description = data.description.map(HtmlFormat.raw)
+  def lang = data.lang
+  def severity = data.severity
+  def timestamp = data.timestamp
+  def title = HtmlFormat.raw(data.title)
+  def url = data.url
+  def occurrences = data.occurrences
 
   def toJson: JsValue =
-    Json.toJson(this)(AssertionView.writes)
+    Json.toJson(data)
 
   def toHtml: Html =
     views.html.model.assertion(this)
 
-  def isEmpty: Boolean = resources.isEmpty && contexts.isEmpty && !description.isDefined
+  def isEmpty: Boolean = contexts.isEmpty && !description.isDefined
 
   def occurrencesLegend: String = {
-    if (resources.size > 1) {
-      val occ = if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
-                else Messages("assertion.occurrences.count.one")
-      Messages("assertion.occurrences.count.resources", occ, resources.size)
-    } else {
-      if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
-      else Messages("assertion.occurrences.count.one")
-    }
+    if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
+    else Messages("assertion.occurrences.count.one")
   }
 }
 
@@ -56,6 +56,13 @@ object AssertionView {
   ).map(a => Definition(a._1, a._2))
 
   def apply(jobId: JobId, assertion: Assertion): AssertionView = {
+    AssertionView(
+      id = assertion.title.hashCode,
+      jobId = jobId,
+      data = assertion)
+  }
+
+  /*def apply(jobId: JobId, assertion: Assertion): AssertionView = {
     AssertionView(
       id = assertion.title.hashCode,
       jobId = jobId,
@@ -107,6 +114,6 @@ object AssertionView {
         "resourcesMore" -> toJson(scala.math.max(0, assertion.resources.size - 50))
       ))
     }
-  }
+  }*/
 
 }

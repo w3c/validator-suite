@@ -17,6 +17,10 @@ case class Assertion(
     description: Option[String],
     timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) {
 
+  def occurrences = scala.math.max(1, contexts.size)
+
+  val id: AssertionTypeId = AssertionTypeId(assertor, title)
+
   override def toString: String =
     s"""Assertion($url, $assertor, $severity)"""
 

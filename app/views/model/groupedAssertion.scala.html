@@ -1,4 +1,4 @@
-@(assertion: AssertionView)
+@(assertion: GroupedAssertionView)
 <article class="@assertion.severity" tabindex="1" data-id="@assertion.id" xmlns="http://www.w3.org/1999/html">
         <dl>
             @AssertionView.definitions.map { definition =>
@@ -18,24 +18,20 @@
             case "title" => {
             <div @if(!assertion.isEmpty){class="fold"} data-title="">@assertion.title</div>}
 
-            case "description" if assertion.description.isDefined => {
-            <div data-description="">@assertion.description</div>}
+            case "resources" => {
+            @Messages("assertion.resources.detail")
 
-            case "description" => {}
-
-            case "contexts" => {
-            @assertion.contexts.take(50).map { case context =>
-            <dd class="context">
-                @if(context.line.isDefined){
-                <span class="line">Line <span title="Line @context.line" data-context-line="">@context.line</span></span>}
-                @if(context.column.isDefined){
-                <span class="column">Column <span title="Column @context.column" data-context-column="">@context.column</span></span>}
-                @if(context.content != ""){
-                <code class="code language-" data-context-content="">@context.content</code>}
+            @assertion.resources.take(50).map { case url =>
+            <dd class="resource">
+                <a href="@routes.Assertions.index(assertion.jobId, url)" class="report" title="@Messages("report.link")">
+                    <span>@Messages("resource.report.for")</span>
+                    <span>url.shorten(80)</span>
+                </a>
+                <br><a href="@url" data-resource="@url" class="external" target="_blank" title="@Messages("resource.external.link")">@url</a>
             </dd>}
-            @if(assertion.contexts.size > 50){
+            @if(assertion.resources.size > 50){
             <dd class="more">
-                <p>And <span data-contextsMore="">@{assertion.contexts.size - 50}</span> more</p>
+                <p>And <span data-resourcesMore="">@{assertion.resources.size - 50}</span> more</p>
             </dd>}}
 
             }}
