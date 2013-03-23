@@ -43,6 +43,8 @@ object ApplicationBuild extends Build {
     testOptions in Test += Tests.Argument("""-oDF"""),
 
     scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
+    scalacOptions in (Compile, doc) ++= Opts.doc.title("Validator Suite"),
+    scalacOptions in (Compile, doc) <++= baseDirectory map { bd => Seq("-sourcepath", bd.getAbsolutePath, "-doc-source-url", "https://github.com/w3c/validator-suite/tree/master€{FILE_PATH}.scala") },
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
     playAssetsDirectories <+= baseDirectory / "app/assets/scripts",
