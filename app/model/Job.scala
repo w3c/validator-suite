@@ -100,13 +100,13 @@ case class Job(
     * on time, the TimeoutException is mapped to a
     * NoSuchElementException.
     */
-  def getFutureT(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.T], conf: VSConfiguration): Future[classifier.T] = {
+  def getFuture(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.OneOff], conf: VSConfiguration): Future[classifier.OneOff] = {
     import conf._
     val actorRef = system.actorFor(actorPath)
     val message = JobActor.Get(classifier)
     val shortTimeout = Duration(1, "s")
-    ask(actorRef, message)(shortTimeout).mapTo[classifier.T] recoverWith {
-      case _: AskTimeoutException => Future.failed[classifier.T](new NoSuchElementException)
+    ask(actorRef, message)(shortTimeout).mapTo[classifier.OneOff] recoverWith {
+      case _: AskTimeoutException => Future.failed[classifier.OneOff](new NoSuchElementException)
     }
   }
 
@@ -119,12 +119,12 @@ case class Job(
     * enumerator will either terminates (Input.EOF) or just emit a
     * Input.Empty.
     */
-  def actorBasedEnumerator[T](classifier: Classifier, forever: Boolean)(implicit classTag: ClassTag[T], conf: VSConfiguration): Enumerator[T] = {
+  def actorBasedEnumerator(classifier: Classifier, forever: Boolean)(implicit classTag: ClassTag[classifier.Streamed], conf: VSConfiguration): Enumerator[classifier.Streamed] = {
     import conf._
-    val (enumerator, channel) = Concurrent.broadcast[T]
+    val (enumerator, channel) = Concurrent.broadcast[classifier.Streamed]
     def subscriberActor(): Actor = new Actor {
 
-      var channel: Concurrent.Channel[T] = null
+      var channel: Concurrent.Channel[classifier.Streamed] = null
 
       def stop(): Unit = {
         context.stop(self)
@@ -132,7 +132,7 @@ case class Job(
           channel.eofAndEnd()
       }
 
-      def push(msg: T): Unit = {
+      def push(msg: classifier.Streamed): Unit = {
         try {
           if (channel != null)
             channel.push(msg)
@@ -146,7 +146,7 @@ case class Job(
         actorRef ! JobActor.Listen(classifier)
       }
 
-      def subscribeToChannel(channel: Concurrent.Channel[T]): Unit = {
+      def subscribeToChannel(channel: Concurrent.Channel[classifier.Streamed]): Unit = {
         this.channel = channel
         // subscribe to the EventStream to be notified of new started runs
         if (forever) {
@@ -169,15 +169,15 @@ case class Job(
       /* the actor's main method... */
       def receive = {
         // the normal messages that we're expecting
-        case msg: T => push(msg)
+        case classTag(msg) => push(msg)
         // the actor can group the messages in an iterable
         case messages: Iterable[_] =>
-          messages foreach { case msg: T => push(msg) }
+          messages foreach { case classTag(msg) => push(msg) }
         // this can come from the EventStream
         case JobActorStarted(_, `id`, _, jobActorRef) => subscribeToJobActor(jobActorRef)
         // that's the signal that a run just ended
         case () => if (forever) channel.push(Input.Empty) else stop()
-        case channel: Concurrent.Channel[T] => subscribeToChannel(channel)
+        case channel: Concurrent.Channel[_] => subscribeToChannel(channel.asInstanceOf[Concurrent.Channel[classifier.Streamed]])
         case msg => logger.error("subscriber got " + msg) ; stop()
       }
     }
@@ -222,7 +222,7 @@ case class Job(
       case NeverStarted | Zombie => Enumerator[RunEvent]()
       case Done(runId, _, _, _) => Run.enumerateRunEvents(runId)
       case Running(_, jobActorPath) =>
-        actorBasedEnumerator[RunEvent](Classifier.AllRunEvents, forever = false)
+        actorBasedEnumerator(Classifier.AllRunEvents, forever = false)
     }
   }
 
@@ -231,7 +231,7 @@ case class Job(
     * Job.jobData() instead. */
   def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
     import conf._
-    val enumerator = actorBasedEnumerator[RunData](Classifier.AllRunDatas, forever = true)
+    val enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
     enumerator &> Enumeratee.map(runData => JobData(this, runData))
   }
 
@@ -243,7 +243,7 @@ case class Job(
   /** this is stateless, so if you're the Done case, you want to use
     * Job.runData() instead */
   def runDatas()(implicit conf: VSConfiguration): Enumerator[RunData] = {
-    actorBasedEnumerator[RunData](Classifier.AllRunDatas, forever = true)
+    actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
   }
 
   /** returns the most up-to-date RunData for the Job, if available */
@@ -253,19 +253,19 @@ case class Job(
       case NeverStarted | Zombie => Future.successful(RunData())
       case Done(_, _, _, runData) => Future.successful(runData)
       case Running(_, jobActorPath) =>
-        getFutureT(jobActorPath, Classifier.AllRunDatas) recover {
+        getFuture(jobActorPath, Classifier.AllRunDatas) recover {
           case _: NoSuchElementException => RunData()
         }
     }
   }
 
   def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
-    actorBasedEnumerator[ResourceData](Classifier.AllResourceDatas, forever = true)
+    actorBasedEnumerator(Classifier.AllResourceDatas, forever = true)
   }
 
   // all ResourceDatas updates for url
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
-    actorBasedEnumerator[ResourceData](Classifier.ResourceDataFor(url), forever = true)
+    actorBasedEnumerator(Classifier.ResourceDataFor(url), forever = true)
   }
 
   // the most up-to-date ResourceData for url
@@ -275,7 +275,7 @@ case class Job(
       case NeverStarted | Zombie => Future.failed(new NoSuchElementException)
       case Done(runId, _, _, _) => Run.getResourceDataForURL(runId, url)
       case Running(_, jobActorPath) =>
-        getFutureT(jobActorPath, Classifier.ResourceDataFor(url))
+        getFuture(jobActorPath, Classifier.ResourceDataFor(url))
     }
   }
 
@@ -286,13 +286,13 @@ case class Job(
       case NeverStarted | Zombie => Future.successful(Iterable.empty)
       case Done(runId, _, _, _) => Run.getResourceDatas(runId)
       case Running(_, jobActorPath) =>
-        getFutureT(jobActorPath, Classifier.AllResourceDatas)
+        getFuture(jobActorPath, Classifier.AllResourceDatas)
     }
   }
 
   // all GroupedAssertionDatas updates
   def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] =  {
-    actorBasedEnumerator[GroupedAssertionData](Classifier.AllGroupedAssertionDatas, forever = true)
+    actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = true)
   }
 
   // all current GroupedAssertionDatas
@@ -302,13 +302,13 @@ case class Job(
       case NeverStarted | Zombie => Future.successful(Iterable.empty)
       case Done(runId, _, _, _) => Run.getGroupedAssertionDatas(runId)
       case Running(_, jobActorPath) =>
-        getFutureT(jobActorPath, Classifier.AllGroupedAssertionDatas)
+        getFuture(jobActorPath, Classifier.AllGroupedAssertionDatas)
     }
   }
 
   // all Assertions updatesfor url
   def assertionDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = {
-    actorBasedEnumerator[Assertion](Classifier.AssertionsFor(url), forever = true)
+    actorBasedEnumerator(Classifier.AssertionsFor(url), forever = true)
   }
 
   // all current Assertions for `url`
@@ -318,7 +318,7 @@ case class Job(
       case NeverStarted | Zombie => Future.successful(Iterable.empty)
       case Done(runId, _, _, _) => Run.getAssertionsForURL(runId, url)
       case Running(_, jobActorPath) =>
-        getFutureT(jobActorPath, Classifier.AssertionsFor(url))
+        getFuture(jobActorPath, Classifier.AssertionsFor(url))
     }
   }
 

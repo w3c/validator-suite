@@ -44,7 +44,7 @@ class JobDataTest extends RunTestHelper with TestKitHelper {
     println("!!!!!!!!!!!!!!!! I mean, I really do  !!!!!!!!!!!!!!!!!!!!!!")
     //(enum |>>> waitFor[JobData]{ case e: JobData => e }).getOrFail()
 
-    true
+    ()
   }
 
 }

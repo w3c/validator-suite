@@ -14,29 +14,41 @@ object Classifier {
     }
   }
 
-  case object AllRunEvents extends Classifier
+  case object AllRunEvents extends Classifier {
+    type OneOff = RunEvent
+    type Streamed = RunEvent
+  }
   case object AllRunDatas extends Classifier {
-    type T = RunData
+    type OneOff = RunData
+    type Streamed = RunData
   }
   case object AllResourceDatas extends Classifier {
-    type T = Iterable[ResourceData]
+    type OneOff = Iterable[ResourceData]
+    type Streamed = ResourceData
   }
   case class ResourceDataFor(url: URL) extends Classifier {
-    type T = ResourceData
+    type OneOff = ResourceData
+    type Streamed = ResourceData
   }
   case object AllAssertions extends Classifier
   case class AssertionsFor(url: URL) extends Classifier {
-    type T = Iterable[Assertion]
+    type OneOff = Iterable[Assertion]
+    type Streamed = Assertion
   }
   case object AllGroupedAssertionDatas extends Classifier {
-    type T = Iterable[GroupedAssertionData]
+    type OneOff = Iterable[GroupedAssertionData]
+    type Streamed = GroupedAssertionData
   }
 
 }
 
 sealed trait Classifier {
 
-  type T
+  /** the type  */
+  type OneOff
+
+  /** the type for the elements  */
+  type Streamed
 
   import Classifier._
 

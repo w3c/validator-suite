@@ -67,7 +67,7 @@ case class User(
               logger.error("ClosedChannel exception: ", e)
               channel.eofAndEnd()
             }
-            case e => {
+            case e: Exception => {
               logger.error("Enumerator exception: ", e)
               channel.eofAndEnd()
             }
