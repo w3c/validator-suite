@@ -55,7 +55,7 @@ object AssertionView {
     ("resources" -> true)
   ).map(a => Definition(a._1, a._2))
 
-  def apply(assertion: Assertion, jobId: JobId): AssertionView = {
+  def apply(jobId: JobId, assertion: Assertion): AssertionView = {
     AssertionView(
       id = assertion.title.hashCode,
       jobId = jobId,

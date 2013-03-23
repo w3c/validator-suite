@@ -12,6 +12,7 @@ import controllers.routes
 import org.w3.vs.VSConfiguration
 import org.w3.vs.store.Formats._
 import play.api.libs.json.JsValue
+import ExecutionContext.Implicits.global
 
 case class JobsView(
     source: Iterable[JobView],
@@ -117,13 +118,14 @@ case class JobsView(
 object JobsView {
 
   def apply(job: Job)(implicit conf: VSConfiguration): Future[JobsView] = {
-    apply(Iterable(job))
+    //apply(Iterable(job), "single")
+    job.getJobData().map(data => JobsView(source = Iterable(JobView(data)), classe = "single"))
   }
 
   def apply(jobs: Iterable[Job])(implicit conf: VSConfiguration): Future[JobsView] = {
-    import ExecutionContext.Implicits.global
+
     val f = Future.sequence(jobs.map(_.getJobData()))
-    f.map(datas => JobsView(datas.map(data => JobView(data))))
+    f.map(datas => JobsView(source = datas.map(data => JobView(data))))
   }
 
 }

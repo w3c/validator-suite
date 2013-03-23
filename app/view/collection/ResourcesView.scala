@@ -13,15 +13,16 @@ import org.w3.vs.view.Collection.SortParam
 import scala.concurrent.Future
 import org.w3.vs.VSConfiguration
 import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.mvc.Call
 
 case class ResourcesView (
     jobId: JobId,
     source: Iterable[ResourceView],
-    id: String = "resources",
-    classe: String = "list",
+    classe: String,
+    route: Call,
     params: Parameters = Parameters()) extends CollectionImpl[ResourceView] {
 
-  val route = routes.Resources.index(jobId, None)
+  val id = "resources"
 
   def definitions = ResourceView.definitions
 
@@ -78,7 +79,12 @@ object ResourcesView {
       datas <- job.getResourceDatas()
     } yield {
       val views = datas.map(data => ResourceView(job.id, data))
-      ResourcesView(job.id, views)
+      ResourcesView(
+        jobId = job.id,
+        source = views,
+        classe = "list",
+        route = routes.Resources.index(job.id, None)
+      )
     }
   }
 
@@ -87,7 +93,12 @@ object ResourcesView {
       data <- job.getResourceData(url)
     } yield {
       val views = Iterable(ResourceView(job.id, data))
-      ResourcesView(job.id, views)
+      ResourcesView(
+        jobId = job.id,
+        source = views,
+        classe = "single",
+        route = routes.Resources.index(job.id, Some(url))
+      )
     }
   }
 

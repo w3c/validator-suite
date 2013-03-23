@@ -54,7 +54,7 @@ object Resources extends VSController  {
 
   def index_(id: JobId, url: URL): Request[AnyContent] => User => PartialFunction[Format, Result] = { implicit req: RequestHeader => user: User =>
     timer(indexUrlName, indexUrlTimer) {
-      case Html(_) => Redirect(routes.Assertions.index(id, Some(url)))
+      case Html(_) => Redirect(routes.Assertions.index(id, url))
     }
   }
 

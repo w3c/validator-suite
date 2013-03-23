@@ -20,13 +20,13 @@ object Job extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Job")
 
-  def reportByMessage(id: JobId): ActionA = Assertions.index(id, None)
+  def reportByMessage(id: JobId): ActionA = GroupedAssertions.index(id)
 
   def reportByResource(id: JobId): ActionA = Resources.index(id, None)
 
   def get(id: JobId): ActionA = Action { implicit req =>
       req.getQueryString("group") match {
-        case Some("message") => Redirect(routes.Assertions.index(id, None))
+        case Some("message") => Redirect(routes.GroupedAssertions.index(id))
         case _ =>               Redirect(routes.Resources.index(id, None))
       }
   }

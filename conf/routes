@@ -25,9 +25,13 @@ POST    /jobs/:job/                                 controllers.Job.dispatcher(j
 # GET     /jobs/:job/edit                           controllers.Job.edit(job: JobId)
 GET     /jobs/:job/socket/:socket                   controllers.Job.socket(job: JobId, socket: SocketType)
 
+# Job/grouped
+GET     /jobs/:job/grouped/                         controllers.GroupedAssertions.index(job: JobId)
+GET     /jobs/:job/grouped/socket/:socket           controllers.GroupedAssertions.socket(job: JobId, socket: SocketType)
+
 # Job/assertions
-GET     /jobs/:job/assertions/                      controllers.Assertions.index(job: JobId, resource: Option[URL])
-GET     /jobs/:job/assertions/socket/:socket        controllers.Assertions.socket(job: JobId, resource: Option[URL], socket: SocketType)
+GET     /jobs/:job/assertions/                      controllers.Assertions.index(job: JobId, resource: URL)
+GET     /jobs/:job/assertions/socket/:socket        controllers.Assertions.socket(job: JobId, resource: URL, socket: SocketType)
 
 # Job/assertors
 GET     /jobs/:job/assertors/                       controllers.Assertors.index(job: JobId, resource: Option[URL])

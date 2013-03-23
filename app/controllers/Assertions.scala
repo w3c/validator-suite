@@ -20,7 +20,7 @@ object Assertions extends VSController  {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Assertions")
 
-  def index(id: JobId, url: Option[URL]): ActionA = {
+  /*def index(id: JobId, url: ): ActionA = {
     url match {
       case Some(url) => AuthAsyncAction { index_(id, url) }
       case None => AuthAsyncAction { index_(id) }
@@ -54,9 +54,9 @@ object Assertions extends VSController  {
       }
     }
     f.timer(indexName).timer(indexTimer)
-  }
+  } */
 
-  def index_(id: JobId, url: URL) = { implicit req: RequestHeader => user: User =>
+  def index(id: JobId, url: URL): ActionA = AuthAsyncAction { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
       //assertions_ <- job_.getAssertionsForURL(org.w3.util.URL(url))
@@ -86,7 +86,7 @@ object Assertions extends VSController  {
     f.timer(indexUrlName).timer(indexUrlTimer)
   }
 
-  def socket(jobId: JobId, url: Option[URL], typ: SocketType): Handler = {
+  def socket(jobId: JobId, url: URL, typ: SocketType): Handler = {
     typ match {
       case SocketType.ws => webSocket(jobId, url)
       case SocketType.events => eventsSocket(jobId, url)
@@ -94,35 +94,30 @@ object Assertions extends VSController  {
     }
   }
 
-  def webSocket(jobId: JobId, url: Option[URL]): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
+  def webSocket(jobId: JobId, url: URL): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
     val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, url, user)))
     (iteratee, enum)
   }
 
-  def cometSocket(jobId: JobId, url: Option[URL]): ActionA = AuthAction { implicit req => user => {
+  def cometSocket(jobId: JobId, url: URL): ActionA = AuthAction { implicit req => user => {
     case Html(_) => Ok.stream(enumerator(jobId, url, user) &> Comet(callback = "parent.VS.resourceupdate"))
   }}
 
-  def eventsSocket(jobId: JobId, url: Option[URL]): ActionA = AuthAction { implicit req => user => {
+  def eventsSocket(jobId: JobId, url: URL): ActionA = AuthAction { implicit req => user => {
     case Stream => Ok.stream(enumerator(jobId, url, user) &> EventSource())
   }}
 
-  private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
+  private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue] = {
     import PlayJson.toJson
-    Enumerator.flatten(user.getJob(jobId).map(job =>
-      (url match {
-        case Some(url) =>
-          job.assertionDatas(org.w3.util.URL(url)) &> Enumeratee.map { assertion => toJson(assertion) }
-        case None =>
-          job.groupedAssertionDatas() &> Enumeratee.map { assertion => toJson(assertion) }
-      }) &> Enumeratee.map { json =>
-        val assertor = (json \ "assertor").as[String]
-        val title = (json \ "title").as[String]
-        val id = (assertor + title).hashCode
-        json.asInstanceOf[JsObject] + ("id", PlayJson.toJson(id))
-      }
-    ))
+    Enumerator.flatten(user.getJob(jobId).map(
+      job => job.assertionDatas(org.w3.util.URL(url)) &> Enumeratee.map { assertion => toJson(assertion) }
+    )) &> Enumeratee.map { json =>
+      val assertor = (json \ "assertor").as[String]
+      val title = (json \ "title").as[String]
+      val id = (assertor + title).hashCode
+      json.asInstanceOf[JsObject] + ("id", PlayJson.toJson(id))
+    }
   }
 
   val indexName = (new controllers.javascript.ReverseAssertions).index.name

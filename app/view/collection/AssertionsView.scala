@@ -10,15 +10,19 @@ import org.w3.util.URL
 import scalaz.Scalaz._
 import play.api.i18n.Messages
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.store.Formats._
 import play.api.libs.json.JsValue
+import controllers.routes
+import org.w3.vs.VSConfiguration
 
 case class AssertionsView(
     source: Iterable[AssertionView],
-    id: String = "assertions",
-    classe: String = "folds",
-    params: Parameters = Parameters(),
-    route: Call) extends CollectionImpl[AssertionView] {
+    classe: String,
+    route: Call,
+    params: Parameters = Parameters()) extends CollectionImpl[AssertionView] {
+
+  val id = "assertions"
 
   /*override def attributes = Iterable(
     //("url1" -> routes.Assertions.index(jobId)),
@@ -68,13 +72,25 @@ case class AssertionsView(
 
 object AssertionsView {
 
-  def apply(job: Job, url: URL): Future[AssertionsView] = {
-    ???
+  def apply(job: Job, url: URL)(implicit conf: VSConfiguration): Future[AssertionsView] = {
+    job.getAssertions(url).map(assertionsDatas =>
+      AssertionsView(
+        source = assertionsDatas.map(data => AssertionView(job.id, data)),
+        classe = "folds",
+        route = routes.Assertions.index(job.id, url)
+      )
+    )
   }
 
-  def apply(job: Job): Future[AssertionsView] = {
-    ???
-  }
+  /*def apply(job: Job)(implicit conf: VSConfiguration): Future[AssertionsView] = {
+    job.getAssertions().map(assertionsDatas =>
+      AssertionsView(
+        source = assertionsDatas.map(data => AssertionView(job.id, data)),
+        classe = "folds",
+        route = routes.GroupedAssertions.index(job.id)
+      )
+    )
+  }*/
 
 //  def apply(assertions: Iterable[Assertion], id: JobId, url: URL): AssertionsView = {
 //    AssertionsView(source = assertions.map(assertion => AssertionView(assertion, id)), route = routes.Assertions.index(id, Some(url)))

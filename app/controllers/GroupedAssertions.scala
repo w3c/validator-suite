@@ -49,43 +49,38 @@ object GroupedAssertions extends VSController  {
     f.timer(indexName).timer(indexTimer)
   }
 
-  def socket(jobId: JobId, url: Option[URL], typ: SocketType): Handler = {
+  def socket(jobId: JobId, typ: SocketType): Handler = {
     typ match {
-      case SocketType.ws => webSocket(jobId, url)
-      case SocketType.events => eventsSocket(jobId, url)
-      case SocketType.comet => cometSocket(jobId, url)
+      case SocketType.ws => webSocket(jobId)
+      case SocketType.events => eventsSocket(jobId)
+      case SocketType.comet => cometSocket(jobId)
     }
   }
 
-  def webSocket(jobId: JobId, url: Option[URL]): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
+  def webSocket(jobId: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
-    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, url, user)))
+    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, user)))
     (iteratee, enum)
   }
 
-  def cometSocket(jobId: JobId, url: Option[URL]): ActionA = AuthAction { implicit req => user => {
-    case Html(_) => Ok.stream(enumerator(jobId, url, user) &> Comet(callback = "parent.VS.resourceupdate"))
+  def cometSocket(jobId: JobId): ActionA = AuthAction { implicit req => user => {
+    case Html(_) => Ok.stream(enumerator(jobId, user) &> Comet(callback = "parent.VS.resourceupdate"))
   }}
 
-  def eventsSocket(jobId: JobId, url: Option[URL]): ActionA = AuthAction { implicit req => user => {
-    case Stream => Ok.stream(enumerator(jobId, url, user) &> EventSource())
+  def eventsSocket(jobId: JobId): ActionA = AuthAction { implicit req => user => {
+    case Stream => Ok.stream(enumerator(jobId, user) &> EventSource())
   }}
 
-  private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
+  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
     import PlayJson.toJson
-    Enumerator.flatten(user.getJob(jobId).map(job =>
-      (url match {
-        case Some(url) =>
-          job.assertionDatas(org.w3.util.URL(url)) &> Enumeratee.map { assertion => toJson(assertion) }
-        case None =>
-          job.groupedAssertionDatas() &> Enumeratee.map { assertion => toJson(assertion) }
-      }) &> Enumeratee.map { json =>
-        val assertor = (json \ "assertor").as[String]
-        val title = (json \ "title").as[String]
-        val id = (assertor + title).hashCode
-        json.asInstanceOf[JsObject] + ("id", PlayJson.toJson(id))
-      }
-    ))
+    Enumerator.flatten(user.getJob(jobId).map(
+      job => job.groupedAssertionDatas() &> Enumeratee.map { assertion => toJson(assertion) }
+    )) &> Enumeratee.map { json =>
+      val assertor = (json \ "assertor").as[String]
+      val title = (json \ "title").as[String]
+      val id = (assertor + title).hashCode
+      json.asInstanceOf[JsObject] + ("id", PlayJson.toJson(id))
+    }
   }
 
   val indexName = (new controllers.javascript.ReverseAssertions).index.name

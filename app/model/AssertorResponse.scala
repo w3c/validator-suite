@@ -19,9 +19,3 @@ case class AssertorResult(
     sourceUrl: URL,
     /** assumption: the assertions are grouped by URL */
     assertions: Map[URL, Vector[Assertion]]) extends AssertorResponse
-
-//case class GroupedAssertions(grouped: Map[URL, Vector[Assertion]]) extends AnyVal {
-//
-//  def toIterable: Iterable[(URL, Vector[Assertion])] = grouped
-//
-//}

@@ -272,19 +272,27 @@ case class Run private (
    * @return an indication of the progress of the Run, between 0 and 100
    */
   def progress: Int = {
+    val expectedFetchs: Double = strategy.maxResources.toDouble
     val crawlProgress =
-      if (pendingFetches.size > 0) {
+      if (pendingFetches.size > 0 && expectedFetchs > 0) {
         // How many have we fetched compared to the max we can go
-        (numberOfFetchedResources.toDouble / strategy.maxResources.toDouble * 100).toInt
+        (numberOfFetchedResources / expectedFetchs * 100)
       } else {
         // No pending fetches. We have either reached the limit of knownUrls or the max number of pages.
-        100
+        100 // or no pending fetch yet!
       }
 
-    val assertionProgress =
-     (assertorResponsesReceived.toDouble / (assertorResponsesReceived + pendingAssertorCalls.size).toDouble * 100).toInt
+    val expectedAssertorCalls: Double =
+      if (crawlProgress == 100)
+        numberOfFetchedResources * (strategy.assertorsConfiguration.size) // only assertors that accept html documents, i.e. all for now
+      else
+        expectedFetchs * (strategy.assertorsConfiguration.size)
 
-    scala.math.min(crawlProgress, assertionProgress)
+    val assertionProgress =
+     if (expectedAssertorCalls == 0) 100
+     else (assertorResponsesReceived / expectedAssertorCalls * 100)
+
+    scala.math.min(crawlProgress, assertionProgress).toInt
   }
 
   def data: RunData = RunData(numberOfFetchedResources, errors, warnings, jobDataStatus, completedOn)

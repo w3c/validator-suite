@@ -9,15 +9,20 @@ import org.w3.util.URL
 import scalaz.Scalaz._
 import play.api.i18n.Messages
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.store.Formats._
 import play.api.libs.json.JsValue
+import controllers.routes
+import org.w3.vs.VSConfiguration
 
 case class GroupedAssertionsView(
   source: Iterable[GroupedAssertionView],
-  id: String = "assertions",
-  classe: String = "folds",
-  params: Parameters = Parameters(),
-  route: Call) extends CollectionImpl[GroupedAssertionView] {
+  route: Call,
+  params: Parameters = Parameters()) extends CollectionImpl[GroupedAssertionView] {
+
+  // html attributes
+  val id = "assertions"
+  val classe = "folds"
 
   def definitions = GroupedAssertionView.definitions
 
@@ -59,12 +64,13 @@ case class GroupedAssertionsView(
 
 object GroupedAssertionsView {
 
-  def apply(job: Job, url: URL): Future[GroupedAssertionsView] = {
-    ???
-  }
-
-  def apply(job: Job): Future[GroupedAssertionsView] = {
-    ???
+  def apply(job: Job)(implicit conf: VSConfiguration): Future[GroupedAssertionsView] = {
+    job.getGroupedAssertionDatas().map(gAssertionsDatas =>
+      GroupedAssertionsView(
+        source = gAssertionsDatas.map(data => GroupedAssertionView(job.id, data)),
+        route = routes.GroupedAssertions.index(job.id)
+      )
+    )
   }
 
   //  def apply(assertions: Iterable[Assertion], id: JobId, url: URL): AssertionsView = {

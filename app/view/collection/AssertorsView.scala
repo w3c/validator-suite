@@ -17,7 +17,7 @@ case class AssertorsView(
     classe: String = "tabs",
     params: Parameters = Parameters()) extends CollectionImpl[AssertorView] {
 
-  def route = routes.Jobs.index
+  def route = ??? //routes.Assertors.Jobs.index
 
   def definitions = AssertorView.definitions
 
