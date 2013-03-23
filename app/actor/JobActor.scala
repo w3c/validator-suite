@@ -124,7 +124,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
         sender ! runEvents
       case AllRunDatas => sender ! run.data
       case AllResourceDatas => sender ! run.resourceDatas.values
-      case ResourceDatasFor(url) =>
+      case ResourceDataFor(url) =>
         run.resourceDatas.get(url) match {
           case Some(resourceData) => sender ! resourceData
           case None =>

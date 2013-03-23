@@ -100,13 +100,13 @@ case class Job(
     * on time, the TimeoutException is mapped to a
     * NoSuchElementException.
     */
-  def getFutureT[T](actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[T], conf: VSConfiguration): Future[T] = {
+  def getFutureT(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.T], conf: VSConfiguration): Future[classifier.T] = {
     import conf._
     val actorRef = system.actorFor(actorPath)
     val message = JobActor.Get(classifier)
     val shortTimeout = Duration(1, "s")
-    ask(actorRef, message)(shortTimeout).mapTo[T] recoverWith {
-      case _: AskTimeoutException => Future.failed[T](new NoSuchElementException)
+    ask(actorRef, message)(shortTimeout).mapTo[classifier.T] recoverWith {
+      case _: AskTimeoutException => Future.failed[classifier.T](new NoSuchElementException)
     }
   }
 
@@ -265,7 +265,7 @@ case class Job(
 
   // all ResourceDatas updates for url
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
-    actorBasedEnumerator[ResourceData](Classifier.ResourceDatasFor(url), forever = true)
+    actorBasedEnumerator[ResourceData](Classifier.ResourceDataFor(url), forever = true)
   }
 
   // the most up-to-date ResourceData for url
@@ -273,9 +273,9 @@ case class Job(
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.failed(new NoSuchElementException)
-      case Done(runId, _, _, _) => Run.getResourceDatasForURL(runId, url)
+      case Done(runId, _, _, _) => Run.getResourceDataForURL(runId, url)
       case Running(_, jobActorPath) =>
-        getFutureT(jobActorPath, Classifier.ResourceDatasFor(url))
+        getFutureT(jobActorPath, Classifier.ResourceDataFor(url))
     }
   }
 

@@ -72,7 +72,7 @@ object Run {
 
   /** gets the final ResourceData for the given `run` and `url`
     */
-  def getResourceDatasForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
+  def getResourceDataForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")

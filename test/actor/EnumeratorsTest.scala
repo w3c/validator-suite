@@ -134,6 +134,9 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
 
     runData.resources must be(2)
 
+    val instantRunData = runningJob.getRunData().getOrFail()
+    instantRunData must be(runData)
+
     val rds = (resourceDatas &> Enumeratee.take(2) |>>> Iteratee.getChunks[ResourceData]).getOrFail()
 
     val rd1 = rds.find(_.url == foo).get

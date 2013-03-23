@@ -8,23 +8,35 @@ object Classifier {
 
   implicit val ordering: Ordering[Classifier] = new Ordering[Classifier] {
     def compare(x: Classifier, y: Classifier): Int = (x, y) match {
-      case (ResourceDatasFor(u1), ResourceDatasFor(u2)) => URL.ordering.compare(u1, u2)
+      case (ResourceDataFor(u1), ResourceDataFor(u2)) => URL.ordering.compare(u1, u2)
       case (AssertionsFor(u1), AssertionsFor(u2)) => URL.ordering.compare(u1, u2)
       case _ => x.hashCode - y.hashCode
     }
   }
 
   case object AllRunEvents extends Classifier
-  case object AllRunDatas extends Classifier
-  case object AllResourceDatas extends Classifier
-  case class ResourceDatasFor(url: URL) extends Classifier
+  case object AllRunDatas extends Classifier {
+    type T = RunData
+  }
+  case object AllResourceDatas extends Classifier {
+    type T = Iterable[ResourceData]
+  }
+  case class ResourceDataFor(url: URL) extends Classifier {
+    type T = ResourceData
+  }
   case object AllAssertions extends Classifier
-  case class AssertionsFor(url: URL) extends Classifier
-  case object AllGroupedAssertionDatas extends Classifier
+  case class AssertionsFor(url: URL) extends Classifier {
+    type T = Iterable[Assertion]
+  }
+  case object AllGroupedAssertionDatas extends Classifier {
+    type T = Iterable[GroupedAssertionData]
+  }
 
 }
 
 sealed trait Classifier {
+
+  type T
 
   import Classifier._
 
@@ -32,7 +44,7 @@ sealed trait Classifier {
     case AllRunEvents => event.isInstanceOf[RunEvent]
     case AllRunDatas => event.isInstanceOf[RunData]
     case AllResourceDatas => event.isInstanceOf[ResourceData]
-    case ResourceDatasFor(url) => event match {
+    case ResourceDataFor(url) => event match {
       case ResourceData(`url`, _, _, _) => true
       case _ => false
     }

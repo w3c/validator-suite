@@ -295,7 +295,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
 
   "get final ResourceData for a given run and url" in {
     val url = URL("http://example.com/foo/1")
-    val rd = Run.getResourceDatasForURL(run3.runId, url).getOrFail()
+    val rd = Run.getResourceDataForURL(run3.runId, url).getOrFail()
     rd must be(run3.resourceDatas(url))
   }
 
