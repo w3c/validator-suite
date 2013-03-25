@@ -88,8 +88,9 @@ trait DefaultProdConfiguration extends VSConfiguration {
   }
 
   lazy val connection = {
+    val driver = new reactivemongo.api.MongoDriver
     val node = configuration.getString("application.mongodb.node") getOrElse sys.error("application.mongodb.node")
-    MongoConnection( List( node ) )
+    driver.connection(Seq(node))
   }
 
   lazy val db = {
