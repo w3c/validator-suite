@@ -245,7 +245,7 @@ case class Job(
     def enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
     this.status match {
       case Done(_, _, _, runData) =>
-        Enumerator(runData) andThen enumerator
+        Enumerator(runData) andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
   }
@@ -269,7 +269,7 @@ case class Job(
       case Done(runId, _, _, _) =>
         val current: Enumerator[ResourceData] =
           Enumerator(Run.getResourceDatas(runId)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
-        current andThen enumerator
+        current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
   }
@@ -281,7 +281,7 @@ case class Job(
       case Done(runId, _, _, _) =>
         val current: Enumerator[ResourceData] =
           Enumerator(Run.getResourceDataForURL(runId, url)) &> Enumeratee.mapM(x => x)
-        current andThen enumerator
+        current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
   }
@@ -315,7 +315,7 @@ case class Job(
       case Done(runId, _, _, _) =>
         val current: Enumerator[GroupedAssertionData] =
           Enumerator(Run.getGroupedAssertionDatas(runId)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
-        current andThen enumerator
+        current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
   }
@@ -338,7 +338,7 @@ case class Job(
       case Done(runId, _, _, _) =>
         val current: Enumerator[Assertion] =
           Enumerator(Run.getAssertionsForURL(runId, url)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
-        current andThen enumerator
+        current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
   }
