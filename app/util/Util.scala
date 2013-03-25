@@ -116,6 +116,16 @@ object Util {
     }
   }
 
+  /** Enumeratee that maps Input.Empty to Input.EOF */
+  def endWithEmpty[T]: Enumeratee[T, T] =
+    Enumeratee.mapInput[T] {
+      case Input.Empty => Input.EOF
+      case t => t
+    }
+
+  /** Enumeratee that just passes the elements and prints them -- for test only */
+  def eprint[T]: Enumeratee[T, T] = Enumeratee.map { t => println("** "+t); t }
+
   import reactivemongo.core.commands.GetLastError
 
   val journalCommit = GetLastError(awaitJournalCommit = true)

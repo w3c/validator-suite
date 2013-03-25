@@ -14,6 +14,7 @@ import scala.util._
 import scala.concurrent.duration.Duration
 import org.w3.util.Util._
 import akka.actor.ActorPath
+import play.api.libs.iteratee.{ Done => _, Error => _, _ }
 
 abstract class MongoStoreTest(
   nbUrlsPerAssertions: Int,
@@ -311,6 +312,50 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     runningJobs must contain(job5)
   }
 
+  "Enumerator-s for completed jobs must send the elements from the latest Run" in {
+    // first, we terminate job1/run4 and we make it point to run3
+    JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)).getOrFail()
+
+    // refresh job1
+    job1 = Job.get(job1.id).getOrFail()
+
+    // now retrieve the JobData-s from the Enumerator
+    val enumJobDatas: List[JobData] =
+      (job1.jobDatas() &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+    val Done(_, _, _, runData) = job1.status
+
+    // and compare it to the RunData in the Job
+    val jobData = JobData(job1, runData)
+    enumJobDatas must be(List(jobData))
+
+    // do the same with RunData
+    val enumRunDatas: List[RunData] =
+      (job1.runDatas() &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+    enumRunDatas must be(List(runData))
+
+    // ... and resourceDatas
+    val enumRds: List[ResourceData] =
+      (job1.resourceDatas() &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+    val rds = job1.getResourceDatas().getOrFail()
+    enumRds must be(rds)
+
+    // ... and GroupedAssertionDatas
+    val enumGads: List[GroupedAssertionData] =
+      (job1.groupedAssertionDatas() &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+    val gads = job1.getGroupedAssertionDatas().getOrFail()
+    enumGads must be(gads)
+
+    // ... and Assertions
+    // TODO add assertions in run3: it's currently empty
+    val url = URL("http://example.com/nothing-here")
+    val enumAssertions: List[Assertion] =
+      (job1.assertions(url) &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+    val assertions = job1.getAssertions(url).getOrFail()
+    enumAssertions must be(assertions)
+
+  }
+
+  /* THIS HAS TO BE AT THE END BECAUSE THERE ARE SIDE-EFFECTS HAPPENING */
   "reInitialize a job" in {
     val jobId = JobId()
     val runId = RunId()
@@ -352,3 +397,11 @@ class MongoStoreTestLight extends MongoStoreTest(
   nbHttpErrorsPerAssertions = 2,
   nbHttpResponsesPerAssertions = 5,
   nbRunDatas = 3)
+
+
+
+
+
+
+
+

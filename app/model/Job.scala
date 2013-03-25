@@ -298,10 +298,10 @@ case class Job(
   }
 
   // all current ResourceDatas
-  def getResourceDatas()(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = {
+  def getResourceDatas()(implicit conf: VSConfiguration): Future[Seq[ResourceData]] = {
     import conf._
     this.status match {
-      case NeverStarted | Zombie => Future.successful(Iterable.empty)
+      case NeverStarted | Zombie => Future.successful(Seq.empty)
       case Done(runId, _, _, _) => Run.getResourceDatas(runId)
       case Running(_, jobActorPath) =>
         getFuture(jobActorPath, Classifier.AllResourceDatas)
@@ -321,10 +321,10 @@ case class Job(
   }
 
   // all current GroupedAssertionDatas
-  def getGroupedAssertionDatas()(implicit conf: VSConfiguration): Future[Iterable[GroupedAssertionData]] = {
+  def getGroupedAssertionDatas()(implicit conf: VSConfiguration): Future[Seq[GroupedAssertionData]] = {
     import conf._
     this.status match {
-      case NeverStarted | Zombie => Future.successful(Iterable.empty)
+      case NeverStarted | Zombie => Future.successful(Seq.empty)
       case Done(runId, _, _, _) => Run.getGroupedAssertionDatas(runId)
       case Running(_, jobActorPath) =>
         getFuture(jobActorPath, Classifier.AllGroupedAssertionDatas)
@@ -332,7 +332,7 @@ case class Job(
   }
 
   // all Assertions updatesfor url
-  def assertionDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = {
+  def assertions(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = {
     def enumerator = actorBasedEnumerator(Classifier.AssertionsFor(url), forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
@@ -344,10 +344,10 @@ case class Job(
   }
 
   // all current Assertions for `url`
-  def getAssertions(url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
+  def getAssertions(url: URL)(implicit conf: VSConfiguration): Future[Seq[Assertion]] = {
     import conf._
     this.status match {
-      case NeverStarted | Zombie => Future.successful(Iterable.empty)
+      case NeverStarted | Zombie => Future.successful(Seq.empty)
       case Done(runId, _, _, _) => Run.getAssertionsForURL(runId, url)
       case Running(_, jobActorPath) =>
         getFuture(jobActorPath, Classifier.AssertionsFor(url))
