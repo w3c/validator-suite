@@ -16,7 +16,7 @@ object ApplicationBuild extends Build {
 
   val appDependencies = Seq(
     // runtime dependencies
-    "org.scala-lang" % "scala-actors" % "2.10.0",
+    "org.scala-lang" % "scala-actors" % "2.10.1",
     "org.apache.commons" % "commons-lang3" % "3.1" intransitive(), // For StringUtils escaping functions
     "nu.validator.htmlparser" % "htmlparser" % "1.2.1" intransitive(),
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10_20130110.jar",

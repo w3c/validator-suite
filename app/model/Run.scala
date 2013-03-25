@@ -30,7 +30,7 @@ object Run {
   def collection(implicit conf: VSConfiguration): BSONCollection =
     conf.db("runs")
 
-  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
+  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[Seq[Assertion]] = {
     import conf._
     val query = Json.obj(
       "runId" -> toJson(runId),
@@ -41,13 +41,13 @@ object Run {
       "_id" -> BSONInteger(0))
     val cursor = Run.collection.find(query, projection).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
-      val assertions: Iterable[Iterable[Assertion]] =
-        (json \ "ar" \ "assertions").as[JsArray].value.map(_.\("assertions").as[Iterable[Assertion]])
+      val assertions: Seq[Seq[Assertion]] =
+        (json \ "ar" \ "assertions").as[JsArray].value.map(_.\("assertions").as[Seq[Assertion]])
       assertions.flatten
-    } |>>> Iteratee.consume[Iterable[Assertion]]()
+    } |>>> Iteratee.consume[Seq[Assertion]]()
   }
 
-  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
+  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[Seq[Assertion]] = {
     import conf._
     val query = Json.obj(
       "runId" -> toJson(runId),
@@ -62,12 +62,12 @@ object Run {
       "_id" -> toJson(0))
     val cursor = Run.collection.find(query, projection).cursor[JsValue]
     cursor.enumerate() &> Enumeratee.map[JsValue] { json =>
-      val assertions: Iterable[Iterable[Assertion]] =
+      val assertions: Seq[Seq[Assertion]] =
         (json \ "ar" \ "assertions").as[JsArray].value.collect { case json if (json \ "url") == toJson(url) =>
-          (json \ "assertions").as[Iterable[Assertion]]
+          (json \ "assertions").as[Seq[Assertion]]
         }
       assertions.flatten
-    } |>>> Iteratee.consume[Iterable[Assertion]]()
+    } |>>> Iteratee.consume[Seq[Assertion]]()
   }
 
   /** gets the final ResourceData for the given `run` and `url`
@@ -94,7 +94,7 @@ object Run {
 
   /** gets all final ResourceData-s for the given `run` and `url`
     */
-  def getResourceDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = {
+  def getResourceDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Seq[ResourceData]] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -105,7 +105,7 @@ object Run {
     cursor.headOption() flatMap {
       case None => Future.failed(new NoSuchElementException(s"${runId} does not exist or is not in Done state"))
       case Some(json) => Future.successful {
-        val rds: Iterable[ResourceData] =
+        val rds: Seq[ResourceData] =
           (json \ "rd").as[JsArray].value.map(json => (json \ "rd").as[ResourceData])
         rds
       }
@@ -114,7 +114,7 @@ object Run {
 
   /** gets all final ResourceData-s for the given `run` and `url`
     */
-  def getGroupedAssertionDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Iterable[GroupedAssertionData]] = {
+  def getGroupedAssertionDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Seq[GroupedAssertionData]] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -125,7 +125,7 @@ object Run {
     cursor.headOption() flatMap {
       case None => Future.failed(new NoSuchElementException(s"${runId} does not exist or is not in Done state"))
       case Some(json) => Future.successful {
-        (json \ "gad").as[Iterable[GroupedAssertionData]]
+        (json \ "gad").as[Seq[GroupedAssertionData]]
       }
     }
   }

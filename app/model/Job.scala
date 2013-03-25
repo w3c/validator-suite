@@ -231,8 +231,7 @@ case class Job(
     * Job.jobData() instead. */
   def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
     import conf._
-    val enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
-    enumerator &> Enumeratee.map(runData => JobData(this, runData))
+    runDatas() &> Enumeratee.map(runData => JobData(this, runData))
   }
 
   /** returns the most up-to-date JobData for the Job, if available */
@@ -243,7 +242,12 @@ case class Job(
   /** this is stateless, so if you're the Done case, you want to use
     * Job.runData() instead */
   def runDatas()(implicit conf: VSConfiguration): Enumerator[RunData] = {
-    actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
+    def enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
+    this.status match {
+      case Done(_, _, _, runData) =>
+        Enumerator(runData) andThen enumerator
+      case _ => enumerator
+    }
   }
 
   /** returns the most up-to-date RunData for the Job, if available */
@@ -260,12 +264,26 @@ case class Job(
   }
 
   def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
-    actorBasedEnumerator(Classifier.AllResourceDatas, forever = true)
+    def enumerator = actorBasedEnumerator(Classifier.AllResourceDatas, forever = true)
+    this.status match {
+      case Done(runId, _, _, _) =>
+        val current: Enumerator[ResourceData] =
+          Enumerator(Run.getResourceDatas(runId)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
+        current andThen enumerator
+      case _ => enumerator
+    }
   }
 
   // all ResourceDatas updates for url
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
-    actorBasedEnumerator(Classifier.ResourceDataFor(url), forever = true)
+    def enumerator = actorBasedEnumerator(Classifier.ResourceDataFor(url), forever = true)
+    this.status match {
+      case Done(runId, _, _, _) =>
+        val current: Enumerator[ResourceData] =
+          Enumerator(Run.getResourceDataForURL(runId, url)) &> Enumeratee.mapM(x => x)
+        current andThen enumerator
+      case _ => enumerator
+    }
   }
 
   // the most up-to-date ResourceData for url
@@ -292,7 +310,14 @@ case class Job(
 
   // all GroupedAssertionDatas updates
   def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] =  {
-    actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = true)
+    def enumerator = actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = true)
+    this.status match {
+      case Done(runId, _, _, _) =>
+        val current: Enumerator[GroupedAssertionData] =
+          Enumerator(Run.getGroupedAssertionDatas(runId)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
+        current andThen enumerator
+      case _ => enumerator
+    }
   }
 
   // all current GroupedAssertionDatas
@@ -308,7 +333,14 @@ case class Job(
 
   // all Assertions updatesfor url
   def assertionDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = {
-    actorBasedEnumerator(Classifier.AssertionsFor(url), forever = true)
+    def enumerator = actorBasedEnumerator(Classifier.AssertionsFor(url), forever = true)
+    this.status match {
+      case Done(runId, _, _, _) =>
+        val current: Enumerator[Assertion] =
+          Enumerator(Run.getAssertionsForURL(runId, url)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
+        current andThen enumerator
+      case _ => enumerator
+    }
   }
 
   // all current Assertions for `url`
