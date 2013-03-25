@@ -1,7 +1,7 @@
 @(assertion: GroupedAssertionView)
 <article class="@assertion.severity" tabindex="1" data-id="@assertion.id" xmlns="http://www.w3.org/1999/html">
         <dl>
-            @AssertionView.definitions.map { definition =>
+            @GroupedAssertionView.definitions.map { definition =>
             <dt>@Messages(s"assertions.${definition.name}")</dt>
             <dd class="@{definition.name}">
             @definition.name match {
