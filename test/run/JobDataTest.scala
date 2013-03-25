@@ -14,7 +14,7 @@ class JobDataTest extends RunTestHelper with TestKitHelper {
     Strategy(
       entrypoint=URL("http://localhost:9001/"),
       linkCheck=true,
-      maxResources = 1,
+      maxResources = 10,
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
 
@@ -22,29 +22,22 @@ class JobDataTest extends RunTestHelper with TestKitHelper {
 
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
 
-  "An enumerator of jobData opened on an idle job should receive updates if the job is run in the future" in {
-
-    /**
-     * That was the old behavior when we had the EventBus, subscribers, and MessageProvenance stuff.
-     * It allowed the client to open the websocket once, send an ajax request to start a job, and receive
-     * updates immediately. Basically job.jobData() should be the enumerator of past and future jobDatas,
-     * regardless of the state of the job when I create it.
-     */
+  "Job.jobData() must be subscribed to future updates even if the job was Idle" in {
 
     (for {
       _ <- User.save(userTest)
       _ <- Job.save(job)
     } yield ()).getOrFail(5.seconds)
 
+    // Get the enum first
     val enum = job.jobDatas()
 
+    // Then run the job
     job.run().getOrFail()
 
-    println("!!!!!!!!!!!!!!!! I would like to pass !!!!!!!!!!!!!!!!!!!!!!")
-    println("!!!!!!!!!!!!!!!! I mean, I really do  !!!!!!!!!!!!!!!!!!!!!!")
-    //(enum |>>> waitFor[JobData]{ case e: JobData => e }).getOrFail()
+    // We should receive an update
+    (enum |>>> waitFor[JobData]{ case e: JobData => e }).getOrFail()
 
-    ()
   }
 
 }
