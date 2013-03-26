@@ -7,7 +7,8 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.templates.Html
 import scala.math
 import scalaz.Scalaz._
-import play.api.mvc.{RequestHeader}
+import play.api.mvc.RequestHeader
+import java.net.URLEncoder
 
 abstract class CollectionImpl[A <: Model] extends Collection[A] {
 
@@ -109,7 +110,7 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
   def queryParameters: Seq[QueryParameter] = {
     Seq (
       params.resource match {
-        case Some(url) => Some(QueryParameter("resource", url.toString))
+        case Some(url) => Some(QueryParameter("resource", URLEncoder.encode(url.toString, "UTF-8")))
         case _ => None
       },
       if (params.perPage != DefaultPerPage) Some(QueryParameter("n", params.perPage.toString)) else None,
