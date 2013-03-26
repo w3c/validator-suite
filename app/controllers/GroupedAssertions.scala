@@ -23,11 +23,10 @@ object GroupedAssertions extends VSController  {
   def index(id: JobId) = AuthAsyncAction { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
-      //assertions_ <- job_.getAssertions()
       job <- JobsView(job_)
       groupedAssertions <- GroupedAssertionsView(job_)
       assertors <- AssertorsView(id, groupedAssertions).map(_.withCollection(groupedAssertions))
-      bindedGroupedAssertions = groupedAssertions.filterOn(assertors.firstAssertor).bindFromRequest
+      bindedGroupedAssertions = groupedAssertions.filterOn(assertors.firstAssertor).bindFromRequest.groupBy("message")
     } yield {
       case Html(_) => {
         // XXX: /!\ get rid of the cyclic dependency between assertors and assertions
