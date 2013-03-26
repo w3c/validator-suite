@@ -72,8 +72,8 @@ package object controllers {
   }
 
   implicit object urlQueryStringBinder extends Parsing[URL] (
-    s => new URL(s),
-    _.toString,
+    s => new URL(URLDecoder.decode(s, "UTF-8")),
+    url => URLEncoder.encode(url.toString, "UTF-8"),
     (key: String, e: Exception) => "Cannot parse parameter %s as URL: %s".format(key, e.getMessage)
   )
   
