@@ -3,6 +3,7 @@ package org.w3.vs.view
 import play.api.templates.Html
 import scalaz.Equal
 import play.api.mvc.{RequestHeader, Call}
+import org.w3.util.URL
 
 trait Collection[+A] extends View {
 
@@ -97,7 +98,8 @@ object Collection {
     group: Option[String] = None,
     page: Int = 1,
     perPage: Int = DefaultPerPage,
-    offset: Int = 0
+    offset: Int = 0,
+    resource: Option[URL] = None
   )
 
   implicit val equal: Equal[SortParam] = new Equal[SortParam] {

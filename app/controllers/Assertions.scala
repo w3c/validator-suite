@@ -65,6 +65,8 @@ object Assertions extends VSController  {
       assertors <- AssertorsView(id, url, assertions)
     } yield {
       case Html(_) => {
+        // XXX: /!\ get rid of the cyclic dependency between assertors and assertions
+        val bindedAssertions = assertions.filterOn(assertors.firstAssertor).bindFromRequest
         Ok(views.html.main(
           user = user,
           title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
@@ -75,8 +77,8 @@ object Assertions extends VSController  {
             Helper.shorten(url, 50) -> ""),
           collections = Seq(
             resource.withAssertions(assertions),
-            assertors.withCollection(assertions),
-            assertions.filterOn(assertors.firstAssertor).bindFromRequest
+            assertors.withCollection(bindedAssertions),
+            bindedAssertions
         )))
       }
       case Json => {

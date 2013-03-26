@@ -108,6 +108,10 @@ abstract class CollectionImpl[A <: Model] extends Collection[A] {
 
   def queryParameters: Seq[QueryParameter] = {
     Seq (
+      params.resource match {
+        case Some(url) => Some(QueryParameter("resource", url.toString))
+        case _ => None
+      },
       if (params.perPage != DefaultPerPage) Some(QueryParameter("n", params.perPage.toString)) else None,
       params.sortParam match {
         case Some(sort) if (sort === defaultSortParam) => None

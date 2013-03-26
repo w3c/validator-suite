@@ -18,11 +18,12 @@ import org.w3.vs.VSConfiguration
 
 case class AssertionsView(
     source: Iterable[AssertionView],
-    classe: String,
     route: Call,
     params: Parameters = Parameters()) extends CollectionImpl[AssertionView] {
 
+  // html attributes
   val id = "assertions"
+  val classe = "folds"
 
   /*override def attributes = Iterable(
     //("url1" -> routes.Assertions.index(jobId)),
@@ -76,8 +77,8 @@ object AssertionsView {
     job.getAssertions(url).map(assertionsDatas =>
       AssertionsView(
         source = assertionsDatas.map(data => AssertionView(job.id, data)),
-        classe = "folds",
-        route = routes.Assertions.index(job.id, url)
+        route = routes.Assertions.index(job.id, url),
+        params = Parameters(resource = Some(url))
       )
     )
   }

@@ -43,7 +43,7 @@ case class AssertorsView(
   def jsTemplate: Option[Html] = Some(views.html.template.assertor())
 
   def firstAssertor: String = {
-    if (iterable.size > 0) iterable.maxBy(_.errors).id.toString else ""
+    if (source.size > 0) source.maxBy(_.errors).id.toString else ""
   }
 
   def withCollection(collection: Collection[Model]): AssertorsView =

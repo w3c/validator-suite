@@ -26,9 +26,11 @@ object GroupedAssertions extends VSController  {
       //assertions_ <- job_.getAssertions()
       job <- JobsView(job_)
       groupedAssertions <- GroupedAssertionsView(job_)
-      assertors <- AssertorsView(id, groupedAssertions)
+      assertors <- AssertorsView(id, groupedAssertions).map(_.withCollection(groupedAssertions))
     } yield {
       case Html(_) => {
+        // XXX: /!\ get rid of the cyclic dependency between assertors and assertions
+        val bindedGroupedAssertions = groupedAssertions.filterOn(assertors.firstAssertor).bindFromRequest
         Ok(views.html.main(
           user = user,
           title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
@@ -36,9 +38,9 @@ object GroupedAssertions extends VSController  {
           script = "test",
           crumbs = Seq(job_.name -> ""),
           collections = Seq(
-            job.withCollection(groupedAssertions), //.groupBy("message")),
-            assertors.withCollection(groupedAssertions),
-            groupedAssertions.filterOn(assertors.firstAssertor).bindFromRequest
+            job.withCollection(groupedAssertions),
+            assertors.withCollection(bindedGroupedAssertions),
+            bindedGroupedAssertions
           )))
       }
       case Json => {
