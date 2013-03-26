@@ -165,7 +165,7 @@ class AuthorityManager(authority: Authority, httpClient: AsyncHttpClient, schedu
         case HEAD => httpClient.prepareHead(url.httpClientFriendly).execute(httpHandler)
       }
     } catch { case t: Throwable =>
-        logger.error("that's unexpected: AsyncHttpClient had failed", t)
+        logger.error(s"AsyncHttpClient failed on ${url}", t)
         val errorResponse = ErrorResponse(url = url, method = method, why = t.getMessage)
         to ! errorResponse
         cacheOpt foreach { _.save(errorResponse) }

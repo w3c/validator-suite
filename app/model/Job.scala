@@ -298,7 +298,7 @@ case class Job(
   }
 
   // all current ResourceDatas
-  def getResourceDatas()(implicit conf: VSConfiguration): Future[Seq[ResourceData]] = {
+  def getResourceDatas()(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.successful(Seq.empty)
@@ -321,7 +321,7 @@ case class Job(
   }
 
   // all current GroupedAssertionDatas
-  def getGroupedAssertionDatas()(implicit conf: VSConfiguration): Future[Seq[GroupedAssertionData]] = {
+  def getGroupedAssertionDatas()(implicit conf: VSConfiguration): Future[Iterable[GroupedAssertionData]] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.successful(Seq.empty)

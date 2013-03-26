@@ -15,7 +15,7 @@ import play.api.libs.iteratee.{ Error => _, _ }
 import scala.util._
 import org.w3.util.html.Doctype
 
-class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
+object DataTest {
 
   val strategy =
     Strategy( 
@@ -24,14 +24,64 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
       maxResources = 100,
       filter=Filter(include=Everything, exclude=Nothing),
       assertorsConfiguration = Map.empty)
-  
-  val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
+
+  val foo = URL("http://example.com/foo")
+  val bar = URL("http://example.com/bar")
+
+  val assertion1 =
+    Assertion(
+      url = foo,
+      assertor = AssertorId("id1"),
+      contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
+      lang = "fr",
+      title = "bar",
+      severity = Error,
+      description = None)
+
+  val assertion2 =
+    Assertion(
+      url = foo,
+      assertor = AssertorId("id2"),
+      contexts = Vector.empty,
+      lang = "fr",
+      title = "bar",
+      severity = Warning,
+      description = None)
+
+  val assertion3 =
+    Assertion(
+      url = bar,
+      assertor = AssertorId("id2"),
+      contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
+      lang = "fr",
+      title = "bar",
+      severity = Warning,
+      description = None)
+
+  val httpResponse = HttpResponse(
+    url = foo,
+    method = GET,
+    status = 200,
+    headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
+    extractedURLs = List(foo, foo, bar), Some(Doctype("html", "", "")))
+
+  val ar1 = AssertorResult(AssertorId("id1"), foo, Map(foo -> Vector(assertion1)))
+  val ar2 = AssertorResult(AssertorId("id2"), foo, Map(foo -> Vector(assertion2)))
+  val ar3 = AssertorResult(AssertorId("id3"), foo, Map(bar -> Vector(assertion3)))
+
+}
+
+class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
+
+  import DataTest._
 
   val circumference = 20
   
   val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet))
   
   "test enumerators" in {
+
+    val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
     
     (for {
       _ <- User.save(userTest)
@@ -50,68 +100,24 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
     val resourceDatas = runningJob.resourceDatas()
     val groupedAssertionDatas = runningJob.groupedAssertionDatas()
 
-    val foo = URL("http://example.com/foo")
-    val bar = URL("http://example.com/bar")
-
-    val assertion1 =
-      Assertion(
-        url = foo,
-        assertor = AssertorId("id1"),
-        contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
-        lang = "fr",
-        title = "bar",
-        severity = Error,
-        description = None)
-
-    val assertion2 =
-      Assertion(
-        url = foo,
-        assertor = AssertorId("id2"),
-        contexts = Vector.empty,
-        lang = "fr",
-        title = "bar",
-        severity = Warning,
-        description = None)
-
-    val assertion3 =
-      Assertion(
-        url = bar,
-        assertor = AssertorId("id2"),
-        contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
-        lang = "fr",
-        title = "bar",
-        severity = Warning,
-        description = None)
-
-    val httpResponse = HttpResponse(
-      url = foo,
-      method = GET,
-      status = 200,
-      headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
-      extractedURLs = List(foo, foo, bar), Some(Doctype("html", "", "")))
-
-    val ar1 = AssertorResult(AssertorId("id1"), foo, Map(foo -> Vector(assertion1)))
-    val ar2 = AssertorResult(AssertorId("id2"), foo, Map(foo -> Vector(assertion2)))
-    val ar3 = AssertorResult(AssertorId("id3"), foo, Map(bar -> Vector(assertion3)))
-
     def test(): Iteratee[RunEvent, Try[Unit]] = for {
-      e1 <- Iteratee.head[RunEvent]
-      e2 <- Iteratee.head[RunEvent]
+      e1 <- waitFor[CreateRunEvent]()
+      e2 <- waitFor[ResourceResponseEvent]()
       _ = jobActor ! httpResponse
       _ = jobActor ! ar1
       _ = jobActor ! ar2
       _ = jobActor ! ar3
-      e3 <- Iteratee.head[RunEvent]
-      e4 <- Iteratee.head[RunEvent]
-      e5 <- Iteratee.head[RunEvent]
-      e6 <- Iteratee.head[RunEvent]
+      e3 <- waitFor[ResourceResponseEvent]()
+      e4 <- waitFor[AssertorResponseEvent]()
+      e5 <- waitFor[AssertorResponseEvent]()
+      e6 <- waitFor[AssertorResponseEvent]()
     } yield Try {
-      val Some(CreateRunEvent(_, jobId, _, _, _, _)) = e1
-      val Some(ResourceResponseEvent(_, _, `runId`, hr2: HttpResponse, _)) = e2
-      val Some(ResourceResponseEvent(_, _, `runId`, hr3: HttpResponse, _)) = e3
-      val Some(AssertorResponseEvent(_, _, `runId`, a4: AssertorResult, _)) = e4
-      val Some(AssertorResponseEvent(_, _, `runId`, a5: AssertorResult, _)) = e5
-      val Some(AssertorResponseEvent(_, _, `runId`, a6: AssertorResult, _)) = e6
+      val CreateRunEvent(_, jobId, _, _, _, _) = e1
+      val ResourceResponseEvent(_, _, `runId`, hr2: HttpResponse, _) = e2
+      val ResourceResponseEvent(_, _, `runId`, hr3: HttpResponse, _) = e3
+      val AssertorResponseEvent(_, _, `runId`, a4: AssertorResult, _) = e4
+      val AssertorResponseEvent(_, _, `runId`, a5: AssertorResult, _) = e5
+      val AssertorResponseEvent(_, _, `runId`, a6: AssertorResult, _) = e6
       jobId must be(job.id)
       hr2.url must be(URL("http://localhost:9001/"))
       hr3 must be(httpResponse)
@@ -120,7 +126,7 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
       a6 must be(ar3)
     }
 
-    (runEvents |>>> test()).getOrFail().get
+    (runEvents /*&> eprint*/ |>>> test()).getOrFail().get
 
     val jobData = 
       (jobDatas |>>> Iteratee.head[JobData]).getOrFail().get

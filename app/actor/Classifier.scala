@@ -23,7 +23,7 @@ object Classifier {
     type Streamed = RunData
   }
   case object AllResourceDatas extends Classifier {
-    type OneOff = Seq[ResourceData]
+    type OneOff = Iterable[ResourceData]
     type Streamed = ResourceData
   }
   case class ResourceDataFor(url: URL) extends Classifier {
@@ -36,7 +36,7 @@ object Classifier {
     type Streamed = Assertion
   }
   case object AllGroupedAssertionDatas extends Classifier {
-    type OneOff = Seq[GroupedAssertionData]
+    type OneOff = Iterable[GroupedAssertionData]
     type Streamed = GroupedAssertionData
   }
 

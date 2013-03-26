@@ -123,7 +123,8 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       case AllRunEvents =>
         sender ! runEvents
       case AllRunDatas => sender ! run.data
-      case AllResourceDatas => sender ! run.resourceDatas.values
+      case AllResourceDatas =>
+        sender ! run.resourceDatas.values
       case ResourceDataFor(url) =>
         run.resourceDatas.get(url) match {
           case Some(resourceData) => sender ! resourceData
@@ -159,7 +160,9 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     val ResultStep(run, actions) = _run.step(event)
 
     // remember the RunEvents seen so far
-    runEvents :+= event
+    sideEffect {
+      runEvents :+= event
+    }
 
     // pure side-effect, no need for synchronization
     executeActions(actions)
@@ -236,8 +239,15 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     case Event(Listen(classifier), run) =>
       val from = sender
       if (subscribe(from, classifier)) {
-        fireRightAway(from, classifier, run, alwaysFireSomething = false)
+        context.watch(from)
+        sideEffect {
+          fireRightAway(from, classifier, run, alwaysFireSomething = false)
+        }
       }
+      stay()
+
+    case Event(Terminated(ref), run) =>
+      unsubscribe(ref)
       stay()
 
     case Event(Deafen, run) =>

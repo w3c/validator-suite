@@ -107,10 +107,18 @@ object Util {
 //   }
 
   import play.api.libs.iteratee._
+  import scala.reflect.ClassTag
 
   def waitFor[A] = new {
+
+    def apply[E]()(implicit classTag: ClassTag[A]): Iteratee[E, A] = Cont {
+      case Input.El(classTag(a)) => Done(a)
+      case in @ Input.EOF => Error("couln't find an element that matches the partial function", in)
+      case _ => apply()(classTag)
+    }
+
     def apply[B](pf: PartialFunction[A, B]): Iteratee[A, B] = Cont {
-      case in @ Input.El(a) if pf.isDefinedAt(a) => Done(pf(a))
+      case Input.El(a) if pf.isDefinedAt(a) => Done(pf(a))
       case in @ Input.EOF => Error("couln't find an element that matches the partial function", in)
       case _ => apply(pf)
     }
