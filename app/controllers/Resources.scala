@@ -34,20 +34,22 @@ object Resources extends VSController  {
   def index_(id: JobId): Request[AnyContent] => User => Future[PartialFunction[Format, Result]] = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
-      //assertions_ <- job_.getAssertions()
       job <- JobsView(job_)
       resources <- ResourcesView(job_)
+      bindedResources = resources.bindFromRequest
     } yield {
-      case Json => Ok(resources.toJson)
-      case Html(_) => Ok(views.html.main(
-        user = user,
-        title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
-        script = "test",
-        crumbs = Seq(job_.name -> ""),
-        collections = Seq(
-          job.withCollection(resources),
-          resources.bindFromRequest
-        )))
+      case Json => Ok(bindedResources.toJson)
+      case Html(_) =>
+        Ok(views.html.main(
+          user = user,
+          title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
+          script = "test",
+          crumbs = Seq(job_.name -> ""),
+          collections = Seq(
+            job.withCollection(bindedResources),
+            bindedResources
+          ))
+        )
     }
     f.timer(indexName).timer(indexTimer)
   }

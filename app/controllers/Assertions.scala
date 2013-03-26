@@ -59,14 +59,13 @@ object Assertions extends VSController  {
   def index(id: JobId, url: URL): ActionA = AuthAsyncAction { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)
-      //assertions_ <- job_.getAssertionsForURL(org.w3.util.URL(url))
       resource <- ResourcesView(job_, url)
       assertions <- AssertionsView(job_, url)
       assertors <- AssertorsView(id, url, assertions)
+      // XXX: /!\ get rid of the cyclic dependency between assertors and assertions
+      bindedAssertions = assertions.filterOn(assertors.firstAssertor).bindFromRequest
     } yield {
       case Html(_) => {
-        // XXX: /!\ get rid of the cyclic dependency between assertors and assertions
-        val bindedAssertions = assertions.filterOn(assertors.firstAssertor).bindFromRequest
         Ok(views.html.main(
           user = user,
           title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
@@ -76,7 +75,7 @@ object Assertions extends VSController  {
             job_.name -> routes.Job.get(id),
             Helper.shorten(url, 50) -> ""),
           collections = Seq(
-            resource.withAssertions(assertions),
+            resource.withAssertions(bindedAssertions),
             assertors.withCollection(bindedAssertions),
             bindedAssertions
         )))
