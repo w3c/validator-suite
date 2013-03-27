@@ -15,6 +15,7 @@ import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
 import org.w3.vs.model.{ Job => ModelJob, _ }
 import org.w3.vs.store.Formats._
+import org.w3.vs.view.model.AssertionView
 
 object Assertions extends VSController  {
 
@@ -112,13 +113,8 @@ object Assertions extends VSController  {
   private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue] = {
     import PlayJson.toJson
     Enumerator.flatten(user.getJob(jobId).map(
-      job => job.assertions(org.w3.util.URL(url)) &> Enumeratee.map { assertion => toJson(assertion) }
-    )) &> Enumeratee.map { json =>
-      val assertor = (json \ "assertor").as[String]
-      val title = (json \ "title").as[String]
-      val id = (assertor + title).hashCode
-      json.asInstanceOf[JsObject] + ("id", PlayJson.toJson(id))
-    }
+      job => job.assertions(org.w3.util.URL(url))
+    )) &> Enumeratee.map(AssertionView(jobId, _).toJson)
   }
 
   val indexName = (new controllers.javascript.ReverseAssertions).index.name

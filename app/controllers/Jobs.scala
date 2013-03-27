@@ -4,8 +4,7 @@ import org.w3.vs.exception._
 import org.w3.vs.model._
 import org.w3.vs.view.collection._
 import org.w3.vs.view.form._
-import play.api.libs.iteratee.Enumerator
-import play.api.libs.iteratee.Iteratee
+import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.json._
 import play.api.libs.{EventSource, Comet}
 import play.api.mvc._
@@ -15,6 +14,7 @@ import scala.concurrent.Future
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
+import org.w3.vs.view.model.JobView
 
 object Jobs extends VSController {
   
@@ -104,7 +104,7 @@ object Jobs extends VSController {
   }}
 
   private def enumerator(user: User): Enumerator[JsValue] = {
-    user.jobDatas() &> JobData.viewEnumeratee
+    user.jobDatas() &> Enumeratee.map(JobView(_).toJson)
   }
 
 }

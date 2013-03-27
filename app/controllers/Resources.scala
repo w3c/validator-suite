@@ -19,6 +19,7 @@ import org.w3.vs.view.Helper
 import org.joda.time.DateTime
 import play.api.libs.json.JsUndefined
 import play.api.libs.json.JsObject
+import org.w3.vs.view.model.ResourceView
 
 object Resources extends VSController  {
 
@@ -89,25 +90,8 @@ object Resources extends VSController  {
         case Some(url) => job.resourceDatas(org.w3.util.URL(url))
         case None => job.resourceDatas()
       }
-    )) &> Enumeratee.map {resource =>
-      val json = toJson(resource)
-      val id = toJson((json \ "url").as[String].hashCode())
-      // TODO: This must be implemented client side. temporary
-      val lastValidated = if (!(json \ "lastValidated").isInstanceOf[JsUndefined]) {
-        val timestamp = new DateTime((json \ "lastValidated").as[Long])
-        PlayJson.obj(
-          "timestamp" -> toJson(timestamp.toString()),
-          "legend1" -> toJson(Helper.formatTime(timestamp)),
-          "legend2" -> toJson("") /* the legend is hidden for now. Doesn't make sense to compute it here anyway */
-        )
-      } else {
-        PlayJson.obj("legend1" -> toJson("Never"))
-      }
-      json.asInstanceOf[JsObject] +
-        ("id", id) -
-        "lastValidated" +
-        ("lastValidated", lastValidated)
-    }
+    )) &> Enumeratee.map(ResourceView(jobId, _).toJson)
+
   }
 
   val indexName = (new controllers.javascript.ReverseResources).index.name

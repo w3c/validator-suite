@@ -6,6 +6,11 @@ import play.api.libs.json._
 import play.api.templates.Html
 import org.w3.vs.view.Collection.Definition
 import org.w3.vs.store.Formats._
+import org.joda.time.DateTime
+import play.api.libs.json.Json._
+import play.api.libs.json.JsUndefined
+import org.w3.vs.view.Collection.Definition
+import play.api.libs.json.JsObject
 
 case class JobView(
     data: JobData,
@@ -22,7 +27,30 @@ case class JobView(
   def status = data.status
   def warnings = data.warnings
 
-  def toJson: JsValue = Json.toJson(data)
+  def toJson: JsValue = {
+    val json: JsObject = Json.toJson(data).asInstanceOf[JsObject]
+    val id = json \ "_id" \ "$oid"
+    // TODO: This must be implemented client side. temporary
+    val completedOn = {
+      if (!(json \ "completedOn").isInstanceOf[JsUndefined]) {
+        val timestamp = new DateTime((json \ "completedOn").as[Long])
+        Json.obj(
+          "timestamp" -> Json.toJson(timestamp.toString()),
+          "legend1" -> Json.toJson(Helper.formatTime(timestamp)),
+          "legend2" -> Json.toJson("") /* the legend is hidden for now. Doesn't make sense to compute it here anyway */
+        )
+      } else {
+        Json.obj("legend1" -> Json.toJson("Never"))
+      }
+    }
+    // Replace the _id field with id and replace completedOn by its object
+    json -
+      "_id" +
+      ("id", id) -
+      "completedOn" +
+      ("completedOn", completedOn)
+
+  }
 
   def toHtml: Html = views.html.model.job(this, collection)
 

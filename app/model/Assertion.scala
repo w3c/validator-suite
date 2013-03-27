@@ -8,6 +8,7 @@ import scalaz._
 import org.w3.vs._
 
 case class Assertion(
+    //id: AssertionTypeId,
     url: URL,
     assertor: AssertorId,
     contexts: Vector[Context],

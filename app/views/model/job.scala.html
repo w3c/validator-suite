@@ -53,7 +53,7 @@
                 <progress max="100" value="@job.health" title="@job.health%" data-health="@job.health">@job.health%</progress>}
 
                 case "actions" => {
-                <form action="@routes.Job.dispatcher(job.id)" method="post">
+                <form action="@routes.Job.dispatcher(job.id)" method="post" class="jobAction">
                     @if(!collection.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.index"/>}
                     <fieldset>
                         <legend>Controls</legend>

@@ -171,7 +171,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
         },
 
         run: function () {
-            this.$(".run").parent("form").attr("action", this.model.url());
+            this.$(".run").parents("form").attr("action", this.model.url());
 
             /*this.model.run({ wait: true });
             var collec = this.options.resources || this.options.assertions;
@@ -205,7 +205,8 @@ define(["lib/Logger", "lib/Util", "libs/backbone", "model/model"], function (Log
             this.$(".errors").replaceWith(html.children(".errors"));
             this.$(".resources").replaceWith(html.children(".resources"));
             this.$(".health").replaceWith(html.children(".health"));
-            this.$(".action").replaceWith(html.children(".action"));
+            this.$(".jobAction").replaceWith(html.find(".jobAction"));
+            //this.delegateEvents();
         }
 
     });

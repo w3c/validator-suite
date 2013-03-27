@@ -1,0 +1,59 @@
+<script type="text/template" id="assertion-template">
+    <dl class="<%= severity %>">
+        @GroupedAssertionView.definitions.map { definition =>
+        <dt>@Messages(s"assertions.${definition.name}")</dt>
+        <dd class="@{definition.name}">
+            @definition.name match {
+
+            case "assertor" => {
+            <span><%= assertor %></span>}
+
+            case "severity" => {
+            <span><%= severity %></span>}
+
+            case "occurrences" => {
+            <span><%= occurrencesLegend %></span>}
+
+            case "title" => {
+            <div<% if(view.isFoldable()){print(" class='fold'")}%>><%= title %></div>}
+
+            case "description" => {
+            <% if (description) { %><div><%= description %></div><% } %>}
+
+            case "contexts" => {
+            <% _.map(contexts, function (context) {%>
+                <dd class="context">
+                    <% if(context.line !== null){ %>
+                    <span class="line">Line <span title="Line <%= context.line %>"><%= context.line %></span></span>
+                    <% } if(context.column !== null){ %>
+                    <span class="column">Column <span title="Column <%= context.column %>"><%= context.column %></span></span>
+                    <% } if(context.content !== null){ %>
+                    <code class="code language-"><%= context.content %></code>
+                    <% } %>
+                </dd>
+            <%}); %>
+            <% if(contextsMore > 0){ %>
+            <dd class="more">
+                <p>And <%= contextsMore %> more</p>
+            </dd><% } %>}
+
+            case "resources" => {
+            <% if(resources.length > 0) { %>@Messages("assertion.resources.detail")<% } %>
+            <% _.map(resources, function (url) {%>
+            <dd class="resource">
+                <a href="<%= "../assertions/?resource=" + url %>" class="report" title="@Messages("report.link")">
+                    <span>@Messages("resource.report.for")</span>
+                    <span><%= Util.shortenUrl(url, 80) %></span>
+                </a>
+                <br><a href="<%= url %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= url %></a>
+            </dd>
+            <%}); %>
+            <% if(resourcesMore > 0){ %>
+            <dd class="more">
+                <p>And <%= resourcesMore %> more</p>
+            </dd><% } %>}
+
+        }}
+    </dl>
+    <hr/>
+</script>

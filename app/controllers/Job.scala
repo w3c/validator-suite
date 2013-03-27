@@ -11,10 +11,11 @@ import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.JsValue
-import play.api.libs.iteratee.{Enumerator, Iteratee}
+import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
 import org.w3.vs.view.{Helper, OTOJType}
 import org.w3.vs.exception.InvalidFormException
+import org.w3.vs.view.model.{JobView, AssertionView}
 
 object Job extends VSController {
 
@@ -79,11 +80,10 @@ object Job extends VSController {
   def run(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
     for {
       job <- user.getJob(id)
-      //_ = if (user.isSubscriber) job.run()
+      _ <- if (user.isSubscriber) job.run() else Future.successful()
     } yield {
       case Html(_) => {
         if (user.isSubscriber) {
-          job.run()
           SeeOther(routes.Job.get(job.id)) //.flashing(("success" -> Messages("jobs.run", job.name)))
         } else {
           logger.info(s"Redirected user ${user.email} to store for jobId ${job.id}")
@@ -92,7 +92,6 @@ object Job extends VSController {
       }
       case _ => {
         if (user.isSubscriber) {
-          job.run()
           Accepted
         } else {
           Status(402) // Payment required
@@ -144,7 +143,7 @@ object Job extends VSController {
   }}
 
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(user.getJob(jobId).map(_.jobDatas())) &> JobData.viewEnumeratee
+    Enumerator.flatten(user.getJob(jobId).map(_.jobDatas())) &> Enumeratee.map(JobView(_).toJson)
   }
 
   private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>

@@ -53,15 +53,19 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logg
             };
         },
 
-        render: function (options) {
-            if (_.isFunction(this.beforeRender)) { this.beforeRender(); }
-            options = _.extend(
+        renderOptions: function (options) {
+            return _.extend(
                 this.model.toJSON(),
                 { view: this, model: this.model, Util: Util },
                 options,
                 _.isFunction(this.templateOptions) ? this.templateOptions() :
                         _.isObject(this.templateOptions) ? this.templateOptions : {}
             );
+        },
+
+        render: function (options) {
+            if (_.isFunction(this.beforeRender)) { this.beforeRender(); }
+            options = this.renderOptions(options)
             if (this.options.softRender && _.isFunction(this.softRender)) {
                 this.softRender(options);
             } else {

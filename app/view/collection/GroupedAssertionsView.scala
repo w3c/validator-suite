@@ -56,7 +56,7 @@ case class GroupedAssertionsView(
 
   def emptyMessage: Html = Html(Messages("assertions.empty"))
 
-  def jsTemplate: Option[Html] = Some(views.html.template.assertion())
+  def jsTemplate: Option[Html] = Some(views.html.template.groupedAssertion())
 
   def copyWith(params: Parameters) = copy(params = params)
 
