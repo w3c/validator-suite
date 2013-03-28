@@ -10,7 +10,7 @@
                     <span>@Messages("resource.report.for")</span>
                     <span><%= Util.shortenUrl(model.get("url"), 80) %></span>
                 </a>
-                <br><a href="<%= url %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= url %></a>}
+                <br><a href="<%= model.get("url") %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= Util.shortenUrl(model.get("url"), 80) %></a>}
 
                 case "validated" => {
                 <time datetime="<%= lastValidated.timestamp %>"><%= lastValidated.legend1 %></time>
