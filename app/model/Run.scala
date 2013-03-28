@@ -592,7 +592,7 @@ case class Run private (
             case None =>
               newAssertions += (url -> (existingAAMap + (assertorId -> assertions)))
             case Some(_) =>
-              logger.error(s"Got assertions for existing ($url, $assertorId). This should have been filtered and will be ignored.")
+              logger.warning(s"Got assertions for existing ($url, $assertorId). This should have been filtered and will be ignored.")
           }
       }
       // ResourceData
