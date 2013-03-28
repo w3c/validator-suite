@@ -52,8 +52,38 @@ object Administration extends VSController {
 //      action <- param.headOption
 //    } yield action).get
 
+      import org.w3.util.Util._
+    val jobs = List(
+"5107f9380bccf4fa0077c888",
+"51082ca60bccf42004211958",
+"510a6cb40bccf4c033211982",
+"510ab43f0bccf4e63d21198c",
+"510b9f850bccf4895021199b",
+"510fe7250bccf4a20a87475a",
+"51117bf90bccf4ea0710c976",
+"5113def40bccf4a000f98461",
+"5113def40bccf4a000f98461",
+"511a41b90bccf44db7bebb7e",
+"511c64470bccf4f508b3c4db",
+"51219dac0bccf4015db3c517",
+"51248da90bccf4170fff79d1",
+"511a41b90bccf44db7bebb7e",
+"513cd0f50bccf47324ff7afd",
+"5140b65c0bccf40648ff7b28",
+"5140dd190bccf44b4aff7b2b",
+"5142b0c80bccf44782ff7b41").distinct.flatMap { id =>
+  try {
+   val job = model.Job.get(JobId(id)).getOrFail()
+   println("ok for "+User.get(job.creatorId).getOrFail().email)
+   Some(job)
+  } catch { case e: Exception =>
+    println(s"foire avec ${id}")
+    None
+  }
+}
+
     for {
-      jobs <- model.Job.getAll()
+//      jobs <- model.Job.getAll()
       _ <- Future.sequence(jobs.map(_.run()))
     } yield {
       case Html(_) => SeeOther(routes.Administration.index()).flashing(

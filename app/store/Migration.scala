@@ -35,30 +35,36 @@ object Migration {
   val dbNameIn = "vs"
   val dbNameOut = "vs-test"
 
-  def migrationMarch28()(implicit conf: VSConfiguration): Unit = {
-    import conf._
+  def main(args: Array[String]): Unit = {
+    migrationMarch28()
+  }
+
+  def migrationMarch28(): Unit = {
 
     val driver = new reactivemongo.api.MongoDriver
-    val conn = driver.connection(Seq(node))
+    val connection = driver.connection(Seq(node))
 
     val dbIn =
-      connection(dbNameIn)(system.dispatchers.lookup("reactivemongo-dispatcher"))
+      connection(dbNameIn)
 
     val dbOut =
-      connection(dbNameOut)(system.dispatchers.lookup("reactivemongo-dispatcher"))
+      connection(dbNameOut)
 
-    val usersIn = dbIn("users", failoverStrategy = FailoverStrategy(retries = 0))
+    dbOut.drop()
 
-    val usersOut: BSONCollection = dbOut("users", failoverStrategy = FailoverStrategy(retries = 0))
+    val usersIn = dbIn("users")
 
-    val jobsIn = dbIn("jobs", failoverStrategy = FailoverStrategy(retries = 0))
+    val usersOut: BSONCollection = dbOut("users")
 
-    val jobsOut = dbOut("jobs", failoverStrategy = FailoverStrategy(retries = 0))
+    val jobsIn = dbIn("jobs")
+
+    val jobsOut = dbOut("jobs")
 
     // copy users
     val users: List[JsValue] = usersIn.find(Json.obj()).cursor[JsValue].toList.getOrFail()
 
     users foreach { user =>
+      println(user \ "email")
       usersOut.insert(user).getOrFail()
     }
 
@@ -66,7 +72,16 @@ object Migration {
     val jobs: List[JsValue] = jobsIn.find(Json.obj()).cursor[JsValue].toList.getOrFail()
 
     jobs foreach { json =>
-      val job = json.as[Job].copy(status = NeverStarted, latestDone = None)
+      val job = Job(
+        id = (json \ "_id").as[JobId],
+        name = (json \ "name").as[String],
+        createdOn = (json \ "createdOn").as[DateTime],
+	strategy = (json \ "strategy").as[Strategy],
+	creatorId = (json \ "creator").as[UserId],
+	status = NeverStarted,
+	latestDone = None)
+//      println(json)
+      println(job.name)
       jobsOut.insert(toJson(job)).getOrFail()
     }
 
