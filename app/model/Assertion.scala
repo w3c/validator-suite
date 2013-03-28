@@ -8,7 +8,7 @@ import scalaz._
 import org.w3.vs._
 
 case class Assertion(
-    //id: AssertionTypeId,
+    id: AssertionTypeId,
     url: URL,
     assertor: AssertorId,
     contexts: Vector[Context],
@@ -20,7 +20,7 @@ case class Assertion(
 
   def occurrences = scala.math.max(1, contexts.size)
 
-  val id: AssertionTypeId = AssertionTypeId(assertor, title)
+  //val id: AssertionTypeId = AssertionTypeId(assertor, title)
 
   override def toString: String =
     s"""Assertion($url, $assertor, $severity)"""

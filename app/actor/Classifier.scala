@@ -62,7 +62,7 @@ sealed trait Classifier {
     }
     case AllAssertions => event.isInstanceOf[Assertion]
     case AssertionsFor(url) => event match {
-      case Assertion(`url`, _, _, _, _, _, _, _) => true
+      case Assertion(_, `url`, _, _, _, _, _, _, _) => true
       case _ => false
     }
     case AllGroupedAssertionDatas => event.isInstanceOf[GroupedAssertionData]

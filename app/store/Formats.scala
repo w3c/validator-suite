@@ -233,7 +233,10 @@ object Formats {
     }
   }
 
+  implicit val AssertionTypeIdFormat = string[AssertionTypeId](AssertionTypeId(_), _.uniqueId)
+
   implicit val AssertionFormat: Format[Assertion] = (
+    (__ \ 'id).format[AssertionTypeId] and
     (__ \ 'url).format[URL] and
     (__ \ 'assertor).format[AssertorId] and
     (__ \ 'contexts).format[Vector[Context]] and
@@ -243,8 +246,6 @@ object Formats {
     (__ \ 'description).formatNullable[String] and
     (__ \ 'timestamp).format[DateTime]
   )(Assertion.apply _, unlift(Assertion.unapply _))
-
-  implicit val AssertionTypeIdFormat = string[AssertionTypeId](AssertionTypeId(_), _.uniqueId)
 
   implicit val GroupedAssertionDataFormat: Format[GroupedAssertionData] = (
     (__ \ 'id).format[AssertionTypeId] and

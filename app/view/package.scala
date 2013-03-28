@@ -81,14 +81,14 @@ package object view {
     }
   }
 
-  implicit def optionWrites[A](implicit wa: Writes[A]) = new Writes[Option[A]] {
-    def writes(o: Option[A]): JsValue = {
-      o match {
-        case Some(a) => wa.writes(a)
-        case None => JsNull
-      }
-    }
-  }
+//  implicit def optionWrites[A](implicit wa: Writes[A]) = new Writes[Option[A]] {
+//    def writes(o: Option[A]): JsValue = {
+//      o match {
+//        case Some(a) => wa.writes(a)
+//        case None => JsNull
+//      }
+//    }
+//  }
 
   implicit val booleanFormatter = new Formatter[Boolean] {
     def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Boolean] =

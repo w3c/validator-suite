@@ -45,6 +45,7 @@ GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket
 GET     /admin/9m7tKYo1                             controllers.Administration.index()
 POST    /admin/9m7tKYo1/jobs                        controllers.Administration.jobsPost()
 POST    /admin/9m7tKYo1/users                       controllers.Administration.usersPost()
+POST    /admin/9m7tKYo1/migration                   controllers.Administration.migration()
 
 ##########################
 # Map static resources from the /public folder to the /assets URL path

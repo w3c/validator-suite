@@ -54,6 +54,7 @@ class FormatsTest extends WordSpec with MustMatchers {
 
   val assertion =
     Assertion(
+      id = AssertionTypeId("a"),
       url = URL("http://example.com/foo"),
       assertor = AssertorId("test_assertor"),
       contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),

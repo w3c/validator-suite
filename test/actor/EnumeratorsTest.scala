@@ -30,6 +30,7 @@ object DataTest {
 
   val assertion1 =
     Assertion(
+      id = AssertionTypeId(AssertorId("id1"), "bar"),
       url = foo,
       assertor = AssertorId("id1"),
       contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
@@ -40,6 +41,7 @@ object DataTest {
 
   val assertion2 =
     Assertion(
+      id = AssertionTypeId(AssertorId("id2"), "bar"),
       url = foo,
       assertor = AssertorId("id2"),
       contexts = Vector.empty,
@@ -50,6 +52,7 @@ object DataTest {
 
   val assertion3 =
     Assertion(
+      id = AssertionTypeId(AssertorId("id2"), "bar"),
       url = bar,
       assertor = AssertorId("id2"),
       contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),

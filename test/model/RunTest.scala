@@ -29,6 +29,7 @@ class RunTest extends WordSpec with MustMatchers {
     val assertorId = AssertorId("test_assertor")
     val assertion =
       Assertion(
+        id = AssertionTypeId(assertorId, "bar"),
         url = URL("http://example.com/foo"),
         assertor = assertorId,
         contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),

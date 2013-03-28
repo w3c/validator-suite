@@ -122,6 +122,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   def newAssertion(url: URL, assertor: AssertorId, severity: AssertionSeverity): Assertion = {
     val contexts = Vector(Context("blah", Some(42), None), Context("blarf", None, Some(42)))
     Assertion(
+      id = AssertionTypeId(assertor, "some title"),
       url = url,
       assertor = assertor,
       contexts = contexts,
@@ -363,6 +364,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
     val run = run1.copy(runId = runId)
     val url = URL("http://example.com/foo")
     val assertion = Assertion(
+      id = AssertionTypeId(AssertorId("foo"), "some title"),
       url = url,
       assertor = AssertorId("foo"),
       contexts = Vector.empty,

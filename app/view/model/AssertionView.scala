@@ -29,8 +29,8 @@ case class AssertionView(
   def id = data.id.toString
 
   def toJson: JsValue =
-    Json.toJson(data).asInstanceOf[JsObject] +
-      ("id" -> Json.toJson(id)) // because "id" is not part of the json model of an Assertion, cf Formats
+    Json.toJson(data).asInstanceOf[JsObject] //+
+      //("id" -> Json.toJson(id)) // because "id" is not part of the json model of an Assertion, cf Formats
 
   def toHtml: Html =
     views.html.model.assertion(this)

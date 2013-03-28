@@ -20,7 +20,7 @@ object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
 
   def fix(assertions: Iterable[Assertion]): Iterable[Assertion] = {
     assertions map {
-      case assertion@Assertion(_, _, _, _, "External Checker not available", Error, _, _) =>
+      case assertion@Assertion(_, _, _, _, _, "External Checker not available", Error, _, _) =>
         assertion.copy(title = UsesHtml5Syntax)
       case assertion => assertion
     }

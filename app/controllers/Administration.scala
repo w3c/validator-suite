@@ -3,6 +3,7 @@ package controllers
 import org.w3.vs.controllers._
 import play.api.mvc.{Result, Action}
 import org.w3.vs.exception.UnknownUser
+import org.w3.vs.model
 import org.w3.vs.model.{User, JobId}
 import play.api.i18n.Messages
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -18,7 +19,7 @@ object Administration extends VSController {
     Ok(views.html.admin())
   }
 
-  def jobsPost: ActionA = AsyncAction { implicit req =>
+  def jobsPost(): ActionA = AsyncAction { implicit req =>
     // Really don't like that lenghty code to get just a few parameters from the body. Consider a helper function
     val (jobId, action) = (for {
       body <- req.body.asFormUrlEncoded
@@ -34,6 +35,7 @@ object Administration extends VSController {
         action match {
           case "delete" => job.delete().map(_ => "jobs.deleted")
           case "reset" => job.reset().map(_ => "jobs.reset")
+          case "run" => job.run().map(_ => "jobs.run")
         }
       }
     } yield {
@@ -43,7 +45,25 @@ object Administration extends VSController {
     }
   }
 
-  def usersPost: ActionA = AsyncAction { implicit req =>
+  def migration(): ActionA = AsyncAction { implicit req =>
+//    val action = (for {
+//      body <- req.body.asFormUrlEncoded
+//      param <- body.get("action")
+//      action <- param.headOption
+//    } yield action).get
+
+    for {
+      jobs <- model.Job.getAll()
+      _ <- Future.sequence(jobs.map(_.run()))
+    } yield {
+      case Html(_) => SeeOther(routes.Administration.index()).flashing(
+        ("success" -> s"${jobs.size} jobs have been successfully rerun")
+      )
+    }
+
+  }
+
+  def usersPost(): ActionA = AsyncAction { implicit req =>
     val (email, isSubscriber) = (for {
       body <- req.body.asFormUrlEncoded
       email <- body.get("email").get.headOption
