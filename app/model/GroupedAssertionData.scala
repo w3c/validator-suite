@@ -9,7 +9,7 @@ case class GroupedAssertionData(
   title: String,
   severity: AssertionSeverity,
   occurrences: Int,
-  resources: Vector[URL]) {
+  resources: Vector[URL]) { // resources should be a Set. Ideally Map{Int, URL], (occurrences -> url)
 
   /** incorporates `assertion` in this GroupedAssertionData. It expects
     * the assertion to share the same AssertionTypeId than this
@@ -18,7 +18,7 @@ case class GroupedAssertionData(
   def +(assertion: Assertion): GroupedAssertionData = {
     this.copy(
       occurrences = this.occurrences + GroupedAssertionData.occurences(assertion),
-      resources = this.resources :+ assertion.url
+      resources = (this.resources :+ assertion.url).distinct
     )
   }
 
