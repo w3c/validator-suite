@@ -3,10 +3,9 @@ Vary: Accept-Encoding
 X-Pingback: http://www.w3.org/blog/MWIDC/xmlrpc.php
 Transfer-Encoding: chunked
 Server: Apache/2.2.22 (Debian)
-Expires: Tue, 12 Mar 2013 01:47:16 GMT
-Connection: close
+Expires: Thu, 28 Mar 2013 23:56:32 GMT
 Cache-Control: max-age=21600
 P3P: policyref="http://www.w3.org/2001/05/P3P/p3p.xml"
 Content-Type: text/html; charset=UTF-8
-Date: Mon, 11 Mar 2013 19:47:16 GMT
+Date: Thu, 28 Mar 2013 17:56:32 GMT
 X-Powered-By: PHP/5.3.3-7+squeeze15

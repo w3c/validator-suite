@@ -41,9 +41,9 @@ class LocalValidators(port: Int, cacheOpt: Option[Cache]) {
       cacheOpt foreach { cache =>
         cache.setAsDefaultCache()
         // make sure that validator.nu will use the cache, always
-        setFinalStatic(
-          classOf[_root_.nu.validator.xml.PrudentHttpEntityResolver].getDeclaredField("client"),
-          new CacheOnlyHttpClient(cache))
+//        setFinalStatic(
+//          classOf[_root_.nu.validator.xml.PrudentHttpEntityResolver].getDeclaredField("client"),
+//          new CacheOnlyHttpClient(cache))
       }
       // start the validators
       try {

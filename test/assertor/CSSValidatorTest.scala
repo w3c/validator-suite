@@ -18,6 +18,8 @@ object CSSValidatorTest {
   def main(args: Array[String]): Unit = {
     cache.reset()
     cache.retrieveAndCache(URL("http://www.google.com"), GET)
+    cache.retrieveAndCache(URL("http://www.1stincoffee.com"), HEAD)
+    cache.retrieveAndCache(URL("http://www.1stincoffee.com/"), GET)
     cache.retrieveAndCache(URL("http://www.google.com/"), GET)
     cache.retrieveAndCache(URL("http://www.w3.org/2011/08/validator-test/no-error.css"), GET)
     cache.retrieveAndCache(URL("http://www.w3.org/2008/MW4D/"), GET)

@@ -1,0 +1,9 @@
+null: HTTP/1.0 200 FIXED STATUS TEXT
+Cache-control: private
+Server: Microsoft-IIS/6.0
+Content-Length: 21099
+Content-Type: text/html
+Date: Thu, 28 Mar 2013 17:56:31 GMT
+Set-Cookie: sfCustomer=; expires=Thu, 28-Mar-2013 17:56:30 GMT; path=/,ssLastVisited=3%2F28%2F2013+1%3A56%3A31+PM; expires=Sat, 28-Mar-2015 04:00:00 GMT; path=/,sfHTTP%5FREFERER=REMOTE%5FADDRESS=128%2E30%2E55%2E85&HTTP%5FREFERER=&REFERER=; expires=Fri, 29-Mar-2013 04:00:00 GMT; path=/,ASPSESSIONIDCQRTADQR=ELDPPKHBMLNPFHJGFAFANIEE; path=/
+MicrosoftOfficeWebServer: 5.0_Pub
+X-Powered-By: ASP.NET
