@@ -8,7 +8,8 @@ define([""], function () {
 
         return {
             log: function (msg) {
-                if (console && console.log) { console.log("[" + name + "] " + msg); }
+                return;
+                //if (console && console.log) { console.log("[" + name + "] " + msg); }
             },
             info: function (msg) {
                 /*console.log(arguments);
@@ -34,19 +35,24 @@ define([""], function () {
                  console.log(e.stack);
 
                  }*/
-                if (console && console.info) { console.info("[" + name + "] " + msg); }
+                //if (console && console.info) { console.info("[" + name + "] " + msg); }
+                return;
             },
             warn: function (msg) {
-                if (console && console.warn) { console.warn("[" + name + "] " + msg); }
+                //if (console && console.warn) { console.warn("[" + name + "] " + msg); }
+                return;
             },
             error: function (msg) {
-                if (console && console.error) { console.error("[" + name + "] " + msg); }
+                //if (console && console.error) { console.error("[" + name + "] " + msg); }
+                return;
             },
             debug: function (msg) {
-                if (console && console.debug) { console.debug(msg); }
+                //if (console && console.debug) { console.debug(msg); }
+                return;
             },
             trace: function () {
-                if (console && console.trace) { console.trace(); }
+                return;
+                //if (console && console.trace) { console.trace(); }
             }
         };
 
