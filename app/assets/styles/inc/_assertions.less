@@ -108,6 +108,12 @@
         dl {
             //padding-bottom: 10px;
             overflow: auto;
+            //box-shadow: inset 2px -2px 4px #CCC;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .resource {
+            margin-left: 25px;
         }
 
 
@@ -118,6 +124,11 @@
         .resource,
         .resources {
             display: block;
+        }
+
+        .title {
+            box-shadow: 0px 0px 7px #888;
+            background: #F6F3E8;
         }
 
         .title .fold:before {
@@ -180,15 +191,19 @@
         }
     }
 
-    .description div {
-        margin: 1em;
-        margin-top: 8px;
-        padding: 10px;
-        background: white; //#F5F5F5;
+    .description {
+        padding-top: 5px;
+        > div {
+            padding: 5px 10px 10px 24px;
+        }
+        //margin: 1em;
+        //margin-top: 8px;
+
+        //background: white; //#F5F5F5;
         line-height: 1.5em;
-        border: 1px solid #BBB;
-        box-shadow: 1px 1px 1px #AAA;
-        border-radius: 4px;
+//        border: 1px solid #BBB;
+//        box-shadow: 1px 1px 1px #AAA;
+//        border-radius: 4px;
 
         ol {
             list-style-position: inside;
