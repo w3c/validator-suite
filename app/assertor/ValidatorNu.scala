@@ -49,12 +49,12 @@ class ValidatorNu(serviceUrl: String) extends FromHttpResponseAssertor {
         case _ => throw new Exception("malformed json") // TODO
       })
       val title = (obj \ "message") match {
-        case JsString(s) => HtmlFormat.escape(s).body
+        case JsString(s) => s
         case _ => throw new Exception("malformed json")
       }
       val lastLine = (obj \ "lastLine") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
       val lastCol = (obj \ "lastColumn") match {case JsNumber(bigDec) => Some(bigDec.toInt); case _ => None}
-      val extract = (obj \ "extract") match {case JsString(s) => Some(HtmlFormat.escape(s).body); case _ => None}
+      val extract = (obj \ "extract") match {case JsString(s) => Some(s); case _ => None}
       val contexts: Vector[Context] = extract match {
         case Some(code) => Vector(Context(code.trim, lastLine, lastCol)) // The model needs to accept a range of lines/column
         case _ => Vector.empty
