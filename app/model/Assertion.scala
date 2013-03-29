@@ -20,8 +20,6 @@ case class Assertion(
 
   def occurrences = scala.math.max(1, contexts.size)
 
-  //val id: AssertionTypeId = AssertionTypeId(assertor, title)
-
   override def toString: String =
     s"""Assertion($url, $assertor, $severity)"""
 
@@ -34,8 +32,8 @@ object Assertion {
     var warnings = 0
     assertions foreach { assertion =>
       assertion.severity match {
-        case Error => errors += math.max(1, assertion.contexts.size)
-        case Warning => warnings += math.max(1, assertion.contexts.size)
+        case Error => errors += assertion.occurrences
+        case Warning => warnings += assertion.occurrences
         case Info => ()
       }
     }

@@ -72,7 +72,7 @@ object DataTest {
 
   val ar1 = AssertorResult(AssertorId("id1"), foo, Map(foo -> Vector(assertion1)))
   val ar2 = AssertorResult(AssertorId("id2"), foo, Map(foo -> Vector(assertion2)))
-  val ar3 = AssertorResult(AssertorId("id3"), foo, Map(bar -> Vector(assertion3)))
+  val ar3 = AssertorResult(AssertorId("id2"), foo, Map(bar -> Vector(assertion3)))
 
 }
 

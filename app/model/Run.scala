@@ -576,7 +576,7 @@ case class Run private (
     import result.{ assertor => assertorId }
 
     // could be optimized
-    val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(result.assertions.values.flatten)
+    val (globalNbErrors, globalNbWarnings) = Assertion.countErrorsAndWarnings(result.assertions.values.flatten)
 
     // accumulate assertions and take care of the keys
     var newAssertions = this.assertions
@@ -584,6 +584,7 @@ case class Run private (
     var newGroupedAssertionDatas = this.groupedAssertionDatas
 
     result.assertions foreach { case (url, assertions) =>
+      val (nbErrors, nbWarnings) = Assertion.countErrorsAndWarnings(assertions)
       // Assertion
       this.assertions.get(url) match {
         case None => newAssertions += (url -> Map(assertorId -> assertions))
@@ -618,8 +619,8 @@ case class Run private (
       assertions = newAssertions,
       resourceDatas = newResourceDatas,
       groupedAssertionDatas = newGroupedAssertionDatas,
-      errors = this.errors + nbErrors,
-      warnings = this.warnings + nbWarnings,
+      errors = this.errors + globalNbErrors,
+      warnings = this.warnings + globalNbWarnings,
       pendingAssertorCalls = pendingAssertorCalls - ((result.assertor, result.sourceUrl)),
       assertorResponsesReceived = assertorResponsesReceived + 1)
 
