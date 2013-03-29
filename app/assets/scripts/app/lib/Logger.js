@@ -8,8 +8,9 @@ define([""], function () {
 
         return {
             log: function (msg) {
+                //return;
+                if (console && console.log) { /*console.log("[" + name + "] " + msg);*/ }
                 return;
-                //if (console && console.log) { console.log("[" + name + "] " + msg); }
             },
             info: function (msg) {
                 /*console.log(arguments);
