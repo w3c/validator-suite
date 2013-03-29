@@ -605,12 +605,11 @@ case class Run private (
       newResourceDatas += (url -> resourceData)
       // GroupedAssertionData
       assertions foreach { assertion =>
-        val assertionTypeId = AssertionTypeId(assertion)
-        newGroupedAssertionDatas.get(assertionTypeId) match {
+        newGroupedAssertionDatas.get(assertion.id) match {
           case None =>
-            newGroupedAssertionDatas += (assertionTypeId -> GroupedAssertionData(assertion))
+            newGroupedAssertionDatas += (assertion.id -> GroupedAssertionData(assertion))
           case Some(gad) =>
-            newGroupedAssertionDatas += (assertionTypeId -> (gad + assertion))
+            newGroupedAssertionDatas += (assertion.id -> (gad + assertion))
         }
       }
     }

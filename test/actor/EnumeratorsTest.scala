@@ -39,12 +39,14 @@ object DataTest {
       severity = Error,
       description = None)
 
+  val commonId = AssertionTypeId(AssertorId("id2"), "bar")
+
   val assertion2 =
     Assertion(
-      id = AssertionTypeId(AssertorId("id2"), "bar"),
+      id = commonId,
       url = foo,
       assertor = AssertorId("id2"),
-      contexts = Vector.empty,
+      contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719)), Context(content = "baz", line = None, column = Some(2719))),
       lang = "fr",
       title = "bar",
       severity = Warning,
@@ -52,7 +54,7 @@ object DataTest {
 
   val assertion3 =
     Assertion(
-      id = AssertionTypeId(AssertorId("id2"), "bar"),
+      id = commonId,
       url = bar,
       assertor = AssertorId("id2"),
       contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
@@ -149,24 +151,24 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
     val rds = (resourceDatas &> Enumeratee.take(2) |>>> Iteratee.getChunks[ResourceData]).getOrFail()
 
     val rd1 = rds.find(_.url == foo).get
-    rd1.warnings must be(1)
-    rd1.errors must be(2)
+    rd1.warnings must be(3) // from assertion2
+    rd1.errors must be(2)   // from assertion1
 
     val rd2 = rds.find(_.url == bar).get
-    rd2.warnings must be(2)
-    rd2.errors must be(0)
+    rd2.warnings must be(2) // from assertion3
+    rd2.errors must be(0)   // from assertion3
 
     val gads = (groupedAssertionDatas &> Enumeratee.take(2) |>>> Iteratee.getChunks[GroupedAssertionData]).getOrFail()
 
     val gad1 = gads.find(_.id == assertion1.id).get
     gad1.severity must be(Error)
     gad1.occurrences must be(2)
-    gad1.resources must be(Map(foo -> 1))
+    gad1.resources must be(Map(foo -> 2))
 
-    val gad2 = gads.find(_.id == assertion2.id).get
+    val gad2 = gads.find(_.id == commonId).get
     gad2.severity must be(Warning)
-    gad2.occurrences must be(3)
-    gad2.resources must be(Map(foo -> 1, bar -> 2))
+    gad2.occurrences must be(5)
+    gad2.resources must be(Map(foo -> 3, bar -> 2))
 
   }
   

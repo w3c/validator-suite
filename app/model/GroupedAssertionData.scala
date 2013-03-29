@@ -18,6 +18,8 @@ case class GroupedAssertionData(
   def +(assertion: Assertion): GroupedAssertionData = {
     val newResources = resources.get(assertion.url) match {
       case None => resources + (assertion.url -> assertion.occurrences)
+      // because contexts are grouped (on one given url) and because groupedAssertionData are grouped by AssertorTypedId we should never get here
+      // (url + (assertorId + title))
       case Some(counter) => resources + (assertion.url -> (counter + assertion.occurrences))
     }
     this.copy(
@@ -39,7 +41,7 @@ object GroupedAssertionData {
       title,
       severity,
       assertion.occurrences,
-      Map(url -> 1)
+      Map(url -> assertion.occurrences)
     )
   }
 
