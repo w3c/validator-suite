@@ -21,7 +21,7 @@
             case "resources" => {
             @Messages("assertion.resources.detail")
 
-            @assertion.resources.take(50).map { case url =>
+            @assertion.resources.take(50).map { case (url, _) =>
             <dd class="resource">
                 <a href="@routes.Assertions.index(assertion.jobId, url)" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>

@@ -170,8 +170,8 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
       URL("http://example.com/foo/2") -> ResourceData(URL("http://example.com/foo/2"), now, 27, 19)
     )
     val run3GADs = Map(
-      AssertionTypeId("id1") -> GroupedAssertionData(AssertionTypeId("id1"), AssertorId("test_assertor"),"fr", "bar", Warning, 2, Vector(URL("http://example.com/foo"), URL("http://example.com/bar"))),
-      AssertionTypeId("id2") -> GroupedAssertionData(AssertionTypeId("id2"), AssertorId("test_assertor"),"fr", "bar", Warning, 2, Vector(URL("http://example.com/foo"), URL("http://example.com/bar")))
+      AssertionTypeId("id1") -> GroupedAssertionData(AssertionTypeId("id1"), AssertorId("test_assertor"),"fr", "bar", Warning, 2, Map(URL("http://example.com/foo") -> 1, URL("http://example.com/bar") -> 2)),
+      AssertionTypeId("id2") -> GroupedAssertionData(AssertionTypeId("id2"), AssertorId("test_assertor"),"fr", "bar", Warning, 2, Map(URL("http://example.com/foo") -> 1, URL("http://example.com/bar") -> 3))
     )
     run3 = run3.copy(resourceDatas = run3RD, groupedAssertionDatas = run3GADs)
     JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)).getOrFail()

@@ -247,6 +247,10 @@ object Formats {
     (__ \ 'timestamp).format[DateTime]
   )(Assertion.apply _, unlift(Assertion.unapply _))
 
+
+  implicit val ResourcesFormat: Format[Map[URL, Int]] =
+    reifiedMapFormat[URL, Int](key = "url", value = "c")
+
   implicit val GroupedAssertionDataFormat: Format[GroupedAssertionData] = (
     (__ \ 'id).format[AssertionTypeId] and
     (__ \ 'assertor).format[AssertorId] and
@@ -254,7 +258,7 @@ object Formats {
     (__ \ 'title).format[String] and
     (__ \ 'severity).format[AssertionSeverity] and
     (__ \ 'occurrences).format[Int] and
-    (__ \ 'resources).format[Vector[URL]]
+    (__ \ 'resources).format[Map[URL, Int]](ResourcesFormat)
   )(GroupedAssertionData.apply _, unlift(GroupedAssertionData.unapply _))
 
   val GETFormat = constant[GET.type]("GET", GET)

@@ -74,7 +74,11 @@ class FormatsTest extends WordSpec with MustMatchers {
       title = "bar",
       severity = Warning,
       occurrences = 2,
-      resources = Vector(URL("http://example.com/foo"), URL("http://example.com/bar")))
+      resources = Map(
+        URL("http://example.com/foo") -> 1,
+        URL("http://example.com/bar") -> 2
+      )
+    )
 
   val errorResponse =
     ErrorResponse(

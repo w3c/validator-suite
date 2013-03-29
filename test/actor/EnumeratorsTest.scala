@@ -158,15 +158,15 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
 
     val gads = (groupedAssertionDatas &> Enumeratee.take(2) |>>> Iteratee.getChunks[GroupedAssertionData]).getOrFail()
 
-    val gad1 = gads.find(_.assertor == ar1.assertor).get
+    val gad1 = gads.find(_.id == assertion1.id).get
     gad1.severity must be(Error)
     gad1.occurrences must be(2)
-    gad1.resources must be(Vector(foo))
+    gad1.resources must be(Map(foo -> 1))
 
-    val gad2 = gads.find(_.assertor == ar2.assertor).get
+    val gad2 = gads.find(_.id == assertion2.id).get
     gad2.severity must be(Warning)
     gad2.occurrences must be(3)
-    gad2.resources.toSet must be(Set(foo, bar))
+    gad2.resources must be(Map(foo -> 1, bar -> 2))
 
   }
   

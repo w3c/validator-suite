@@ -9,25 +9,26 @@ case class GroupedAssertionData(
   title: String,
   severity: AssertionSeverity,
   occurrences: Int,
-  resources: Vector[URL]) { // resources should be a Set. Ideally Map{Int, URL], (occurrences -> url)
+  resources: Map[URL, Int]) { // resources should be a Set. Ideally Map{Int, URL], (occurrences -> url)
 
   /** incorporates `assertion` in this GroupedAssertionData. It expects
     * the assertion to share the same AssertionTypeId than this
     * GroupedAssertionData
     */
   def +(assertion: Assertion): GroupedAssertionData = {
+    val newResources = resources.get(assertion.url) match {
+      case None => resources + (assertion.url -> assertion.occurrences)
+      case Some(counter) => resources + (assertion.url -> (counter + assertion.occurrences))
+    }
     this.copy(
-      occurrences = this.occurrences + GroupedAssertionData.occurences(assertion),
-      resources = (this.resources :+ assertion.url).distinct
+      occurrences = this.occurrences + assertion.occurrences,
+      resources = newResources
     )
   }
 
 }
 
 object GroupedAssertionData {
-
-  def occurences(assertion: Assertion): Int =
-    math.max(1, assertion.contexts.size)
 
   def apply(assertion: Assertion): GroupedAssertionData = {
     import assertion._
@@ -37,8 +38,9 @@ object GroupedAssertionData {
       lang,
       title,
       severity,
-      occurences(assertion),
-      Vector(url))
+      assertion.occurrences,
+      Map(url -> 1)
+    )
   }
 
 }
