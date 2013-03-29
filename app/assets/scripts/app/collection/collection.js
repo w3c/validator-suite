@@ -75,12 +75,18 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Socket"], function (Logg
         listen: function () {
             var self = this;
             this.socket = new Socket(this.url);
+            window.hack_socket_silent = true; // TODO: fix #155
+            setTimeout(function () {
+                console.log("hack_socket_silent falsed");
+                window.hack_socket_silent = false;
+                self.view.render();
+            }, 2000);
             self.socket.on("message", function (data) {
                 var model = self.get(data.id);
                 if (!_.isUndefined(model)) {
-                    model.set(data);
+                    model.set(data, {silent: window.hack_socket_silent});
                 } else {
-                    self.add(new self.model(data, {collection: self}));
+                    self.add(new self.model(data, {collection: self}), {silent: window.hack_socket_silent});
                 }
             });
         }
