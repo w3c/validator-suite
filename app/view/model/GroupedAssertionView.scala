@@ -21,10 +21,12 @@ case class GroupedAssertionView(
   def title = data.title
   def id = data.id.toString
 
-  def toJson: JsValue =
-    Json.toJson(data).asInstanceOf[JsObject] +
-      //("id" -> Json.toJson(id)) +
+  def toJson: JsValue = {
+    val json = Json.toJson(data).asInstanceOf[JsObject] +
       ("occurrencesLegend" -> Json.toJson(occurrencesLegend))
+    val resources: JsArray = JsArray((json \ "resources").asInstanceOf[JsArray].value.map((_ \ "url")))
+    json - "resources" + ("resources" -> resources)
+  }
 
   def toHtml: Html =
     views.html.model.groupedAssertion(this)
