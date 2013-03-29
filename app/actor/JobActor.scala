@@ -159,11 +159,6 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // (The ResultStep class isn't really needed here)
     val ResultStep(run, actions) = _run.step(event)
 
-    // remember the RunEvents seen so far
-    sideEffect {
-      runEvents :+= event
-    }
-
     // pure side-effect, no need for synchronization
     executeActions(actions)
 
@@ -173,6 +168,8 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // publish events, this will happen asynchronously, but still
     // *after* the event is saved in the database
     sideEffect {
+      runEvents :+= event
+
       publish(run.data)
 
       publish(event)
