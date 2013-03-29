@@ -20,8 +20,8 @@ case class Assertion(
 
   def occurrences = scala.math.max(1, contexts.size)
 
-  override def toString: String =
-    s"""Assertion($url, $assertor, $severity)"""
+//  override def toString: String =
+//    s"""Assertion($url, $assertor, $severity)"""
 
 }
 
