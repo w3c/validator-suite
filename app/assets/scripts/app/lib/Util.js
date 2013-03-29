@@ -69,6 +69,28 @@ define(["lib/Logger"], function (Logger) {
             } else {
                 return url;
             }
+        },
+
+        getAssertorName: function (assertorId) {
+            /*
+             assertor.checker_i18n=I18n Checker
+             assertor.validator_nu=HTML5 Validator
+             assertor.validator_css=CSS Validator
+             assertor.markup_validator=HTML4/XHTML Validator
+             */
+
+            switch (assertorId) {
+            case "checker_i18n":
+                return "I18n Checker";
+            case "validator_nu":
+                return "HTML5 Validator";
+            case "validator_css":
+                return "CSS Validator";
+            case "markup_validator":
+                return "HTML4/XHTML Validator";
+            default:
+                throw new Error("Unable to find assertor name for: " + assertorId);
+            }
         }
 
     };

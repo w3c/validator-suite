@@ -1,4 +1,4 @@
-define(["lib/Logger", "model/assertor", "collection/collection"], function (Logger, Assertor, Collection) {
+define(["lib/Logger", "lib/Util", "model/assertor", "collection/collection"], function (Logger, Util, Assertor, Collection) {
 
     "use strict";
 
@@ -7,7 +7,23 @@ define(["lib/Logger", "model/assertor", "collection/collection"], function (Logg
 
     Assertors = Collection.extend({
 
-        model: Assertor
+        model: Assertor,
+
+        comparator: function (o1, o2) {
+            if (o1.get("errors") > o2.get("errors")) {
+                return -1;
+            } else if (o1.get("errors") === o2.get("errors")) {
+                if (o1.get("warnings") > o2.get("warnings")) {
+                    return -1;
+                } else if (o1.get("warnings") === o2.get("warnings")) {
+                    return 0;
+                } else {
+                    return +1;
+                }
+            } else {
+                return +1;
+            }
+        }
 
     });
 
@@ -23,6 +39,10 @@ define(["lib/Logger", "model/assertor", "collection/collection"], function (Logg
                 reverse: true
                 //string: "errors"
             };
+        },
+
+        beforeRender: function () {
+            this.collection.sort({silent: true}); // not sure why this is necessary
         },
 
         afterRender: function () {
@@ -42,6 +62,51 @@ define(["lib/Logger", "model/assertor", "collection/collection"], function (Logg
                 $(this).parents('article').addClass("current");
                 self.options.assertions.view.filterOn($(this).parents('article').attr('data-id'));
                 return false;
+            });
+        },
+
+        init: function () {
+            var assertions = this.options.assertions,
+                assertors = this.collection,
+                self = this;
+            assertions.on("change", function () {
+                var assertorCounts = {};
+                assertions.map(function (assertion) {
+                    var assertor = assertion.get("assertor"),
+                        level = assertion.get("severity"),
+                        occurrences = assertion.get("occurrences");
+
+                    if (!_.isUndefined(assertorCounts[assertor])) {
+                        assertorCounts[assertor][level] = assertorCounts[assertor][level] + occurrences;
+                    } else {
+                        assertorCounts[assertor] = {};
+                        assertorCounts[assertor].error = 0;
+                        assertorCounts[assertor].warning = 0;
+                        assertorCounts[assertor].info = 0;
+                        assertorCounts[assertor][level] = occurrences;
+                    }
+                });
+                var assertor;
+                for (assertor in assertorCounts) {
+                    //console.log(assertor);
+                    //console.log(assertorCounts[assertor]);
+                    if (!_.isUndefined(assertors.get(assertor))) {
+                        assertors.get(assertor).set({
+                            errors: assertorCounts[assertor].error,
+                            warnings: assertorCounts[assertor].warning
+                        });
+                    } else {
+                        assertors.add({
+                            id: assertor,
+                            name: Util.getAssertorName(assertor),
+                            errors: assertorCounts[assertor].error,
+                            warnings: assertorCounts[assertor].warning
+                        });
+                    }
+                }
+                self.render();
+
+
             });
         }
 
