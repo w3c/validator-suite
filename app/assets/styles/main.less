@@ -212,20 +212,34 @@ fieldset.dropdown {
         z-index: 10;
         background: white;
 
-        /*input:checked + label:after {
+        input + label:after {
             content: "";
-            display: block;
+            display: inline-block;
+            width: 10px;
+            height: 10px;
             position: absolute;
-            right: 6px;
+            right: 5px;
             top: 7px;
-            width: 0px;
-            height: 0px;
-            border-top: 4px solid transparent;
-            border-bottom: 4px solid transparent;
-            border-right: 4px solid #444444;
-            margin-bottom: 3px;
-            margin-left: 3px;
-        }*/
+            -webkit-border-radius: 1000px;
+            border-radius: 1000px;
+            border: solid 1px #888;
+            background: white;
+            z-index: 1;
+        }
+
+        input:checked + label:before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            position: absolute;
+            right: 9px;
+            top: 11px;
+            -webkit-border-radius: 1000px;
+            border-radius: 1000px;
+            background: #222222;
+            z-index: 2;
+        }
     }
     /* fieldset:hover {
         min-width: 202px; // XXX: hmmm...
@@ -234,7 +248,7 @@ fieldset.dropdown {
         content: "";
         display: block;
         position: absolute;
-        right: 6px;
+        right: 7px;
         top: 11px;
         width: 0px;
         height: 0px;
