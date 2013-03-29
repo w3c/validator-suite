@@ -70,7 +70,7 @@ define(["lib/Logger", "lib/Util", "libs/backbone"], function (Logger, Util, Back
                 eventsource = new window.EventSource(socket.url);
 
                 eventsource.onmessage = function (event) {
-                    console.log(event.data);
+                    //console.log(event.data);
                     var message = JSON.parse(event.data);
                     socket.trigger("message", message);
                 };
