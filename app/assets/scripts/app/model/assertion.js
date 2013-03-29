@@ -78,7 +78,7 @@ define(["lib/Logger", "lib/Util", "model/model"], function (Logger, Util, Model)
             }),
             resources: $('.resource', $article).map(function (i, resource) {
                 var value = Util.valueFrom($(resource));
-                return value('data-resource');
+                return { url: value('data-resource'), c: value('data-count') };
             }),
             contextsMore: parseInt(value('data-contextsMore'), 10) || 0,
             resourcesMore: parseInt(value('data-resourcesMore'), 10) || 0

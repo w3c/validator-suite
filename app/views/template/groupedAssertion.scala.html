@@ -39,13 +39,15 @@
 
             case "resources" => {
             <% if(resources.length > 0) { %>@Messages("assertion.resources.detail")<% } %>
-            <% _.map(resources, function (url) {%>
+            <% _.map(resources, function (resource) {%>
+            <% console.log(resource) %>
             <dd class="resource">
-                <a href="<%= "../assertions/?resource=" + url %>" class="report" title="@Messages("report.link")">
+                <span class="count"><%= resource.c %></span>
+                <a href="<%= "../assertions/?resource=" + encodeURIComponent(resource.url) %>" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>
-                    <span><%= Util.shortenUrl(url, 80) %></span>
+                    <span><%= Util.shortenUrl(resource.url, 80) %></span>
                 </a>
-                <br><a href="<%= url %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= url %></a>
+                <br><a href="<%= resource.url %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= resource.url %></a>
             </dd>
             <%}); %>
             <% if(resourcesMore > 0){ %>
