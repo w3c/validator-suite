@@ -31,8 +31,31 @@ import org.w3.vs.store.Formats._
 
 object Migration {
 
+  val node = "localhost:27017"
+  val dbName = "vs-test"
+
+  def makeAllPasswordsLowerCase(): Unit = {
+    val driver = new reactivemongo.api.MongoDriver
+    val connection = driver.connection(Seq(node))
+    val db = connection(dbName)
+
+    val collection = db("users")
+
+    val users: List[JsValue] = collection.find(Json.obj()).cursor[JsValue].toList.getOrFail()
+
+    users foreach { user =>
+      val email = (user \ "email").as[String]
+      println(email)
+      collection.update(
+        selector = Json.obj("email" -> toJson(email)),
+        update = Json.obj("email" -> toJson(email.toLowerCase()))
+      ).getOrFail()
+    }
+
+  }
+
   def main(args: Array[String]): Unit = {
-    println("no migration configured")
+    makeAllPasswordsLowerCase()
   }
 
 }

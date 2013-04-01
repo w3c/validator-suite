@@ -35,7 +35,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   // just for the sake of this test :-)
   val actorPath = ActorPath.fromString("akka://system/user/foo")
 
-  val user1: User = User.create("foo", "foo@example.com", "secret", isSubscriber = true)
+  val user1: User = User.create("foo", "Foo@Example.com", "secret", isSubscriber = true)
 
   val user2 = User.create("bar", "bar@example.com", "secret", isSubscriber = true)
 
@@ -225,7 +225,7 @@ extends WordSpec with MustMatchers with BeforeAndAfterAll with Inside {
   }
 
   "retrieve User by email" in {
-    User.getByEmail("foo@example.com").getOrFail() must be(user1)
+    User.getByEmail("fOO@example.com").getOrFail() must be(user1)
 
     Try { User.getByEmail("unknown@example.com").getOrFail() } must be (Failure(UnknownUser))
   }

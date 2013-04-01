@@ -158,7 +158,7 @@ object User {
     isSubscriber: Boolean): User = {
     val hash = BCrypt.hashpw(password, BCrypt.gensalt())
     val id = UserId()
-    val user = new User(id, name, email, hash, isSubscriber)
+    val user = new User(id, name, email.toLowerCase, hash, isSubscriber)
     user
   }
 
@@ -175,7 +175,7 @@ object User {
   
   def getByEmail(email: String)(implicit conf: VSConfiguration): Future[User] = {
     import conf._
-    val query = Json.obj("email" -> JsString(email))
+    val query = Json.obj("email" -> JsString(email.toLowerCase))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
       case Some(json) => json.as[User]
