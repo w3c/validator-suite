@@ -481,11 +481,11 @@ object Job {
     * if not, it throws an UnknownJob exception */
   def getFor(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
     import conf._
-    val query = Json.obj("_id" -> toJson(jobId), "creator" -> toJson(userId))
+    val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
-      case None => throw UnknownJob(jobId)
-      case Some(json) => json.as[Job]
+      case Some(json) if (json \ "creator").as[UserId] === userId => json.as[Job]
+      case _ => throw UnknownJob(jobId)
     }
   }
 

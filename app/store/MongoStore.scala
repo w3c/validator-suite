@@ -35,18 +35,41 @@ object MongoStore {
     } yield ()
   }
 
-  def initializeDb()(implicit conf: VSConfiguration): Future[Unit] = {
-    import IndexType.Ascending
+  def createCollections()(implicit conf: VSConfiguration): Future[Unit] = {
     for {
       _ <- User.collection.create()
       _ <- Job.collection.create()
       _ <- Run.collection.create()
-      indexesManager = conf.db.indexesManager
-      _ <- indexesManager.onCollection(User.collection.name).ensure(Index(List("email" -> Ascending), unique = true))
-      _ <- indexesManager.onCollection(Job.collection.name).ensure(Index(List("creator" -> Ascending)))
-      runIndexesManager = indexesManager.onCollection(Run.collection.name)
-      _ <- runIndexesManager.ensure(Index(List("jobId" -> Ascending, "event" -> Ascending)))
-      _ <- runIndexesManager.ensure(Index(List("runId" -> Ascending)))
+    } yield ()
+  }
+
+  def createIndexes()(implicit conf: VSConfiguration): Future[Unit] = {
+    import IndexType.Ascending
+    val indexesManager = conf.db.indexesManager
+    val runIndexesManager = indexesManager.onCollection(Run.collection.name)
+    for {
+      _ <- indexesManager.onCollection(User.collection.name).ensure(Index(
+        name = Some("by-email"),
+        key = List("email" -> Ascending), unique = true))
+      _ <- indexesManager.onCollection(Job.collection.name).ensure(Index(
+        name = Some("by-creator-id"),
+        key = List("creator" -> Ascending)))
+//      _ <- runIndexesManager.delete("_id_")
+      _ <- runIndexesManager.ensure(Index(
+        name = Some("by-jobId-then-event"),
+        key = List("jobId" -> Ascending, "event" -> Ascending)))
+      _ <- runIndexesManager.ensure(Index(
+        name = Some("by-runId"),
+        key = List("runId" -> Ascending)))
+    } yield ()
+  }
+
+
+  def initializeDb()(implicit conf: VSConfiguration): Future[Unit] = {
+    import IndexType.Ascending
+    for {
+      _ <- createCollections()
+      _ <- createIndexes()
     } yield ()
   }
 

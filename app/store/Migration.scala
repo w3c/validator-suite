@@ -48,7 +48,7 @@ object Migration {
       println(email)
       collection.update(
         selector = Json.obj("email" -> toJson(email)),
-        update = Json.obj("email" -> toJson(email.toLowerCase()))
+        update = Json.obj("$set" -> Json.obj("email" -> toJson(email.toLowerCase())))
       ).getOrFail()
     }
 

@@ -231,6 +231,11 @@ object Main {
         val conf = new DefaultProdConfiguration { }
         runJob()(conf)
       }
+      case Array("createIndexes") =>  {
+        val conf = new DefaultProdConfiguration { }
+        MongoStore.createIndexes()(conf).getOrFail()
+        println("done")
+      }
       case Array(int(n)) => stressTestData(n)
       case Array() => defaultData()
       case _ => sys.error("check your parameters")
