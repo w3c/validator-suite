@@ -5,9 +5,9 @@ import akka.testkit.{ TestKit, ImplicitSender }
 import org.w3.vs.VSConfiguration
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers
-import org.w3.util.website._
+import org.w3.vs.util.website._
 import org.w3.vs.store.MongoStore
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 
 /**
  * helper trait that can be used to test Runs

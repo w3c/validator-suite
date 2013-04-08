@@ -1,9 +1,9 @@
-package org.w3.util.akkaext
+package org.w3.vs.util.akkaext
 
 import akka.actor._
 import scala.concurrent._
 import java.net.URI
-import org.w3.util._
+import org.w3.vs.util._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.reflect.ClassTag
 

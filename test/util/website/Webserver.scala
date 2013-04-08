@@ -1,4 +1,4 @@
-package org.w3.util.website
+package org.w3.vs.util.website
 
 import javax.servlet.http._
 import org.eclipse.jetty.server.Server

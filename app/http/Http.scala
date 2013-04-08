@@ -1,12 +1,12 @@
 package org.w3.vs.http
 
 import akka.actor._
-import org.w3.util._
+import org.w3.vs.util._
 import play.Logger
 import org.w3.vs.model._
 import com.ning.http.client._
 import scalaz.Scalaz._
-import org.w3.util.akkaext._
+import org.w3.vs.util.akkaext._
 import AuthorityManager.encode
 
 object Http {

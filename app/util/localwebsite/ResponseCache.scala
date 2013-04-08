@@ -1,4 +1,4 @@
-package org.w3.util.localwebsite
+package org.w3.vs.util.localwebsite
 
 import java.net._
 import java.io._

@@ -1,6 +1,6 @@
 package org.w3.vs.model
 
-import org.w3.util.URL
+import org.w3.vs.util.URL
 
 case class GroupedAssertionData(
   id: AssertionTypeId,

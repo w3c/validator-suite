@@ -7,7 +7,7 @@ import play.api.i18n.Messages
 import play.api.mvc.{WebSocket, Result, Handler, Action}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.{ Json => PlayJson, JsValue }

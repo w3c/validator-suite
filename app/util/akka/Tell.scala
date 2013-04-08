@@ -1,4 +1,4 @@
-package org.w3.util.akkaext
+package org.w3.vs.util.akkaext
 
 import java.net.URI
 

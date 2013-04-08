@@ -1,4 +1,4 @@
-package org.w3.util.akkaext
+package org.w3.vs.util.akkaext
 
 import akka.actor._
 import java.util.concurrent.ConcurrentSkipListSet

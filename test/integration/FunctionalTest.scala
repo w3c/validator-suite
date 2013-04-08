@@ -6,7 +6,7 @@ import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 import play.api.Play._
 import play.api.test.TestServer
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 
 class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 

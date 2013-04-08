@@ -6,7 +6,7 @@ import org.w3.vs.view.Collection._
 import org.w3.vs.view.model.AssertionView
 import play.api.templates.{HtmlFormat, Html}
 import play.api.mvc.Call
-import org.w3.util.URL
+import org.w3.vs.util.URL
 import scalaz.Scalaz._
 import play.api.i18n.Messages
 import scala.concurrent.Future

@@ -1,4 +1,4 @@
-package org.w3.util
+package org.w3.vs.util
 
 import java.net.{ URL => jURL, URLEncoder, URI }
 import scalaz.Equal

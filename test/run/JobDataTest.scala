@@ -2,10 +2,10 @@ package org.w3.vs.run
 
 import org.w3.vs.util.{TestKitHelper, RunTestHelper}
 import org.w3.vs.model._
-import org.w3.util.URL
-import org.w3.util.website.Website
-import org.w3.util.Util._
-import org.w3.util.website.Webserver
+import org.w3.vs.util.URL
+import org.w3.vs.util.website.Website
+import org.w3.vs.util.Util._
+import org.w3.vs.util.website.Webserver
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._
 

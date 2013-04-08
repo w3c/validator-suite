@@ -3,7 +3,7 @@ package org.w3.vs.view
 import play.api.templates.Html
 import scalaz.Equal
 import play.api.mvc.{RequestHeader, Call}
-import org.w3.util.URL
+import org.w3.vs.util.URL
 
 trait Collection[+A] extends View {
 

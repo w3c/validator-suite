@@ -8,7 +8,7 @@ import play.api.mvc.QueryStringBindable.Parsing
 
 package object controllers {
 
-  type URL = org.w3.util.URL
+  type URL = org.w3.vs.util.URL
   type SocketType = SocketType.SocketType
   type ActionA = Action[AnyContent]
 

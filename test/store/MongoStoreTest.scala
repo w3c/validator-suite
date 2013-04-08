@@ -3,7 +3,7 @@ package org.w3.vs.store
 import org.scalatest.{Filter => ScalaTestFilter, _}
 import org.scalatest.matchers._
 import org.joda.time.{ DateTime, DateTimeZone }
-import org.w3.util._
+import org.w3.vs.util._
 import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.vs.actor.JobActor
@@ -12,7 +12,7 @@ import org.w3.vs.util._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
 import scala.concurrent.duration.Duration
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 import akka.actor.ActorPath
 import play.api.libs.iteratee.{ Done => _, Error => _, _ }
 

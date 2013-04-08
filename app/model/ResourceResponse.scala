@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
-import org.w3.util._
-import org.w3.util.html.Doctype
+import org.w3.vs.util._
+import org.w3.vs.util.html.Doctype
 import org.joda.time._
 import org.w3.vs._
 import java.io._

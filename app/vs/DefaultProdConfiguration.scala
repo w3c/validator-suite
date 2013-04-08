@@ -3,7 +3,7 @@ package org.w3.vs
 import akka.actor._
 import org.w3.vs.http._
 import org.w3.vs.actor._
-import org.w3.util.Util
+import org.w3.vs.util.Util
 import scala.concurrent._
 import scala.concurrent.duration._
 import akka.util.Timeout

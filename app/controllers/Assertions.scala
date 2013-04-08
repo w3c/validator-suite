@@ -7,7 +7,7 @@ import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
 import scalaz.Scalaz._
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.{Json => PlayJson, JsObject, JsNull, JsValue}
@@ -113,7 +113,7 @@ object Assertions extends VSController  {
   private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson
     Enumerator.flatten(user.getJob(jobId).map(
-      job => job.assertions(org.w3.util.URL(url))
+      job => job.assertions(org.w3.vs.util.URL(url))
     )) &> Enumeratee.map { iterator =>
       toJson(iterator.map(AssertionView(jobId, _).toJson))
     }

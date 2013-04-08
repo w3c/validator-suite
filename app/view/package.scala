@@ -5,7 +5,7 @@ import org.w3.vs.view.model._
 import play.api.libs.json.{Json, JsNull, JsValue, Writes}
 import play.api.templates.{HtmlFormat, Html}
 import play.api.data.format.Formatter
-import org.w3.util.URL
+import org.w3.vs.util.URL
 import play.api.data.format.Formats._
 import play.api.data.FormError
 import org.w3.vs.model.{JobData, Job}
@@ -64,7 +64,7 @@ package object view {
   type Crumb = (String, String)
   type Crumbs = Seq[(String, String)]
 
-  implicit val datetimeOrdering: Ordering[DateTime] = org.w3.util.DateTimeOrdering
+  implicit val datetimeOrdering: Ordering[DateTime] = org.w3.vs.util.DateTimeOrdering
 
   implicit val datetimeOptionOrdering: Ordering[Option[DateTime]] = new Ordering[Option[DateTime]] {
     def compare(x: Option[DateTime], y: Option[DateTime]): Int = (x, y) match {

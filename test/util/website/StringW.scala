@@ -1,4 +1,4 @@
-package org.w3.util.website
+package org.w3.vs.util.website
 
 /** a pimp for String to build [[org.w3.vs.website.Link]]s */
 class StringW(s: String) {

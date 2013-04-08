@@ -1,9 +1,9 @@
 package org.w3.vs.store
 
 import org.joda.time.{ DateTime, DateTimeZone }
-import org.w3.util.{ Headers, URL }
+import org.w3.vs.util.{ Headers, URL }
 import org.w3.vs.model._
-import org.w3.util.html.Doctype
+import org.w3.vs.util.html.Doctype
 
 // Reactive Mongo imports
 import reactivemongo.bson._

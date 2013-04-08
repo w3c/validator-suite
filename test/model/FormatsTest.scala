@@ -3,8 +3,8 @@ package org.w3.vs.store
 import org.scalatest.{ Filter => ScalaTestFilter, _}
 import org.scalatest.matchers._
 import org.joda.time.{ DateTime, DateTimeZone }
-import org.w3.util.URL
-import org.w3.util.html.Doctype
+import org.w3.vs.util.URL
+import org.w3.vs.util.html.Doctype
 import org.w3.vs.model._
 import org.w3.vs._
 import scala.util._

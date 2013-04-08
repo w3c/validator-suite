@@ -11,7 +11,7 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import scala.concurrent.Future
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import org.w3.vs.view.model.JobView

@@ -1,6 +1,6 @@
 package org.w3.vs.assertor
 
-import org.w3.util.URL
+import org.w3.vs.util.URL
 import org.w3c.css.css._
 import org.w3c.css.util.{ Warning => CssWarning, _ }
 import java.io._

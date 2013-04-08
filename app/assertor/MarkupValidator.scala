@@ -1,6 +1,6 @@
 package org.w3.vs.assertor
 
-import org.w3.util._
+import org.w3.vs.util._
 import org.w3.vs.model._
 import org.w3.vs.view.Helper
 import scala.io.Source
@@ -10,7 +10,7 @@ import play.api.Configuration
 import java.util.concurrent.{ Executors, ForkJoinPool }
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
 import com.ning.http.client.providers.jdk._
-import org.w3.util.HeadersHelper.extractCharset
+import org.w3.vs.util.HeadersHelper.extractCharset
 
 object MarkupValidator extends MarkupValidator(MarkupValidatorConfiguration()) {
 

@@ -8,7 +8,7 @@ import scala.concurrent._
 import scala.util._
 import scala.collection.mutable.Queue
 import scala.concurrent.stm._
-import org.w3.util._
+import org.w3.vs.util._
 import JobActor.{ logger => _, _ }
 
 object AssertionsActor {

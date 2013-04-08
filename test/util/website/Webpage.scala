@@ -1,4 +1,4 @@
-package org.w3.util.website
+package org.w3.vs.util.website
 
 /** A webpage that is just a title and a sequence of links
   * 

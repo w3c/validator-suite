@@ -1,19 +1,19 @@
 package org.w3.vs.assertor
 
-import org.w3.util._
 import org.w3.vs.util._
-import org.w3.util.website._
+import org.w3.vs.util._
+import org.w3.vs.util.website._
 import org.w3.vs.model._
-import org.w3.util.akkaext._
+import org.w3.vs.util.akkaext._
 import org.w3.vs.http._
 import org.w3.vs.http.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 import org.scalatest.Inside
 import play.api.libs.iteratee.{ Error => _, _ }
 import scala.util._
-import org.w3.util.html.Doctype
+import org.w3.vs.util.html.Doctype
 
 object DataTest {
 

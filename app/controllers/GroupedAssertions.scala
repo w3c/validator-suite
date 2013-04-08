@@ -7,7 +7,7 @@ import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
 import scalaz.Scalaz._
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.{Json => PlayJson, JsObject, JsNull, JsValue}

@@ -15,7 +15,7 @@ import scala.Some
 import org.w3.vs.view.Collection.Parameters
 import org.w3.vs.view.Collection.SortParam
 import play.api.mvc.Call
-import org.w3.util.URL
+import org.w3.vs.util.URL
 
 case class AssertorsView(
     source: Iterable[AssertorView],

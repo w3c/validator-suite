@@ -2,7 +2,7 @@ package org.apache.commons.httpclient
 
 import org.apache.commons.httpclient.methods.GetMethod
 import org.w3.vs.http.Cache
-import org.w3.util.URL
+import org.w3.vs.util.URL
 import org.w3.vs.model.GET
 import java.io.IOException
 

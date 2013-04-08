@@ -1,6 +1,6 @@
 package org.w3.vs.view.form
 
-import org.w3.util.URL
+import org.w3.vs.util.URL
 import org.w3.vs.VSConfiguration
 import org.w3.vs.assertor.Assertor
 import org.w3.vs.model._
@@ -110,7 +110,7 @@ class ValidJobForm private[view](
 
   def createJob(user: User)(implicit conf: VSConfiguration): Job = {
     val strategy = Strategy(
-      entrypoint = org.w3.util.URL(entrypoint),
+      entrypoint = org.w3.vs.util.URL(entrypoint),
       linkCheck = linkCheck,
       filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
       maxResources = maxResources,

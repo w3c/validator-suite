@@ -3,13 +3,13 @@ package org.w3.vs.http
 import org.w3.vs._
 import org.scalatest._
 import org.w3.vs.util._
-import org.w3.util.website._
+import org.w3.vs.util.website._
 import org.w3.vs.model._
-import org.w3.util._
-import org.w3.util.akkaext._
+import org.w3.vs.util._
+import org.w3.vs.util.akkaext._
 import Http._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 
 // the test would be better without extending RunTestHelper...
 class HttpTest extends RunTestHelper with Inside {

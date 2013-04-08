@@ -1,4 +1,4 @@
-package org.w3.util.localwebsite
+package org.w3.vs.util.localwebsite
 
 sealed trait CacheMode
 case object Store extends CacheMode

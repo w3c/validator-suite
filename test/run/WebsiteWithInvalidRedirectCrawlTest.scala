@@ -1,15 +1,15 @@
 package org.w3.vs.run
 
-import org.w3.util._
 import org.w3.vs.util._
-import org.w3.util.website._
+import org.w3.vs.util._
+import org.w3.vs.util.website._
 import org.w3.vs.model._
-import org.w3.util.akkaext._
+import org.w3.vs.util.akkaext._
 import org.w3.vs.http._
 import org.w3.vs.http.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import org.w3.util.Util._
+import org.w3.vs.util.Util._
 import javax.servlet.http._
 import play.api.libs.iteratee._
 import scala.util.Try

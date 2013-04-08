@@ -1,7 +1,7 @@
 package org.w3.vs.assertor
 
-import org.w3.util._
-import org.w3.util.Util.URLW
+import org.w3.vs.util._
+import org.w3.vs.util.Util.URLW
 import org.w3.vs.model._
 import scala.io.Source
 import play.api.Configuration

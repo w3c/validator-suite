@@ -4,7 +4,7 @@ import org.joda.time._
 import org.joda.time.format._
 import play.api.Play._
 import play.api.i18n.Messages
-import org.w3.util.URL
+import org.w3.vs.util.URL
 
 object Helper {
 

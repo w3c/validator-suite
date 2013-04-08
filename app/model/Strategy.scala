@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs._
-import org.w3.util._
+import org.w3.vs.util._
 import akka.dispatch._
 import scalaz._
 import scalaz.Scalaz._

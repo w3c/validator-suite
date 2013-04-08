@@ -2,7 +2,7 @@ package org.w3.vs.http
 
 import com.ning.http.client._
 import akka.actor._
-import org.w3.util._
+import org.w3.vs.util._
 import scala.concurrent.duration._
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.lang.System.currentTimeMillis

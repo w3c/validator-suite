@@ -2,7 +2,7 @@ package org.w3.vs.model
 
 import org.joda.time.{ DateTime, DateTimeZone }
 import akka.actor.ActorPath
-import org.w3.util.URL
+import org.w3.vs.util.URL
 
 sealed trait JobStatus
 

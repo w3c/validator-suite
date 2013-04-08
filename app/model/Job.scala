@@ -6,8 +6,8 @@ import akka.actor._
 import akka.pattern.{ ask, AskTimeoutException }
 import play.api.libs.iteratee._
 import play.Logger
-import org.w3.util._
-import org.w3.util.Util.journalCommit
+import org.w3.vs.util._
+import org.w3.vs.util.Util.journalCommit
 import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
@@ -447,7 +447,7 @@ object Job {
     * If resuming a Run fails (either an exception or a timeout) then the Job's status is updated to Zombie.
     */
   def resumeAllJobs()(implicit conf: VSConfiguration): Unit = {
-    import org.w3.util.Util.FutureF
+    import org.w3.vs.util.Util.FutureF
     val runningJobs = getRunningJobs().getOrFail()
     val duration = Duration("15s")
     runningJobs foreach { job =>

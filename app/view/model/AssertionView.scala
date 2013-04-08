@@ -1,6 +1,6 @@
 package org.w3.vs.view.model
 
-import org.w3.util.URL
+import org.w3.vs.util.URL
 import org.joda.time.DateTime
 import org.w3.vs.model.{Context => ContextModel, _}
 import org.w3.vs.view._
