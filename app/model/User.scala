@@ -79,8 +79,8 @@ case class User(
     _enumerator
   }
 
-  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
-    val e: Future[Enumerator[JobData]] = Job.getFor(id).map(
+  def jobDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[JobData]] = {
+    val e: Future[Enumerator[Iterator[JobData]]] = Job.getFor(id).map(
       jobs => Enumerator.interleave(jobs.toSeq.map(_.jobDatas()))
     )
     Enumerator.flatten(e)

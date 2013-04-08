@@ -83,15 +83,29 @@ object Resources extends VSController  {
     case Stream => Ok.stream(enumerator(jobId, url, user) &> EventSource())
   }}
 
-  private def enumerator(jobId: JobId, url: Option[URL], user: User): Enumerator[JsValue] = {
-    import PlayJson.toJson
-    Enumerator.flatten(user.getJob(jobId).map(job =>
-      url match {
-        case Some(url) => job.resourceDatas(org.w3.util.URL(url))
-        case None => job.resourceDatas()
-      }
-    )) &> Enumeratee.map(ResourceView(jobId, _).toJson)
+  private def enumerator(jobId: JobId, urlOpt: Option[URL], user: User): Enumerator[JsValue] = urlOpt match {
+    case Some(url) => enumerator(jobId, url, user)
+    case None => enumerator(jobId, user)
+  }
 
+  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
+    import PlayJson.toJson
+    val enumerator = Enumerator.flatten(user.getJob(jobId).map { job =>
+      job.resourceDatas()
+    })
+    enumerator &> Enumeratee.map { iterator =>
+      toJson(iterator.map(ResourceView(jobId, _).toJson))
+    }
+  }
+
+  private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue] = {
+    import PlayJson.toJson
+    val enumerator = Enumerator.flatten(user.getJob(jobId).map { job =>
+      job.resourceDatas(org.w3.util.URL(url))
+    })
+    enumerator &> Enumeratee.map { rd =>
+      PlayJson.arr(ResourceView(jobId, rd).toJson)
+    }
   }
 
   val indexName = (new controllers.javascript.ReverseResources).index.name

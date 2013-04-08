@@ -131,24 +131,24 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
       a6 must be(ar3)
     }
 
-    (runEvents /*&> eprint*/ |>>> test()).getOrFail().get
+    (runEvents &> Enumeratee.mapConcat(_.toSeq) /*&> eprint*/ |>>> test()).getOrFail().get
 
     val jobData = 
-      (jobDatas |>>> Iteratee.head[JobData]).getOrFail().get
+      (jobDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.head[JobData]).getOrFail().get
 
     jobData.id must be (job.id)
     jobData.entrypoint must be(strategy.entrypoint)
     jobData.resources must be(2)
 
     val runData = 
-      (runDatas |>>> Iteratee.head[RunData]).getOrFail().get
+      (runDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.head[RunData]).getOrFail().get
 
     runData.resources must be(2)
 
     val instantRunData = runningJob.getRunData().getOrFail()
     instantRunData must be(runData)
 
-    val rds = (resourceDatas &> Enumeratee.take(2) |>>> Iteratee.getChunks[ResourceData]).getOrFail()
+    val rds = (resourceDatas &> Enumeratee.mapConcat(_.toSeq) &> Enumeratee.take(2) |>>> Iteratee.getChunks[ResourceData]).getOrFail()
 
     val rd1 = rds.find(_.url == foo).get
     rd1.warnings must be(3) // from assertion2
@@ -158,7 +158,7 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
     rd2.warnings must be(2) // from assertion3
     rd2.errors must be(0)   // from assertion3
 
-    val gads = (groupedAssertionDatas &> Enumeratee.take(2) |>>> Iteratee.getChunks[GroupedAssertionData]).getOrFail()
+    val gads = (groupedAssertionDatas &> Enumeratee.mapConcat(_.toSeq) &> Enumeratee.take(2) |>>> Iteratee.getChunks[GroupedAssertionData]).getOrFail()
 
     val gad1 = gads.find(_.id == assertion1.id).get
     gad1.severity must be(Error)

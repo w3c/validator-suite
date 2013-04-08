@@ -10,12 +10,13 @@ import scala.concurrent.Future
 import org.w3.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
-import play.api.libs.json.JsValue
+import play.api.libs.json.{ Json => PlayJson, JsValue }
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
 import org.w3.vs.view.{Helper, OTOJType}
 import org.w3.vs.exception.InvalidFormException
 import org.w3.vs.view.model.{JobView, AssertionView}
+import org.w3.vs.store.Formats._
 
 object Job extends VSController {
 
@@ -143,7 +144,10 @@ object Job extends VSController {
   }}
 
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
-    Enumerator.flatten(user.getJob(jobId).map(_.jobDatas())) &> Enumeratee.map(JobView(_).toJson)
+    import PlayJson.toJson
+    Enumerator.flatten(user.getJob(jobId).map(_.jobDatas())) &> Enumeratee.map { iterator =>
+      toJson(iterator.map(JobView(_).toJson))
+    }
   }
 
   private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>

@@ -110,11 +110,13 @@ object Assertions extends VSController  {
     case Stream => Ok.stream(enumerator(jobId, url, user) &> EventSource())
   }}
 
-  private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue] = {
+  private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson
     Enumerator.flatten(user.getJob(jobId).map(
       job => job.assertions(org.w3.util.URL(url))
-    )) &> Enumeratee.map(AssertionView(jobId, _).toJson)
+    )) &> Enumeratee.map { iterator =>
+      toJson(iterator.map(AssertionView(jobId, _).toJson))
+    }
   }
 
   val indexName = (new controllers.javascript.ReverseAssertions).index.name

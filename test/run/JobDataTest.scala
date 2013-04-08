@@ -28,7 +28,7 @@ class JobDataTest extends RunTestHelper with TestKitHelper {
     rdsBeforeRun must be('empty)
 
     // Get the enum first
-    val enum = job.jobDatas()
+    val enum = job.jobDatas() &> Enumeratee.mapConcat(_.toSeq)
 
     // Then run the job
     val runningJob: Job = job.run().getOrFail()
@@ -41,7 +41,7 @@ class JobDataTest extends RunTestHelper with TestKitHelper {
     jobActor ! ar3
 
     // make sure that at least one of these was received
-    val foo = (runningJob.runEvents() |>>> waitFor[AssertorResponseEvent]()).getOrFail()
+    val foo = (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[AssertorResponseEvent]()).getOrFail()
 
     // We should receive an update even though the enumerator was
     // started *before* starting the run

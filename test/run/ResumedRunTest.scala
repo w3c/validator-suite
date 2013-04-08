@@ -47,7 +47,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     watch(jobActorRef)
 
     // wait for the first ResourceResponseEvent
-    (runningJob.runEvents() |>>> waitFor[RunEvent] { case _: ResourceResponseEvent => () }).getOrFail()
+    (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent] { case _: ResourceResponseEvent => () }).getOrFail()
 
     // kill the jobActor
     jobActorRef ! PoisonPill
@@ -69,7 +69,7 @@ class ResumedRunTest extends RunTestHelper with TestKitHelper {
     resume must be(())
 
     val completeRunEvent =
-      (rJob.runEvents() |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
+      (rJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
     completeRunEvent.resources must be(circumference + 1)
 

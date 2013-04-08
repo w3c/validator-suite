@@ -15,6 +15,10 @@ import play.api.libs.json.Reads.pattern
 
 object Formats {
 
+  implicit def IteratorWrites[A: Writes] = new Writes[Iterator[A]] {
+    def writes(as: Iterator[A]) = JsArray(as.map(toJson(_)).toSeq)
+  }
+
   def reeads[T](body: => T): JsResult[T] = try {
     JsSuccess(body)
   } catch {

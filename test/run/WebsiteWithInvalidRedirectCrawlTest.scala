@@ -73,7 +73,7 @@ class WebsiteWithInvalidRedirectCrawlTest extends RunTestHelper with TestKitHelp
       hr1.status must be(200)
     }
 
-    (runningJob.runEvents() |>>> test()).getOrFail().get
+    (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> test()).getOrFail().get
 
   }
 

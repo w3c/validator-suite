@@ -119,12 +119,12 @@ case class Job(
     * enumerator will either terminates (Input.EOF) or just emit a
     * Input.Empty.
     */
-  def actorBasedEnumerator(classifier: Classifier, forever: Boolean)(implicit classTag: ClassTag[classifier.Streamed], conf: VSConfiguration): Enumerator[classifier.Streamed] = {
+  def actorBasedEnumerator(classifier: Classifier, forever: Boolean)(implicit classTag: ClassTag[classifier.Streamed], conf: VSConfiguration): Enumerator[Iterator[classifier.Streamed]] = {
     import conf._
-    val (enumerator, channel) = Concurrent.broadcast[classifier.Streamed]
+    val (enumerator, channel) = Concurrent.broadcast[Iterator[classifier.Streamed]]
     def subscriberActor(): Actor = new Actor {
 
-      var channel: Concurrent.Channel[classifier.Streamed] = null
+      var channel: Concurrent.Channel[Iterator[classifier.Streamed]] = null
 
       def stop(): Unit = {
         context.stop(self)
@@ -132,7 +132,7 @@ case class Job(
           channel.eofAndEnd()
       }
 
-      def push(msg: classifier.Streamed): Unit = {
+      def push(msg: Iterator[classifier.Streamed]): Unit = {
         try {
           if (channel != null)
             channel.push(msg)
@@ -146,7 +146,7 @@ case class Job(
         actorRef ! JobActor.Listen(classifier)
       }
 
-      def subscribeToChannel(channel: Concurrent.Channel[classifier.Streamed]): Unit = {
+      def subscribeToChannel(channel: Concurrent.Channel[Iterator[classifier.Streamed]]): Unit = {
         this.channel = channel
         // subscribe to the EventStream to be notified of new started runs
         if (forever) {
@@ -166,18 +166,19 @@ case class Job(
           }}
         }
       }
-      /* the actor's main method... */
+      /* the actor's main method... @@@@ */
       def receive = {
         // the normal messages that we're expecting
-        case classTag(msg) => push(msg)
+        case classTag(msg) => push(Iterator(msg))
         // the actor can group the messages in an iterable
         case messages: Iterable[_] =>
-          messages foreach { case classTag(msg) => push(msg) }
+          push(messages.asInstanceOf[Iterable[classifier.Streamed]].iterator)
         // this can come from the EventStream
         case JobActorStarted(_, `id`, _, jobActorRef) => subscribeToJobActor(jobActorRef)
         // that's the signal that a run just ended
         case () => if (forever) channel.push(Input.Empty) else stop()
-        case channel: Concurrent.Channel[_] => subscribeToChannel(channel.asInstanceOf[Concurrent.Channel[classifier.Streamed]])
+        case channel: Concurrent.Channel[_] =>
+          subscribeToChannel(channel.asInstanceOf[Concurrent.Channel[Iterator[classifier.Streamed]]])
         case msg => logger.error("subscriber got " + msg) ; stop()
       }
     }
@@ -216,10 +217,10 @@ case class Job(
    *  parameters (eg. filter X-s for a specific URL).
    */
 
-  def runEvents()(implicit conf: VSConfiguration): Enumerator[RunEvent] = {
+  def runEvents()(implicit conf: VSConfiguration): Enumerator[Iterator[RunEvent]] = {
     import conf._
     this.status match {
-      case NeverStarted | Zombie => Enumerator[RunEvent]()
+      case NeverStarted | Zombie => Enumerator()
       case Done(runId, _, _, _) => Run.enumerateRunEvents(runId)
       case Running(_, jobActorPath) =>
         actorBasedEnumerator(Classifier.AllRunEvents, forever = false)
@@ -229,9 +230,9 @@ case class Job(
   /** Enumerator for all the JobData-s, even for future runs.  This is
     * stateless.  If you just want the most up-to-date JobData, use
     * Job.jobData() instead. */
-  def jobDatas()(implicit conf: VSConfiguration): Enumerator[JobData] = {
+  def jobDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[JobData]] = {
     import conf._
-    runDatas() &> Enumeratee.map(runData => JobData(this, runData))
+    runDatas() &> Enumeratee.map(_.map(runData => JobData(this, runData)))
   }
 
   /** returns the most up-to-date JobData for the Job, if available */
@@ -241,11 +242,11 @@ case class Job(
 
   /** this is stateless, so if you're the Done case, you want to use
     * Job.runData() instead */
-  def runDatas()(implicit conf: VSConfiguration): Enumerator[RunData] = {
+  def runDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[RunData]] = {
     def enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
     this.status match {
       case Done(_, _, _, runData) =>
-        Enumerator(runData) andThen Enumerator.enumInput(Input.Empty) andThen enumerator
+        Enumerator(Iterator(runData)) andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
   }
@@ -263,12 +264,12 @@ case class Job(
     }
   }
 
-  def resourceDatas()(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
+  def resourceDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[ResourceData]] = {
     def enumerator = actorBasedEnumerator(Classifier.AllResourceDatas, forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
-        val current: Enumerator[ResourceData] =
-          Enumerator(Run.getResourceDatas(runId)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
+        val current: Enumerator[Iterator[ResourceData]] =
+          Enumerator(Run.getResourceDatas(runId)) &> Enumeratee.mapM(x => x.map(_.iterator))
         current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
@@ -276,7 +277,7 @@ case class Job(
 
   // all ResourceDatas updates for url
   def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
-    def enumerator = actorBasedEnumerator(Classifier.ResourceDataFor(url), forever = true)
+    def enumerator = actorBasedEnumerator(Classifier.ResourceDataFor(url), forever = true) &> Enumeratee.mapConcat(_.toSeq)
     this.status match {
       case Done(runId, _, _, _) =>
         val current: Enumerator[ResourceData] =
@@ -309,12 +310,12 @@ case class Job(
   }
 
   // all GroupedAssertionDatas updates
-  def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[GroupedAssertionData] =  {
+  def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[GroupedAssertionData]] =  {
     def enumerator = actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
-        val current: Enumerator[GroupedAssertionData] =
-          Enumerator(Run.getGroupedAssertionDatas(runId)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
+        val current: Enumerator[Iterator[GroupedAssertionData]] =
+          Enumerator(Run.getGroupedAssertionDatas(runId)) &> Enumeratee.mapM(x => x.map(_.iterator))
         current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
@@ -332,12 +333,12 @@ case class Job(
   }
 
   // all Assertions updatesfor url
-  def assertions(url: URL)(implicit conf: VSConfiguration): Enumerator[Assertion] = {
+  def assertions(url: URL)(implicit conf: VSConfiguration): Enumerator[Iterator[Assertion]] = {
     def enumerator = actorBasedEnumerator(Classifier.AssertionsFor(url), forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
-        val current: Enumerator[Assertion] =
-          Enumerator(Run.getAssertionsForURL(runId, url)) &> Enumeratee.mapM(x => x) &> Enumeratee.mapConcat(x => x)
+        val current: Enumerator[Iterator[Assertion]] =
+          Enumerator(Run.getAssertionsForURL(runId, url)) &> Enumeratee.mapM(x => x.map(_.iterator))
         current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }

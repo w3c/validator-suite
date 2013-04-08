@@ -74,11 +74,13 @@ object GroupedAssertions extends VSController  {
     case Stream => Ok.stream(enumerator(jobId, user) &> EventSource())
   }}
 
-  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
+  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson
     Enumerator.flatten(user.getJob(jobId).map(
       job => job.groupedAssertionDatas()
-    )) &> Enumeratee.map(GroupedAssertionView(jobId, _).toJson)
+    )) &> Enumeratee.map { iterator =>
+      toJson(iterator.map(GroupedAssertionView(jobId, _).toJson))
+    }
   }
 
   val indexName = (new controllers.javascript.ReverseAssertions).index.name
