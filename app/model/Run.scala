@@ -3,6 +3,7 @@ package org.w3.vs.model
 import org.w3.vs._
 import org.w3.util._
 import org.w3.util.Util.journalCommit
+import org.w3.vs.util._
 import org.w3.vs.assertor._
 import scalaz.{ Free, Equal }
 import scalaz.Scalaz._
@@ -169,17 +170,11 @@ object Run {
     }
   }
 
-//  object Enumerateee {
-//    def map[A] = new Object {
-//      def apply[B](f: A => B): Enumeratee[Iterator[B]] = 
-//    }
-//  }
-
   def enumerateRunEvents(runId: RunId)(implicit conf: VSConfiguration): Enumerator[Iterator[RunEvent]] = {
     val query = Json.obj("runId" -> toJson(runId))
     val cursor = collection.find(query).cursor[JsValue]
 //    cursor.enumerateBulks() &> Enumeratee.map[JsValue](_.as[RunEvent])
-    cursor.enumerateBulks() &> Enumeratee.map[Iterator[JsValue]](_.map(_.as[RunEvent]))
+    cursor.enumerateBulks() &> Enumerateerator.map[JsValue](_.as[RunEvent])
   }
 
   def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[RunAction])] = {
