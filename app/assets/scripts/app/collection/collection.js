@@ -127,7 +127,7 @@ define(["lib/Logger", "libs/backbone", "lib/Util", "lib/Socket"], function (Logg
                 Util.exception('No count parameter was specified');
             }
 
-            collection.on('add reset', this.render, this);
+            collection.on('add reset change', this.render, this);
             collection.on('destroy', this.render, this);
 
             this.addSortHandler();
