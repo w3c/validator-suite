@@ -17,12 +17,14 @@ define(["lib/Logger", "lib/Util", "lib/Socket", "libs/backbone"], function (Logg
         listen: function () {
             var self = this;
             self.socket = new Socket(Util.getValue(this.url, this));
-            self.socket.on("message", function (data) {
-                if (data.id !== self.id) {
-                    logger.error("Received an update with an incorrect id: " + data.id + ". Expected: " + self.id);
-                    return;
-                }
-                self.set(data);
+            self.socket.on("message", function (datas) {
+                _.map(datas, function (data) {
+                    if (data.id !== self.id) {
+                        logger.error("Received an update with an incorrect id: " + data.id + ". Expected: " + self.id);
+                        return;
+                    }
+                    self.set(data);
+                });
             });
         },
 
