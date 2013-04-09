@@ -70,7 +70,7 @@ trait VSController extends Controller {
     }
     }*/
 
-  def format(f: PartialFunction[Format, Result])(implicit reqHeader: RequestHeader, supportedTypes: Seq[String] = Format.supported.keys.toSeq): Result = {
+  def format(f: PartialFunction[Format, Result])(implicit reqHeader: RequestHeader): Result = {
     // get the first supported content type
     val requestFormat: Option[Format] =
       reqHeader.headers.get("Accept").map(
@@ -81,7 +81,8 @@ trait VSController extends Controller {
     if (requestFormat.isDefined && f.isDefinedAt(requestFormat.get))
       f(requestFormat.get).as(requestFormat.get.contentType)
     else {
-      throw new NotAcceptableException(Format.supported.values.filter(f.isDefinedAt(_)).map(_.contentType).toSeq.distinct)
+      val supportedTypes = Format.supported.values.filter(f.isDefinedAt(_)).map(_.contentType).toSeq.distinct
+      NotAcceptable("Unable to generate an acceptable response. Available content-types:" + supportedTypes.mkString("\n* ", "\n* ", ""))
     }
   }
 
@@ -127,7 +128,6 @@ trait VSController extends Controller {
 
   def toError(implicit reqHeader: RequestHeader): PartialFunction[Throwable, Result] = {
     // TODO timeout, store exception, etc...
-    //case ForceResult(result) => result
     case UnknownJob(id) => {
       if (isAjax) {
         NotFound(Messages("exceptions.job.unknown", id))
@@ -141,9 +141,6 @@ trait VSController extends Controller {
         case x: Html => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.unauthorized"))))).withNewSession.as(x.contentType)
         case _ => Unauthorized
       }
-    }
-    case NotAcceptableException(supportedTypes) => {
-      NotAcceptable("Unable to generate an acceptable response. Available content-types:" + supportedTypes.mkString("\n* ", "\n* ", ""))
     }
     case t: Throwable => {
       logger.error("Unexpected exception: " + t.getMessage, t)
