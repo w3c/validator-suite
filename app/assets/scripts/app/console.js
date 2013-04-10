@@ -66,9 +66,9 @@ require([
                 },
 
                 execute: function (command) {
+                    el.attr("disabled", "disabled");
                     this.socket.send(command);
                     this.history.push(command);
-                    el.attr("disabled", "disabled");
                 },
 
                 clear: function () {
@@ -98,13 +98,42 @@ require([
             var parseCommand = function () {
                 var lines = el.val().split("\n"),
                     last = lines[lines.length - 1];
-                return last ? last.match(new RegExp("^" + invite + ".+$")) ? last.replace(invite, "").trim() : undefined : undefined;
+                return last ? last.match(new RegExp(invite + ".+")) ? last.replace(invite, "").trim() : undefined : undefined;
+            };
+
+            var getLastLine = function () {
+                var lines = el.val().split("\n");
+                return lines[lines.length - 1];
             };
 
             el.keyup(function (event) {
+                // Ctrl
                 if (event.which === 17) { isCtrl = false; }
+
+                // Backspace + Delete
+                if (event.which === 8 || event.which === 46) {
+                    var last = getLastLine();
+                    if (!last || last === "" || invite.startsWith(last)) {
+                        console.fill("");
+                        return false;
+                    }
+                }
+
             }).keydown(function (event) {
+                // Ctrl
                 if (event.which === 17) { isCtrl = true; }
+
+                //window.console.log(event.which);
+
+                // Backspace + Delete
+                if (event.which === 8 || event.which === 46) {
+                    var last = getLastLine();
+                    window.console.log(last);
+                    if (!last || last === "" || last === invite) {
+                        console.fill("");
+                        return false;
+                    }
+                }
 
                 // Enter
                 if (event.keyCode === 13) {
@@ -136,7 +165,8 @@ require([
                 }
             });
 
-            el.focus().val(invite + "?");
+            el.focus();
+            console.fill("?");
 
             return console;
         };
