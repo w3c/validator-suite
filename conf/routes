@@ -43,6 +43,8 @@ GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket
 
 # Administration
 GET     /admin/9m7tKYo1                             controllers.Administration.index()
+GET     /admin/9m7tKYo1/console                     controllers.Administration.console()
+GET     /admin/9m7tKYo1/console/socket              controllers.Administration.socket()
 POST    /admin/9m7tKYo1/jobs                        controllers.Administration.jobsPost()
 POST    /admin/9m7tKYo1/users                       controllers.Administration.usersPost()
 POST    /admin/9m7tKYo1/migration                   controllers.Administration.migration()

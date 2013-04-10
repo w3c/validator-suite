@@ -1,0 +1,14 @@
+@()
+
+@libs.main("Validator Suite - Console", "console", "console"){
+
+    <textarea
+        class="console"
+        spellcheck="false"
+        data-socket="@routes.Administration.socket()"></textarea>
+
+}{
+
+    @libs.footer()()
+
+}

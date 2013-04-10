@@ -1,15 +1,17 @@
 package controllers
 
 import org.w3.vs.controllers._
-import play.api.mvc.{Result, Action}
+import play.api.mvc.{WebSocket, Result, Action}
 import org.w3.vs.exception.UnknownUser
 import org.w3.vs.model
-import org.w3.vs.model.{User, JobId}
+import org.w3.vs.model.{Job, User, JobId}
 import play.api.i18n.Messages
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import play.api.cache.Cache
 import play.api.Play._
+import play.api.libs.iteratee._
+import scala.concurrent.duration.Duration
 
 object Administration extends VSController {
 
@@ -17,6 +19,10 @@ object Administration extends VSController {
 
   def index: ActionA = Action { implicit req =>
     Ok(views.html.admin())
+  }
+
+  def console: ActionA = Action { implicit req =>
+    Ok(views.html.console())
   }
 
   def jobsPost(): ActionA = AsyncAction { implicit req =>
@@ -75,9 +81,51 @@ object Administration extends VSController {
 
     f recover {
       case UnknownUser => {
-        case Html(_) => BadRequest(views.html.admin(List(("error" -> s"Unknown user with email: ${email}"))))
+        case Html(_) => BadRequest(views.html.admin(messages = List(("error" -> s"Unknown user with email: ${email}"))))
       }
     }
+  }
+
+  def socket(): WebSocket[String] = WebSocket.using[String] { implicit reqHeader =>
+
+    // TODO: Implement this method in a new class
+    // Executes the side-effects of a command, if any, and returns a result as text.
+    // The call must stay synchronous. Below implementation is for example only.
+    def executeCommand(command: String): String = {
+      import org.w3.vs.util.Util._
+      command match {
+        case _ @ ("?" | "help") =>
+          """Basic UI functionality:
+            |    Ctrl+l to clear the console
+            |    Up/Down arrow to move through command history
+            |
+            |Commands implemented for illustration purposes:
+            |    jobs     - displays the list of all jobs
+            |    long     - a command that takes a long time to perform
+            |
+            |Note: The console is locked when a command is being processed by the server (i.e. the server *must* return a result for every command, may that be the empty string.)""".stripMargin
+        case "jobs" => {
+          val jobs = model.Job.getAll().getOrFail()
+          jobs.map(job => s"${job.name} - ${job.id}").mkString("\n")
+        }
+        case "long" => {
+          Thread.sleep(3000)
+          "done"
+        }
+        case s => s"Command ${s} not found"
+      }
+    }
+
+    val (enum, channel) = Concurrent.broadcast[String]
+    def iteratee: Iteratee[String, String] = Cont[String, String]{
+      case Input.EOF => Done("end of stream")
+      case Input.Empty => iteratee
+      case Input.El(command) => {
+        channel.push(executeCommand(command))
+        iteratee
+      }
+    }
+    (iteratee, enum)
   }
 
 }
