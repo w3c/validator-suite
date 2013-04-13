@@ -2,28 +2,29 @@ package controllers
 
 import org.w3.vs.exception._
 import org.w3.vs.controllers._
-import org.w3.vs.model.{JobId, User}
+import org.w3.vs.model.{User}
 import org.w3.vs.view.form.LoginForm
 import play.Logger.ALogger
 import play.api.Play._
 import play.api.cache.Cache
 import play.api.i18n.Messages
-import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
+import play.api.libs.iteratee.{Enumerator, Iteratee}
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.collection.mutable.LinkedHashMap
 import org.w3.vs.exception.UnknownJob
 import play.api.mvc.AsyncResult
-import scala.collection.mutable.LinkedHashMap
+import play.api.mvc.Call
 
 trait VSController extends Controller {
 
   def logger: ALogger
 
-  // TODO: make the implicit explicit!!!
-  implicit val configuration: org.w3.vs.VSConfiguration = org.w3.vs.Prod.configuration
-  implicit val system = configuration.system
+  implicit val conf = org.w3.vs.Global.conf
+
+  implicit val system = conf.system
 
   def CloseWebsocket = (Iteratee.ignore[JsValue], Enumerator.eof)
 

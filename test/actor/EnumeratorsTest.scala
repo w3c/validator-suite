@@ -1,84 +1,30 @@
 package org.w3.vs.assertor
 
-import org.w3.vs.util._
+import org.w3.vs.model._
 import org.w3.vs.util._
 import org.w3.vs.util.website._
-import org.w3.vs.model._
 import org.w3.vs.util.akkaext._
-import org.w3.vs.http._
 import org.w3.vs.http.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 import org.w3.vs.util.Util._
-import org.scalatest.Inside
 import play.api.libs.iteratee.{ Error => _, _ }
 import scala.util._
-import org.w3.vs.util.html.Doctype
+import org.w3.vs._
+import org.w3.vs.model.AssertorResult
+import org.w3.vs.http.Http.SetSleepTime
+import org.w3.vs.model.CreateRunEvent
+import org.w3.vs.model.ResourceData
+import org.w3.vs.model.AssertorResponseEvent
+import org.w3.vs.model.Running
+import org.w3.vs.model.ResourceResponseEvent
+import org.w3.vs.util.Webserver
+import play.api.Mode
 
-object DataTest {
+class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient with RunEvents] with ServersTest with TestData {
 
-  val strategy =
-    Strategy( 
-      entrypoint=URL("http://localhost:9001/"),
-      linkCheck=true,
-      maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing),
-      assertorsConfiguration = Map.empty)
+  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 
-  val foo = URL("http://example.com/foo")
-  val bar = URL("http://example.com/bar")
-
-  val assertion1 =
-    Assertion(
-      id = AssertionTypeId(AssertorId("id1"), "bar"),
-      url = foo,
-      assertor = AssertorId("id1"),
-      contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
-      lang = "fr",
-      title = "bar",
-      severity = Error,
-      description = None)
-
-  val commonId = AssertionTypeId(AssertorId("id2"), "bar")
-
-  val assertion2 =
-    Assertion(
-      id = commonId,
-      url = foo,
-      assertor = AssertorId("id2"),
-      contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719)), Context(content = "baz", line = None, column = Some(2719))),
-      lang = "fr",
-      title = "bar",
-      severity = Warning,
-      description = None)
-
-  val assertion3 =
-    Assertion(
-      id = commonId,
-      url = bar,
-      assertor = AssertorId("id2"),
-      contexts = Vector(Context(content = "foo", line = Some(42), column = None), Context(content = "bar", line = None, column = Some(2719))),
-      lang = "fr",
-      title = "bar",
-      severity = Warning,
-      description = None)
-
-  val httpResponse = HttpResponse(
-    url = foo,
-    method = GET,
-    status = 200,
-    headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
-    extractedURLs = List(foo, foo, bar), Some(Doctype("html", "", "")))
-
-  val ar1 = AssertorResult(AssertorId("id1"), foo, Map(foo -> Vector(assertion1)))
-  val ar2 = AssertorResult(AssertorId("id2"), foo, Map(foo -> Vector(assertion2)))
-  val ar3 = AssertorResult(AssertorId("id2"), foo, Map(bar -> Vector(assertion3)))
-
-}
-
-class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
-
-  import DataTest._
+  import TestData._
 
   val circumference = 20
   
@@ -86,18 +32,12 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
   
   "test enumerators" in {
 
-    val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
-    
-    (for {
-      _ <- User.save(userTest)
-      _ <- Job.save(job)
-    } yield ()).getOrFail()
-    
+    val http = vs.httpActorRef
     PathAware(http, http.path / "localhost_9001") ! SetSleepTime(10000)
 
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
-    val jobActor = system.actorFor(actorPath)
+    val jobActor = vs.system.actorFor(actorPath)
 
     val runEvents = runningJob.runEvents()
     val jobDatas = runningJob.jobDatas()
@@ -131,7 +71,7 @@ class EnumeratorsTest extends RunTestHelper with TestKitHelper with Inside {
       a6 must be(ar3)
     }
 
-    (runEvents &> Enumeratee.mapConcat(_.toSeq) /*&> eprint*/ |>>> test()).getOrFail().get
+    (runEvents &> Enumeratee.mapConcat(_.toSeq) &> eprint |>>> test()).getOrFail().get
 
     val jobData = 
       (jobDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.head[JobData]).getOrFail().get

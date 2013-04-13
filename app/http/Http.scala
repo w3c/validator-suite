@@ -51,10 +51,5 @@ class Http(httpClient: AsyncHttpClient, scheduler: Scheduler, cacheOpt: Option[C
     }
   }
   
-  override def postStop() = {
-    logger.debug("closing asyncHttpClient")
-    httpClient.close()
-  }
-  
 }
 

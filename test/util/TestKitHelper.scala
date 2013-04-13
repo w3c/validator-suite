@@ -1,7 +1,9 @@
 package org.w3.vs.util
 
-import akka.testkit.TestKit
+import akka.testkit.{TestKitBase, ImplicitSender, TestKit}
 import scala.concurrent.duration.Duration
+import akka.actor.ActorSystem
+import org.w3.vs.{DefaultActorSystem, ActorSystem}
 
 trait TestKitHelper { this: TestKit =>
 

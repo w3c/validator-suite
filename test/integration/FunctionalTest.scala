@@ -12,7 +12,7 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
   override def beforeAll(configMap: Map[String, Any]): Unit = {
     timer("load data for FunctionalTest") {
-      org.w3.vs.Main.main(Array())
+      org.w3.vs.Main.main(Array("default"))
     }
   }
 

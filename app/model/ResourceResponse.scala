@@ -8,14 +8,8 @@ import java.io._
 import scalax.io._
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
+import play.modules.reactivemongo.json.ImplicitBSONHandlers._
 
-// Reactive Mongo imports
-import reactivemongo.api._
-import reactivemongo.api.collections.default._
-import reactivemongo.bson._
-// Reactive Mongo plugin
-import play.modules.reactivemongo._
-import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
@@ -23,7 +17,7 @@ import org.w3.vs.store.Formats.{ RunIdFormat, ResourceResponseEventFormat }
 
 object ResourceResponse {
 
-  def getFor(runId: RunId)(implicit conf: VSConfiguration): Future[Set[ResourceResponse]] = {
+  def getFor(runId: RunId)(implicit conf: ActorSystem with Database): Future[Set[ResourceResponse]] = {
     import conf._
     val query = Json.obj(
       "runId" -> toJson(runId),

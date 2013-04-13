@@ -1,7 +1,7 @@
 package org.w3.vs.view.form
 
 import org.w3.vs.util.URL
-import org.w3.vs.VSConfiguration
+import org.w3.vs.ActorSystem
 import org.w3.vs.assertor.Assertor
 import org.w3.vs.model._
 import org.w3.vs.view._
@@ -108,7 +108,7 @@ class ValidJobForm private[view](
 
   val (name, entrypoint, linkCheck, maxResources) = bind
 
-  def createJob(user: User)(implicit conf: VSConfiguration): Job = {
+  def createJob(user: User)(implicit conf: ActorSystem): Job = {
     val strategy = Strategy(
       entrypoint = org.w3.vs.util.URL(entrypoint),
       linkCheck = linkCheck,
@@ -118,7 +118,7 @@ class ValidJobForm private[view](
     Job.createNewJob(name, strategy, user.id)
   }
 
-  def update(job: Job)(implicit conf: VSConfiguration): Job = {
+  def update(job: Job)(implicit conf: ActorSystem): Job = {
     ??? // TODO decide, implement
     //     job.copy(
     //         name = name,

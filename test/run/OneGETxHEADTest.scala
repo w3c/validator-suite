@@ -11,13 +11,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.vs.util.Util._
 import play.api.libs.iteratee._
+import org.w3.vs.DefaultActorSystem
 
 /**
   * Server 1 -> Server 2
   * 1 GET       10 HEAD
-  */
-class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
-  
+class OneGETxHEADTest extends VSTest with TestData {
+
+  def config = new DefaultActorSystem
+
+  implicit val implicitConf = conf
+
   val j = 10
   
   val strategy =
@@ -54,3 +58,4 @@ class OneGETxHEADTest extends RunTestHelper with TestKitHelper {
 
 }
 
+*/

@@ -2,12 +2,13 @@ package org.w3.vs
 
 import org.w3.vs.model._
 import org.joda.time.{ Duration => _, _ }
-import org.w3.vs.util.{ URL, Util }
+import org.w3.vs.util.{In, Out, URL, Util}
 import org.w3.vs.util.Util._
-import scala.concurrent.util._
 import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.store.MongoStore
+import scala.concurrent.Future
+import play.api.Mode.Prod
 
 object Main {
 
@@ -35,9 +36,7 @@ object Main {
     urls foreach { url => cache.retrieveAndCache(URL(url), GET) }
   }
 
-  def test(jobIdS: String): Unit = {
-    implicit val conf = new DefaultProdConfiguration { }
-
+  def test(jobIdS: String)(implicit conf: Database): Unit = {
     val jobId = JobId(jobIdS)
     val job = Job.get(jobId).getOrFail()
     job.latestDone match {
@@ -52,19 +51,11 @@ object Main {
 //        println("assertorCalls: " + assertorCalls.size)
     }
 
-    conf.system.shutdown()
-    conf.system.awaitTermination()
-    conf.httpClient.close()
-    conf.connection.close()
-
     println("you need to press ctrl-c")
 
   }
 
-
-
-  def stressTestData(n: Int): Unit = {
-    implicit val conf = new DefaultProdConfiguration { }
+  def stressTestData(n: Int)(implicit conf: Database): Unit = {
 
     def makeUser(name: String): User = User.create(name = name, email = s"${name}@w3.org", password = "secret", isSubscriber = true)
 
@@ -82,18 +73,11 @@ object Main {
       User.save(user).getOrFail()
     }
 
-    conf.system.shutdown()
-    conf.system.awaitTermination()
-    conf.httpClient.close()
-    conf.connection.close()
-
     println("you need to press ctrl-c")
 
   }
 
-  def defaultData(): Unit = {
-    
-    implicit val conf = new DefaultProdConfiguration { }
+  def defaultData()(implicit conf: Database): Unit = {
 
     val tgambet = User.create(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", isSubscriber = false)
 
@@ -179,7 +163,7 @@ object Main {
       status = NeverStarted,
       latestDone = None)
 
-    val script = for {
+    val script: Future[Unit] = for {
       _ <- MongoStore.reInitializeDb()
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
@@ -197,23 +181,27 @@ object Main {
       _ <- Job.save(tr)
       _ <- Job.save(ibm)
       _ <- Job.save(lemonde)
-      _ <- User.save(User.sample) // The sample user for the demo
-      _ <- Job.save(Job.sample)   // The sample job
     } yield ()
 
     script.getOrFail(10.seconds)
-    
-    conf.connection.close()
-    conf.httpClient.close()
-    conf.system.shutdown()
-    conf.system.awaitTermination()
-
-    println("you need to press ctrl-c")
 
   }
-  
+
   def main(args: Array[String]): Unit = {
-    
+    val in = new In {
+      def readLine(): String = scala.Console.readLine()
+    }
+    val out = new Out {
+      def println(s: String) = System.out.println(s)
+    }
+    val conf = new ValidatorSuite(mode = Prod)
+    main(args, in, out)(conf)
+    conf.shutdown
+  }
+  
+  def main(args: Array[String], in: In, out: Out)(implicit conf: ValidatorSuite): Unit = {
+    import out.println
+
     val int = new Object {
       def unapply(s: String): Option[Int] = try Some(s.toInt) catch { case _: NumberFormatException => None }
     }
@@ -223,33 +211,56 @@ object Main {
         cacheW3C()
       }
       case Array("migration") => {
-        val conf = new DefaultProdConfiguration { }
         println("nothing planned right now")
       }
-      case Array("test", jobIdS) => test(jobIdS)
+      case Array("test", jobIdS) => {
+        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase
+        test(jobIdS)(nconf)
+        nconf.shutdown()
+      }
       case Array("run") =>  {
-        val conf = new DefaultProdConfiguration { }
-        runJob()(conf)
+        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+        runJob()(nconf)
+        nconf.shutdown()
       }
       case Array("createIndexes") =>  {
-        val conf = new DefaultProdConfiguration { }
-        MongoStore.createIndexes()(conf).getOrFail()
+        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase
+        MongoStore.createIndexes()(nconf).getOrFail()
+        nconf.shutdown()
         println("done")
       }
-      case Array(int(n)) => stressTestData(n)
-      case Array() => defaultData()
-      case _ => sys.error("check your parameters")
+      case Array(int(n)) => {
+        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase
+        stressTestData(n)(nconf)
+        nconf.shutdown()
+      }
+      case Array("default") => {
+        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase
+        defaultData()(nconf)
+        nconf.shutdown()
+        println("Database reset with default data")
+      }
+      case _ => {
+        println(
+          """Help:
+            | * TODO
+            |
+          """.stripMargin)
+        println("asd")
+        println("asd")
+        println("asd")
+      }
     }
 
   }
   
-  def runJob()(implicit conf: VSConfiguration): Unit = {
+  def runJob()(implicit conf: ValidatorSuite with ActorSystem with Database with HttpClient with RunEvents): Unit = {
     val strategy =
       Strategy(
-        entrypoint=URL("http://www.w3.org/"),
-        linkCheck=false,
+        entrypoint = URL("http://www.w3.org/"),
+        linkCheck = false,
         maxResources = 20,
-        filter=Filter(include=Everything, exclude=Nothing),
+        filter=Filter(include = Everything, exclude = Nothing),
         assertorsConfiguration = AssertorsConfiguration.default)
 
     val job = Job.createNewJob(name = "w3c", strategy = strategy, creatorId = UserId())

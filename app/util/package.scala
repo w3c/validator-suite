@@ -49,9 +49,7 @@ package object util {
       val status = response.getStatusCode()
       val headers: Headers =
         response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScalaHeaders
-      println("1")
       def bodyContent = Resource.fromInputStream(response.getResponseBodyAsStream())
-      println("2")
       val httpResponse = HttpResponse(url, method, status, headers, bodyContent)
       (httpResponse, bodyContent)
     }
@@ -81,5 +79,12 @@ package object util {
     def equal(a1: jURL, a2: jURL) = a1.toExternalForm === a2.toExternalForm
   }
 
+  trait Out {
+    def println(s: String): Unit
+  }
+
+  trait In {
+    def readLine(): String
+  }
 
 }

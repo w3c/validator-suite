@@ -1,17 +1,34 @@
-import play.api._
+package org.w3.vs
 
-import java.net.{ Socket, ResponseCache }
 import com.yammer.metrics._
 import com.yammer.metrics.reporting._
+import java.net.ResponseCache
 import java.util.concurrent.TimeUnit
 import org.w3.vs.model.Job
+import play.api._
+
 
 object Global extends GlobalSettings {
 
-  val conf = org.w3.vs.Prod.configuration
-  import conf._
+  var conf: ValidatorSuite
+    with ActorSystem
+    with Database
+    with HttpClient
+    with RunEvents = _
+
+  override def beforeStart(app: Application): Unit = {
+
+    assert(conf == null)
+
+    conf = new ValidatorSuite(mode = app.mode)
+      with DefaultActorSystem
+      with DefaultDatabase
+      with DefaultHttpClient
+      with DefaultRunEvents
+  }
 
   override def onStart(app: Application): Unit = {
+
     // TODO: that's ugly
     val graphiteConf =
       Configuration.load(new java.io.File(".")).getConfig("application.graphite-reporter") getOrElse sys.error("application.graphite-reporter")
@@ -31,18 +48,12 @@ object Global extends GlobalSettings {
 
     Job.resumeAllJobs()(conf)
 
-    // Run the sample job on start
-    /*import org.w3.vs.model.Job
-    implicit val configuration: org.w3.vs.VSConfiguration = org.w3.vs.Prod.configuration
-    import scala.concurrent.ExecutionContext.Implicits.global
-    Job.get(Job.sample.id).map(_.run())*/
-
   }
   
   override def onStop(app: Application): Unit = {
     Metrics.shutdown()
     ResponseCache.setDefault(null)
-    system.shutdown()
+    conf.shutdown()
   }
   
 }

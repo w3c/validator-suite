@@ -13,12 +13,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._
 
 // Reactive Mongo imports
-import reactivemongo.api._
-import reactivemongo.api.collections.default._
 import reactivemongo.bson._
-// Reactive Mongo plugin
-import play.modules.reactivemongo._
-import play.modules.reactivemongo.ReactiveBSONImplicits._
+import reactivemongo.api.collections.default.BSONCollection
+import play.modules.reactivemongo.json.ImplicitBSONHandlers._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
@@ -28,10 +25,10 @@ object Run {
 
   val logger = play.Logger.of(classOf[Run])
 
-  def collection(implicit conf: VSConfiguration): BSONCollection =
+  def collection(implicit conf: Database): BSONCollection =
     conf.db("runs")
 
-  def getAssertions(runId: RunId)(implicit conf: VSConfiguration): Future[Seq[Assertion]] = {
+  def getAssertions(runId: RunId)(implicit conf: Database): Future[Seq[Assertion]] = {
     import conf._
     val query = Json.obj(
       "runId" -> toJson(runId),
@@ -48,7 +45,7 @@ object Run {
     } |>>> Iteratee.consume[Seq[Assertion]]()
   }
 
-  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[Seq[Assertion]] = {
+  def getAssertionsForURL(runId: RunId, url: URL)(implicit conf: Database): Future[Seq[Assertion]] = {
     import conf._
     val query = Json.obj(
       "runId" -> toJson(runId),
@@ -73,7 +70,7 @@ object Run {
 
   /** gets the final ResourceData for the given `run` and `url`
     */
-  def getResourceDataForURL(runId: RunId, url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
+  def getResourceDataForURL(runId: RunId, url: URL)(implicit conf: Database): Future[ResourceData] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -95,7 +92,7 @@ object Run {
 
   /** gets all final ResourceData-s for the given `run` and `url`
     */
-  def getResourceDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Seq[ResourceData]] = {
+  def getResourceDatas(runId: RunId)(implicit conf: Database): Future[Seq[ResourceData]] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -115,7 +112,7 @@ object Run {
 
   /** gets all final ResourceData-s for the given `run` and `url`
     */
-  def getGroupedAssertionDatas(runId: RunId)(implicit conf: VSConfiguration): Future[Seq[GroupedAssertionData]] = {
+  def getGroupedAssertionDatas(runId: RunId)(implicit conf: Database): Future[Seq[GroupedAssertionData]] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -134,7 +131,7 @@ object Run {
   /** returns the data that defines the final state of a Run.
     */
   @deprecated("if the Job is Done, then RunData is already available there", "")
-  def getFinalRunData(runId: RunId)(implicit conf: VSConfiguration): Future[RunData] = {
+  def getFinalRunData(runId: RunId)(implicit conf: Database): Future[RunData] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -151,7 +148,7 @@ object Run {
   /** returns the data that defines the final state of a Run.
     */
   @deprecated("already in Job's Done state", "")
-  def getPartialJobData(runId: RunId)(implicit conf: VSConfiguration): Future[(DateTime, RunData)] = {
+  def getPartialJobData(runId: RunId)(implicit conf: Database): Future[(DateTime, RunData)] = {
     val query = Json.obj(
       "runId" -> toJson(runId),
       "event" -> "done-run")
@@ -170,14 +167,14 @@ object Run {
     }
   }
 
-  def enumerateRunEvents(runId: RunId)(implicit conf: VSConfiguration): Enumerator[Iterator[RunEvent]] = {
+  def enumerateRunEvents(runId: RunId)(implicit conf: Database): Enumerator[Iterator[RunEvent]] = {
     val query = Json.obj("runId" -> toJson(runId))
     val cursor = collection.find(query).cursor[JsValue]
 //    cursor.enumerateBulks() &> Enumeratee.map[JsValue](_.as[RunEvent])
     cursor.enumerateBulks() &> Enumerateerator.map[JsValue](_.as[RunEvent])
   }
 
-  def get(runId: RunId)(implicit conf: VSConfiguration): Future[(Run, Iterable[RunAction])] = {
+  def get(runId: RunId)(implicit conf: Database): Future[(Run, Iterable[RunAction])] = {
     val query = Json.obj("runId" -> toJson(runId))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.toList() map { list =>
@@ -191,11 +188,11 @@ object Run {
     }
   }  
 
-  def delete(run: Run)(implicit conf: VSConfiguration): Future[Unit] =
+  def delete(run: Run)(implicit conf: Database): Future[Unit] =
     sys.error("")
 
   /** removes all the [[org.w3.vs.model.RunEvent]]s with the given runId */
-  def removeAll(runId: RunId)(implicit conf: VSConfiguration): Future[Unit] = {
+  def removeAll(runId: RunId)(implicit conf: Database): Future[Unit] = {
     val query = Json.obj("runId" -> toJson(runId))
     collection.remove[JsValue](query) map { lastError => () }
   }
@@ -209,7 +206,7 @@ object Run {
 
   /* addResourceResponse */
 
-  def saveEvent(event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = {
+  def saveEvent(event: RunEvent)(implicit conf: Database): Future[Unit] = {
     import conf._
     // default writeConcern here as we don't care about waiting for
     // the actual Write

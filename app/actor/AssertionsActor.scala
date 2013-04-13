@@ -3,7 +3,7 @@ package org.w3.vs.actor
 import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.vs.assertor._
-import akka.actor._
+import akka.actor.{ActorSystem => AkkaActorSystem, _}
 import scala.concurrent._
 import scala.util._
 import scala.collection.mutable.Queue
@@ -21,9 +21,9 @@ object AssertionsActor {
 
 import AssertionsActor._
 
-class AssertionsActor(job: Job)(implicit conf: VSConfiguration) extends Actor {
+class AssertionsActor(job: Job)(implicit vs: ActorSystem) extends Actor {
 
-  implicit val ec = conf.system.dispatchers.lookup("assertor-dispatcher")
+  implicit val ec = vs.system.dispatchers.lookup("assertor-dispatcher")
 
   val pendingAssertions: Ref[Int] = Ref(0)
 

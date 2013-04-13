@@ -10,7 +10,7 @@
    </appender>
 
   <appender name="ORDERS" class="ch.qos.logback.core.FileAppender">
-    <file>./logs/orders.log</file>
+    <file>./logs/orders-test.log</file>
     <encoder>
       <pattern>%date [%level] %message%n%xException{40}</pattern>
     </encoder>
@@ -25,11 +25,12 @@
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
   <logger name="org.w3.vs" level="DEBUG" />
-  <logger name="org.w3.vs.controllers.OneTimeJob" level="DEBUG">
-      <appender-ref ref="ORDERS" />
-  </logger>
-  <logger name="org.eclipse.jetty.server" level="INFO"/>
+  <logger name="org.w3.vs.actor.JobActor" level="INFO" />
+  <logger name="org.w3.vs.http.AuthorityManagerr" level="INFO" />
+
+  <!-- External libraries to silence -->
   <logger name="com.gargoylesoftware.htmlunit" level="OFF" />
+  <logger name="org.eclipse.jetty.server" level="ERROR"/>
   <logger name="reactivemongo" level="ERROR"/>
 
   <!-- activate those loggers for more resource fetching info -->

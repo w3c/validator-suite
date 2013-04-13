@@ -8,32 +8,34 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.vs.util.Util._
 import play.api.libs.iteratee._
+import org.w3.vs._
+import org.w3.vs.util.TestData
+import org.w3.vs.model.Running
+import org.w3.vs.util.Webserver
+import org.w3.vs.model.DoneRunEvent
+import play.api.Mode
 
 /**
   * Server 1 -> Server 2
   * 1 GET       1 HEAD
   */
-class SimpleInterWebsiteTest extends RunTestHelper with TestKitHelper {
+class SimpleInterWebsiteTest extends VSTest[ActorSystem with HttpClient with Database with RunEvents] with ServersTest with TestData {
 
-  val strategy =
-    Strategy(
-      entrypoint=URL("http://localhost:9001/"),
-      linkCheck=true,
-      maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing),
-      assertorsConfiguration = Map.empty)
-  
-  val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
+  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 
   val servers = Seq(
       Webserver(9001, Website(Seq("/" --> "http://localhost:9001/1")).toServlet)
   )
 
   "test simpleInterWebsite" in {
-    (for {
-      _ <- User.save(userTest)
-      _ <- Job.save(job)
-    } yield ()).getOrFail()
+
+    val job = TestData.job
+    val user = TestData.user
+
+//    (for {
+//      _ <- User.save(user)
+//      _ <- Job.save(job)
+//    } yield ()).getOrFail()
 
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
@@ -46,3 +48,4 @@ class SimpleInterWebsiteTest extends RunTestHelper with TestKitHelper {
   }
   
 }
+

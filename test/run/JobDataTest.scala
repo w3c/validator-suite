@@ -1,28 +1,43 @@
+/*
 package org.w3.vs.run
 
-import org.w3.vs.util.{TestKitHelper, RunTestHelper}
+import org.w3.vs.util._
 import org.w3.vs.model._
-import org.w3.vs.util.URL
 import org.w3.vs.util.website.Website
 import org.w3.vs.util.Util._
-import org.w3.vs.util.website.Webserver
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._
+import org.w3.vs.model.Running
+import org.w3.vs.model.AssertorResponseEvent
+import org.w3.vs.util.TestData
+import org.w3.vs._
+import play.api.Mode
+import org.w3.vs.model.Running
+import org.w3.vs.util.Webserver
+import org.w3.vs.model.AssertorResponseEvent
+import org.w3.vs.model.Running
+import org.w3.vs.util.Webserver
+import org.w3.vs.model.AssertorResponseEvent
+import org.w3.vs.model.Running
+import org.w3.vs.util.Webserver
+import org.w3.vs.model.AssertorResponseEvent
+import org.w3.vs.util.akkaext.PathAware
+import org.w3.vs.http.Http.SetSleepTime
 
-class JobDataTest extends RunTestHelper with TestKitHelper {
+class JobDataTest extends VSTest[ActorSystem with Database with RunEvents] with ServersTest with TestData {
 
-  import org.w3.vs.assertor.DataTest._
+  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
+  val http = vs.httpActorRef
+  PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
   "Job.jobData() must be subscribed to future updates even if the job was Idle" in {
 
-    val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
+    val job = TestData.job
 
-    (for {
-      _ <- User.save(userTest)
-      _ <- Job.save(job)
-    } yield ()).getOrFail(5.seconds)
+    // Save the job
+    Job.save(job).getOrFail()
 
     val rdsBeforeRun = job.getResourceDatas().getOrFail()
     rdsBeforeRun must be('empty)
@@ -33,12 +48,12 @@ class JobDataTest extends RunTestHelper with TestKitHelper {
     // Then run the job
     val runningJob: Job = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
-    val jobActor = system.actorFor(actorPath)
+    val jobActor = vs.system.actorFor(actorPath)
 
     // generating some stuff
-    jobActor ! ar1
-    jobActor ! ar2
-    jobActor ! ar3
+    jobActor ! TestData.ar1
+    jobActor ! TestData.ar2
+    jobActor ! TestData.ar3
 
     // make sure that at least one of these was received
     val foo = (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[AssertorResponseEvent]()).getOrFail()
@@ -54,3 +69,4 @@ class JobDataTest extends RunTestHelper with TestKitHelper {
   }
 
 }
+*/

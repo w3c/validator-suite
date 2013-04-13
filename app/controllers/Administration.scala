@@ -4,14 +4,13 @@ import org.w3.vs.controllers._
 import play.api.mvc.{WebSocket, Result, Action}
 import org.w3.vs.exception.UnknownUser
 import org.w3.vs.model
-import org.w3.vs.model.{Job, User, JobId}
+import org.w3.vs.model.{User, JobId}
 import play.api.i18n.Messages
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import play.api.cache.Cache
 import play.api.Play._
 import play.api.libs.iteratee._
-import scala.concurrent.duration.Duration
 
 object Administration extends VSController {
 

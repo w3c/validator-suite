@@ -1,11 +1,11 @@
 package org.w3.vs.actor
 
-import akka.actor._
-import org.w3.vs.VSConfiguration
 import org.w3.vs.model._
 import scala.util._
 import scalaz.Scalaz._
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.w3.vs._
+import akka.actor.{ActorSystem => AkkaActorSystem, _}
 
 object RunsActor {
 
@@ -22,7 +22,7 @@ object RunsActor {
 
 }
 
-class RunsActor()(implicit conf: VSConfiguration) extends Actor {
+class RunsActor()(implicit conf: ActorSystem with Database with HttpClient with RunEvents) extends Actor {
 
   import RunsActor.{ logger, createActorName, RunJob, ResumeJob }
 

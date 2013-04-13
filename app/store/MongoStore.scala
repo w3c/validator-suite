@@ -9,11 +9,9 @@ import scala.util._
 
 // Reactive Mongo imports
 import reactivemongo.api._
-import reactivemongo.api.collections.default._
 import reactivemongo.bson._
 // Reactive Mongo plugin
 import play.modules.reactivemongo._
-import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -28,14 +26,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 object MongoStore {
 
-  def reInitializeDb()(implicit conf: VSConfiguration): Future[Unit] = {
+  def reInitializeDb()(implicit conf: Database): Future[Unit] = {
     for {
       _ <- conf.db.drop()
       _ <- initializeDb()
     } yield ()
   }
 
-  def createCollections()(implicit conf: VSConfiguration): Future[Unit] = {
+  def createCollections()(implicit conf: Database): Future[Unit] = {
     for {
       _ <- User.collection.create()
       _ <- Job.collection.create()
@@ -43,7 +41,7 @@ object MongoStore {
     } yield ()
   }
 
-  def createIndexes()(implicit conf: VSConfiguration): Future[Unit] = {
+  def createIndexes()(implicit conf: Database): Future[Unit] = {
     import IndexType.Ascending
     val indexesManager = conf.db.indexesManager
     val runIndexesManager = indexesManager.onCollection(Run.collection.name)
@@ -65,8 +63,7 @@ object MongoStore {
   }
 
 
-  def initializeDb()(implicit conf: VSConfiguration): Future[Unit] = {
-    import IndexType.Ascending
+  def initializeDb()(implicit conf: Database): Future[Unit] = {
     for {
       _ <- createCollections()
       _ <- createIndexes()

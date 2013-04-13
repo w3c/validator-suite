@@ -1,8 +1,6 @@
 package org.w3.vs.model
 
-import java.nio.channels.ClosedChannelException
 import org.joda.time.{ DateTime, DateTimeZone }
-import akka.actor._
 import akka.pattern.{ ask, AskTimeoutException }
 import play.api.libs.iteratee._
 import play.Logger
@@ -19,14 +17,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.exception.UnknownJob
 import org.w3.vs.view.model.JobView
 import scalaz.Scalaz._
+import play.modules.reactivemongo.json.collection.JSONCollection
+import akka.actor.{ActorSystem => AkkaActorSystem, _}
 
-// Reactive Mongo imports
-import reactivemongo.api._
-import reactivemongo.api.collections.default.BSONCollection
-import reactivemongo.bson._
-// Reactive Mongo plugin
-import play.modules.reactivemongo._
-import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
@@ -47,7 +40,7 @@ case class Job(
 
   import Job.logger
 
-  def getAssertions()(implicit conf: VSConfiguration): Future[Iterable[Assertion]] = {
+  def getAssertions()(implicit conf: ValidatorSuite with Database): Future[Iterable[Assertion]] = {
     status match {
       case NeverStarted | Zombie => Future.successful(Iterable.empty)
       case Done(runId, _, _, _) => Run.getAssertions(runId)
@@ -55,38 +48,38 @@ case class Job(
     }
   }
 
-  def save()(implicit conf: VSConfiguration): Future[Job] =
+  def save()(implicit conf: ValidatorSuite with Database): Future[Job] =
     Job.save(this)
   
-  def delete()(implicit conf: VSConfiguration): Future[Unit] = {
+  def delete()(implicit conf: ValidatorSuite with ActorSystem with Database): Future[Unit] = {
     cancel() flatMap { case () =>
       Job.delete(id)
     }
   }
 
-  def reset(removeRunData: Boolean = true)(implicit conf: VSConfiguration): Future[Unit] =
+  def reset(removeRunData: Boolean = true)(implicit conf: ValidatorSuite with ActorSystem with Database): Future[Unit] =
     Job.reset(this.id, removeRunData)
 
-  def run()(implicit conf: VSConfiguration): Future[Job] = {
-    import conf._
-    (runsActorRef ? RunsActor.RunJob(this)).mapTo[Running] map { running =>
+  def run()(implicit vs: ActorSystem with RunEvents): Future[Job] = {
+    implicit val timeout = vs.timeout
+    (vs.runsActorRef ? RunsActor.RunJob(this)).mapTo[Running] map { running =>
       this.copy(status = running)
     }
   }
 
   // TODO we can actually look at the status before sending the message
-  def resume()(implicit conf: VSConfiguration): Future[Unit] = {
-    import conf._
-    (runsActorRef ? RunsActor.ResumeJob(this)).mapTo[Unit]
+  def resume()(implicit conf: ActorSystem with Database with HttpClient with RunEvents): Future[Unit] = {
+    implicit val timeout = conf.timeout
+    (conf.runsActorRef ? RunsActor.ResumeJob(this)).mapTo[Unit]
   }
 
-  def cancel()(implicit conf: VSConfiguration): Future[Unit] = {
-    import conf._
+  def cancel()(implicit conf: ActorSystem): Future[Unit] = {
+    implicit val timeout = conf.timeout
     status match {
       case NeverStarted | Zombie => Future.successful(())
       case Done(_, _, _, _) => Future.successful(())
       case Running(_, actorPath) => {
-        val actorRef = system.actorFor(actorPath)
+        val actorRef = conf.system.actorFor(actorPath)
         (actorRef ? JobActor.Cancel).mapTo[Unit]
       }
     }
@@ -100,9 +93,8 @@ case class Job(
     * on time, the TimeoutException is mapped to a
     * NoSuchElementException.
     */
-  def getFuture(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.OneOff], conf: VSConfiguration): Future[classifier.OneOff] = {
-    import conf._
-    val actorRef = system.actorFor(actorPath)
+  def getFuture(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.OneOff], conf: ActorSystem): Future[classifier.OneOff] = {
+    val actorRef = conf.system.actorFor(actorPath)
     val message = JobActor.Get(classifier)
     val shortTimeout = Duration(1, "s")
     ask(actorRef, message)(shortTimeout).mapTo[classifier.OneOff] recoverWith {
@@ -119,9 +111,10 @@ case class Job(
     * enumerator will either terminates (Input.EOF) or just emit a
     * Input.Empty.
     */
-  def actorBasedEnumerator(classifier: Classifier, forever: Boolean)(implicit classTag: ClassTag[classifier.Streamed], conf: VSConfiguration): Enumerator[Iterator[classifier.Streamed]] = {
-    import conf._
+  def actorBasedEnumerator(classifier: Classifier, forever: Boolean)(
+      implicit classTag: ClassTag[classifier.Streamed], vs: ActorSystem): Enumerator[Iterator[classifier.Streamed]] = {
     val (enumerator, channel) = Concurrent.broadcast[Iterator[classifier.Streamed]]
+    val system = vs.system
     def subscriberActor(): Actor = new Actor {
 
       var channel: Concurrent.Channel[Iterator[classifier.Streamed]] = null
@@ -160,10 +153,10 @@ case class Job(
           // have changed. Let's give it a chance. Note that we
           // shouldn't be missing anything at this point as we've
           // already subscribed to the EventStream
-          case _ => Job.get(id).onSuccess { _.status match {
+          case _ => () /*Job.get(id).onSuccess { _.status match {
             case Running(_, jobActorPath) => subscribeToJobActor(system.actorFor(jobActorPath))
             case _ => ()
-          }}
+          }}*/
         }
       }
       /* the actor's main method... @@@@ */
@@ -217,7 +210,7 @@ case class Job(
    *  parameters (eg. filter X-s for a specific URL).
    */
 
-  def runEvents()(implicit conf: VSConfiguration): Enumerator[Iterator[RunEvent]] = {
+  def runEvents()(implicit conf: ActorSystem with Database): Enumerator[Iterator[RunEvent]] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Enumerator()
@@ -230,19 +223,19 @@ case class Job(
   /** Enumerator for all the JobData-s, even for future runs.  This is
     * stateless.  If you just want the most up-to-date JobData, use
     * Job.jobData() instead. */
-  def jobDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[JobData]] = {
+  def jobDatas()(implicit conf: ActorSystem with Database): Enumerator[Iterator[JobData]] = {
     import conf._
     runDatas() &> Enumeratee.map(_.map(runData => JobData(this, runData)))
   }
 
   /** returns the most up-to-date JobData for the Job, if available */
-  def getJobData()(implicit conf: VSConfiguration): Future[JobData] = {
+  def getJobData()(implicit conf: ActorSystem): Future[JobData] = {
     getRunData().map { JobData(this, _) }
   }
 
   /** this is stateless, so if you're the Done case, you want to use
     * Job.runData() instead */
-  def runDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[RunData]] = {
+  def runDatas()(implicit conf: ActorSystem): Enumerator[Iterator[RunData]] = {
     def enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
     this.status match {
       case Done(_, _, _, runData) =>
@@ -252,7 +245,7 @@ case class Job(
   }
 
   /** returns the most up-to-date RunData for the Job, if available */
-  def getRunData()(implicit conf: VSConfiguration): Future[RunData] = {
+  def getRunData()(implicit conf: ActorSystem): Future[RunData] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.successful(RunData())
@@ -264,7 +257,7 @@ case class Job(
     }
   }
 
-  def resourceDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[ResourceData]] = {
+  def resourceDatas()(implicit conf: ActorSystem with Database): Enumerator[Iterator[ResourceData]] = {
     def enumerator = actorBasedEnumerator(Classifier.AllResourceDatas, forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
@@ -276,7 +269,7 @@ case class Job(
   }
 
   // all ResourceDatas updates for url
-  def resourceDatas(url: URL)(implicit conf: VSConfiguration): Enumerator[ResourceData] = {
+  def resourceDatas(url: URL)(implicit conf: ActorSystem with Database): Enumerator[ResourceData] = {
     def enumerator = actorBasedEnumerator(Classifier.ResourceDataFor(url), forever = true) &> Enumeratee.mapConcat(_.toSeq)
     this.status match {
       case Done(runId, _, _, _) =>
@@ -288,7 +281,7 @@ case class Job(
   }
 
   // the most up-to-date ResourceData for url
-  def getResourceData(url: URL)(implicit conf: VSConfiguration): Future[ResourceData] = {
+  def getResourceData(url: URL)(implicit conf: ActorSystem with Database): Future[ResourceData] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.failed(new NoSuchElementException)
@@ -299,7 +292,7 @@ case class Job(
   }
 
   // all current ResourceDatas
-  def getResourceDatas()(implicit conf: VSConfiguration): Future[Iterable[ResourceData]] = {
+  def getResourceDatas()(implicit conf: ActorSystem with Database): Future[Iterable[ResourceData]] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.successful(Seq.empty)
@@ -310,7 +303,7 @@ case class Job(
   }
 
   // all GroupedAssertionDatas updates
-  def groupedAssertionDatas()(implicit conf: VSConfiguration): Enumerator[Iterator[GroupedAssertionData]] =  {
+  def groupedAssertionDatas()(implicit conf: ActorSystem with Database): Enumerator[Iterator[GroupedAssertionData]] =  {
     def enumerator = actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
@@ -322,7 +315,7 @@ case class Job(
   }
 
   // all current GroupedAssertionDatas
-  def getGroupedAssertionDatas()(implicit conf: VSConfiguration): Future[Iterable[GroupedAssertionData]] = {
+  def getGroupedAssertionDatas()(implicit conf: ActorSystem with Database): Future[Iterable[GroupedAssertionData]] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.successful(Seq.empty)
@@ -333,7 +326,7 @@ case class Job(
   }
 
   // all Assertions updatesfor url
-  def assertions(url: URL)(implicit conf: VSConfiguration): Enumerator[Iterator[Assertion]] = {
+  def assertions(url: URL)(implicit conf: ActorSystem with Database): Enumerator[Iterator[Assertion]] = {
     def enumerator = actorBasedEnumerator(Classifier.AssertionsFor(url), forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
@@ -345,7 +338,7 @@ case class Job(
   }
 
   // all current Assertions for `url`
-  def getAssertions(url: URL)(implicit conf: VSConfiguration): Future[Seq[Assertion]] = {
+  def getAssertions(url: URL)(implicit conf: ActorSystem with Database): Future[Seq[Assertion]] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Future.successful(Seq.empty)
@@ -364,28 +357,28 @@ object Job {
 
   val logger = Logger.of(classOf[Job])
 
-  def collection(implicit conf: VSConfiguration): BSONCollection =
+  def collection(implicit conf: Database): JSONCollection =
     conf.db("jobs")
 
-  def sample(implicit conf: VSConfiguration) = Job(
-    JobId("50cb698f04ca20aa0283bc84"),
-    "Sample report",
-    DateTime.now(DateTimeZone.UTC),
-    Strategy(
-      entrypoint = URL("http://www.w3.org/"),
-      linkCheck = false,
-      maxResources = 10,
-      filter = Filter(include = Everything, exclude = Nothing),
-      assertorsConfiguration = AssertorsConfiguration.default),
-    User.sample.id,
-    NeverStarted,
-    None)
+//  def sample(implicit conf: Database) = Job(
+//    JobId("50cb698f04ca20aa0283bc84"),
+//    "Sample report",
+//    DateTime.now(DateTimeZone.UTC),
+//    Strategy(
+//      entrypoint = URL("http://www.w3.org/"),
+//      linkCheck = false,
+//      maxResources = 10,
+//      filter = Filter(include = Everything, exclude = Nothing),
+//      assertorsConfiguration = AssertorsConfiguration.default),
+//    User.sample.id,
+//    NeverStarted,
+//    None)
 
   private def updateStatus(
     jobId: JobId,
     status: JobStatus,
     latestDoneOpt: Option[Done])(
-    implicit conf: VSConfiguration): Future[Unit] = {
+    implicit conf: Database): Future[Unit] = {
     val selector = Json.obj("_id" -> toJson(jobId))
     val update = latestDoneOpt match {
       case Some(latestDone) =>
@@ -408,20 +401,20 @@ object Job {
     jobId: JobId,
     status: JobStatus,
     latestDone: Done)(
-    implicit conf: VSConfiguration): Future[Unit] = {
+    implicit conf: Database): Future[Unit] = {
     updateStatus(jobId, status, Some(latestDone))
   }
 
   def updateStatus(
     jobId: JobId,
     status: JobStatus)(
-    implicit conf: VSConfiguration): Future[Unit] = {
+    implicit conf: Database): Future[Unit] = {
     updateStatus(jobId, status, None)
   }
 
   // returns the Job with the jobId and optionally the latest Run* for this Job
   // the Run may not exist if the Job was never started
-  def get(jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
+  def get(jobId: JobId)(implicit conf: Database): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
@@ -431,12 +424,12 @@ object Job {
   }
 
   /** the list of all the Jobs */
-  def getAll()(implicit conf: VSConfiguration): Future[List[Job]] = {
+  def getAll()(implicit conf: Database): Future[List[Job]] = {
     val cursor = collection.find(Json.obj()).cursor[JsValue]
     cursor.toList() map { list => list map { _.as[Job] } }
   }
 
-  def getRunningJobs()(implicit conf: VSConfiguration): Future[List[Job]] = {
+  def getRunningJobs()(implicit conf: Database): Future[List[Job]] = {
     val query = Json.obj("status.actorPath" -> Json.obj("$exists" -> JsBoolean(true)))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.toList() map { list => list map { _.as[Job] } }
@@ -446,7 +439,7 @@ object Job {
     * The function itself is blocking and intended to be called when VS is (re-)started.
     * If resuming a Run fails (either an exception or a timeout) then the Job's status is updated to Zombie.
     */
-  def resumeAllJobs()(implicit conf: VSConfiguration): Unit = {
+  def resumeAllJobs()(implicit conf: ActorSystem with Database with HttpClient with RunEvents): Unit = {
     import org.w3.vs.util.Util.FutureF
     val runningJobs = getRunningJobs().getOrFail()
     val duration = Duration("15s")
@@ -469,7 +462,7 @@ object Job {
     }
   }
 
-  def getFor(userId: UserId)(implicit conf: VSConfiguration): Future[Iterable[Job]] = {
+  def getFor(userId: UserId)(implicit conf: Database): Future[Iterable[Job]] = {
     import conf._
     val query = Json.obj("creator" -> toJson(userId))
     val cursor = collection.find(query).cursor[JsValue]
@@ -480,8 +473,7 @@ object Job {
 
   /** returns the Job for this JobId, if it belongs to the provided user
     * if not, it throws an UnknownJob exception */
-  def getFor(userId: UserId, jobId: JobId)(implicit conf: VSConfiguration): Future[Job] = {
-    import conf._
+  def getFor(userId: UserId, jobId: JobId)(implicit conf: Database): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
@@ -490,18 +482,17 @@ object Job {
     }
   }
 
-  def save(job: Job)(implicit conf: VSConfiguration): Future[Job] = {
-    import conf._
+  def save(job: Job)(implicit conf: Database): Future[Job] = {
     val jobJson = toJson(job)
     collection.insert(jobJson) map { lastError => job }
   }
 
-  def delete(jobId: JobId)(implicit conf: VSConfiguration): Future[Unit] = {
+  def delete(jobId: JobId)(implicit conf: Database): Future[Unit] = {
     val query = Json.obj("_id" -> toJson(jobId))
     collection.remove[JsValue](query) map { lastError => () }
   }
 
-  def reset(jobId: JobId, removeRunData: Boolean = true)(implicit conf: VSConfiguration): Future[Unit] = {
+  def reset(jobId: JobId, removeRunData: Boolean = true)(implicit conf: ActorSystem with Database): Future[Unit] = {
     Job.get(jobId) flatMap { job =>
       job.cancel() // <- do not block!
       val rebornJob = job.copy(status = NeverStarted, latestDone = None)

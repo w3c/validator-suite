@@ -4,13 +4,13 @@ import akka.actor._
 import akka.pattern.ask
 import akka.event._
 import akka.util.Timeout
-import org.w3.vs.VSConfiguration
 import org.w3.vs.model._
 import scala.util._
 import scalaz.Scalaz._
 import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.w3.vs.ActorSystem
 
 object RunEventBusActor {
 
@@ -20,7 +20,7 @@ object RunEventBusActor {
 
 }
 
-class RunEventBusActor()(implicit conf: VSConfiguration) extends Actor {
+class RunEventBusActor()(implicit vs: ActorSystem) extends Actor {
 
   import RunEventBusActor.{ Listen, Deafen, Publish }
 

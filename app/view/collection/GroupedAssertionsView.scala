@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.store.Formats._
 import play.api.libs.json.JsValue
 import controllers.routes
-import org.w3.vs.VSConfiguration
+import org.w3.vs._
 
 case class GroupedAssertionsView(
   source: Iterable[GroupedAssertionView],
@@ -64,7 +64,7 @@ case class GroupedAssertionsView(
 
 object GroupedAssertionsView {
 
-  def apply(job: Job)(implicit conf: VSConfiguration): Future[GroupedAssertionsView] = {
+  def apply(job: Job)(implicit vs: ActorSystem with Database): Future[GroupedAssertionsView] = {
     job.getGroupedAssertionDatas().map(gAssertionsDatas =>
       GroupedAssertionsView(
         source = gAssertionsDatas.map(data => GroupedAssertionView(job.id, data)),

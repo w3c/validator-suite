@@ -18,7 +18,7 @@ import reactivemongo.api.collections.default._
 import reactivemongo.bson._
 // Reactive Mongo plugin
 import play.modules.reactivemongo._
-import play.modules.reactivemongo.ReactiveBSONImplicits._
+import play.modules.reactivemongo.json.ImplicitBSONHandlers._
 // Play Json imports
 import play.api.libs.iteratee._
 import play.api.libs.json._

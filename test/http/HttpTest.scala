@@ -1,8 +1,5 @@
 package org.w3.vs.http
 
-import org.w3.vs._
-import org.scalatest._
-import org.w3.vs.util._
 import org.w3.vs.util.website._
 import org.w3.vs.model._
 import org.w3.vs.util._
@@ -10,19 +7,31 @@ import org.w3.vs.util.akkaext._
 import Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.util.Util._
+import org.w3.vs.util.ServersTest
+import scala.concurrent.Future
+import org.w3.vs._
+import play.api.Mode.Test
+import org.w3.vs.http.Http.SetSleepTime
+import org.w3.vs.util.Webserver
+import org.w3.vs.model.ErrorResponse
+import org.w3.vs.model.Fetch
 
-// the test would be better without extending RunTestHelper...
-class HttpTest extends RunTestHelper with Inside {
-  
+class HttpTest extends VSTestKit[ActorSystem with HttpClient](new ValidatorSuite(mode = Test) with DefaultActorSystem with DefaultHttpClient) with ServersTest {
+
   val servers = Seq(Webserver(9001, Website.cyclic(10).toServlet))
-  
+
+  val http = vs.httpActorRef
+
   PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
   "testing HEAD on existing URL" in {
 
-    http ! Fetch(URL("http://localhost:9001/"), HEAD)
+    Future {
+      Thread.sleep(1000)
+      http ! Fetch(URL("http://localhost:9001/"), HEAD)
+    }
 
-    val fetchResponse = expectMsgType[ResourceResponse](3.seconds)
+    val fetchResponse = expectMsgType[ResourceResponse](10.seconds)
 
     inside (fetchResponse) { case response: HttpResponse =>
       response.url must be(URL("http://localhost:9001/"))
@@ -31,7 +40,6 @@ class HttpTest extends RunTestHelper with Inside {
     }
 
   }
-
 
 
   "testing GET on existing URL" in {
@@ -63,7 +71,7 @@ class HttpTest extends RunTestHelper with Inside {
 
   }
 
-  
+
   "testing HEAD on non-existing domain example.com must fail" in {
 
     http ! Fetch(URL("http://example.co/bar"), HEAD)

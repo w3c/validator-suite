@@ -1,7 +1,6 @@
 package org.w3.vs.view.collection
 
-import org.joda.time.DateTime
-import org.w3.vs.model.{Job, JobId, AssertionSeverity, Assertion}
+import org.w3.vs.model.{Job, AssertionSeverity}
 import org.w3.vs.view.Collection._
 import org.w3.vs.view.model.AssertionView
 import play.api.templates.{HtmlFormat, Html}
@@ -12,9 +11,8 @@ import play.api.i18n.Messages
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.store.Formats._
-import play.api.libs.json.JsValue
 import controllers.routes
-import org.w3.vs.VSConfiguration
+import org.w3.vs._
 
 case class AssertionsView(
     source: Iterable[AssertionView],
@@ -73,7 +71,7 @@ case class AssertionsView(
 
 object AssertionsView {
 
-  def apply(job: Job, url: URL)(implicit conf: VSConfiguration): Future[AssertionsView] = {
+  def apply(job: Job, url: URL)(implicit vs: ActorSystem with Database): Future[AssertionsView] = {
     job.getAssertions(url).map(assertionsDatas =>
       AssertionsView(
         source = assertionsDatas.map(data => AssertionView(job.id, data)),
@@ -83,7 +81,7 @@ object AssertionsView {
     )
   }
 
-  /*def apply(job: Job)(implicit conf: VSConfiguration): Future[AssertionsView] = {
+  /*def apply(job: Job)(implicit conf: ActorSystem): Future[AssertionsView] = {
     job.getAssertions().map(assertionsDatas =>
       AssertionsView(
         source = assertionsDatas.map(data => AssertionView(job.id, data)),

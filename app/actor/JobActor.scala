@@ -3,7 +3,6 @@ package org.w3.vs.actor
 import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.vs.util._
-import akka.actor._
 import play.Logger
 import org.w3.vs.http._
 import org.joda.time.DateTime
@@ -16,6 +15,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
 import akka.event._
+import akka.actor.{ActorSystem => AkkaActorSystem, _}
 
 object JobActor {
 
@@ -44,7 +44,7 @@ object JobActor {
 //    def warn(msg: String): Unit = println("== " + msg)
 //  }
 
-  def saveEvent(event: RunEvent)(implicit conf: VSConfiguration): Future[Unit] = event match {
+  def saveEvent(event: RunEvent)(implicit vs: Database): Future[Unit] = event match {
     case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
         val running = Running(runId, actorPath)
@@ -82,7 +82,7 @@ case object NotYetStarted extends JobActorState
 case object Stopping extends JobActorState
 
 // TODO extract all pure function in a companion object
-class JobActor(job: Job, initialRun: Run)(implicit val conf: VSConfiguration)
+class JobActor(job: Job, initialRun: Run)(implicit val conf: ActorSystem with HttpClient with Database)
 extends Actor with FSM[JobActorState, Run]
 with EventBus
 with ActorEventBus /* Represents an EventBus where the Subscriber type is ActorRef */

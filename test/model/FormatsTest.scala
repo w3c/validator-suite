@@ -6,18 +6,8 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.vs.util.URL
 import org.w3.vs.util.html.Doctype
 import org.w3.vs.model._
-import org.w3.vs._
-import scala.util._
-import org.w3.vs.actor.JobActor._
 import Formats._
 
-// Reactive Mongo imports
-import reactivemongo.api._
-import reactivemongo.api.collections.default._
-import reactivemongo.bson._
-// Reactive Mongo plugin
-import play.modules.reactivemongo._
-import play.modules.reactivemongo.ReactiveBSONImplicits._
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson

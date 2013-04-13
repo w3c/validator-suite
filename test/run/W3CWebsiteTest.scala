@@ -12,8 +12,40 @@ import scala.concurrent.duration.Duration
 import org.w3.vs.util.Util._
 import org.scalatest.Inside
 import java.io.File
+import org.w3.vs.util.TestData
+import org.w3.vs._
+import org.w3.vs.model.Running
+import org.w3.vs.model.Done
+import org.w3.vs.model.DoneRunEvent
+import scala.Some
+import org.w3.vs.model.FromJob
+import play.api.Mode
+import org.w3.vs.model.Running
+import org.w3.vs.model.Done
+import org.w3.vs.model.DoneRunEvent
+import scala.Some
+import org.w3.vs.model.FromJob
+import org.w3.vs.model.Running
+import org.w3.vs.model.Done
+import org.w3.vs.model.DoneRunEvent
+import scala.Some
+import org.w3.vs.model.FromJob
+import org.w3.vs.model.Running
+import org.w3.vs.model.Done
+import org.w3.vs.model.DoneRunEvent
+import scala.Some
+import org.w3.vs.model.FromJob
+import org.w3.vs.model.Running
+import org.w3.vs.model.Done
+import org.w3.vs.model.DoneRunEvent
+import scala.Some
+import org.w3.vs.model.FromJob
 
-abstract class W3CWebsiteTest extends RunTestHelper/*({
+abstract class W3CWebsiteTest extends VSTestKit[ActorSystem with HttpClient with Database with RunEvents](
+  new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+) with TestData with Inside {
+
+/*({
 try {
   val configuration = new DefaultTestConfiguration {
     override val httpCacheOpt = Some(new Cache(new File("test/resources/w3c-cache")))
@@ -22,19 +54,12 @@ try {
 } catch {
   case e: Exception => e.printStackTrace ; throw e
 }
-})*/ with TestKitHelper with Inside {
-
-  val strategy =
-    Strategy( 
-      entrypoint=URL("http://www.w3.org/"),
-      linkCheck=false,
-      maxResources = 10,
-      filter=Filter(include=Everything, exclude=Nothing),
-      assertorsConfiguration = AssertorsConfiguration.default)
-  
-  val job = Job.createNewJob(name = "w3c", strategy = strategy, creatorId = userTest.id)
+})*/
 
   val servers = Seq.empty
+
+  val job = TestData.job
+  val user = TestData.user
 
   override def beforeAll: Unit = {
     org.w3.vs.assertor.LocalValidators.start()
@@ -49,16 +74,16 @@ try {
   "test w3c website" in {
     
     (for {
-      _ <- User.save(userTest)
+      _ <- User.save(user)
       _ <- Job.save(job)
     } yield ()).getOrFail()
     
-    PathAware(http, http.path / "www.w3.org") ! SetSleepTime(0)
+//    PathAware(http, http.path / "www.w3.org") ! SetSleepTime(0)
 
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    runEventBus.subscribe(testActor, FromJob(job.id))
+    vs.runEventBus.subscribe(testActor, FromJob(job.id))
 
     fishForMessagePF(10.seconds) { case _: DoneRunEvent => () }
 

@@ -11,7 +11,7 @@ import play.api.i18n.Messages
 import org.w3.vs.view.Collection.Parameters
 import org.w3.vs.view.Collection.SortParam
 import scala.concurrent.Future
-import org.w3.vs.VSConfiguration
+import org.w3.vs._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.mvc.Call
 
@@ -74,7 +74,7 @@ case class ResourcesView (
 
 object ResourcesView {
 
-  def apply(job: Job)(implicit conf: VSConfiguration): Future[ResourcesView] = {
+  def apply(job: Job)(implicit conf: ActorSystem with Database): Future[ResourcesView] = {
     for {
       datas <- job.getResourceDatas()
     } yield {
@@ -88,7 +88,7 @@ object ResourcesView {
     }
   }
 
-  def apply(job: Job, url: URL)(implicit conf: VSConfiguration): Future[ResourcesView] = {
+  def apply(job: Job, url: URL)(implicit conf: ActorSystem with Database): Future[ResourcesView] = {
     for {
       data <- job.getResourceData(url)
     } yield {
