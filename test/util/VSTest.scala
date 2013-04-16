@@ -12,7 +12,7 @@ object VSTest {
     new ValidatorSuite(Test)
       with DefaultActorSystem
       with DefaultDatabase
-      with DefaultHttpActor
+      with DefaultHttpClient
       with DefaultRunEvents
   }
 
