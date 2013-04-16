@@ -179,52 +179,44 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
   // (signature could be (State, RunEvent) => State)?
   def handleRunEvent(_run: Run, event: RunEvent): State = {
 
+    runEvents :+= event
+
     // Get the new run and actions resulting from this this event
     // (The ResultStep class isn't really needed here)
     val ResultStep(run, actions) = _run.step(event)
 
-    // pure side-effect, no need for synchronization
     executeActions(actions)
 
-    // save event
-    futureSideEffect { saveEvent(event) }
+    saveEvent(event)
 
-    // publish events, this will happen asynchronously, but still
-    // *after* the event is saved in the database
-    sideEffect {
+    publish(run.data)
 
-      runEvents :+= event
+    publish(event)
 
-      publish(run.data)
-
-      publish(event)
-
-      event match {
-        case AssertorResponseEvent(_, _, _, AssertorResult(assertorId, sourceUrl, arAssertions), _) =>
-          arAssertions.toIterable foreach { case (url, assertions) =>
-            // ResourceData
-            publish(run.resourceDatas(url))
-            // Assertion
-            run.assertions(url).values foreach { assertions =>
-              assertions foreach { assertion =>
-                publish(assertion)
-              }
-            }
-            // GroupedAssertionData: we exploit here the fact that
-            // these assertions are grouped by title (that's an
-            // invariant enforced by FromHttpResponseAssertor) and
-            // that this is coming from a single Assertor. That makes
-            // it easy to find which AssertionTypeId-s were
-            // impacted. There is basically exactly one for each
-            // assertion.
+    event match {
+      case AssertorResponseEvent(_, _, _, AssertorResult(assertorId, sourceUrl, arAssertions), _) =>
+        arAssertions.toIterable foreach { case (url, assertions) =>
+          // ResourceData
+          publish(run.resourceDatas(url))
+          // Assertion
+          run.assertions(url).values foreach { assertions =>
             assertions foreach { assertion =>
-              val assertionTypeId = AssertionTypeId(assertion)
-              publish(run.groupedAssertionDatas(assertionTypeId))
+              publish(assertion)
             }
           }
-        case _ => ()
-      }
-
+          // GroupedAssertionData: we exploit here the fact that
+          // these assertions are grouped by title (that's an
+          // invariant enforced by FromHttpResponseAssertor) and
+          // that this is coming from a single Assertor. That makes
+          // it easy to find which AssertionTypeId-s were
+          // impacted. There is basically exactly one for each
+          // assertion.
+          assertions foreach { assertion =>
+            val assertionTypeId = AssertionTypeId(assertion)
+            publish(run.groupedAssertionDatas(assertionTypeId))
+          }
+        }
+      case _ => ()
     }
 
     // compute the next step and do side-effects
@@ -234,7 +226,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
         val running = Running(run.runId, self.path)
         // Job.run() is waiting for this value
         val from = sender
-        sideEffect { from ! running }
+        from ! running
         goto(Started) using run
       case DoneRunEvent(_, _, _, doneReason, _, _, _, _, _, _) =>
         if (doneReason === Completed)
@@ -262,9 +254,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       val from = sender
       if (subscribe(from, classifier)) {
         context.watch(from)
-        sideEffect {
-          fireRightAway(from, classifier, run, alwaysFireSomething = false)
-        }
+        fireRightAway(from, classifier, run, alwaysFireSomething = false)
       }
       stay()
 
@@ -289,10 +279,8 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // to subscribe anybody.
     case Event(Listen(classifier), run) =>
       val from = sender
-      sideEffect {
-        fireRightAway(from, classifier, run, alwaysFireSomething = false)
-        from ! ()
-      }
+      fireRightAway(from, classifier, run, alwaysFireSomething = false)
+      from ! ()
       stay()
 
 //    case Event(e, run) =>
@@ -355,37 +343,22 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
   }
 
   def stopThisActor(): Unit = {
-    val duration = scala.concurrent.duration.Duration(5, "s")
-    sideEffect {
-      val it = subscribers.iterator()
-      while(it.hasNext) {
-        val subscriber: ActorRef = it.next()._2
-        subscriber ! ()
-      }
 
-      // we stay a bit longer in the Stopping state. This lets the
-      // occasion for pending Enumerators to catch up
-      system.scheduler.scheduleOnce(duration, self, PoisonPill)
+    val it = subscribers.iterator()
+    while(it.hasNext) {
+      val subscriber: ActorRef = it.next()._2
+      subscriber ! ()
     }
+
+    // we stay a bit longer in the Stopping state. This lets the
+    // occasion for pending Enumerators to catch up
+    val duration = scala.concurrent.duration.Duration(5, "s")
+    system.scheduler.scheduleOnce(duration, self, PoisonPill)
   }
 
   override def postStop(): Unit = {
     httpClient.close()
   }
-
-  /* managing side-effects: use these functions for all side-effects
-   * that need to be ordered */
-
-  /** all side-effects are happening against this future. The invariant
-    * holds if you use sideEffect and futureSideEffect to schedule the
-    * asynchronous side-effects */
-  var lastSideEffect: Future[Unit] = Future.successful(())
-
-  def sideEffect(block: => Unit): Unit =
-    lastSideEffect = lastSideEffect andThen { case Success(()) => block }
-
-  def futureSideEffect(block: => Future[Unit]): Unit =
-    lastSideEffect = lastSideEffect flatMap { case () => block }
 
   /* EventBus */
 
