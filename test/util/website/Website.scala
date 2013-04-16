@@ -8,8 +8,8 @@ import javax.servlet.http._
   */
 case class Website(links: Iterable[Link]) {
 
-  def toServlet: HttpServlet = new HttpServlet {
-    override def doGet(req: HttpServletRequest, resp: HttpServletResponse) = {
+  def toServlet(sleepAfterRequest: Int = 0): HttpServlet = new HttpServlet {
+    override def doGet(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
       val path = req.getRequestURI
       if (path startsWith "/404") {
         resp.sendError(404)
@@ -21,6 +21,13 @@ case class Website(links: Iterable[Link]) {
         resp.setStatus(200)
         resp.setContentType("text/html")
         resp.getWriter.print(webpage.toHtml)
+      }
+      if (sleepAfterRequest > 0) {
+        try {
+          Thread.sleep(sleepAfterRequest)
+        } catch {
+          case _: InterruptedException => () // swallow sleep interruption
+        }
       }
     }
   }

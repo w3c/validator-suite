@@ -24,7 +24,7 @@ class FilteredTreeWebsiteTest extends VSTest[ActorSystem with HttpClient with Da
 
   implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 
-  val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
+  val servers = Seq(Webserver(9001, Website.tree(4).toServlet()))
   val http = vs.httpActorRef
   PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 

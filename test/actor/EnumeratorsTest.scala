@@ -28,7 +28,7 @@ class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient w
 
   val circumference = 20
   
-  val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet))
+  val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet(sleepAfterRequest = 500)))
   
   "test enumerators" in {
 

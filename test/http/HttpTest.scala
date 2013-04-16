@@ -18,7 +18,7 @@ import org.w3.vs.model.Fetch
 
 class HttpTest extends VSTestKit[ActorSystem with HttpClient](new ValidatorSuite(mode = Test) with DefaultActorSystem with DefaultHttpClient) with ServersTest {
 
-  val servers = Seq(Webserver(9001, Website.cyclic(10).toServlet))
+  val servers = Seq(Webserver(9001, Website.cyclic(10).toServlet()))
 
   val http = vs.httpActorRef
 

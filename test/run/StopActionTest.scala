@@ -16,7 +16,7 @@ class StopActionTest extends VSTestKit[ActorSystem with HttpClient with Database
   new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 ) with ServersTest with TestData {
 
-  val servers = Seq(Webserver(9001, Website.cyclic(1000).toServlet))
+  val servers = Seq(Webserver(9001, Website.cyclic(1000).toServlet()))
 
   val job = TestData.job
   val user = TestData.user

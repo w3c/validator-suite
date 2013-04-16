@@ -38,7 +38,7 @@ class ResumedRunTest extends VSTestKit[ActorSystem with Database with HttpClient
 
   val circumference = 20
   
-  val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet))
+  val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet()))
   val http = vs.httpActorRef
   PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
   

@@ -21,7 +21,7 @@ class WebsiteWithRedirectsCrawlTest extends VSTest[ActorSystem with HttpClient w
 
   val circumference = 10
   
-  val servers = Seq(Webserver(9001, Website.cyclicWithRedirects(circumference).toServlet))
+  val servers = Seq(Webserver(9001, Website.cyclicWithRedirects(circumference).toServlet()))
   
   "test cyclic" in {
 

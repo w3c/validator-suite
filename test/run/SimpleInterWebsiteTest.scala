@@ -24,7 +24,7 @@ class SimpleInterWebsiteTest extends VSTest[ActorSystem with HttpClient with Dat
   implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 
   val servers = Seq(
-      Webserver(9001, Website(Seq("/" --> "http://localhost:9001/1")).toServlet)
+      Webserver(9001, Website(Seq("/" --> "http://localhost:9001/1")).toServlet())
   )
 
   "test simpleInterWebsite" in {

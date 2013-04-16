@@ -23,7 +23,7 @@ class MaxResourcesTest extends VSTest[ActorSystem with HttpClient with Database 
     with DefaultHttpClient
     with DefaultRunEvents
 
-  val servers = Seq(Webserver(9001, Website.tree(4).toServlet))
+  val servers = Seq(Webserver(9001, Website.tree(4).toServlet()))
 
   val job = TestData.job
 
