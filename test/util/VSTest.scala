@@ -3,18 +3,16 @@ package org.w3.vs.util
 import org.w3.vs._
 import org.scalatest._
 import akka.testkit.{TestKit, ImplicitSender}
-import org.w3.vs.model._
-import play.api.{Mode, Configuration}
-import org.w3.vs.util.html.Doctype
 import org.w3.vs.store.MongoStore
+import play.api.Mode.Test
 
 object VSTest {
 
   def newTestConfiguration() = {
-    new ValidatorSuite(mode = Mode.Test)
+    new ValidatorSuite(Test)
       with DefaultActorSystem
       with DefaultDatabase
-      with DefaultHttpClient
+      with DefaultHttpActor
       with DefaultRunEvents
   }
 
@@ -25,7 +23,14 @@ trait DefaultTest extends Suite with BeforeAndAfterAll with MustMatchers with Wo
 trait VSTest[A <: ValidatorSuite]
   extends DefaultTest { this: Suite with BeforeAndAfterAll =>
 
-  implicit val vs: A
+  implicit def vs: A
+
+  override def beforeAll() {
+    super.beforeAll()
+    vs match {
+      case vsDb: Database => MongoStore.reInitializeDb()(vsDb)
+    }
+  }
 
   override def afterAll() {
     vs.shutdown()
@@ -41,6 +46,13 @@ abstract class VSTestKit[A <: ValidatorSuite with ActorSystem](val vs: A)
     with DefaultTest { this: DefaultTest with TestKit with ImplicitSender =>
 
   implicit val _vs = vs
+
+  override def beforeAll() {
+    super.beforeAll()
+    vs match {
+      case vsDb: Database => MongoStore.reInitializeDb()(vsDb)
+    }
+  }
 
   override def afterAll() {
     vs.shutdown()
