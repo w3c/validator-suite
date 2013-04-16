@@ -37,7 +37,7 @@ class FilteredTreeWebsiteTest extends VSTest[ActorSystem with HttpClient with Da
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
 
-    val events = (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.getChunks[RunEvent]).getOrFail(3.seconds)
+    val events = (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.getChunks[RunEvent]).getOrFail()
 
     val completeRunEvent = events.collectFirst { case e: DoneRunEvent => e }.get
     completeRunEvent.resources must be(maxResources)
