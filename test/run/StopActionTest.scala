@@ -44,14 +44,6 @@ class StopActionTest extends VSTestKit[ActorSystem with HttpClient with Database
 
     (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> test()).getOrFail().get
 
-    // just checking that the data in the store is correct
-
-    val finalJob = Job.get(job.id).getOrFail()
-
-    inside(finalJob.status ) { case Done(runId, reason, completedOn, runData) =>
-      reason must be(Cancelled)
-    }
-
   }
   
 }
