@@ -7,16 +7,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.util.Util._
 import play.api.libs.iteratee._
 import org.w3.vs._
-import org.w3.vs.util.TestData
 import play.api.Mode
-import org.w3.vs.model.Running
-import org.w3.vs.model.DoneRunEvent
-import org.w3.vs.model.ResourceResponseEvent
-import akka.actor.{PoisonPill, Terminated}
-import org.w3.vs.util.Webserver
-import akka.actor.{ActorSystem => AkkaSystem, _}
-import org.w3.vs.util.akkaext.PathAware
-import org.w3.vs.http.Http.SetSleepTime
+import akka.actor.{ ActorSystem => _, _ }
+import org.w3.vs.util.akkaext._
 
 class ResumedRunTest extends VSTestKit[ActorSystem with Database with HttpClient with RunEvents](
   new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
@@ -39,8 +32,6 @@ class ResumedRunTest extends VSTestKit[ActorSystem with Database with HttpClient
   val circumference = 20
   
   val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet()))
-  val http = vs.httpActorRef
-  PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
   
   "test cyclic + interruption + resuming job" in {
 
@@ -52,9 +43,6 @@ class ResumedRunTest extends VSTestKit[ActorSystem with Database with HttpClient
 
     val jobId = job.id
     
-//    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
-    import org.w3.vs.util.akkaext._
-
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
     runningJob.id must be(job.id)

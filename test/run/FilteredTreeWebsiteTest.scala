@@ -11,10 +11,6 @@ import play.api.libs.iteratee._
 import org.w3.vs.util.TestData
 import org.w3.vs._
 import play.api.Mode
-import org.w3.vs.model.Running
-import org.w3.vs.model.DoneRunEvent
-import org.w3.vs.model.ResourceResponseEvent
-import org.w3.vs.util.Webserver
 
 /**
   * Server 1 -> Server 2
@@ -25,8 +21,6 @@ class FilteredTreeWebsiteTest extends VSTest[ActorSystem with HttpClient with Da
   implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet()))
-  val http = vs.httpActorRef
-  PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
   val job = TestData.job.copy(strategy = TestData.strategy.copy(entrypoint = URL("http://localhost:9001/1/")))
 

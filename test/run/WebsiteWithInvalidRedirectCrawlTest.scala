@@ -10,12 +10,7 @@ import javax.servlet.http._
 import play.api.libs.iteratee._
 import scala.util.Try
 import org.w3.vs._
-import org.w3.vs.util.TestData
 import play.api.Mode
-import org.w3.vs.model.Running
-import org.w3.vs.model.ResourceResponseEvent
-import org.w3.vs.http.Http.SetSleepTime
-import org.w3.vs.util.Webserver
 
 class WebsiteWithInvalidRedirectCrawlTest extends VSTest[ActorSystem with HttpClient with Database with RunEvents] with ServersTest with TestData {
 
@@ -47,8 +42,6 @@ class WebsiteWithInvalidRedirectCrawlTest extends VSTest[ActorSystem with HttpCl
   "test with invalid redirects -- no Location header" in {
 
     val job = TestData.job
-
-    PathAware(vs.httpActorRef, vs.httpActorRef.path / "localhost_9001") ! SetSleepTime(0)
 
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status

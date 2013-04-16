@@ -28,7 +28,7 @@ trait DefaultActorSystem extends ActorSystem {
     val vs = AkkaSystem("vs", config.getConfig("application.vs").map(_.underlying) getOrElse sys.error("application.vs"))
     val listener = vs.actorOf(Props(new Actor {
       def receive = {
-        case d: DeadLetter => println/*logger.debug*/("DeadLetter - sender: %s, recipient: %s, message: %s" format(d.sender.toString, d.recipient.toString, d.message.toString))
+        case d: DeadLetter => logger.debug("DeadLetter - sender: %s, recipient: %s, message: %s" format(d.sender.toString, d.recipient.toString, d.message.toString))
       }
     }))
     vs.eventStream.subscribe(listener, classOf[DeadLetter])

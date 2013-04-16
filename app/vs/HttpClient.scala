@@ -7,8 +7,6 @@ import akka.actor.{Props, ActorRef}
 trait HttpClient extends ValidatorSuite {
   this: ValidatorSuite =>
 
-  def httpActorRef: ActorRef
-
   def httpCacheOpt: Option[Cache]
 
   def httpClient: AsyncHttpClient
@@ -52,9 +50,6 @@ trait DefaultHttpClient extends HttpClient {
   }
 
   val httpCacheOpt: Option[Cache] = Cache(config)
-
-  val httpActorRef: ActorRef =
-    system.actorOf(Props(new Http(httpClient, system.scheduler, httpCacheOpt)).withDispatcher("http-dispatcher"), "http")
 
   override def shutdown() {
     logger.info("Closing HTTPClient")

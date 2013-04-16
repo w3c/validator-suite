@@ -10,14 +10,6 @@ import org.w3.vs.util.Util._
 import play.api.libs.iteratee.{ Error => _, _ }
 import scala.util._
 import org.w3.vs._
-import org.w3.vs.model.AssertorResult
-import org.w3.vs.http.Http.SetSleepTime
-import org.w3.vs.model.CreateRunEvent
-import org.w3.vs.model.ResourceData
-import org.w3.vs.model.AssertorResponseEvent
-import org.w3.vs.model.Running
-import org.w3.vs.model.ResourceResponseEvent
-import org.w3.vs.util.Webserver
 import play.api.Mode
 
 class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient with RunEvents] with ServersTest with TestData {
@@ -31,9 +23,6 @@ class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient w
   val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet(sleepAfterRequest = 500)))
   
   "test enumerators" in {
-
-    val http = vs.httpActorRef
-    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(10000)
 
     val runningJob = job.run().getOrFail()
     val Running(runId, actorPath) = runningJob.status
