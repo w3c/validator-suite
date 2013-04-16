@@ -33,7 +33,7 @@ class RunsActor()(implicit conf: ActorSystem with Database with HttpClient with 
       // start with a fresh job
       val run = Run.freshRun(job.strategy)
       // create the corresponding actor
-      val jobActorRef = context.actorOf(Props(new JobActor(job, run)), name = createActorName())
+      val jobActorRef = context.actorOf(Props(new JobActor(job, run)).withDispatcher("jobactor-dispatcher"), name = createActorName())
       jobActorRef.forward(JobActor.Start)
     }
 
@@ -53,7 +53,7 @@ class RunsActor()(implicit conf: ActorSystem with Database with HttpClient with 
               // re-create the corresponding actor
               // we force the actor name to avoid having to update the actorPath in the job record
               // it should be safe as we're starting from scratch
-              val jobActorRef = context.actorOf(Props(new JobActor(job, run)), name = actorPath.name)
+              val jobActorRef = context.actorOf(Props(new JobActor(job, run)).withDispatcher("jobactor-dispatcher"), name = actorPath.name)
               // we can now tell the JobActor to resume its work
               jobActorRef.tell(JobActor.Resume(actions), from)
             }

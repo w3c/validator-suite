@@ -9,7 +9,8 @@ import com.typesafe.config.Config
 class JobActorMailbox(settings: ActorSystem.Settings, config: Config)
 extends UnboundedPriorityMailbox(
   PriorityGenerator {
-    case _: Classifier => 0
+    case Listen(_) => 0
+    case Get(_) => 0
     case PoisonPill => 3
     case otherwize => 5
   }

@@ -52,7 +52,7 @@ class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient w
       _ = jobActor ! ar1
       _ = jobActor ! ar2
       _ = jobActor ! ar3
-      e3 <- waitFor[ResourceResponseEvent]()
+      e3 <- waitFor[RunEvent]{ case rre: ResourceResponseEvent if rre.rr == httpResponse => rre }
       e4 <- waitFor[AssertorResponseEvent]()
       e5 <- waitFor[AssertorResponseEvent]()
       e6 <- waitFor[AssertorResponseEvent]()
@@ -66,9 +66,7 @@ class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient w
       jobId must be(job.id)
       hr2.url must be(URL("http://localhost:9001/"))
       hr3 must be(httpResponse)
-      a4 must be(ar1)
-      a5 must be(ar2)
-      a6 must be(ar3)
+      Set(a4, a5, a6) must be(Set(ar1, ar2, ar3))
     }
 
     (runEvents &> Enumeratee.mapConcat(_.toSeq) &> eprint |>>> test()).getOrFail().get
@@ -78,15 +76,15 @@ class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient w
 
     jobData.id must be (job.id)
     jobData.entrypoint must be(strategy.entrypoint)
-    jobData.resources must be(2)
+    jobData.resources must be >=(2)
 
     val runData = 
       (runDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.head[RunData]).getOrFail().get
 
-    runData.resources must be(2)
+    runData.resources must be >= (2)
 
     val instantRunData = runningJob.getRunData().getOrFail()
-    instantRunData must be(runData)
+    instantRunData.resources must be >= (runData.resources)
 
     val rds = (resourceDatas &> Enumeratee.mapConcat(_.toSeq) &> Enumeratee.take(2) |>>> Iteratee.getChunks[ResourceData]).getOrFail()
 

@@ -15,7 +15,9 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
 import akka.event._
-import akka.actor.{ActorSystem => AkkaActorSystem, _}
+import akka.actor.{ ActorSystem => AkkaActorSystem, _ }
+import com.ning.http.client.{ Response, AsyncHttpClient, AsyncCompletionHandler }
+import scalax.io._
 
 object JobActor {
 
@@ -82,7 +84,7 @@ case object NotYetStarted extends JobActorState
 case object Stopping extends JobActorState
 
 // TODO extract all pure function in a companion object
-class JobActor(job: Job, initialRun: Run)(implicit val conf: ActorSystem with HttpClient with Database)
+class JobActor(job: Job, initialRun: Run)(implicit val conf: ActorSystem with Database)
 extends Actor with FSM[JobActorState, Run]
 with EventBus
 with ActorEventBus /* Represents an EventBus where the Subscriber type is ActorRef */
@@ -96,6 +98,8 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
   import job.{ creatorId => userId, id => jobId }
   import initialRun.runId
 
+  val httpClient: AsyncHttpClient = Http.newAsyncHttpClient(job.strategy)
+
   /* some variables */
 
   var runEvents: Vector[RunEvent] = Vector.empty
@@ -107,9 +111,29 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
   def executeActions(actions: Iterable[RunAction]): Unit = {
     actions foreach {
-      case fetch: Fetch =>
-        logger.debug(s"${runId.shortId}: >>> ${fetch.method} ${fetch.url}")
-        httpActorRef ! fetch
+      case Fetch(url, method) =>
+        logger.debug(s"${runId.shortId}: >>> ${method} ${url}")
+        val boundRequestBuilder = method match {
+          case GET => httpClient.prepareGet(url.httpClientFriendly)
+          case HEAD => httpClient.prepareHead(url.httpClientFriendly)
+        }
+        boundRequestBuilder.execute(new AsyncCompletionHandler[Unit]() {
+          override def onCompleted(response: Response): Unit = {
+            import java.util.{ Map => jMap, List => jList }
+            import scala.collection.JavaConverters._
+            val status = response.getStatusCode()
+            val headers: Headers =
+              (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
+            def resource = Resource.fromInputStream(response.getResponseBodyAsStream())
+            val httpResponse = HttpResponse(url, method, status, headers, resource)
+            self ! httpResponse
+//            cacheOpt foreach { _.save(httpResponse, resource) }
+          }
+          override def onThrowable(t: Throwable): Unit = {
+            val errorResponse = ErrorResponse(url = url, method = method, why = t.getMessage)
+            self ! errorResponse
+          }
+        })
       case call: AssertorCall =>
         assertionsActorRef ! call
       case EmitEvent(event) =>
@@ -168,6 +192,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // publish events, this will happen asynchronously, but still
     // *after* the event is saved in the database
     sideEffect {
+
       runEvents :+= event
 
       publish(run.data)
@@ -252,7 +277,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       stay()
 
     case Event(e, run) =>
-      logger.error(s"${run.shortId}: unexpected event ${e}")
+      logger.info(s"${run.shortId}: unexpected event ${e}")
       stay()
 
   }
@@ -270,9 +295,9 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       }
       stay()
 
-    case Event(e, run) =>
-      logger.debug(s"${run.shortId}: received ${e} while Stopping")
-      stay()
+//    case Event(e, run) =>
+//      println(s"${run.shortId}: received ${e} while Stopping")
+//      stay()
 
   }
 
@@ -342,6 +367,10 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       // occasion for pending Enumerators to catch up
       system.scheduler.scheduleOnce(duration, self, PoisonPill)
     }
+  }
+
+  override def postStop(): Unit = {
+    httpClient.close()
   }
 
   /* managing side-effects: use these functions for all side-effects
