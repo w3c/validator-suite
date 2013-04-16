@@ -29,6 +29,7 @@ trait VSTest[A <: ValidatorSuite]
     super.beforeAll()
     vs match {
       case vsDb: Database => MongoStore.reInitializeDb()(vsDb)
+      case _ => ()
     }
   }
 
@@ -51,6 +52,7 @@ abstract class VSTestKit[A <: ValidatorSuite with ActorSystem](val vs: A)
     super.beforeAll()
     vs match {
       case vsDb: Database => MongoStore.reInitializeDb()(vsDb)
+      case _ => ()
     }
   }
 

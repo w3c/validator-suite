@@ -21,10 +21,10 @@ class StopActionTest extends VSTestKit[ActorSystem with HttpClient with Database
   val job = TestData.job
   val user = TestData.user
 
-  // Save the job because we'll check the db
-  Job.save(job).getOrFail()
-
   "test stop" in {
+
+    // Save the job because we'll check the db
+    Job.save(job).getOrFail()
 
 //    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
 
