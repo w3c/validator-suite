@@ -26,8 +26,6 @@ class StopActionTest extends VSTestKit[ActorSystem with HttpClient with Database
     // Save the job because we'll check the db
     Job.save(job).getOrFail()
 
-//    PathAware(http, http.path / "localhost_9001") ! SetSleepTime(20)
-
     vs.runEventBus.subscribe(testActor, FromJob(job.id))
 
     val runningJob = job.run().getOrFail()

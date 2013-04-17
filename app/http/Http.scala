@@ -37,7 +37,6 @@ object Http {
         .setConnectionTimeoutInMs(timeout)
         .build
     new AsyncHttpClient(asyncHttpConfig)
-
   }
 
 }

@@ -1,6 +1,5 @@
-package org.w3.vs.store
+package org.w3.vs.model
 
-import org.w3.vs.model._
 import org.w3.vs.util.URL
 import org.scalatest.{Filter => ScalaTestFilter, _}
 import org.scalatest.matchers._
