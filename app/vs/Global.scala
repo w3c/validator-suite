@@ -1,11 +1,8 @@
 package org.w3.vs
 
-import com.yammer.metrics._
-import com.yammer.metrics.reporting._
-import java.net.ResponseCache
-import java.util.concurrent.TimeUnit
-import org.w3.vs.model.Job
+
 import play.api._
+import java.net.ResponseCache
 
 
 object Global extends GlobalSettings {
@@ -20,39 +17,35 @@ object Global extends GlobalSettings {
 
     assert(conf == null)
 
-    conf = new ValidatorSuite(mode = app.mode)
-      with DefaultActorSystem
-      with DefaultDatabase
-      with DefaultHttpClient
-      with DefaultRunEvents
+    import play.api.Mode._
+    app.mode match {
+
+      case Prod => conf = new ValidatorSuite(Prod)
+        with DefaultActorSystem
+        with DefaultDatabase
+        with DefaultHttpClient
+        with DefaultRunEvents
+        with Graphite
+
+      case mode @ (Test | Dev) => conf = new ValidatorSuite(mode)
+        with DefaultActorSystem
+        with DefaultDatabase
+        with DefaultHttpClient
+        with DefaultRunEvents
+
+    }
+
   }
 
   override def onStart(app: Application): Unit = {
-
-    // TODO: that's ugly
-    val graphiteConf =
-      Configuration.load(new java.io.File(".")).getConfig("application.graphite-reporter") getOrElse sys.error("application.graphite-reporter")
-    if (graphiteConf.getBoolean("enable") getOrElse false) {
-      val r = """^(\d+)([^\d]+)$""".r
-      val (period, unit) =
-        graphiteConf.getString("period") getOrElse sys.error("period") match {
-          case r(period, "s") => (period.toInt, TimeUnit.SECONDS)
-        }
-      val host = graphiteConf.getString("host") getOrElse sys.error("host")
-      val port = graphiteConf.getInt("port").map(_.toInt) getOrElse sys.error("port")
-      val prefix = graphiteConf.getString("prefix") getOrElse sys.error("prefix")
-      GraphiteReporter.enable(period, unit, host, port, prefix)
-    }
-    conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
+    //conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
     org.w3.vs.assertor.LocalValidators.start()
-
-    Job.resumeAllJobs()(conf)
-
+    org.w3.vs.model.Job.resumeAllJobs()(conf)
   }
   
   override def onStop(app: Application): Unit = {
-    Metrics.shutdown()
-    ResponseCache.setDefault(null)
+    //ResponseCache.setDefault(null)
+    //org.w3.vs.assertor.LocalValidators.stop()
     conf.shutdown()
   }
   
