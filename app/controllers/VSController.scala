@@ -119,10 +119,6 @@ trait VSController extends Controller {
     catch { toError }
   }
 
-  /*def AuthAction(f: Request[AnyContent] => User => Result): ActionA = AuthAsyncAction {
-    req => user => Future.successful(f(req)(user))
-  }*/
-
   def AuthAction(f: Request[AnyContent] => User => PartialFunction[Format, Result]): ActionA = AuthAsyncAction {
     req => user => Future.successful(f(req)(user))
   }

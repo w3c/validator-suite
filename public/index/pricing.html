@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Validator Suite</title>
+    <!--<link rel="stylesheet" href="stylesheets/foundation.css">-->
+    <link rel="stylesheet" href="css/foundation.min.css">
+    <link rel="stylesheet" href="css/app.css">
+    <script src="js/vendor/custom.modernizr.js"></script>
+</head>
+
+<body>
+
+
+<section id="banner">
+    <div class="row">
+        <a class="left" href="index.html"><img src="img/fullLogo.svg" style="height: 100px; margin-top: 22px;" /> </a>
+        <ul id="nav" class="right">
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="faq.html">Faq</a></li>
+            <li><a href="mailto:validator-contact-vsuite@w3.org">Contact</a></li>
+            <li><a href="#" data-reveal-id="login"><strong>Login</strong></a></li>
+        </ul>
+    </div>
+</section>
+
+<div class="row">
+    <div class="column">
+    <h1>Pricing & Plans</h1>
+    <p>
+        W3C Validator Suite is currently available in a limited beta release under two price plans.
+        You may purchase a single “one-time” W3C Validator Suite report or <a>contact us</a> for
+        more information about our monthly subscription plans.
+
+    </p>
+
+    </div>
+</div>
+
+<hr />
+
+
+<div class="row">
+
+    <div class="large-3 column">
+        <ul class="pricing-table">
+            <li class="title">Small</li>
+            <li class="price">$50 / 40€*</li>
+            <li class="description">250 pages or fewer</li>
+            <li class="bullet-item">HTML</li>
+            <li class="bullet-item">CSS</li>
+            <li class="bullet-item">I18n</li>
+            <li class="cta-button"><a class="button" href="#">Buy Now</a></li>
+        </ul>
+    </div>
+
+    <div class="large-3 column">
+        <ul class="pricing-table">
+            <li class="title">Standard</li>
+            <li class="price">$75 / 60€*</li>
+            <li class="description">500 pages or fewer</li>
+            <li class="bullet-item">HTML</li>
+            <li class="bullet-item">CSS</li>
+            <li class="bullet-item">I18n</li>
+            <li class="cta-button"><a class="button" href="#">Buy Now</a></li>
+        </ul>
+    </div>
+
+    <div class="large-3 column">
+        <ul class="pricing-table">
+            <li class="title">Business</li>
+            <li class="price">$110 / 90€*</li>
+            <li class="description">2,000 pages or fewer</li>
+            <li class="bullet-item">HTML</li>
+            <li class="bullet-item">CSS</li>
+            <li class="bullet-item">I18n</li>
+            <li class="cta-button"><a class="button" href="#">Buy Now</a></li>
+        </ul>
+    </div>
+    <div class="large-3 column">
+        <ul class="pricing-table">
+            <li class="title">Corporate</li>
+            <li class="price">$190 / 150€*</li>
+            <li class="description">5,000 pages or fewer</li>
+            <li class="bullet-item">HTML</li>
+            <li class="bullet-item">CSS</li>
+            <li class="bullet-item">I18n</li>
+            <li class="cta-button"><a class="button" href="#">Buy Now</a></li>
+        </ul>
+    </div>
+
+    <div class="column"><i>* Plus VAT if applicable. Funds from W3C Validator Suite support W3C's mission to Lead the Web to its Full Potential.</i></div>
+
+
+    <div class="column action"><h1></h1><p class="action">[ACTION: come up with some names for the four tiers. Add other information ? link to agreement ?]</p></div>
+
+</div>
+
+
+
+<section id="footer">
+    <div class="row">
+        <p class="column">
+            Copyright © 2013 W3C <sup>®</sup>
+            (<a href="http://www.csail.mit.edu/"><abbr title="Massachusetts Institute of Technology">MIT</abbr></a>,
+            <a href="http://www.ercim.eu/"><abbr title="European Research Consortium for Informatics and Mathematics">ERCIM</abbr></a>,
+            <a href="http://www.keio.ac.jp/">Keio</a>,
+            <a href="http://ev.buaa.edu.cn/">Beihang</a>)
+            <a href="/Consortium/Legal/ipr-notice">Usage policies apply</a>.
+        </p>
+    </div>
+</section>
+
+
+<div id="login" class="reveal-modal small">
+    <h1>Login</h1>
+    <form action="https://valid.w3.org/suite/login" method="POST">
+        <p>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Email" value="" required="required">
+        </p>
+        <p>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Password" required="required">
+        </p>
+        <p>
+            <button id="submit-login" type="submit">Login</button>
+        </p>
+    </form>
+    <a class="close-reveal-modal">&#215;</a>
+</div>
+
+
+<script>
+    document.write('<script src=' + ('__proto__' in {} ? 'js/vendor/zepto' : 'js/vendor/jquery') + '.js><\/script>')
+</script>
+<script src="js/foundation.min.js"></script>
+<script>$(document).foundation();</script>
+
+</body>
+</html>
+

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Validator Suite</title>
+    <!--<link rel="stylesheet" href="stylesheets/foundation.css">-->
+    <link rel="stylesheet" href="css/foundation.min.css">
+    <link rel="stylesheet" href="css/app.css">
+    <script src="js/vendor/custom.modernizr.js"></script>
+</head>
+
+<body>
+
+
+<section id="banner">
+    <div class="row">
+        <a class="left" href="index.html"><img src="img/fullLogo.svg" style="height: 100px; margin-top: 22px;" /> </a>
+        <ul id="nav" class="right">
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="faq.html">Faq</a></li>
+            <li><a href="mailto:validator-contact-vsuite@w3.org">Contact</a></li>
+            <li><a href="#" data-reveal-id="login"><strong>Login</strong></a></li>
+        </ul>
+    </div>
+</section>
+
+
+<div class="row" id="faq-toc">
+    <div class="column">
+
+        <h1>Frequently Asked Questions</h1>
+
+        <ol>
+            <li><a href="#logomeaning">When I see the W3C Validator Suite brand logo, what does it mean?</a></li>
+            <li><a href="#badgemeaning">When I see the W3C Validator Suite badge, what does it mean?</a></li>
+            <li><a href="#implies">Do the brand logo/badge imply validity?</a></li>
+            <li><a href="#everypage">Must I include the badge on every validated page?</a></li>
+            <li><a href="#otherpages">May I use the badge on pages that have not be run through the W3C Validator Suite?</a></li>
+            <li><a href="#nonWeb">May I use the brand logo off the Web for creative purposes (e.g., t-shirts, stickers, etc.)?</a></li>
+            <li><a href="#commercial">May I use the brand logo/badge on commercial products (e.g., my own validator service)?</a></li>
+            <li><a href="#derivatives">May I create derivative works of the brand logo/badge?</a></li>
+            <li><a href="#javascript">My site uses Javascript.  Is that OK?</a>
+        </ol>
+    </div>
+</div>
+
+<hr />
+
+<div class="row" id="faq">
+    <div class="column">
+
+        <h2 id="logomeaning">1. When I see the W3C Validator Suite brand logo, what does it mean?</h2>
+        <p>The brand logo -- 5 check marks of success for validity, accessibility, compatibility, optimization, efficiency -- refers in a broad sense to the W3C Validator Suite and may be used to promote it. There are no implications of usage or validity.</p>
+
+        <h2 id="badgemeaning">2. When I see the W3C Validator Suite badge, what does it mean?</h2>
+        <p>The badge indicates that a page (or site) has been evaluated with the W3C Validator Suite. The badge does not imply anything about the outcome of running the W3C Validator Suite.</p>
+
+        <h2 id="implies">3. Do the brand logo/badge imply validity?</h2>
+        <p>No. The logo/badge do not imply anything about the outcome of running the W3C Validator Suite.</p>
+
+        <h2 id="everypage">4. Must I include the badge on every validated page?</h2>
+        <p>No, though you may do so if you wish. You may include the logo on one page and list or describe pages that have been evaluated through the W3C Validator Suite.</p>
+
+        <h2 id="otherpages">5. May I use the badge on pages that have not be run through the W3C Validator Suite?</h2>
+        <p>No. You may use the brand logo if you wish to refer to the W3C service.</p>
+
+        <h2 id="nonWeb">6. May I use the brand logo off the Web for creative purposes (e.g., t-shirts, stickers, etc.)?</h2>
+        <p>Yes. We are interested in creative uses of the logo that show support for the service. Please let us know about your usage of the brand logo off the Web at <a href="mailto:validator-feedback@w3.org">validator-feedback@w3.org</a>.</p>
+
+        <h2 id="commercial">7. May I use the brand logo/badge on commercial products (e.g., my own validator service)?</h2>
+        <p>Not at this time.</p>
+
+        <h2 id="derivatives">8. May I create derivative works of the brand logo/badge?</h2>
+        <p>Not at this time.</p>
+
+        <h2 id="javascript">9. My site uses Javascript.  Is that OK?</h2>
+        <p>Some users do not enable Javascript in their browsers.  Therefore,
+            to be fully interoperable your Web site should not depend on
+            navigation links inside the Javascript.  W3C Validator Suite will
+            not process the Javascript; it will only follow the links that
+            are specified in the HTML markup.  If the Javascript modifies
+            the HTML, W3C Validator Suite will only check the original, unmodifed
+            HTML.  Aside from this, Javascript in your site should not impact the
+            W3C Validator Suite report.</p>
+
+    </div>
+</div>
+
+
+<section id="footer">
+    <div class="row">
+        <p class="column">
+            Copyright © 2013 W3C <sup>®</sup>
+            (<a href="http://www.csail.mit.edu/"><abbr title="Massachusetts Institute of Technology">MIT</abbr></a>,
+            <a href="http://www.ercim.eu/"><abbr title="European Research Consortium for Informatics and Mathematics">ERCIM</abbr></a>,
+            <a href="http://www.keio.ac.jp/">Keio</a>,
+            <a href="http://ev.buaa.edu.cn/">Beihang</a>)
+            <a href="/Consortium/Legal/ipr-notice">Usage policies apply</a>.
+        </p>
+    </div>
+</section>
+
+
+<div id="login" class="reveal-modal small">
+    <h1>Login</h1>
+    <form action="https://valid.w3.org/suite/login" method="POST">
+        <p>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Email" value="" required="required">
+        </p>
+        <p>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Password" required="required">
+        </p>
+        <p>
+            <button id="submit-login" type="submit">Login</button>
+        </p>
+    </form>
+    <a class="close-reveal-modal">&#215;</a>
+</div>
+
+
+<script>
+    document.write('<script src=' + ('__proto__' in {} ? 'js/vendor/zepto' : 'js/vendor/jquery') + '.js><\/script>')
+</script>
+<script src="js/foundation.min.js"></script>
+<script>$(document).foundation();</script>
+
+</body>
+</html>
+

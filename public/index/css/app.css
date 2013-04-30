@@ -1,0 +1,316 @@
+/* Artfully masterminded by ZURB  */
+
+/* -------------------------------------------------- 
+   Table of Contents
+-----------------------------------------------------
+:: Shared Styles
+:: Page Name 1
+:: Page Name 2
+*/
+
+
+/* -----------------------------------------
+   Shared Styles
+----------------------------------------- */
+
+@font-face {
+    font-family: 'LeagueGothicRegular';
+    src: url('../types/League_Gothic-webfont.eot');
+    src: url('../types/League_Gothic-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../types/League_Gothic-webfont.woff') format('woff'),
+    url('../types/OpenSans-Regular.ttf') format('truetype'),
+    url('../types/League_Gothic-webfont.svg#LeagueGothicRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+
+    font-family: Helvetica, Arial, sans-serif;
+
+}
+
+a:link, a:visited {
+    color: #0066CC;
+    text-decoration: none;
+}
+a.button {
+    color: white;
+}
+
+.primary-1 { background-color: #0E53A7 }
+.primary-2 { background-color: #21518B }
+.primary-3 { background-color: #073E80 }
+.primary-4 { background-color: #2E72C4 }
+.primary-5 { background-color: #457FC4 }
+
+.complement-1 { background-color: #FF9C00 }
+.complement-2 { background-color: #D59023 }
+.complement-3 { background-color: #C47800 }
+.complement-4 { background-color: #FFAC2A }
+.complement-5 { background-color: #FFB94C }
+
+
+h1 {
+    font: 2.5em 'LeagueGothicRegular', Arial, sans-serif;
+    color: #073E80;
+    text-transform: uppercase;
+}
+
+h2 {
+    font-size: 1.4em;
+}
+
+#banner {
+    background: #073E80;
+    margin-bottom: 2em;
+    border-bottom: 1em solid #D9E6F0;
+    line-height: 1em;
+
+}
+
+#banner .row {
+    background: url("../img/tick.svg") no-repeat right;
+    background-size: auto 100%;
+}
+
+#banner img {
+    height: 100px;
+    margin-top: 25px;
+
+}
+
+#banner .row {
+    height: 150px;
+    position: relative;
+}
+
+#banner h1 {
+    color: #ffffff;
+}
+
+#nav {
+    position: absolute;
+    bottom: 1em;
+    right: 1em;
+    margin-bottom: 0;
+    font-size: 1.1em;
+    line-height: 1.1em;
+}
+
+#nav li {
+    list-style-type: none;
+    display: inline;
+    color: white;
+    margin-left: 2.5em;
+    /*text-shadow: 0 0 4px black;*/
+}
+
+#nav a:link,
+#nav a:visited {
+    color: white;
+}
+
+#nav a:hover {
+    text-decoration: underline;
+}
+
+#slide {
+    margin-bottom: 2em;
+}
+
+#first h1 {
+    margin: 0
+}
+#first p {
+    font-size: 1.2em;
+    color: #888;
+}
+#first .button {
+    font-size: 1.2em;
+    width: 100%;
+}
+
+#features ul li {
+    list-style-type: none;
+    list-style-position: inside;
+}
+#features ul li:before {
+    content: "✔";
+    margin-right: 0.5em;
+    color: green;
+}
+
+.pricing-table .bullet-item:after {
+    content: "✔";
+    margin-left: 0.5em;
+    color: green;
+}
+
+.action {
+    color:red;
+}
+
+
+button,
+.button {
+    background: #F97F2D;
+/*    background: -moz-linear-gradient(top, #EDB556 0%, #C47903 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#EDB556), color-stop(100%,#C47903));
+    background: -webkit-linear-gradient(top, #EDB556 0%,#C47903 100%);
+    background: -o-linear-gradient(top, #EDB556 0%,#C47903 100%);
+    background: -ms-linear-gradient(top, #EDB556 0%,#C47903 100%);
+    background: linear-gradient(to bottom, #EDB556 0%,#C47903 100%);*/
+    border-color: #C47800;
+    text-shadow: 0px 0px 2px rgba(0,0,0,0.8);
+    border-radius: 2px;
+}
+
+button:hover,
+.button:hover {
+    background: #FFAC2A;
+}
+
+.orbit-bullets {
+    display: block;
+    width: 8em;
+    margin: 1em auto 0 auto;
+}
+
+.orbit-bullets li {
+    background-color: #D9E6F0;
+    border-color: black;
+    border-width: 1px;
+    margin-left: 0.5em;
+}
+.orbit-bullets li.active {
+    background-color: #457FC4;
+}
+
+.orbit-container .orbit-slide-number {
+    right: 10px;
+    bottom: 15px;
+    top: auto;
+    left: auto;
+}
+
+.orbit-container {
+/*    //border: 1px solid rgba(0,0,0,0.6);
+    border-radius: 2px;*/
+}
+
+
+.orbit-container .orbit-prev,
+.orbit-container .orbit-next,
+.orbit-container .orbit-progress {
+    opacity: 0;
+    -moz-transition: opacity 0.3s;
+    -webkit-transition: opacity 0.3s;
+    -o-transition: opacity 0.3s;
+    transition: opacity 0.3s;
+
+}
+
+.orbit-container .orbit-prev,
+.orbit-container .orbit-next {
+    width: 60px;
+    background: transparent;
+
+}
+
+
+.orbit-container .orbit-prev span,
+.orbit-container .orbit-next span {
+    border: inset 30px;
+    margin-top: -30px;
+}
+
+.orbit-container .orbit-next>span {
+    border-color: transparent;
+    border-left-style: solid;
+    border-left-color: rgba(0,0,0,0.6);
+    left: auto;
+    margin-left: auto;
+}
+
+.orbit-container .orbit-prev>span {
+    border-right-style: solid;
+    border-color: transparent;
+    border-right-color: rgba(0,0,0,0.6);
+}
+
+.orbit-container .orbit-next:hover>span {
+    border-left-color: black;
+}
+.orbit-container .orbit-prev:hover>span {
+    border-right-color: black;
+}
+
+.orbit-container:hover .orbit-prev,
+.orbit-container:hover .orbit-next,
+.orbit-container:hover .orbit-progress {
+    opacity: 1;
+}
+
+#footer {
+    background: #073E80;
+    margin-top: 2em;
+    border-top: 0.5em solid #D9E6F0;
+}
+
+#footer p {
+    margin: 1em 0;
+    text-align: center;
+    color: white;
+    font-size: 0.9em;
+}
+#footer abbr {
+    color: white;
+}
+#footer a {
+    text-decoration: underline;
+    color: white;
+}
+
+/* -----------------------------------------
+   Page Name 1
+----------------------------------------- */
+
+#faq-toc ol {
+    list-style-position: inside;
+}
+#faq h2:target {
+    color: #F97F2D;
+    /*text-shadow: 1px 1px #D59023;*/
+}
+
+hr {
+    margin-bottom: 2em;
+}
+
+hr:before {
+    content: "";
+    display: block;
+    position: relative;
+    height: 28px;
+    width: 46px;
+    margin-left: 48%;
+    top: -14px;
+    background: url("../img/ruler.png")
+}
+
+
+/* -----------------------------------------
+   Page Name 2
+----------------------------------------- */
+
+#login button,
+#login p:last-child,
+#login form {
+    margin-bottom: 0;
+}
+
+#login label {
+    display: none;
+}
+

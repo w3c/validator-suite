@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg 
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    viewBox="0 0 1100 800"
+    width="110"
+    height="80">
+    
+    <style type="text/css">
+        .blue {fill: #02356d; stroke: #02356d; stroke-width: 6; stroke-linejoin:bevel;} /* Blue */
+        .blue-d {fill: #02579e; stroke: #02579e; stroke-width: 6; stroke-linejoin:bevel;}
+    </style>
+
+    <defs>
+        <polygon id="M16a" points=" 52, -160   172, -528    999, -528   1119, -160                        "/>
+        <polygon id="M16b" points="                                     1119, -160   757, 103   672, -160 "/>
+    </defs>
+
+    <!--<rect x="0" y="0" fill="#000" height="100%" width="100%" />-->
+
+    <g transform="translate(850,-200)">
+        <use xlink:href="#M16b" transform="rotate(144)" class="blue" />
+        <use xlink:href="#M16a" transform="rotate(144)" class="blue-d" />
+    </g>
+
+</svg>
