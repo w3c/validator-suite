@@ -16,7 +16,7 @@ object Application extends VSController {
   
   val logger = play.Logger.of("org.w3.vs.controllers.Application")
 
-  def index: ActionA = Action { Redirect(routes.Jobs.index.toString) }
+  def index: ActionA = controllers.Assets.at("/public", "index.html")
 
   val loginName = (new controllers.javascript.ReverseApplication).login.name
   val loginTimer = Metrics.newTimer(Application.getClass, loginName, MILLISECONDS, SECONDS)

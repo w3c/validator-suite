@@ -51,7 +51,7 @@ POST    /admin/9m7tKYo1/migration                   controllers.Administration.m
 
 ##########################
 # Map static resources from the /public folder to the /assets URL path
-GET     /public/*file                                     controllers.Assets.at(path="/public", file)
+GET     /*file                                     controllers.Assets.at(path="/public", file)
 
 # Adds an Assets controller to expose javascript sources directly during development
 # Because Play changes the signature of routes.Assets.at() depending on whether there is a single assets controller or
