@@ -16,7 +16,7 @@
 @font-face {
     font-family: 'LeagueGothicRegular';
     src: url('../types/League_Gothic-webfont.eot');
-    src: url('../types/League_Gothic-webfont.eot?#iefix') format('embedded-opentype'),
+    src: url('../types/League_Gothic-webfont.eot') format('embedded-opentype'),
     url('../types/League_Gothic-webfont.woff') format('woff'),
     url('../types/OpenSans-Regular.ttf') format('truetype'),
     url('../types/League_Gothic-webfont.svg#LeagueGothicRegular') format('svg');
@@ -70,13 +70,13 @@ h2 {
 }
 
 #banner .row {
-    background: url("../img/tick.svg") no-repeat right;
+    background: url("../images/tick.svg") no-repeat right;
     background-size: auto 100%;
 }
 
 #banner img {
     height: 100px;
-    margin-top: 25px;
+    margin-top: 22px;
 
 }
 
@@ -296,7 +296,7 @@ hr:before {
     width: 46px;
     margin-left: 48%;
     top: -14px;
-    background: url("../img/ruler.png")
+    background: url("../images/ruler.png")
 }
 
 
