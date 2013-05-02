@@ -7,24 +7,25 @@ import org.w3.vs.model
 import org.w3.vs.model.{User, JobId}
 import play.api.i18n.Messages
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import play.api.cache.Cache
 import play.api.Play._
 import play.api.libs.iteratee._
+import scala.concurrent.duration.Duration
 
 object Administration extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Administration")
 
-  def index: ActionA = Action { implicit req =>
+  def index: ActionA = RootBasicAuth { implicit req =>
     Ok(views.html.admin())
   }
 
-  def console: ActionA = Action { implicit req =>
+  def console: ActionA = RootBasicAuth { implicit req =>
     Ok(views.html.console())
   }
 
-  def jobsPost(): ActionA = AsyncAction { implicit req =>
+  def jobsPost(): ActionA = RootBasicAuth { implicit req =>
     // Really don't like that lenghty code to get just a few parameters from the body. Consider a helper function
     val (jobId, action) = (for {
       body <- req.body.asFormUrlEncoded
@@ -34,7 +35,7 @@ object Administration extends VSController {
       action <- param2.headOption
     } yield (jobId, action)).get
 
-    for {
+    val f: Future[Result] = for {
       job <- org.w3.vs.model.Job.get(JobId(jobId))
       msg <- {
         action match {
@@ -44,17 +45,19 @@ object Administration extends VSController {
         }
       }
     } yield {
-      case Html(_) => SeeOther(routes.Administration.index()).flashing(
+      SeeOther(routes.Administration.index()).flashing(
         ("success" -> Messages(msg, jobId + " (" + job.name + ")"))
       )
     }
+
+    Await.result(f.recover(toError), Duration(5, "s"))
   }
 
-  def migration(): ActionA = Action { implicit req =>
+  def migration(): ActionA = RootBasicAuth { implicit req =>
     Ok("")
   }
 
-  def usersPost(): ActionA = AsyncAction { implicit req =>
+  def usersPost(): ActionA = RootBasicAuth { implicit req =>
     val (email, isSubscriber) = (for {
       body <- req.body.asFormUrlEncoded
       email <- body.get("email").get.headOption
@@ -66,26 +69,30 @@ object Administration extends VSController {
       }
     } yield (email, isSubscriber)).get
 
-    val f: Future[PartialFunction[Format, Result]] = for {
+    val f: Future[Result] = for {
       user <- org.w3.vs.model.User.getByEmail(email)
       _ <- {
         Cache.remove(email)
         User.update(user.copy(isSubscriber = isSubscriber))
       }
     } yield {
-      case Html(_) => SeeOther(routes.Administration.index()).flashing(
+      SeeOther(routes.Administration.index()).flashing(
         ("success" -> s"User ${email} succesfully saved with account type subscriber=${isSubscriber}")
       )
     }
 
     f recover {
       case UnknownUser => {
-        case Html(_) => BadRequest(views.html.admin(messages = List(("error" -> s"Unknown user with email: ${email}"))))
+        BadRequest(views.html.admin(messages = List(("error" -> s"Unknown user with email: ${email}"))))
       }
     }
+
+    Await.result(f.recover(toError), Duration(5, "s"))
   }
 
   def socket(): WebSocket[String] = WebSocket.using[String] { implicit reqHeader =>
+
+    // TODO: Find a way to authenticate. (Authentication header is not passed in a websocket request)
 
     // TODO: Implement this method in a new class
     // Executes the side-effects of a command, if any, and returns a result as text.

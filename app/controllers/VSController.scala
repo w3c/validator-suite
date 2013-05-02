@@ -123,6 +123,16 @@ trait VSController extends Controller {
     req => user => Future.successful(f(req)(user))
   }
 
+  def RootBasicAuth(f: Request[AnyContent] => Result): ActionA = Action { implicit req =>
+    val action = req.headers.get("Authorization")
+      .map(_.replace("Basic ", ""))
+      .map { hash =>
+        val challenge = conf.config.getString("root.password.basic").get
+        if (hash == challenge) Some(f(req)) else None
+      }.flatten
+    action.getOrElse(Unauthorized("unauthorized").withHeaders(("WWW-Authenticate", """Basic realm="Validator Suite"""")))
+  }
+
   def toError(implicit reqHeader: RequestHeader): PartialFunction[Throwable, Result] = {
     // TODO timeout, store exception, etc...
     case UnknownJob(id) => {
