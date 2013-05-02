@@ -27,8 +27,8 @@ class I18nCheckerTest extends WordSpec with MustMatchers with AssertionsMatchers
     cache.restorePreviousCache()
   }
 
-  "http://www.w3.org/International/tests/i18n-checker/utf16/utf16be-html.html should have at least one error" in {
-    val url = URL("http://www.w3.org/International/tests/i18n-checker/utf16/utf16be-html.html")
+  "http://www.w3.org/International/tests/i18n-checker/generate?test=25&format=html&serveas=html should have at least one error" in {
+    val url = URL("http://www.w3.org/International/tests/i18n-checker/generate?test=25&format=html&serveas=html")
     val assertions = I18nChecker.assert(url, Map.empty: AssertorConfiguration)
     assertions must (haveErrors)
   }
