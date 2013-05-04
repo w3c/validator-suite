@@ -70,8 +70,6 @@ object Assertions extends VSController  {
         Ok(views.html.main(
           user = user,
           title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
-          style = "",
-          script = "test",
           crumbs = Seq(
             job_.name -> routes.Job.get(id),
             Helper.shorten(url, 50) -> ""),

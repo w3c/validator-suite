@@ -33,7 +33,6 @@ object Jobs extends VSController {
         Ok(views.html.main(
           user = user,
           title = "Jobs - Validator Suite",
-          script = "test",
           collections = Seq(jobs.bindFromRequest)
         ))
       }

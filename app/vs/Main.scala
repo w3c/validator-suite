@@ -9,6 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.store.MongoStore
 import scala.concurrent.Future
 import play.api.Mode.Prod
+import org.mozilla.javascript.tools.shell.Main.{main => executeJs}
 
 object Main {
 
@@ -194,12 +195,10 @@ object Main {
     val out = new Out {
       def println(s: String) = System.out.println(s)
     }
-    val conf = new ValidatorSuite(mode = Prod)
-    main(args, in, out)(conf)
-    conf.shutdown
+    main(args, in, out)
   }
   
-  def main(args: Array[String], in: In, out: Out)(implicit conf: ValidatorSuite): Unit = {
+  def main(args: Array[String], in: In, out: Out): Unit = {
     import out.println
 
     val int = new Object {
@@ -240,15 +239,20 @@ object Main {
         nconf.shutdown()
         println("Database reset with default data")
       }
+      case Array("build-js") => {
+        executeJs(Array("app/assets/r.js", "-o", "app/assets/build.js"))
+        println("Javascript built")
+      }
+      case Array("build-js-dev") => {
+        executeJs(Array("app/assets/r.js", "-o", "app/assets/build-dev.js"))
+        println("Javascript built")
+      }
       case _ => {
         println(
           """Help:
             | * TODO
             |
           """.stripMargin)
-        println("asd")
-        println("asd")
-        println("asd")
       }
     }
 

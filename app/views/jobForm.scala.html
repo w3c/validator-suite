@@ -1,6 +1,6 @@
 @(form: JobForm,
     user: User,
-    idOpt: Option[JobId] = None)(implicit req: Request[AnyContent], flash: Flash)
+    idOpt: Option[JobId] = None)(implicit req: Request[AnyContent], flash: Flash, vs: ValidatorSuite)
 
 @libs.main("New Job - Validator Suite"){
 

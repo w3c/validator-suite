@@ -1,25 +1,20 @@
-@(title: String, style: String = "", script: String = "")(content: Html)(footer: Html)
+@(title: String, style: String = "", script: String = "")(content: Html)(footer: Html)(implicit vs: ValidatorSuite)
+@import play.api.Mode._
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>@title</title>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg" href='@routes.Assets.at("/public", "images/vsLogo.svg")' />
-    <link href='@routes.Assets.at("/public", "styles/main.min.css")' rel="stylesheet" />
+    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/vsLogo.svg")' />
+    <link href='@routes.Assets.at("styles/main.min.css")' rel="stylesheet" />
     @if(style != "") {
-    <link href='@routes.Assets.at("/public", "styles/" + style + ".min.css")' rel="stylesheet" />}
-
-    <script src='@routes.Assets.at("/app/assets/scripts", "libs/require.js")'></script>
-    <script>
-        require.config({
-            baseUrl: '@routes.Assets.at("/app/assets/scripts", "app")',
-            paths: {
-                "libs": "../libs",
-                "libs/jquery": "../libs/jquery-1.7.1"
-            }
-        });
-        @if(script != "") {require(["@script"]);}
-    </script>
+    <link href='@routes.Assets.at("styles/" + style + ".min.css")' rel="stylesheet" />}
+    @vs.mode match {
+    case Dev => {
+    <script data-main='@routes.ExternalAssets.at(s"""js/${script}.js""")' src='@routes.ExternalAssets.at("js/libs/require.js")'></script>
+    <script src='@routes.ExternalAssets.at("js/config-dev.js")'></script>}
+    case _ => {
+    <script data-main='@routes.Assets.at(s"""js/${script}.js""")' src='@routes.Assets.at("js/libs/require.js")'></script>}}
 </head>
 
 <body class="no-js">

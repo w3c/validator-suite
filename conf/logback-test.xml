@@ -29,7 +29,7 @@
   <logger name="org.w3.vs.http.AuthorityManagerr" level="INFO" />
 
   <!-- External libraries to silence -->
-  <logger name="com.gargoylesoftware.htmlunit" level="OFF" />
+  <logger name="com.gargoylesoftware.htmlunit" level="DEBUG" />
   <logger name="org.eclipse.jetty.server" level="ERROR"/>
   <logger name="reactivemongo" level="ERROR"/>
 

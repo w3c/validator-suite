@@ -1,9 +1,8 @@
 package org.w3.vs
 
-
 import play.api._
+import play.api.Mode._
 import java.net.ResponseCache
-
 
 object Global extends GlobalSettings {
 
@@ -17,7 +16,6 @@ object Global extends GlobalSettings {
 
     assert(conf == null)
 
-    import play.api.Mode._
     app.mode match {
 
       case Prod => conf = new ValidatorSuite(Prod)
@@ -41,6 +39,13 @@ object Global extends GlobalSettings {
     //conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
     org.w3.vs.assertor.LocalValidators.start()
     org.w3.vs.model.Job.resumeAllJobs()(conf)
+
+    // Build scripts
+    val command = conf.mode match {
+      case Dev => "build-js-dev"
+      case _ => "build-js"
+    }
+    org.w3.vs.Main.main(Array(command))
   }
   
   override def onStop(app: Application): Unit = {
@@ -48,5 +53,5 @@ object Global extends GlobalSettings {
     //org.w3.vs.assertor.LocalValidators.stop()
     conf.shutdown()
   }
-  
+
 }

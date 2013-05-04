@@ -44,7 +44,6 @@ object Resources extends VSController  {
         Ok(views.html.main(
           user = user,
           title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
-          script = "test",
           crumbs = Seq(job_.name -> ""),
           collections = Seq(
             job.withCollection(bindedResources),

@@ -4,7 +4,7 @@ import play.api.{Logger, Mode, Configuration}
 import Mode._
 
 class ValidatorSuite(
-  mode: Mode,
+  val mode: Mode,
   name: String = "Validator Suite") {
 
   val logger: Logger = Logger(name + (mode match {

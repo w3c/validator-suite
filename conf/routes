@@ -51,11 +51,7 @@ POST    /admin/migration                            controllers.Administration.m
 
 ##########################
 
-# Adds an Assets controller to expose javascript sources directly during development
-# Because Play changes the signature of routes.Assets.at() depending on whether there is a single assets controller or
-# more i added a dummy controller that serves files from nowhere. The switch has to be done manually.
-#GET     /no_folder/*file                                       controllers.Assets.at(path="/no_folder", file)
-GET     /dev/scripts/*file                                controllers.Assets.at(path="/app/assets/scripts", file)
-
-# Map static resources from the /public folder to the /assets URL path
+# Serve files directly from app/assets in Dev mode. The route is disabled in production.
+GET     /dev/*file                                 controllers.ExternalAssets.at(path="app/assets", file)
+# Static files are served from the root path. Error pages are defined in Global.
 GET     /*file                                     controllers.Assets.at(path="/public", file)

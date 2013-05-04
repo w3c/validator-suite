@@ -35,8 +35,6 @@ object GroupedAssertions extends VSController  {
         Ok(views.html.main(
           user = user,
           title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
-          style = "",
-          script = "test",
           crumbs = Seq(job_.name -> ""),
           collections = Seq(
             job.withCollection(bindedGroupedAssertions),

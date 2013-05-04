@@ -25,6 +25,7 @@ object ApplicationBuild extends Build {
     "org.reactivemongo" %% "play2-reactivemongo" % "0.9" /*cross CrossVersion.full*/ excludeAll(ExclusionRule(organization = "io.netty"), ExclusionRule(organization = "play")),
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     "org.mindrot" % "jbcrypt" % "0.3m",
+    "rhino" % "js" % "1.7R2",
     // test dependencies
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
     "com.typesafe.akka" %% "akka-dataflow" % akkaVersion,
@@ -44,11 +45,13 @@ object ApplicationBuild extends Build {
     scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
     scalacOptions in (Compile, doc) ++= Opts.doc.title("Validator Suite"),
     scalacOptions in (Compile, doc) <++= baseDirectory map { bd => Seq("-sourcepath", bd.getAbsolutePath, "-doc-source-url", "https://github.com/w3c/validator-suite/tree/master€{FILE_PATH}.scala") },
+
     routesImport += "org.w3.vs.controllers._",
     routesImport += "org.w3.vs.model._",
-    playAssetsDirectories <+= baseDirectory / "app/assets/scripts",
+    playAssetsDirectories <+= baseDirectory / "app/assets/js",
     coffeescriptEntryPoints := Seq.empty[File],
     javascriptEntryPoints := Seq.empty[File],
+    templatesImport += "org.w3.vs.ValidatorSuite",
     templatesImport += "org.w3.vs.view._",
     templatesImport += "org.w3.vs.view.form._",
     templatesImport += "org.w3.vs.view.model._",
@@ -56,6 +59,7 @@ object ApplicationBuild extends Build {
     templatesImport += "org.w3.vs.model._",
     templatesImport += "org.w3.vs.exception._",
     templatesImport += "scala.util._",
+
     logLevel := Level.Debug,
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 //    resolvers += "sgodbillon" at "https://bitbucket.org/sgodbillon/repository/raw/master/snapshots/"
