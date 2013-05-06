@@ -1563,3 +1563,322 @@ window.Zepto = Zepto
 
   testEl = null
 })(Zepto)
+
+//     Zepto.js
+//     (c) 2010-2012 Thomas Fuchs
+//     Zepto.js may be freely distributed under the MIT license.
+
+;(function($, undefined){
+  var document = window.document, docElem = document.documentElement,
+    origShow = $.fn.show, origHide = $.fn.hide, origToggle = $.fn.toggle
+
+  function anim(el, speed, opacity, scale, callback) {
+    if (typeof speed == 'function' && !callback) callback = speed, speed = undefined
+    var props = { opacity: opacity }
+    if (scale) {
+      props.scale = scale
+      el.css($.fx.cssPrefix + 'transform-origin', '0 0')
+    }
+    return el.animate(props, speed, null, callback)
+  }
+
+  function hide(el, speed, scale, callback) {
+    return anim(el, speed, 0, scale, function(){
+      origHide.call($(this))
+      callback && callback.call(this)
+    })
+  }
+
+  $.fn.show = function(speed, callback) {
+    origShow.call(this)
+    if (speed === undefined) speed = 0
+    else this.css('opacity', 0)
+    return anim(this, speed, 1, '1,1', callback)
+  }
+
+  $.fn.hide = function(speed, callback) {
+    if (speed === undefined) return origHide.call(this)
+    else return hide(this, speed, '0,0', callback)
+  }
+
+  $.fn.toggle = function(speed, callback) {
+    if (speed === undefined || typeof speed == 'boolean')
+      return origToggle.call(this, speed)
+    else return this.each(function(){
+      var el = $(this)
+      el[el.css('display') == 'none' ? 'show' : 'hide'](speed, callback)
+    })
+  }
+
+  $.fn.fadeTo = function(speed, opacity, callback) {
+    return anim(this, speed, opacity, null, callback)
+  }
+
+  $.fn.fadeIn = function(speed, callback) {
+    var target = this.css('opacity')
+    if (target > 0) this.css('opacity', 0)
+    else target = 1
+    return origShow.call(this).fadeTo(speed, target, callback)
+  }
+
+  $.fn.fadeOut = function(speed, callback) {
+    return hide(this, speed, null, callback)
+  }
+
+  $.fn.fadeToggle = function(speed, callback) {
+    return this.each(function(){
+      var el = $(this)
+      el[
+        (el.css('opacity') == 0 || el.css('display') == 'none') ? 'fadeIn' : 'fadeOut'
+      ](speed, callback)
+    })
+  }
+
+})(Zepto)
+
+//     Zepto.js
+//     (c) 2010-2012 Thomas Fuchs
+//     Zepto.js may be freely distributed under the MIT license.
+
+;(function($){
+  var cache = [], timeout
+
+  $.fn.remove = function(){
+    return this.each(function(){
+      if(this.parentNode){
+        if(this.tagName === 'IMG'){
+          cache.push(this)
+          this.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
+          if (timeout) clearTimeout(timeout)
+          timeout = setTimeout(function(){ cache = [] }, 60000)
+        }
+        this.parentNode.removeChild(this)
+      }
+    })
+  }
+})(Zepto)
+
+//     Zepto.js
+//     (c) 2010-2012 Thomas Fuchs
+//     Zepto.js may be freely distributed under the MIT license.
+
+// The following code is heavily inspired by jQuery's $.fn.data()
+
+;(function($) {
+  var data = {}, dataAttr = $.fn.data, camelize = $.camelCase,
+    exp = $.expando = 'Zepto' + (+new Date())
+
+  // Get value from node:
+  // 1. first try key as given,
+  // 2. then try camelized key,
+  // 3. fall back to reading "data-*" attribute.
+  function getData(node, name) {
+    var id = node[exp], store = id && data[id]
+    if (name === undefined) return store || setData(node)
+    else {
+      if (store) {
+        if (name in store) return store[name]
+        var camelName = camelize(name)
+        if (camelName in store) return store[camelName]
+      }
+      return dataAttr.call($(node), name)
+    }
+  }
+
+  // Store value under camelized key on node
+  function setData(node, name, value) {
+    var id = node[exp] || (node[exp] = ++$.uuid),
+      store = data[id] || (data[id] = attributeData(node))
+    if (name !== undefined) store[camelize(name)] = value
+    return store
+  }
+
+  // Read all "data-*" attributes from a node
+  function attributeData(node) {
+    var store = {}
+    $.each(node.attributes, function(i, attr){
+      if (attr.name.indexOf('data-') == 0)
+        store[camelize(attr.name.replace('data-', ''))] =
+          $.zepto.deserializeValue(attr.value)
+    })
+    return store
+  }
+
+  $.fn.data = function(name, value) {
+    return value === undefined ?
+      // set multiple values via object
+      $.isPlainObject(name) ?
+        this.each(function(i, node){
+          $.each(name, function(key, value){ setData(node, key, value) })
+        }) :
+        // get value from first element
+        this.length == 0 ? undefined : getData(this[0], name) :
+      // set value on all elements
+      this.each(function(){ setData(this, name, value) })
+  }
+
+  $.fn.removeData = function(names) {
+    if (typeof names == 'string') names = names.split(/\s+/)
+    return this.each(function(){
+      var id = this[exp], store = id && data[id]
+      if (store) $.each(names, function(){ delete store[camelize(this)] })
+    })
+  }
+})(Zepto)
+
+;(function($){
+  var zepto = $.zepto, oldQsa = zepto.qsa, oldMatches = zepto.matches
+
+  function visible(elem){
+    elem = $(elem)
+    return !!(elem.width() || elem.height()) && elem.css("display") !== "none"
+  }
+
+  // Implements a subset from:
+  // http://api.jquery.com/category/selectors/jquery-selector-extensions/
+  //
+  // Each filter function receives the current index, all nodes in the
+  // considered set, and a value if there were parentheses. The value
+  // of `this` is the node currently being considered. The function returns the
+  // resulting node(s), null, or undefined.
+  //
+  // Complex selectors are not supported:
+  //   li:has(label:contains("foo")) + li:has(label:contains("bar"))
+  //   ul.inner:first > li
+  var filters = $.expr[':'] = {
+    visible:  function(){ if (visible(this)) return this },
+    hidden:   function(){ if (!visible(this)) return this },
+    selected: function(){ if (this.selected) return this },
+    checked:  function(){ if (this.checked) return this },
+    parent:   function(){ return this.parentNode },
+    first:    function(idx){ if (idx === 0) return this },
+    last:     function(idx, nodes){ if (idx === nodes.length - 1) return this },
+    eq:       function(idx, _, value){ if (idx === value) return this },
+    contains: function(idx, _, text){ if ($(this).text().indexOf(text) > -1) return this },
+    has:      function(idx, _, sel){ if (zepto.qsa(this, sel).length) return this }
+  }
+
+  var filterRe = new RegExp('(.*):(\\w+)(?:\\(([^)]+)\\))?$\\s*'),
+      childRe  = /^\s*>/,
+      classTag = 'Zepto' + (+new Date())
+
+  function process(sel, fn) {
+    // quote the hash in `a[href^=#]` expression
+    sel = sel.replace(/=#\]/g, '="#"]')
+    var filter, arg, match = filterRe.exec(sel)
+    if (match && match[2] in filters) {
+      filter = filters[match[2]], arg = match[3]
+      sel = match[1]
+      if (arg) {
+        var num = Number(arg)
+        if (isNaN(num)) arg = arg.replace(/^["']|["']$/g, '')
+        else arg = num
+      }
+    }
+    return fn(sel, filter, arg)
+  }
+
+  zepto.qsa = function(node, selector) {
+    return process(selector, function(sel, filter, arg){
+      try {
+        var taggedParent
+        if (!sel && filter) sel = '*'
+        else if (childRe.test(sel))
+          // support "> *" child queries by tagging the parent node with a
+          // unique class and prepending that classname onto the selector
+          taggedParent = $(node).addClass(classTag), sel = '.'+classTag+' '+sel
+
+        var nodes = oldQsa(node, sel)
+      } catch(e) {
+        console.error('error performing selector: %o', selector)
+        throw e
+      } finally {
+        if (taggedParent) taggedParent.removeClass(classTag)
+      }
+      return !filter ? nodes :
+        zepto.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
+    })
+  }
+
+  zepto.matches = function(node, selector){
+    return process(selector, function(sel, filter, arg){
+      return (!sel || oldMatches(node, sel)) &&
+        (!filter || filter.call(node, null, arg) === node)
+    })
+  }
+})(Zepto)
+
+//     Zepto.js
+//     (c) 2010-2012 Thomas Fuchs
+//     Zepto.js may be freely distributed under the MIT license.
+
+;(function($){
+  $.fn.end = function(){
+    return this.prevObject || $()
+  }
+
+  $.fn.andSelf = function(){
+    return this.add(this.prevObject || $())
+  }
+
+  'filter,add,not,eq,first,last,find,closest,parents,parent,children,siblings'.split(',').forEach(function(property){
+    var fn = $.fn[property]
+    $.fn[property] = function(){
+      var ret = fn.apply(this, arguments)
+      ret.prevObject = this
+      return ret
+    }
+  })
+})(Zepto)
+
+
+// outer and inner height/width support
+if (this.Zepto) {
+  (function($) {
+    var ioDim, _base;
+    ioDim = function(elem, Dimension, dimension, includeBorder, includeMargin) {
+      var sides, size;
+      if (elem) {
+        size = elem[dimension]();
+        sides = {
+          width: ["left", "right"],
+          height: ["top", "bottom"]
+        };
+        sides[dimension].forEach(function(side) {
+          size += parseInt(elem.css("padding-" + side), 10);
+          if (includeBorder) {
+            size += parseInt(elem.css("border-" + side + "-width"), 10);
+          }
+          if (includeMargin) {
+            return size += parseInt(elem.css("margin-" + side), 10);
+          }
+        });
+        return size;
+      } else {
+        return null;
+      }
+    };
+    ["width", "height"].forEach(function(dimension) {
+      var Dimension, _base, _base1, _name, _name1;
+      Dimension = dimension.replace(/./, function(m) {
+        return m[0].toUpperCase();
+      });
+      (_base = $.fn)[_name = "inner" + Dimension] || (_base[_name] = function(includeMargin) {
+        return ioDim(this, Dimension, dimension, false, includeMargin);
+      });
+      return (_base1 = $.fn)[_name1 = "outer" + Dimension] || (_base1[_name1] = function(includeMargin) {
+        return ioDim(this, Dimension, dimension, true, includeMargin);
+      });
+    });
+    return (_base = $.fn).detach || (_base.detach = function(selector) {
+      var cloned, set;
+      set = this;
+      if (selector != null) {
+        set = set.filter(selector);
+      }
+      cloned = set.clone(true);
+      set.remove();
+      return cloned;
+    });
+  })(Zepto);
+}

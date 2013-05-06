@@ -35,3 +35,4 @@ RUNNING_PID
 test/resources/w3c-cache/*
 \.#*
 public/js
+conf/application-dev.conf

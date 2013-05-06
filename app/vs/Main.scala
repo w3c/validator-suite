@@ -243,10 +243,6 @@ object Main {
         executeJs(Array("app/assets/r.js", "-o", "app/assets/build.js"))
         println("Javascript built")
       }
-      case Array("build-js-dev") => {
-        executeJs(Array("app/assets/r.js", "-o", "app/assets/build-dev.js"))
-        println("Javascript built")
-      }
       case _ => {
         println(
           """Help:

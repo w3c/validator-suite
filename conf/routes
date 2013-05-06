@@ -51,7 +51,5 @@ POST    /admin/migration                            controllers.Administration.m
 
 ##########################
 
-# Serve files directly from app/assets in Dev mode. The route is disabled in production.
-GET     /dev/*file                                 controllers.ExternalAssets.at(path="app/assets", file)
-# Static files are served from the root path. Error pages are defined in Global.
-GET     /*file                                     controllers.Assets.at(path="/public", file)
+# Serves assets from /public. In Dev mode try to find the file in /app/assets first unless forceProdAssets is true.
+GET     /*file                                      controllers.Application.asset(file)

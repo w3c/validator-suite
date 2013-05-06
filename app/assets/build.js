@@ -6,7 +6,8 @@
     keepBuildDir: false,
     removeCombined: true,
     optimize: "none",
-    mainConfigFile: 'js/config-dev.js',
+    mainConfigFile: 'js/config.js',
+    paths: { "config": "config-prod" },
     modules: [
         {
             name: "libs/require",
@@ -18,7 +19,6 @@
         },
         {
             name: "libs/foundation",
-            include: ["libs/foundation/reveal", "libs/foundation/orbit"],
             exclude: ["libs/query"]
         },
         {

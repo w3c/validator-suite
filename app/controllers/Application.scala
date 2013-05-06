@@ -11,6 +11,7 @@ import scala.concurrent.Future
 import org.w3.vs.util.Util._
 import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
+import java.nio.file.{Path, Paths}
 
 object Application extends VSController {
   
@@ -90,6 +91,19 @@ object Application extends VSController {
         case DuplicatedEmail(email: String) => BadRequest(views.html.register(RegisterForm.blank, List(("error" -> Messages("form.email.duplicate")))))
         case InvalidFormException(form: RegisterForm, _) => BadRequest(views.html.register(form))
       } recover toError
+    }
+  }
+
+  import play.api.Mode._
+
+  val forceProdAssets = conf.config.getBoolean("forceProdAssets").getOrElse(false)
+
+  def asset(file: String) = {
+    conf.mode match {
+      case Dev if Paths.get("app/assets").resolve(file).toFile.exists() && !forceProdAssets =>
+        controllers.ExternalAssets.at("app/assets", file)
+      case _ =>
+        controllers.Assets.at("/public", file)
     }
   }
   

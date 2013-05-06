@@ -4,10 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>Validator Suite</title>
-    <!--<link rel="stylesheet" href="stylesheets/foundation.css">-->
     <link rel="stylesheet" href="css/foundation.min.css">
     <link rel="stylesheet" href="css/app.css">
-    <script src="js/vendor/custom.modernizr.js"></script>
+    <script src='js/libs/require.js'></script>
+    <script>
+        require.config({baseUrl: './js'});
+        require(['config'], function () {require(['libs/foundation']);});
+    </script>
 </head>
 
 <body>
@@ -119,13 +122,6 @@
     </form>
     <a class="close-reveal-modal">&#215;</a>
 </div>
-
-
-<script>
-    document.write('<script src=' + ('__proto__' in {} ? 'js/vendor/zepto' : 'js/vendor/jquery') + '.js><\/script>')
-</script>
-<script src="js/foundation.min.js"></script>
-<script>$(document).foundation();</script>
 
 </body>
 </html>

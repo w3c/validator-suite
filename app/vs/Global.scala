@@ -41,11 +41,8 @@ object Global extends GlobalSettings {
     org.w3.vs.model.Job.resumeAllJobs()(conf)
 
     // Build scripts
-    val command = conf.mode match {
-      case Dev => "build-js-dev"
-      case _ => "build-js"
-    }
-    org.w3.vs.Main.main(Array(command))
+    val forceProdAssets = conf.config.getBoolean("forceProdAssets").getOrElse(false)
+    if (conf.mode == Prod || forceProdAssets) org.w3.vs.Main.main(Array("build-js"))
   }
   
   override def onStop(app: Application): Unit = {

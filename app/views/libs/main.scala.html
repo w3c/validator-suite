@@ -5,16 +5,16 @@
 <head>
     <title>@title</title>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/vsLogo.svg")' />
-    <link href='@routes.Assets.at("styles/main.min.css")' rel="stylesheet" />
+    <link rel="icon" type="image/svg" href='@routes.Application.asset("images/vsLogo.svg")' />
+    <link href='@routes.Application.asset("styles/main.min.css")' rel="stylesheet" />
     @if(style != "") {
-    <link href='@routes.Assets.at("styles/" + style + ".min.css")' rel="stylesheet" />}
-    @vs.mode match {
-    case Dev => {
-    <script data-main='@routes.ExternalAssets.at(s"""js/${script}.js""")' src='@routes.ExternalAssets.at("js/libs/require.js")'></script>
-    <script src='@routes.ExternalAssets.at("js/config-dev.js")'></script>}
-    case _ => {
-    <script data-main='@routes.Assets.at(s"""js/${script}.js""")' src='@routes.Assets.at("js/libs/require.js")'></script>}}
+    <link href='@routes.Application.asset(s"styles/${style}.min.css")' rel="stylesheet" />}
+
+    <script src='@routes.Application.asset("js/libs/require.js")'></script>
+    <script>
+        require.config({baseUrl: '@routes.Application.asset("js")'});
+        require(['config'], function(){require(['@script'])});
+    </script>
 </head>
 
 <body class="no-js">
