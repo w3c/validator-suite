@@ -3,6 +3,8 @@
 
 # Application
 GET     /                                           controllers.Application.index
+GET     /faq                                        controllers.Application.faq
+GET     /pricing                                    controllers.Application.pricing
 GET     /login                                      controllers.Application.login
 POST    /login                                      controllers.Application.authenticate
 POST    /logout                                     controllers.Application.logout
@@ -26,8 +28,8 @@ POST    /jobs/:job/                                 controllers.Job.dispatcher(j
 GET     /jobs/:job/socket/:socket                   controllers.Job.socket(job: JobId, socket: SocketType)
 
 # Job/grouped
-GET     /jobs/:job/messages/                         controllers.GroupedAssertions.index(job: JobId)
-GET     /jobs/:job/messages/socket/:socket           controllers.GroupedAssertions.socket(job: JobId, socket: SocketType)
+GET     /jobs/:job/messages/                        controllers.GroupedAssertions.index(job: JobId)
+GET     /jobs/:job/messages/socket/:socket          controllers.GroupedAssertions.socket(job: JobId, socket: SocketType)
 
 # Job/assertions
 GET     /jobs/:job/assertions/                      controllers.Assertions.index(job: JobId, resource: URL)
@@ -52,4 +54,4 @@ POST    /admin/migration                            controllers.Administration.m
 ##########################
 
 # Serves assets from /public. In Dev mode try to find the file in /app/assets first unless forceProdAssets is true.
-GET     /*file                                      controllers.Application.asset(file)
+GET     /assets/*file                               controllers.Application.asset(file)

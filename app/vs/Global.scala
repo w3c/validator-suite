@@ -1,6 +1,8 @@
 package org.w3.vs
 
 import play.api._
+import play.api.mvc._
+import play.api.mvc.Results._
 import play.api.Mode._
 import java.net.ResponseCache
 
@@ -49,6 +51,10 @@ object Global extends GlobalSettings {
     //ResponseCache.setDefault(null)
     //org.w3.vs.assertor.LocalValidators.stop()
     conf.shutdown()
+  }
+
+  override def onHandlerNotFound(request : RequestHeader) : Result = {
+    NotFound(views.html.error._404())
   }
 
 }

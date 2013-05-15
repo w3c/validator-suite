@@ -12,7 +12,7 @@ object ValidatorNuTest {
 
   val cacheDirectory = {
     val f = new File("test/resources/cache")
-    println(f.getAbsolutePath)
+    //println(f.getAbsolutePath)
     f
   }
   val cache = Cache(cacheDirectory)

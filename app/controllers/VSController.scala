@@ -139,7 +139,7 @@ trait VSController extends Controller {
       if (isAjax) {
         NotFound(Messages("exceptions.job.unknown", id))
       } else {
-        NotFound(views.html.error(List(("error", Messages("exceptions.job.unknown", id)))))
+        NotFound(views.html.error.generic(List(("error", Messages("exceptions.job.unknown", id)))))
         //SeeOther(routes.Jobs.index).flashing(("error" -> Messages("exceptions.job.unknown", id)))
       }
     }
@@ -152,7 +152,7 @@ trait VSController extends Controller {
     case t: Throwable => {
       logger.error("Unexpected exception: " + t.getMessage, t)
       format {
-        case x: Html => InternalServerError(views.html.error(List(("error", Messages("exceptions.unexpected", t.getMessage))))).as(x.contentType)
+        case x: Html => InternalServerError(views.html.error.generic(List(("error", Messages("exceptions.unexpected", t.getMessage))))).as(x.contentType)
         case _ => InternalServerError
       }
     }
