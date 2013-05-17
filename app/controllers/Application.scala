@@ -17,9 +17,9 @@ object Application extends VSController {
   
   val logger = play.Logger.of("org.w3.vs.controllers.Application")
 
-  def faq: ActionA =     controllers.Assets.at("/public", "faq.html")
-  def index: ActionA =   controllers.Assets.at("/public", "index.html")
-  def pricing: ActionA = controllers.Assets.at("/public", "pricing.html")
+  def faq:     ActionA = Action { Ok(views.html.faq()) }
+  def index:   ActionA = Action { Ok(views.html.index()) }
+  def pricing: ActionA = Action { Ok(views.html.pricing()) }
 
   val loginName = (new controllers.javascript.ReverseApplication).login.name
   val loginTimer = Metrics.newTimer(Application.getClass, loginName, MILLISECONDS, SECONDS)
