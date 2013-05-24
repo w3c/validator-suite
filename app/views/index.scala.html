@@ -1,33 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Validator Suite</title>
-    <link rel="stylesheet" href="assets/css/foundation.min.css">
-    <link rel="stylesheet" href="assets/css/app.css">
-    <script src='assets/js/libs/require.js'></script>
-    <script>
-        require.config({baseUrl: './assets/js'});
-        require(['config'], function () {require(['libs/foundation']);});
-    </script>
-</head>
-
-<body>
-
-
-<section id="banner">
-    <div class="row">
-        <a class="left" href="./"><img src="assets/images/fullLogo.svg" /> </a>
-        <ul id="nav" class="right">
-            <li><a href="pricing">Pricing</a></li>
-            <li><a href="faq">Faq</a></li>
-            <li><a href="mailto:validator-contact-vsuite@@w3.org">Contact</a></li>
-            <li><a href="#" data-reveal-id="login"><strong>Login</strong></a></li>
-        </ul>
-    </div>
-</section>
-
+@front("Validator Suite") {
 
 <div id="slide" class="row">
     <div class="column large-10 large-centered">
@@ -61,9 +32,7 @@
     <div class="large-3 columns"><a class="button right" href="pricing.html">Buy Now</a></div>
 </div>
 
-
 <hr />
-
 
 <div class="row">
     <div class="large-4 columns">
@@ -89,38 +58,4 @@
     </div>
 </div>
 
-
-<section id="footer">
-    <div class="row">
-        <p class="column">
-            Copyright © 2013 W3C <sup>®</sup>
-            (<a href="http://www.csail.mit.edu/"><abbr title="Massachusetts Institute of Technology">MIT</abbr></a>,
-            <a href="http://www.ercim.eu/"><abbr title="European Research Consortium for Informatics and Mathematics">ERCIM</abbr></a>,
-            <a href="http://www.keio.ac.jp/">Keio</a>,
-            <a href="http://ev.buaa.edu.cn/">Beihang</a>)
-            <a href="/Consortium/Legal/ipr-notice">Usage policies apply</a>.
-        </p>
-    </div>
-</section>
-
-
-<div id="login" class="reveal-modal small">
-    <h1>Login</h1>
-    <form action="https://valid.w3.org/suite/login" method="POST">
-        <p>
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="Email" value="" required="required">
-        </p>
-        <p>
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Password" required="required">
-        </p>
-        <p>
-            <button id="submit-login" type="submit">Login</button>
-        </p>
-    </form>
-    <a class="close-reveal-modal">&#215;</a>
-</div>
-
-</body>
-</html>
+}
