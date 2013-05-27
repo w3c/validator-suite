@@ -5,9 +5,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>@title</title>
-    <link rel="stylesheet" href="assets/css/foundation.min.css">
-    <link rel="stylesheet" href="assets/css/app.css">
-    <script src='assets/js/libs/require.js'></script>
+    <link rel="stylesheet" href='@routes.Application.asset("css/foundation.min.css")'>
+    <link rel="stylesheet" href='@routes.Application.asset("css/app.css")'>
+    <script src='@routes.Application.asset("js/libs/require.js")'></script>
     <script>
         require.config({baseUrl: './assets/js'});
         require(['config'], function () {require(['libs/foundation']);});
@@ -19,7 +19,7 @@
 
 <section id="banner">
     <div class="row">
-        <a class="left" href="./"><img src="assets/images/fullLogo.svg" /> </a>
+        <a class="left" href="./"><img src='@routes.Application.asset("images/fullLogo.svg")' /></a>
         <ul id="nav" class="right">
             <li><a href="pricing">Pricing</a></li>
             <li><a href="faq">Faq</a></li>
@@ -47,7 +47,7 @@
 
 <div id="login" class="reveal-modal small">
     <h1>Login</h1>
-    <form action="https://valid.w3.org/suite/login" method="POST">
+    <form action="@routes.Application.login" method="POST">
         <p>
             <label for="email">Email</label>
             <input type="email" id="email" name="email" placeholder="Email" value="" required="required">
