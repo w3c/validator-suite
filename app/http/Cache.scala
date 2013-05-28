@@ -18,12 +18,6 @@ case object ERROR extends CachedResourceState
 object Cache {
 
   val logger = play.Logger.of(classOf[Cache])
-//  val logger = new Object {
-//    def debug(msg: String): Unit = println("== " + msg)
-//    def error(msg: String): Unit = println("== " + msg)
-//    def error(msg: String, t: Throwable): Unit = println("== " + msg)
-//    def warn(msg: String): Unit = println("== " + msg)
-//  }
 
   val metaRegex = """^(OK|ERROR) (\d+) (.*)$""".r
 
@@ -34,6 +28,10 @@ object Cache {
     val httpCacheConf = configuration.getConfig("application.http-cache") getOrElse sys.error("application.http-cache")
     if (httpCacheConf.getBoolean("enable") getOrElse sys.error("enable")) {
       val directory = new File(httpCacheConf.getString("directory") getOrElse sys.error("directory"))
+      if (httpCacheConf.getBoolean("create-if-not-exist") getOrElse sys.error("create-if-not-exist")) {
+        if (! directory.exists && ! directory.mkdir())
+          sys.error("could not create HTTP Cache directory " + directory.getAbsolutePath)
+      }
       if (httpCacheConf.getBoolean("clean-at-startup") getOrElse sys.error("clean-at-startup")) {
         if (directory.exists) Util.delete(directory)
         if (! directory.mkdir()) sys.error("could not create HTTP Cache directory " + directory.getAbsolutePath)

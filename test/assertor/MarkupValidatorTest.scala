@@ -10,21 +10,21 @@ import java.io.File
 
 object MarkupValidatorTest {
 
-  val cacheDirectory = new File("test/resources/cache")
-  val cache = Cache(cacheDirectory)
+//  val cacheDirectory = new File("test/resources/cache")
+//  val cache = Cache(cacheDirectory)
 
 }
 
 class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatchers with BeforeAndAfterAll {
 
-  import MarkupValidatorTest.cache
+//  import MarkupValidatorTest.cache
 
   override def beforeAll(): Unit = {
-    cache.setAsDefaultCache()
+//    cache.setAsDefaultCache()
   }
   
   override def afterAll(): Unit = {
-    cache.restorePreviousCache()
+//    cache.restorePreviousCache()
   }
 
   "http://www.google.com should have at least one error" in {
@@ -39,9 +39,9 @@ class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatc
 
     val urlForMachine = MarkupValidator.validatorURLForMachine(url, assertorConfiguration).toString
 
-    urlForMachine must startWith(MarkupValidator.configuration.serviceUrl)
+    urlForMachine must startWith(MarkupValidator.serviceUrl)
 
-    val queryString: String = urlForMachine.substring(MarkupValidator.configuration.serviceUrl.length)
+    val queryString: String = urlForMachine.substring(MarkupValidator.serviceUrl.length)
 
     Helper.parseQueryString(queryString) must be (assertorConfiguration
       + ("output" -> List("ucn"))
@@ -51,14 +51,14 @@ class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatc
   }
 
   "http://www.w3.org/2008/MW4D/ should not be valid because it's using HTML5" in {
-    MarkupValidator.configuration match {
-      case _: Distant => ()
-      case _: Local =>
-        val url = URL("http://www.w3.org/2008/MW4D/")
-        val assertions: Iterable[Assertion] = MarkupValidator.assert(url, Map.empty)
-        assertions must have size(1)
-        val assertion = assertions.head
-        assertion.title must be(MarkupValidator.UsesHtml5Syntax)
+    if (! MarkupValidator.serviceUrl.startsWith("http://validator.w3.org")) {
+      val url = URL("http://www.w3.org/2008/MW4D/")
+      val assertions: Iterable[Assertion] = MarkupValidator.assert(url, Map.empty)
+      assertions must have size(1)
+      val assertion = assertions.head
+      assertion.title must be(MarkupValidator.UsesHtml5Syntax)
+    } else {
+      play.Logger.debug("not executing test because using validator.w3.org")
     }
   }
 
