@@ -36,3 +36,4 @@ test/resources/w3c-cache/*
 \.#*
 public/js
 conf/application-dev.conf
+conf/application-test.conf
