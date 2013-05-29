@@ -41,10 +41,6 @@ object Global extends GlobalSettings {
     //conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
     org.w3.vs.assertor.LocalValidators.start()
     org.w3.vs.model.Job.resumeAllJobs()(conf)
-
-    // Build scripts
-    val forceProdAssets = conf.config.getBoolean("forceProdAssets").getOrElse(false)
-    if (conf.mode == Prod || forceProdAssets) org.w3.vs.Main.main(Array("build-js"))
   }
   
   override def onStop(app: Application): Unit = {

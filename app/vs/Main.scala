@@ -239,10 +239,6 @@ object Main {
         nconf.shutdown()
         println("Database reset with default data")
       }
-      case Array("build-js") => {
-        executeJs(Array("app/assets/r.js", "-o", "app/assets/build.js"))
-        println("Javascript built")
-      }
       case _ => {
         println(
           """Help:
