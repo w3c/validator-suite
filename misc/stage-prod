@@ -12,7 +12,18 @@ fi
 SERVER="$1"
 APP="vs"
 
-cd `dirname $0`
+for i in 3 2 1 0; do
+    if [ -d ".git" ]; then
+        break
+    elif [ i == 0 ]; then
+        echo "Couldn't find the root of the git repository"
+        return 2
+    else
+        cd ..
+    fi
+done
+
+#cd `dirname $0`
 
 APP_VERSION=$(git rev-parse --short HEAD)
 echo "Staging $APP $APP_VERSION"
