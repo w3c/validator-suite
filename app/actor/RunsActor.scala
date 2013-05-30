@@ -22,7 +22,7 @@ object RunsActor {
 
 }
 
-class RunsActor()(implicit conf: ActorSystem with Database with HttpClient with RunEvents) extends Actor {
+class RunsActor()(implicit conf: ActorSystem with Database) extends Actor {
 
   import RunsActor.{ logger, createActorName, RunJob, ResumeJob }
 

@@ -20,7 +20,7 @@ object RunEventBusActor {
 
 }
 
-class RunEventBusActor()(implicit vs: ActorSystem) extends Actor {
+class RunEventBusActor() extends Actor {
 
   import RunEventBusActor.{ Listen, Deafen, Publish }
 

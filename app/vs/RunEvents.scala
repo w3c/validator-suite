@@ -22,7 +22,7 @@ trait DefaultRunEvents extends RunEvents {
     with HttpClient =>
 
   val runEventBus: RunEventBus = {
-    val actorRef = system.actorOf(Props(new RunEventBusActor()(this)), "runevent-bus")
+    val actorRef = system.actorOf(Props(classOf[RunEventBusActor]), "runevent-bus")
     RunEventBus(actorRef)
   }
 
