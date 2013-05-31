@@ -25,7 +25,6 @@ import play.modules.reactivemongo.json.ImplicitBSONHandlers._
 import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
-import org.w3.vs.ActorSystem
 
 /** A User.
   * Be careful when creating a User direclty with `new User` or `User.apply` as you'll have to hash the password yourself.
@@ -40,19 +39,19 @@ case class User(
 
   import User.logger
 
-  def getJob(jobId: JobId)(implicit conf: ActorSystem with Database): Future[Job] = {
+  def getJob(jobId: JobId)(implicit conf: ValidatorSuite): Future[Job] = {
     Job.getFor(id, jobId)
   }
 
-  def getJobs()(implicit conf: ActorSystem with Database): Future[Iterable[Job]] = {
+  def getJobs()(implicit conf: ValidatorSuite): Future[Iterable[Job]] = {
     Job.getFor(id)
   }
   
-  def save()(implicit conf: ActorSystem with Database): Future[Unit] = User.save(this)
+  def save()(implicit conf: ValidatorSuite): Future[Unit] = User.save(this)
   
-  def delete()(implicit conf: ActorSystem with Database): Future[Unit] = User.delete(this)
+  def delete()(implicit conf: ValidatorSuite): Future[Unit] = User.delete(this)
 
-  def enumerator()(implicit conf: ActorSystem with Database with RunEvents): Enumerator[RunEvent] = {
+  def enumerator()(implicit conf: ValidatorSuite): Enumerator[RunEvent] = {
     val (_enumerator, channel) = Concurrent.broadcast[RunEvent]
     val subscriber: ActorRef = conf.system.actorOf(Props(new Actor {
       def receive = {
@@ -76,7 +75,7 @@ case class User(
     _enumerator
   }
 
-  def jobDatas()(implicit conf: ActorSystem with Database): Enumerator[Iterator[JobData]] = {
+  def jobDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[JobData]] = {
     val e: Future[Enumerator[Iterator[JobData]]] = Job.getFor(id).map(
       jobs => Enumerator.interleave(jobs.toSeq.map(_.jobDatas()))
     )
@@ -106,7 +105,7 @@ object User {
   def collection(implicit conf: Database): BSONCollection =
     conf.db("users", failoverStrategy = FailoverStrategy(retries = 0))
 
-//  def sample(implicit conf: ActorSystem with Database): User = User(
+//  def sample(implicit conf: ValidatorSuite): User = User(
 //    id = UserId("50cb6a1c04ca20aa0283bc85"),
 //    name = "Test user",
 //    email = BCrypt.hashpw("sample@valid.w3.org", BCrypt.gensalt()),
@@ -127,7 +126,7 @@ object User {
   /** Attemps to authenticate a user based on the couple email/password.
     * The password is checked against the hash in the database.
     */
-  def authenticate(email: String, password: String)(implicit conf: ActorSystem with Database): Future[User] = {
+  def authenticate(email: String, password: String)(implicit conf: ValidatorSuite): Future[User] = {
     if (email.endsWith("ROOT") && BCrypt.checkpw(password, rootPassword)) {
       val userEmail = email.substring(0, email.size - 4)
       val userF = getByEmail(userEmail)
@@ -164,13 +163,13 @@ object User {
     * 
     * @return the User created within a Future
     */
-  def register(name: String, email: String, password: String, isSubscriber: Boolean)(implicit conf: ActorSystem with Database): Future[User] = {
+  def register(name: String, email: String, password: String, isSubscriber: Boolean)(implicit conf: ValidatorSuite): Future[User] = {
     logger.info(s"Registering user: ${name}, ${email}")
     val user = User.create(name, email, password, isSubscriber)
     user.save().map(_ => user)
   }
   
-  def getByEmail(email: String)(implicit conf: ActorSystem with Database): Future[User] = {
+  def getByEmail(email: String)(implicit conf: ValidatorSuite): Future[User] = {
     import conf._
     val query = Json.obj("email" -> JsString(email.toLowerCase))
     val cursor = collection.find(query).cursor[JsValue]
@@ -202,7 +201,7 @@ object User {
     collection.update(selector, update, writeConcern = journalCommit) map { lastError => () }
   }
 
-  def delete(user: User)(implicit conf: Database): Future[Unit] =
+  def delete(user: User)(implicit conf: ValidatorSuite): Future[Unit] =
     sys.error("")
     
 }

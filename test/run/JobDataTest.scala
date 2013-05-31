@@ -47,8 +47,8 @@ class JobDataTest extends VSTest[ActorSystem with Database with RunEvents] with 
 
     // Then run the job
     val runningJob: Job = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
-    val jobActor = vs.system.actorFor(actorPath)
+    val Running(runId, actorName) = runningJob.status
+    val jobActor = vs.system.actorFor(actorName.actorPath)
 
     // generating some stuff
     jobActor ! TestData.ar1

@@ -3,7 +3,7 @@ package org.w3.vs.util
 import akka.testkit.{TestKitBase, ImplicitSender, TestKit}
 import scala.concurrent.duration.Duration
 import akka.actor.ActorSystem
-import org.w3.vs.{DefaultActorSystem, ActorSystem}
+import org.w3.vs._
 
 trait TestKitHelper { this: TestKit =>
 

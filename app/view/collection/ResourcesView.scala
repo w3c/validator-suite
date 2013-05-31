@@ -74,7 +74,7 @@ case class ResourcesView (
 
 object ResourcesView {
 
-  def apply(job: Job)(implicit conf: ActorSystem with Database): Future[ResourcesView] = {
+  def apply(job: Job)(implicit conf: ValidatorSuite): Future[ResourcesView] = {
     for {
       datas <- job.getResourceDatas()
     } yield {
@@ -88,7 +88,7 @@ object ResourcesView {
     }
   }
 
-  def apply(job: Job, url: URL)(implicit conf: ActorSystem with Database): Future[ResourcesView] = {
+  def apply(job: Job, url: URL)(implicit conf: ValidatorSuite): Future[ResourcesView] = {
     for {
       data <- job.getResourceData(url)
     } yield {

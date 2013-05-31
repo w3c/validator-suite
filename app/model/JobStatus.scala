@@ -8,7 +8,7 @@ sealed trait JobStatus
 
 case object NeverStarted extends JobStatus
 case object Zombie extends JobStatus
-case class Running(runId: RunId, actorPath: ActorPath) extends JobStatus
+case class Running(runId: RunId, actorName: RunningActorName) extends JobStatus
 case class Done(
   runId: RunId,
   reason: DoneReason,

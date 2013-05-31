@@ -71,7 +71,7 @@ case class AssertionsView(
 
 object AssertionsView {
 
-  def apply(job: Job, url: URL)(implicit vs: ActorSystem with Database): Future[AssertionsView] = {
+  def apply(job: Job, url: URL)(implicit vs: ValidatorSuite with Database): Future[AssertionsView] = {
     job.getAssertions(url).map(assertionsDatas =>
       AssertionsView(
         source = assertionsDatas.map(data => AssertionView(job.id, data)),
@@ -81,7 +81,7 @@ object AssertionsView {
     )
   }
 
-  /*def apply(job: Job)(implicit conf: ActorSystem): Future[AssertionsView] = {
+  /*def apply(job: Job)(implicit conf: ValidatorSuite): Future[AssertionsView] = {
     job.getAssertions().map(assertionsDatas =>
       AssertionsView(
         source = assertionsDatas.map(data => AssertionView(job.id, data)),

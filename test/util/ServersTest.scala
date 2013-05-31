@@ -1,18 +1,17 @@
 package org.w3.vs.util
 
-import org.scalatest.{Suite, BeforeAndAfterAll}
-import org.w3.vs.HttpClient
+import org.scalatest.{ Suite, BeforeAndAfterAll }
 
-trait ServersTest extends BeforeAndAfterAll { this: Suite with BeforeAndAfterAll =>
+trait ServersTest extends BeforeAndAfterAll { this: Suite =>
 
   def servers: Seq[Webserver]
 
-  override def beforeAll() {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     servers foreach { _.start() }
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     servers foreach { _.stop() }
     super.afterAll()
   }

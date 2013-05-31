@@ -5,13 +5,9 @@ import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit
 
 trait Graphite extends ValidatorSuite {
-  this: ValidatorSuite =>
-
-  logger.info("Initializing Graphite")
 
   val graphiteConf = config.getConfig("application.graphite-reporter") getOrElse sys.error("application.graphite-reporter")
 
-  //if (graphiteConf.getBoolean("enable") getOrElse false) {
   val r = """^(\d+)([^\d]+)$""".r
   val (period, unit) =
     graphiteConf.getString("period") getOrElse sys.error("period") match {
@@ -20,12 +16,15 @@ trait Graphite extends ValidatorSuite {
   val host = graphiteConf.getString("host") getOrElse sys.error("host")
   val port = graphiteConf.getInt("port").map(_.toInt) getOrElse sys.error("port")
   val prefix = graphiteConf.getString("prefix") getOrElse sys.error("prefix")
-  //}
 
-  GraphiteReporter.enable(period, unit, host, port, prefix)
+  override def start(): Unit = {
+    super.start()
+    logger.info("Initializing Graphite")
+    GraphiteReporter.enable(period, unit, host, port, prefix)
+  }
 
   override def shutdown() {
-    logger.info("Shuting down Metrics")
+    logger.info("Shutting down Metrics")
     Metrics.shutdown()
     super.shutdown()
   }

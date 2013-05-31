@@ -17,7 +17,7 @@ import org.w3.vs.store.Formats.{ RunIdFormat, ResourceResponseEventFormat }
 
 object ResourceResponse {
 
-  def getFor(runId: RunId)(implicit conf: ActorSystem with Database): Future[Set[ResourceResponse]] = {
+  def getFor(runId: RunId)(implicit conf: ValidatorSuite): Future[Set[ResourceResponse]] = {
     import conf._
     val query = Json.obj(
       "runId" -> toJson(runId),

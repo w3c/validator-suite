@@ -8,11 +8,7 @@ import java.net.ResponseCache
 
 object Global extends GlobalSettings {
 
-  var conf: ValidatorSuite
-    with ActorSystem
-    with Database
-    with HttpClient
-    with RunEvents = _
+  var conf: ValidatorSuite = _
 
   override def beforeStart(app: Application): Unit = {
 
@@ -20,18 +16,13 @@ object Global extends GlobalSettings {
 
     app.mode match {
 
-      case Prod => conf = new ValidatorSuite(Prod)
-        with DefaultActorSystem
-        with DefaultDatabase
-        with DefaultHttpClient
-        with DefaultRunEvents
-        with Graphite
+      case Prod => conf = new ValidatorSuite with Graphite {
+        val mode = Prod
+      }
 
-      case mode @ (Test | Dev) => conf = new ValidatorSuite(mode)
-        with DefaultActorSystem
-        with DefaultDatabase
-        with DefaultHttpClient
-        with DefaultRunEvents
+      case m @ (Test | Dev) => conf = new ValidatorSuite {
+        val mode = m
+      }
 
     }
 
@@ -39,6 +30,7 @@ object Global extends GlobalSettings {
 
   override def onStart(app: Application): Unit = {
     //conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
+    conf.start()
     org.w3.vs.assertor.LocalValidators.start()
     org.w3.vs.model.Job.resumeAllJobs()(conf)
   }
@@ -47,6 +39,7 @@ object Global extends GlobalSettings {
     //ResponseCache.setDefault(null)
     //org.w3.vs.assertor.LocalValidators.stop()
     conf.shutdown()
+    conf = null
   }
 
   override def onHandlerNotFound(request : RequestHeader) : Result = {

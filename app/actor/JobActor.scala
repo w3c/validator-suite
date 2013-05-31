@@ -47,9 +47,9 @@ object JobActor {
 //  }
 
   def saveEvent(event: RunEvent)(implicit vs: Database): Future[Unit] = event match {
-    case event@CreateRunEvent(userId, jobId, runId, actorPath, strategy, timestamp) =>
+    case event@CreateRunEvent(userId, jobId, runId, actorName, strategy, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
-        val running = Running(runId, actorPath)
+        val running = Running(runId, actorName)
         Job.updateStatus(jobId, status = running)
       }
 
@@ -84,7 +84,7 @@ case object NotYetStarted extends JobActorState
 case object Stopping extends JobActorState
 
 // TODO extract all pure function in a companion object
-class JobActor(job: Job, initialRun: Run)(implicit val conf: ActorSystem with Database)
+class JobActor(job: Job, initialRun: Run)(implicit val conf: ValidatorSuite)
 extends Actor with FSM[JobActorState, Run]
 with EventBus
 with ActorEventBus /* Represents an EventBus where the Subscriber type is ActorRef */
@@ -223,7 +223,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     val state = event match {
       case CreateRunEvent(_, _, _, _, _, _) =>
         runningJobs.inc()
-        val running = Running(run.runId, self.path)
+        val running = Running(run.runId, RunningActorName(self.path.name))
         // Job.run() is waiting for this value
         val from = sender
         from ! running
@@ -292,7 +292,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
   when(NotYetStarted) {
 
     case Event(Start, run) =>
-      val event = CreateRunEvent(userId, jobId, run.runId, self.path, job.strategy, job.createdOn)
+      val event = CreateRunEvent(userId, jobId, run.runId, RunningActorName(self.path.name), job.strategy, job.createdOn)
       handleRunEvent(run, event)
 
     case Event(Resume(actions), run) =>

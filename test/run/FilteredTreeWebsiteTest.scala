@@ -16,9 +16,9 @@ import play.api.Mode
   * Server 1 -> Server 2
   * 1 GET       10 HEAD
   **/
-class FilteredTreeWebsiteTest extends VSTest[ActorSystem with HttpClient with Database with RunEvents] with TestData with ServersTest {
+class FilteredTreeWebsiteTest extends VSTest with ServersTest with TestData with WipeoutData {
 
-  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet()))
 
@@ -29,7 +29,7 @@ class FilteredTreeWebsiteTest extends VSTest[ActorSystem with HttpClient with Da
   "test FilteredTreeWebsiteTest" in {
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
 
     val events = (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.getChunks[RunEvent]).getOrFail()
 

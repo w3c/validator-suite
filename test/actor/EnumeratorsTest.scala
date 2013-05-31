@@ -12,9 +12,9 @@ import scala.util._
 import org.w3.vs._
 import play.api.Mode
 
-class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient with RunEvents] with ServersTest with TestData {
+class EnumeratorsTest extends VSTest with ServersTest with TestData with WipeoutData {
 
-  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   import TestData._
 
@@ -25,8 +25,8 @@ class EnumeratorsTest extends VSTest[Database with ActorSystem with HttpClient w
   "test enumerators" in {
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
-    val jobActor = vs.system.actorFor(actorPath)
+    val Running(runId, actorName) = runningJob.status
+    val jobActor = vs.system.actorFor(actorName.actorPath)
 
     val runEvents = runningJob.runEvents()
     val jobDatas = runningJob.jobDatas()

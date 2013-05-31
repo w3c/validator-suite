@@ -111,7 +111,7 @@ object Formats {
   )(Strategy.apply, unlift(Strategy.unapply))
 
   import akka.actor.ActorPath
-  implicit val ActorPatchFormat = string[ActorPath](ActorPath.fromString, _.toString)
+  implicit val RunningActorNameFormat = string[RunningActorName](RunningActorName.apply, _.name)
 
   implicit val ResourceDataFormat: Format[ResourceData] = (
     (__ \ 'url).format[URL] and
@@ -182,10 +182,7 @@ object Formats {
     }
   }
 
-  val RunningFormat: Format[Running] = (
-    (__ \ 'runId).format[RunId] and
-    (__ \ 'actorPath).format[ActorPath]
-  )(Running.apply, unlift(Running.unapply))
+  val RunningFormat: Format[Running] = Json.format[Running]
 
   val DoneFormat: Format[Done] = (
     (__ \ 'runId).format[RunId] and
@@ -359,12 +356,12 @@ object Formats {
     (__ \ 'userId).format[UserId] and
     (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
-    (__ \ 'actorPath).format[ActorPath] and
+    (__ \ 'actorName).format[RunningActorName] and
     (__ \ 'strategy).format[Strategy] and
     (__ \ 'timestamp).format[DateTime]
   )({
-    case (_, userId, jobId, runId, actorPath, strategy, timestamp) =>
-      CreateRunEvent(userId, jobId, runId, actorPath, strategy, timestamp)
+    case (_, userId, jobId, runId, actorName, strategy, timestamp) =>
+      CreateRunEvent(userId, jobId, runId, actorName, strategy, timestamp)
   },
     {
       case CreateRunEvent(userId, jobId, runId, actorPath, strategy, timestamp) =>

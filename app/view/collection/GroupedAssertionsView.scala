@@ -64,7 +64,7 @@ case class GroupedAssertionsView(
 
 object GroupedAssertionsView {
 
-  def apply(job: Job)(implicit vs: ActorSystem with Database): Future[GroupedAssertionsView] = {
+  def apply(job: Job)(implicit vs: ValidatorSuite with Database): Future[GroupedAssertionsView] = {
     job.getGroupedAssertionDatas().map(gAssertionsDatas =>
       GroupedAssertionsView(
         source = gAssertionsDatas.map(data => GroupedAssertionView(job.id, data)),

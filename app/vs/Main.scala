@@ -213,28 +213,28 @@ object Main {
         println("nothing planned right now")
       }
       case Array("test", jobIdS) => {
-        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase
+        val nconf = new ValidatorSuite { val mode = Prod }
         test(jobIdS)(nconf)
         nconf.shutdown()
       }
       case Array("run") =>  {
-        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+        val nconf = new ValidatorSuite { val mode = Prod }
         runJob()(nconf)
         nconf.shutdown()
       }
       case Array("createIndexes") =>  {
-        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase
+        val nconf = new ValidatorSuite { val mode = Prod }
         MongoStore.createIndexes()(nconf).getOrFail()
         nconf.shutdown()
         println("done")
       }
       case Array(int(n)) => {
-        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase
+        val nconf = new ValidatorSuite { val mode = Prod }
         stressTestData(n)(nconf)
         nconf.shutdown()
       }
       case Array("default") => {
-        val nconf = new ValidatorSuite(mode = Prod) with DefaultActorSystem with DefaultDatabase
+        val nconf = new ValidatorSuite { val mode = Prod }
         defaultData()(nconf)
         nconf.shutdown()
         println("Database reset with default data")
@@ -250,7 +250,7 @@ object Main {
 
   }
   
-  def runJob()(implicit conf: ValidatorSuite with ActorSystem with Database with HttpClient with RunEvents): Unit = {
+  def runJob()(implicit conf: ValidatorSuite): Unit = {
     val strategy =
       Strategy(
         entrypoint = URL("http://www.w3.org/"),

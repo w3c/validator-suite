@@ -19,9 +19,9 @@ import play.api.Mode
   * Server 1 -> Server 2
   * 1 GET       1 HEAD
   */
-class SimpleInterWebsiteTest extends VSTest[ActorSystem with HttpClient with Database with RunEvents] with ServersTest with TestData {
+class SimpleInterWebsiteTest extends VSTest with ServersTest with TestData {
 
-  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   val servers = Seq(
       Webserver(9001, Website(Seq("/" --> "http://localhost:9001/1")).toServlet())
@@ -38,7 +38,7 @@ class SimpleInterWebsiteTest extends VSTest[ActorSystem with HttpClient with Dat
 //    } yield ()).getOrFail()
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
 
     val completeRunEvent =
       (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail(3.seconds)

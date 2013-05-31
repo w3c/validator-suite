@@ -11,9 +11,9 @@ import play.api.Mode
 import akka.actor.{ ActorSystem => _, _ }
 import org.w3.vs.util.akkaext._
 
-class ResumedRunTest extends VSTestKit[ActorSystem with Database with HttpClient with RunEvents](
-  new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
-) with ServersTest with TestData {
+class ResumedRunTest extends VSTestKit(
+  new ValidatorSuite { val mode = Mode.Test }
+) with ServersTest with TestData with WipeoutData {
 
   //implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 
@@ -44,11 +44,11 @@ class ResumedRunTest extends VSTestKit[ActorSystem with Database with HttpClient
     val jobId = job.id
     
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
     runningJob.id must be(job.id)
 
     // register to the death of the JobActor
-    val jobActorRef = vs.system.actorFor(actorPath)
+    val jobActorRef = vs.system.actorFor(actorName.actorPath)
     watch(jobActorRef)
 
     // wait for the first ResourceResponseEvent

@@ -6,21 +6,15 @@ import org.w3.vs.model._
 import org.w3.vs.util.akkaext._
 import org.w3.vs.http.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.util.Util._
 import play.api.libs.iteratee._
 import org.w3.vs.util.TestData
 import org.w3.vs._
 import play.api.Mode
-import org.w3.vs.model.Running
-import org.w3.vs.model.DoneRunEvent
-import org.w3.vs.util.Webserver
-import org.w3.vs.model.Running
-import org.w3.vs.model.DoneRunEvent
-import org.w3.vs.util.Webserver
+import org.w3.vs.util.Util._
 
-class CyclicWebsiteCrawlTest extends VSTest[ActorSystem with Database with RunEvents] with ServersTest with TestData {
+class CyclicWebsiteCrawlTest extends VSTest with ServersTest with TestData with WipeoutData {
 
-  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   val circumference = 10
 
@@ -31,7 +25,7 @@ class CyclicWebsiteCrawlTest extends VSTest[ActorSystem with Database with RunEv
   "test cyclic" in {
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
 
     val completeRunEvent =
       (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail(3.seconds)

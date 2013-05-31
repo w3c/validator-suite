@@ -10,9 +10,9 @@ import play.api.libs.iteratee._
 import org.w3.vs._
 import play.api.Mode
 
-class WebsiteWithRedirectsCrawlTest extends VSTest[ActorSystem with HttpClient with Database with RunEvents] with ServersTest with TestData {
+class WebsiteWithRedirectsCrawlTest extends VSTest with ServersTest with TestData with WipeoutData {
 
-  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   val circumference = 10
   
@@ -29,7 +29,7 @@ class WebsiteWithRedirectsCrawlTest extends VSTest[ActorSystem with HttpClient w
     } yield ()).getOrFail()
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
 
     val completeRunEvent =
       (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail(3.seconds)

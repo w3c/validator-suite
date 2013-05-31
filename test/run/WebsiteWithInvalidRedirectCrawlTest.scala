@@ -12,9 +12,9 @@ import scala.util.Try
 import org.w3.vs._
 import play.api.Mode
 
-class WebsiteWithInvalidRedirectCrawlTest extends VSTest[ActorSystem with HttpClient with Database with RunEvents] with ServersTest with TestData {
+class WebsiteWithInvalidRedirectCrawlTest extends VSTest with ServersTest with TestData with WipeoutData {
 
-  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   val servlet = new HttpServlet {
     override def doGet(req: HttpServletRequest, resp: HttpServletResponse) = {
@@ -44,7 +44,7 @@ class WebsiteWithInvalidRedirectCrawlTest extends VSTest[ActorSystem with HttpCl
     val job = TestData.job
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
 
     val nextHttpResponse: Iteratee[RunEvent, HttpResponse] =
       waitFor[RunEvent] { case ResourceResponseEvent(_, _, _, rr: HttpResponse, _) => rr }

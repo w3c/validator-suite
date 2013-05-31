@@ -1,7 +1,6 @@
 package org.w3.vs.run
 
 import org.w3.vs.util._
-import org.w3.vs.util._
 import org.w3.vs.util.website._
 import org.w3.vs.model._
 import org.w3.vs.util.akkaext._
@@ -14,47 +13,11 @@ import org.scalatest.Inside
 import java.io.File
 import org.w3.vs.util.TestData
 import org.w3.vs._
-import org.w3.vs.model.Running
-import org.w3.vs.model.Done
-import org.w3.vs.model.DoneRunEvent
-import scala.Some
-import org.w3.vs.model.FromJob
 import play.api.Mode
-import org.w3.vs.model.Running
-import org.w3.vs.model.Done
-import org.w3.vs.model.DoneRunEvent
-import scala.Some
-import org.w3.vs.model.FromJob
-import org.w3.vs.model.Running
-import org.w3.vs.model.Done
-import org.w3.vs.model.DoneRunEvent
-import scala.Some
-import org.w3.vs.model.FromJob
-import org.w3.vs.model.Running
-import org.w3.vs.model.Done
-import org.w3.vs.model.DoneRunEvent
-import scala.Some
-import org.w3.vs.model.FromJob
-import org.w3.vs.model.Running
-import org.w3.vs.model.Done
-import org.w3.vs.model.DoneRunEvent
-import scala.Some
-import org.w3.vs.model.FromJob
 
-abstract class W3CWebsiteTest extends VSTestKit[ActorSystem with HttpClient with Database with RunEvents](
-  new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
+abstract class W3CWebsiteTest extends VSTestKit(
+  new ValidatorSuite { val mode = Mode.Test }
 ) with TestData with Inside {
-
-/*({
-try {
-  val configuration = new DefaultTestConfiguration {
-    override val httpCacheOpt = Some(new Cache(new File("test/resources/w3c-cache")))
-  }
-  configuration
-} catch {
-  case e: Exception => e.printStackTrace ; throw e
-}
-})*/
 
   val servers = Seq.empty
 
@@ -81,7 +44,7 @@ try {
 //    PathAware(http, http.path / "www.w3.org") ! SetSleepTime(0)
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
 
     vs.runEventBus.subscribe(testActor, FromJob(job.id))
 

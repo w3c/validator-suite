@@ -23,16 +23,16 @@ abstract class MongoStoreTest(
   nbHttpErrorsPerAssertions: Int,
   nbHttpResponsesPerAssertions: Int,
   nbRunDatas: Int)
-extends VSTest[Database] {
+extends VSTest with WipeoutData {
 
-  implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   val nbAssertionsPerRunPerAssertor = nbUrlsPerAssertions * ( severities(Error) + severities(Warning) + severities(Info) ) /* nb of contexts */
   val nbAssertionsPerRun = 2 /* nb of assertors */ * nbAssertionsPerRunPerAssertor
   val nbAssertionsForJob1 = 2 /* runs */ * nbAssertionsPerRun
 
   // just for the sake of this test :-)
-  val actorPath = ActorPath.fromString("akka://system/user/foo")
+  val actorName = RunningActorName("foo")
 
   val user1: User = User.create("foo", "Foo@Example.com", "secret", isSubscriber = true)
 
@@ -102,7 +102,7 @@ extends VSTest[Database] {
     createdOn = now,
     strategy = strategy,
     creatorId = user1.id,
-    status = Running(run5Id, actorPath),
+    status = Running(run5Id, actorName),
     latestDone = None)
 
   // a job may have never completed, for example if the user has forced a new run
@@ -132,7 +132,7 @@ extends VSTest[Database] {
   }
 
   def createRun1(): Unit = {
-    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run1.runId, actorPath, run1.strategy, now)).getOrFail()
+    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run1.runId, actorName, run1.strategy, now)).getOrFail()
     // add assertions
     var counter = 0
     for {
@@ -158,12 +158,12 @@ extends VSTest[Database] {
   }
 
   def createRun2(): Unit = {
-    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run2.runId, actorPath, run2.strategy, now)).getOrFail()
+    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run2.runId, actorName, run2.strategy, now)).getOrFail()
     JobActor.saveEvent(DoneRunEvent(user1.id, job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas, run2.groupedAssertionDatas.values, run2.completedOn.get)).getOrFail()
   }
 
   def createRun3(): Unit = {
-    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run3.runId, actorPath, run3.strategy, now)).getOrFail()
+    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run3.runId, actorName, run3.strategy, now)).getOrFail()
     val run3RD = Map(
       URL("http://example.com/foo/1") -> ResourceData(URL("http://example.com/foo/1"), now, 27, 19),
       URL("http://example.com/foo/2") -> ResourceData(URL("http://example.com/foo/2"), now, 27, 19)
@@ -177,13 +177,13 @@ extends VSTest[Database] {
   }
 
   def createRun4(): Unit = {
-    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run4.runId, actorPath, run4.strategy, now)).getOrFail()
+    JobActor.saveEvent(CreateRunEvent(user1.id, job1.id, run4.runId, actorName, run4.strategy, now)).getOrFail()
     // time to get the latest value for job1 here
     job1 = Job.get(job1.id).getOrFail()
   }
 
   def createRun5(): Unit = {
-    JobActor.saveEvent(CreateRunEvent(user1.id, job5.id, run5.runId, actorPath, run5.strategy, now)).getOrFail()
+    JobActor.saveEvent(CreateRunEvent(user1.id, job5.id, run5.runId, actorName, run5.strategy, now)).getOrFail()
   }
 
   override def beforeAll(): Unit = {
@@ -362,7 +362,7 @@ extends VSTest[Database] {
   "reInitialize a job" in {
     val jobId = JobId()
     val runId = RunId()
-    val job = job1.copy(id = jobId, status = Running(runId, akka.actor.ActorPath.fromString("akka://123456")))
+    val job = job1.copy(id = jobId, status = Running(runId, RunningActorName("123456")))
     val run = run1.copy(runId = runId)
     val url = URL("http://example.com/foo")
     val assertion = Assertion(
@@ -377,7 +377,7 @@ extends VSTest[Database] {
     val assertorResult = AssertorResult(AssertorId("foo"), url, Map(url -> Vector(assertion)))
     val script = for {
       _ <- Job.save(job)
-      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run.runId, actorPath, run.strategy, now))
+      _ <- Run.saveEvent(CreateRunEvent(user1.id, job1.id, run.runId, actorName, run.strategy, now))
       _ <- Run.saveEvent(AssertorResponseEvent(user1.id, job1.id, run.runId, assertorResult))
       assertionsBefore <- Run.getAssertions(run.runId)
       _ <- Job.reset(job.id, removeRunData = true)

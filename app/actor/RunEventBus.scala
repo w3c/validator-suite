@@ -10,7 +10,7 @@ import scalaz.Scalaz._
 import scala.concurrent._
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.ActorSystem
+import org.w3.vs.ValidatorSuite
 
 object RunEventBusActor {
 

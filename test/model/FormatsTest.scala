@@ -27,7 +27,7 @@ class FormatsTest extends WordSpec with MustMatchers {
 
   val runData = RunData()
 
-  val jobStatus = Running(RunId(), akka.actor.ActorPath.fromString("akka://system/user/foo"))
+  val jobStatus = Running(RunId(), RunningActorName("foo"))
 
   val done = Done(RunId(), Completed, DateTime.now(DateTimeZone.UTC), runData)
 

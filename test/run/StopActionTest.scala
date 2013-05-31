@@ -12,9 +12,9 @@ import org.w3.vs._
 import play.api.Mode
 import org.w3.vs.model._
 
-class StopActionTest extends VSTestKit[ActorSystem with HttpClient with Database with RunEvents](
-  new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
-) with ServersTest with TestData {
+class StopActionTest extends VSTestKit(
+  new ValidatorSuite { val mode = Mode.Test }
+) with ServersTest with TestData with WipeoutData {
 
   val servers = Seq(Webserver(9001, Website.cyclic(1000).toServlet()))
 
@@ -29,7 +29,7 @@ class StopActionTest extends VSTestKit[ActorSystem with HttpClient with Database
     vs.runEventBus.subscribe(testActor, FromJob(job.id))
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
 
     def test(): Iteratee[RunEvent, Try[Unit]] = for {
       rr <- waitFor[RunEvent] { case ResourceResponseEvent(_, _, _, rr, _) => rr }

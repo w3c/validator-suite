@@ -10,13 +10,9 @@ import play.api.libs.iteratee._
 import org.w3.vs._
 import play.api.Mode
 
-class MaxResourcesTest extends VSTest[ActorSystem with HttpClient with Database with RunEvents] with ServersTest with TestData {
+class MaxResourcesTest extends VSTest with ServersTest with TestData with WipeoutData {
 
-  implicit val vs = new ValidatorSuite(mode =  Mode.Test)
-    with DefaultActorSystem
-    with DefaultDatabase
-    with DefaultHttpClient
-    with DefaultRunEvents
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   val servers = Seq(Webserver(9001, Website.tree(4).toServlet()))
 
@@ -27,7 +23,7 @@ class MaxResourcesTest extends VSTest[ActorSystem with HttpClient with Database 
   s"""shoudldn't access more that $maxResources resources""" in {
 
     val runningJob = job.run().getOrFail()
-    val Running(runId, actorPath) = runningJob.status
+    val Running(runId, actorName) = runningJob.status
 
     val completeRunEvent =
       (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()

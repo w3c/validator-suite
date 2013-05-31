@@ -22,7 +22,7 @@ object RunsActor {
 
 }
 
-class RunsActor()(implicit conf: ActorSystem with Database) extends Actor {
+class RunsActor()(implicit conf: ValidatorSuite) extends Actor {
 
   import RunsActor.{ logger, createActorName, RunJob, ResumeJob }
 
@@ -45,7 +45,7 @@ class RunsActor()(implicit conf: ActorSystem with Database) extends Actor {
         // this is a valid message only if it was already Running
         case NeverStarted | Zombie => sys.error("not valid here")
         case Done(_, _, _, _) => sys.error("not valid here")
-        case running @ Running(runId, actorPath) => {
+        case running @ Running(runId, actorName) => {
           // recover a coherent state from the database
           Run.get(runId) onComplete {
             case f @ Failure(t) => from ! f
@@ -53,7 +53,7 @@ class RunsActor()(implicit conf: ActorSystem with Database) extends Actor {
               // re-create the corresponding actor
               // we force the actor name to avoid having to update the actorPath in the job record
               // it should be safe as we're starting from scratch
-              val jobActorRef = context.actorOf(Props(new JobActor(job, run)).withDispatcher("jobactor-dispatcher"), name = actorPath.name)
+              val jobActorRef = context.actorOf(Props(new JobActor(job, run)).withDispatcher("jobactor-dispatcher"), name = actorName.name)
               // we can now tell the JobActor to resume its work
               jobActorRef.tell(JobActor.Resume(actions), from)
             }

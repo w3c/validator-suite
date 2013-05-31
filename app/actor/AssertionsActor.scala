@@ -21,7 +21,7 @@ object AssertionsActor {
 
 import AssertionsActor._
 
-class AssertionsActor(job: Job)(implicit vs: ActorSystem) extends Actor {
+class AssertionsActor(job: Job)(implicit vs: ValidatorSuite) extends Actor {
 
   implicit val ec = vs.system.dispatchers.lookup("assertor-dispatcher")
 
