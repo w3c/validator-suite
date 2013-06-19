@@ -11,7 +11,7 @@ import com.ning.http.client.{ AsyncHttpClient, AsyncHttpClientConfig }
 
 trait ValidatorSuite extends Database {
 
-  val mode: Mode
+  def mode: Mode
   val name: String = "Validator Suite"
 
   def start(): Unit = {
