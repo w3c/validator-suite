@@ -1,0 +1,19 @@
+vs-prepare
+
+vs-start
+
+ssh -A monkey@graphite.vs
+sudo puppet apply -v -e "class { 'w3cvs::graphite': test => true }"
+
+ssh -A monkey@mongo.vs
+sudo puppet apply -v -e "class { 'w3cvs::mongodb': test => true }"
+
+cd ~/projects/validator-suite
+./misc/stage-prod play.vs
+
+ssh -A monkey@play.vs
+sudo puppet apply -v -e "class { 'w3cvs::playapp': app_version => 'fbc578f', port => 8080, mongodb_node => 'mongo.vs.w3.org:27017', test => true }"
+
+ssh -A monkey@vs
+sudo puppet apply -v -e "class { 'w3cvs::pfe': backend_server => 'http://play.vs.w3.org:8080', test => true }"
+

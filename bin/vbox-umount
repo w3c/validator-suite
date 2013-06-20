@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## un-mounts /mnt and disconnects the block-level device on /dev/nbd0
+
+sudo umount /mnt
+
+sudo qemu-nbd -d /dev/nbd0

@@ -1,0 +1,36 @@
+#!/bin/bash
+
+## mounts a vdi file on /mnt
+## http://bethesignal.org/blog/2011/01/05/how-to-mount-virtualbox-vdi-image/
+## http://pissedoffadmins.com/os/mount-unknown-filesystem-type-lvm2_member.html
+
+VDI=`vbox-get-vdi "$1"`
+RET=$?
+
+if [ $RET -ne 0 ]; then
+    echo "\"$SOURCE\" is not a know VBox machine. Here are the known VMs:"
+    vboxmanage list vms
+    exit $RET
+fi
+
+# un-mount the existing partition, just in case it's there
+vbox-umount 2> /dev/null
+
+# make sure that these modules are loaded
+sudo modprobe nbd
+sudo modprobe dm-mod
+
+# mount the .vdi at the block level
+sudo qemu-nbd -c /dev/nbd0 "$VDI"
+
+# vgchange - change attributes of a volume group
+# makes the logical volumes available
+sudo vgchange -ay
+
+# find the root partition for the volume being considered
+# not sure how else I could know this information
+PARTITION=`sudo lvmdiskscan | grep 'root' | awk -F" " '{print $1}'`
+
+echo "mounting $PARTITION"
+
+sudo mount "$PARTITION" /mnt

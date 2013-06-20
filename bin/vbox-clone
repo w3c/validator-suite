@@ -1,0 +1,23 @@
+#!/bin/bash
+
+## clones SOURCE into TARGET
+
+SOURCE="$1"
+
+if ! vboxmanage showvminfo "$SOURCE" > /dev/null 2> /dev/null; then
+    echo "\"$SOURCE\" is not a know VBox machine. Here are the known VMs:"
+    vboxmanage list vms
+    exit 1
+fi
+
+TARGET="$2"
+
+# deletes the TARGET if it exists
+if vboxmanage showvminfo "$TARGET" > /dev/null 2> /dev/null; then
+    echo "Deleting existing \"$TARGET\""
+    vboxmanage unregistervm "$TARGET" --delete
+fi
+
+echo "Cloning \"$SOURCE\" to \"$TARGET\""
+
+vboxmanage clonevm "$SOURCE" --name "$TARGET" --register

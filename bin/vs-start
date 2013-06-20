@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## starts all the VMs for local testing of VS
+
+VBoxManage startvm 'VS pfe' --type headless
+VBoxManage startvm 'VS MongoDB' --type headless
+VBoxManage startvm 'VS Play app' --type headless
+VBoxManage startvm 'VS Graphite' --type headless
