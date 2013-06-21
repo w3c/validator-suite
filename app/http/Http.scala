@@ -6,7 +6,6 @@ import play.Logger
 import org.w3.vs.model._
 import com.ning.http.client._
 import scalaz.Scalaz._
-import org.w3.vs.util.akkaext._
 import org.w3.vs.ValidatorSuite
 
 object Http {

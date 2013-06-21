@@ -9,7 +9,6 @@ import play.api.libs.iteratee._
 import org.w3.vs._
 import play.api.Mode
 import akka.actor.{ ActorSystem => _, _ }
-import org.w3.vs.util.akkaext._
 
 class ResumedRunTest extends VSTestKit(
   new ValidatorSuite { val mode = Mode.Test }
