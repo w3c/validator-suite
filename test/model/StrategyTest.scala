@@ -1,6 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs.util.URL
+import org.w3.vs.http.Headers
 import org.scalatest.{ Filter => ScalaTestFilter, _ }
 import org.scalatest.matchers._
 import org.w3.vs.assertor.{ LocalValidators, FromHttpResponseAssertor }
@@ -24,7 +25,7 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
         url = URL("http://example.com/foo"),
         method = GET,
         status = 200,
-        headers = Map("Content-Type" -> List("text/html")),
+        headers = Headers(Map("Content-Type" -> List("text/html"))),
         extractedURLs = List.empty,
         doctypeOpt = None)
 
@@ -39,7 +40,7 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
         url = URL("http://example.com/foo"),
         method = GET,
         status = 200,
-        headers = Map("Content-Type" -> List("unknown")),
+        headers = Headers(Map("Content-Type" -> List("unknown"))),
         extractedURLs = List.empty,
         doctypeOpt = None)
 
@@ -54,7 +55,7 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
         url = URL("http://example.com/foo"),
         method = GET,
         status = 404,
-        headers = Map("Content-Type" -> List("text/html")),
+        headers = Headers(Map("Content-Type" -> List("text/html"))),
         extractedURLs = List.empty,
         doctypeOpt = None)
 
@@ -69,7 +70,7 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
         url = URL("http://example.com/foo"),
         method = HEAD,
         status = 200,
-        headers = Map("Content-Type" -> List("text/html")),
+        headers = Headers(Map("Content-Type" -> List("text/html"))),
         extractedURLs = List.empty,
         doctypeOpt = None)
 

@@ -3,6 +3,7 @@ package org.w3.vs.actor
 import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.vs.util._
+import org.w3.vs.http.Headers
 import play.Logger
 import org.w3.vs.http._
 import org.joda.time.DateTime
@@ -121,8 +122,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
             import java.util.{ Map => jMap, List => jList }
             import scala.collection.JavaConverters._
             val status = response.getStatusCode()
-            val headers: Headers =
-              (response.getHeaders().asInstanceOf[jMap[String, jList[String]]].asScala mapValues { _.asScala.toList }).toMap
+            val headers = Headers(response.getHeaders().asInstanceOf[jMap[String, jList[String]]])
             def resource = Resource.fromInputStream(response.getResponseBodyAsStream())
             val httpResponse = HttpResponse(url, method, status, headers, resource)
             self ! httpResponse

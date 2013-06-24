@@ -7,7 +7,7 @@ import scalax.io.JavaConverters._
 import java.net._
 import java.util.{ LinkedHashMap, ArrayList, List => jList, Map => jMap }
 import scala.collection.JavaConverters._
-import org.w3.vs.util.{ URL, Headers }
+import org.w3.vs.util.URL
 import Cache._
 import scala.util.Try
 
@@ -81,7 +81,7 @@ class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod) 
     lines.tail foreach { case headerRegex(key, values) =>
       builder += (key -> values.split(",").toList)
     }
-    val headers = builder.result()
+    val headers = Headers(builder.result())
     (status, headers)
   }
 
@@ -117,14 +117,14 @@ class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod) 
   def asCacheResponse(): Try[CacheResponse] = Try {
     val headers: jMap[String, jList[String]] = {
       val (status, headers) = getStatusHeaders()
-      val map = new LinkedHashMap[String, jList[String]](headers.size + 1)
+      val map = new LinkedHashMap[String, jList[String]](headers.underlying.size + 1)
       val statusSingletonList = {
         val l = new ArrayList[String](1)
         l.add("HTTP/1.0 " + status.toString + " FIXED STATUS TEXT")
         l
       }
       map.put(null, statusSingletonList)
-      headers foreach { case (header, values) =>
+      headers.underlying foreach { case (header, values) =>
         map.put(header, values.asJava)
       }
       map

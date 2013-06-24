@@ -125,7 +125,7 @@ case class Cache(directory: File) extends ResponseCache {
     cr.responseHeadersFile.asBinaryWriteChars(Codec.UTF8).writeCharsProcessor.foreach { owc =>
       val wc = owc.asWriteChars
       wc.write(s"null: HTTP/1.0 ${hr.status} FIXED STATUS TEXT\n")
-      hr.headers foreach { case (header, values) =>
+      hr.headers.underlying foreach { case (header, values) =>
         wc.write(header + ": " + values.mkString(",") + "\n")
       }
     }

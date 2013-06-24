@@ -3,6 +3,7 @@ package org.w3.vs.util
 import org.w3.vs.model._
 import org.scalatest.{Suite, BeforeAndAfterEach}
 import org.w3.vs.util.html.Doctype
+import org.w3.vs.http.Headers
 
 trait TestData { this: Suite =>
 
@@ -61,7 +62,7 @@ trait TestData { this: Suite =>
       url = foo,
       method = GET,
       status = 200,
-      headers = Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz")),
+      headers = Headers(Map("Accept" -> List("foo"), "bar" -> List("baz", "bazz"))),
       extractedURLs = List(foo, foo, bar), Some(Doctype("html", "", "")))
 
     val ar1 = AssertorResult(AssertorId("id1"), foo, Map(foo -> Vector(assertion1)))

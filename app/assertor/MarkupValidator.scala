@@ -10,7 +10,6 @@ import play.api.Configuration
 import java.util.concurrent.{ Executors, ForkJoinPool }
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
 import com.ning.http.client.providers.jdk._
-import org.w3.vs.util.HeadersHelper.extractCharset
 
 /** An instance of the MarkupValidator
   */

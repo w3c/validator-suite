@@ -1,6 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs.util._
+import org.w3.vs.http.Headers
 import scalaz.Equal
 
 object ResourceInfo {
@@ -8,7 +9,7 @@ object ResourceInfo {
   def apply(response: ResourceResponse): ResourceInfo = response match {
     case ErrorResponse(_, _, why) => InfoError(why)
     case HttpResponse(url, _, status@(301|302|303|307), headers, _, _) => {
-      headers get "Location" flatMap { _.headOption } match {
+      headers.location match {
         case Some(location) => try Redirect(status, (url / location).get) catch { case e: Exception => InfoError(location + " is not a valid URL") }
         case None => InfoError(url.toString + ": couldn't find a Location header")
       }

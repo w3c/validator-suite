@@ -20,7 +20,7 @@ class CacheOnlyHttpClient(cache: Cache) extends HttpClient {
       case Some(resource) =>
         val (status, headers, bodyStream) = resource.getCachedData().get
         m.statusLine = new StatusLine(s"HTTP/1.0 ${status} don't look here :-)")
-        headers foreach { case (name, values) =>
+        headers.underlying foreach { case (name, values) =>
           val value = values.mkString(",")
           m.setRequestHeader(name, value)
         }

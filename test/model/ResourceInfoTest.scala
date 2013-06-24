@@ -1,6 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs.util.URL
+import org.w3.vs.http.Headers
 import org.scalatest._
 import org.scalatest.Inside._
 import org.scalatest.matchers._
@@ -13,7 +14,7 @@ class ResourceInfoTest extends WordSpec with MustMatchers {
       URL("http://example.com/foo/"),
       GET,
       302,
-      Map("Location" -> List("/bar/baz")),
+      Headers(Map("Location" -> List("/bar/baz"))),
       List.empty,
       None)
 
@@ -29,7 +30,7 @@ class ResourceInfoTest extends WordSpec with MustMatchers {
       URL("http://example.com/foo/"),
       GET,
       302,
-      Map("Location" -> List("http://other.example.com/bar/baz")),
+      Headers(Map("Location" -> List("http://other.example.com/bar/baz"))),
       List.empty,
       None)
 
@@ -45,7 +46,7 @@ class ResourceInfoTest extends WordSpec with MustMatchers {
       URL("http://example.com/foo/"),
       GET,
       302,
-      Map.empty,
+      Headers.empty,
       List.empty,
       None)
 
@@ -61,7 +62,7 @@ class ResourceInfoTest extends WordSpec with MustMatchers {
       URL("http://example.com/foo/"),
       GET,
       302,
-      Map("Location" -> List("torrent://other.example.com/bar/baz")),
+      Headers(Map("Location" -> List("torrent://other.example.com/bar/baz"))),
       List.empty,
       None)
 

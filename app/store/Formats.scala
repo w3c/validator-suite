@@ -1,7 +1,8 @@
 package org.w3.vs.store
 
 import org.joda.time.{ DateTime, DateTimeZone }
-import org.w3.vs.util.{ Headers, URL }
+import org.w3.vs.util.URL
+import org.w3.vs.http.Headers
 import org.w3.vs.model._
 import org.w3.vs.util.html.Doctype
 
@@ -286,6 +287,12 @@ object Formats {
   )(Doctype.apply _, unlift(Doctype.unapply _))
 
   import Format.constraints._
+
+  implicit val HeadersFormat: Format[Headers] = new Format[Headers] {
+    val format = implicitly[Format[Map[String, List[String]]]]
+    def reads(json: JsValue): JsResult[Headers] = format.reads(json).map(Headers(_))
+    def writes(headers: Headers): JsValue = format.writes(headers.underlying)
+  }
 
   val HttpResponseFormat: Format[HttpResponse] = (
     (__ \ 'url).format[URL] and
