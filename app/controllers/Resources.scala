@@ -7,8 +7,9 @@ import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
 import org.w3.vs.util.equaljURL
+import org.w3.vs.Graphite
 import org.w3.vs.util.Util._
-import com.yammer.metrics.Metrics
+import com.codahale.metrics._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.iteratee.{Iteratee, Enumeratee, Enumerator}
 import play.api.libs.json.{Json => PlayJson, _}
@@ -108,8 +109,8 @@ object Resources extends VSController  {
   }
 
   val indexName = (new controllers.javascript.ReverseResources).index.name
-  val indexTimer = Metrics.newTimer(Resources.getClass, indexName, MILLISECONDS, SECONDS)
+  val indexTimer = Graphite.metrics.timer(MetricRegistry.name(Resources.getClass, indexName))
   val indexUrlName = indexName + "+url"
-  val indexUrlTimer = Metrics.newTimer(Resources.getClass, indexUrlName, MILLISECONDS, SECONDS)
+  val indexUrlTimer = Graphite.metrics.timer(MetricRegistry.name(Resources.getClass, indexUrlName))
 
 }

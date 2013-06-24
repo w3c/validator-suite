@@ -2,7 +2,7 @@ package org.w3.vs.util
 
 import java.io._
 import scala.concurrent.{ Future, ExecutionContext }
-import com.yammer.metrics.core.Timer
+import com.codahale.metrics._
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import scala.util.{ Success, Failure, Try }

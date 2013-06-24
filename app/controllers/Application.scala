@@ -9,9 +9,10 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.w3.vs.util.Util._
-import com.yammer.metrics.Metrics
+import com.codahale.metrics._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import java.nio.file.{Path, Paths}
+import org.w3.vs.Graphite
 
 object Application extends VSController {
   
@@ -22,7 +23,7 @@ object Application extends VSController {
   def pricing: ActionA = Action { Ok(views.html.pricing()) }
 
   val loginName = (new controllers.javascript.ReverseApplication).login.name
-  val loginTimer = Metrics.newTimer(Application.getClass, loginName, MILLISECONDS, SECONDS)
+  val loginTimer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, loginName))
 
   def login: ActionA = Action { implicit req =>
     AsyncResult {
@@ -40,7 +41,7 @@ object Application extends VSController {
   }
 
   val authenticateName = (new controllers.javascript.ReverseApplication).authenticate.name
-  val authenticateTimer = Metrics.newTimer(Application.getClass, authenticateName, MILLISECONDS, SECONDS)
+  val authenticateTimer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, authenticateName))
   
   def authenticate: ActionA = Action { implicit req =>
     AsyncResult {

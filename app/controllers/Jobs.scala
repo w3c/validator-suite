@@ -12,7 +12,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import scala.concurrent.Future
 import org.w3.vs.util.Util._
-import com.yammer.metrics.Metrics
+import org.w3.vs.Graphite
+import com.codahale.metrics._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import org.w3.vs.view.model.JobView
 import org.w3.vs.store.Formats._
@@ -22,7 +23,7 @@ object Jobs extends VSController {
   val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
 
   val indexName = (new controllers.javascript.ReverseJobs).index.name
-  val indexTimer = Metrics.newTimer(Jobs.getClass, indexName, MILLISECONDS, SECONDS)
+  val indexTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, indexName))
 
   def index: ActionA = AuthAsyncAction { implicit req => user =>
     val f: Future[PartialFunction[Format, Result]] = for {
@@ -43,7 +44,7 @@ object Jobs extends VSController {
   }
 
   val newJobName = (new controllers.javascript.ReverseJobs).newJob.name
-  val newJobTimer = Metrics.newTimer(Jobs.getClass, newJobName, MILLISECONDS, SECONDS)
+  val newJobTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, newJobName))
 
   def newJob: ActionA = AuthAction { implicit req => user =>
     timer(newJobName, newJobTimer) {
@@ -58,7 +59,7 @@ object Jobs extends VSController {
   }
 
   val createName = (new controllers.javascript.ReverseJobs).create.name
-  val createTimer = Metrics.newTimer(Jobs.getClass, createName, MILLISECONDS, SECONDS)
+  val createTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, createName))
 
   def create: ActionA = AuthAsyncAction { implicit req => user =>
     val f1: Future[PartialFunction[Format, Result]] =

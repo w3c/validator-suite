@@ -10,32 +10,31 @@ object ApplicationBuild extends Build {
   val appVersion      = "0.2"
 
   val akkaVersion = "2.1.0"
-  val scalazVersion = "7.0.0-M7"
+  val scalazVersion = "7.0.0"
   val scalatestVersion = "2.0.M5b"
-  val metricsVersion = "2.1.3"
+  val metricsVersion = "3.0.0"
 
   val appDependencies = Seq(
     // runtime dependencies
-    "org.scala-lang" % "scala-actors" % "2.10.1",
+    "org.scala-lang" % "scala-actors" % "2.10.2",
     "org.apache.commons" % "commons-lang3" % "3.1" intransitive(), // For StringUtils escaping functions
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10_20130110.jar",
     "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20130328-2.jar",
-    "com.yammer.metrics" % "metrics-core" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
-    "com.yammer.metrics" % "metrics-graphite" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
+    "com.codahale.metrics" % "metrics-core" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
+    "com.codahale.metrics" % "metrics-graphite" % metricsVersion excludeAll(ExclusionRule(organization = "org.slf4j")),
     "org.reactivemongo" %% "play2-reactivemongo" % "0.9" /*cross CrossVersion.full*/ excludeAll(ExclusionRule(organization = "io.netty"), ExclusionRule(organization = "play")),
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     "org.mindrot" % "jbcrypt" % "0.3m",
     "rhino" % "js" % "1.7R2",
     // test dependencies
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
-    "com.typesafe.akka" %% "akka-dataflow" % akkaVersion,
     "org.scalatest" %% "scalatest" % scalatestVersion
   )
 
 //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
-    scalaVersion := "2.10.1",
+    scalaVersion := "2.10.2",
     libraryDependencies += "commons-io" % "commons-io" % "2.4",
 
     // activates full stacktrace and durations

@@ -8,7 +8,6 @@ import play.api.mvc._
 import scala.concurrent.Future
 import org.w3.vs.util.Util._
 import org.w3.vs.util._
-import com.yammer.metrics.Metrics
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import scalaz.Scalaz._
 

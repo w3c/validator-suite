@@ -1,8 +1,14 @@
 package org.w3.vs
 
-import com.yammer.metrics.reporting.GraphiteReporter
-import com.yammer.metrics.Metrics
+import com.codahale.metrics._
+import com.codahale.metrics.graphite.{ Graphite => MGraphite, GraphiteReporter }
 import java.util.concurrent.TimeUnit
+
+object Graphite {
+
+  val metrics = new MetricRegistry()
+
+}
 
 trait Graphite extends ValidatorSuite {
 
@@ -17,15 +23,25 @@ trait Graphite extends ValidatorSuite {
   lazy val port = graphiteConf.getInt("port").map(_.toInt) getOrElse sys.error("port")
   lazy val prefix = graphiteConf.getString("prefix") getOrElse sys.error("prefix")
 
+  val graphite: MGraphite = new MGraphite(new java.net.InetSocketAddress(host, port))
+  val reporter: GraphiteReporter =
+    GraphiteReporter
+      .forRegistry(Graphite.metrics)
+      .prefixedWith(prefix) /* should be the server being used! */
+      .convertRatesTo(TimeUnit.SECONDS)
+      .convertDurationsTo(TimeUnit.MILLISECONDS)
+      .filter(MetricFilter.ALL)
+      .build(graphite)
+
   override def start(): Unit = {
     super.start()
     logger.info("Initializing Graphite")
-    GraphiteReporter.enable(period, unit, host, port, prefix)
+    reporter.start(1, TimeUnit.MINUTES);
   }
 
   override def shutdown() {
     logger.info("Shutting down Metrics")
-    Metrics.shutdown()
+    reporter.stop()
     super.shutdown()
   }
 

@@ -3,12 +3,13 @@ package controllers
 import org.w3.vs.view.Helper
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.w3.vs.Graphite
 import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
 import scalaz.Scalaz._
 import org.w3.vs.util.Util._
-import com.yammer.metrics.Metrics
+import com.codahale.metrics._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.{Json => PlayJson, JsObject, JsNull, JsValue}
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
@@ -82,8 +83,8 @@ object GroupedAssertions extends VSController  {
   }
 
   val indexName = (new controllers.javascript.ReverseAssertions).index.name
-  val indexTimer = Metrics.newTimer(Assertions.getClass, indexName, MILLISECONDS, SECONDS)
+  val indexTimer = Graphite.metrics.timer(MetricRegistry.name(Assertions.getClass, indexName))
   val indexUrlName = indexName + "+url"
-  val indexUrlTimer = Metrics.newTimer(Assertions.getClass, indexUrlName, MILLISECONDS, SECONDS)
+  val indexUrlTimer = Graphite.metrics.timer(MetricRegistry.name(Assertions.getClass, indexUrlName))
 
 }

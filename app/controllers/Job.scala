@@ -8,7 +8,8 @@ import play.api.mvc.{WebSocket, Result, Handler, Action}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.w3.vs.util.Util._
-import com.yammer.metrics.Metrics
+import org.w3.vs.Graphite
+import com.codahale.metrics._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.{ Json => PlayJson, JsValue }
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
@@ -161,10 +162,10 @@ object Job extends VSController {
   }
 
   val getName = (new controllers.javascript.ReverseJob).get.name
-  val getTimer = Metrics.newTimer(Job.getClass, getName, MILLISECONDS, SECONDS)
+  val getTimer = Graphite.metrics.timer(MetricRegistry.name(Job.getClass, getName))
 //  val editName = (new controllers.javascript.ReverseJob).edit.name
 //  val editTimer = Metrics.newTimer(Jobs.getClass, editName, MILLISECONDS, SECONDS)
   val dispatcherName = (new controllers.javascript.ReverseJob).dispatcher.name
-  val dispatcherTimer = Metrics.newTimer(Jobs.getClass, dispatcherName, MILLISECONDS, SECONDS)
+  val dispatcherTimer = Graphite.metrics.timer(MetricRegistry.name(Job.getClass, dispatcherName))
 
 }

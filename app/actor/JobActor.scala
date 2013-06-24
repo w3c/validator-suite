@@ -7,8 +7,7 @@ import play.Logger
 import org.w3.vs.http._
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import com.yammer.metrics._
-import com.yammer.metrics.core._
+import com.codahale.metrics._
 import scalaz.Equal
 import scalaz.Scalaz._
 import scala.concurrent.Future
@@ -21,13 +20,13 @@ import scalax.io._
 
 object JobActor {
 
-  val runningJobs: Counter = Metrics.newCounter(classOf[JobActor], "running-jobs")
+  val runningJobs: Counter = Graphite.metrics.counter(MetricRegistry.name(classOf[JobActor], "running-jobs"))
 
-  val extractedUrls: Histogram = Metrics.newHistogram(classOf[JobActor], "extracted-urls")
+  val extractedUrls: Histogram = Graphite.metrics.histogram(MetricRegistry.name(classOf[JobActor], "extracted-urls"))
 
-  val fetchesPerRun: Histogram = Metrics.newHistogram(classOf[JobActor], "fetches-per-run")
+  val fetchesPerRun: Histogram = Graphite.metrics.histogram(MetricRegistry.name(classOf[JobActor], "fetches-per-run"))
 
-  val assertionsPerRun: Histogram = Metrics.newHistogram(classOf[JobActor], "assertions-per-run")
+  val assertionsPerRun: Histogram = Graphite.metrics.histogram(MetricRegistry.name(classOf[JobActor], "assertions-per-run"))
 
   /* actor events */
   case object Start
