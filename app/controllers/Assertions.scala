@@ -112,7 +112,7 @@ object Assertions extends VSController  {
   private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson
     Enumerator.flatten(user.getJob(jobId).map(
-      job => job.assertions(org.w3.vs.util.URL(url))
+      job => job.assertions(org.w3.vs.web.URL(url))
     )) &> Enumeratee.map { iterator =>
       toJson(iterator.map(AssertionView(jobId, _).toJson))
     }

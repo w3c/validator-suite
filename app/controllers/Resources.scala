@@ -101,7 +101,7 @@ object Resources extends VSController  {
   private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue] = {
     import PlayJson.toJson
     val enumerator = Enumerator.flatten(user.getJob(jobId).map { job =>
-      job.resourceDatas(org.w3.vs.util.URL(url))
+      job.resourceDatas(org.w3.vs.web.URL(url))
     })
     enumerator &> Enumeratee.map { rd =>
       PlayJson.arr(ResourceView(jobId, rd).toJson)

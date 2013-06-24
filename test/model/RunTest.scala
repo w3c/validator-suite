@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs.util._
-import org.w3.vs.util._
+import org.w3.vs.web._
 import org.scalatest._
 import org.scalatest.matchers._
 import org.joda.time.{ DateTime, DateTimeZone }

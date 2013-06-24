@@ -2,7 +2,7 @@ package org.w3.vs.store
 
 import org.w3.vs.model._
 import org.joda.time.{ DateTime, DateTimeZone }
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 import org.w3.vs._
 import org.w3.vs.actor.JobActor._
 import scala.util._

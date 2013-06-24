@@ -1,8 +1,9 @@
-package org.w3.vs.util
+package org.w3.vs.web
 
 import java.net.{ URL => jURL, URLEncoder, URI }
 import scalaz.Equal
 import scala.util.Try
+import org.w3.vs.util._
 
 case class URL(url: String) {
   

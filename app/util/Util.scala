@@ -6,6 +6,7 @@ import com.codahale.metrics._
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import scala.util.{ Success, Failure, Try }
+import org.w3.vs.web._
 
 object Util {
 

@@ -1,6 +1,7 @@
 package org.w3.vs.assertor
 
 import org.w3.vs.util._
+import org.w3.vs.web._
 import org.w3.vs.model._
 import scala.io.Source
 import play.api.libs.json._

@@ -3,7 +3,7 @@ package org.w3.vs.model
 import org.w3.vs._
 import org.w3.vs.util._
 import org.w3.vs.util.Util.journalCommit
-import org.w3.vs.util._
+import org.w3.vs.web._
 import org.w3.vs.assertor._
 import scalaz.{ Free, Equal }
 import scalaz.Scalaz._

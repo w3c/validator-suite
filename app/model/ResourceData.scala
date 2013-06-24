@@ -1,6 +1,6 @@
 package org.w3.vs.model
 
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 import org.joda.time.DateTime
 
 case class ResourceData(

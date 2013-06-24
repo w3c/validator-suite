@@ -2,7 +2,7 @@ package org.w3.vs.actor
 
 import org.w3.vs.model._
 import scala.math.Ordering
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 
 object Classifier {
 

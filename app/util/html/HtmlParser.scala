@@ -1,6 +1,6 @@
 package org.w3.vs.util.html
 
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 import java.io._
 import org.xml.sax._
 import scalax.io._

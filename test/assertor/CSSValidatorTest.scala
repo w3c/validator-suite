@@ -1,6 +1,6 @@
 package org.w3.vs.assertor
 
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 import org.w3.vs.view.Helper
 import org.scalatest._
 import org.scalatest.matchers._

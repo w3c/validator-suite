@@ -2,7 +2,7 @@ package org.w3.vs.model
 
 import org.joda.time._
 import akka.actor.ActorPath
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 
 /* any event that has an impact on the state of a run */
 sealed trait RunEvent {

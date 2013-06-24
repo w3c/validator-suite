@@ -7,7 +7,7 @@ import scalax.io.JavaConverters._
 import java.net._
 import java.util.{ LinkedHashMap, ArrayList, List => jList, Map => jMap }
 import scala.collection.JavaConverters._
-import org.w3.vs.util.URL
+import org.w3.vs.web._
 import Cache._
 import scala.util.Try
 

@@ -2,7 +2,8 @@ package org.w3.vs
 
 import org.w3.vs.model._
 import org.joda.time.{ Duration => _, _ }
-import org.w3.vs.util.{In, Out, URL, Util}
+import org.w3.vs.util.{In, Out, Util}
+import org.w3.vs.web._
 import org.w3.vs.util.Util._
 import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global

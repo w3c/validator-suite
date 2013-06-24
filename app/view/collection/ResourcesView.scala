@@ -1,6 +1,6 @@
 package org.w3.vs.view.collection
 
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 import org.joda.time.DateTime
 import org.w3.vs.model._
 import org.w3.vs.view._

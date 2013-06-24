@@ -6,6 +6,7 @@ import play.api.libs.iteratee._
 import play.Logger
 import org.w3.vs.util._
 import org.w3.vs.util.Util.journalCommit
+import org.w3.vs.web._
 import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._

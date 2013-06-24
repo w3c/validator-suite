@@ -4,7 +4,7 @@ import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 import org.w3.vs.web._
 import org.w3.vs.model._
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 import org.w3.vs.view.Helper
 import java.io.File
 

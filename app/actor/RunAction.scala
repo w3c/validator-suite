@@ -1,6 +1,6 @@
 package org.w3.vs.model
 
-import org.w3.vs.util.URL
+import org.w3.vs.web.URL
 import org.w3.vs.model._
 import org.w3.vs.assertor._
 
