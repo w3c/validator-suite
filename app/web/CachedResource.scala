@@ -1,4 +1,4 @@
-package org.w3.vs.http
+package org.w3.vs.web
 
 import org.w3.vs.model._
 import java.io._
@@ -31,7 +31,7 @@ object CachedResource {
  * - a 404 is not an error because the server could be reached
  * - a failed connection, or a DNS issue, are the typical errors
  */
-class CachedResource private[http] (cache: Cache, url: URL, method: HttpMethod) {
+class CachedResource private[web] (cache: Cache, url: URL, method: HttpMethod) {
 
   val filename = math.abs(url.toString.hashCode).toString
 

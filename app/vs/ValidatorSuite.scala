@@ -6,7 +6,7 @@ import akka.util.Timeout
 import akka.actor._
 import org.w3.vs.actor.{ RunsActor, RunEventBusActor, RunEventBus }
 import reactivemongo.api.DefaultDB
-import org.w3.vs.http.{ Http, Cache }
+import org.w3.vs.web.{ Http, Cache }
 import com.ning.http.client.{ AsyncHttpClient, AsyncHttpClientConfig }
 
 trait ValidatorSuite extends Database {

@@ -3,9 +3,9 @@ package org.w3.vs.actor
 import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.vs.util._
-import org.w3.vs.http.Headers
+import org.w3.vs.web.Headers
 import play.Logger
-import org.w3.vs.http._
+import org.w3.vs.web._
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import com.codahale.metrics._

@@ -4,8 +4,8 @@ import org.w3.vs._
 import org.w3.vs.util._
 import org.w3.vs.util.website._
 import org.w3.vs.model._
-import org.w3.vs.http._
-import org.w3.vs.http.Http._
+import org.w3.vs.web._
+import org.w3.vs.web.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import org.w3.vs.util.Util._

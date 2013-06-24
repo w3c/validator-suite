@@ -3,7 +3,7 @@ package org.w3.vs.assertor
 import play.api._
 import java.io.File
 import org.w3.validator._
-import org.w3.vs.http.Cache
+import org.w3.vs.web.Cache
 import java.lang.reflect.{ Field, Modifier }
 import org.apache.commons.httpclient.CacheOnlyHttpClient
 

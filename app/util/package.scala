@@ -1,6 +1,6 @@
 package org.w3.vs
 
-import org.w3.vs.http.Headers
+import org.w3.vs.web.Headers
 
 package object util {
   

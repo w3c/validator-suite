@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs.util.URL
-import org.w3.vs.http.Headers
+import org.w3.vs.web.Headers
 import org.scalatest._
 import org.scalatest.Inside._
 import org.scalatest.matchers._

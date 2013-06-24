@@ -1,4 +1,4 @@
-package org.w3.vs.http
+package org.w3.vs.web
 
 import java.util.{ Map => jMap, List => jList }
 import scala.collection.JavaConverters._

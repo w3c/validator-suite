@@ -22,7 +22,7 @@ import org.w3.vs.model.Running
 import org.w3.vs.util.Webserver
 import org.w3.vs.model.AssertorResponseEvent
 import org.w3.vs.util.akkaext.PathAware
-import org.w3.vs.http.Http.SetSleepTime
+import org.w3.vs.web.Http.SetSleepTime
 
 class JobDataTest extends VSTest[ActorSystem with Database with RunEvents] with ServersTest with TestData {
 

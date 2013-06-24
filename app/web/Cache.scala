@@ -1,4 +1,4 @@
-package org.w3.vs.http
+package org.w3.vs.web
 
 import org.w3.vs.model._
 import java.io.File

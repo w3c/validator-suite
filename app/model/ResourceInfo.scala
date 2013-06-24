@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
 import org.w3.vs.util._
-import org.w3.vs.http.Headers
+import org.w3.vs.web.Headers
 import scalaz.Equal
 
 object ResourceInfo {

@@ -1,4 +1,4 @@
-package org.w3.vs.http
+package org.w3.vs.web
 
 import akka.actor._
 import org.w3.vs.util._

@@ -1,4 +1,4 @@
-package org.w3.vs.http
+package org.w3.vs.web
 
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers

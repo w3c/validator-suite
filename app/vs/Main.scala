@@ -14,7 +14,7 @@ import org.mozilla.javascript.tools.shell.Main.{main => executeJs}
 object Main {
 
   def cacheW3C(): Unit = {
-    import org.w3.vs.http._
+    import org.w3.vs.web._
     val urls = List(
       "http://www.w3.org",
       "http://www.w3.org/",

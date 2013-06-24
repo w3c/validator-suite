@@ -5,7 +5,7 @@ import org.w3.vs.model._
 import org.w3.vs.view.Helper
 import scala.io.Source
 import java.io._
-import org.w3.vs.http._
+import org.w3.vs.web._
 import play.api.Configuration
 import java.util.concurrent.{ Executors, ForkJoinPool }
 import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }

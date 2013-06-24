@@ -5,7 +5,7 @@ import org.w3.vs.view.Helper
 import org.scalatest._
 import org.scalatest.matchers._
 import org.w3.vs.model._
-import org.w3.vs.http._
+import org.w3.vs.web._
 import java.io.File
 
 object CSSValidatorTest {

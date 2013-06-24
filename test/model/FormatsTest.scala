@@ -4,7 +4,7 @@ import org.scalatest.{ Filter => ScalaTestFilter, _}
 import org.scalatest.matchers._
 import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.vs.util.URL
-import org.w3.vs.http.Headers
+import org.w3.vs.web.Headers
 import org.w3.vs.util.html.Doctype
 import org.w3.vs.model._
 import Formats._

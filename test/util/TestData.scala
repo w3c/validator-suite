@@ -3,7 +3,7 @@ package org.w3.vs.util
 import org.w3.vs.model._
 import org.scalatest.{Suite, BeforeAndAfterEach}
 import org.w3.vs.util.html.Doctype
-import org.w3.vs.http.Headers
+import org.w3.vs.web.Headers
 
 trait TestData { this: Suite =>
 
