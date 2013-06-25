@@ -79,16 +79,6 @@ object Util {
     def seconds: FiniteDuration = Duration(n, java.util.concurrent.TimeUnit.SECONDS)
   }
 
-  import java.net.{ URL => jURL }
-
-  implicit class jURLW(val url: jURL) extends AnyVal {
-    def withToken(token: String): jURL = new jURL(s"""${url}t0k3n=${token}""")
-  }
-
-  implicit class URLW(val url: URL) extends AnyVal {
-    def withToken(token: String): URL = URL(s"""${url}t0k3n=${token}""")
-  }
-
   implicit class TryW[T](val t: Try[T]) extends AnyVal {
     def asFuture: Future[T] = t match {
       case Success(s) => Future.successful(s)

@@ -6,10 +6,8 @@ import scalaz.Scalaz._
 import scala.util.Try
 import org.w3.vs.util._
 
-case class URL(url: String) {
+case class URL(underlying: jURL) extends AnyVal {
   
-  val underlying: jURL = new jURL(url)
-
   override def toString = underlying.toString
 
   def host: Host = Host(underlying.getHost)
@@ -34,7 +32,7 @@ case class URL(url: String) {
       case e: Exception => None
     }
 
-  def encode(enc: String): String = URLEncoder.encode(url, enc)
+  def encode(enc: String): String = URLEncoder.encode(underlying.toString, enc)
 
   /** does the correct convertion to a URI as per RFC 2396
     */
@@ -49,7 +47,7 @@ case class URL(url: String) {
   def openConnection() = underlying.openConnection()
 
   def shorten(limit: Int): String =
-    org.w3.vs.view.Helper.shorten(url.replaceFirst("http://", ""), limit)
+    org.w3.vs.view.Helper.shorten(underlying.toString.replaceFirst("http://", ""), limit)
     
 }
 
@@ -57,14 +55,12 @@ object URL {
 
   implicit val ordering: Ordering[URL] = new Ordering[URL] {
     def compare(x: URL, y: URL): Int = 
-       scala.math.Ordering.String.compare(x.url, y.url)
+       scala.math.Ordering.String.compare(x.underlying.toString, y.underlying.toString)
   }
 
-  def apply(url: jURL): URL = URL(url.toString)
-  
   implicit def unwrap(url: URL): jURL = url.underlying
   
-  def fromString(url: String) = URL(url)
+  def apply(url: String): URL = URL(new jURL(url))
   
   def clearHash(url: URL): URL = URL(new jURL(url.protocol.underlying, url.host.underlying, url.port.underlying, url.file.underlying))
 

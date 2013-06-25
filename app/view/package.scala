@@ -102,7 +102,7 @@ package object view {
     def bind(key: String, data: Map[String, String]) = {
       stringFormat.bind(key, data).right.flatMap { s =>
         scala.util.control.Exception.allCatch[URL]
-          .either(new URL(s))
+          .either(URL(s))
           .left.map(e => Seq(FormError(key, "error.url", Nil)))
       }
     }

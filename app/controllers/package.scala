@@ -5,6 +5,7 @@ import java.net.URLEncoder
 import org.w3.vs.model._
 import play.api.mvc.{AnyContent, Action, QueryStringBindable, PathBindable}
 import play.api.mvc.QueryStringBindable.Parsing
+import org.w3.vs.web.URL
 
 package object controllers {
 
@@ -61,7 +62,7 @@ package object controllers {
   implicit val bindableURL = new PathBindable[URL] {
     def bind (key: String, value: String): Either[String, URL] = {
       try {
-        Right(new URL(URLDecoder.decode(value, "UTF-8")))
+        Right(URL(URLDecoder.decode(value, "UTF-8")))
       } catch { case e: Exception =>
         Left("invalid url: " + value)
       }
@@ -72,7 +73,7 @@ package object controllers {
   }
 
   implicit object urlQueryStringBinder extends Parsing[URL] (
-    s => new URL(URLDecoder.decode(s, "UTF-8")),
+    s => URL(URLDecoder.decode(s, "UTF-8")),
     url => URLEncoder.encode(url.toString, "UTF-8"),
     (key: String, e: Exception) => "Cannot parse parameter %s as URL: %s".format(key, e.getMessage)
   )
