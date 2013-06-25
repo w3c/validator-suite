@@ -1,6 +1,5 @@
-package org.w3.vs.util.html
+package org.w3.vs.web
 
-import org.w3.vs.web.URL
 import java.io._
 import org.xml.sax._
 import scalax.io._
@@ -8,7 +7,6 @@ import scalax.io._
 import org.scalatest._
 import org.scalatest.matchers.MustMatchers
 import org.w3.vs.model._
-import org.w3.vs.web.URL
 import org.w3.vs.view.Helper
 
 class HtmlParserTest extends WordSpec with MustMatchers {

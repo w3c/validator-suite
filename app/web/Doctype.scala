@@ -1,4 +1,4 @@
-package org.w3.vs.util.html
+package org.w3.vs.web
 
 case class Doctype(name: String, publicId: String, systemId: String) {
 

@@ -1,6 +1,5 @@
-package org.w3.vs.util.html
+package org.w3.vs.web
 
-import org.w3.vs.web.URL
 import org.xml.sax._
 import org.xml.sax.ext._
 import org.xml.sax.helpers.DefaultHandler

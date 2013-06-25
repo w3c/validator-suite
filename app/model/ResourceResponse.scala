@@ -2,7 +2,6 @@ package org.w3.vs.model
 
 import org.w3.vs.util._
 import org.w3.vs.web._
-import org.w3.vs.util.html.Doctype
 import org.joda.time._
 import org.w3.vs._
 import java.io._
@@ -52,7 +51,7 @@ object HttpResponse {
     
     val (extractedURLs, doctypeOpt) = headers.mimetype collect {
       case "text/html" | "application/xhtml+xml" => {
-        val (urls, doctypeOpt) = html.HtmlParser.parse(url, resource, headers.charset)
+        val (urls, doctypeOpt) = HtmlParser.parse(url, resource, headers.charset)
         (urls.map(URL.clearHash).distinct, doctypeOpt)
       }
       case "text/css" => (List.empty, None) // TODO
