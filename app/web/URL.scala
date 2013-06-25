@@ -2,6 +2,7 @@ package org.w3.vs.web
 
 import java.net.{ URL => jURL, URLEncoder, URI }
 import scalaz.Equal
+import scalaz.Scalaz._
 import scala.util.Try
 import org.w3.vs.util._
 
@@ -11,14 +12,14 @@ case class URL(url: String) {
 
   override def toString = underlying.toString
 
-  def host: Host = underlying.getHost
-  def protocol: Protocol = underlying.getProtocol
-  def authority: Authority = underlying.getAuthority
-  def port: Port = underlying.getPort
-  def file: FileName = underlying.getFile
+  def host: Host = Host(underlying.getHost)
+  def protocol: Protocol = Protocol(underlying.getProtocol)
+  def authority: Authority = Authority(underlying.getAuthority)
+  def port: Port = Port(underlying.getPort)
+  def file: FileName = FileName(underlying.getFile)
 
   def domain: String = {
-    val a = host.split("\\.")
+    val a = host.underlying.split("\\.")
     val s = a.size
     a(s - 2) + "." + a(s - 1)
   }
@@ -28,7 +29,7 @@ case class URL(url: String) {
   def /(spec: String): Option[URL] =
     try {
       val url2 = URL(new jURL(underlying, spec))
-      if ("http" == url2.protocol || "https" == url2.protocol) Some(url2) else None
+      if ("http" === url2.protocol.underlying || "https" === url2.protocol.underlying) Some(url2) else None
     } catch {
       case e: Exception => None
     }
@@ -65,7 +66,7 @@ object URL {
   
   def fromString(url: String) = URL(url)
   
-  def clearHash(url: URL): URL = URL(new jURL(url.protocol, url.host, url.port, url.file))
+  def clearHash(url: URL): URL = URL(new jURL(url.protocol.underlying, url.host.underlying, url.port.underlying, url.file.underlying))
 
   implicit val equal = Equal.equalA[URL]
   

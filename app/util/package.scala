@@ -4,16 +4,6 @@ import org.w3.vs.web._
 
 package object util {
   
-  type Host = String
-  type Protocol = String
-  type Authority = String
-  type Port = Int
-  type FileName = String
-  
-  type ContentType = String
-
-  /*******/
-
   import com.ning.http.client.Response
   import java.util.{ Map => jMap, List => jList }
   import org.w3.vs.model.{ HttpMethod, HttpResponse }
