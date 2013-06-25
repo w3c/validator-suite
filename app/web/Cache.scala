@@ -33,7 +33,7 @@ object Cache {
           sys.error("could not create HTTP Cache directory " + directory.getAbsolutePath)
       }
       if (httpCacheConf.getBoolean("clean-at-startup") getOrElse sys.error("clean-at-startup")) {
-        if (directory.exists) Util.delete(directory)
+        if (directory.exists) file.delete(directory)
         if (! directory.mkdir()) sys.error("could not create HTTP Cache directory " + directory.getAbsolutePath)
       }
       assert(directory.exists, "directory [" + directory.getAbsolutePath + "] for the HTTP Cache must exist")

@@ -4,7 +4,7 @@ package org.w3.vs.run
 import org.w3.vs.util._
 import org.w3.vs.model._
 import org.w3.vs.util.website.Website
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._
 import org.w3.vs.model.Running

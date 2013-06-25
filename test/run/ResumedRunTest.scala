@@ -1,10 +1,12 @@
 package org.w3.vs.run
 
 import org.w3.vs.util._
+import org.w3.vs.util.iteratee._
 import org.w3.vs.util.website._
 import org.w3.vs.model._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
+import scala.concurrent.duration.Duration
 import play.api.libs.iteratee._
 import org.w3.vs._
 import play.api.Mode
@@ -57,7 +59,7 @@ class ResumedRunTest extends VSTestKit(
     jobActorRef ! PoisonPill
 
     // wait for the death notification
-    val terminated = fishForMessagePF(3.seconds) { case event: Terminated => event }
+    val terminated = fishForMessagePF(Duration("3s")) { case event: Terminated => event }
 
     // make sure we've seen the right death
     terminated.actor must be(jobActorRef)

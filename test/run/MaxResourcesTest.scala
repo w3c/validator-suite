@@ -1,10 +1,11 @@
 package org.w3.vs.run
 
 import org.w3.vs.util._
+import org.w3.vs.util.iteratee._
 import org.w3.vs.util.website._
 import org.w3.vs.model._
 import org.w3.vs.web.Http._
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import play.api.libs.iteratee._
 import org.w3.vs._
 import play.api.Mode

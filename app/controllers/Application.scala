@@ -8,7 +8,7 @@ import play.api.i18n._
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import com.codahale.metrics._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import java.nio.file.{Path, Paths}

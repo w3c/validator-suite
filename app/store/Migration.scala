@@ -24,7 +24,7 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import Json.toJson
 import play.api.libs.json.Reads.pattern
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 
 import org.w3.vs.store.Formats._
 

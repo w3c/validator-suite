@@ -7,10 +7,9 @@ import org.w3.vs.web._
 import org.w3.vs.web.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import org.scalatest.Inside
 import java.io.File
-import org.w3.vs.util.TestData
 import org.w3.vs._
 import play.api.Mode
 
@@ -47,7 +46,7 @@ abstract class W3CWebsiteTest extends VSTestKit(
 
     vs.runEventBus.subscribe(testActor, FromJob(job.id))
 
-    fishForMessagePF(10.seconds) { case _: DoneRunEvent => () }
+    fishForMessagePF(Duration("10s")) { case _: DoneRunEvent => () }
 
     val rrs = ResourceResponse.getFor(runId).getOrFail()
     rrs must have size (10)

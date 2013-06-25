@@ -6,7 +6,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import org.w3.vs.util._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import scalaz.Scalaz._

@@ -8,7 +8,7 @@ import play.api.mvc._
 import scala.concurrent.Future
 import org.w3.vs.util.equaljURL
 import org.w3.vs.Graphite
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import com.codahale.metrics._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.iteratee.{Iteratee, Enumeratee, Enumerator}

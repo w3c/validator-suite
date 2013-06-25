@@ -8,7 +8,7 @@ import org.w3.vs.web._
 import org.w3.vs.web.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import play.api.Mode
 import play.api.libs.iteratee._
 

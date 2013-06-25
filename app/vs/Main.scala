@@ -2,9 +2,10 @@ package org.w3.vs
 
 import org.w3.vs.model._
 import org.joda.time.{ Duration => _, _ }
-import org.w3.vs.util.{In, Out, Util}
+import org.w3.vs.util.{ In, Out, timer }
 import org.w3.vs.web._
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
+import scala.concurrent.duration.Duration
 import java.io._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.store.MongoStore
@@ -44,7 +45,7 @@ object Main {
     job.latestDone match {
       case None => println("nothing to do")
       case Some(Done(runId, reason, completedOn, runData)) =>
-        val (run, actions) = Run.get(runId).getOrFail(60.seconds)
+        val (run, actions) = Run.get(runId).getOrFail(Duration("60s"))
         ()
 //        if (urls.size < 10)
 //          println("urls: " + urls)
@@ -185,7 +186,7 @@ object Main {
       _ <- Job.save(lemonde)
     } yield ()
 
-    script.getOrFail(10.seconds)
+    script.getOrFail(Duration("10s"))
 
   }
 

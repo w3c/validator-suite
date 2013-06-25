@@ -1,19 +1,19 @@
 package org.w3.vs.store
 
-import org.scalatest.{Filter => ScalaTestFilter, _}
+import org.scalatest.{ Filter => ScalaTestFilter, _ }
 import org.scalatest.matchers._
 import org.joda.time.{ DateTime, DateTimeZone }
+import org.w3.vs._
 import org.w3.vs.web._
 import org.w3.vs.util._
-import org.w3.vs._
+import org.w3.vs.util.iteratee._
 import org.w3.vs.model._
 import org.w3.vs.actor.JobActor
 import org.w3.vs.exception._
-import org.w3.vs.util._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util._
 import scala.concurrent.duration.Duration
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import akka.actor.ActorPath
 import play.api.libs.iteratee.{ Done => _, Error => _, _ }
 import play.api.Mode
@@ -256,7 +256,7 @@ extends VSTest with WipeoutData {
     val job = job1.copy(id = JobId())
     Try { Job.get(job.id).getOrFail() } must be ('failure)
     Try { Job.save(job).getOrFail() } must be ('success)
-    val retrieved = Job.get(job.id).getOrFail(10.seconds)
+    val retrieved = Job.get(job.id).getOrFail(Duration("10s"))
     retrieved must be (job)
     Try { Job.delete(job.id).getOrFail() } must be ('success)
     Try { Job.get(job.id).getOrFail() } must be ('failure)
@@ -277,7 +277,7 @@ extends VSTest with WipeoutData {
   }
 
   "retrieve Run" in {
-    val run = Run.get(run1.runId).getOrFail(10.seconds)._1
+    val run = Run.get(run1.runId).getOrFail(Duration("10s"))._1
     run.assertions.size must be(run1.assertions.size)
   }
 

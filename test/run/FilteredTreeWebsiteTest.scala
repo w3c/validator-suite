@@ -6,7 +6,7 @@ import org.w3.vs.model._
 import org.w3.vs.web._
 import org.w3.vs.web.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import play.api.libs.iteratee._
 import org.w3.vs.util.TestData
 import org.w3.vs._

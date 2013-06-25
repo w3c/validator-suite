@@ -4,7 +4,7 @@ import scalaz.std.string._
 import scalaz.Scalaz.ToEqualOps
 import org.w3.vs.exception._
 import org.w3.vs._
-import org.w3.vs.util.Util.journalCommit
+import org.w3.vs.store.MongoStore.journalCommit
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee.{Enumeratee, Concurrent, Enumerator}

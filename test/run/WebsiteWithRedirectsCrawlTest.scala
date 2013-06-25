@@ -1,10 +1,11 @@
 package org.w3.vs.run
 
 import org.w3.vs.util._
+import org.w3.vs.util.iteratee._
 import org.w3.vs.util.website._
 import org.w3.vs.model._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import play.api.libs.iteratee._
 import org.w3.vs._
 import play.api.Mode
@@ -31,7 +32,7 @@ class WebsiteWithRedirectsCrawlTest extends VSTest with ServersTest with TestDat
     val Running(runId, actorName) = runningJob.status
 
     val completeRunEvent =
-      (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail(3.seconds)
+      (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
     completeRunEvent.resources must be(circumference + 1)
 

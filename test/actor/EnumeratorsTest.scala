@@ -6,7 +6,8 @@ import org.w3.vs.util.website._
 import org.w3.vs.web._
 import org.w3.vs.web.Http._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
+import org.w3.vs.util.iteratee._
 import play.api.libs.iteratee.{ Error => _, _ }
 import scala.util._
 import org.w3.vs._

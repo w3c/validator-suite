@@ -98,7 +98,7 @@ object Administration extends VSController {
     // Executes the side-effects of a command, if any, and returns a result as text.
     // The call must stay synchronous. Below implementation is for example only.
     def executeCommand(command: String): String = {
-      import org.w3.vs.util.Util._
+      import org.w3.vs.util.timer._
       command match {
         case _ @ ("?" | "help") =>
           """Basic UI functionality:

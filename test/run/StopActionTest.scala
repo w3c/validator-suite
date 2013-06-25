@@ -1,17 +1,17 @@
 package org.w3.vs.run
 
 import org.w3.vs.util._
+import org.w3.vs.util.iteratee._
 import org.w3.vs.util.website._
 import org.w3.vs.web._
 import org.w3.vs.model._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.util.Util._
+import org.w3.vs.util.timer._
 import play.api.libs.iteratee.{ Done => ItDone, Error => ItError, _ }
 import scala.util.Try
 import org.w3.vs.util.TestData
 import org.w3.vs._
 import play.api.Mode
-import org.w3.vs.model._
 
 class StopActionTest extends VSTestKit(
   new ValidatorSuite { val mode = Mode.Test }

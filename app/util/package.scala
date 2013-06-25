@@ -1,8 +1,12 @@
 package org.w3.vs
 
 import org.w3.vs.web._
+import scala.util.{ Success, Failure, Try }
+import scala.concurrent.{ Future, ExecutionContext }
 
 package object util {
+
+  /*******/
   
   import com.ning.http.client.Response
   import java.util.{ Map => jMap, List => jList }
@@ -24,10 +28,9 @@ package object util {
 
   import scala.math.Ordering
   import org.joda.time.DateTime
+  import scalaz.Equal
 
   implicit val DateTimeOrdering: Ordering[DateTime] = Ordering.fromLessThan((x: DateTime, y: DateTime) => x isBefore y)
-
-  import scalaz.Equal
 
   implicit val equalDateTime: Equal[DateTime] = new Equal[DateTime] {
     def equal(a1: DateTime, a2: DateTime) = DateTimeOrdering.compare(a1, a2) == 0
@@ -43,6 +46,24 @@ package object util {
   implicit val equaljURL: Equal[jURL] = new Equal[jURL] {
     def equal(a1: jURL, a2: jURL) = a1.toExternalForm === a2.toExternalForm
   }
+
+  /*******/
+
+  implicit class TryW[T](val t: Try[T]) extends AnyVal {
+    def asFuture: Future[T] = t match {
+      case Success(s) => Future.successful(s)
+      case Failure(f) => Future.failed(f)
+    }
+  }
+
+
+
+
+
+
+
+
+  /*******/
 
   trait Out {
     def println(s: String): Unit

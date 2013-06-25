@@ -18,13 +18,15 @@ import play.api.libs.functional.syntax._
 import Json.toJson
 import play.api.libs.json.Reads.pattern
 import reactivemongo.api.indexes._
-
+import reactivemongo.core.commands.GetLastError
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /** utility functions to deal with a mongodb instance for the Validator Suite
   */
 object MongoStore {
+
+  val journalCommit = GetLastError(awaitJournalCommit = true)
 
   def reInitializeDb()(implicit conf: Database): Future[Unit] = {
     for {
