@@ -4,7 +4,7 @@ import play.api.libs.iteratee._
 import scala.reflect.ClassTag
 
 /** utility functions for Play's Iteratee-s and Enumerator-s */
-object iteratee {
+package object iteratee {
 
   val logger = play.Logger.of("org.w3.vs.util.iteratee")
 

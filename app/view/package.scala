@@ -64,7 +64,7 @@ package object view {
   type Crumb = (String, String)
   type Crumbs = Seq[(String, String)]
 
-  implicit val datetimeOrdering: Ordering[DateTime] = org.w3.vs.util.DateTimeOrdering
+  implicit val datetimeOrdering: Ordering[DateTime] = org.w3.vs.util.implicits.DateTimeOrdering
 
   implicit val datetimeOptionOrdering: Ordering[Option[DateTime]] = new Ordering[Option[DateTime]] {
     def compare(x: Option[DateTime], y: Option[DateTime]): Int = (x, y) match {

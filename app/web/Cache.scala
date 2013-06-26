@@ -4,7 +4,8 @@ import org.w3.vs.model._
 import java.io.File
 import java.net.{ URI, CacheRequest, ResponseCache, CacheResponse, URLConnection }
 import java.util.{ List => jList, Map => jMap }
-import org.w3.vs.util._
+import org.w3.vs.util.file
+import org.w3.vs.util.implicits._
 import scala.util.Try
 import java.io.InputStream
 import scalax.io._

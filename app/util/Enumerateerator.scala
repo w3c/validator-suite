@@ -1,4 +1,4 @@
-package org.w3.vs.util
+package org.w3.vs.util.iteratee
 
 import play.api.libs.iteratee._
 

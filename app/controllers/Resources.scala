@@ -6,7 +6,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
-import org.w3.vs.util.equaljURL
+import org.w3.vs.util.implicits.equaljURL
 import org.w3.vs.Graphite
 import org.w3.vs.util.timer._
 import com.codahale.metrics._
