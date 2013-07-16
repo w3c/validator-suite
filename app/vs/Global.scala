@@ -42,8 +42,8 @@ object Global extends GlobalSettings {
     conf = null
   }
 
-  override def onHandlerNotFound(request : RequestHeader) : Result = {
+  /*override def onHandlerNotFound(request : RequestHeader) : Result = {
     NotFound(views.html.error._404())
-  }
+  }*/
 
 }

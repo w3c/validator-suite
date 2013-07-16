@@ -54,4 +54,5 @@ POST    /admin/migration                            controllers.Administration.m
 ##########################
 
 # Serves assets from /public. In Dev mode try to find the file in /app/assets first unless forceProdAssets is true.
-GET     /assets/*file                               controllers.Application.asset(file)
+GET     /assets/*file                               controllers.Assets.at(path="/public", file)
+

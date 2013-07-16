@@ -2,6 +2,7 @@ package org.w3.vs.util
 
 import play.api.libs.iteratee._
 import scala.reflect.ClassTag
+import scala.concurrent.ExecutionContext
 
 /** utility functions for Play's Iteratee-s and Enumerator-s */
 package object iteratee {
@@ -24,13 +25,13 @@ package object iteratee {
   }
 
   /** Enumeratee that maps Input.Empty to Input.EOF */
-  def endWithEmpty[T]: Enumeratee[T, T] =
+  def endWithEmpty[T]()(implicit ec: ExecutionContext): Enumeratee[T, T] =
     Enumeratee.mapInput[T] {
       case Input.Empty => Input.EOF
       case t => t
     }
 
   /** Enumeratee that just passes the elements and prints them -- for test only */
-  def eprint[T]: Enumeratee[T, T] = Enumeratee.map { t => println("** "+t); t }
+  def eprint[T]()(implicit ec: ExecutionContext): Enumeratee[T, T] = Enumeratee.map { t => println("** "+t); t }
 
 }

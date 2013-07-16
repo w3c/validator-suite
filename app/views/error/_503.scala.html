@@ -6,7 +6,7 @@
     <title>Validator Suite</title>
     <link rel="stylesheet" href="assets/css/foundation.min.css">
     <link rel="stylesheet" href="assets/css/app.css">
-    @helper.requireJs(core = routes.Application.asset("js/libs/require.js").url, module = routes.Application.asset("js/main.js").url)
+    @helper.requireJs(core = routes.Assets.at("js/libs/require.js").url, module = routes.Assets.at("js/main.js").url)
     <script>
         require(['config'], function () {require(['libs/foundation']);});
     </script>

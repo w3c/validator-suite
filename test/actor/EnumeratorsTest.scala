@@ -59,7 +59,7 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
       Set(a4, a5, a6) must be(Set(ar1, ar2, ar3))
     }
 
-    (runEvents &> Enumeratee.mapConcat(_.toSeq) &> eprint |>>> test()).getOrFail().get
+    (runEvents &> Enumeratee.mapConcat(_.toSeq) &> eprint() |>>> test()).getOrFail().get
 
     val jobData = 
       (jobDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.head[JobData]).getOrFail().get

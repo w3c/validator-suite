@@ -325,7 +325,7 @@ extends VSTest with WipeoutData {
 
     // now retrieve the JobData-s from the Enumerator
     val enumJobDatas: List[JobData] =
-      (job1.jobDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+      (job1.jobDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     val Done(_, _, _, runData) = job1.status
 
     // and compare it to the RunData in the Job
@@ -334,18 +334,18 @@ extends VSTest with WipeoutData {
 
     // do the same with RunData
     val enumRunDatas: List[RunData] =
-      (job1.runDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+      (job1.runDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     enumRunDatas must be(List(runData))
 
     // ... and resourceDatas
     val enumRds: List[ResourceData] =
-      (job1.resourceDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+      (job1.resourceDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     val rds = job1.getResourceDatas().getOrFail()
     enumRds must be(rds)
 
     // ... and GroupedAssertionDatas
     val enumGads: List[GroupedAssertionData] =
-      (job1.groupedAssertionDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+      (job1.groupedAssertionDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     val gads = job1.getGroupedAssertionDatas().getOrFail()
     enumGads must be(gads)
 
@@ -353,7 +353,7 @@ extends VSTest with WipeoutData {
     // TODO add assertions in run3: it's currently empty
     val url = URL("http://example.com/nothing-here")
     val enumAssertions: List[Assertion] =
-      (job1.assertions(url) &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty |>>> Iteratee.getChunks).getOrFail()
+      (job1.assertions(url) &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     val assertions = job1.getAssertions(url).getOrFail()
     enumAssertions must be(assertions)
 

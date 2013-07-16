@@ -96,18 +96,5 @@ object Application extends VSController {
       } recover toError
     }
   }
-
-  import play.api.Mode._
-
-  val forceProdAssets = conf.config.getBoolean("forceProdAssets").getOrElse(false)
-
-  def asset(file: String) = {
-    conf.mode match {
-      case Dev if Paths.get("app/assets").resolve(file).toFile.exists() && !forceProdAssets =>
-        controllers.ExternalAssets.at("app/assets", file)
-      case _ =>
-        controllers.Assets.at("/public", file)
-    }
-  }
   
 }

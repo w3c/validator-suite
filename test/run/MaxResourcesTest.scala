@@ -9,6 +9,7 @@ import org.w3.vs.util.timer._
 import play.api.libs.iteratee._
 import org.w3.vs._
 import play.api.Mode
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class MaxResourcesTest extends VSTest with ServersTest with TestData with WipeoutData {
 

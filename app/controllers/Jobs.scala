@@ -38,7 +38,7 @@ object Jobs extends VSController {
         ))
       }
       case Json => Ok(jobs.bindFromRequest.toJson)
-      case Rdf => TODO(req) // TODO
+      //case Rdf => TODO(req) // TODO
     }
     f.timer(indexName).timer(indexTimer)
   }

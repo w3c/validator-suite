@@ -5,12 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>@title</title>
-    <link rel="stylesheet" href='@routes.Application.asset("css/foundation.min.css")'>
-    <link rel="stylesheet" href='@routes.Application.asset("css/app.css")'>
-    @helper.requireJs(core = routes.Application.asset("js/libs/require.js").url, module = routes.Application.asset("js/main.js").url)
-    <script>
-        require(['config'], function () {require(['libs/foundation']);});
-    </script>
+    <link rel="stylesheet" href='@routes.Assets.at("css/foundation.min.css")'>
+    <link rel="stylesheet" href='@routes.Assets.at("css/app.css")'>
+    @helper.requireJs(core = routes.Assets.at("javascripts/require.js").url, module = routes.Assets.at("js/config.js").url)
+    <script>require(['config'], function () {require(['libs/foundation']);})</script>
 </head>
 
 <body>
@@ -18,7 +16,7 @@
 
 <section id="banner">
     <div class="row">
-        <a class="left" href="./"><img src='@routes.Application.asset("images/fullLogo.svg")' /></a>
+        <a class="left" href="./"><img src='@routes.Assets.at("images/fullLogo.svg")' /></a>
         <ul id="nav" class="right">
             <li><a href="pricing">Pricing</a></li>
             <li><a href="faq">Faq</a></li>

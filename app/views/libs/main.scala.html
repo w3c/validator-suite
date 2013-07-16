@@ -5,12 +5,12 @@
 <head>
     <title>@title</title>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg" href='@routes.Application.asset("images/vsLogo.svg")' />
-    <link href='@routes.Application.asset("styles/main.min.css")' rel="stylesheet" />
+    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/vsLogo.svg")' />
+    <link href='@routes.Assets.at("styles/main.min.css")' rel="stylesheet" />
     @if(style != "") {
-    <link href='@routes.Application.asset(s"styles/${style}.min.css")' rel="stylesheet" />}
+    <link href='@routes.Assets.at(s"styles/${style}.min.css")' rel="stylesheet" />}
 
-    @helper.requireJs(core = routes.Application.asset("js/libs/require.js").url, module = routes.Application.asset("js/main.js").url)
+    @helper.requireJs(core = routes.Assets.at("js/libs/require.js").url, module = routes.Assets.at("js/main.js").url)
     <script>
         require(['config'], function(){require(['@script'])});
     </script>
