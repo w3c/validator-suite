@@ -274,4 +274,4 @@
       $(this.scope).off('.fndtn.reveal');
     }
   };
-}(Foundation.zj, this, this.document));
+}($, this, this.document));

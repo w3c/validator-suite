@@ -370,4 +370,4 @@
       }
     }
   };
-}(Foundation.zj, this, this.document));
+}($, this, this.document));
