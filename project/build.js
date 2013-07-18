@@ -4,7 +4,7 @@
     //mainConfigFile: '../js/config.js',
     preserveLicenseComments: false,
     wrap: {
-        startFile: ["../js/licenses.txt"],
+        startFile: ["../js/licences.txt"],
         endFile: []
     },
     paths: {
