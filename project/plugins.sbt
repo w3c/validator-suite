@@ -4,7 +4,10 @@ logLevel := Level.Warn
 // The Typesafe repository
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-// Use the Play sbt plugin for Play projects
+//resolvers += Resolver.url("jay-tgambet", new URL("http://jay.w3.org/~tgambet/ivy/"))(Resolver.ivyStylePatterns)
+
 addSbtPlugin("play" % "sbt-plugin" % "2.2-SNAPSHOT")
 
-addSbtPlugin("org.ensime" % "ensime-sbt-cmd" % "0.1.0")
+addSbtPlugin("net.tgambet" % "play-requirejs" % "0.1-SNAPSHOT")
+
+//addSbtPlugin("org.ensime" % "ensime-sbt-cmd" % "0.1.0")

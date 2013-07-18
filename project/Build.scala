@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import play.Project.{ fork => _, _ }
+import net.tgambet.requirejs.RequireJsPlugin._
 //import org.ensime.sbt.Plugin.Settings.ensimeConfig
 //import org.ensime.sbt.util.SExp._
 
@@ -41,10 +42,6 @@ object ApplicationBuild extends Build {
     testOptions in Test := Nil,
     testOptions in Test += Tests.Argument("""-oDF"""),
 
-    // requireJs
-    requireJs += "main.js",
-    requireJsFolder += "js",
-
     scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
     scalacOptions in (Compile, doc) ++= Opts.doc.title("Validator Suite"),
     scalacOptions in (Compile, doc) <++= baseDirectory map { bd => Seq("-sourcepath", bd.getAbsolutePath, "-doc-source-url", "https://github.com/w3c/validator-suite/tree/master€{FILE_PATH}.scala") },
@@ -66,7 +63,7 @@ object ApplicationBuild extends Build {
     logLevel := Level.Debug,
     resolvers += "Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 //    resolvers += "sgodbillon" at "https://bitbucket.org/sgodbillon/repository/raw/master/snapshots/"
-    //resolvers += "jay-bertails" at "http://jay.w3.org/~bertails/ivy/"
+//    resolvers += "jay-bertails" at "http://jay.w3.org/~bertails/ivy/"
 //    resolvers += "repo.codahale.com" at "http://repo.codahale.com",
 //    resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
 //    ensimeConfig := sexp(
@@ -76,6 +73,13 @@ object ApplicationBuild extends Build {
 //        key(":doubleIndentClassDeclaration"), false
 //      )
 //    )
-  )
+  ).settings(requireBaseSettings: _*)
+   .settings(
+    RequireJS.baseDir   <<= (baseDirectory)(_ / "project" / "target"),
+    RequireJS.sourceDir <<= (baseDirectory)(_ / "app" / "assets" / "js"),
+    RequireJS.targetDir <<= (resourceManaged in Compile)(_ / "public" / "js"),
+    RequireJS.cacheFile <<= cacheDirectory(_ / "requirejs"),
+    javascriptEntryPoints := PathFinder.empty
+   )
 
 }

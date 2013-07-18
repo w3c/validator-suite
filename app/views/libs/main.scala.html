@@ -9,11 +9,7 @@
     <link href='@routes.Assets.at("styles/main.min.css")' rel="stylesheet" />
     @if(style != "") {
     <link href='@routes.Assets.at(s"styles/${style}.min.css")' rel="stylesheet" />}
-
-    @helper.requireJs(core = routes.Assets.at("js/libs/require.js").url, module = routes.Assets.at("js/main.js").url)
-    <script>
-        require(['config'], function(){require(['@script'])});
-    </script>
+    <script data-main='@routes.Assets.at(s"js/${script}.js")' src='@routes.Assets.at("js/libs/require.js")' />
 </head>
 
 <body class="no-js">

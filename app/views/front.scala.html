@@ -7,12 +7,10 @@
     <title>@title</title>
     <link rel="stylesheet" href='@routes.Assets.at("css/foundation.min.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("css/app.css")'>
-    @helper.requireJs(core = routes.Assets.at("javascripts/require.js").url, module = routes.Assets.at("js/config.js").url)
-    <script>require(['config'], function () {require(['libs/foundation']);})</script>
+    <script data-main='@routes.Assets.at("js/front.js")' src='@routes.Assets.at("js/libs/require.js")'></script>
 </head>
 
 <body>
-
 
 <section id="banner">
     <div class="row">
@@ -40,7 +38,6 @@
         </p>
     </div>
 </section>
-
 
 <div id="login" class="reveal-modal small">
     <h1>Login</h1>
