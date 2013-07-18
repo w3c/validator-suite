@@ -1,9 +1,9 @@
 /**
- * @license Copyright (c) 2013 World Wide Web Consortium, (Massachusetts Institute of Technology, European Research
+ * @license Copyright (c) 2013 World Wide Web Consortium (Massachusetts Institute of Technology, European Research
  * Consortium for Informatics and Mathematics, Keio University, Beihang University). All Rights Reserved.
  * Not licensed for redistribution.
- * The following program may contain or load at runtime any or all of the following third-party dependencies, all under
- * the MIT licence (http://opensource.org/licenses/MIT):
+ * The following program may contain, or load at runtime, any or all of the following third-party dependencies (all
+ * released under the MIT licence: http://opensource.org/licenses/MIT):
  *         Zepto - Copyright (c) 2010-2012 Thomas Fuchs
  *        jQuery - Copyright (c) 2005-2013 jQuery Foundation, Inc. and other contributors
  *     Modernizr - Copyright (c) 2009–2013
