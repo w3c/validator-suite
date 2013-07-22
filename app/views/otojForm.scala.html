@@ -33,15 +33,15 @@
 
         <br>
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Password" required="required"/>
+        <input type="password" id="password" pattern=".{6,}" name="password" placeholder="Password" required="required" title="Password must be 6 characters minimum"/>
 
         <br>
         <label for="repeatPassword" class="repeatPassword">Repeat password</label>
-        <input type="password" id="repeatPassword" class="repeatPassword" name="repeatPassword" placeholder="Repeat password"/>
+        <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword" name="repeatPassword" placeholder="Repeat password"/>
 
         }
 
-        <h1 class="purchase">Step 2: Purchase a one-time job</h1>
+        <h1 class="purchase">Step 2: Job Setup</h1>
 
         <label for="name">Job Name</label>
         <input id="name" name="name" type="text" value='@form("name").value' required="required"/>
@@ -83,7 +83,7 @@
     <script>
         require(["libs/jquery"], function () {
         $(function (){
-            $('input[name=assertor[]] + fieldset').each(function () {
+            $('input[name="assertor[]"] + fieldset').each(function () {
                 var fold = $('<a class="jsFold">Options</a>');
                 fold.click(function (){
                     $(this).toggleClass('folded');
