@@ -107,7 +107,6 @@ object Job extends VSController {
   import play.api.mvc._
 
   def dispatcher(implicit id: JobId): ActionA = Action { implicit req =>
-    AsyncResult {
     timer(dispatcherName, dispatcherTimer) {
       (for {
         body <- req.body.asFormUrlEncoded
@@ -120,9 +119,8 @@ object Job extends VSController {
         //case "off" => off(id)(req)
         case "run" => run(id)(req)
         case "stop" => stop(id)(req)
-        //case a => BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
-      }).get //.getOrElse(BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
-    }
+        case a => BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
+      }).getOrElse(BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
     }
   }
 
