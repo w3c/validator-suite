@@ -1,8 +1,6 @@
 #!/bin/bash
 
 ## clone a VM and assign a static IP address and a FQDN
-## typical usage:
-##  vbox-prepare 'VS pfe'
 
 cd `dirname "$0"`
 
@@ -12,13 +10,13 @@ FQDN="$3"
 LAST_OCTET="$4"
 
 if [ $# -eq 0 ]; then
-    echo "usage:  $0 Wheezy Test test 27"
+    echo "usage:  $0 Wheezy Local local 27"
     exit 1
 fi
 
 sudo echo -n
 
-echo "== preparing VS pfe =="
+echo "== preparing $TARGET =="
 vbox-clone "$SOURCE" "$TARGET"
 vbox-mount "$TARGET"
 sudo ./vbox-customize "$FQDN" "$LAST_OCTET"

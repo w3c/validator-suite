@@ -11,9 +11,13 @@ fi
 
 FQDN="$1"
 
+# set the hostname
 echo $FQDN > /mnt/etc/hostname
 
 sed -i "s|wheezy|${FQDN}|g" /mnt/etc/hosts
+
+# modify the user used for the FUSE mount
+sed -i "s|betehess|${SUDO_USER}|g" /mnt/etc/fstab
 
 NETWORK="$2"
 
@@ -47,4 +51,3 @@ gateway 192.168.56.0
 dns-search w3.org
 EOF
 fi
-
