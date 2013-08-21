@@ -1,0 +1,16 @@
+Source: vs
+Section: devel
+Priority: extra
+Maintainer: Alexandre Bertails <bertails@w3.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: https://valid.w3.org/
+Vcs-Git: git@github.com:w3c/validator-suite.git
+Vcs-Browser: https://github.com/w3c/validator-suite/
+
+Package: vs
+Architecture: all
+Depends: openjdk-7-jre
+Description: W3C Validator Suite
+ W3C Validator Suite is a service providing a new integrated view for
+ evaluating Web site quality.

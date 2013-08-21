@@ -1,0 +1,5 @@
+# Automatically added by dh_installinit
+if [ -x "/etc/init.d/vs" ]; then
+	invoke-rc.d vs stop || exit $?
+fi
+# End automatically added section

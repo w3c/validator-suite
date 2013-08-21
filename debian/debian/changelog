@@ -1,0 +1,5 @@
+vs (1.0.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Alexandre Bertails <bertails@w3.org>  Tue, 20 Aug 2013 11:05:33 -0400

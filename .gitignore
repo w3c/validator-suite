@@ -37,3 +37,10 @@ test/resources/w3c-cache/*
 public/js
 conf/application-dev.conf
 conf/application-test.conf
+debian/lib
+debian/debian/vs
+debian/debian/wgrep
+debian/debian/vs.install
+*.deb
+*.build
+*.changes

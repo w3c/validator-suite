@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# script to track a specific pattern in logs
+# returns 0 only if the pattern is found before the timeout
+
+if [ -z "$3" ]; then
+    echo "Usage: $0 timeout logfile pattern"
+    return 1
+fi
+
+# helper function
+doalarm () { perl -e 'alarm shift; exec @ARGV' "$@"; }
+
+TEMPFILE=`mktemp -u`
+
+mkfifo $TEMPFILE
+
+tail -f -n 0 "$2" > $TEMPFILE &
+PID=$!
+
+doalarm "$1" grep -q "$3" $TEMPFILE
+RETVAL=$?
+
+# don't forget to kill the tail!
+kill $PID
+
+rm -f $TEMPFILE
+
+return $RETVAL
