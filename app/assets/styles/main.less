@@ -201,13 +201,13 @@ fieldset.dropdown {
     /*:hover ~ * {
         vertical-align: bottom;
     }*/
-    &:not(:hover) input:not(:checked) + label {
+    &:not(:hover):not(:focus) input:not(:checked) + label {
         //display:none;
         visibility: hidden;
         height: 0;
         padding: 0 22px 0 10px;
     }
-    &:hover {
+    &:hover, &:focus {
         //top: 23px;
         z-index: 10;
         background: white;
@@ -244,7 +244,7 @@ fieldset.dropdown {
     /* fieldset:hover {
         min-width: 202px; // XXX: hmmm...
     }*/
-    &:not(:hover):after {
+    &:not(:hover):not(:focus):after {
         content: "";
         display: block;
         position: absolute;
@@ -276,3 +276,9 @@ fieldset.dropdown {
     margin: 0 5px;
 }
 
+
+/* https://lists.w3.org/Archives/Team/team-vs/2013Aug/att-0010/ValidatorSuiteA11y.html */
+
+:focus {
+    outline: 3px solid orange;
+}

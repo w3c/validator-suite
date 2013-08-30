@@ -68,7 +68,7 @@
                 @if(collection.isDefined) {
                 @defining(collection.get) { collection =>
                 <form class="group" action="@routes.Job.dispatcher(job.id)" method="get">
-                    <fieldset class="dropdown">
+                    <fieldset class="dropdown" tabindex="0">
                         <legend>Report by</legend>
                         <input name=group type=radio value="resource" id="resource" @if(!collection.isGroupedBy("message")){checked}/>
                         <label for="resource">Group by resource</label>

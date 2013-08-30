@@ -59,11 +59,11 @@
                     </fieldset>
             </form>
             <form class="group" action="<%= url %>" method="get">
-                <fieldset class="dropdown">
+                <fieldset class="dropdown" tabindex="0">
                     <legend>Report by</legend>
                     <input name="group" type="radio" value="url" id="url" <% if(hasResources()) {%>checked="checked"<%} %>/>
                     <label for="url">Group by resource</label>
-                    <input name="group" type="radio" value="message" id="message" <% if(!hasResources()) {%>checked="checked"<%} %>/>
+                    <input name="group" type="radio" value="message" id="message" <% if(!hasResources()) {%>checked="checked"<%} %> />
                     <label for="message">Group by message</label>
                 </fieldset>
             </form>
