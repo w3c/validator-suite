@@ -84,9 +84,16 @@
         require(["libs/jquery"], function () {
         $(function (){
             $('input[name="assertor[]"] + fieldset').each(function () {
-                var fold = $('<a class="jsFold">Options</a>');
+                var fold = $('<a class="jsFold" tabindex="0">Options</a>'),
+                    fieldset = $(this);
                 fold.click(function (){
                     $(this).toggleClass('folded');
+                    if ($(this).hasClass("folded")) {
+                        fieldset.attr("aria-expanded", "true");
+                    } else {
+                        fieldset.attr("aria-expanded", "false");
+                    }
+                    return false;
                 });
                 $(this).before(fold);
             });
