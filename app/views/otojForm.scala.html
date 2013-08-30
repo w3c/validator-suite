@@ -14,7 +14,7 @@
 
         @if(!user.isDefined) {
 
-        <h1>Step 1: Login/Register</h1>
+        <h1 tabindex="0">Step 1: Login/Register</h1>
 
         <input id="userKnown" name="userType" value="known" type="radio" checked />
         <label for="userKnown">Log in with an existing account:</label>
@@ -41,7 +41,7 @@
 
         }
 
-        <h1 class="purchase">Step 2: Job Setup</h1>
+        <h1 class="purchase" tabindex="0">Step 2: Job Setup</h1>
 
         <label for="name">Job Name</label>
         <input id="name" name="name" type="text" value='@form("name").value' required="required"/>
