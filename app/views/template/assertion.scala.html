@@ -28,7 +28,7 @@
                     <% } if(context.column !== null){ %>
                     <span class="column">Column <span title="Column <%= context.column %>"><%= context.column %></span></span>
                     <% } if(context.content !== null){ %>
-                    <code class="code language-"><%= context.content %></code>
+                    <code class="code language-"><%= _.escape(context.content) %></code>
                     <% } %>
                 </dd>
             <%}); %>

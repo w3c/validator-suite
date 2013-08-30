@@ -192,74 +192,81 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
             };
         },
 
-        render: function (options) {
+        render: (function () {
+            var render = function (options) {
 
-            options = (options || {});
 
-            logger.log("render");
 
-            if (_.isFunction(this.beforeRender)) { this.beforeRender(); }
+                options = (options || {});
 
-            var models = this.collection.models,
-                elements,
-                empty;
+                logger.log("render");
 
-            if (_.isFunction(this.search_)) {
-                models = _.filter(models, this.search_);
-            }
+                if (_.isFunction(this.beforeRender)) { this.beforeRender(); }
 
-            if (_.isFunction(this.filter)) {
-                models = _.filter(models, this.filter);
-            }
+                var models = this.collection.models,
+                    elements,
+                    empty;
 
-            this.filteredCount = models.length;
-
-            models = this.displayed = models.slice(0, this.maxOnScreen);
-
-            elements = _.map(models, function (model) {
-                return model.view.el;
-            });
-
-            this.$('.empty').remove();
-
-            this.$el.children('article').detach();
-
-            if (elements.length > 0) {
-                _.map(elements, function (elem) {
-                    this.$el.append(elem);
-                    this.$el.append(" ");
-                }, this);
-            } else {
-                empty = $('<p class="empty"></p>');
-                this.$el.append(empty);
-
-                var self = this;
-                var emptyMessage = (function () {
-                    if (_.isFunction(self.emptyMessage)) {
-                        return self.emptyMessage();
-                    } else if (_.isString(self.emptyMessage)) {
-                        return self.emptyMessage;
-                    } else {
-                        logger.warn("No emptyMessage function or value provided");
-                        return "";
-                    }
-                }());
-
-                if (this.collection.expected === 0) {
-                    empty.html(emptyMessage);
-                } else if (this.currentSearch && this.currentSearch !== "") {
-                    empty.html("No search result.");
-                } else {
-                    // TODO: loading no?
-                    empty.html(emptyMessage);
+                if (_.isFunction(this.search_)) {
+                    models = _.filter(models, this.search_);
                 }
-            }
 
-            if (this.isList() && (_.isUndefined(this.options.updateLegend) || this.options.updateLegend)) { this.updateLegend(); }
+                if (_.isFunction(this.filter)) {
+                    models = _.filter(models, this.filter);
+                }
 
-            if (_.isFunction(this.afterRender)) { this.afterRender(); }
+                this.filteredCount = models.length;
 
-        },
+                models = this.displayed = models.slice(0, this.maxOnScreen);
+
+                elements = _.map(models, function (model) {
+                    return model.view.el;
+                });
+
+                this.$('.empty').remove();
+
+                this.$el.children('article').detach();
+
+                if (elements.length > 0) {
+                    _.map(elements, function (elem) {
+                        this.$el.append(elem);
+                        this.$el.append(" ");
+                    }, this);
+                } else {
+                    //empty = $('<p class="empty"></p>');
+                    //this.$el.append(empty);
+                    this.$el.append('<p class="empty"></p>');
+
+                    var self = this;
+                    var emptyMessage = (function () {
+                        if (_.isFunction(self.emptyMessage)) {
+                            return self.emptyMessage();
+                        } else if (_.isString(self.emptyMessage)) {
+                            return self.emptyMessage;
+                        } else {
+                            logger.warn("No emptyMessage function or value provided");
+                            return "";
+                        }
+                    }());
+
+                    if (this.collection.expected === 0) {
+                        this.$('.empty').html(emptyMessage);
+                    } else if (this.currentSearch && this.currentSearch !== "") {
+                        this.$('.empty').html("No search result.");
+                    } /*else {
+                     // TODO: loading no?
+                     empty.html(emptyMessage);
+                     }*/
+                }
+
+                if (this.isList() && (_.isUndefined(this.options.updateLegend) || this.options.updateLegend)) { this.updateLegend(); }
+
+                if (_.isFunction(this.afterRender)) { this.afterRender(); }
+
+
+            };
+            return _.throttle(render, 100);
+        }()),
 
         addSortHandler: function () {
             var sortLinks = this.$(".sort a"),

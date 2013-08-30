@@ -18,7 +18,8 @@ require(["model/vs"], function (VS) {
 
         $("#assertions").map(function (i, el) {
             root.assertions = new VS.Assertions().configure({
-                el: el
+                el: el,
+                listen: true
             });
         });
 
@@ -47,6 +48,8 @@ require(["model/vs"], function (VS) {
             });
 
         });
+
+        window.VS = VS;
 
     });
 });

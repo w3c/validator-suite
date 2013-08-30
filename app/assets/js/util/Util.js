@@ -62,7 +62,7 @@ define(["util/Logger"], function (Logger) {
                     if (attr !== "") {
                         return attr;
                     } else {
-                        return $(sub).html();
+                        return $(sub).html().toString();
                     }
                 }).toArray();
 

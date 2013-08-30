@@ -26,7 +26,8 @@ object ApplicationBuild extends Build {
     "org.reactivemongo" %% "play2-reactivemongo" % "0.9" /*cross CrossVersion.full*/ excludeAll(ExclusionRule(organization = "io.netty"), ExclusionRule(organization = "play")),
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     "org.mindrot" % "jbcrypt" % "0.3m",
-    "rhino" % "js" % "1.7R2",
+    //"rhino" % "js" % "1.7R2",
+    "commons-io" % "commons-io" % "2.4",
     // test dependencies
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
     "org.scalatest" %% "scalatest" % scalatestVersion
@@ -36,7 +37,6 @@ object ApplicationBuild extends Build {
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
     scalaVersion := "2.10.2",
-    libraryDependencies += "commons-io" % "commons-io" % "2.4",
 
     // activates full stacktrace and durations
     testOptions in Test := Nil,

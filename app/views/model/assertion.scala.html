@@ -1,5 +1,5 @@
 @(assertion: AssertionView)
-<article class="@assertion.severity" tabindex="1" data-id="@assertion.id" xmlns="http://www.w3.org/1999/html">
+<article class="@assertion.severity" tabindex="1" data-id="@assertion.id">
         <dl>
             @AssertionView.definitions.map { definition =>
             <dt>@Messages(s"assertions.${definition.name}")</dt>

@@ -35,7 +35,7 @@ define(["util/Logger", "model/job", "model/collection"], function (Logger, Job, 
                 view = this.collection.at(0).view;
                 view.options.assertions = this.options.assertions;
                 view.options.resources = this.options.resources;
-                view.options.softRender = true;
+                view.options.softRender = false;
                 view.addSearchHandler();
             }
             $("#actions input[name=search]").bind("keyup change", function () {

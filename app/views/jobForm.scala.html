@@ -48,11 +48,11 @@
             var slider = $("input#maxResources");
             var output = $("output.maxResources");
             slider.change(function (){
-                output.html(slider.attr("value"));
+                output.html(slider.val()/*attr("value")*/);
             });
             slider.change();
 
-            $('input[name=assertor[]] + fieldset').each(function (){
+            $('input[name="assertor[]"] + fieldset').each(function (){
                 var fold = $('<a class="jsFold">Options</a>');
                 fold.click(function (){
                     $(this).toggleClass('folded');

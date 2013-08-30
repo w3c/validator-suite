@@ -72,6 +72,7 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
                 eventsource.onmessage = function (event) {
                     //console.log(event.data);
                     var message = JSON.parse(event.data);
+                    //console.log(message);
                     socket.trigger("message", message);
                 };
                 eventsource.onopen = function (event) {
