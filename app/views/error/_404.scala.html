@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>Validator Suite</title>
-    <link rel="stylesheet" href="assets/css/foundation.min.css">
-    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="@routes.Assets.at("css/foundation.min.css").url">
+    <link rel="stylesheet" href="@routes.Assets.at("css/app.css").url">
     @helper.requireJs(core = routes.Assets.at("js/libs/require.js").url, module = routes.Assets.at("js/main.js").url)
     <script>
         require(['config'], function () {require(['libs/foundation']);});
@@ -17,7 +17,7 @@
 
 <section id="banner">
     <div class="row">
-        <a class="left" href="../"><img src="assets/images/fullLogo.svg" height="80" /> </a>
+        <a class="left" href="../"><img src="@routes.Assets.at("images/fullLogo.svg").url" height="80" /> </a>
         <ul id="nav" class="right">
             <li><a href="pricing.html">Pricing</a></li>
             <li><a href="faq.html">Faq</a></li>

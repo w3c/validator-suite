@@ -94,8 +94,8 @@ h2 {
     bottom: 1em;
     right: 1em;
     margin-bottom: 0;
-    font-size: 1.1em;
-    line-height: 1.1em;
+    font-size: 1em;
+    line-height: 1em;
 }
 
 #nav li {
@@ -162,13 +162,13 @@ button,
     background: -ms-linear-gradient(top, #EDB556 0%,#C47903 100%);
     background: linear-gradient(to bottom, #EDB556 0%,#C47903 100%);*/
     border-color: #C47800;
-    text-shadow: 0px 0px 2px rgba(0,0,0,0.8);
-    border-radius: 2px;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.6);
+    border-radius: 1px;
 }
 
 button:hover,
 .button:hover {
-    background: #FFAC2A;
+    background: #febe4d;
 }
 
 .orbit-bullets {
@@ -313,4 +313,8 @@ hr:before {
 #login label {
     display: none;
 }
+
+
+
+
 
