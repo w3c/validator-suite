@@ -75,13 +75,13 @@ h2 {
 }
 
 #banner img {
-    /*height: 100px;*/
-    margin-top: 22px;
+    height: 80px;
+    margin-top: 10px;
 
 }
 
 #banner .row {
-    height: 150px;
+    height: 100px;
     position: relative;
 }
 

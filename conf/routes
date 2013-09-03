@@ -3,7 +3,7 @@
 
 # Application
 GET     /                                           controllers.Application.index
-GET     /faq                                        controllers.Application.faq
+GET     /faqs                                       controllers.Application.faq
 GET     /pricing                                    controllers.Application.pricing
 GET     /login                                      controllers.Application.login
 POST    /login                                      controllers.Application.authenticate
