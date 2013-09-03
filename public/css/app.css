@@ -74,10 +74,12 @@ h2 {
     background-size: auto 100%;
 }
 
+#banner a {
+    padding: 8px 10px 7px 10px;
+}
+
 #banner img {
     height: 80px;
-    margin-top: 10px;
-
 }
 
 #banner .row {
