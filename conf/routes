@@ -12,8 +12,9 @@ GET     /register                                   controllers.Application.regi
 POST    /register                                   controllers.Application.registerAction
 
 # Jobs
-GET     /jobs/                                      controllers.Jobs.index
-POST    /jobs/                                      controllers.Jobs.create
+GET     /jobs                                       controllers.Jobs.index
+GET     /jobs/                                      controllers.Jobs.redirect
+POST    /jobs                                       controllers.Jobs.create
 GET     /jobs/new                                   controllers.Jobs.newJob
 GET     /jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
@@ -22,25 +23,29 @@ POST    /jobs/purchase                              controllers.OneTimeJob.purch
 POST    /purchase/callback                          controllers.OneTimeJob.callback
 
 # Job
-GET     /jobs/:job/                                 controllers.Job.get(job: JobId)
-POST    /jobs/:job/                                 controllers.Job.dispatcher(job: JobId)
+GET     /jobs/:job                                 controllers.Job.get(job: JobId)
+GET     /jobs/:job/                                controllers.Job.redirect(job: JobId)
+POST    /jobs/:job                                 controllers.Job.dispatcher(job: JobId)
 # GET     /jobs/:job/edit                           controllers.Job.edit(job: JobId)
 GET     /jobs/:job/socket/:socket                   controllers.Job.socket(job: JobId, socket: SocketType)
 
 # Job/grouped
-GET     /jobs/:job/messages/                        controllers.GroupedAssertions.index(job: JobId)
+GET     /jobs/:job/messages                         controllers.GroupedAssertions.index(job: JobId)
+GET     /jobs/:job/messages/                        controllers.GroupedAssertions.redirect(job: JobId)
 GET     /jobs/:job/messages/socket/:socket          controllers.GroupedAssertions.socket(job: JobId, socket: SocketType)
 
 # Job/assertions
-GET     /jobs/:job/assertions/                      controllers.Assertions.index(job: JobId, resource: URL)
+GET     /jobs/:job/assertions                       controllers.Assertions.index(job: JobId, resource: URL)
+GET     /jobs/:job/assertions/                      controllers.Assertions.redirect(job: JobId, resource: URL)
 GET     /jobs/:job/assertions/socket/:socket        controllers.Assertions.socket(job: JobId, resource: URL, socket: SocketType)
 
 # Job/assertors
-#GET     /jobs/:job/assertors/                       controllers.Assertors.index(job: JobId, resource: Option[URL])
+#GET     /jobs/:job/assertors                        controllers.Assertors.index(job: JobId, resource: Option[URL])
 #GET     /jobs/:job/assertors/socket/:socket         controllers.Assertors.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Job/resources
-GET     /jobs/:job/resources/                       controllers.Resources.index(job: JobId, resource: Option[URL])
+GET     /jobs/:job/resources                        controllers.Resources.index(job: JobId, resource: Option[URL])
+GET     /jobs/:job/resources/                       controllers.Resources.redirect(job: JobId, resource: Option[URL])
 GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Administration

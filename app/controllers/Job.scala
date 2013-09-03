@@ -34,6 +34,10 @@ object Job extends VSController {
       }
   }
 
+  def redirect(id: JobId): ActionA = Action { implicit req =>
+    Redirect(routes.Job.get(id))
+  }
+
   /*def edit(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job <- user.getJob(id)

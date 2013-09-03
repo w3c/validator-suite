@@ -19,9 +19,9 @@ define(["model/model", "model/assertions", "util/Util"], function (Model, Assert
             //this.id = this.get("resourceUrl");
         },
 
-        url: function () { return "../resources/?resource=" + this.get("url"); },
+        url: function () { return "resources/?resource=" + encodeURIComponent(this.get("url")); },
 
-        reportUrl: function () { return "../assertions/?resource=" + encodeURIComponent(this.get("url")); },
+        reportUrl: function () { return "assertions/?resource=" + encodeURIComponent(this.get("url")); },
 
         search: function (search) {
             return this.get("url").toLowerCase().indexOf(search.toLowerCase()) > -1;

@@ -104,7 +104,7 @@ h2 {
     list-style-type: none;
     display: inline;
     color: white;
-    margin-left: 2.5em;
+    margin-left: 1.5em;
     /*text-shadow: 0 0 4px black;*/
 }
 
@@ -170,7 +170,7 @@ button,
 
 button:hover,
 .button:hover {
-    background: #febe4d;
+    background: #FFAD21;
 }
 
 .orbit-bullets {

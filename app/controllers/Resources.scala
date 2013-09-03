@@ -33,6 +33,10 @@ object Resources extends VSController  {
     }
   }
 
+  def redirect(id: JobId, url: Option[URL]): ActionA = Action { implicit req =>
+    Redirect(routes.Resources.index(id, url))
+  }
+
   def index_(id: JobId): Request[AnyContent] => User => Future[PartialFunction[Format, Result]] = { implicit req: RequestHeader => user: User =>
     val f: Future[PartialFunction[Format, Result]] = for {
       job_ <- user.getJob(id)

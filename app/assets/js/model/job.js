@@ -34,7 +34,7 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
         },
 
         reportUrl: function () {
-            return this.url() + "resources/";
+            return this.url() + "/resources";
         },
 
         isIdle: function () {
@@ -122,7 +122,7 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
         },
 
         url: function () {
-            return this.collection.url + this.get("id") + "/";
+            return this.collection.url + "/" + this.get("id");
         }
 
     });

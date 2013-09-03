@@ -87,6 +87,10 @@ object Assertions extends VSController  {
     f.timer(indexUrlName).timer(indexUrlTimer)
   }
 
+  def redirect(id: JobId, url: URL): ActionA = Action { implicit req =>
+    Redirect(routes.Assertions.index(id, url))
+  }
+
   def socket(jobId: JobId, url: URL, typ: SocketType): Handler = {
     typ match {
       case SocketType.ws => webSocket(jobId, url)

@@ -36,7 +36,7 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
                 }
 
                 var urlA = socket.url.split("?");
-                socket.url = urlA[0] + 'socket/ws?' + (urlA[1] || '');
+                socket.url = urlA[0] + '/socket/ws?' + (urlA[1] || '');
                 websocket = new window.WebSocket(socket.url);
 
                 websocket.onmessage = function (event) {
@@ -66,7 +66,7 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
                 }
 
                 var urlA = socket.url.split("?");
-                socket.url = urlA[0] + 'socket/events?' + (urlA[1] || '');
+                socket.url = urlA[0] + '/socket/events?' + (urlA[1] || '');
                 eventsource = new window.EventSource(socket.url);
 
                 eventsource.onmessage = function (event) {
@@ -96,7 +96,7 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
                 logger.warn("using comet iframe");
 
                 var urlA = socket.url.split("?");
-                socket.url = urlA[0] + 'socket/comet?' + (urlA[1] || '');
+                socket.url = urlA[0] + '/socket/comet?' + (urlA[1] || '');
 
                 iframe = $('<iframe src="' + socket.url + '"></iframe>');
                 $(function () {

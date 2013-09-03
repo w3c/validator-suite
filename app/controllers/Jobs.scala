@@ -43,6 +43,10 @@ object Jobs extends VSController {
     f.timer(indexName).timer(indexTimer)
   }
 
+  def redirect(): ActionA = Action { implicit req =>
+    Redirect(routes.Jobs.index)
+  }
+
   val newJobName = (new controllers.javascript.ReverseJobs).newJob.name
   val newJobTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, newJobName))
 

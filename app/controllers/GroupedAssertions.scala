@@ -51,6 +51,10 @@ object GroupedAssertions extends VSController  {
     f.timer(indexName).timer(indexTimer)
   }
 
+  def redirect(id: JobId): ActionA = Action { implicit req =>
+    Redirect(routes.GroupedAssertions.index(id))
+  }
+
   def socket(jobId: JobId, typ: SocketType): Handler = {
     typ match {
       case SocketType.ws => webSocket(jobId)
