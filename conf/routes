@@ -50,6 +50,7 @@ GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket
 
 # Administration
 GET     /admin/                                     controllers.Administration.index()
+GET     /admin/503                                  controllers.Administration.e503()
 GET     /admin/console                              controllers.Administration.console()
 GET     /admin/console/socket                       controllers.Administration.socket()
 POST    /admin/jobs                                 controllers.Administration.jobsPost()

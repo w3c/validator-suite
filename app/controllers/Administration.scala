@@ -1,7 +1,7 @@
 package controllers
 
 import org.w3.vs.controllers._
-import play.api.mvc.{WebSocket, Result, Action}
+import play.api.mvc.{WebSocket, Result, Results, Action}
 import org.w3.vs.exception.UnknownUser
 import org.w3.vs.model
 import org.w3.vs.model.{User, JobId}
@@ -19,6 +19,10 @@ object Administration extends VSController {
 
   def index: ActionA = RootBasicAuth { implicit req =>
     Ok(views.html.admin())
+  }
+
+  def e503(): ActionA = Action {
+    ServiceUnavailable(views.html.error._503())
   }
 
   def console: ActionA = RootBasicAuth { implicit req =>
