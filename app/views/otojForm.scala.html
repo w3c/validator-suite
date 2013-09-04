@@ -2,7 +2,7 @@
     user: Option[User],
     idOpt: Option[JobId] = None)(implicit req: Request[AnyContent], flash: Flash, vs: ValidatorSuite)
 
-@libs.main("New Job - Validator Suite"){
+@libs.main("New Job - W3C Validator Suite"){
 
     @if(user.isDefined) { @libs.admin(user.get) }
     @libs.navigation(List((form("name").value.getOrElse("New Job"), "")))

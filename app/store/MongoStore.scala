@@ -22,7 +22,7 @@ import reactivemongo.core.commands.GetLastError
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-/** utility functions to deal with a mongodb instance for the Validator Suite
+/** utility functions to deal with a mongodb instance for the W3C Validator Suite
   */
 object MongoStore {
 

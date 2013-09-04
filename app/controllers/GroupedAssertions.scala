@@ -35,7 +35,7 @@ object GroupedAssertions extends VSController  {
         //val bindedGroupedAssertions = groupedAssertions.filterOn(assertors.firstAssertor).bindFromRequest
         Ok(views.html.main(
           user = user,
-          title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
+          title = s"""Report for job "${job_.name}" - By messages - W3C Validator Suite""",
           crumbs = Seq(job_.name -> ""),
           collections = Seq(
             job.withCollection(bindedGroupedAssertions),

@@ -6,13 +6,13 @@ import akka.util.Timeout
 import akka.actor._
 import org.w3.vs.actor.{ RunsActor, RunEventBusActor, RunEventBus }
 import reactivemongo.api.DefaultDB
-import org.w3.vs.web.{ Http, Cache }
+import org.w3.vs.web.Cache
 import com.ning.http.client.{ AsyncHttpClient, AsyncHttpClientConfig }
 
 trait ValidatorSuite extends Database {
 
   def mode: Mode
-  val name: String = "Validator Suite"
+  val name: String = "W3C Validator Suite"
 
   def start(): Unit = {
     logger.info("Application starting")

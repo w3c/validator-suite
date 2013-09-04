@@ -2,7 +2,7 @@ package controllers
 
 import org.w3.vs.exception._
 import org.w3.vs.controllers._
-import org.w3.vs.model.{User}
+import org.w3.vs.model.User
 import org.w3.vs.view.form.LoginForm
 import play.Logger.ALogger
 import play.api.Play._
@@ -130,7 +130,7 @@ trait VSController extends Controller {
         val challenge = conf.config.getString("root.password.basic").get
         if (hash == challenge) Some(f(req)) else None
       }.flatten
-    action.getOrElse(Unauthorized("unauthorized").withHeaders(("WWW-Authenticate", """Basic realm="Validator Suite"""")))
+    action.getOrElse(Unauthorized("unauthorized").withHeaders(("WWW-Authenticate", """Basic realm="W3C Validator Suite"""")))
   }
 
   def toError(implicit reqHeader: RequestHeader): PartialFunction[Throwable, Result] = {

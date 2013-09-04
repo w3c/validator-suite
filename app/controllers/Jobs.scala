@@ -33,7 +33,7 @@ object Jobs extends VSController {
       case Html(_) => {
         Ok(views.html.main(
           user = user,
-          title = "Jobs - Validator Suite",
+          title = "Jobs - W3C Validator Suite",
           collections = Seq(jobs.bindFromRequest)
         ))
       }

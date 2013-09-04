@@ -48,7 +48,7 @@ object Resources extends VSController  {
       case Html(_) =>
         Ok(views.html.main(
           user = user,
-          title = s"""Report for job "${job_.name}" - By resources - Validator Suite""",
+          title = s"""Report for job "${job_.name}" - By resources - W3C Validator Suite""",
           crumbs = Seq(job_.name -> ""),
           collections = Seq(
             job.withCollection(bindedResources),

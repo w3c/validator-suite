@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import play.Project.{ fork => _, _ }
+import play.Project.{ fork => _ }
 import net.tgambet.requirejs.RequireJsPlugin._
 //import org.ensime.sbt.Plugin.Settings.ensimeConfig
 //import org.ensime.sbt.util.SExp._
@@ -43,7 +43,7 @@ object ApplicationBuild extends Build {
     testOptions in Test += Tests.Argument("""-oDF"""),
 
     scalacOptions ++= Seq("-deprecation", "-unchecked", /* "-optimize",*/ "-feature", "-language:implicitConversions,higherKinds,reflectiveCalls"),
-    scalacOptions in (Compile, doc) ++= Opts.doc.title("Validator Suite"),
+    scalacOptions in (Compile, doc) ++= Opts.doc.title("W3C Validator Suite"),
     scalacOptions in (Compile, doc) <++= baseDirectory map { bd => Seq("-sourcepath", bd.getAbsolutePath, "-doc-source-url", "https://github.com/w3c/validator-suite/tree/master€{FILE_PATH}.scala") },
 
     routesImport += "org.w3.vs.controllers._",

@@ -1,4 +1,4 @@
-Validator Suite
+W3C Validator Suite
 ---------------
 
 ### Play 2.1-SNAPSHOT

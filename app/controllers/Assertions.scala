@@ -70,7 +70,7 @@ object Assertions extends VSController  {
       case Html(_) => {
         Ok(views.html.main(
           user = user,
-          title = s"Report for ${Helper.shorten(url, 50)} - Validator Suite",
+          title = s"Report for ${Helper.shorten(url, 50)} - W3C Validator Suite",
           crumbs = Seq(
             job_.name -> routes.Job.get(id),
             Helper.shorten(url, 50) -> ""),
