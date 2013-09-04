@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg 
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    viewBox="0 0 4200 1000"
+    width="420"
+    height="100">
+    
+    <style type="text/css">
+        .color > :nth-child(1) {fill: #6c0100; stroke: #6c0100; stroke-width: 6; stroke-linejoin:bevel;} /* Red */
+        .color > :nth-child(2) {fill: #bb1e17; stroke: #bb1e17; stroke-width: 6; stroke-linejoin:bevel;}
+        .color > :nth-child(3) {fill: #40006c; stroke: #40006c; stroke-width: 6; stroke-linejoin:bevel;} /* Purple */
+        .color > :nth-child(4) {fill: #7A00bc; stroke: #7A00bc; stroke-width: 6; stroke-linejoin:bevel;}
+        .color > :nth-child(5), .blue {fill: #02356d; stroke: #02356d; stroke-width: 6; stroke-linejoin:bevel;} /* Blue */
+        .color > :nth-child(6), .blue-d {fill: #02579e; stroke: #02579e; stroke-width: 6; stroke-linejoin:bevel;}
+        .color > :nth-child(7) {fill: #136c00; stroke: #136c00; stroke-width: 6; stroke-linejoin:bevel;} /* Green */
+        .color > :nth-child(8) {fill: #3bbc00; stroke: #3bbc00; stroke-width: 6; stroke-linejoin:bevel;}
+        .color > :nth-child(9) {fill: #c27400; stroke: #c27400; stroke-width: 6; stroke-linejoin:bevel;} /* Yellow */
+        .color > :nth-child(10){fill: #f4d538; stroke: #f4d538; stroke-width: 6; stroke-linejoin:bevel;}
+        .border > * {fill: white; stroke: white; stroke-width: 10;}
+        .w3, .c1, .c2, .validator {
+            fill: white;
+        }
+    </style>
+
+    <defs>
+        <polygon id="E16"  points="  0, 0      224, -688   1115, -688   1307, -99    809, 263   724, 0    "/>
+        <polygon id="M16a" points=" 52, -160   172, -528    999, -528   1119, -160                        "/>
+        <polygon id="M16b" points="                                     1119, -160   757, 103   672, -160 "/>
+        <filter id="shadow" filterUnit="userSpaceOnUse">
+            <feOffset in="SourceAlpha" dx="0" dy="0" result="offset"/>
+            <feGaussianBlur in="offset" stdDeviation="30" result="blur"/>
+            <feFlood flood-color='black' flood-opacity='0.8' result='color' />
+            <feComposite operator='in' in='color' in2='blur' result='shadow' />
+            <feComposite operator='over' in='SourceGraphic' in2='shadow' />
+        </filter>
+    </defs>
+
+    <!--<rect x="0" y="0" fill="#000" height="100%" width="100%" />-->
+
+    <g class="logo m16" filter="url(#shadow)" transform="translate(1650, 512)">
+        <g transform="scale(0.35,0.35)">
+        <g class="border">
+            <use xlink:href="#E16" transform="rotate(0)"/>
+            <use xlink:href="#E16" transform="rotate(72)"/>
+            <use xlink:href="#E16" transform="rotate(144)"/>
+            <use xlink:href="#E16" transform="rotate(216)"/>
+            <use xlink:href="#E16" transform="rotate(288)"/>
+        </g>
+        <g class="color">
+            <use xlink:href="#M16b" transform="rotate(0)"/>
+            <use xlink:href="#M16a" transform="rotate(0)"/>
+            <use xlink:href="#M16b" transform="rotate(72)"/>
+            <use xlink:href="#M16a" transform="rotate(72)"/>
+            <use xlink:href="#M16b" transform="rotate(144)"/>
+            <use xlink:href="#M16a" transform="rotate(144)"/>
+            <use xlink:href="#M16b" transform="rotate(216)"/>
+            <use xlink:href="#M16a" transform="rotate(216)"/>
+            <use xlink:href="#M16b" transform="rotate(288)"/>
+            <use xlink:href="#M16a" transform="rotate(288)"/>
+        </g>
+        </g>
+    </g>
+
+    <g class="w3c" filter="url(#shadow)" transform="translate(80, 270)">
+        <g transform="scale(1.05,1.05)">
+        <path class="w3" d="M0,1h67.7l92.9,315.3l62.7-211.9L192.5,1H260l93.1,315L446,1h252.7l-0.4,31.5l-94.5,162.8
+        C763.2,246,720.4,520,571.8,520c-69.8,0-109.7-48.3-129.7-106l52.4-21.6c17.4,38.7,38.8,63,74.9,63c78.7,0,99.8-200.5-15.5-204.2
+        l-38.1,0l0.1-31.4l89.7-154.6l-111.2,0.1L359.6,519.6h-6.7l-96.1-320.7l-96.2,320.7H154L0,1z"/>
+        <path class="c1" d="M984.9,0l11.4,65.9L957.5,140C880.2-2.9,749.4,113.5,778.2,302.3c-79.7-181.2,61.2-410.1,169.1-226.8L984.9,0z"/>
+        <path class="c2" d="M990.1,375.2l9.9,51.4c-80.3,147.9-219.7,114.1-268.6-60.7C758.6,430.9,879.6,561.3,990.1,375.2z"/>
+        </g>
+    </g>
+
+    <!--<g class="big" transform="translate(8930,-320), scale(1.4,1.4)">
+        <use xlink:href="#M16b" transform="rotate(144)" class="blue" />
+        <use xlink:href="#M16a" transform="rotate(144)" class="blue-d" />
+    </g>-->
+
+    <g class="validator" filter="url(#shadow)"><g transform="scale(31,31), translate(3.5,0.5)">
+        <!--Validator-->
+        <polygon points="71.019,16.94 68.996,16.94 66.086,8.014 68.35,8.014 70.121,14.125 71.891,8.014 73.996,8.014 "/>
+        <path d="M77.893,16.94l-0.508-1.797h-2.494l-0.522,1.797h-1.997l2.68-8.927h2.347l2.695,8.927H77.893z M76.164,10.438l-0.872,3.231h1.718L76.164,10.438z"/>
+        <polygon points="80.86,16.94 80.86,8.014 83.004,8.014 83.004,15.157 86.175,15.157 86.175,16.94 "/>
+        <rect x="87.223" y="8.014" width="2.146" height="8.927"/>
+        <path d="M93.974,16.94h-3.566V8.014h3.566c2.385,0,3.472,1.367,3.472,3.204v2.598 C97.445,15.653,96.358,16.94,93.974,16.94 M95.286,11.149c0-0.938-0.494-1.421-1.474-1.421h-1.26v5.495h1.26 c0.979,0,1.474-0.48,1.474-1.42V11.149z"/>
+        <path d="M103.253,16.94l-0.51-1.797h-2.492l-0.524,1.797H97.73l2.68-8.927h2.346l2.694,8.927H103.253z M101.525,10.438l-0.874,3.231h1.716L101.525,10.438z"/>
+        <polygon points="108.781,9.77 108.781,16.94 106.639,16.94 106.639,9.77 104.265,9.77 104.265,8.014 111.167,8.014 111.167,9.77 "/>
+        <path d="M115.264,17.195c-2.227,0-3.605-1.383-3.605-3.258v-2.921c0-1.892,1.379-3.244,3.605-3.244 c2.225,0,3.593,1.353,3.593,3.244v2.921C118.856,15.812,117.488,17.195,115.264,17.195 M116.686,10.923 c0-0.819-0.481-1.435-1.422-1.435c-0.952,0-1.421,0.615-1.421,1.435v3.121c0,0.805,0.469,1.422,1.421,1.422 c0.94,0,1.422-0.617,1.422-1.422V10.923z"/>
+        <path d="M125.498,16.981c-0.712,0-0.992-0.55-1.006-1.382v-1.327c-0.012-0.563-0.254-0.925-0.978-0.925h-1.422v3.593 h-2.145V8.014h3.889c1.876,0,2.721,0.91,2.721,2.253v0.629c0,0.896-0.416,1.474-1.407,1.715c1.045,0.148,1.435,0.859,1.435,1.61 v1.272c0,0.469,0.134,0.79,0.415,1.058v0.431H125.498z M124.438,10.438c0-0.481-0.241-0.804-0.924-0.804h-1.422v2.387h1.382 c0.657,0,0.964-0.295,0.964-0.858V10.438z"/>
+
+        <!--Suite-->
+        <path d="M63.477,23.139l0.438-0.021c0.274,1.374,0.885,1.893,1.748,1.893c0.663,0,1.08-0.447,1.08-1.037 c0-0.569-0.347-0.864-1.211-1.354c-0.773-0.446-1.413-0.896-1.413-1.881c0-1.119,0.935-1.974,2.246-1.974 c0.582,0,1.07,0.153,1.446,0.377l0.366-0.356h0.376l-0.295,2.075l-0.438,0.02c-0.304-1.109-0.761-1.587-1.444-1.587 c-0.57,0-0.945,0.396-0.945,0.958c0,0.537,0.315,0.751,1.201,1.259c0.812,0.47,1.403,0.908,1.403,1.853 c0,1.312-1.008,2.157-2.392,2.157c-0.723,0-1.393-0.184-1.841-0.418l-0.335,0.366h-0.388L63.477,23.139z"/>
+        <path d="M68.849,23.728l0.468-2.004l-0.691-0.354l0.029-0.306l1.984-0.479l0.165,0.112l-0.673,2.92 c-0.143,0.629,0,0.936,0.447,0.936c0.274,0,0.642-0.163,1.139-0.518l0.5-2.301l-0.691-0.365l0.01-0.306l2.004-0.479l0.162,0.112 l-0.772,3.539c-0.103,0.479-0.041,0.519,0.772,0.562l0.041,0.243c-0.456,0.273-0.925,0.458-1.373,0.458 c-0.661,0-0.774-0.448-0.693-0.957l-0.102-0.02c-0.62,0.569-1.189,0.977-1.779,0.977C68.89,25.499,68.615,24.734,68.849,23.728"/>
+        <path d="M74.21,24.461l0.651-2.716l-0.792-0.376l0.04-0.306l2.087-0.479l0.171,0.112l-0.854,3.549 c-0.11,0.47-0.05,0.52,0.834,0.552l0.042,0.243c-0.519,0.295-0.998,0.458-1.467,0.458C74.223,25.499,74.069,25.082,74.21,24.461 M75.27,19.008c0-0.508,0.386-1.077,0.945-1.077c0.357,0,0.62,0.234,0.62,0.691c0,0.499-0.376,1.079-0.935,1.079 C75.545,19.701,75.27,19.455,75.27,19.008"/>
+        <path d="M77.12,24.044l0.551-2.522h-0.854l0.07-0.345l1.118-0.623l0.916-1.19l0.457,0.083l-0.305,1.414h1.354 l-0.143,0.661h-1.353l-0.477,2.197c-0.113,0.487-0.103,0.692,0.029,0.813c0.111,0.112,0.324,0.173,0.812,0.173 c0.185,0,0.355-0.01,0.529-0.03V25c-0.641,0.284-1.23,0.487-1.861,0.487C77.001,25.487,76.958,24.755,77.12,24.044"/>
+        <path d="M82.596,24.645c0.416,0,0.813-0.163,1.211-0.429l0.202,0.184c-0.437,0.663-1.099,1.098-1.983,1.098 c-1.22,0-1.912-0.751-1.912-1.778c0-1.607,1.312-3.094,2.857-3.094c0.916,0,1.466,0.478,1.466,1.109 c0,1.109-1.304,1.658-3.083,1.598C81.324,24.188,81.739,24.645,82.596,24.645 M83.286,21.583c0-0.296-0.153-0.5-0.447-0.5 c-0.559,0-1.251,0.793-1.434,1.822C82.757,22.844,83.286,22.324,83.286,21.583"/>
+    </g></g>
+
+</svg>
