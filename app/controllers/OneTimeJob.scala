@@ -21,8 +21,8 @@ object OneTimeJob extends VSController {
         case Html(_) => Ok(views.html.otojForm(OneTimeJobForm.blank, Some(user)))
       }
     f recover {
-      case Unauthenticated => {
-        case Html(_) => Ok(views.html.otojForm(OneTimeJobForm.blank, None))
+      case Unauthenticated(email) => {
+        case Html(_) => Ok(views.html.otojForm(OneTimeJobForm.blank, None)) // TODO pass email to form
       }
     }
   }
@@ -30,7 +30,7 @@ object OneTimeJob extends VSController {
   def purchase(): ActionA = AsyncAction { implicit req =>
     val f1: Future[PartialFunction[Format, Result]] = for {
       // Authenticate or register user
-      user <- getUser() recoverWith { case Unauthenticated =>
+      user <- getUser() recoverWith { case Unauthenticated(email) =>
         // If user is not already logged in check the form
         req.body.asFormUrlEncoded.get.get("userType").map(_.headOption).flatten match {
           // New user

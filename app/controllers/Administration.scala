@@ -86,7 +86,7 @@ object Administration extends VSController {
     }
 
     f recover {
-      case UnknownUser => {
+      case UnknownUser(email) => {
         BadRequest(views.html.admin(messages = List(("error" -> s"Unknown user with email: ${email}"))))
       }
     }

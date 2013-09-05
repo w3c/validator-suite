@@ -1,0 +1,113 @@
+@(loginForm: LoginForm = LoginForm.blank, registerForm: RegisterForm = RegisterForm.blank, messages: List[(String, String)] = List())(implicit flash: Flash, vs: ValidatorSuite)
+
+@front("W3C Validator Suite") {
+
+<section class="login-register" xmlns="http://www.w3.org/1999/html">
+
+    <div class="row">
+    @libs.messages2(messages)
+    </div>
+
+    @**<p class="column large-10 large-offset-1">
+        You must be logged in to access this page. If you don't have an account yet you can
+        <a href="#register">register now</a> for free.
+    </p>**@
+
+    <form action="@routes.Application.login" method="POST" class="row form-login">
+        <fieldset class="column">
+            <legend id="login" tabindex="0">Login</legend>
+
+            <div class="column small-9 small-offset-3 formErrors">
+                @libs.messages2(loginForm.errors.toList)
+            </div>
+
+            <p class="row">
+                <div class="small-3 columns">
+                    <label for="l_email" class="right inline">Email</label>
+                </div>
+                <div class="small-9 columns">
+                    <input type="email" id="l_email" name="l_email" placeholder="Email" value='@loginForm("l_email").value' required="required">
+                </div>
+            </p>
+
+            <p class="row">
+                <div class="small-3 columns">
+                    <label for="l_password" class="right inline">Password</label>
+                </div>
+                <div class="small-9 columns">
+                    <input type="password" id="l_password" name="l_password" placeholder="Password" required="required">
+                </div>
+            </p>
+            <p class="column large-4 large-offset-8 small-9 small-offset-3">
+                <button id="submit-login" type="submit">Login</button>
+            </p>
+        </fieldset>
+    </form>
+
+    <form method="post" action="@routes.Application.register" class="row form-register">
+        <fieldset class="column">
+            <legend id="register" tabindex="0">Register</legend>
+
+            @libs.messages2(registerForm.errors.toList)
+
+            <p class="row">
+                <div class="small-3 columns">
+                    <label for="userName" class="right inline">Name</label>
+                </div>
+                <div class="small-9 columns">
+                    <input type="text" id="userName" name="userName" placeholder="Name" value='@registerForm("userName").value' class="userName" />
+                </div>
+            </p>
+
+            <p class="row">
+                <div class="small-3 columns">
+                    <label for="r_email" class="right inline">Email</label>
+                </div>
+                <div class="small-9 columns">
+                    <input type="email" id="r_email" name="r_email" placeholder="Email" value='@registerForm("r_email").value' required="required"/>
+                </div>
+            </p>
+
+            <p class="row">
+                <div class="small-3 columns">
+                    <label for="r_password" class="right inline">Password</label>
+                </div>
+                <div class="small-9 columns">
+                    <input type="password" id="r_password" pattern=".{6,}" name="r_password" placeholder="The password must be at least 6 characters long" required="required" title="The password must be at least 6 characters long"/>
+                </div>
+            </p>
+
+            <p class="row">
+
+                <div class="small-3 columns">
+                    <label for="repeatPassword" class="right inline">Repeat password</label>
+                </div>
+                <div class="small-9 columns">
+                    <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword" name="repeatPassword" placeholder="Verify your password"/>
+                </div>
+
+            </p>
+
+            <p class="row">
+
+                <div class="small-3 columns">
+                    <input type="checkbox" id="news" class="right inline" />
+                </div>
+                <div class="small-9 columns">
+                    <label for="news">W3C may send me information about new products and services</label>
+                </div>
+
+            </p>
+
+            <p class="column large-4 large-offset-8 small-9 small-offset-3">
+                <button id="submit-register" type="submit">Register</button>
+            </p>
+
+
+        </fieldset>
+
+    </form>
+
+</section>
+
+}

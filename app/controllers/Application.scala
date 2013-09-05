@@ -10,8 +10,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.w3.vs.util.timer._
 import com.codahale.metrics._
-import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
-import java.nio.file.{Path, Paths}
 import org.w3.vs.Graphite
 
 object Application extends VSController {
@@ -30,14 +28,14 @@ object Application extends VSController {
       val f = getUser map {
         case _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
       } recover {
-        case  _: UnauthorizedException => Ok(views.html.login(LoginForm.blank)).withNewSession
+        case  _: UnauthorizedException => Ok(views.html.loginRegister()).withNewSession
       } recover toError
       f.timer(loginName).timer(loginTimer)
     }
   }
 
   def logout: ActionA = Action {
-    Redirect(routes.Application.login).withNewSession.flashing("success" -> Messages("application.loggedOut"))
+    Redirect(routes.Application.index).withNewSession // .flashing("success" -> Messages("application.loggedOut"))
   }
 
   val authenticateName = (new controllers.javascript.ReverseApplication).authenticate.name
@@ -61,8 +59,13 @@ object Application extends VSController {
           case None => SeeOther(routes.Jobs.index).withSession("email" -> user.email)
         }
       }) recover {
-        case  _: UnauthorizedException => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.invalidCredentials"))))).withNewSession
-        case InvalidFormException(form: LoginForm, _) => BadRequest(views.html.login(form))
+        //case error @ (Unauthenticated(email) | UnknownUser(email)) =>
+        case UnauthorizedException(email) =>
+          Unauthorized(views.html.loginRegister(
+            loginForm = LoginForm(email).withGlobalError("application.invalidCredentials")
+          )).withNewSession
+        case InvalidFormException(form: LoginForm, _) =>
+          BadRequest(views.html.loginRegister(loginForm = form))
       } recover toError
       f.timer(authenticateName).timer(authenticateTimer)
     }

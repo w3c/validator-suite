@@ -97,8 +97,9 @@ assertion.resources.detail=This message appears in the following resources:
 
 # Application
 application.loggedOut=You have been logged out
-application.invalidCredentials=Username or password not recognized
+form..application.invalidCredentials=The username or password you entered is incorrect
 application.unauthorized=You must be logged in to access this page
+
 
 # Jobs
 jobs.notfound=The requested job does not exist
@@ -167,9 +168,12 @@ sort.descending=Sort in descending order
 name.error.required=Name cannot be empty
 form.email.duplicate=Email already in use. Choose another one or login with an existing account.
 
-form.email.error.email=Invalid email address
-form.email.error.required=Email is required
-form.password.error.required=Password is required
+form.l_email.error.email=Invalid email address
+form.r_email.error.email=Invalid email address
+form.l_email.error.required=Email is required
+form.r_email.error.required=Email is required
+form.l_password.error.required=Password is required
+form.r_password.error.required=Password is required
 
 form.name.error.required=A job name is required
 form.entrypoint.error.url=Start URL must be a valid URL
@@ -179,8 +183,8 @@ form.maxResources.error.min=Invalid max pages value
 
 form.userName.error.required=A user name is required.
 
-form.password.error.minLength=Password too short. Minimum is 6 characters.
+form.r_password.error.minLength=Password too short. Minimum is 6 characters.
 # There is no key for this one hence the '..' (cf RegisterForm.scala)
-form..password.dont_match=Passwords do not match.
+form..r_password.dont_match=Passwords do not match.
 form.terms.not_accepted=You must read and agree to the Terms and Conditions to purchase a job.
 

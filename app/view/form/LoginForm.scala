@@ -21,10 +21,14 @@ object LoginForm {
 
   private def playForm: Form[(String, String)] = Form(
     tuple(
-      "email" -> email.verifying(nonEmpty),
-      "password" -> nonEmptyText
+      "l_email" -> email.verifying(nonEmpty),
+      "l_password" -> nonEmptyText
     )
   )
+
+  def apply(email: String) = {
+    new LoginForm(playForm.fill(email, ""))
+  }
 
 }
 
@@ -32,8 +36,21 @@ class LoginForm private[view](form: Form[(String, String)]) extends VSForm {
 
   def apply(s: String) = form(s)
 
-  def errors: Seq[(String, String)] = form.errors.map{
-    case error => ("error", Messages("form." + error.key + "." + error.message))
+  def withError(key: String, message: String) = new LoginForm(form = form.withError(key, message))
+  def withGlobalError(message: String) = {
+    new LoginForm(form = form.withGlobalError(message))
+  }
+
+  def globalErrors: Seq[(String, String)] = {
+    form.globalErrors.map{
+      case error => ("error", Messages(error.message))
+    }
+  }
+
+  def errors: Seq[(String, String)] = {
+    form.errors.map{
+      case error => ("error", Messages("form." + error.key + "." + error.message))
+    }
   }
 
 }

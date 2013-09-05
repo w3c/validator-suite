@@ -316,7 +316,46 @@ hr:before {
     display: none;
 }
 
+/* -----------------------------------------
+   login-register
+----------------------------------------- */
+
+.login-register button {
+    width: 100%;
+
+    margin-bottom: 0;
+}
+
+.login-register p:last-child {
+    margin-bottom: 1em;
+
+}
+
+.login-register legend {
+    font: 2.5em 'LeagueGothicRegular', Arial, sans-serif;
+    color: #073E80;
+    text-transform: uppercase;
+
+}
 
 
+:focus, a:focus {
+    outline: 3px solid orange;
+}
 
+.message.error {
+    background: #FA481C;
+    border: none;
+    font-weight: bold;
+    font-size: 0.875em;
+    color: #fff;
+}
 
+.message.error .close {
+    color: #fff;
+
+}
+
+.formErrors {
+
+}

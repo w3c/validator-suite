@@ -135,7 +135,7 @@ object User {
     } else {
       getByEmail(email) map {
         case user if BCrypt.checkpw(password, user.password) => user
-        case _ => throw Unauthenticated
+        case _ => throw Unauthenticated(email)
       }
     }
   }
@@ -175,7 +175,7 @@ object User {
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
       case Some(json) => json.as[User]
-      case None => throw UnknownUser
+      case None => throw UnknownUser(email)
     }
   }
 

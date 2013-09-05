@@ -91,7 +91,8 @@ trait VSController extends Controller {
 
   def getUser()(implicit reqHeader: RequestHeader): Future[User] = {
     for {
-      email <- Future(session.get("email").get) recoverWith { case _ => Future(throw Unauthenticated) }
+      // TODO sort out this code
+      email <- Future(session.get("email").get) recoverWith { case _ => Future(throw Unauthenticated("")) }
       user <- Future(Cache.getAs[User](email).get) recoverWith { case _ => User.getByEmail(email) }
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
@@ -143,9 +144,13 @@ trait VSController extends Controller {
         //SeeOther(routes.Jobs.index).flashing(("error" -> Messages("exceptions.job.unknown", id)))
       }
     }
-    case _: UnauthorizedException => {
+    case UnauthorizedException(email) => {
       format {
-        case x: Html => Unauthorized(views.html.login(LoginForm.blank, List(("error", Messages("application.unauthorized"))))).withNewSession.as(x.contentType)
+        case x: Html => Unauthorized(
+          views.html.loginRegister(
+            loginForm = LoginForm(email),
+            messages = List(("error", Messages("application.unauthorized"))))
+        ).withNewSession.as(x.contentType)
         case _ => Unauthorized
       }
     }

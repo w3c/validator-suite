@@ -12,9 +12,19 @@ case class UnknownJob(id: JobId) extends Exception("UnknownJob") //with SuiteExc
 case object UnauthorizedJob extends Exception("UnauthorizedJob") //with SuiteException
 
 
-trait UnauthorizedException
-case object UnknownUser extends Exception("UnknownUser") with UnauthorizedException //with SuiteException
-case object Unauthenticated extends Exception("Unauthenticated") with UnauthorizedException //with SuiteException
+trait UnauthorizedException {
+  val email: String
+}
+object UnauthorizedException {
+  def unapply(o: UnauthorizedException): Option[String] = o match {
+    case UnknownUser(email) => Some(email)
+    case Unauthenticated(email) => Some(email)
+    case _ => None
+  }
+}
+
+case class UnknownUser(email: String) extends Exception("UnknownUser") with UnauthorizedException //with SuiteException
+case class Unauthenticated(email: String) extends Exception("Unauthenticated") with UnauthorizedException //with SuiteException
 
 case class DuplicatedEmail(email: String) extends Exception(s"${email} already in use")
 
