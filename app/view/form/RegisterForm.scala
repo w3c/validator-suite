@@ -7,10 +7,11 @@ import scala.concurrent._
 
 import RegisterForm.RegisterType
 import play.api.i18n.Messages
+import org.w3.vs.view._
 
 object RegisterForm {
 
-  type RegisterType = (String, String, String, String)
+  type RegisterType = (String, String, String, String, Boolean)
 
   def bind()(implicit req: Request[_], context: ExecutionContext): Either[RegisterForm, ValidRegisterForm] = {
     val form = playForm.bindFromRequest
@@ -25,20 +26,36 @@ object RegisterForm {
   private def playForm: Form[RegisterType] = Form(
     tuple(
       "userName" -> nonEmptyText,
-      "email" -> email,
-      "password" -> nonEmptyText(minLength = 6),
-      "repeatPassword" -> text
+      "r_email" -> email,
+      "r_password" -> nonEmptyText(minLength = 6),
+      "repeatPassword" -> text,
+      "mailing" -> of[Boolean](booleanFormatter)
     ).verifying("password.dont_match", p => p._3 == p._4)
   )
 
 }
 
-class RegisterForm private[view](form: Form[RegisterType]) extends VSForm {
+class RegisterForm private[view](val form: Form[RegisterType]) extends VSForm {
   def apply(s: String) = form(s)
-  def errors: Seq[(String, String)] =
-    form.errors.map{case error => ("error", Messages("form." + error.key + "." + error.message))}
+
+  def withError(key: String, message: String) = new RegisterForm(form = form.withError(key, message))
+  def withGlobalError(message: String) = {
+    new RegisterForm(form = form.withGlobalError(message))
+  }
+
+  def globalErrors: Seq[(String, String)] = {
+    form.globalErrors.map{
+      case error => ("error", Messages(error.message))
+    }
+  }
+
+  def errors: Seq[(String, String)] = {
+    form.errors.map{
+      case error => ("error", Messages("form." + error.key + "." + error.message))
+    }
+  }
 }
 
 class ValidRegisterForm private[view](form: Form[RegisterType], bind: RegisterType) extends RegisterForm(form) with VSForm {
-  val (name, email, password, repeatPassword) = bind
+  val (name, email, password, repeatPassword, mailing) = bind
 }

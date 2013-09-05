@@ -39,7 +39,7 @@
                 </div>
             </p>
             <p class="column large-4 large-offset-8 small-9 small-offset-3">
-                <button id="submit-login" type="submit">Login</button>
+                <button id="submit-login" name="submit" value="login" type="submit">Login</button>
             </p>
         </fieldset>
     </form>
@@ -48,7 +48,9 @@
         <fieldset class="column">
             <legend id="register" tabindex="0">Register</legend>
 
-            @libs.messages2(registerForm.errors.toList)
+            <div class="column small-9 small-offset-3 formErrors">
+                @libs.messages2(registerForm.errors.toList)
+            </div>
 
             <p class="row">
                 <div class="small-3 columns">
@@ -91,16 +93,16 @@
             <p class="row">
 
                 <div class="small-3 columns">
-                    <input type="checkbox" id="news" class="right inline" />
+                    <input type="checkbox" id="mailing" name="mailing" class="right inline" @registerForm("mailing").value.map{_ => checked="checked"} />
                 </div>
                 <div class="small-9 columns">
-                    <label for="news">W3C may send me information about new products and services</label>
+                    <label for="mailing">W3C may send me information about new products and services</label>
                 </div>
 
             </p>
 
             <p class="column large-4 large-offset-8 small-9 small-offset-3">
-                <button id="submit-register" type="submit">Register</button>
+                <button id="submit_register" name="submit" value="register" type="submit">Register</button>
             </p>
 
 

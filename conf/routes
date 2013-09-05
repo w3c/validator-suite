@@ -6,7 +6,7 @@ GET     /                                           controllers.Application.inde
 GET     /faqs                                       controllers.Application.faq
 GET     /pricing                                    controllers.Application.pricing
 GET     /login                                      controllers.Application.login
-POST    /login                                      controllers.Application.authenticate
+POST    /login                                      controllers.Application.loginAction
 POST    /logout                                     controllers.Application.logout
 GET     /register                                   controllers.Application.register
 POST    /register                                   controllers.Application.registerAction

@@ -11,6 +11,7 @@ import scala.concurrent.Future
 import org.w3.vs.util.timer._
 import com.codahale.metrics._
 import org.w3.vs.Graphite
+import play.api.templates.Html
 
 object Application extends VSController {
   
@@ -34,14 +35,16 @@ object Application extends VSController {
     }
   }
 
+  def register = login
+
   def logout: ActionA = Action {
     Redirect(routes.Application.index).withNewSession // .flashing("success" -> Messages("application.loggedOut"))
   }
 
-  val authenticateName = (new controllers.javascript.ReverseApplication).authenticate.name
+  val authenticateName = (new controllers.javascript.ReverseApplication).loginAction.name
   val authenticateTimer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, authenticateName))
   
-  def authenticate: ActionA = Action { implicit req =>
+  def loginAction: ActionA = Action { implicit req =>
     AsyncResult {
       val f = (for {
         form <- Future(LoginForm.bind() match {
@@ -59,7 +62,6 @@ object Application extends VSController {
           case None => SeeOther(routes.Jobs.index).withSession("email" -> user.email)
         }
       }) recover {
-        //case error @ (Unauthenticated(email) | UnknownUser(email)) =>
         case UnauthorizedException(email) =>
           Unauthorized(views.html.loginRegister(
             loginForm = LoginForm(email).withGlobalError("application.invalidCredentials")
@@ -71,32 +73,23 @@ object Application extends VSController {
     }
   }
 
-  def register: ActionA = Action { implicit req =>
-    AsyncResult {
-      getUser map {
-        case _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
-      } recover {
-        case  _: UnauthorizedException => Ok(views.html.register(RegisterForm.blank)).withNewSession
-      } recover toError
-    }
-  }
-
   def registerAction: ActionA = Action { implicit req =>
     AsyncResult {
-      (for {
-        form <- Future(RegisterForm.bind() match {
-          case Left(form) => throw InvalidFormException(form)
-          case Right(validForm) => validForm
-        })
-        user <- User.register(name = form.name, email = form.email, password = form.password, isSubscriber = false)
-        // TODO The registration form should be protected. Registration for one-time users is done through its own form
-        // and subscribers registration is done manually. If this form is protected for admins isSubscriber could be set to true
-      } yield {
-        SeeOther(routes.Jobs.index).withSession("email" -> user.email)
-      }) recover {
-        case DuplicatedEmail(email: String) => BadRequest(views.html.register(RegisterForm.blank, List(("error" -> Messages("form.email.duplicate")))))
-        case InvalidFormException(form: RegisterForm, _) => BadRequest(views.html.register(form))
-      } recover toError
+      RegisterForm.bind() match {
+        case Left(form) => {
+          Future.successful(BadRequest(views.html.loginRegister(registerForm = form)))
+        }
+        case Right(form) => {
+          val f = User.register(name = form.name, email = form.email, password = form.password, isSubscriber = false).map {
+            case user => {
+              SeeOther(routes.Jobs.index).withSession("email" -> user.email)
+            }
+          } recover {
+            case DuplicatedEmail(email: String) => BadRequest(views.html.loginRegister(registerForm = form.withError("r_email", "duplicate")))
+          }
+          f
+        }
+      }
     }
   }
   
