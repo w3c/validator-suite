@@ -58,8 +58,10 @@ object Application extends VSController {
           param <- body.get("uri")
           uri <- param.headOption
         } yield uri) match {
-          case Some(uri) => SeeOther(uri).withSession("email" -> user.email) // Redirect to "uri" param if specified
-          case None => SeeOther(routes.Jobs.index).withSession("email" -> user.email)
+          case Some(uri) if (uri != routes.Application.login.url && uri != "") => {
+            SeeOther(uri).withSession("email" -> user.email)
+          } // Redirect to "uri" param if specified
+          case _ => SeeOther(routes.Jobs.index).withSession("email" -> user.email)
         }
       }) recover {
         case UnauthorizedException(email) =>
