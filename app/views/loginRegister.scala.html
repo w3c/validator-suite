@@ -1,12 +1,14 @@
-@(loginForm: LoginForm = LoginForm.blank, registerForm: RegisterForm = RegisterForm.blank, messages: List[(String, String)] = List())(implicit flash: Flash, vs: ValidatorSuite)
+@(loginForm: LoginForm = LoginForm.blank, registerForm: RegisterForm = RegisterForm.blank, uri: Option[String] = None, messages: List[(String, String)] = List())(implicit flash: Flash, vs: ValidatorSuite)
 
 @front("W3C Validator Suite") {
 
-<section class="login-register" xmlns="http://www.w3.org/1999/html">
+<section class="login-register">
 
+    @if(messages.size > 0) {
     <div class="row">
-    @libs.messages2(messages)
+        @libs.messages2(messages)
     </div>
+    }
 
     @**<p class="column large-10 large-offset-1">
         You must be logged in to access this page. If you don't have an account yet you can
@@ -17,30 +19,38 @@
         <fieldset class="column">
             <legend id="login" tabindex="0">Login</legend>
 
-            <div class="column small-9 small-offset-3 formErrors">
-                @libs.messages2(loginForm.errors.toList)
+            @if(loginForm.errors.size > 0) {
+            <div class="row">
+                <div class="column large-9 large-offset-3 formErrors">
+                    @libs.messages2(loginForm.errors.toList)
+                </div>
             </div>
+            }
 
-            <p class="row">
+            <div class="row">
                 <div class="small-3 columns">
                     <label for="l_email" class="right inline">Email</label>
                 </div>
                 <div class="small-9 columns">
                     <input type="email" id="l_email" name="l_email" placeholder="Email" value='@loginForm("l_email").value' required="required">
                 </div>
-            </p>
+            </div>
 
-            <p class="row">
+            <div class="row">
                 <div class="small-3 columns">
                     <label for="l_password" class="right inline">Password</label>
                 </div>
                 <div class="small-9 columns">
                     <input type="password" id="l_password" name="l_password" placeholder="Password" required="required">
                 </div>
-            </p>
-            <p class="column large-4 large-offset-8 small-9 small-offset-3">
-                <button id="submit-login" name="submit" value="login" type="submit">Login</button>
-            </p>
+            </div>
+
+            <div class="row">
+                <div class="column large-4 large-offset-8 small-9 small-offset-3">
+                    <input type="hidden" name="uri" value="@uri">
+                    <button id="submit-login" name="submit" value="login" type="submit">Login</button>
+                </div>
+            </div>
         </fieldset>
     </form>
 
@@ -48,38 +58,42 @@
         <fieldset class="column">
             <legend id="register" tabindex="0">Register</legend>
 
-            <div class="column small-9 small-offset-3 formErrors">
-                @libs.messages2(registerForm.errors.toList)
+            @if(registerForm.errors.size > 0) {
+            <div class="row">
+                <div class="column large-9 large-offset-3 formErrors">
+                    @libs.messages2(registerForm.errors.toList)
+                </div>
             </div>
+            }
 
-            <p class="row">
+            <div class="row">
                 <div class="small-3 columns">
                     <label for="userName" class="right inline">Name</label>
                 </div>
                 <div class="small-9 columns">
                     <input type="text" id="userName" name="userName" placeholder="Name" value='@registerForm("userName").value' class="userName" />
                 </div>
-            </p>
+            </div>
 
-            <p class="row">
+            <div class="row">
                 <div class="small-3 columns">
                     <label for="r_email" class="right inline">Email</label>
                 </div>
                 <div class="small-9 columns">
                     <input type="email" id="r_email" name="r_email" placeholder="Email" value='@registerForm("r_email").value' required="required"/>
                 </div>
-            </p>
+            </div>
 
-            <p class="row">
+            <div class="row">
                 <div class="small-3 columns">
                     <label for="r_password" class="right inline">Password</label>
                 </div>
                 <div class="small-9 columns">
                     <input type="password" id="r_password" pattern=".{6,}" name="r_password" placeholder="The password must be at least 6 characters long" required="required" title="The password must be at least 6 characters long"/>
                 </div>
-            </p>
+            </div>
 
-            <p class="row">
+            <div class="row">
 
                 <div class="small-3 columns">
                     <label for="repeatPassword" class="right inline">Repeat password</label>
@@ -88,9 +102,9 @@
                     <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword" name="repeatPassword" placeholder="Verify your password"/>
                 </div>
 
-            </p>
+            </div>
 
-            <p class="row">
+            <div class="row">
 
                 <div class="small-3 columns">
                     <input type="checkbox" id="mailing" name="mailing" class="right inline" @registerForm("mailing").value.map{_ => checked="checked"} />
@@ -99,12 +113,14 @@
                     <label for="mailing">W3C may send me information about new products and services</label>
                 </div>
 
-            </p>
+            </div>
 
-            <p class="column large-4 large-offset-8 small-9 small-offset-3">
-                <button id="submit_register" name="submit" value="register" type="submit">Register</button>
-            </p>
-
+            <div class="row">
+                <div class="column large-4 large-offset-8 small-9 small-offset-3">
+                    <button id="submit_register" name="submit" value="register" type="submit">Register</button>
+                    <input type="hidden" name="uri" value="@uri">
+                </div>
+            </div>
 
         </fieldset>
 

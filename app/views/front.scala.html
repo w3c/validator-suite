@@ -14,7 +14,7 @@
 
 <section id="banner">
     <div class="row">
-        <a class="left" href="./"><img src='@routes.Assets.at("images/fullLogo.svg")' height="80" /></a>
+        <a class="left" href="/"><img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite" height="80" /></a>
         <ul id="nav" class="right">
             <li><a href="@routes.Application.pricing">Pricing</a></li>
             <li><a href="@routes.Application.faq">FAQs</a></li>
@@ -40,7 +40,7 @@
     </div>
 </section>
 
-<div id="login" class="reveal-modal small">
+@**<div id="login" class="reveal-modal small">
     <h1>Login</h1>
     <form action="@routes.Application.login" method="POST">
         <p>
@@ -56,7 +56,7 @@
         </p>
     </form>
     <a class="close-reveal-modal">&#215;</a>
-</div>
+</div>**@
 
 </body>
 </html>

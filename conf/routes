@@ -16,6 +16,7 @@ GET     /jobs                                       controllers.Jobs.index
 GET     /jobs/                                      controllers.Jobs.redirect
 POST    /jobs                                       controllers.Jobs.create
 GET     /jobs/new                                   controllers.Jobs.newJob
+GET     /jobs/new2                                   controllers.Jobs.newJob2
 GET     /jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
 GET     /jobs/purchase                              controllers.OneTimeJob.newJob

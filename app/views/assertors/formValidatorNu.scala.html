@@ -47,7 +47,7 @@
 
     <br>
     <label for="@name-schema">Schemas</label>
-    <input name="@name-schema" id="@name-schema" pattern="(?:(?:(?:https?://\S+)|(?:data:\S+))(?:\s+(?:(?:https?://\S+)|(?:data:\S+)))*)?" title="Space-separated list of schema IRIs. (Leave blank to let the service guess.)" value=""/>
+    <input name="@name-schema" id="@name-schema" type="text" pattern="(?:(?:(?:https?://\S+)|(?:data:\S+))(?:\s+(?:(?:https?://\S+)|(?:data:\S+)))*)?" title="Space-separated list of schema IRIs. (Leave blank to let the service guess.)" value=""/>
 
     <br>
     <label for="@name-preset">Preset</label>
@@ -80,7 +80,7 @@
 
     <br>
     <label for="@name-nsfilter"><abbr title="XML namespace">XMLNS</abbr>&nbsp;Filter</label>
-    <input name="@name-nsfilter" id="@name-nsfilter" pattern="(?:.+:.+(?:\s+.+:.+)*)?" title="Space-separated namespace URIs for vocabularies to be filtered out."/>
+    <input name="@name-nsfilter" id="@name-nsfilter" type="text" pattern="(?:.+:.+(?:\s+.+:.+)*)?" title="Space-separated namespace URIs for vocabularies to be filtered out."/>
 
     <br>
     <input type="checkbox" name="@name-laxtype" id="@name-laxtype" value="yes"/>

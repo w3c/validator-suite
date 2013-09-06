@@ -1,0 +1,157 @@
+@(form: JobForm,
+    user: User,
+    idOpt: Option[JobId] = None)(implicit req: Request[AnyContent], flash: Flash, vs: ValidatorSuite)
+
+@front("W3C Validator Suite") {
+
+<section class="newJob row">
+
+    <form method="post" action="@routes.OneTimeJob.purchase" class="column">
+        <fieldset tabindex="0">
+            <legend>Create a job</legend>
+
+
+
+            <div class="row">
+                <div class="small-3 columns">
+                    <label for="entrypoint" class="right inline">Start URL</label>
+                </div>
+                <div class="small-9 columns">
+                    <input id="entrypoint" name="entrypoint" type="url" value='@form("entrypoint").value' required="required"/>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="small-3 columns">
+                    <label for="validator_css-warning" class="right inline">CSS Warnings</label>
+                </div>
+                <div class="small-9 columns">
+                    <select id="validator_css-warning" name="validator_css-warning" class="large-6 small-12">
+                        <option value="2">All</option>
+                        <option selected="selected" value="1">Normal report</option>
+                        <option value="0">Most important</option>
+                        <option value="no">No warnings</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="small-3 columns">
+                    <label for="validator_css-vextwarning"  class="right inline">CSS Vendor Extensions</label>
+                </div>
+                    <div class="small-9 columns">
+                        <select id="validator_css-vextwarning" name="validator_css-vextwarning" class="large-6 small-12">
+                            <option value="false">Errors</option>
+                            <option value="true">Warnings</option>
+                        </select>
+                    </div>
+            </div>
+
+            <div class="row">
+                <div class="column large-9 large-offset-3">
+                    <div class="row">
+                        <div class="large-3 column">
+                            <ul class="pricing-table" >
+                                <li class="title">
+                                    <label for="otoj250">
+                                        <input id="otoj250" name="otoj" value="otoj250" type="radio" checked />
+                                        <span>Small</span>
+                                    </label>
+                                </li>
+                                <li class="price">$50 / 40€*</li>
+                                <li class="description">250 pages or fewer</li>
+                            </ul>
+                        </div>
+
+                        <div class="large-3 column">
+                            <ul class="pricing-table">
+                                <li class="title">
+                                    <label for="otoj500">
+                                        <input id="otoj500" name="otoj" value="otoj500" type="radio" />
+                                        Medium
+                                    </label>
+                                    </li>
+                                <li class="price">$75 / 60€*</li>
+                                <li class="description">500 pages or fewer</li>
+                            </ul>
+                        </div>
+
+                        <div class="large-3 column">
+                            <ul class="pricing-table">
+                                <li class="title">
+                                    <label for="otoj2000">
+                                        <input id="otoj2000" name="otoj" value="otoj2000" type="radio" />
+                                        Large
+                                    </label>
+
+                                </li>
+                                <li class="price">$110 / 90€*</li>
+                                <li class="description">2,000 pages or fewer</li>
+                            </ul>
+                        </div>
+
+                        <div class="large-3 column">
+                            <ul class="pricing-table">
+                                <li class="title">
+                                    <label for="otoj5000">
+                                        <input id="otoj5000" name="otoj" value="otoj5000" type="radio" />
+                                        Corporate
+                                    </label>
+
+                                </li>
+                                <li class="price">$190 / 150€*</li>
+                                <li class="description">5,000 pages or fewer</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="small-3 columns">
+                    <input class="right inline" id="dtd" name="dtd" type="checkbox" @form("dtd").value.map{_ => checked="checked"}/>
+                </div>
+                <div class="small-9 columns">
+                    <label for="dtd">Force DTD-based validation for HTML4 documents</label>
+                </div>
+            </div>
+
+            @**<label>Max pages</label>
+
+            <div class="otoj">
+                <label for="otoj250">250</label>
+                <input id="otoj250" name="otoj" value="otoj250" type="radio" checked />
+                <label for="otoj2000" style="margin-left:10px">2,000</label>
+                <input id="otoj2000" name="otoj" value="otoj2000" type="radio" />
+                <br>
+                <label for="otoj500">500</label>
+                <input id="otoj500" name="otoj" value="otoj500" type="radio" />
+                <label for="otoj5000" style="margin-left:10px">5,000</label>
+                <input id="otoj5000" name="otoj" value="otoj5000" type="radio" />
+            </div>**@
+
+            <div class="row">
+                <div class="small-3 columns">
+                    <input id="terms" type="checkbox" required="required" name="terms" class="right">
+                </div>
+                <div class="small-9 columns">
+                    <label for="terms">I agree to the <a href="/policies/terms">Terms and Conditions</a></label>
+                </div>
+            </div>
+
+            <div class="row">
+                <p class="column large-9 large-offset-3 vats">* Plus VAT if applicable. Funds from W3C Validator Suite<sup>®</sup> support W3C's mission to Lead the Web to its Full Potential.</p>
+            </div>
+
+            <div class="row">
+                <div class="large-4 columns large-offset-3">
+                    <button type="submit" name="action" value="create">Purchase</button>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+
+</section>
+
+}

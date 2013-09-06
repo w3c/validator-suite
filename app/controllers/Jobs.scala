@@ -62,6 +62,14 @@ object Jobs extends VSController {
     }
   }
 
+  def newJob2: ActionA = AuthAction { implicit req => user =>
+    timer(newJobName, newJobTimer) {
+      case Html(_) => {
+        Ok(views.html.newJob(JobForm.blank, user, None))
+      }
+    }
+  }
+
   val createName = (new controllers.javascript.ReverseJobs).create.name
   val createTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, createName))
 

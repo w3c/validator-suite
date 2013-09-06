@@ -122,7 +122,7 @@ h2 {
 }
 
 #first h1 {
-    margin: 0
+    padding-left: 0.45em;
 }
 #first p {
     font-size: 1.2em;
@@ -322,22 +322,18 @@ hr:before {
 
 .login-register button {
     width: 100%;
-
     margin-bottom: 0;
 }
 
 .login-register p:last-child {
     margin-bottom: 1em;
-
 }
 
-.login-register legend {
+fieldset legend {
     font: 2.5em 'LeagueGothicRegular', Arial, sans-serif;
     color: #073E80;
     text-transform: uppercase;
-
 }
-
 
 :focus, a:focus {
     outline: 3px solid orange;
@@ -353,9 +349,46 @@ hr:before {
 
 .message.error .close {
     color: #fff;
-
 }
 
-.formErrors {
 
+select {
+    height: 2.3125em;
+}
+
+.newJob button {
+    margin-bottom: 0;
+}
+
+.newJob fieldset {
+    margin-top: 0;
+}
+
+.newJob .large-2 {
+    width: 18.75%;
+}
+
+.newJob .pricing-table .title {
+    padding: 0;
+}
+.newJob .pricing-table .price {
+    font-size: 1em;
+}
+.newJob .pricing-table input {
+    margin: 0;
+    position: absolute;
+    top: 1.45em;
+    left: 1.65em;
+}
+.newJob .pricing-table label {
+    padding: 1em 0.5em;
+    color: #333;
+    font-weight: bold;
+    font-size: 1em;
+    margin: 0;
+}
+
+.vats {
+    font-size: 0.75em;
+    font-style: italic;
 }
