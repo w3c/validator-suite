@@ -29,13 +29,22 @@ object Application extends VSController {
       val f = getUser map {
         case _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
       } recover {
-        case  _: UnauthorizedException => Ok(views.html.loginRegister()).withNewSession
+        case  _: UnauthorizedException => Ok(views.html.login()).withNewSession
       } recover toError
       f.timer(loginName).timer(loginTimer)
     }
   }
 
-  def register = login
+  def register = Action { implicit req =>
+    AsyncResult {
+      val f = getUser map {
+        case _ => Redirect(routes.Jobs.index) // Already logged in -> redirect to index
+      } recover {
+        case  _: UnauthorizedException => Ok(views.html.register()).withNewSession
+      } recover toError
+      f.timer(loginName).timer(loginTimer)
+    }
+  }
 
   def logout: ActionA = Action {
     Redirect(routes.Application.index).withNewSession // .flashing("success" -> Messages("application.loggedOut"))
@@ -65,11 +74,11 @@ object Application extends VSController {
         }
       }) recover {
         case UnauthorizedException(email) =>
-          Unauthorized(views.html.loginRegister(
+          Unauthorized(views.html.login(
             loginForm = LoginForm(email).withGlobalError("application.invalidCredentials")
           )).withNewSession
         case InvalidFormException(form: LoginForm, _) =>
-          BadRequest(views.html.loginRegister(loginForm = form))
+          BadRequest(views.html.login(loginForm = form))
       } recover toError
       f.timer(authenticateName).timer(authenticateTimer)
     }
@@ -79,20 +88,29 @@ object Application extends VSController {
     AsyncResult {
       RegisterForm.bind() match {
         case Left(form) => {
-          Future.successful(BadRequest(views.html.loginRegister(registerForm = form)))
+          Future.successful(BadRequest(views.html.register(registerForm = form)))
         }
         case Right(form) => {
           val f = User.register(name = form.name, email = form.email, password = form.password, isSubscriber = false).map {
             case user => {
-              SeeOther(routes.Jobs.index).withSession("email" -> user.email)
+              (getFormParam("uri") match {
+                case Some(uri) if uri != "" => SeeOther(uri)
+                case _ => SeeOther(routes.Jobs.index)
+              }).withSession("email" -> user.email).flashing(("success", Messages("success.registered.user", user.name, user.email)))
             }
           } recover {
-            case DuplicatedEmail(email: String) => BadRequest(views.html.loginRegister(registerForm = form.withError("r_email", "duplicate")))
+            case DuplicatedEmail(email: String) => BadRequest(views.html.register(registerForm = form.withError("r_email", "duplicate")))
           }
           f
         }
       }
     }
   }
+
+  private def getFormParam(param: String)(implicit req: Request[AnyContent]) = for {
+    body <- req.body.asFormUrlEncoded
+    paramL <- body.get(param)
+    param <- paramL.headOption
+  } yield param
   
 }

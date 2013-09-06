@@ -128,7 +128,7 @@ trait VSController extends Controller {
     val action = req.headers.get("Authorization")
       .map(_.replace("Basic ", ""))
       .map { hash =>
-        val challenge = conf.config.getString("root.password.basic").get
+        val challenge = conf.config.getString("root.passwordBasic").get
         if (hash == challenge) Some(f(req)) else None
       }.flatten
     action.getOrElse(Unauthorized("unauthorized").withHeaders(("WWW-Authenticate", """Basic realm="W3C Validator Suite"""")))
@@ -147,7 +147,7 @@ trait VSController extends Controller {
     case UnauthorizedException(email) => {
       format {
         case x: Html => Unauthorized(
-          views.html.loginRegister(
+          views.html.login(
             loginForm = LoginForm(email),
             messages = List(("error", Messages("application.unauthorized"))),
             uri = Some(reqHeader.uri)
