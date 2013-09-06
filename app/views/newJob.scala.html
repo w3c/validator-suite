@@ -2,51 +2,48 @@
     user: User,
     idOpt: Option[JobId] = None)(implicit req: Request[AnyContent], flash: Flash, vs: ValidatorSuite)
 
-@front("W3C Validator Suite") {
+@front("W3C Validator Suite", Some(user)) {
 
 <section class="newJob row">
 
+    @if(flash.data.size > 0) {
+    <div class="column globalMessages">
+        @libs.messages2(flash.data.toList)
+    </div>}
+
     <form method="post" action="@routes.OneTimeJob.purchase" class="column">
         <fieldset tabindex="0">
-            <legend>Create a job</legend>
+            <legend>Purchase a job</legend>
+
+            <div class="row">
+                <div class="large-9 large-offset-3 columns">
+                    <p>Purchase a new W3C Validator Suite<sup>®</sup> job. Your website HTML and CSS content will be checked for validity and internationalization-friendliness.</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="small-3 columns">
+                    <label for="entrypoint" class="right inline">Job Name</label>
+                </div>
+                <div class="small-9 columns">
+                    <input id="name" name="name" type="text" value='@form("name").value' required="required" placeholder="A display name for this job" />
+                </div>
+            </div>
 
             <div class="row">
                 <div class="small-3 columns">
                     <label for="entrypoint" class="right inline">Start URL</label>
                 </div>
                 <div class="small-9 columns">
-                    <input id="entrypoint" name="entrypoint" type="url" value='@form("entrypoint").value' required="required"/>
+                    <input id="entrypoint" name="entrypoint" type="url" value='@form("entrypoint").value' required="required" placeholder="Your website homepage" />
                 </div>
             </div>
 
             <div class="row">
                 <div class="small-3 columns">
-                    <label for="validator_css-warning" class="right inline">CSS Warnings</label>
+                    <label class="right inline">Plan</label>
                 </div>
-                <div class="small-9 columns">
-                    <select id="validator_css-warning" name="validator_css-warning" class="large-6 small-12">
-                        <option value="2">All</option>
-                        <option selected="selected" value="1">Normal report</option>
-                        <option value="0">Most important</option>
-                        <option value="no">No warnings</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="small-3 columns">
-                    <label for="validator_css-vextwarning"  class="right inline">CSS Vendor Extensions</label>
-                </div>
-                    <div class="small-9 columns">
-                        <select id="validator_css-vextwarning" name="validator_css-vextwarning" class="large-6 small-12">
-                            <option value="false">Errors</option>
-                            <option value="true">Warnings</option>
-                        </select>
-                    </div>
-            </div>
-
-            <div class="row">
-                <div class="column large-9 large-offset-3">
+                <div class="column large-9">
                     <div class="row">
                         <div class="large-3 column">
                             <ul class="pricing-table" >
@@ -81,7 +78,6 @@
                                         <input id="otoj2000" name="otoj" value="otoj2000" type="radio" />
                                         Medium
                                     </label>
-
                                 </li>
                                 <li class="price">$110 / 90€*</li>
                                 <li class="description">1,000 pages or fewer</li>
@@ -95,7 +91,6 @@
                                         <input id="otoj5000" name="otoj" value="otoj5000" type="radio" />
                                         Large
                                     </label>
-
                                 </li>
                                 <li class="price">$190 / 150€*</li>
                                 <li class="description">2,000 pages or fewer</li>
@@ -107,26 +102,42 @@
             </div>
 
             <div class="row">
+                <p class="column large-9 large-offset-3 vats">* Plus VAT if applicable. Funds from W3C Validator Suite<sup>®</sup> support W3C's mission to Lead the Web to its Full Potential.</p>
+            </div>
+
+            <div class="row">
+                <div class="small-3 columns">
+                    <label for="validator_css-warning" class="right inline">CSS Warnings</label>
+                </div>
+                <div class="small-9 columns">
+                    <select id="validator_css-warning" name="validator_css-warning" class="large-6 small-12">
+                        <option value="2">All</option>
+                        <option selected="selected" value="1">Normal report</option>
+                        <option value="0">Most important</option>
+                        <option value="no">No warnings</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="small-3 columns">
+                    <label for="validator_css-vextwarning"  class="right inline">CSS Vendor Extensions</label>
+                </div>
+                <div class="small-9 columns">
+                    <select id="validator_css-vextwarning" name="validator_css-vextwarning" class="large-6 small-12">
+                        <option value="false">Errors</option>
+                        <option value="true">Warnings</option>
+                    </select>
+                </div>
+            </div>
+
+            @**<div class="row">
                 <div class="small-3 columns">
                     <input class="right inline" id="dtd" name="dtd" type="checkbox" @form("dtd").value.map{_ => checked="checked"}/>
                 </div>
                 <div class="small-9 columns">
                     <label for="dtd">Force DTD-based validation for HTML4 documents</label>
                 </div>
-            </div>
-
-            @**<label>Max pages</label>
-
-            <div class="otoj">
-                <label for="otoj250">250</label>
-                <input id="otoj250" name="otoj" value="otoj250" type="radio" checked />
-                <label for="otoj2000" style="margin-left:10px">2,000</label>
-                <input id="otoj2000" name="otoj" value="otoj2000" type="radio" />
-                <br>
-                <label for="otoj500">500</label>
-                <input id="otoj500" name="otoj" value="otoj500" type="radio" />
-                <label for="otoj5000" style="margin-left:10px">5,000</label>
-                <input id="otoj5000" name="otoj" value="otoj5000" type="radio" />
             </div>**@
 
             <div class="row">
@@ -136,10 +147,6 @@
                 <div class="small-9 columns">
                     <label for="terms">I agree to the <a href="/policies/terms">Terms and Conditions</a></label>
                 </div>
-            </div>
-
-            <div class="row">
-                <p class="column large-9 large-offset-3 vats">* Plus VAT if applicable. Funds from W3C Validator Suite<sup>®</sup> support W3C's mission to Lead the Web to its Full Potential.</p>
             </div>
 
             <div class="row">

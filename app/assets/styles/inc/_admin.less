@@ -1,9 +1,8 @@
 #admin {
     font-size: 1.23em;
     position: absolute;
-    right: 15px;
-    line-height: 60px;
-    top: -60px;
+    right: 1.2em;
+    top: -2.1em;
     z-index: 2;
     border-bottom: none;
     text-align:right;
@@ -15,11 +14,17 @@
     //background-size: 32px 48px;
     //padding-right: 57px;
 
+
+    li > span {
+        margin-right: 2.5em;
+    }
+
+
     a, button {
         color: white !important;
-        margin: 0 30px;
+        margin-right: 2.5em;
         text-decoration: none;
-        vertical-align: middle;
+        //vertical-align: middle;
         border-radius: 0;
 
         &:hover {
@@ -58,4 +63,15 @@
         text-shadow: 1px 1px 0 #1a4a78;
         box-shadow: none;
     }
+
+    .logout {
+        vertical-align: initial;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    ul, li {
+        display: inline;
+    }
+
 }

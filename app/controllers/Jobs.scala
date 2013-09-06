@@ -14,9 +14,9 @@ import scala.concurrent.Future
 import org.w3.vs.util.timer._
 import org.w3.vs.Graphite
 import com.codahale.metrics._
-import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import org.w3.vs.view.model.JobView
 import org.w3.vs.store.Formats._
+import play.api.i18n.Messages
 
 object Jobs extends VSController {
   
@@ -50,7 +50,7 @@ object Jobs extends VSController {
   val newJobName = (new controllers.javascript.ReverseJobs).newJob.name
   val newJobTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, newJobName))
 
-  def newJob: ActionA = AuthAction { implicit req => user =>
+  def newJob2: ActionA = AuthAction { implicit req => user =>
     timer(newJobName, newJobTimer) {
       case Html(_) => {
         if (user.isSubscriber) {
@@ -62,11 +62,22 @@ object Jobs extends VSController {
     }
   }
 
-  def newJob2: ActionA = AuthAction { implicit req => user =>
+  def newJob: ActionA = AuthAction { implicit req => user =>
     timer(newJobName, newJobTimer) {
       case Html(_) => {
         Ok(views.html.newJob(JobForm.blank, user, None))
       }
+    }
+  }
+
+  def buyOneTime: ActionA = Action { implicit req =>
+    AsyncResult {
+      getUser map {
+        case user => Ok(views.html.newJob(JobForm.blank, user))
+      } recover {
+        case  _: UnauthorizedException =>
+          Unauthorized(views.html.register(uri = Some(req.uri), messages = List(("info", Messages("info.register.first")))))
+      } recover toError
     }
   }
 

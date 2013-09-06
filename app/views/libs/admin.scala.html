@@ -1,6 +1,21 @@
 @(user: User)
     <section id="admin">
-        <h1>Administration</h1>
+
+        <ul>
+            <li><a href="@routes.Application.pricing">Pricing</a></li>
+            <li><a href="@routes.Application.faq">FAQs</a></li>
+            <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
+            <li><span>@user.name</span></li>
+            <li>
+                <form action="@routes.Application.logout" method="post">
+                    <button type="submit" class="logout">Logout</button>
+                </form>
+            </li>
+        </ul>
+
+        @**<h1>Administration</h1>
+        <a href="@routes.Application.pricing">Pricing</a>
+        <a href="@routes.Application.faq">FAQs</a>
         <a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a>
         <dl>
             <dt>User name:</dt>
@@ -8,5 +23,5 @@
         </dl>
         <form action="@routes.Application.logout" method="post">
             <button type="submit">Logout</button>
-        </form>
+        </form>**@
     </section>

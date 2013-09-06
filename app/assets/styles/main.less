@@ -46,7 +46,7 @@ a.external {
     text-decoration: underline;
     padding-right: 20px;
     background: url("../images/external.png") no-repeat center right;
-    font-family: "Trebuchet MS",sans-serif; // To overide in <code> elems
+    font-family: @baseFontFamily; // To overide in <code> elems
 }
 
 input[type="reset"]::-moz-focus-inner,
@@ -78,7 +78,7 @@ input[pattern] {
     //font-weight: bold;
     font-size: 14px;
     line-height: 15px;
-    font-family: "Trebuchet MS", sans-serif;
+    font-family: @baseFontFamily;
     cursor: pointer;
     background-color: #F0F0F0;
     background: -webkit-linear-gradient(#FAFAFA, #F4F4F4 40%, #E5E5E5);

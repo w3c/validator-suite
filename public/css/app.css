@@ -79,7 +79,13 @@ h2 {
 }
 
 #banner img {
-    height: 80px;
+    height: 50px;
+}
+
+@media only screen and (min-width: 48em) {
+    #banner img {
+        height: 80px;
+    }
 }
 
 #banner .row {
@@ -374,6 +380,11 @@ select {
 .newJob .pricing-table .price {
     font-size: 1em;
 }
+
+.newJob .pricing-table {
+    margin-bottom: 0.5em;
+}
+
 .newJob .pricing-table input {
     margin: 0;
     position: absolute;
@@ -408,3 +419,42 @@ select {
     padding: 10px 14px;
     font-size: 0.875em;
 }
+
+fieldset > .row > .small-3 {
+    padding-right: 0;
+}
+
+.topLabel {
+    margin-bottom: 1em;
+    font-size: 0.875em;
+}
+
+.alert-box.info {
+   color: #073E80;
+   background: #D9E6F0;
+}
+
+.globalMessages .alert-box {
+    border: none;
+    padding: 1.25em;
+}
+
+#nav form {
+    display: inline;
+}
+
+#nav .logout:hover {
+    background: transparent;
+}
+#nav .logout {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#nav li > span {
+    padding: 8px 10px 7px 10px;
+}
+

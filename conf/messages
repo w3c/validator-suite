@@ -181,10 +181,14 @@ form.assertor.error.required=No assertors selected
 form.maxResources.error.max=Invalid max pages value
 form.maxResources.error.min=Invalid max pages value
 
-form.userName.error.required=A user name is required.
+form.userName.error.required=A name is required.
 
 form.r_password.error.minLength=Password too short. Minimum is 6 characters.
 # There is no key for this one hence the '..' (cf RegisterForm.scala)
 form..password.dont_match=Passwords did not match.
 form.terms.not_accepted=You must read and agree to the Terms and Conditions to purchase a job.
 
+
+
+info.register.first=In order to purchase a job please register first, or login if you already have an account.
+success.registered.user=Successfully registered as {0} <{1}>
