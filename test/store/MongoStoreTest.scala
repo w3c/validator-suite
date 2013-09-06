@@ -228,7 +228,7 @@ extends VSTest with WipeoutData {
   "retrieve User by email" in {
     User.getByEmail("fOO@example.com").getOrFail() must be(user1)
 
-    Try { User.getByEmail("unknown@example.com").getOrFail() } must be (Failure(UnknownUser))
+    Try { User.getByEmail("unknown@example.com").getOrFail() } must be (Failure(UnknownUser("unknown@example.com")))
   }
 
 
@@ -242,9 +242,9 @@ extends VSTest with WipeoutData {
   "authenticate a user" in {
     Try { User.authenticate("foo@example.com", "secret").getOrFail() } must be (Success(user1))
 
-    Try { User.authenticate("foo@example.com", "bouleshit").getOrFail() } must be (Failure(Unauthenticated))
+    Try { User.authenticate("foo@example.com", "bouleshit").getOrFail() } must be (Failure(Unauthenticated("foo@example.com")))
 
-    Try {User.authenticate("unknown@example.com", "bouleshit").getOrFail() } must be (Failure(UnknownUser))
+    Try {User.authenticate("unknown@example.com", "bouleshit").getOrFail() } must be (Failure(UnknownUser("unknown@example.com")))
   }
 
   "retrieve unknown Job" in {
