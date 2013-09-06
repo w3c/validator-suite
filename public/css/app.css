@@ -63,7 +63,7 @@ h2 {
 
 #banner {
     background: #073E80;
-    margin-bottom: 2em;
+    margin-bottom: 1.5em;
     border-bottom: 1em solid #D9E6F0;
     line-height: 1em;
 
@@ -391,4 +391,20 @@ select {
 .vats {
     font-size: 0.75em;
     font-style: italic;
+}
+
+.screenshot {
+    width: 803px;
+    padding: 1em 0;
+}
+
+.caption {
+    position: absolute;
+    bottom: 0;
+    background-color: #000;
+    background-color: rgba(0,0,0,0.6);
+    color: #fff;
+    width: 803px;
+    padding: 10px 14px;
+    font-size: 0.875em;
 }
