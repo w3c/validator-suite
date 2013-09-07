@@ -80,11 +80,13 @@ h2 {
 
 #banner img {
     height: 50px;
+    width: 210px;
 }
 
 @media only screen and (min-width: 48em) {
     #banner img {
         height: 80px;
+        width: 336px;
     }
 }
 
