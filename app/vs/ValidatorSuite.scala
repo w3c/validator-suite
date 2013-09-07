@@ -39,10 +39,10 @@ trait ValidatorSuite extends Database {
       Configuration(ConfigFactory.load(ConfigFactory.parseFileAnySyntax(new File(s"conf/${fileName}"))))
 
     mode match {
-      // will look for application.conf on the class path
-      case Prod => Configuration(ConfigFactory.load(ConfigParseOptions.defaults().setAllowMissing(false)))
       case Test => load("application.conf") ++ load("application-test.conf")
       case Dev =>  load("application.conf") ++ load("application-dev.conf")
+      // will look for application.conf on the class path
+      case _ => Configuration(ConfigFactory.load(ConfigParseOptions.defaults().setAllowMissing(false)))
     }
   }
 
