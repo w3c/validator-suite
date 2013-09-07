@@ -135,16 +135,16 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
             "click .stop"   : "stop",
             "click .run"    : "run",
             "click .delete" : "_delete",
-            "keydown .dropdown" : "dropdown",
-            "change [name=group]" : "group"
+            //"keydown .dropdown" : "dropdown",
+            "change [name='group']" : "group"
             //"keyup [name=search]": "search"
         },
 
         dropdown: function (event) {
             // Space = 32
-            if (event.which === 32) {
+            /*if (event.which === 32) {
                 $("input:not(:checked)", event.target).click();
-            }
+            }*/
         },
 
         group: function (event) {

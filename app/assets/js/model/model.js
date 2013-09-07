@@ -44,7 +44,7 @@ define(["util/Logger", "util/Util", "util/Socket", "libs/backbone"], function (L
         tagName: "article",
 
         initialize: function () {
-            this.model.on('change', this.render, this);
+            this.model.on('change', _.throttle(this.render, 100), this);
             this.model.on('destroy', this.remove, this);
             this.template = this.options.template || Util.getTemplate(this.templateId);
             if (_.isFunction(this.init)) { this.init(); }

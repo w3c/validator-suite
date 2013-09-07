@@ -32,6 +32,10 @@ define(["util/Logger", "model/resource", "model/collection", "util/Socket"], fun
             }
         },
 
+        afterRender: function () {
+            //console.log("Resources rendered");
+        },
+
         emptyMessage: "No resources to show." // resources.empty
 
     });
