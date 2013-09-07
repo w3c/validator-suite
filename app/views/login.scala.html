@@ -15,6 +15,12 @@
         <fieldset>
             <legend id="login" tabindex="0">Login</legend>
 
+            <div class="row">
+                <span class="column large-offset-3 topLabel">
+                    If you don't have an account yet, you can <a href="@routes.Application.register.url">register now</a>.
+                </span>
+            </div>
+
             @if(loginForm.errors.size > 0) {
             <div class="row">
                 <div class="column large-9 large-offset-3 formErrors">
