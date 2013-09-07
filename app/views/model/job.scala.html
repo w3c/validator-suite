@@ -70,9 +70,9 @@
                 <form class="group" action="@routes.Job.dispatcher(job.id)" method="get">
                     <fieldset class="dropdown" tabindex="0">
                         <legend>Report by</legend>
-                        <input name=group type=radio value="resource" id="resource" @if(!collection.isGroupedBy("message")){checked}/>
+                        <input name="group" type="radio" value="resource" id="resource" @if(!collection.isGroupedBy("message")){checked}/>
                         <label for="resource">Group by resource</label>
-                        <input name=group type=radio value="message" id="message" @if(collection.isGroupedBy("message")){checked}/>
+                        <input name="group" type="radio" value="message" id="message" @if(collection.isGroupedBy("message")){checked}/>
                         <label for="message">Group by message</label>
                         @collection.params.search.map { search =>
                         <input name="search" type="hidden" value="@search"/>}
