@@ -34,7 +34,7 @@
             case _ => {
             <li><a href="@routes.Application.pricing">Pricing</a></li>
             <li><a href="@routes.Application.faq">FAQs</a></li>
-            <li><a href="mailto:validator-contact-vsuite@@w3.org">Contact</a></li>
+            <li><a href="mailto:@Helper.config.getString("contact.email").getOrElse("")">Contact</a></li>
             <li><a href="@routes.Application.login"><strong>Login</strong></a></li>
             }}
         </ul>
