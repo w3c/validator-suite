@@ -2,16 +2,16 @@
 
 @front("W3C Validator Suite") {
 
-<section class="login-register">
+<section class="login-register row">
 
     @defining(messages ++ flash.data){ case messages =>
     @if(messages.size > 0) {
-    <div class="row globalMessages">
+    <div class="column globalMessages">
         @libs.messages2(messages)
     </div>}}
 
-    <form method="post" action="@routes.Application.register" class="row form-register">
-        <fieldset class="column">
+    <form method="post" action="@routes.Application.register" class="column form-register">
+        <fieldset>
             <legend id="register" tabindex="0">Register</legend>
 
             <div class="row">
@@ -25,8 +25,7 @@
                 <div class="column large-9 large-offset-3 formErrors">
                     @libs.messages2(registerForm.errors.toList)
                 </div>
-            </div>
-            }
+            </div>}
 
             <div class="row">
                 <div class="small-3 columns">
@@ -80,7 +79,7 @@
             <div class="row">
                 <div class="column large-4 large-offset-8 small-9 small-offset-3">
                     <button id="submit_register" name="submit" value="register" type="submit">Register</button>
-                    <input type="hidden" name="uri" value="@uri">
+                    <input type="hidden" name="uri" value="@uri" value='form("uri").value'>
                 </div>
             </div>
 

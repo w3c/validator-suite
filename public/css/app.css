@@ -63,7 +63,7 @@ h2 {
 
 #banner {
     background: #073E80;
-    margin-bottom: 1.5em;
+    margin-bottom: 1.25em;
     border-bottom: 1em solid #D9E6F0;
     line-height: 1em;
 
@@ -174,8 +174,7 @@ button,
     border-radius: 1px;
 }
 
-button:hover,
-.button:hover {
+button:hover, .button:hover, button:focus, .button:hover{
     background: #FFAD21;
 }
 
@@ -262,7 +261,7 @@ button:hover,
 
 #footer {
     background: #073E80;
-    margin-top: 2em;
+    /*margin-top: 2em;*/
     border-top: 0.5em solid #D9E6F0;
 }
 
@@ -366,8 +365,9 @@ select {
     margin-bottom: 0;
 }
 
-.newJob fieldset {
-    margin-top: 0;
+.newJob fieldset,
+.login-register fieldset {
+    margin-top: 0.5em;
 }
 
 .newJob .large-2 {

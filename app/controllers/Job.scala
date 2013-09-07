@@ -2,7 +2,6 @@ package controllers
 
 import org.w3.vs.controllers._
 import org.w3.vs.model.{ Job => JobModel, User, JobId, _ }
-import org.w3.vs.view.form.JobForm
 import play.api.i18n.Messages
 import play.api.mvc.{WebSocket, Result, Handler, Action}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,7 +46,7 @@ object Job extends VSController {
     f.timer(editName).timer(editTimer)
   }*/
 
-  def update(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
+  /*def update(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
     val result: Future[PartialFunction[Format, Result]] = for {
       form <- Future(JobForm.bind match {
         case Left(form) => throw new InvalidFormException(form)
@@ -65,7 +64,7 @@ object Job extends VSController {
         case _ => BadRequest
       }
     }
-  }
+  }*/
 
   def delete(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
     for {
@@ -117,7 +116,7 @@ object Job extends VSController {
         param <- body.get("action")
         action <- param.headOption
       } yield action.toLowerCase match {
-        case "update" => update(id)(req)
+        //case "update" => update(id)(req)
         case "delete" => delete(id)(req)
         //case "on" => on(id)(req)
         //case "off" => off(id)(req)

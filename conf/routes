@@ -14,14 +14,12 @@ POST    /register                                   controllers.Application.regi
 # Jobs
 GET     /jobs                                       controllers.Jobs.index
 GET     /jobs/                                      controllers.Jobs.redirect
-POST    /jobs                                       controllers.Jobs.create
+#POST    /jobs                                       controllers.Jobs.create
 GET     /jobs/new                                   controllers.Jobs.newJob
-GET     /jobs/buy-one-time                          controllers.Jobs.buyOneTime
-GET     /jobs/new2                                  controllers.Jobs.newJob2
 GET     /jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
-GET     /jobs/purchase                              controllers.OneTimeJob.newJob
-POST    /jobs/purchase                              controllers.OneTimeJob.purchase
+GET     /jobs/buy-one-time                          controllers.OneTimeJob.buy
+POST    /jobs/buy-one-time                          controllers.OneTimeJob.buyAction
 POST    /purchase/callback                          controllers.OneTimeJob.callback
 
 # Job

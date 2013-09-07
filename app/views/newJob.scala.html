@@ -1,25 +1,33 @@
-@(form: JobForm,
+@(form: OneTimeJobForm,
     user: User,
-    idOpt: Option[JobId] = None)(implicit req: Request[AnyContent], flash: Flash, vs: ValidatorSuite)
+    messages: List[(String, String)] = List.empty)(implicit req: Request[AnyContent], flash: Flash, vs: ValidatorSuite)
 
 @front("W3C Validator Suite", Some(user)) {
 
 <section class="newJob row">
 
-    @if(flash.data.size > 0) {
-    <div class="column globalMessages">
-        @libs.messages2(flash.data.toList)
-    </div>}
+    @defining(messages ++ flash.data){ case messages =>
+    @if(messages.size > 0) {
+    <div class="row globalMessages">
+        @libs.messages2(messages)
+    </div>}}
 
-    <form method="post" action="@routes.OneTimeJob.purchase" class="column">
-        <fieldset tabindex="0">
-            <legend>Purchase a job</legend>
+    <form method="post" action="@routes.OneTimeJob.buyAction" class="column">
+        <fieldset>
+            <legend tabindex="0">Purchase a job</legend>
 
             <div class="row">
                 <div class="large-9 large-offset-3 columns">
                     <p>Purchase a new W3C Validator Suite<sup>®</sup> job. Your website HTML and CSS content will be checked for validity and internationalization-friendliness.</p>
                 </div>
             </div>
+
+            @if(form.errors.size > 0) {
+            <div class="row">
+                <div class="column large-9 large-offset-3 formErrors">
+                    @libs.messages2(form.errors.toList)
+                </div>
+            </div>}
 
             <div class="row">
                 <div class="small-3 columns">
@@ -48,8 +56,8 @@
                         <div class="large-3 column">
                             <ul class="pricing-table" >
                                 <li class="title">
-                                    <label for="otoj250">
-                                        <input id="otoj250" name="otoj" value="otoj250" type="radio" checked />
+                                    <label for="tiny">
+                                        <input id="tiny" name="plan" value="tiny" type="radio" checked />
                                         <span>Tiny</span>
                                     </label>
                                 </li>
@@ -61,8 +69,8 @@
                         <div class="large-3 column">
                             <ul class="pricing-table">
                                 <li class="title">
-                                    <label for="otoj500">
-                                        <input id="otoj500" name="otoj" value="otoj500" type="radio" />
+                                    <label for="small">
+                                        <input id="small" name="plan" value="small" type="radio" />
                                         Small
                                     </label>
                                     </li>
@@ -74,8 +82,8 @@
                         <div class="large-3 column">
                             <ul class="pricing-table">
                                 <li class="title">
-                                    <label for="otoj2000">
-                                        <input id="otoj2000" name="otoj" value="otoj2000" type="radio" />
+                                    <label for="medium">
+                                        <input id="medium" name="plan" value="medium" type="radio" />
                                         Medium
                                     </label>
                                 </li>
@@ -87,8 +95,8 @@
                         <div class="large-3 column">
                             <ul class="pricing-table">
                                 <li class="title">
-                                    <label for="otoj5000">
-                                        <input id="otoj5000" name="otoj" value="otoj5000" type="radio" />
+                                    <label for="large">
+                                        <input id="large" name="plan" value="large" type="radio" />
                                         Large
                                     </label>
                                 </li>
@@ -105,7 +113,7 @@
                 <p class="column large-9 large-offset-3 vats">* Plus VAT if applicable. Funds from W3C Validator Suite<sup>®</sup> support W3C's mission to Lead the Web to its Full Potential.</p>
             </div>
 
-            <div class="row">
+            @**<div class="row">
                 <div class="small-3 columns">
                     <label for="validator_css-warning" class="right inline">CSS Warnings</label>
                 </div>
@@ -131,7 +139,7 @@
                 </div>
             </div>
 
-            @**<div class="row">
+            <div class="row">
                 <div class="small-3 columns">
                     <input class="right inline" id="dtd" name="dtd" type="checkbox" @form("dtd").value.map{_ => checked="checked"}/>
                 </div>
@@ -142,7 +150,7 @@
 
             <div class="row">
                 <div class="small-3 columns">
-                    <input id="terms" type="checkbox" required="required" name="terms" class="right">
+                    <input id="terms" type="checkbox" required="required" name="terms" class="right" @form("terms").value.map{_ => checked="checked"}>
                 </div>
                 <div class="small-9 columns">
                     <label for="terms">I agree to the <a href="/policies/terms">Terms and Conditions</a></label>

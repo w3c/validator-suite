@@ -29,7 +29,7 @@ object RegisterForm {
       "r_email" -> email,
       "r_password" -> nonEmptyText(minLength = 6),
       "repeatPassword" -> text,
-      "mailing" -> of[Boolean](booleanFormatter)
+      "mailing" -> of[Boolean](checkboxFormatter)
     ).verifying("password.dont_match", p => p._3 == p._4)
   )
 

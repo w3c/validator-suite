@@ -1,7 +1,5 @@
 package org.w3.vs
 
-import org.w3.vs.model._
-
 package object model {
 
   type AssertorsConfiguration = Map[AssertorId, AssertorConfiguration]

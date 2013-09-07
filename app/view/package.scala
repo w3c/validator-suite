@@ -15,18 +15,18 @@ package object view {
   object OTOJType {
     def fromOpt(o: Option[String]): OTOJType = {
       o match {
-        case Some("otoj500") => Otoj500
-        case Some("otoj2000") => Otoj2000
-        case Some("otoj5000") => Otoj5000
-        case _ => Otoj250
+        case Some("tiny") => Tiny
+        case Some("small") => Small
+        case Some("medium") => Medium
+        case _ => Large
       }
     }
     def fromJob(job: Job): OTOJType = {
       job.strategy.maxResources match {
-        case n if n <= Otoj250.maxPages => Otoj250
-        case n if n <= Otoj500.maxPages => Otoj500
-        case n if n <= Otoj2000.maxPages => Otoj2000
-        case n if n <= Otoj5000.maxPages => Otoj5000
+        case n if n <= Tiny.maxPages => Tiny
+        case n if n <= Small.maxPages => Small
+        case n if n <= Medium.maxPages => Medium
+        case n if n <= Large.maxPages => Large
         case _ => throw new Exception("this job max pages exceed the maximum one-time job value")
       }
     }
@@ -35,30 +35,23 @@ package object view {
     def value: String
     def maxPages: Int
   }
-  case object Otoj250 extends OTOJType {
-    val value = "otoj250"
+  case object Tiny extends OTOJType {
+    val value = "one-time-tiny"
     val maxPages = 250
   }
-  case object Otoj500 extends OTOJType {
-    val value = "otoj500"
+  case object Small extends OTOJType {
+    val value = "one-time-small"
     val maxPages = 500
   }
-  case object Otoj2000 extends OTOJType{
-    val value = "otoj2000"
+  case object Medium extends OTOJType{
+    val value = "one-time-medium"
+    val maxPages = 1000
+  }
+  case object Large extends OTOJType{
+    val value = "one-time-large"
     val maxPages = 2000
   }
-  case object Otoj5000 extends OTOJType{
-    val value = "otoj5000"
-    val maxPages = 5000
-  }
-  implicit val Otojformater = new Formatter[OTOJType]{
-    def bind(key: String, data: Map[String, String]): Either[Seq[FormError], OTOJType] = {
-      Right(OTOJType.fromOpt(data.get("otoj")))
-    }
-    def unbind(key: String, value: OTOJType): Map[String, String] = {
-      Map(key -> value.value)
-    }
-  }
+
 
 
   type Crumb = (String, String)
@@ -90,7 +83,7 @@ package object view {
 //    }
 //  }
 
-  implicit val booleanFormatter = new Formatter[Boolean] {
+  implicit val checkboxFormatter = new Formatter[Boolean] {
     def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Boolean] =
       Right(data isDefinedAt key)
     def unbind(key: String, value: Boolean): Map[String, String] =

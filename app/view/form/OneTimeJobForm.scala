@@ -15,78 +15,49 @@ import scala.concurrent._
 import OneTimeJobForm.OneTimeJobType
 import play.api.data
 import play.api.i18n.Messages
+import controllers.Assertors
+import scala.collection.immutable.Nil
 
 object OneTimeJobForm {
 
   type OneTimeJobType = (String, URL, OTOJType, Boolean)
-
-  def assertors()(implicit req: Request[AnyContent]): Seq[Assertor] = try {
-    req.body.asFormUrlEncoded.get.get("assertor[]").get.map(Assertor.get)
-  } catch { case _: Exception =>
-    Seq.empty
-  }
-
-  def assertorParameters()(implicit req: Request[AnyContent]): AssertorsConfiguration = {
-    assertors().map { assertor =>
-      val k = assertor.id
-      val v: Map[String, List[String]] = req.body.asFormUrlEncoded match {
-        case Some(foo) => foo.collect {
-          case (param, values) if (param.startsWith(assertor.id + "-")) =>
-            (param.replaceFirst("^" + assertor.id + "-", ""), values.toList)
-        }.toMap
-        case None => Map.empty
-      }
-      (k -> v)
-    }.toMap
-  }
 
   def bind()(implicit req: Request[AnyContent], context: ExecutionContext): Either[OneTimeJobForm, ValidOneTimeJobForm] = {
 
     val form: Form[OneTimeJobType] = playForm.bindFromRequest
 
     val vsform: Either[OneTimeJobForm, ValidOneTimeJobForm] = form.fold(
-      f => Left(new OneTimeJobForm(f, assertorParameters())),
-      s => {
-        if (assertors().isEmpty)
-          Left(new OneTimeJobForm(form.withError("assertor", "No assertor selected", "error"), assertorParameters())) // TODO
-        else
-          Right(new ValidOneTimeJobForm(form, s, assertorParameters()))
-      }
+      f => Left(new OneTimeJobForm(f)),
+      s => Right(new ValidOneTimeJobForm(form, s))
     )
 
     vsform
   }
 
-  def blank: OneTimeJobForm = new OneTimeJobForm(playForm, AssertorsConfiguration.default)
+  def blank: OneTimeJobForm = new OneTimeJobForm(playForm)
 
-  def fill(job: Job) = new ValidOneTimeJobForm(
-    playForm fill(
-      job.name,
-      job.strategy.entrypoint,
-      Otoj250, // TODO
-      false
-    ), (
-      job.name,
-      job.strategy.entrypoint,
-      Otoj250, // TODO
-      false
-    ), job.strategy.assertorsConfiguration
-  )
+  implicit val Otojformater = new Formatter[OTOJType]{
+    def bind(key: String, data: Map[String, String]): Either[Seq[FormError], OTOJType] = {
+      Right(OTOJType.fromOpt(data.get("plan")))
+    }
+    def unbind(key: String, value: OTOJType): Map[String, String] = {
+      Map(key -> value.value)
+    }
+  }
 
   private def playForm: Form[OneTimeJobType] = Form(
     tuple(
       "name" -> nonEmptyText,
       "entrypoint" -> of[URL],
-      "otoj" -> of[OTOJType],
-      "terms" -> of[Boolean](booleanFormatter).verifying("not_accepted", _ == true)
+      "plan" -> of[OTOJType],
+      "terms" -> of[Boolean](checkboxFormatter).verifying("not_accepted", _ == true)
     )
   )
 
 }
 
 case class OneTimeJobForm private[view](
-    form: Form[OneTimeJobType],
-    val assertorsConfiguration: AssertorsConfiguration) extends VSForm {
+    form: Form[OneTimeJobType]) extends VSForm {
 
   def apply(s: String) = form(s)
 
@@ -96,28 +67,22 @@ case class OneTimeJobForm private[view](
 
   def withErrors(errors: Seq[(String, String)]) = copy(form = form.copy(errors = errors.map(e => FormError(e._1, e._2)) ++ form.errors))
 
-  def hasAssertor(assertor: String): Boolean = try {
-    assertorsConfiguration.contains(AssertorId(assertor))
-  } catch { case _: Exception =>
-    false
-  }
-
 }
 
 class ValidOneTimeJobForm private[view](
     form: Form[OneTimeJobType],
-    bind: OneTimeJobType,
-    assertorsConfiguration: AssertorsConfiguration) extends OneTimeJobForm(form, assertorsConfiguration) with VSForm {
+    bind: OneTimeJobType) extends OneTimeJobForm(form) with VSForm {
 
-  val (name, entrypoint, otoj, terms) = bind
+  val (name, entrypoint, plan, terms) = bind
 
   def createJob(user: User)(implicit conf: ValidatorSuite): Job = {
     val strategy = Strategy(
       entrypoint = org.w3.vs.web.URL(entrypoint),
       linkCheck = false,
-      filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
-      maxResources = otoj.maxPages,
-      assertorsConfiguration = assertorsConfiguration)
+      filter = Filter.includePrefix(entrypoint.toString),
+      maxResources = plan.maxPages,
+      assertorsConfiguration = AssertorsConfiguration.default
+    )
     Job.createNewJob(name, strategy, user.id)
   }
 

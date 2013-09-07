@@ -1,3 +1,4 @@
+/*
 package org.w3.vs.view.form
 
 import org.w3.vs.web.URL
@@ -76,7 +77,7 @@ object JobForm {
       "name" -> nonEmptyText,
       //"assertor" -> of[Seq[String]].verifying("Choose an assertor", ! _.isEmpty),
       "entrypoint" -> of[URL],
-      "linkCheck" -> of[Boolean](booleanFormatter),
+      "linkCheck" -> of[Boolean](checkboxFormatter),
       "maxResources" -> number(min=1, max=5000)
     )
   )
@@ -131,3 +132,4 @@ class ValidJobForm private[view](
   }
 
 }
+*/

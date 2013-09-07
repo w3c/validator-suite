@@ -5,6 +5,7 @@
             <li><a href="@routes.Application.pricing">Pricing</a></li>
             <li><a href="@routes.Application.faq">FAQs</a></li>
             <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
+            <li><a href="@routes.Jobs.index">Jobs</a></li>
             <li><span>@user.name</span></li>
             <li>
                 <form action="@routes.Application.logout" method="post">

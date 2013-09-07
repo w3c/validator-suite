@@ -50,7 +50,7 @@ object Jobs extends VSController {
   val newJobName = (new controllers.javascript.ReverseJobs).newJob.name
   val newJobTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, newJobName))
 
-  def newJob2: ActionA = AuthAction { implicit req => user =>
+/*  def newJob2: ActionA = AuthAction { implicit req => user =>
     timer(newJobName, newJobTimer) {
       case Html(_) => {
         if (user.isSubscriber) {
@@ -60,28 +60,17 @@ object Jobs extends VSController {
         }
       }
     }
-  }
+  }*/
 
   def newJob: ActionA = AuthAction { implicit req => user =>
     timer(newJobName, newJobTimer) {
       case Html(_) => {
-        Ok(views.html.newJob(JobForm.blank, user, None))
+        Ok(views.html.newJob(OneTimeJobForm.blank, user))
       }
     }
   }
 
-  def buyOneTime: ActionA = Action { implicit req =>
-    AsyncResult {
-      getUser map {
-        case user => Ok(views.html.newJob(JobForm.blank, user))
-      } recover {
-        case  _: UnauthorizedException =>
-          Unauthorized(views.html.register(uri = Some(req.uri), messages = List(("info", Messages("info.register.first")))))
-      } recover toError
-    }
-  }
-
-  val createName = (new controllers.javascript.ReverseJobs).create.name
+  /*val createName = (new controllers.javascript.ReverseJobs).create.name
   val createTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, createName))
 
   def create: ActionA = AuthAsyncAction { implicit req => user =>
@@ -98,12 +87,12 @@ object Jobs extends VSController {
       }
     val f2: Future[PartialFunction[Format, Result]] = f1 recover {
       case InvalidFormException(form: JobForm, _) => {
-        case Html(_) => BadRequest(views.html.jobForm(form, user))
+        case Html(_) => BadRequest(views.html.newJob(form, user))
         case _ => BadRequest
       }
     }
     f2.timer(createName).timer(createTimer)
-  }
+  }*/
 
   def socket(typ: SocketType): Handler = {
     typ match {
