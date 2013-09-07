@@ -60,9 +60,16 @@ object Application extends VSController {
           case Left(form) => throw InvalidFormException(form)
           case Right(validForm) => validForm
         })
-        user <- User.authenticate(form.email, form.password)
+        user <- User.authenticate(form.email, form.password) recover {
+          case UnauthorizedException(email) => throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
+        }
       } yield {
-        (for {
+        (form("uri").value match {
+          case Some(uri) if (uri != routes.Application.login.url && uri != "") => SeeOther(uri)
+          case _ => SeeOther(routes.Jobs.index)
+        }).withSession("email" -> user.email)
+
+        /*(for {
           body <- req.body.asFormUrlEncoded
           param <- body.get("uri")
           uri <- param.headOption
@@ -71,14 +78,16 @@ object Application extends VSController {
             SeeOther(uri).withSession("email" -> user.email)
           } // Redirect to "uri" param if specified
           case _ => SeeOther(routes.Jobs.index).withSession("email" -> user.email)
-        }
+        }*/
       }) recover {
-        case UnauthorizedException(email) =>
+        /*case UnauthorizedException(email) =>
           Unauthorized(views.html.login(
             loginForm = LoginForm(email).withGlobalError("application.invalidCredentials")
-          )).withNewSession
-        case InvalidFormException(form: LoginForm, _) =>
-          BadRequest(views.html.login(loginForm = form))
+          )).withNewSession*/
+        case InvalidFormException(form: LoginForm, _) => {
+          BadRequest(views.html.login(loginForm = form)).withNewSession
+        }
+
       } recover toError
       f.timer(authenticateName).timer(authenticateTimer)
     }

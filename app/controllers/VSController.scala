@@ -148,9 +148,8 @@ trait VSController extends Controller {
       format {
         case x: Html => Unauthorized(
           views.html.login(
-            loginForm = LoginForm(email),
-            messages = List(("error", Messages("application.unauthorized"))),
-            uri = Some(reqHeader.uri)
+            loginForm = LoginForm.blank.fill(email, "", reqHeader.uri),
+            messages = List(("error", Messages("application.unauthorized")))
           )
         ).withNewSession.as(x.contentType)
         case _ => Unauthorized

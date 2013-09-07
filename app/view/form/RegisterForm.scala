@@ -11,7 +11,7 @@ import org.w3.vs.view._
 
 object RegisterForm {
 
-  type RegisterType = (String, String, String, String, Boolean)
+  type RegisterType = (String, String, String, String, Boolean, String)
 
   def bind()(implicit req: Request[_], context: ExecutionContext): Either[RegisterForm, ValidRegisterForm] = {
     val form = playForm.bindFromRequest
@@ -23,13 +23,16 @@ object RegisterForm {
 
   def blank: RegisterForm = new RegisterForm(playForm)
 
+  def redirectTo(uri: String) = new RegisterForm(playForm.fill("", "", "", "", false, uri))
+
   private def playForm: Form[RegisterType] = Form(
     tuple(
       "userName" -> nonEmptyText,
       "r_email" -> email,
       "r_password" -> nonEmptyText(minLength = 6),
       "repeatPassword" -> text,
-      "mailing" -> of[Boolean](checkboxFormatter)
+      "mailing" -> of[Boolean](checkboxFormatter),
+      "uri" -> text
     ).verifying("password.dont_match", p => p._3 == p._4)
   )
 
@@ -57,5 +60,5 @@ class RegisterForm private[view](val form: Form[RegisterType]) extends VSForm {
 }
 
 class ValidRegisterForm private[view](form: Form[RegisterType], bind: RegisterType) extends RegisterForm(form) with VSForm {
-  val (name, email, password, repeatPassword, mailing) = bind
+  val (name, email, password, repeatPassword, mailing, redirectUri) = bind
 }

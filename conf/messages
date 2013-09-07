@@ -187,7 +187,7 @@ form.r_password.error.minLength=Password too short. Minimum is 6 characters.
 # There is no key for this one hence the '..' (cf RegisterForm.scala)
 form..password.dont_match=Passwords did not match.
 form.terms.not_accepted=You must read and agree to the Terms and Conditions to purchase a job.
-
+form.repeatPassword.error.required=Please verify your password.
 
 
 info.register.first=In order to purchase a job please register first, or login if you already have an account.

@@ -19,22 +19,27 @@ object LoginForm {
 
   def blank: LoginForm = new LoginForm(playForm)
 
-  private def playForm: Form[(String, String)] = Form(
+  def redirectTo(uri: String) = new LoginForm(playForm.bind(Map(("uri", uri))))
+
+  private def playForm: Form[(String, String, String)] = Form(
     tuple(
       "l_email" -> email.verifying(nonEmpty),
-      "l_password" -> nonEmptyText
+      "l_password" -> nonEmptyText,
+      "uri" -> text
     )
   )
 
-  def apply(email: String) = {
+  /*def apply(email: String) = {
     new LoginForm(playForm.fill(email, ""))
-  }
+  }*/
 
 }
 
-class LoginForm private[view](form: Form[(String, String)]) extends VSForm {
+class LoginForm private[view](form: Form[(String, String, String)]) extends VSForm {
 
   def apply(s: String) = form(s)
+
+  def fill(m: (String, String, String)) = new LoginForm(form.fill(m))
 
   def withError(key: String, message: String) = new LoginForm(form = form.withError(key, message))
   def withGlobalError(message: String) = {
@@ -55,6 +60,6 @@ class LoginForm private[view](form: Form[(String, String)]) extends VSForm {
 
 }
 
-class ValidLoginForm private[view](form: Form[(String, String)], bind: (String, String)) extends LoginForm(form) with VSForm {
-  val (email, password) = bind
+class ValidLoginForm private[view](form: Form[(String, String, String)], bind: (String, String, String)) extends LoginForm(form) with VSForm {
+  val (email, password, redirectUri) = bind
 }

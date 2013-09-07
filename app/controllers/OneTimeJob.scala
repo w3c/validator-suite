@@ -19,7 +19,7 @@ object OneTimeJob extends VSController {
         case user => Ok(views.html.newJob(OneTimeJobForm.blank, user))
       } recover {
         case  _: UnauthorizedException =>
-          Unauthorized(views.html.register(uri = Some(req.uri), messages = List(("info", Messages("info.register.first")))))
+          Unauthorized(views.html.register(RegisterForm.redirectTo(req.uri), messages = List(("info", Messages("info.register.first")))))
       } recover toError
     }
   }

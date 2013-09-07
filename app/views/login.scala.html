@@ -1,6 +1,4 @@
 @(loginForm: LoginForm = LoginForm.blank,
-    registerForm: RegisterForm = RegisterForm.blank,
-    uri: Option[String] = None,
     messages: List[(String, String)] = List.empty)(implicit flash: Flash, vs: ValidatorSuite)
 
 @front("W3C Validator Suite - Login") {
@@ -44,7 +42,7 @@
 
             <div class="row">
                 <div class="column large-4 large-offset-8 small-9 small-offset-3">
-                    <input type="hidden" name="uri" value="@uri" value='form("uri").value'>
+                    <input type="hidden" name="uri" value='@loginForm("uri").value'>
                     <button id="submit-login" name="submit" value="login" type="submit">Login</button>
                 </div>
             </div>
