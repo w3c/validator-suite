@@ -413,7 +413,7 @@ select {
 
 .caption {
     position: absolute;
-    bottom: 0;
+    bottom: 1.4em;
     background-color: #000;
     background-color: rgba(0,0,0,0.6);
     color: #fff;

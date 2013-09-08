@@ -5,13 +5,9 @@ html {
 .bodyLayout(@h, @f) {
     body {
         padding-top: @h + @borderSize;
-        padding-bottom: @f; // @borderSize;
+        padding-bottom: @f + 7px; // @borderSize;
         > header {
             height: @h;
-        }
-        > footer {
-            height: @f - (@spacing);
-            padding: (@spacing / 2) 0;
         }
     }
 }
@@ -89,7 +85,6 @@ dd.errors {
 }
 
 .list,
-footer,
 #crumbs,
 #messages {
     background-image: url('../images/texture.gif')
