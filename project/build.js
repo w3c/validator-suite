@@ -27,7 +27,7 @@
     modules: [
         {
             name: "libs/require",
-            include: ["libs/zepto", 'config']
+            include: ['config' ]
         },
         {   name: "libs/backbone"   },
         {

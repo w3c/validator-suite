@@ -63,8 +63,8 @@ h2 {
 
 #banner {
     background: #073E80;
-    margin-bottom: 1.25em;
-    border-bottom: 1em solid #D9E6F0;
+    margin-bottom: 0.5em;
+    border-bottom: 0.5em solid #D9E6F0;
     line-height: 1em;
 
 }
@@ -427,7 +427,7 @@ select {
     font-size: 0.875em;
 }
 
-fieldset > .row > .small-3 {
+fieldset > .row > .large-3 {
     padding-right: 0;
 }
 
@@ -465,3 +465,14 @@ fieldset > .row > .small-3 {
     padding: 8px 10px 7px 10px;
 }
 
+.note {
+    font-size: 0.8em;
+}
+
+.pricing .pricing-table {
+    margin-bottom: 0.5em
+}
+
+h1 {
+    margin-bottom: 0.5em;
+}

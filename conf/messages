@@ -5,8 +5,10 @@ collection.definitions=Definitions
 jobs.col.title=Jobs
 jobs.name=Name
 jobs.name.detail=The name of the job
-jobs.entrypoint=Start URL
-jobs.entrypoint.detail=The start URL for this job, entry point of the crawler
+jobs.entrypoint=Website URL
+jobs.entrypoint.detail=W3C Validator Suite will begin crawling your site from this page.
+jobs.entrypoint.detail2=W3C Validator Suite will begin crawling your site from this page. Only pages that start with this URL prefix will be checked.
+
 jobs.status=Status
 jobs.status.detail=The current status of the job, either Idle or Running.
 jobs.completedOn=Last completed
@@ -176,7 +178,7 @@ form.l_password.error.required=Password is required
 form.r_password.error.required=Password is required
 
 form.name.error.required=A job name is required
-form.entrypoint.error.url=Start URL must be a valid URL
+form.entrypoint.error.url=Website URL must be a valid URL
 form.assertor.error.required=No assertors selected
 form.maxResources.error.max=Invalid max pages value
 form.maxResources.error.min=Invalid max pages value
@@ -188,7 +190,6 @@ form.r_password.error.minLength=Password too short. Minimum is 6 characters.
 form..password.dont_match=Passwords did not match.
 form.terms.not_accepted=You must read and agree to the Terms and Conditions to purchase a job.
 form.repeatPassword.error.required=Please verify your password.
-
 
 info.register.first=In order to purchase a job please register first, or login if you already have an account.
 success.registered.user=Successfully registered as {0} <{1}>

@@ -55,7 +55,7 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
         stop: function (options) { this._serverEvent('stop', options); },
 
         validate: function (attrs) {
-            if (!attrs.name || attrs.name.length < 1) {
+            /*if (!attrs.name || attrs.name.length < 1) {
                 logger.warn("Name required");
                 return "Name required";
             }
@@ -66,7 +66,7 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
             if (!attrs.maxResources || attrs.maxResources < 1 || attrs.maxResources > 5000) {
                 logger.warn("Max resources must be between 1 and 5000");
                 return "Max resources must be between 1 and 5000";
-            }
+            }*/
         },
 
         _serverEvent: function (event, options) {
