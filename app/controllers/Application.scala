@@ -93,6 +93,8 @@ object Application extends VSController {
     }
   }
 
+  val optInLogger = play.Logger.of("OptInUsers")
+
   def registerAction: ActionA = Action { implicit req =>
     AsyncResult {
       RegisterForm.bind() match {
@@ -102,6 +104,10 @@ object Application extends VSController {
         case Right(form) => {
           val f = User.register(name = form.name, email = form.email, password = form.password, isSubscriber = false).map {
             case user => {
+              getFormParam("optin") match {
+                case Some("on") => optInLogger.info(s"${user.name} <${user.email}>")
+                case _ =>
+              }
               (getFormParam("uri") match {
                 case Some(uri) if uri != "" => SeeOther(uri)
                 case _ => SeeOther(routes.Jobs.index)

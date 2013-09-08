@@ -16,12 +16,22 @@
     </encoder>
   </appender>
 
+    <appender name="OPTINS" class="ch.qos.logback.core.FileAppender">
+        <file>${application.home}/logs/opt-ins.log</file>
+        <encoder>
+            <pattern>%date{yyyy-MM-dd} %message\n</pattern>
+        </encoder>
+    </appender>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%coloredLevel %logger - %message%n%xException{40}</pattern>
     </encoder>
   </appender>
-  
+
+  <logger name="OptInUsers" level="DEBUG">
+    <appender-ref ref="OPTINS" />
+  </logger>
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
   <logger name="org.w3.vs" level="DEBUG" />

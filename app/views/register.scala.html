@@ -29,38 +29,38 @@
             </div>}
 
             <div class="row">
-                <div class="small-3 columns">
+                <div class="large-3 columns">
                     <label for="userName" class="right inline">Name</label>
                 </div>
-                <div class="small-9 columns">
+                <div class="large-9 columns">
                     <input type="text" id="userName" name="userName" placeholder="Name" value='@registerForm("userName").value' class="userName" />
                 </div>
             </div>
 
             <div class="row">
-                <div class="small-3 columns">
+                <div class="large-3 columns">
                     <label for="r_email" class="right inline">Email</label>
                 </div>
-                <div class="small-9 columns">
+                <div class="large-9 columns">
                     <input type="email" id="r_email" name="r_email" placeholder="Email" value='@registerForm("r_email").value' required="required"/>
                 </div>
             </div>
 
             <div class="row">
-                <div class="small-3 columns">
+                <div class="large-3 columns">
                     <label for="r_password" class="right inline">Password</label>
                 </div>
-                <div class="small-9 columns">
+                <div class="large-9 columns">
                     <input type="password" id="r_password" pattern=".{6,}" name="r_password" placeholder="The password must be at least 6 characters long" required="required" title="The password must be at least 6 characters long"/>
                 </div>
             </div>
 
             <div class="row">
 
-                <div class="small-3 columns">
+                <div class="large-3 columns">
                     <label for="repeatPassword" class="right inline">Repeat password</label>
                 </div>
-                <div class="small-9 columns">
+                <div class="large-9 columns">
                     <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword" name="repeatPassword" placeholder="Verify your password"/>
                 </div>
 
@@ -68,11 +68,11 @@
 
             <div class="row">
 
-                <div class="small-3 columns">
-                    <input type="checkbox" id="mailing" name="mailing" class="right inline" @registerForm("mailing").value.map{_ => checked="checked"} />
+                <div class="large-3 columns">
+                    <input type="checkbox" id="optin" name="optin" class="right inline" @registerForm("optin").value.map{_ => checked="checked"} />
                 </div>
-                <div class="small-9 columns">
-                    <label for="mailing">W3C may send me information about new products and services</label>
+                <div class="large-9 columns">
+                    <label for="optin">W3C may send me information about new products and services</label>
                 </div>
 
             </div>
