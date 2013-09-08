@@ -108,6 +108,9 @@ h2 {
     line-height: 1em;
 }
 
+#nav li:first-of-type {
+    margin-left: 0;
+}
 #nav li {
     list-style-type: none;
     display: inline;
@@ -407,7 +410,8 @@ select {
 }
 
 .screenshot {
-    width: 803px;
+    width: 100%;
+    max-width: 803px;
     padding: 1em 0;
 }
 
@@ -417,7 +421,8 @@ select {
     background-color: #000;
     background-color: rgba(0,0,0,0.6);
     color: #fff;
-    width: 803px;
+    width: 100%;
+    max-width: 803px;
     padding: 10px 14px;
     font-size: 0.875em;
 }
