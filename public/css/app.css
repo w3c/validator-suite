@@ -411,18 +411,17 @@ select {
 
 .screenshot {
     width: 100%;
-    max-width: 803px;
-    padding: 1em 0;
+    margin: 0;
+    padding: 0 0.9375em;
 }
 
 .caption {
-    position: absolute;
-    bottom: 1.4em;
+    position: relative;
+    top: -2.5em;
     background-color: #000;
     background-color: rgba(0,0,0,0.6);
     color: #fff;
     width: 100%;
-    max-width: 803px;
     padding: 10px 14px;
     font-size: 0.875em;
 }
