@@ -30,7 +30,7 @@
 
             <div class="row">
                 <div class="large-3 columns">
-                    <label for="userName" class="right inline">Name</label>
+                    <label for="userName" class="right inline">Name<span class="required" title="This field is required">*</span></label>
                 </div>
                 <div class="large-9 columns">
                     <input type="text" id="userName" name="userName" placeholder="Name" value='@registerForm("userName").value' class="userName" />
@@ -39,7 +39,7 @@
 
             <div class="row">
                 <div class="large-3 columns">
-                    <label for="r_email" class="right inline">Email</label>
+                    <label for="r_email" class="right inline">Email<span class="required" title="This field is required">*</span></label>
                 </div>
                 <div class="large-9 columns">
                     <input type="email" id="r_email" name="r_email" placeholder="Email" value='@registerForm("r_email").value' required="required"/>
@@ -48,7 +48,7 @@
 
             <div class="row">
                 <div class="large-3 columns">
-                    <label for="r_password" class="right inline">Password</label>
+                    <label for="r_password" class="right inline">Password<span class="required" title="This field is required">*</span></label>
                 </div>
                 <div class="large-9 columns">
                     <input type="password" id="r_password" pattern=".{6,}" name="r_password" placeholder="The password must be at least 6 characters long" required="required" title="The password must be at least 6 characters long"/>
@@ -58,7 +58,7 @@
             <div class="row">
 
                 <div class="large-3 columns">
-                    <label for="repeatPassword" class="right inline">Repeat password</label>
+                    <label for="repeatPassword" class="right inline">Repeat password<span class="required" title="This field is required">*</span></label>
                 </div>
                 <div class="large-9 columns">
                     <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword" name="repeatPassword" placeholder="Verify your password"/>
