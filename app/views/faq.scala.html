@@ -1,4 +1,4 @@
-@front("W3C Validator Suite - FAQ") {
+@front("W3C Validator Suite - FAQs") {
 
 <div class="row" id="faq-toc">
     <div class="column">
@@ -6,15 +6,18 @@
         <h1>Frequently Asked Questions</h1>
 
         <ol>
-            <li><a href="#logomeaning">When I see the W3C Validator Suite brand logo, what does it mean?</a></li>
-            <li><a href="#badgemeaning">When I see the W3C Validator Suite badge, what does it mean?</a></li>
-            <li><a href="#implies">Do the brand logo/badge imply validity?</a></li>
-            <li><a href="#everypage">Must I include the badge on every validated page?</a></li>
-            <li><a href="#otherpages">May I use the badge on pages that have not be run through the W3C Validator Suite?</a></li>
-            <li><a href="#nonWeb">May I use the brand logo off the Web for creative purposes (e.g., t-shirts, stickers, etc.)?</a></li>
-            <li><a href="#commercial">May I use the brand logo/badge on commercial products (e.g., my own validator service)?</a></li>
-            <li><a href="#derivatives">May I create derivative works of the brand logo/badge?</a></li>
-            <li><a href="#javascript">My site uses Javascript.  Is that OK?</a>
+            <li><a href="#whatis">What is the W3C Validator Suite?</a></li>
+            <li><a href="#howcaniuse"> How can I use Validator Suite service?</a></li>
+            <li><a href="#freevalidators">What is the difference between the existing free W3C Markup Validator and this new service?</a></li>
+            <li><a href="#logomeaning">When I see the W3C Validator Suite logo/badge, what does it mean?</a></li>
+            <li><a href="#w3cmembers">Do W3C Members enjoy special privileges?</a></li>
+            <li><a href="#accessibility">What about Accessibility testing?</a></li>
+            <li><a href="#howlong">How long will it take to validate my Web site?</a></li>
+            <li><a href="#privatesites">Can I check internal websites or sites that require authentication?</a></li>
+            <li><a href="#javascript">My site uses Javascript. Is that OK?</a></li>
+            <li><a href="#license">Is the W3C Validator Suite published under an open-source license?</a></li>
+            <li><a href="#api">Is there an API?</a></li>
+            <li><a href="#bugsandideas">How can I submit bug reports or send ideas?</a></li>
         </ol>
     </div>
 </div>
@@ -24,39 +27,43 @@
 <div class="row" id="faq">
     <div class="column">
 
-        <h2 id="logomeaning">1. When I see the W3C Validator Suite brand logo, what does it mean?</h2>
-        <p>The brand logo -- 5 check marks of success for validity, accessibility, compatibility, optimization, efficiency -- refers in a broad sense to the W3C Validator Suite and may be used to promote it. There are no implications of usage or validity.</p>
+        <h2 id="whatis">What is the W3C Validator Suite?</h2>
+        <p>The W3C Validator Suite service checks an entire Web site and evaluates conformance with <a href="http://www.w3.org/standards/">W3C open standards</a>. Validation currently includes HTML5, CSS and Internationalization checking.</p>
 
-        <h2 id="badgemeaning">2. When I see the W3C Validator Suite badge, what does it mean?</h2>
-        <p>The badge indicates that a page (or site) has been evaluated with the W3C Validator Suite. The badge does not imply anything about the outcome of running the W3C Validator Suite.</p>
+        <h2 id="howcaniuse"> How can I use Validator Suite service?</h2>
+        <p>W3C is providing Validator Suite as Software-as-a-Service. It is offered  completely online as a <a href="@routes.Application.pricing">One-Time service</a>.</p>
 
-        <h2 id="implies">3. Do the brand logo/badge imply validity?</h2>
-        <p>No. The logo/badge do not imply anything about the outcome of running the W3C Validator Suite.</p>
+        <h2 id="freevalidators">What is the difference between the existing free W3C Markup Validator and this new service?</h2>
+        <p>Validator Suite integrates Web standards conformance tools to make it easy and quick to keep your entire Web site compliant with the latest Web standards.</p>
 
-        <h2 id="everypage">4. Must I include the badge on every validated page?</h2>
-        <p>No, though you may do so if you wish. You may include the logo on one page and list or describe pages that have been evaluated through the W3C Validator Suite.</p>
+        <p>W3C will continue to offer its free validator tools, including the <a href="http://validator.w3.org/">single page Markup Validator</a>. This free service only checks one Web page at a time.</p>
 
-        <h2 id="otherpages">5. May I use the badge on pages that have not be run through the W3C Validator Suite?</h2>
-        <p>No. You may use the brand logo if you wish to refer to the W3C service.</p>
+        <h2 id="logomeaning">When I see the W3C Validator Suite logo/badge, what does it mean?</h2>
+        <p>The service logo refers to the five key benchmarks for the <a href="http://www.w3.org/standards/">Open Web Platform</a>. The Validator Suite badge says "Improved with W3C Validator Suite". You are encouraged to post the badge to your Websites to indicate you used the service, although it does not imply any seal of approval or service outcomes.</p>
 
-        <h2 id="nonWeb">6. May I use the brand logo off the Web for creative purposes (e.g., t-shirts, stickers, etc.)?</h2>
-        <p>Yes. We are interested in creative uses of the logo that show support for the service. Please let us know about your usage of the brand logo off the Web at <a href="mailto:validator-feedback@@w3.org">validator-feedback@@w3.org</a>.</p>
+        <h2 id="w3cmembers">Do W3C Members enjoy special privileges?</h2>
+        <p>Yes, a benefit of <a href="http://www.w3.org/Consortium/membership">W3C Membership</a> is that Members do receive a Validator Suite service discount. Please <a href='mailto:@Helper.config.getString("support.email").getOrElse("")'>contact our sales team</a> directly instead of using the online payment platform.</p>
 
-        <h2 id="commercial">7. May I use the brand logo/badge on commercial products (e.g., my own validator service)?</h2>
-        <p>Not at this time.</p>
+        <h2 id="accessibility">What about Accessibility testing?</h2>
+        <p>Currently the W3C Validator Suite does not test for accessibility. Additional conformance checking for accessibility, mobile, etc. is under consideration for the near future.</p>
 
-        <h2 id="derivatives">8. May I create derivative works of the brand logo/badge?</h2>
-        <p>Not at this time.</p>
+        <h2 id="howlong">How long will it take to validate my Web site?</h2>
+        <p>Validation processing time depends on multiple factors like the number of your Web pages, the complexity of your page content, your server's capacity, and your network bandwidth. As an example, an average Web site of 900 pages could be processed in 15 to 20 minutes.</p>
 
-        <h2 id="javascript">9. My site uses Javascript.  Is that OK?</h2>
-        <p>Some users do not enable Javascript in their browsers.  Therefore,
-            to be fully interoperable your website should not depend on
-            navigation links inside the Javascript.  W3C Validator Suite will
-            not process the Javascript; it will only follow the links that
-            are specified in the HTML markup.  If the Javascript modifies
-            the HTML, W3C Validator Suite will only check the original, unmodifed
-            HTML.  Aside from this, Javascript in your site should not impact the
-            W3C Validator Suite report.</p>
+        <h2 id="privatesites">Can I check internal websites or sites that require authentication?</h2>
+        <p>No. Sites must be publicly accessible to be validated.</p>
+
+        <h2 id="javascript">My site uses Javascript. Is that OK?</h2>
+        <p>Some users do not enable Javascript in their browsers. Therefore, to be fully interoperable your Web site should not depend on navigation links inside the Javascript. W3C Validator Suite will not process the Javascript; it will only follow the links that are specified in the HTML markup. If the Javascript modifies the HTML, W3C Validator Suite will only check the original, unmodifed HTML. Aside from this, Javascript in your site should not impact the W3C Validator Suite report.</p>
+
+        <h2 id="license">Is the W3C Validator Suite published under an open-source license?</h2>
+        <p>No.</p>
+
+        <h2 id="api">Is there an API?</h2>
+        <p>Currently the W3C Validator Suite is only available as Software-as-a-Service from <a href="/">https://validator-suite.w3.org</a>. We are hoping to offer an API in the future which will make it possible to integrate with Content Management Systems (CMS) or an existing Quality assurance (QA) process.</p>
+
+        <h2 id="bugsandideas">How can I submit bug reports or send ideas?</h2>
+        <p>W3C Validator Suite current customers should <a href="/login">login</a> and follow the "Support" link available from the top menu. Other comments and suggestions should be submitted to by email to our <a href='mailto:@Helper.config.getString("support.email").getOrElse("")'>support team</a>.</p>
 
     </div>
 </div>
