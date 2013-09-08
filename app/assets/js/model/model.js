@@ -86,9 +86,8 @@ define(["util/Logger", "util/Util", "util/Socket", "libs/backbone"], function (L
                 top = this.$el.offset().top,
                 bottom = this.$el.offset().top + this.$el.height();
 
-            return (top > win.scrollTop() + aside.height() &&
-                //      top < win.scrollTop() + win.height() - footer.height());
-                bottom <= win.scrollTop() + win.height() - footer.height());
+            return !((top < win.scrollTop() + aside.height()) ||
+                (bottom >= win.scrollTop() + win.height() - footer.height()));
 
         },
 

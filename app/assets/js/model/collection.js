@@ -308,8 +308,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
                 asideClone = aside.clone(),
                 self = this;
             win.unbind("scroll resize");
-            win.bind("scroll resize", function () {
-                setTimeout(function () {
+            win.bind("scroll resize", _.throttle(function () {
                     if (self.$el.offset().top > win.scrollTop()) {
                         aside.removeClass('jsFixed');
                         asideClone.remove();
@@ -318,8 +317,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
                         aside.addClass('jsFixed');
                     }
                     self.updateLegend();
-                }, 0);
-            });
+            }, 100));
         },
 
         isList: function () {
@@ -394,9 +392,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
                 legend;
 
             old = this.maxOnScreen;
-            this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 10 : 30;
+            this.maxOnScreen = visibles.last ? visibles.last + 40 : 40;
 
-            if (this.maxOnScreen !== old && (this.displayed.length - visibles.last < 5 || this.displayed.length - visibles.last > 20)) { // does not remove elements on scroll up. seems more efficient like that
+            if (this.maxOnScreen !== old && (this.displayed.length - visibles.last < 20 || this.displayed.length - visibles.last > 60)) { // does not remove elements on scroll up. seems more efficient like that
                 //console.log("re-rendering");
                 this.render({ updateLegend: false });
                 //return;
