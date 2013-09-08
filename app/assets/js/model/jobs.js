@@ -48,6 +48,10 @@ define(["util/Logger", "model/job", "model/collection"], function (Logger, Job, 
 
         emptyMessage: function () {
             return "No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>";
+        },
+
+        afterRender: function () {
+            //console.log("Jobs rendered")
         }
 
     });

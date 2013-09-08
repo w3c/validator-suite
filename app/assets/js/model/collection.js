@@ -136,7 +136,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
                 Util.exception('No count parameter was specified');
             }
 
-            collection.on('add reset change', this.render, this);
+            collection.on('add reset change', _.throttle(this.render, 250), this);
             collection.on('destroy', this.render, this);
 
             this.addSortHandler();
@@ -192,81 +192,75 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
             };
         },
 
-        render: (function () {
-            var render = function (options) {
+        render: function (options) {
 
+            options = (options || {});
 
+            //console.log("render");
 
-                options = (options || {});
+            if (_.isFunction(this.beforeRender)) { this.beforeRender(); }
 
-                logger.log("render");
+            var models = this.collection.models,
+                elements,
+                empty;
 
-                if (_.isFunction(this.beforeRender)) { this.beforeRender(); }
+            if (_.isFunction(this.search_)) {
+                models = _.filter(models, this.search_);
+            }
 
-                var models = this.collection.models,
-                    elements,
-                    empty;
+            if (_.isFunction(this.filter)) {
+                models = _.filter(models, this.filter);
+            }
 
-                if (_.isFunction(this.search_)) {
-                    models = _.filter(models, this.search_);
-                }
+            this.filteredCount = models.length;
 
-                if (_.isFunction(this.filter)) {
-                    models = _.filter(models, this.filter);
-                }
+            models = this.displayed = models.slice(0, this.maxOnScreen);
 
-                this.filteredCount = models.length;
+            elements = _.map(models, function (model) {
+                return model.view.el;
+            });
 
-                models = this.displayed = models.slice(0, this.maxOnScreen);
+            this.$('.empty').remove();
 
-                elements = _.map(models, function (model) {
-                    return model.view.el;
-                });
+            this.$el.children('article').detach();
 
-                this.$('.empty').remove();
+            if (elements.length > 0) {
+                _.map(elements, function (elem) {
+                    this.$el.append(elem);
+                    this.$el.append(" ");
+                }, this);
+            } else {
+                //empty = $('<p class="empty"></p>');
+                //this.$el.append(empty);
+                this.$el.append('<p class="empty"></p>');
 
-                this.$el.children('article').detach();
+                var self = this;
+                var emptyMessage = (function () {
+                    if (_.isFunction(self.emptyMessage)) {
+                        return self.emptyMessage();
+                    } else if (_.isString(self.emptyMessage)) {
+                        return self.emptyMessage;
+                    } else {
+                        logger.warn("No emptyMessage function or value provided");
+                        return "";
+                    }
+                }());
 
-                if (elements.length > 0) {
-                    _.map(elements, function (elem) {
-                        this.$el.append(elem);
-                        this.$el.append(" ");
-                    }, this);
-                } else {
-                    //empty = $('<p class="empty"></p>');
-                    //this.$el.append(empty);
-                    this.$el.append('<p class="empty"></p>');
+                if (this.collection.expected === 0) {
+                    this.$('.empty').html(emptyMessage);
+                } else if (this.currentSearch && this.currentSearch !== "") {
+                    this.$('.empty').html("No search result.");
+                } /*else {
+                 // TODO: loading no?
+                 empty.html(emptyMessage);
+                 }*/
+            }
 
-                    var self = this;
-                    var emptyMessage = (function () {
-                        if (_.isFunction(self.emptyMessage)) {
-                            return self.emptyMessage();
-                        } else if (_.isString(self.emptyMessage)) {
-                            return self.emptyMessage;
-                        } else {
-                            logger.warn("No emptyMessage function or value provided");
-                            return "";
-                        }
-                    }());
+            if (this.isList() && (_.isUndefined(this.options.updateLegend) || this.options.updateLegend)) { this.updateLegend(); }
 
-                    if (this.collection.expected === 0) {
-                        this.$('.empty').html(emptyMessage);
-                    } else if (this.currentSearch && this.currentSearch !== "") {
-                        this.$('.empty').html("No search result.");
-                    } /*else {
-                     // TODO: loading no?
-                     empty.html(emptyMessage);
-                     }*/
-                }
+            if (_.isFunction(this.afterRender)) { this.afterRender(); }
 
-                if (this.isList() && (_.isUndefined(this.options.updateLegend) || this.options.updateLegend)) { this.updateLegend(); }
-
-                if (_.isFunction(this.afterRender)) { this.afterRender(); }
-
-
-            };
-            return _.throttle(render, 100);
-        }()),
+        },
 
         addSortHandler: function () {
             var sortLinks = this.$(".sort a"),
@@ -314,8 +308,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
                 asideClone = aside.clone(),
                 self = this;
             win.unbind("scroll resize");
-            win.bind("scroll resize", function () {
-                setTimeout(function () {
+            win.bind("scroll resize", _.throttle(function () {
                     if (self.$el.offset().top > win.scrollTop()) {
                         aside.removeClass('jsFixed');
                         asideClone.remove();
@@ -324,8 +317,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
                         aside.addClass('jsFixed');
                     }
                     self.updateLegend();
-                }, 0);
-            });
+            }, 100));
         },
 
         isList: function () {
@@ -400,9 +392,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
                 legend;
 
             old = this.maxOnScreen;
-            this.maxOnScreen = visibles.last && visibles.last >= 30 ? visibles.last + 10 : 30;
+            this.maxOnScreen = visibles.last ? visibles.last + 40 : 40;
 
-            if (this.maxOnScreen !== old && (this.displayed.length - visibles.last < 5 || this.displayed.length - visibles.last > 20)) { // does not remove elements on scroll up. seems more efficient like that
+            if (this.maxOnScreen !== old && (this.displayed.length - visibles.last < 20 || this.displayed.length - visibles.last > 60)) { // does not remove elements on scroll up. seems more efficient like that
                 //console.log("re-rendering");
                 this.render({ updateLegend: false });
                 //return;

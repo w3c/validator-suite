@@ -3,7 +3,7 @@ require.config({
     //enforceDefine: true,
     //urlArgs: "bust=" +  (new Date()).getTime(),
     shim: {
-        //'libs/backbone': ['libs/query']
+        'libs/backbone': ['libs/query'],
         'front': ['libs/query']
     }
 });

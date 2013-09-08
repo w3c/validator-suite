@@ -50,6 +50,7 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
             if (this.$('.current').size() === 0) {
                 this.$("article:first-of-type .filter").click();
             }
+            //console.log("Assertors rendered");
         },
 
         addFilterHandler: function () {
@@ -69,7 +70,7 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
             var assertions = this.options.assertions,
                 assertors = this.collection,
                 self = this;
-            assertions.on("change", function () {
+            assertions.on("change reset", function () {
                 var assertorCounts = {};
                 assertions.map(function (assertion) {
                     var assertor = assertion.get("assertor"),
@@ -77,13 +78,13 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
                         occurrences = assertion.get("occurrences");
 
                     if (!_.isUndefined(assertorCounts[assertor])) {
-                        assertorCounts[assertor][level] = assertorCounts[assertor][level] + occurrences;
+                        assertorCounts[assertor][level] = assertorCounts[assertor][level] + (occurrences !== 0 ? occurrences : 1);
                     } else {
                         assertorCounts[assertor] = {};
                         assertorCounts[assertor].error = 0;
                         assertorCounts[assertor].warning = 0;
                         assertorCounts[assertor].info = 0;
-                        assertorCounts[assertor][level] = occurrences;
+                        assertorCounts[assertor][level] = (occurrences !== 0 ? occurrences : 1);
                     }
                 });
                 var assertor;

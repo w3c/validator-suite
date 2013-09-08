@@ -46,6 +46,10 @@ define(["util/Logger", "model/assertion", "model/collection"], function (Logger,
             this.render();
         },
 
+        afterRender: function () {
+            //console.log("Assertions rendered");
+        },
+
         emptyMessage: "No assertions to show." // assertions.empty
 
     });

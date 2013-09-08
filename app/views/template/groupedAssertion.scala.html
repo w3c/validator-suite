@@ -42,7 +42,9 @@
             <% _.map(resources, function (resource) {%>
             <dd class="resource">
                 <span class="count" title="<%= resource.c %> time(s)"><%= resource.c %></span>
-                <a href="<%= "../assertions/?resource=" + encodeURIComponent(resource.url) %>" class="report" title="@Messages("report.link")">
+
+                @** TODO - stop with the harcoded urls... **@
+                <a href="<%= "./assertions?resource=" + encodeURIComponent(resource.url) %>" class="report" title="@Messages("report.link")">
                     <span>@Messages("resource.report.for")</span>
                     <span><%= Util.shortenUrl(resource.url, 80) %></span>
                 </a>
