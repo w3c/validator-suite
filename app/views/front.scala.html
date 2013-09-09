@@ -2,8 +2,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width"/>
     <title>@title</title>
     <link rel="icon" type="image/svg" href='@routes.Assets.at("images/vsLogo.svg")'>
     <link rel="stylesheet" href='@routes.Assets.at("css/foundation.min.css")'>
@@ -15,13 +15,15 @@
 
 <section id="banner">
     <div class="row">
-        <a class="left" href="/"><img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite" /></a>
+        <a class="left" href="@routes.Application.index"><img src='@routes.Assets.at("images/fullLogo.svg")'
+                                                              alt="W3C Validator Suite"/></a>
         <ul id="nav" class="right">
             @user match {
             case Some(user) => {
             <li><a href="@routes.Application.pricing">Pricing</a></li>
             <li><a href="@routes.Application.faq">FAQs</a></li>
-            <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
+            <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a>
+            </li>
             <li><a href="@routes.Jobs.index">Jobs</a></li>
             <li><span title="Logged in as @user.name <@user.email>">@user.name</span></li>
             <li>
@@ -34,7 +36,7 @@
             case _ => {
             <li><a href="@routes.Application.pricing">Pricing</a></li>
             <li><a href="@routes.Application.faq">FAQs</a></li>
-            <li><a href="mailto:@Helper.config.getString("contact.email").getOrElse("")">Contact</a></li>
+            <li><a href="mailto:@Helper.config.getString(" contact.email").getOrElse("")">Contact</a></li>
             <li><a href="@routes.Application.login"><strong>Login</strong></a></li>
             }}
         </ul>
