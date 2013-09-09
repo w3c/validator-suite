@@ -460,7 +460,7 @@ select {
     font-size: 0.875em;
 }
 
-fieldset > .row > .large-3 {
+fieldset > .row > .small-3 {
     padding-right: 0;
 }
 
