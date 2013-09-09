@@ -6,6 +6,7 @@ import play.api.test.Helpers._
 import org.scalatest._
 import org.scalatest.matchers._
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.mindrot.jbcrypt.BCrypt
 
 class AdministrationTest extends WordSpec with MustMatchers {
   
@@ -16,10 +17,11 @@ class AdministrationTest extends WordSpec with MustMatchers {
 
   "A user needs to authenticate with root.password when accessing /admin/" in {
 
-    val password = "6ggFWMoTODiU"
+    val password = "foobar"
     val headerValue = authHeader(password)
+    val configuration = Map("root.password" -> BCrypt.hashpw(password, BCrypt.gensalt()))
 
-     running(FakeApplication()) {
+     running(FakeApplication(additionalConfiguration = configuration)) {
        val post =
          route(FakeRequest(GET, "/admin/").withHeaders("Authorization" -> s"Basic ${headerValue}")).get
        status(post) must be (OK)
@@ -33,9 +35,10 @@ class AdministrationTest extends WordSpec with MustMatchers {
     val headerValue = authHeader(password)
     
      running(FakeApplication()) {
-       val post =
+       val get =
          route(FakeRequest(GET, "/admin/").withHeaders("Authorization" -> s"Basic ${headerValue}")).get
-       status(post) must be (UNAUTHORIZED)
+       status(get) must be (UNAUTHORIZED)
+       headers(get)("WWW-Authenticate") must be("""Basic realm="W3C Validator Suite"""")
      }
     
   }

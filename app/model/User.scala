@@ -96,9 +96,9 @@ object User {
     * res1: String = $2a$10$Iz9jrqrtT4VzV7s4.3l2bew/C3PZh52wDzc5GWlhYxvYa3cVk5u8i
     * ```
     */
-  lazy val rootPassword: String = {
+  def rootPassword: String = {
+    val configuration = play.api.Play.configuration
     val key = "root.password"
-    val configuration = Configuration.load(new java.io.File("."))
     configuration.getString(key) getOrElse sys.error("could not find root password")
   }
 

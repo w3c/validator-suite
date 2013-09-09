@@ -17,6 +17,8 @@ import scala.collection.mutable.LinkedHashMap
 import org.w3.vs.exception.UnknownJob
 import play.api.mvc.AsyncResult
 import play.api.mvc.Call
+import org.apache.commons.codec.binary.Base64.decodeBase64
+import org.mindrot.jbcrypt.BCrypt
 
 trait VSController extends Controller {
 
@@ -125,12 +127,15 @@ trait VSController extends Controller {
   }
 
   def RootBasicAuth(f: Request[AnyContent] => Result): ActionA = Action { implicit req =>
-    val action = req.headers.get("Authorization")
-      .map(_.replace("Basic ", ""))
-      .map { hash =>
-        val challenge = conf.config.getString("root.passwordBasic").get
-        if (hash == challenge) Some(f(req)) else None
-      }.flatten
+    val action =
+      req.headers.get("Authorization").flatMap { headerValue =>
+        val b64 = headerValue.replace("Basic ", "")
+        new String(decodeBase64(b64.getBytes)).split(":") match {
+          case Array("ROOT", rootPassword) if BCrypt.checkpw(rootPassword, User.rootPassword) =>
+            Some(f(req))
+          case _ => None
+        }
+      }
     action.getOrElse(Unauthorized("unauthorized").withHeaders(("WWW-Authenticate", """Basic realm="W3C Validator Suite"""")))
   }
 
