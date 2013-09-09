@@ -1,5 +1,5 @@
 @(registerForm: RegisterForm = RegisterForm.blank,
-    messages: List[(String, String)] = List())(implicit flash: Flash, vs: ValidatorSuite)
+messages: List[(String, String)] = List())(implicit flash: Flash, vs: ValidatorSuite)
 
 @front("W3C Validator Suite - Register") {
 
@@ -9,14 +9,17 @@
     @if(messages.size > 0) {
     <div class="column globalMessages">
         @libs.messages2(messages)
-    </div>}}
+    </div>
+    }}
+
+    <h1 class="column">Register</h1>
 
     <form method="post" action="@routes.Application.register" class="column form-register">
         <fieldset>
-            <legend id="register" tabindex="0">Register</legend>
+            <legend id="register" tabindex="0" style="display:none">Register</legend>
 
             <div class="row">
-                <span class="column large-offset-3 topLabel">
+                <span class="column large-9 large-offset-3 topLabel">
                     If you already have an account, <a href="@routes.Application.login.url">login</a>.
                 </span>
             </div>
@@ -26,52 +29,63 @@
                 <div class="column large-9 large-offset-3 formErrors">
                     @libs.messages2(registerForm.errors.toList)
                 </div>
-            </div>}
+            </div>
+            }
 
             <div class="row">
-                <div class="large-3 columns">
-                    <label for="userName" class="right inline">Name<span class="required" title="This field is required">*</span></label>
+                <div class="small-3 columns">
+                    <label for="userName" class="right inline">Name<span class="required"
+                                                                         title="This field is required">*</span></label>
                 </div>
-                <div class="large-9 columns">
-                    <input type="text" id="userName" name="userName" placeholder="Name" value='@registerForm("userName").value' class="userName" />
+                <div class="small-9 columns">
+                    <input type="text" id="userName" name="userName" placeholder="Name"
+                           value='@registerForm("userName").value' required="required" class="userName"/>
                 </div>
             </div>
 
             <div class="row">
-                <div class="large-3 columns">
-                    <label for="r_email" class="right inline">Email<span class="required" title="This field is required">*</span></label>
+                <div class="small-3 columns">
+                    <label for="r_email" class="right inline">Email<span class="required"
+                                                                         title="This field is required">*</span></label>
                 </div>
-                <div class="large-9 columns">
-                    <input type="email" id="r_email" name="r_email" placeholder="Email" value='@registerForm("r_email").value' required="required"/>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="large-3 columns">
-                    <label for="r_password" class="right inline">Password<span class="required" title="This field is required">*</span></label>
-                </div>
-                <div class="large-9 columns">
-                    <input type="password" id="r_password" pattern=".{6,}" name="r_password" placeholder="The password must be at least 6 characters long" required="required" title="The password must be at least 6 characters long"/>
+                <div class="small-9 columns">
+                    <input type="email" id="r_email" name="r_email" placeholder="Email"
+                           value='@registerForm("r_email").value' required="required"/>
                 </div>
             </div>
 
             <div class="row">
-
-                <div class="large-3 columns">
-                    <label for="repeatPassword" class="right inline">Repeat password<span class="required" title="This field is required">*</span></label>
+                <div class="small-3 columns">
+                    <label for="r_password" class="right inline">Password<span class="required"
+                                                                               title="This field is required">*</span></label>
                 </div>
-                <div class="large-9 columns">
-                    <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword" name="repeatPassword" placeholder="Verify your password"/>
+                <div class="small-9 columns">
+                    <input type="password" id="r_password" pattern=".{6,}" name="r_password"
+                           placeholder="The password must be at least 6 characters long" required="required"
+                           title="The password must be at least 6 characters long"/>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="small-3 columns">
+                    <label for="repeatPassword" class="right inline">Repeat password<span class="required"
+                                                                                          title="This field is required">*</span></label>
+                </div>
+                <div class="small-9 columns">
+                    <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword"
+                           name="repeatPassword" required="required" placeholder="Verify your password"/>
                 </div>
 
             </div>
 
             <div class="row">
 
-                <div class="large-3 columns">
-                    <input type="checkbox" id="optin" name="optin" class="right inline" @registerForm("optin").value.map{_ => checked="checked"} />
+                <div class="small-3 columns">
+                    <input type="checkbox" id="optin" name="optin" class="right inline"
+                    @registerForm("optin").value.map{_ => checked="checked"} />
                 </div>
-                <div class="large-9 columns">
+                <div class="small-9 columns">
                     <label for="optin">W3C may send me information about new products and services</label>
                 </div>
 
@@ -81,6 +95,12 @@
                 <div class="column large-4 large-offset-8 small-9 small-offset-3">
                     <input type="hidden" name="uri" value='@registerForm("uri").value'>
                     <button id="submit_register" name="submit" value="register" type="submit">Register</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="column small-9 small-offset-3">
+                    Fields marked with an asterisk (*) are required.
                 </div>
             </div>
 

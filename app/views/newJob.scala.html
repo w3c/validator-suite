@@ -1,6 +1,6 @@
 @(form: OneTimeJobForm,
-    user: User,
-    messages: List[(String, String)] = List.empty)(implicit req: Request[AnyContent], flash: Flash, vs: ValidatorSuite)
+user: User,
+messages: List[(String, String)] = List.empty)(implicit req: Request[AnyContent], flash: Flash, vs: ValidatorSuite)
 
 @front("W3C Validator Suite - Buy a One Time service", Some(user)) {
 
@@ -10,7 +10,8 @@
     @if(messages.size > 0) {
     <div class="column globalMessages">
         @libs.messages2(messages)
-    </div>}}
+    </div>
+    }}
 
     <form method="post" action="@routes.OneTimeJob.buyAction" class="column">
         <fieldset>
@@ -18,7 +19,8 @@
 
             <div class="row">
                 <div class="large-9 large-offset-3 columns">
-                    <p>Purchase a new W3C Validator Suite<sup>®</sup> One Time job. Your website HTML and CSS content will be checked for validity and internationalization-friendliness.</p>
+                    <p>Purchase a new W3C Validator Suite<sup>®</sup> One Time job. Your website HTML and CSS content
+                        will be checked for validity and internationalization-friendliness.</p>
                 </div>
             </div>
 
@@ -27,41 +29,48 @@
                 <div class="column large-9 large-offset-3 formErrors">
                     @libs.messages2(form.errors.toList)
                 </div>
-            </div>}
+            </div>
+            }
 
             <div class="row">
                 <div class="large-3 columns">
-                    <label for="name" class="right inline">Job Name<span class="required" title="This field is required">*</span></label>
+                    <label for="name" class="right inline">Job Name<span class="required"
+                                                                         title="This field is required">*</span></label>
                 </div>
                 <div class="large-9 columns">
-                    <input id="name" name="name" type="text" value='@form("name").value' required="required" placeholder="A display name for this job" />
+                    <input id="name" name="name" type="text" value='@form("name").value' required="required"
+                           placeholder="A display name for this job"/>
                 </div>
             </div>
 
             <div class="row">
                 <div class="large-3 columns">
-                    <label for="entrypoint" class="right inline" title='@Messages("jobs.entrypoint.detail2")'>@Messages("jobs.entrypoint")<span class="required" title="This field is required">*</span></label>
+                    <label for="entrypoint" class="right inline" title='@Messages("jobs.entrypoint.detail2")'>@Messages("jobs.entrypoint")<span
+                            class="required" title="This field is required">*</span></label>
                 </div>
                 <div class="large-9 columns">
-                    <input id="entrypoint" name="entrypoint" type="url" value='@form("entrypoint").value' required="required" placeholder='@Messages("jobs.entrypoint.detail")' />
+                    <input id="entrypoint" name="entrypoint" type="url" value='@form("entrypoint").value'
+                           required="required" placeholder='@Messages("jobs.entrypoint.detail")'/>
                 </div>
             </div>
 
             <div class="row">
                 <div class="large-3 columns">
-                    <label class="right inline" for="tiny">One Time job plan<span class="required" title="This field is required">*</span></label>
+                    <label class="right inline" for="tiny">One Time job plan<span class="required"
+                                                                                  title="This field is required">*</span></label>
                 </div>
                 <div class="column large-9">
                     <div class="row">
                         <div class="large-3 column">
-                            <ul class="pricing-table" >
+                            <ul class="pricing-table">
                                 <li class="title">
                                     <label for="tiny">
-                                        <input id="tiny" name="plan" value="tiny" type="radio" checked />
+                                        <input id="tiny" name="plan" value="tiny" type="radio" checked/>
                                         <span>Tiny</span>
                                     </label>
                                 </li>
-                                <li class="price">$50 / 40€<span class="tax" title="Plus VAT if applicable">*</span></li>
+                                <li class="price">$50 / 40€<span class="tax" title="Plus VAT if applicable">*</span>
+                                </li>
                                 <li class="description">250 pages or fewer</li>
                             </ul>
                         </div>
@@ -70,11 +79,12 @@
                             <ul class="pricing-table">
                                 <li class="title">
                                     <label for="small">
-                                        <input id="small" name="plan" value="small" type="radio" />
+                                        <input id="small" name="plan" value="small" type="radio"/>
                                         Small
                                     </label>
-                                    </li>
-                                <li class="price">$75 / 60€<span class="tax" title="Plus VAT if applicable">*</span></li>
+                                </li>
+                                <li class="price">$75 / 60€<span class="tax" title="Plus VAT if applicable">*</span>
+                                </li>
                                 <li class="description">500 pages or fewer</li>
                             </ul>
                         </div>
@@ -83,11 +93,12 @@
                             <ul class="pricing-table">
                                 <li class="title">
                                     <label for="medium">
-                                        <input id="medium" name="plan" value="medium" type="radio" />
+                                        <input id="medium" name="plan" value="medium" type="radio"/>
                                         Medium
                                     </label>
                                 </li>
-                                <li class="price">$110 / 90€<span class="tax" title="Plus VAT if applicable">*</span></li>
+                                <li class="price">$110 / 90€<span class="tax" title="Plus VAT if applicable">*</span>
+                                </li>
                                 <li class="description">1,000 pages or fewer</li>
                             </ul>
                         </div>
@@ -96,11 +107,12 @@
                             <ul class="pricing-table">
                                 <li class="title">
                                     <label for="large">
-                                        <input id="large" name="plan" value="large" type="radio" />
+                                        <input id="large" name="plan" value="large" type="radio"/>
                                         Large
                                     </label>
                                 </li>
-                                <li class="price">$190 / 150€<span class="tax" title="Plus VAT if applicable">*</span></li>
+                                <li class="price">$190 / 150€<span class="tax" title="Plus VAT if applicable">*</span>
+                                </li>
                                 <li class="description">2,000 pages or fewer</li>
                             </ul>
                         </div>
@@ -110,10 +122,11 @@
             </div>
 
             <div class="row">
-                <p class="column large-9 large-offset-3 vats">* Plus VAT if applicable.</p>
+                <p class="column large-9 large-offset-3 vats"><em>* Plus VAT if applicable.</em></p>
             </div>
 
-            @**<div class="row">
+            @**
+            <div class="row">
                 <div class="large-3 columns">
                     <label for="validator_css-warning" class="right inline">CSS Warnings</label>
                 </div>
@@ -129,7 +142,7 @@
 
             <div class="row">
                 <div class="large-3 columns">
-                    <label for="validator_css-vextwarning"  class="right inline">CSS Vendor Extensions</label>
+                    <label for="validator_css-vextwarning" class="right inline">CSS Vendor Extensions</label>
                 </div>
                 <div class="large-9 columns">
                     <select id="validator_css-vextwarning" name="validator_css-vextwarning" class="large-6 small-12">
@@ -141,19 +154,23 @@
 
             <div class="row">
                 <div class="large-3 columns">
-                    <input class="right inline" id="dtd" name="dtd" type="checkbox" @form("dtd").value.map{_ => checked="checked"}/>
+                    <input class="right inline" id="dtd" name="dtd" type="checkbox" @form("dtd").value.map{_ =>
+                    checked="checked"}/>
                 </div>
                 <div class="large-9 columns">
                     <label for="dtd">Force DTD-based validation for HTML4 documents</label>
                 </div>
-            </div>**@
+            </div>
+            **@
 
             <div class="row">
                 <div class="large-3 columns">
-                    <input id="terms" type="checkbox" required="required" name="terms" class="right" @form("terms").value.map{_ => checked="checked"}>
+                    <input id="terms" type="checkbox" required="required" name="terms" class="right"
+                    @form("terms").value.map{_ => checked="checked"}>
                 </div>
                 <div class="large-9 columns">
-                    <label for="terms">I agree to the <a href="/policies/terms">Terms and Conditions</a><span class="required" title="This field is required">*</span></label>
+                    <label for="terms">I agree to the <a href="/policies/terms">Terms and Conditions</a><span
+                            class="required" title="This field is required">*</span></label>
                 </div>
             </div>
 
