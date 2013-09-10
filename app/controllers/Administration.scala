@@ -1,17 +1,19 @@
 package controllers
 
 import org.w3.vs.controllers._
-import play.api.mvc.{WebSocket, Result, Results, Action}
+import play.api.mvc.{ WebSocket, Result, Results, Action }
 import org.w3.vs.exception.UnknownUser
 import org.w3.vs.model
-import org.w3.vs.model.{User, JobId}
+import org.w3.vs.model.{ User, JobId, UserId }
 import play.api.i18n.Messages
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import play.api.cache.Cache
 import play.api.Play._
 import play.api.libs.iteratee._
 import scala.concurrent.duration.Duration
+import play.api.libs.json.Json.toJson
+import org.w3.vs.store.Formats._
 
 object Administration extends VSController {
 
@@ -100,29 +102,56 @@ object Administration extends VSController {
 
     // TODO: Implement this method in a new class
     // Executes the side-effects of a command, if any, and returns a result as text.
-    // The call must stay synchronous. Below implementation is for example only.
+    // The call must stay synchronous.
     def executeCommand(command: String): String = {
       import org.w3.vs.util.timer._
-      command match {
-        case _ @ ("?" | "help") =>
+
+      command.split(" ") match {
+        case Array("?") | Array("help") =>
           """Basic UI functionality:
             |    Ctrl+l to clear the console
             |    Up/Down arrow to move through command history
             |
-            |Commands implemented for illustration purposes:
-            |    jobs     - displays the list of all jobs
-            |    long     - a command that takes a long time to perform
+            |Available commands:
+            |    jobs          - the list of all jobs
+            |    runningJobs   - only the running jobs
+            |    job <jobId>   - informations about that jobId
+            |    user <userId> - informations about that userId
             |
             |Note: The console is locked when a command is being processed by the server (i.e. the server *must* return a result for every command, may that be the empty string.)""".stripMargin
-        case "jobs" => {
+
+        case Array("jobs") =>
           val jobs = model.Job.getAll().getOrFail()
-          jobs.map(job => s"${job.name} - ${job.id}").mkString("\n")
-        }
-        case "long" => {
-          Thread.sleep(3000)
+          jobs.map(job => s"${job.id} [${job.name}] by ${job.creatorId}").mkString("\n")
+
+        case Array("runningJobs") =>
+          val jobs = model.Job.getRunningJobs().getOrFail()
+          jobs.map(job => s"${job.id} [${job.name}] by ${job.creatorId}").mkString("\n")
+
+        case Array("job", jobId) =>
+          try {
+            val job = model.Job.get(JobId(jobId)).getOrFail()
+            val json = toJson(job)
+            s"Scala: ${job}\nJSON: ${json}"
+          } catch { case t: Throwable =>
+            t.getMessage
+          }
+
+        case Array("user", userId) =>
+          try {
+            val user = model.User.get(UserId(userId)).getOrFail()
+            val json = toJson(user)
+            s"Scala: ${user}\nJSON: ${json}"
+          } catch { case t: Throwable =>
+            t.getMessage
+          }
+
+        case Array("defaultData") =>
+          org.w3.vs.Main.defaultData()
           "done"
-        }
-        case s => s"Command ${s} not found"
+
+        case _ => s"Command ${command} not found"
+          
       }
     }
 
