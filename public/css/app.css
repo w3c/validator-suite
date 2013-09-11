@@ -434,6 +434,12 @@ select {
     margin: 0;
 }
 
+.newJob .oneTimeLabel {
+    font-size: 0.875em;
+    padding-top: 1.2em;
+    color: #4d4d4d;
+}
+
 .vats {
     font-size: 0.75em;
     font-style: italic;
@@ -460,7 +466,7 @@ select {
     font-size: 0.875em;
 }
 
-fieldset > .row > .small-3 {
+fieldset > .row > .large-3 {
     padding-right: 0;
 }
 
