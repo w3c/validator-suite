@@ -3,7 +3,7 @@ messages: List[(String, String)] = List.empty)(implicit flash: Flash, vs: Valida
 
 @front("W3C Validator Suite - Login") {
 
-<section class="login-register row">
+<section class="row">
 
     @defining(messages ++ flash.data){ case messages =>
     @if(messages.size > 0) {
@@ -12,11 +12,11 @@ messages: List[(String, String)] = List.empty)(implicit flash: Flash, vs: Valida
     </div>
     }}
 
-    <h1 class="column">Login</h1>
+    <div class="column">
 
-    <form action="@routes.Application.login" method="POST" class="column form-login">
-        <fieldset>
-            <legend id="login" tabindex="0" style="display:none">Login</legend>
+        <h1 class="formHeader">Login</h1>
+
+        <form action="@routes.Application.login" method="POST" class="vsForm">
 
             <div class="row">
                 <span class="column large-offset-3 large-9 topLabel">
@@ -67,8 +67,9 @@ messages: List[(String, String)] = List.empty)(implicit flash: Flash, vs: Valida
                 </div>
             </div>
 
-        </fieldset>
-    </form>
+        </form>
+
+    </div>
 
 </section>
 

@@ -87,7 +87,7 @@ h2 {
 
 #banner {
     background: #073E80;
-    margin-bottom: 1.5em;
+    margin-bottom: 1em;
     border-bottom: 0.5em solid #D9E6F0;
     line-height: 1em;
 
@@ -359,19 +359,13 @@ hr:before {
    login-register
 ----------------------------------------- */
 
-.login-register button {
+.vsForm button {
     width: 100%;
     margin-bottom: 0;
 }
 
-.login-register p:last-child {
+.vsForm p:last-child {
     margin-bottom: 1em;
-}
-
-fieldset legend {
-    font: 2.5em 'LeagueGothicRegular', Arial, sans-serif;
-    color: #073E80;
-    text-transform: uppercase;
 }
 
 :focus, a:focus {
@@ -396,11 +390,6 @@ select {
 
 .newJob button {
     margin-bottom: 0;
-}
-
-.newJob fieldset,
-.login-register fieldset {
-    margin-top: 0.5em;
 }
 
 .newJob .large-2 {
@@ -466,7 +455,8 @@ select {
     font-size: 0.875em;
 }
 
-fieldset > .row > .large-3 {
+.vsForm .large-3,
+.vsForm .small-3 {
     padding-right: 0;
 }
 
@@ -516,3 +506,37 @@ fieldset > .row > .large-3 {
 h1 {
     margin-bottom: 0.5em;
 }
+
+.vsForm legend {
+    text-align: right;
+    font-size: 0.875em;
+    font-weight: normal;
+
+    margin: 0 0 1em 0;
+    padding: 0.625em 0;
+}
+.vsForm fieldset {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.vsForm {
+    border: solid 1px #ddd;
+    padding: 1.25em;
+    padding-top: 1.75em;
+    position: relative;
+    top: -1.5em;
+}
+
+.formHeader {
+    margin: 0;
+    margin-top: 0.2em;
+    padding: 0 0.2em;
+    margin-left: 0.1em;
+    background-color: white;
+    display: inline-block;
+    z-index: 2;
+    position: relative;
+}
+
