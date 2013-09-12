@@ -38,6 +38,13 @@ object Application extends VSController {
       }
     }
   }
+  def logos: ActionA = Action { implicit req =>
+    AsyncResult {
+      getUserOption map { user =>
+        Ok(views.html.logos(user))
+      }
+    }
+  }
 
   val loginName = (new controllers.javascript.ReverseApplication).login.name
   val loginTimer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, loginName))

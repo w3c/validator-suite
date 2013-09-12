@@ -540,3 +540,12 @@ h1 {
     position: relative;
 }
 
+.logos code {
+    background: #D9E6F0;
+    display: block;
+    padding: 0.5em;
+    font-weight: normal;
+    color: #073E80;
+    line-height: 1.5;
+    white-space: pre;
+}

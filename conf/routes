@@ -5,6 +5,7 @@
 GET     /                                           controllers.Application.index
 GET     /faqs                                       controllers.Application.faq
 GET     /pricing                                    controllers.Application.pricing
+GET     /logos                                      controllers.Application.logos
 GET     /login                                      controllers.Application.login
 POST    /login                                      controllers.Application.loginAction
 POST    /logout                                     controllers.Application.logout
