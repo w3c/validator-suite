@@ -102,6 +102,11 @@ trait VSController extends Controller {
     }
   }
 
+  // never fails
+  def getUserOption()(implicit reqHeader: RequestHeader): Future[Option[User]] = {
+    getUser.map(Some(_)).recover{case _ => None}
+  }
+
   def AuthAsyncAction(f: Request[AnyContent] => User => Future[PartialFunction[Format, Result]]): ActionA = Action { implicit req =>
     AsyncResult {
       (for {

@@ -17,9 +17,27 @@ object Application extends VSController {
   
   val logger = play.Logger.of("org.w3.vs.controllers.Application")
 
-  def faq:     ActionA = Action { Ok(views.html.faq()) }
-  def index:   ActionA = Action { Ok(views.html.index()) }
-  def pricing: ActionA = Action { Ok(views.html.pricing()) }
+  def faq:     ActionA = Action { implicit req =>
+    AsyncResult {
+      getUserOption map { user =>
+        Ok(views.html.faq(user))
+      }
+    }
+  }
+  def index:   ActionA = Action { implicit req =>
+    AsyncResult {
+      getUserOption map { user =>
+        Ok(views.html.index(user))
+      }
+    }
+  }
+  def pricing: ActionA = Action { implicit req =>
+    AsyncResult {
+      getUserOption map { user =>
+         Ok(views.html.pricing(user))
+      }
+    }
+  }
 
   val loginName = (new controllers.javascript.ReverseApplication).login.name
   val loginTimer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, loginName))

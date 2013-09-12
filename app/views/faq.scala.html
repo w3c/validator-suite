@@ -1,4 +1,6 @@
-@front("W3C Validator Suite - FAQs") {
+@(user: Option[User])
+
+@front("W3C Validator Suite - FAQs", user) {
 
 <div class="row" id="faq-toc">
     <div class="column">
@@ -10,15 +12,13 @@
             <li><a href="#howcaniuse">How can I use W3C Validator Suite<sup>™</sup> service?</a></li>
             <li><a href="#freevalidators">What is the difference between the existing free W3C Markup Validator and this
                 new service?</a></li>
-            <li><a href="#logomeaning">When I see the W3C Validator Suite<sup>™</sup> logo/badge, what does it mean?</a>
-            </li>
+            <li><a href="#logomeaning">When I see the W3C Validator Suite<sup>™</sup> logo/badge, what does it mean?</a></li>
             <li><a href="#w3cmembers">Do W3C Members enjoy special privileges?</a></li>
             <li><a href="#accessibility">What about Accessibility testing?</a></li>
             <li><a href="#howlong">How long will it take to validate my Web site?</a></li>
             <li><a href="#privatesites">Can I check internal websites or sites that require authentication?</a></li>
             <li><a href="#javascript">My site uses Javascript. Is that OK?</a></li>
-            <li><a href="#license">Is the W3C Validator Suite<sup>™</sup> published under an open-source license?</a>
-            </li>
+            <li><a href="#license">Is the W3C Validator Suite<sup>™</sup> published under an open-source license?</a></li>
             <li><a href="#api">Is there an API?</a></li>
             <li><a href="#bugsandideas">How can I submit bug reports or send ideas?</a></li>
         </ol>
