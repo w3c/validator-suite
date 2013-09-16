@@ -184,10 +184,24 @@ h2 {
     color: green;
 }
 
-.pricing-table .bullet-item:after {
+.pricing-table .description:after {
     content: "✔";
     margin-left: 0.5em;
     color: green;
+}
+
+.pricing-table abbr {
+    font-size: 1em;
+    color: #777777;
+}
+
+.pricing-table .price {
+    padding: 0.9375em 0.5em;
+}
+
+.pricing-table .bullet-item {
+    line-height: 1.3;
+    font-size: 0.75em;
 }
 
 .action {
@@ -550,6 +564,10 @@ h1 {
     color: #073E80;
     line-height: 1.5;
     white-space: pre;
+}
+
+body { // So that people stop reporting responsiveness issues!
+    min-width: 380px;
 }
 
 @media print {
