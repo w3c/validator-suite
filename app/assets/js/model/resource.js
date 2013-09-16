@@ -2,55 +2,61 @@ define(["model/model", "model/assertions", "util/Util"], function (Model, Assert
 
     "use strict";
 
-    var Resource;
+    var Resource = Model.extend({
 
-    Resource = Model.extend({
+        logger:Logger.of("Resource"),
 
-        defaults: {
-            url: "",
-            lastValidated: null,
-            warnings: 0,
-            errors: 0
+        defaults:{
+            url:"",
+            lastValidated:null,
+            warnings:0,
+            errors:0
         },
 
-        assertions: new Assertions(),
+        assertions:new Assertions(),
 
-        init: function () {
+        init:function () {
             //this.id = this.get("resourceUrl");
         },
 
         // TODO Use play js utility for urls!
 
-        url: function () { return "resources?resource=" + encodeURIComponent(this.get("url")); },
+        url:function () {
+            return "resources?resource=" + encodeURIComponent(this.get("url"));
+        },
 
-        reportUrl: function () { return "assertions?resource=" + encodeURIComponent(this.get("url")); },
+        reportUrl:function () {
+            return "assertions?resource=" + encodeURIComponent(this.get("url"));
+        },
 
-        search: function (search) {
+        search:function (search) {
             return this.get("url").toLowerCase().indexOf(search.toLowerCase()) > -1;
         }
 
         /*validate: function (attrs) {
-            if (!attrs.resourceUrl || attrs.resourceUrl.length < 1) {
-                logger.warn("Resource url required");
-                return "Resource url required";
-            }
-        },*/
+         if (!attrs.resourceUrl || attrs.resourceUrl.length < 1) {
+         logger.warn("Resource url required");
+         return "Resource url required";
+         }
+         },*/
 
     });
 
     Resource.View = Resource.View.extend({
 
-        templateId: "resource-template",
+        templateId:"resource-template",
 
-        templateOptions: function () {
+        templateOptions:function () {
             return {
-                reportUrl : this.model.reportUrl()
+                reportUrl:this.model.reportUrl()
             };
         },
 
-        addSearchHandler: function () {
+        addSearchHandler:function () {
             var collec = this.options.assertions, input;
-            if (!collec) { return; }
+            if (!collec) {
+                return;
+            }
             this.$(".actions input[name=search]").bind("keyup change", function () {
                 input = this;
                 setTimeout(function () {
@@ -59,7 +65,7 @@ define(["model/model", "model/assertions", "util/Util"], function (Model, Assert
             });
         },
 
-        afterRender: function () {
+        afterRender:function () {
             this.addSearchHandler();
         }
 
@@ -68,15 +74,15 @@ define(["model/model", "model/assertions", "util/Util"], function (Model, Assert
     Resource.fromHtml = function ($article) {
         var value = Util.valueFrom($article);
         return {
-            id: $article.attr("data-id"),
-            url: value('data-url'),
-            lastValidated: {
-                timestamp: value('data-lastValidated'),
-                legend1: value('data-lastValidated-legend1'),
-                legend2: value('data-lastValidated-legend2')
+            id:$article.attr("data-id"),
+            url:value('data-url'),
+            lastValidated:{
+                timestamp:value('data-lastValidated'),
+                legend1:value('data-lastValidated-legend1'),
+                legend2:value('data-lastValidated-legend2')
             },
-            warnings: parseInt(value('data-warnings'), 10),
-            errors: parseInt(value('data-errors'), 10)
+            warnings:parseInt(value('data-warnings'), 10),
+            errors:parseInt(value('data-errors'), 10)
         };
     };
 

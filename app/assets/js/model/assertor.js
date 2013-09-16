@@ -2,19 +2,19 @@ define(["model/model", "util/Util"], function (Model, Util) {
 
     "use strict";
 
-    var Assertor;
+    var Assertor = Model.extend({
 
-    Assertor = Model.extend({
+        logger:Logger.of("Assertor"),
 
-        defaults: {
-            name: "None",
-            errors: 0,
-            warnings: 0
+        defaults:{
+            name:"None",
+            errors:0,
+            warnings:0
         },
 
-        assertions: null,
+        assertions:null,
 
-        isValid: function () {
+        isValid:function () {
             return this.get("errors") + this.get("warnings") === 0;
         }
 
@@ -22,29 +22,32 @@ define(["model/model", "util/Util"], function (Model, Util) {
 
     Assertor.View = Assertor.View.extend({
 
-        templateId: "assertor-template",
+        templateId:"assertor-template",
 
-        setCurrent: function () {
+        setCurrent:function () {
             this.$el.parents('section').children('article').removeClass('current');
             this.$el.addClass("current");
         },
 
-        addFilterHandler: function () {},
+        addFilterHandler:function () {
+        },
 
-        attributes: function () {
+        attributes:function () {
             var clas = this.model.isValid() ? "valid" : "";
             clas += this.isCurrent() ? " current" : "";
             return {
-                "class": clas
+                "class":clas
             };
         },
 
-        init: function () {
+        init:function () {
             this.el.setAttribute("data-id", this.model.id);
         },
 
-        isCurrent: function () {
-            if (!this.$el) { return false; }
+        isCurrent:function () {
+            if (!this.$el) {
+                return false;
+            }
             return this.$el.hasClass("current");
         }
 
@@ -53,10 +56,10 @@ define(["model/model", "util/Util"], function (Model, Util) {
     Assertor.fromHtml = function ($article) {
         var value = Util.valueFrom($article);
         return {
-            id: $article.attr('data-id'),
-            name: value('data-name'),
-            errors: parseInt(value('data-errors'), 10),
-            warnings: parseInt(value('data-warnings'), 10)
+            id:$article.attr('data-id'),
+            name:value('data-name'),
+            errors:parseInt(value('data-errors'), 10),
+            warnings:parseInt(value('data-warnings'), 10)
         };
     };
 

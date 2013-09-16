@@ -12,11 +12,21 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return function (o1, o2) {
                 var p1 = o1.get(param),
                     p2 = o2.get(param);
-                if (p1 === null && p2 === null) { return 0; }
-                if (p2 === null) { return reverse ? -1 : +1; }
-                if (p1 === null) { return reverse ? +1 : -1; }
-                if (p1.timestamp > p2.timestamp) { return reverse ? -1 : +1; }
-                if (p1.timestamp === p2.timestamp) { return 0; }
+                if (p1 === null && p2 === null) {
+                    return 0;
+                }
+                if (p2 === null) {
+                    return reverse ? -1 : +1;
+                }
+                if (p1 === null) {
+                    return reverse ? +1 : -1;
+                }
+                if (p1.timestamp > p2.timestamp) {
+                    return reverse ? -1 : +1;
+                }
+                if (p1.timestamp === p2.timestamp) {
+                    return 0;
+                }
                 return reverse ? +1 : -1;
             };
         }
@@ -36,28 +46,32 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
         //comparator: getComparatorBy("id"),
 
-        sortByParam: function (param, reverse, options) {
+        logger:Logger.of("UnNamed-Collection"),
+
+        sortByParam:function (param, reverse, options) {
             this.comparator = getComparatorBy(param, reverse);
             this.sort(options);
         },
 
-        isComplete: function () {
+        isComplete:function () {
             return this.expected && this.length < this.expected ? false : true;
         },
 
-        initialize: function () {
+        initialize:function () {
             var self = this;
             this.on('add', function () {
                 if (!_.isUndefined(self.expected) && self.expected < self.length) {
                     self.expected = self.length;
                 }
             });
-            if (_.isFunction(this.init)) { this.init(); }
+            if (_.isFunction(this.init)) {
+                this.init();
+            }
         },
 
-        configure: function (options) {
+        configure:function (options) {
             options = this.options = (options || {});
-            this.view = new this.constructor.prototype.constructor.View(_.extend({ collection: this }, options));
+            this.view = new this.constructor.prototype.constructor.View(_.extend({ collection:this }, options));
             if (options.listen || (_.isUndefined(options.listen))) {
                 if (this.view.isList()) {
                     this.listen();
@@ -70,7 +84,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return this;
         },
 
-        listen: function () {
+        listen:function () {
 
             var self = this;
 
@@ -81,9 +95,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
                     var model = self.get(data.id);
                     if (!_.isUndefined(model)) {
                         changedModels.push(model);
-                        model.set(data, {silent: true});
+                        model.set(data, {silent:true});
                     } else {
-                        self.add(new self.model(data, {collection: self}), {silent: true});
+                        self.add(new self.model(data, {collection:self}), {silent:true});
                     }
                 });
 
@@ -99,21 +113,25 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
     Collection.View = Backbone.View.extend({
 
-        displayed: [],
+        displayed:[],
 
-        maxOnScreen: 30,
+        maxOnScreen:30,
 
-        filteredCount: 0,
+        filteredCount:0,
 
-        sortParams: [],
+        sortParams:[],
 
-        search: function (search, searchInput) {
+        search:function (search, searchInput) {
             this.currentSearch = search;
-            this.search_ = (_.isString(search) && search !== "") ? function (model) { return model.search(search); } : undefined;
+            this.search_ = (_.isString(search) && search !== "") ? function (model) {
+                return model.search(search);
+            } : undefined;
             this.render();
         },
 
-        initialize: function () {
+        initialize:function () {
+
+            this.logger = this.collection.logger;
 
             var collection = this.collection,
                 initial_sort = this.getSortParam();
@@ -145,26 +163,29 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             }
 
             if (_.isUndefined(this.options.loadFromMarkup) || this.options.loadFromMarkup) {
-                logger.log("loadFromMarkup");
+                this.logger.log("loadFromMarkup");
                 this.loadFromMarkup();
             }
 
             if (!_.isFunction(collection.comparator)) {
-                collection.sortByParam(initial_sort.param, initial_sort.reverse, { silent: true });
-            } /*else {
-                //collection.sort({ silent: true });
-            }*/
+                collection.sortByParam(initial_sort.param, initial_sort.reverse, { silent:true });
+            }
+            /*else {
+             //collection.sort({ silent: true });
+             }*/
 
-            if (_.isFunction(this.init)) { this.init(); }
+            if (_.isFunction(this.init)) {
+                this.init();
+            }
 
         },
 
-        loadFromMarkup: function () {
+        loadFromMarkup:function () {
             var collection = this.collection,
                 models;
 
             if (!_.isFunction(collection.model.fromHtml)) {
-                logger.error("fromHtml function not provided");
+                this.logger.error("fromHtml function not provided");
                 return false;
             }
 
@@ -174,29 +195,31 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
                 return new collection.model.fromHtml($(article));
             }).toArray();
 
-            logger.info("parsed " + models.length + " model(s) from the page.");
+            this.logger.info("parsed " + models.length + " model(s) from the page.");
 
             collection.reset(models);
         },
 
-        getSortParam: function () {
+        getSortParam:function () {
             var current = this.$(".sort .current"),
                 param = current.parents("dt").attr("class"),
                 reverse = !current.hasClass("ascend");
             return {
-                param: param,
-                reverse: reverse,
-                string: reverse ? param : "-" + param
+                param:param,
+                reverse:reverse,
+                string:reverse ? param : "-" + param
             };
         },
 
-        render: function (options) {
+        render:function (options) {
 
             options = (options || {});
 
             //console.log("render");
 
-            if (_.isFunction(this.beforeRender)) { this.beforeRender(); }
+            if (_.isFunction(this.beforeRender)) {
+                this.beforeRender();
+            }
 
             var models = this.collection.models,
                 elements,
@@ -239,7 +262,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
                     } else if (_.isString(self.emptyMessage)) {
                         return self.emptyMessage;
                     } else {
-                        logger.warn("No emptyMessage function or value provided");
+                        this.logger.warn("No emptyMessage function or value provided");
                         return "";
                     }
                 }());
@@ -248,19 +271,24 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
                     this.$('.empty').html(emptyMessage);
                 } else if (this.currentSearch && this.currentSearch !== "") {
                     this.$('.empty').html("No search result.");
-                } /*else {
+                }
+                /*else {
                  // TODO: loading no?
                  empty.html(emptyMessage);
                  }*/
             }
 
-            if (this.isList() && (_.isUndefined(this.options.updateLegend) || this.options.updateLegend)) { this.updateLegend(); }
+            if (this.isList() && (_.isUndefined(this.options.updateLegend) || this.options.updateLegend)) {
+                this.updateLegend();
+            }
 
-            if (_.isFunction(this.afterRender)) { this.afterRender(); }
+            if (_.isFunction(this.afterRender)) {
+                this.afterRender();
+            }
 
         },
 
-        addSortHandler: function () {
+        addSortHandler:function () {
             var sortLinks = this.$(".sort a"),
                 self = this;
             _.each(this.sortParams, function (param) {
@@ -287,48 +315,48 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
         },
 
         /*addSearchHandler: function () {
-            if (!this.options.searchInput) { return; }
-            var self = this;
-            this.options.searchInput.unbind("keyup change");
-            this.options.searchInput.bind("keyup change", function () {
-                var input = this;
-                setTimeout(function () {
-                    if (self.loader) { self.loader.setData({ sort: self.getSortParam().string, search: input.value }); }
-                    self.render();
-                }, 0);
-            });
+         if (!this.options.searchInput) { return; }
+         var self = this;
+         this.options.searchInput.unbind("keyup change");
+         this.options.searchInput.bind("keyup change", function () {
+         var input = this;
+         setTimeout(function () {
+         if (self.loader) { self.loader.setData({ sort: self.getSortParam().string, search: input.value }); }
+         self.render();
+         }, 0);
+         });
 
-        },*/
+         },*/
 
-        addScrollHandler: function () {
+        addScrollHandler:function () {
             var win = $(window),
                 aside = this.$('aside'),
                 asideClone = aside.clone(),
                 self = this;
             win.unbind("scroll resize");
             win.bind("scroll resize", _.throttle(function () {
-                    if (self.$el.offset().top > win.scrollTop()) {
-                        aside.removeClass('jsFixed');
-                        asideClone.remove();
-                    } else {
-                        aside.before(asideClone);
-                        aside.addClass('jsFixed');
-                    }
-                    self.updateLegend();
+                if (self.$el.offset().top > win.scrollTop()) {
+                    aside.removeClass('jsFixed');
+                    asideClone.remove();
+                } else {
+                    aside.before(asideClone);
+                    aside.addClass('jsFixed');
+                }
+                self.updateLegend();
             }, 100));
         },
 
-        isList: function () {
+        isList:function () {
             return this.$el.hasClass('list') || this.$el.hasClass('folds');
         },
 
-        isSingle: function () {
+        isSingle:function () {
             return this.$el.hasClass('single');
         },
 
-        getVisibles: function () {
+        getVisibles:function () {
             var views = _.pluck(this.displayed, 'view'),
-                visibles = { first: null, last: null },
+                visibles = { first:null, last:null },
                 i = 0,
                 isVisible;
             for (i; i < views.length; i += 1) {
@@ -344,9 +372,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return visibles;
         },
 
-        getVisibles2: function () {
+        getVisibles2:function () {
             var views = _.pluck(this.displayed, 'view'),
-                visibles = { first: null, last: null },
+                visibles = { first:null, last:null },
                 i = views.length - 1,
                 isVisible;
             for (i; i >= 0; i -= 1) {
@@ -362,9 +390,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return visibles;
         },
 
-        getVisibles3: function () {
+        getVisibles3:function () {
             var views = _.pluck(this.displayed, 'view').reverse(),
-                visibles = { first: null, last: null },
+                visibles = { first:null, last:null },
                 i = 0,
                 isVisible,
                 index;
@@ -382,7 +410,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return visibles;
         },
 
-        updateLegend: function () {
+        updateLegend:function () {
 
             var visibles = this.getVisibles3(),
                 old,
@@ -394,7 +422,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
             if (this.maxOnScreen !== old && (this.displayed.length - visibles.last < 20 || this.displayed.length - visibles.last > 60)) { // does not remove elements on scroll up. seems more efficient like that
                 //console.log("re-rendering");
-                this.render({ updateLegend: false });
+                this.render({ updateLegend:false });
                 //return;
             }
 
@@ -415,8 +443,8 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             }
 
             /*if (this.collection.loader && this.collection.loader.isLoading()) {
-                legend.append($("<span class='loader'></span>"));
-            }*/
+             legend.append($("<span class='loader'></span>"));
+             }*/
 
         }
 

@@ -2,14 +2,13 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
 
     "use strict";
 
-    var logger = Logger.of("Assertors"),
-        Assertors;
+    var Assertors = Collection.extend({
 
-    Assertors = Collection.extend({
+        logger:Logger.of("Assertors"),
 
-        model: Assertor,
+        model:Assertor,
 
-        comparator: function (o1, o2) {
+        comparator:function (o1, o2) {
             if (o1.get("errors") > o2.get("errors")) {
                 return -1;
             } else if (o1.get("errors") === o2.get("errors")) {
@@ -29,23 +28,23 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
 
     Assertors.View = Assertors.View.extend({
 
-        attributes: {
-            id: "assertors"
+        attributes:{
+            id:"assertors"
         },
 
-        getSortParam: function () {
+        getSortParam:function () {
             return {
-                param: "errors",
-                reverse: true
+                param:"errors",
+                reverse:true
                 //string: "errors"
             };
         },
 
-        beforeRender: function () {
-            this.collection.sort({silent: true}); // not sure why this is necessary
+        beforeRender:function () {
+            this.collection.sort({silent:true}); // not sure why this is necessary
         },
 
-        afterRender: function () {
+        afterRender:function () {
             this.addFilterHandler();
             if (this.$('.current').size() === 0) {
                 this.$("article:first-of-type .filter").click();
@@ -53,7 +52,7 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
             //console.log("Assertors rendered");
         },
 
-        addFilterHandler: function () {
+        addFilterHandler:function () {
             var filterLinks = this.$(".filter"),
                 self = this;
             filterLinks.unbind('click');
@@ -66,7 +65,7 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
             });
         },
 
-        init: function () {
+        init:function () {
             var assertions = this.options.assertions,
                 assertors = this.collection,
                 self = this;
@@ -93,15 +92,15 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
                     //console.log(assertorCounts[assertor]);
                     if (!_.isUndefined(assertors.get(assertor))) {
                         assertors.get(assertor).set({
-                            errors: assertorCounts[assertor].error,
-                            warnings: assertorCounts[assertor].warning
+                            errors:assertorCounts[assertor].error,
+                            warnings:assertorCounts[assertor].warning
                         });
                     } else {
                         assertors.add({
-                            id: assertor,
-                            name: Util.getAssertorName(assertor),
-                            errors: assertorCounts[assertor].error,
-                            warnings: assertorCounts[assertor].warning
+                            id:assertor,
+                            name:Util.getAssertorName(assertor),
+                            errors:assertorCounts[assertor].error,
+                            warnings:assertorCounts[assertor].warning
                         });
                     }
                 }

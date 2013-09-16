@@ -2,18 +2,17 @@ define(["util/Logger", "model/assertion", "model/collection"], function (Logger,
 
     "use strict";
 
-    var logger = Logger.of("Assertions"),
-        Assertions;
+    var Assertions = Collection.extend({
 
-    Assertions = Collection.extend({
+        logger:Logger.of("Assertions"),
 
-        model: Assertion,
+        model:Assertion,
 
-        comparator: function (o1, o2) {
+        comparator:function (o1, o2) {
             if (o1.get("severity") === o2.get("severity")) {
                 return o1.get("occurrences") === o2.get("occurrences") ?
-                        (o1.get("title") > o2.get("title") ? +1 : -1) :
-                        (o1.get("occurrences") > o2.get("occurrences") ? -1 : +1);
+                    (o1.get("title") > o2.get("title") ? +1 : -1) :
+                    (o1.get("occurrences") > o2.get("occurrences") ? -1 : +1);
             }
             if (o1.get("severity") === "error") {
                 return -1;
@@ -33,24 +32,20 @@ define(["util/Logger", "model/assertion", "model/collection"], function (Logger,
 
     Assertions.View = Assertions.View.extend({
 
-        attributes: {
-            id: "assertions"
+        attributes:{
+            id:"assertions"
         },
 
-        sortParams: [],
+        sortParams:[],
 
-        filterOn: function (assertorId) {
+        filterOn:function (assertorId) {
             this.filter = function (assertion) {
                 return assertion.get("assertor") === assertorId;
             };
             this.render();
         },
 
-        afterRender: function () {
-            //console.log("Assertions rendered");
-        },
-
-        emptyMessage: "No assertions to show." // assertions.empty
+        emptyMessage:"No assertions to show." // assertions.empty
 
     });
 
