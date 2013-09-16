@@ -1,12 +1,10 @@
-define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (Logger, Backbone, Util, Socket) {
+define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/underscore", "libs/jquery"], function (Logger, Backbone, Util, Socket, _, $) {
 
     "use strict";
 
-    var logger = new Logger("Collection"),
-        getComparatorBy,
-        Collection;
+    var Collection;
 
-    getComparatorBy = function (param, reverse) {
+    function getComparatorBy(param, reverse) {
 
         reverse = (reverse || false);
 
@@ -32,7 +30,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket"], function (L
             }
             return reverse ? +1 : -1;
         };
-    };
+    }
 
     Collection = Backbone.Collection.extend({
 

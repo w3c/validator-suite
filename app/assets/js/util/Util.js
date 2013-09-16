@@ -1,4 +1,4 @@
-define(["util/Logger"], function (Logger) {
+define(["util/Logger", "libs/underscore", "libs/jquery"], function (Logger, _, $) {
 
     "use strict";
 
@@ -15,7 +15,7 @@ define(["util/Logger"], function (Logger) {
         });
     }
 
-    var logger = new Logger("Util"),
+    var logger = Logger.of("Util"),
         templates = {};
 
     return {

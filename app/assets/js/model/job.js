@@ -2,7 +2,7 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
 
     "use strict";
 
-    var logger = new Logger("Job"),
+    var logger = Logger.of("Job"),
         Job;
 
     Job = Model.extend({

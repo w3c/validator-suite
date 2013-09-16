@@ -2,7 +2,7 @@ define(["util/Logger", "util/Util", "model/assertor", "model/collection"], funct
 
     "use strict";
 
-    var logger = new Logger("Assertors"),
+    var logger = Logger.of("Assertors"),
         Assertors;
 
     Assertors = Collection.extend({

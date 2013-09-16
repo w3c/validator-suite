@@ -2,7 +2,7 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
 
     "use strict";
 
-    var logger = new Logger("Socket"),
+    var logger = Logger.of("Socket"),
         Socket;
 
     Socket = function (url, type) {

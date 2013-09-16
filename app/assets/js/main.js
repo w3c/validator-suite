@@ -1,4 +1,4 @@
-require(["model/vs"], function (VS) {
+require(["libs/underscore", "libs/jquery", "model/vs", "config"], function (_, $, VS, config) {
 
     "use strict";
 

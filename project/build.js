@@ -1,17 +1,15 @@
 // https://github.com/jrburke/r.js/blob/master/build/example.build.js
 ({
     baseUrl: "./",
-    //mainConfigFile: '../js/config.js',
     preserveLicenseComments: false,
     optimize: "uglify",
     wrap: {
         startFile: ["../js/licences.txt"],
         endFile: []
     },
-    paths: {
-        //'libs/query': "libs/jquery" //"empty:"
-    },
+    paths: { },
     shim: {
+        'libs/jquery':     { exports: '$' },
         'libs/underscore': { exports: '_' },
         'libs/modernizr':  { exports: 'Modernizr' },
         'libs/backbone': {
@@ -30,20 +28,10 @@
             name: 'libs/jquery'
         },
         {
-            name: "libs/require"
-            //include: ['config' ]
-        },
-        {   name: "libs/backbone"   },
-        {
-            name: "model/vs",
-            exclude: ["libs/backbone"]
+            name: "main"
         },
         {
-            name: "main",
-            exclude: ["libs/backbone", "model/vs"],
-        },
-        {
-            name: "front",
+            name: "front"
         }
     ]
 })

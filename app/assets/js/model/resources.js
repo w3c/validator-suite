@@ -2,7 +2,7 @@ define(["util/Logger", "model/resource", "model/collection", "util/Socket"], fun
 
     "use strict";
 
-    var logger = new Logger("Resources"),
+    var logger = Logger.of("Resources"),
         Resources;
 
     Resources = Collection.extend({

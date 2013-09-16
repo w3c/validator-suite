@@ -2,7 +2,7 @@ define(["util/Logger", "model/job", "model/collection"], function (Logger, Job, 
 
     "use strict";
 
-    var logger = new Logger("Jobs"),
+    var logger = Logger.of("Jobs"),
         Jobs;
 
     Jobs = Collection.extend({
