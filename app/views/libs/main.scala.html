@@ -4,30 +4,32 @@
 <html lang="en">
 <head>
     <title>@title</title>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/vsLogo.svg")' />
-    <link href='@routes.Assets.at("styles/main.min.css")' rel="stylesheet" />
+    <meta charset="utf-8"/>
+    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/favicon.png")'/>
+    <link href='@routes.Assets.at("styles/main.min.css")' rel="stylesheet"/>
     @if(style != "") {
-    <link href='@routes.Assets.at(s"styles/${style}.min.css")' rel="stylesheet" />}
+    <link href='@routes.Assets.at(s"styles/${style}.min.css")' rel="stylesheet"/>
+    }
     <script data-main='@routes.Assets.at(s"js/${script}.js")' src='@routes.Assets.at("js/libs/require.js")'></script>
 </head>
 
 <body class="no-js">
-    <script>document.body.className = "js";</script>
-    @libs.header()
-    <div id="main">
+<script>document.body.className = "js";</script>
+@libs.header()
+<div id="main">
     @content
-    </div>
-    <footer class="fixed">
+</div>
+<footer class="fixed">
     @footer
-        <p class="copyright">
-            Copyright © 2013 <a href="http://www.w3.org" title="About W3C">W3C</a> <sup>®</sup>
-            (<a href="http://www.csail.mit.edu/"><abbr title="Massachusetts Institute of Technology">MIT</abbr></a>,
-            <a href="http://www.ercim.eu/"><abbr title="European Research Consortium for Informatics and Mathematics">ERCIM</abbr></a>,
-            <a href="http://www.keio.ac.jp/">Keio</a>,
-            <a href="http://ev.buaa.edu.cn/">Beihang</a>)
-            <a href="/policies/privacy">Privacy Policy</a>
-        </p>
-    </footer>
+    <p class="copyright">
+        Copyright © 2013 <a href="http://www.w3.org" title="About W3C">W3C</a> <sup>®</sup>
+        (<a href="http://www.csail.mit.edu/"><abbr title="Massachusetts Institute of Technology">MIT</abbr></a>,
+        <a href="http://www.ercim.eu/"><abbr
+                title="European Research Consortium for Informatics and Mathematics">ERCIM</abbr></a>,
+        <a href="http://www.keio.ac.jp/">Keio</a>,
+        <a href="http://ev.buaa.edu.cn/">Beihang</a>)
+        <a href="/policies/privacy">Privacy Policy</a>
+    </p>
+</footer>
 </body>
 </html>
