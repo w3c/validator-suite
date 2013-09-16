@@ -1,7 +1,7 @@
 package org.w3.vs.model
 
-import org.joda.time.{ DateTime, DateTimeZone }
-import akka.pattern.{ ask, AskTimeoutException }
+import org.joda.time.{DateTime, DateTimeZone}
+import akka.pattern.{ask, AskTimeoutException}
 import play.api.libs.iteratee._
 import play.Logger
 import org.w3.vs.util._
@@ -11,9 +11,9 @@ import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
 import org.w3.vs.actor._
-import scala.util.{ Success, Failure, Try }
+import scala.util.{Success, Failure, Try}
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ ops => _, _ }
+import scala.concurrent.{ops => _, _}
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.exception.UnknownJob
 import org.w3.vs.view.model.JobView
@@ -22,22 +22,28 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 import akka.actor._
 
 // Play Json imports
+
 import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
 
 case class Job(
-  id: JobId,
-  name: String,
-  createdOn: DateTime,
-  /** the strategy to be used when creating the Run */
-  strategy: Strategy,
-  /** the identity of the the creator of this Job */
-  creatorId: UserId,
-  /** the status for this Job */
-  status: JobStatus,
-  /** if this job was ever done, the final state -- includes link to the concerned Run */
-  latestDone: Option[Done]) { thisJob =>
+                id: JobId,
+                name: String,
+                createdOn: DateTime,
+
+                /**the strategy to be used when creating the Run */
+                strategy: Strategy,
+
+                /**the identity of the the creator of this Job */
+                creatorId: UserId,
+
+                /**the status for this Job */
+                status: JobStatus,
+
+                /**if this job was ever done, the final state -- includes link to the concerned Run */
+                latestDone: Option[Done]) {
+  thisJob =>
 
   import Job.logger
 
@@ -51,10 +57,11 @@ case class Job(
 
   def save()(implicit conf: ValidatorSuite with Database): Future[Job] =
     Job.save(this)
-  
+
   def delete()(implicit conf: ValidatorSuite): Future[Unit] = {
-    cancel() flatMap { case () =>
-      Job.delete(id)
+    cancel() flatMap {
+      case () =>
+        Job.delete(id)
     }
   }
 
@@ -63,8 +70,9 @@ case class Job(
 
   def run()(implicit vs: ValidatorSuite): Future[Job] = {
     implicit val timeout = vs.timeout
-    (vs.runsActorRef ? RunsActor.RunJob(this)).mapTo[Running] map { running =>
-      this.copy(status = running)
+    (vs.runsActorRef ? RunsActor.RunJob(this)).mapTo[Running] map {
+      running =>
+        this.copy(status = running)
     }
   }
 
@@ -88,12 +96,12 @@ case class Job(
 
   import scala.reflect.ClassTag
 
-  /** asks the actor at `actorPath` for the optional value corresponding
-    * to `classifier`. The actor sends back a NoSuchElementException
-    * to signal that no value can be provided. If nothing comes back
-    * on time, the TimeoutException is mapped to a
-    * NoSuchElementException.
-    */
+  /**asks the actor at `actorPath` for the optional value corresponding
+   * to `classifier`. The actor sends back a NoSuchElementException
+   * to signal that no value can be provided. If nothing comes back
+   * on time, the TimeoutException is mapped to a
+   * NoSuchElementException.
+   */
   def getFuture(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.OneOff], conf: ValidatorSuite): Future[classifier.OneOff] = {
     val actorRef = conf.system.actorFor(actorPath)
     val message = JobActor.Get(classifier)
@@ -103,17 +111,17 @@ case class Job(
     }
   }
 
-  /** enumerates the values of type T (according to the
-    * `classifier`). This will spawn an anonymous actor which will
-    * subscribe to the current JobActor (if available) and future
-    * ones. This actor detects the new runs/JobActor by subscribing to
-    * the system's EventStream. The JobActor sends () values when runs
-    * are over, and depending on the value for `forever`, this
-    * enumerator will either terminates (Input.EOF) or just emit a
-    * Input.Empty.
-    */
+  /**enumerates the values of type T (according to the
+   * `classifier`). This will spawn an anonymous actor which will
+   * subscribe to the current JobActor (if available) and future
+   * ones. This actor detects the new runs/JobActor by subscribing to
+   * the system's EventStream. The JobActor sends () values when runs
+   * are over, and depending on the value for `forever`, this
+   * enumerator will either terminates (Input.EOF) or just emit a
+   * Input.Empty.
+   */
   def actorBasedEnumerator(classifier: Classifier, forever: Boolean)(
-      implicit classTag: ClassTag[classifier.Streamed], vs: ValidatorSuite): Enumerator[Iterator[classifier.Streamed]] = {
+    implicit classTag: ClassTag[classifier.Streamed], vs: ValidatorSuite): Enumerator[Iterator[classifier.Streamed]] = {
     val (enumerator, channel) = Concurrent.broadcast[Iterator[classifier.Streamed]]
     val system = vs.system
     def subscriberActor(): Actor = new Actor {
@@ -130,9 +138,10 @@ case class Job(
         try {
           if (channel != null)
             channel.push(msg)
-        } catch { case t: Throwable =>
-          logger.error("Enumerator exception", t)
-          stop()
+        } catch {
+          case t: Throwable =>
+            logger.error("Enumerator exception", t)
+            stop()
         }
       }
 
@@ -160,6 +169,7 @@ case class Job(
           }}*/
         }
       }
+
       /* the actor's main method... @@@@ */
       def receive = {
         // the normal messages that we're expecting
@@ -173,17 +183,22 @@ case class Job(
         case () => if (forever) channel.push(Input.Empty) else stop()
         case channel: Concurrent.Channel[_] =>
           subscribeToChannel(channel.asInstanceOf[Concurrent.Channel[Iterator[classifier.Streamed]]])
-        case msg => logger.error("subscriber got " + msg) ; stop()
+        case msg => logger.error("subscriber got " + msg); stop()
       }
     }
     // create (and start) the actor
     val actor = system.actorOf(Props(subscriberActor()))
     Concurrent.unicast(
-      onStart = { channel => actor ! channel },
-      onComplete = { actor ! PoisonPill },
-      onError = { case (error, input) =>
-        logger.error(s"$input: $error")
+      onStart = {
+        channel => actor ! channel
+      },
+      onComplete = {
         actor ! PoisonPill
+      },
+      onError = {
+        case (error, input) =>
+          logger.error(s"$input: $error")
+          actor ! PoisonPill
       }
     )
   }
@@ -221,21 +236,23 @@ case class Job(
     }
   }
 
-  /** Enumerator for all the JobData-s, even for future runs.  This is
-    * stateless.  If you just want the most up-to-date JobData, use
-    * Job.jobData() instead. */
+  /**Enumerator for all the JobData-s, even for future runs.  This is
+   * stateless.  If you just want the most up-to-date JobData, use
+   * Job.jobData() instead. */
   def jobDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[JobData]] = {
     import conf._
     runDatas() &> Enumeratee.map(_.map(runData => JobData(this, runData)))
   }
 
-  /** returns the most up-to-date JobData for the Job, if available */
+  /**returns the most up-to-date JobData for the Job, if available */
   def getJobData()(implicit conf: ValidatorSuite): Future[JobData] = {
-    getRunData().map { JobData(this, _) }
+    getRunData().map {
+      JobData(this, _)
+    }
   }
 
-  /** this is stateless, so if you're the Done case, you want to use
-    * Job.runData() instead */
+  /**this is stateless, so if you're the Done case, you want to use
+   * Job.runData() instead */
   def runDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[RunData]] = {
     def enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
     this.status match {
@@ -245,7 +262,7 @@ case class Job(
     }
   }
 
-  /** returns the most up-to-date RunData for the Job, if available */
+  /**returns the most up-to-date RunData for the Job, if available */
   def getRunData()(implicit conf: ValidatorSuite): Future[RunData] = {
     import conf._
     this.status match {
@@ -262,8 +279,10 @@ case class Job(
     def enumerator = actorBasedEnumerator(Classifier.AllResourceDatas, forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
-        val current: Enumerator[Iterator[ResourceData]] =
-          Enumerator(Run.getResourceDatas(runId)) &> Enumeratee.mapM(x => x.map(_.iterator))
+        val partitionSize = 100
+        val partitions: Future[Iterator[Iterator[ResourceData]]] =
+          Run.getResourceDatas(runId).map(_.grouped(partitionSize).map(_.iterator))
+        val current = Enumerator.flatten(partitions.map(Enumerator.enumerate(_))) //&> Enumeratee.mapM(x => x.map(_.iterator))
         current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
@@ -304,12 +323,14 @@ case class Job(
   }
 
   // all GroupedAssertionDatas updates
-  def groupedAssertionDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[GroupedAssertionData]] =  {
+  def groupedAssertionDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[GroupedAssertionData]] = {
     def enumerator = actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
-        val current: Enumerator[Iterator[GroupedAssertionData]] =
-          Enumerator(Run.getGroupedAssertionDatas(runId)) &> Enumeratee.mapM(x => x.map(_.iterator))
+        val partitionSize = 100
+        val partitions: Future[Iterator[Iterator[GroupedAssertionData]]] =
+          Run.getGroupedAssertionDatas(runId).map(_.grouped(partitionSize).map(_.iterator))
+        val current = Enumerator.flatten(partitions.map(Enumerator.enumerate(_)))
         current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
@@ -331,8 +352,10 @@ case class Job(
     def enumerator = actorBasedEnumerator(Classifier.AssertionsFor(url), forever = true)
     this.status match {
       case Done(runId, _, _, _) =>
-        val current: Enumerator[Iterator[Assertion]] =
-          Enumerator(Run.getAssertionsForURL(runId, url)) &> Enumeratee.mapM(x => x.map(_.iterator))
+        val partitionSize = 100
+        val partitions: Future[Iterator[Iterator[Assertion]]] =
+          Run.getAssertionsForURL(runId, url).map(_.grouped(partitionSize).map(_.iterator))
+        val current = Enumerator.flatten(partitions.map(Enumerator.enumerate(_)))
         current andThen Enumerator.enumInput(Input.Empty) andThen enumerator
       case _ => enumerator
     }
@@ -361,24 +384,24 @@ object Job {
   def collection(implicit conf: Database): JSONCollection =
     conf.db("jobs")
 
-//  def sample(implicit conf: Database) = Job(
-//    JobId("50cb698f04ca20aa0283bc84"),
-//    "Sample report",
-//    DateTime.now(DateTimeZone.UTC),
-//    Strategy(
-//      entrypoint = URL("http://www.w3.org/"),
-//      linkCheck = false,
-//      maxResources = 10,
-//      filter = Filter(include = Everything, exclude = Nothing),
-//      assertorsConfiguration = AssertorsConfiguration.default),
-//    User.sample.id,
-//    NeverStarted,
-//    None)
+  //  def sample(implicit conf: Database) = Job(
+  //    JobId("50cb698f04ca20aa0283bc84"),
+  //    "Sample report",
+  //    DateTime.now(DateTimeZone.UTC),
+  //    Strategy(
+  //      entrypoint = URL("http://www.w3.org/"),
+  //      linkCheck = false,
+  //      maxResources = 10,
+  //      filter = Filter(include = Everything, exclude = Nothing),
+  //      assertorsConfiguration = AssertorsConfiguration.default),
+  //    User.sample.id,
+  //    NeverStarted,
+  //    None)
 
   private def updateStatus(
-    jobId: JobId,
-    status: JobStatus,
-    latestDoneOpt: Option[Done])(
+                            jobId: JobId,
+                            status: JobStatus,
+                            latestDoneOpt: Option[Done])(
     implicit conf: Database): Future[Unit] = {
     val selector = Json.obj("_id" -> toJson(jobId))
     val update = latestDoneOpt match {
@@ -392,23 +415,24 @@ object Job {
           "$set" -> Json.obj(
             "status" -> toJson(status)))
     }
-    collection.update(selector, update, writeConcern = journalCommit) map { lastError =>
-      if (!lastError.ok) throw lastError
+    collection.update(selector, update, writeConcern = journalCommit) map {
+      lastError =>
+        if (!lastError.ok) throw lastError
     }
 
   }
 
   def updateStatus(
-    jobId: JobId,
-    status: JobStatus,
-    latestDone: Done)(
+                    jobId: JobId,
+                    status: JobStatus,
+                    latestDone: Done)(
     implicit conf: Database): Future[Unit] = {
     updateStatus(jobId, status, Some(latestDone))
   }
 
   def updateStatus(
-    jobId: JobId,
-    status: JobStatus)(
+                    jobId: JobId,
+                    status: JobStatus)(
     implicit conf: Database): Future[Unit] = {
     updateStatus(jobId, status, None)
   }
@@ -424,42 +448,51 @@ object Job {
     }
   }
 
-  /** the list of all the Jobs */
+  /**the list of all the Jobs */
   def getAll()(implicit conf: Database): Future[List[Job]] = {
     val cursor = collection.find(Json.obj()).cursor[JsValue]
-    cursor.toList() map { list => list map { _.as[Job] } }
+    cursor.toList() map {
+      list => list map {
+        _.as[Job]
+      }
+    }
   }
 
   def getRunningJobs()(implicit conf: Database): Future[List[Job]] = {
     val query = Json.obj("status.actorName" -> Json.obj("$exists" -> JsBoolean(true)))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.toList() map { list => list map { _.as[Job] } }
+    cursor.toList() map {
+      list => list map {
+        _.as[Job]
+      }
+    }
   }
 
-  /** Resumes all the pending jobs (Running status) in the system.
-    * The function itself is blocking and intended to be called when VS is (re-)started.
-    * If resuming a Run fails (either an exception or a timeout) then the Job's status is updated to Zombie.
-    */
+  /**Resumes all the pending jobs (Running status) in the system.
+   * The function itself is blocking and intended to be called when VS is (re-)started.
+   * If resuming a Run fails (either an exception or a timeout) then the Job's status is updated to Zombie.
+   */
   def resumeAllJobs()(implicit conf: ValidatorSuite): Unit = {
     import org.w3.vs.util.timer.FutureF
     val runningJobs = getRunningJobs().getOrFail()
     val duration = Duration("15s")
-    runningJobs foreach { job =>
-      val future = job.resume()
-      try {
-        logger.info(s"${job.id}: resuming -- wait up to ${duration}")
-        Await.result(future, duration)
-        logger.info(s"${job.id}: successfuly resumed")
-      } catch {
-        case t: Throwable =>
-          logger.error(s"failed to resume ${job}", t)
-          updateStatus(job.id, Zombie) onComplete {
-            case Failure(f) =>
-              logger.error(s"failed to update status of ${job.id} to Zombie", f)
-            case Success(_) =>
-              logger.info(s"${job.id} status is now Zombie. Restart the server to clean the global state.")
-          }
-      }
+    runningJobs foreach {
+      job =>
+        val future = job.resume()
+        try {
+          logger.info(s"${job.id}: resuming -- wait up to ${duration}")
+          Await.result(future, duration)
+          logger.info(s"${job.id}: successfuly resumed")
+        } catch {
+          case t: Throwable =>
+            logger.error(s"failed to resume ${job}", t)
+            updateStatus(job.id, Zombie) onComplete {
+              case Failure(f) =>
+                logger.error(s"failed to update status of ${job.id} to Zombie", f)
+              case Success(_) =>
+                logger.info(s"${job.id} status is now Zombie. Restart the server to clean the global state.")
+            }
+        }
     }
   }
 
@@ -467,13 +500,16 @@ object Job {
     import conf._
     val query = Json.obj("creator" -> toJson(userId))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.toList() map { list =>
-      list map { json => json.as[Job] }
+    cursor.toList() map {
+      list =>
+        list map {
+          json => json.as[Job]
+        }
     }
   }
 
-  /** returns the Job for this JobId, if it belongs to the provided user
-    * if not, it throws an UnknownJob exception */
+  /**returns the Job for this JobId, if it belongs to the provided user
+   * if not, it throws an UnknownJob exception */
   def getFor(userId: UserId, jobId: JobId)(implicit conf: Database): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
@@ -485,31 +521,39 @@ object Job {
 
   def save(job: Job)(implicit conf: Database): Future[Job] = {
     val jobJson = toJson(job)
-    collection.insert(jobJson) map { lastError => job }
+    collection.insert(jobJson) map {
+      lastError => job
+    }
   }
 
   def delete(jobId: JobId)(implicit conf: Database): Future[Unit] = {
     val query = Json.obj("_id" -> toJson(jobId))
-    collection.remove[JsValue](query) map { lastError => () }
+    collection.remove[JsValue](query) map {
+      lastError => ()
+    }
   }
 
   def reset(jobId: JobId, removeRunData: Boolean = true)(implicit conf: ValidatorSuite): Future[Unit] = {
-    Job.get(jobId) flatMap { job =>
-      job.cancel() // <- do not block!
-      val rebornJob = job.copy(status = NeverStarted, latestDone = None)
-      // as we don't change the jobId, this will override the previous one
-      val update = collection.update(
-        selector = Json.obj("_id" -> toJson(jobId)),
-        update = toJson(rebornJob),
-        writeConcern = journalCommit
-      ) map { lastError => job }
-      update flatMap { case job =>
-        job.status match {
-          case Done(runId, _, _, _) if removeRunData => Run.removeAll(runId)
-          case Running(runId, _) if removeRunData => Run.removeAll(runId)
-          case _ => Future.successful(())
+    Job.get(jobId) flatMap {
+      job =>
+        job.cancel() // <- do not block!
+        val rebornJob = job.copy(status = NeverStarted, latestDone = None)
+        // as we don't change the jobId, this will override the previous one
+        val update = collection.update(
+          selector = Json.obj("_id" -> toJson(jobId)),
+          update = toJson(rebornJob),
+          writeConcern = journalCommit
+        ) map {
+          lastError => job
         }
-      }
+        update flatMap {
+          case job =>
+            job.status match {
+              case Done(runId, _, _, _) if removeRunData => Run.removeAll(runId)
+              case Running(runId, _) if removeRunData => Run.removeAll(runId)
+              case _ => Future.successful(())
+            }
+        }
     }
   }
 
