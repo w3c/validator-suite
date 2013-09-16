@@ -442,8 +442,7 @@ select {
 
 .screenshot {
     width: 100%;
-    margin: 0;
-    margin-top: 1em;
+    margin: 0.5em 0 1.5em 0;
     padding: 0 0.9375em;
 }
 
@@ -551,4 +550,16 @@ h1 {
     color: #073E80;
     line-height: 1.5;
     white-space: pre;
+}
+
+@media print {
+    #nav, hr {
+        display: none;
+    }
+
+    #banner, #footer, #banner .row {
+        border: none;
+        height: auto;
+    }
+
 }
