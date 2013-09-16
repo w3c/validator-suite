@@ -5,10 +5,10 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width"/>
     <title>@title</title>
-    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/vsLogo.svg")'>
+    <link rel="icon" type="image/svg" href='@routes.Assets.at("images/favicon.png")'>
     <link rel="stylesheet" href='@routes.Assets.at("css/foundation.min.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("css/app.css")'>
-    <script data-main='@routes.Assets.at("js/front.js")' src='@routes.Assets.at("js/libs/require.js")'></script>
+    <script data-main='@routes.Assets.at("js/front.js")' src='@routes.Assets.at("js/libs/require.js")' async="async"></script>
 </head>
 
 <body>
@@ -16,24 +16,21 @@
 <section id="banner">
     <div class="row">
         <a class="left" href="@routes.Application.index">
-            <img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite"
-                 title="W3C Validator Suite homepage"/>
+            <img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite" title="W3C Validator Suite homepage"/>
         </a>
         <ul id="nav" class="right">
             @user match {
             case Some(user) => {
             <li><a href="@routes.Application.pricing">Pricing</a></li>
             <li><a href="@routes.Application.faq">FAQs</a></li>
-            <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a>
-            </li>
+            <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
             <li><a href="@routes.Jobs.index">Jobs</a></li>
             <li><span title="Logged in as @user.name <@user.email>">@user.name</span></li>
             <li>
                 <form action="@routes.Application.logout" method="post">
                     <button type="submit" class="logout">Logout</button>
                 </form>
-            </li>
-            }
+            </li>}
             case _ => {
             <li><a href="@routes.Application.pricing">Pricing</a></li>
             <li><a href="@routes.Application.faq">FAQs</a></li>
