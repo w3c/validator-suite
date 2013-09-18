@@ -129,7 +129,7 @@
 #banner .row {
     background: url("../images/tick.svg") no-repeat right;
     background-size: auto 100%;
-    height: 100px;
+    min-height: 100px;
     position: relative;
 }
 
@@ -142,12 +142,7 @@
     width: 210px;
 }
 
-@media only screen and (min-width: 48em) {
-    #banner img {
-        height: 80px;
-        width: 336px;
-    }
-}
+
 
 
 #banner h1 {
@@ -157,8 +152,24 @@
 #banner {
     .logo {
         padding: 0.5em;
+        padding-bottom: 0;
         display: inline-block;
+        //float: left;
+    }
+}
+
+@media only screen and (min-width: 48em) {
+    #banner img {
+        height: 80px;
+        width: 336px;
+
+    }
+    #banner .logo {
         float: left;
+        padding-bottom: 0.5em;
+    }
+    .mainNav {
+        position: absolute;
     }
 }
 

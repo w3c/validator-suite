@@ -91,36 +91,7 @@ h2 {
 }
 
 @import "inc/_banner.less";
-
-#nav {
-    position: absolute;
-    bottom: 1em;
-    right: 1em;
-    margin-bottom: 0;
-    font-size: 1em;
-    line-height: 1em;
-}
-
-#nav li:first-of-type {
-    margin-left: 0;
-}
-
-#nav li {
-    list-style-type: none;
-    display: inline;
-    color: white;
-    margin-left: 1.5em;
-/*text-shadow: 0 0 4px black;*/
-}
-
-#nav a:link,
-#nav a:visited {
-    color: white;
-}
-
-#nav a:hover {
-    text-decoration: underline;
-}
+@import "inc/_nav.less";
 
 #slide {
     margin-bottom: 2em;
@@ -457,26 +428,6 @@ select {
     padding: 1.25em;
 }
 
-#nav form {
-    display: inline;
-}
-
-#nav .logout:hover {
-    background: transparent;
-}
-
-#nav .logout {
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-}
-
-#nav li > span {
-    padding: 8px 10px 7px 10px;
-}
-
 .note {
     font-size: 0.8em;
 }
@@ -534,7 +485,7 @@ h1 {
 }
 
 body {
-    min-width: 480px;
+    min-width: 380px;
 }
 
 @media print {
@@ -554,4 +505,3 @@ body {
     vertical-align: text-bottom;
 }
 
-@import "inc/_nav.less";
