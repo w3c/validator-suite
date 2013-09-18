@@ -33,6 +33,9 @@
         },
         {
             name: "front"
+        },
+        {
+            name: "console"
         }
     ]
 })
