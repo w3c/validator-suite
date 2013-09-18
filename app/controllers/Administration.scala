@@ -14,6 +14,7 @@ import play.api.libs.iteratee._
 import scala.concurrent.duration.Duration
 import play.api.libs.json.Json.toJson
 import org.w3.vs.store.Formats._
+import play.api.Mode
 
 object Administration extends VSController {
 
@@ -105,6 +106,7 @@ object Administration extends VSController {
     // The call must stay synchronous.
     def executeCommand(command: String): String = {
       import org.w3.vs.util.timer._
+      import play.api.libs.json.Json.prettyPrint
 
       command.split(" ") match {
         case Array("?") | Array("help") =>
@@ -117,8 +119,10 @@ object Administration extends VSController {
             |    runningJobs   - only the running jobs
             |    job <jobId>   - informations about that jobId
             |    user <userId> - informations about that userId
-            |
-            |Note: The console is locked when a command is being processed by the server (i.e. the server *must* return a result for every command, may that be the empty string.)""".stripMargin
+            |    current-users - users seen in the last 5 minutes (or duration of cache.user.expire)
+            |    clear-cache   - clear Play's cache of current users
+            |    defaultData   - resets the database with default data (only available in Dev mode)
+            |    """.stripMargin
 
         case Array("jobs") =>
           val jobs = model.Job.getAll().getOrFail()
@@ -132,7 +136,7 @@ object Administration extends VSController {
           try {
             val job = model.Job.get(JobId(jobId)).getOrFail()
             val json = toJson(job)
-            s"Scala: ${job}\nJSON: ${json}"
+            s"Scala: ${job}\nJSON: ${prettyPrint(json)}"
           } catch { case t: Throwable =>
             t.getMessage
           }
@@ -141,12 +145,19 @@ object Administration extends VSController {
           try {
             val user = model.User.get(UserId(userId)).getOrFail()
             val json = toJson(user)
-            s"Scala: ${user}\nJSON: ${json}"
+            s"Scala: ${user}\nJSON: ${prettyPrint(json)}"
           } catch { case t: Throwable =>
             t.getMessage
           }
 
-        case Array("defaultData") =>
+        case Array("current-users") =>
+          org.w3.vs.Main.currentUsers().mkString(" | ")
+
+        case Array("clear-cache") =>
+          org.w3.vs.Main.clearCache()
+          "done"
+
+        case Array("defaultData") if conf.mode == Mode.Dev =>
           org.w3.vs.Main.defaultData()
           "done"
 

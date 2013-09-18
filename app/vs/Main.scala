@@ -12,6 +12,7 @@ import org.w3.vs.store.MongoStore
 import scala.concurrent.Future
 import play.api.Mode.Prod
 import org.mozilla.javascript.tools.shell.Main.{main => executeJs}
+import play.api.cache.EhCachePlugin
 
 object Main {
 
@@ -78,6 +79,22 @@ object Main {
 
     println("you need to press ctrl-c")
 
+  }
+
+  def currentUsers(): List[String] = {
+    import play.api.Play.current
+    import scala.collection.JavaConversions._
+    current.plugin[EhCachePlugin].map{ p: EhCachePlugin =>
+      val removedKeys = p.manager.asInstanceOf[net.sf.ehcache.CacheManager].getCache("play").getKeys.toList.map(_.toString)
+      removedKeys
+    }.getOrElse(List.empty)
+  }
+
+  def clearCache() {
+    import play.api.Play.current
+    for (p <- current.plugin[EhCachePlugin]) {
+      p.manager.clearAll
+    }
   }
 
   def defaultData()(implicit conf: Database): Unit = {
@@ -168,6 +185,7 @@ object Main {
 
     val script: Future[Unit] = for {
       _ <- MongoStore.reInitializeDb()
+      _ <- Future.successful(clearCache())
       _ <- User.save(tgambet)
       _ <- User.save(bertails)
       _ <- User.save(ted)

@@ -1,4 +1,4 @@
-require(["util/console", "libs/jquery", "util/Util"], function (Console, $, Util) {
+require(["util/Console", "libs/jquery", "util/Util"], function (Console, $, Util) {
 
     "use strict";
 
