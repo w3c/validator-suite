@@ -110,7 +110,7 @@ object Application extends VSController {
             loginForm = LoginForm(email).withGlobalError("application.invalidCredentials")
           )).withNewSession*/
         case InvalidFormException(form: LoginForm, _) => {
-          BadRequest(views.html.login(loginForm = form)).withNewSession
+          BadRequest(views.html.login(form)).withNewSession
         }
 
       } recover toError

@@ -1,5 +1,5 @@
-@(loginForm: LoginForm = LoginForm.blank,
-messages: List[(String, String)] = List.empty)(implicit flash: Flash, vs: ValidatorSuite)
+@(form: LoginForm = LoginForm.blank,
+    messages: List[(String, String)] = List.empty)(implicit flash: Flash, vs: ValidatorSuite)
 
 @front("W3C Validator Suite - Login") {
 
@@ -12,64 +12,7 @@ messages: List[(String, String)] = List.empty)(implicit flash: Flash, vs: Valida
     </div>
     }}
 
-    <div class="column">
-
-        <h1 class="formHeader">Login</h1>
-
-        <form action="@routes.Application.login" method="POST" class="vsForm">
-
-            <div class="row">
-                <span class="column large-offset-3 large-9 topLabel">
-                    If you don't have an account yet, you can <a href="@routes.Application.register.url">register
-                    now</a>.
-                </span>
-            </div>
-
-            @if(loginForm.errors.size > 0) {
-            <div class="row">
-                <div class="column large-9 large-offset-3 formErrors">
-                    @libs.messages2(loginForm.errors.toList)
-                </div>
-            </div>
-            }
-
-            <div class="row">
-                <div class="small-3 columns">
-                    <label for="l_email" class="right inline">Email<span class="required"
-                                                                         title="This field is required">*</span></label>
-                </div>
-                <div class="small-9 columns">
-                    <input type="email" id="l_email" name="l_email" placeholder="Email"
-                           value='@loginForm("l_email").value' required="required">
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="small-3 columns">
-                    <label for="l_password" class="right inline">Password<span class="required"
-                                                                               title="This field is required">*</span></label>
-                </div>
-                <div class="small-9 columns">
-                    <input type="password" id="l_password" name="l_password" placeholder="Password" required="required">
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="column large-4 large-offset-8 small-9 small-offset-3">
-                    <input type="hidden" name="uri" value='@loginForm("uri").value'>
-                    <button id="submit-login" name="submit" value="login" type="submit">Login</button>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="column small-9 small-offset-3 note">
-                    <em>Fields marked with an asterisk (*) are required.</em>
-                </div>
-            </div>
-
-        </form>
-
-    </div>
+    @forms.loginForm(form)
 
 </section>
 
