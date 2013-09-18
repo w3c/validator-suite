@@ -7,25 +7,62 @@
     <title>@title</title>
     <link rel="icon" type="image/svg" href='@routes.Assets.at("images/favicon.png")'>
     <link rel="stylesheet" href='@routes.Assets.at("styles/front.css")'>
-    <script data-main='@routes.Assets.at("js/front.js")' src='@routes.Assets.at("js/libs/require.js")'
-            async="async"></script>
+    <script data-main='@routes.Assets.at("js/front.js")' src='@routes.Assets.at("js/libs/require.js")' async="async"></script>
 </head>
 
 <body>
 
 <section id="banner">
     <div class="row">
-        <a class="left" href="@routes.Application.index">
-            <img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite"
-                 title="W3C Validator Suite homepage"/>
+
+        <a href="@routes.Application.index" class="logo">
+            <img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite" title="W3C Validator Suite homepage"/>
         </a>
-        <ul id="nav" class="right">
+
+        @libs.nav(user)
+
+        @**<nav class="top-bar">
+            <ul class="title-area">
+                <li class="name"></li>
+                <li class="toggle-topbar menu-icon"><a href="#" class="menu"><span></span></a></li>
+            </ul>
+            <section class="top-bar-section">
+                <ul class="right">
+                    <li><a href="@routes.Application.index">Home</a></li>
+                    <li><a href="@routes.Application.pricing">Pricing</a></li>
+                    <li><a href="@routes.Application.faq">FAQs</a></li>
+                    <li><a href="mailto:@Helper.config.getString("contact.email").getOrElse("")">Contact</a></li>
+                    @user match {
+                    case Some(user) => {
+                    <li class="has-dropdown not-click">
+                        <a tabindex="0">My account</a>
+                        <ul class="dropdown">
+                            <li class=""><label>@user.name</label></li>
+                            <li><a href="@routes.Jobs.index">Settings</a></li>
+                            <li><a href="@routes.Jobs.index">My Jobs</a></li>
+                            <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
+                            <li class="divider"></li>
+                            <li>
+                                <form action="@routes.Application.logout" method="post">
+                                    <button type="submit" class="logout">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>}
+                    case _ => {
+                    <li><a href="@routes.Application.login"><strong>Login</strong></a></li>
+                    }}
+                </ul>
+            </section>
+        </nav>**@
+
+
+        @**<ul class="column row">
             @user match {
             case Some(user) => {
             <li><a href="@routes.Application.pricing">Pricing</a></li>
             <li><a href="@routes.Application.faq">FAQs</a></li>
-            <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a>
-            </li>
+            <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
             <li><a href="@routes.Jobs.index">Jobs</a></li>
             <li><span title="Logged in as @user.name <@user.email>">@user.name</span></li>
             <li>
@@ -40,7 +77,7 @@
             <li><a href="mailto:@Helper.config.getString(" contact.email").getOrElse("")">Contact</a></li>
             <li><a href="@routes.Application.login"><strong>Login</strong></a></li>
             }}
-        </ul>
+        </ul>**@
     </div>
 </section>
 

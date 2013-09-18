@@ -1,4 +1,4 @@
-/*
+
 define(["libs/jquery", "libs/underscore"], function () {
 
     var CSSReloader = {};
@@ -62,4 +62,4 @@ define(["libs/jquery", "libs/underscore"], function () {
 
     return CSSReloader;
 
-});*/
+});
