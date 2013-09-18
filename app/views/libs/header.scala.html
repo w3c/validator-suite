@@ -1,7 +1,9 @@
-    <header>
-        <h1>
-            <a class="left" href="@routes.Application.index">
-                <img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite" height="80" />
+@(userO: Option[User])
+    <section id="banner">
+        <div class="row">
+            <a href="@routes.Application.index" class="logo">
+                <img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite" title="W3C Validator Suite homepage"/>
             </a>
-        </h1>
-    </header>
+            @libs.nav(userO)
+        </div>
+    </section>

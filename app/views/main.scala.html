@@ -5,9 +5,7 @@
     crumbs: Crumbs = Seq.empty,
     collections: Seq[Collection[Model]])(implicit flash: Flash, vs: ValidatorSuite)
 
-@libs.main(title, style, script) {
-
-    @libs.admin(user)
+@libs.main(title, style, script, Some(user)) {
 
     @libs.navigation(crumbs)
 

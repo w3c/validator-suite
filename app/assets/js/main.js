@@ -1,6 +1,13 @@
-require(["libs/underscore", "libs/jquery", "model/vs", "config"], function (_, $, VS, config) {
+require([
+    "libs/underscore",
+    "libs/jquery",
+    "model/vs",
+    "config",
+    "libs/foundation.dropdown"], function (_, $, VS, config) {
 
     "use strict";
+
+    $(document).foundation();
 
     if (_.isUndefined(document.createElement('progress').position)) {
         require(["libs/progress-polyfill"]);

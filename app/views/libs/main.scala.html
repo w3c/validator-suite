@@ -1,4 +1,4 @@
-@(title: String, style: String = "", script: String = "")(content: Html)(footer: Html)(implicit vs: ValidatorSuite)
+@(title: String, style: String = "", script: String = "", userO: Option[User] = None)(content: Html)(footer: Html)(implicit vs: ValidatorSuite)
 @import play.api.Mode._
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +15,7 @@
 
 <body class="no-js">
 <script>document.body.className = "js";</script>
-@libs.header()
+@libs.header(userO)
 <div id="main">
     @content
 </div>

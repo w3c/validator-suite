@@ -2,7 +2,7 @@
 ({
     baseUrl: "./",
     preserveLicenseComments: false,
-    optimize: "none",
+    optimize: "uglify",
     wrap: {
         startFile: ["../js/licences.txt"],
         endFile: []
@@ -22,7 +22,6 @@
         },
         'libs/foundation.reveal': ['libs/foundation'],
         'libs/foundation.orbit': ['libs/foundation'],
-        'libs/foundation.topbar': ['libs/foundation'],
         'libs/foundation.dropdown': ['libs/foundation']
     },
     modules: [

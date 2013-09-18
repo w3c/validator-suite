@@ -7,8 +7,8 @@
 @import 'inc/_reset.less';
 
 @import 'inc/_main.less';
-@import 'inc/_header.less';
-@import 'inc/_admin.less';
+//@import 'inc/_header.less';
+//@import 'inc/_admin.less';
 @import 'inc/_navigation.less';
 @import 'inc/_messages.less';
 @import 'inc/_actions.less';
@@ -26,6 +26,56 @@
 @import 'inc/_loginForm.less';
 @import 'inc/_js.less';
 @import 'inc/_sample.less';
+
+@import 'inc/_nav.less';
+
+#banner {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    line-height: 25px !important;
+    font-size: 16px;
+
+    button:hover, .button:hover, button:focus, .button:hover, .button:active {
+        background: #FFAD21 !important;
+    }
+
+    button, .button {
+        background: #F97F2D !important;
+        border-color: #C47800;
+        text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+        border-radius: 1px;
+
+        display: inline-block;
+        -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+        -webkit-transition: background-color 300ms ease-out;
+        -moz-transition: background-color 300ms ease-out;
+        transition: background-color 300ms ease-out;
+        border-style: solid;
+        border-width: 1px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: bold;
+        margin: 0;
+        position: relative;
+        text-decoration: none;
+        text-align: center;
+        display: inline-block;
+        padding-top: 0.75em;
+        padding-right: 1.5em;
+        padding-bottom: 0.8125em;
+        padding-left: 1.5em;
+        font-size: 1em;
+        color: white;
+    }
+
+    a:hover {
+        text-decoration: none;
+    }
+
+}
+@import 'inc/_banner.less';
 
 @import 'libs/prism.less';
 
