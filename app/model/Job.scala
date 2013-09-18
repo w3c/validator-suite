@@ -28,21 +28,17 @@ import Json.toJson
 import org.w3.vs.store.Formats._
 
 case class Job(
-                id: JobId,
-                name: String,
-                createdOn: DateTime,
-
-                /**the strategy to be used when creating the Run */
-                strategy: Strategy,
-
-                /**the identity of the the creator of this Job */
-                creatorId: UserId,
-
-                /**the status for this Job */
-                status: JobStatus,
-
-                /**if this job was ever done, the final state -- includes link to the concerned Run */
-                latestDone: Option[Done]) {
+  id: JobId,
+  name: String,
+  createdOn: DateTime,
+  /**the strategy to be used when creating the Run */
+  strategy: Strategy,
+  /**the identity of the the creator of this Job */
+  creatorId: UserId,
+  /**the status for this Job */
+  status: JobStatus,
+  /**if this job was ever done, the final state -- includes link to the concerned Run */
+  latestDone: Option[Done]) {
   thisJob =>
 
   import Job.logger
@@ -399,9 +395,9 @@ object Job {
   //    None)
 
   private def updateStatus(
-                            jobId: JobId,
-                            status: JobStatus,
-                            latestDoneOpt: Option[Done])(
+      jobId: JobId,
+      status: JobStatus,
+      latestDoneOpt: Option[Done])(
     implicit conf: Database): Future[Unit] = {
     val selector = Json.obj("_id" -> toJson(jobId))
     val update = latestDoneOpt match {
@@ -423,16 +419,16 @@ object Job {
   }
 
   def updateStatus(
-                    jobId: JobId,
-                    status: JobStatus,
-                    latestDone: Done)(
+      jobId: JobId,
+      status: JobStatus,
+      latestDone: Done)(
     implicit conf: Database): Future[Unit] = {
     updateStatus(jobId, status, Some(latestDone))
   }
 
   def updateStatus(
-                    jobId: JobId,
-                    status: JobStatus)(
+      jobId: JobId,
+      status: JobStatus)(
     implicit conf: Database): Future[Unit] = {
     updateStatus(jobId, status, None)
   }

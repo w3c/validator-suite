@@ -58,6 +58,9 @@ POST    /admin/jobs                                 controllers.Administration.j
 POST    /admin/users                                controllers.Administration.usersPost()
 POST    /admin/migration                            controllers.Administration.migration()
 
+# Dev
+GET     /dev/test                                   controllers.Dev.test()
+
 ##########################
 
 # Serves assets from /public. In Dev mode try to find the file in /app/assets first unless forceProdAssets is true.
