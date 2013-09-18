@@ -1,0 +1,29 @@
+@(user: Option[User] = None)
+
+<nav class="mainNav">
+    <ul>
+        <li><a href="@routes.Application.index">Home</a></li>
+        <li><a href="@routes.Application.pricing">Pricing</a></li>
+        <li><a href="@routes.Application.faq">FAQs</a></li>
+        <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")'>Contact</a></li>
+        @user match {
+        case Some(user) => {
+        <li class="c-dropdown">
+            <a href="#" data-dropdown="myAccount">My Account</a>
+            <ul id="myAccount" class="f-dropdown small" data-dropdown-content>
+                <li class="noHover"><span class="loggedIn">Logged in as @user.name</span></li>
+                <li><a href="@routes.Jobs.index">My Jobs</a></li>
+                <li><a href="@routes.Jobs.index">Settings</a></li>
+                <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Email Support</a></li>
+                <li class="noHover">
+                    <form action="@routes.Application.logout" method="post">
+                        <button type="submit" class="logout">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </li>}
+        case _ => {
+        <li><a href="@routes.Application.login"><strong>Login</strong></a></li>
+        }}
+    </ul>
+</nav>

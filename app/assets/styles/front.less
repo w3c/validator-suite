@@ -17,7 +17,10 @@
 @font-face {
     font-family: 'LeagueGothicRegular';
     src: url('../types/League_Gothic-webfont.eot');
-    src: url('../types/League_Gothic-webfont.eot') format('embedded-opentype'), url('../types/League_Gothic-webfont.woff') format('woff'), url('../types/OpenSans-Regular.ttf') format('truetype'), url('../types/League_Gothic-webfont.svg#LeagueGothicRegular') format('svg');
+    src: url('../types/League_Gothic-webfont.eot') format('embedded-opentype'),
+         url('../types/League_Gothic-webfont.woff') format('woff'),
+         url('../types/OpenSans-Regular.ttf') format('truetype'),
+         url('../types/League_Gothic-webfont.svg#LeagueGothicRegular') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -98,10 +101,12 @@ h2 {
 #banner .row {
     background: url("../images/tick.svg") no-repeat right;
     background-size: auto 100%;
+    height: 100px;
+    position: relative;
 }
 
 #banner a {
-    padding: 8px 10px 7px 10px;
+    //padding: 8px 10px 7px 10px;
 }
 
 #banner img {
@@ -116,13 +121,17 @@ h2 {
     }
 }
 
-#banner .row {
-    height: 100px;
-    position: relative;
-}
 
 #banner h1 {
     color: #ffffff;
+}
+
+#banner {
+    .logo {
+        padding: 0.5em;
+        display: inline-block;
+        float: left;
+    }
 }
 
 #nav {
@@ -210,7 +219,7 @@ h2 {
 
 button,
 .button {
-    background: #F97F2D;
+    background: #F97F2D !important;
 /*    background: -moz-linear-gradient(top, #EDB556 0%, #C47903 100%);
 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#EDB556), color-stop(100%,#C47903));
 background: -webkit-linear-gradient(top, #EDB556 0%,#C47903 100%);
@@ -222,8 +231,8 @@ background: linear-gradient(to bottom, #EDB556 0%,#C47903 100%);*/
     border-radius: 1px;
 }
 
-button:hover, .button:hover, button:focus, .button:hover {
-    background: #FFAD21;
+button:hover, .button:hover, button:focus, .button:hover, .button:active {
+    background: #FFAD21 !important;
 }
 
 .orbit-bullets {
@@ -566,8 +575,8 @@ h1 {
     white-space: pre;
 }
 
-body { // So that people stop reporting responsiveness issues!
-    min-width: 380px;
+body {
+    min-width: 480px;
 }
 
 @media print {
@@ -586,3 +595,5 @@ body { // So that people stop reporting responsiveness issues!
     font-size: 0.75em;
     vertical-align: text-bottom;
 }
+
+@import "inc/_nav.less";
