@@ -17,34 +17,20 @@ object Application extends VSController {
   
   val logger = play.Logger.of("org.w3.vs.controllers.Application")
 
-  def faq:     ActionA = Action { implicit req =>
+  def FrontAction(f: Request[AnyContent] => Option[User] => Result) = Action { implicit req =>
     AsyncResult {
       getUserOption map { user =>
-        Ok(views.html.faq(user))
+        f(req)(user)
       }
     }
   }
-  def index:   ActionA = Action { implicit req =>
-    AsyncResult {
-      getUserOption map { user =>
-        Ok(views.html.index(user))
-      }
-    }
-  }
-  def pricing: ActionA = Action { implicit req =>
-    AsyncResult {
-      getUserOption map { user =>
-         Ok(views.html.pricing(user))
-      }
-    }
-  }
-  def logos: ActionA = Action { implicit req =>
-    AsyncResult {
-      getUserOption map { user =>
-        Ok(views.html.logos(user))
-      }
-    }
-  }
+
+  def faq: ActionA =     FrontAction { implicit req => user => Ok(views.html.faq(user)) }
+  def index: ActionA =   FrontAction { implicit req => user => Ok(views.html.index(user)) }
+  def pricing: ActionA = FrontAction { implicit req => user => Ok(views.html.pricing(user)) }
+  def logos: ActionA =   FrontAction { implicit req => user => Ok(views.html.logos(user)) }
+  def terms: ActionA =   FrontAction { implicit req => user => Ok(views.html.terms(user)) }
+  def privacy: ActionA = FrontAction { implicit req => user => Ok(views.html.privacy(user)) }
 
   val loginName = (new controllers.javascript.ReverseApplication).login.name
   val loginTimer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, loginName))
