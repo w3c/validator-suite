@@ -30,6 +30,12 @@
     </div>
 </section>
 
+@if(user == None) {
+<div id="loginModal" class="reveal-modal">
+    @forms.loginForm()
+    <a class="close-reveal-modal">&#215;</a>
+</div>}
+
 </body>
 </html>
 
