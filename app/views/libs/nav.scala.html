@@ -13,7 +13,7 @@
             <ul id="myAccount" class="f-dropdown small" data-dropdown-content>
                 <li class="noHover"><span class="loggedIn">Logged in as @user.name</span></li>
                 <li><a href="@routes.Jobs.index">My Jobs</a></li>
-                <li><a href="@routes.Jobs.index">My Profile</a></li>
+                <li class="noHover" title="Coming soon"><a class="disabled">My Profile</a></li>
                 <li class="noHover">
                     <form action="@routes.Application.logout" method="post">
                         <button type="submit" class="logout">Logout</button>
