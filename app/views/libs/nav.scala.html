@@ -1,10 +1,12 @@
-@(user: Option[User] = None)
+@(user: Option[User] = None)(implicit req: RequestHeader)
+
+@active(url: String) = @{if (req.uri == url) {"active"} else ""}
 
 <nav class="mainNav">
     <ul>
-        <li><a href="@routes.Application.index">Home</a></li>
-        <li><a href="@routes.Application.pricing">Pricing</a></li>
-        <li><a href="@routes.Application.faq">FAQs</a></li>
+        <li><a href="@routes.Application.index.url" class="@active(routes.Application.index.url)">Home</a></li>
+        <li><a href="@routes.Application.pricing.url" class="@active(routes.Application.pricing.url)">Pricing</a></li>
+        <li><a href="@routes.Application.faq.url" class="@active(routes.Application.faq.url)">FAQs</a></li>
         @user match {
         case Some(user) => {
         <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
@@ -12,7 +14,7 @@
             <a href="#" data-dropdown="myAccount">My Account</a>
             <ul id="myAccount" class="f-dropdown small" data-dropdown-content>
                 <li class="noHover"><span class="loggedIn">Logged in as @user.name</span></li>
-                <li><a href="@routes.Jobs.index">My Jobs</a></li>
+                <li><a href="@routes.Jobs.index.url" class="@active(routes.Jobs.index.url)">My Jobs</a></li>
                 <li class="noHover" title="Coming soon"><a class="disabled">My Profile</a></li>
                 <li class="noHover">
                     <form action="@routes.Application.logout" method="post">
@@ -23,7 +25,7 @@
         </li>}
         case _ => {
         <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")'>Contact</a></li>
-        <li><a href="@routes.Application.login" data-reveal-id="loginModal"><strong>Login</strong></a></li>
+        <li><a href="@routes.Application.login.url" data-reveal-id="loginModal"><strong>Login</strong></a></li>
         }}
     </ul>
 </nav>

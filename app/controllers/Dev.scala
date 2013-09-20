@@ -16,7 +16,7 @@ object Dev extends VSController {
     }
   }
 
-  def test = DevAction { req =>
+  def test = DevAction { implicit req =>
     Ok(views.html.test())
   }
 

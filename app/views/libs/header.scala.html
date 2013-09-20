@@ -1,4 +1,4 @@
-@(userO: Option[User])
+@(userO: Option[User])(implicit req: RequestHeader)
     <section id="banner">
         <div class="row">
             <a href="@routes.Application.index" class="logo">

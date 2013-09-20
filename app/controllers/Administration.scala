@@ -24,7 +24,7 @@ object Administration extends VSController {
     Ok(views.html.admin())
   }
 
-  def e503(): ActionA = Action {
+  def e503(): ActionA = Action { implicit req =>
     ServiceUnavailable(views.html.error._503())
   }
 

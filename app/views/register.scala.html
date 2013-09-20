@@ -1,5 +1,5 @@
 @(registerForm: RegisterForm = RegisterForm.blank,
-    messages: List[(String, String)] = List())(implicit flash: Flash, vs: ValidatorSuite)
+    messages: List[(String, String)] = List())(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
 @front("W3C Validator Suite - Register") {
 

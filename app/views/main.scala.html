@@ -3,7 +3,7 @@
     script: String = "main",
     style: String = "",
     crumbs: Crumbs = Seq.empty,
-    collections: Seq[Collection[Model]])(implicit flash: Flash, vs: ValidatorSuite)
+    collections: Seq[Collection[Model]])(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
 @libs.main(title, style, script, Some(user)) {
 

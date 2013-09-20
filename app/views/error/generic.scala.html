@@ -1,4 +1,4 @@
-@(messages: List[(String, String)] = List(), userO: Option[User] = None)(implicit flash: Flash, vs: ValidatorSuite)
+@(messages: List[(String, String)] = List(), userO: Option[User] = None)(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
 @libs.main("W3C Validator Suite"){
 

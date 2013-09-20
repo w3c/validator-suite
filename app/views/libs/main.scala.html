@@ -1,4 +1,4 @@
-@(title: String, style: String = "", script: String = "", userO: Option[User] = None)(content: Html)(footer: Html)(implicit vs: ValidatorSuite)
+@(title: String, style: String = "", script: String = "", userO: Option[User] = None)(content: Html)(footer: Html)(implicit vs: ValidatorSuite, req: RequestHeader)
 @import play.api.Mode._
 <!DOCTYPE html>
 <html lang="en">
