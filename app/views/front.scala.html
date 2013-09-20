@@ -30,7 +30,7 @@
     </div>
 </section>
 
-@if(user == None) {
+@if(user == None && req.uri != routes.Application.login.url) {
 <div id="loginModal" class="reveal-modal medium">
     @forms.loginForm()
     <a class="close-reveal-modal">&#215;</a>

@@ -25,7 +25,7 @@
         </li>}
         case _ => {
         <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")'>Contact</a></li>
-        <li><a href="@routes.Application.login.url" data-reveal-id="loginModal"><strong>Login</strong></a></li>
+        <li><a @active(routes.Application.login.url) @if(req.uri != routes.Application.login.url){data-reveal-id="loginModal"}><strong>Login</strong></a></li>
         }}
     </ul>
 </nav>
