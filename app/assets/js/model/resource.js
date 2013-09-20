@@ -1,35 +1,35 @@
-define(["model/model", "model/assertions", "util/Util"], function (Model, Assertions, Util) {
+define(["model/model", "model/assertions", "util/Util", "util/Logger"], function (Model, Assertions, Util, Logger) {
 
     "use strict";
 
     var Resource = Model.extend({
 
-        logger:Logger.of("Resource"),
+        logger: Logger.of("Resource"),
 
-        defaults:{
-            url:"",
-            lastValidated:null,
-            warnings:0,
-            errors:0
+        defaults: {
+            url: "",
+            lastValidated: null,
+            warnings: 0,
+            errors: 0
         },
 
-        assertions:new Assertions(),
+        assertions: new Assertions(),
 
-        init:function () {
+        init: function () {
             //this.id = this.get("resourceUrl");
         },
 
         // TODO Use play js utility for urls!
 
-        url:function () {
+        url: function () {
             return "resources?resource=" + encodeURIComponent(this.get("url"));
         },
 
-        reportUrl:function () {
+        reportUrl: function () {
             return "assertions?resource=" + encodeURIComponent(this.get("url"));
         },
 
-        search:function (search) {
+        search: function (search) {
             return this.get("url").toLowerCase().indexOf(search.toLowerCase()) > -1;
         }
 
@@ -44,15 +44,27 @@ define(["model/model", "model/assertions", "util/Util"], function (Model, Assert
 
     Resource.View = Resource.View.extend({
 
-        templateId:"resource-template",
+        templateId: "resource-template",
 
-        templateOptions:function () {
+        events: {
+            "click .print": "print"
+        },
+
+        print: function () {
+            if (this.model.collection.options.assertions) {
+                this.model.collection.options.assertions.view.render({dump: true});
+            }
+            window.print();
+            return false;
+        },
+
+        templateOptions: function () {
             return {
-                reportUrl:this.model.reportUrl()
+                reportUrl: this.model.reportUrl()
             };
         },
 
-        addSearchHandler:function () {
+        addSearchHandler: function () {
             var collec = this.options.assertions, input;
             if (!collec) {
                 return;
@@ -65,7 +77,7 @@ define(["model/model", "model/assertions", "util/Util"], function (Model, Assert
             });
         },
 
-        afterRender:function () {
+        afterRender: function () {
             this.addSearchHandler();
         }
 
@@ -74,15 +86,15 @@ define(["model/model", "model/assertions", "util/Util"], function (Model, Assert
     Resource.fromHtml = function ($article) {
         var value = Util.valueFrom($article);
         return {
-            id:$article.attr("data-id"),
-            url:value('data-url'),
-            lastValidated:{
-                timestamp:value('data-lastValidated'),
-                legend1:value('data-lastValidated-legend1'),
-                legend2:value('data-lastValidated-legend2')
+            id: $article.attr("data-id"),
+            url: value('data-url'),
+            lastValidated: {
+                timestamp: value('data-lastValidated'),
+                legend1: value('data-lastValidated-legend1'),
+                legend2: value('data-lastValidated-legend2')
             },
-            warnings:parseInt(value('data-warnings'), 10),
-            errors:parseInt(value('data-errors'), 10)
+            warnings: parseInt(value('data-warnings'), 10),
+            errors: parseInt(value('data-errors'), 10)
         };
     };
 

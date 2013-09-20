@@ -235,7 +235,11 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
             this.filteredCount = models.length;
 
-            models = this.displayed = models.slice(0, this.maxOnScreen);
+            if (options.dump) {
+                this.displayed = models;
+            } else {
+                models = this.displayed = models.slice(0, this.maxOnScreen);
+            }
 
             elements = _.map(models, function (model) {
                 return model.view.el;

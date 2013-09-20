@@ -1,4 +1,10 @@
-define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (Logger, Util, Backbone, Model) {
+define([
+    "util/Logger",
+    "util/Util",
+    "libs/backbone",
+    "libs/jquery",
+    "libs/underscore",
+    "model/model"], function (Logger, Util, Backbone, $, _, Model) {
 
     "use strict";
 
@@ -7,58 +13,58 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
 
     Job = Model.extend({
 
-        logger:Logger.of("Job"),
+        logger: Logger.of("Job"),
 
-        defaults:{
-            name:"New Job",
-            entrypoint:"http://www.example.com",
-            status:{ status:"idle" }, // can be { status: "running", progress: 10 }
-            completedOn:null, // .timestamp, .legend1, .legend2
-            warnings:0,
-            errors:0,
-            resources:0,
-            maxResources:0,
-            health:-1
+        defaults: {
+            name: "New Job",
+            entrypoint: "http://www.example.com",
+            status: { status: "idle" }, // can be { status: "running", progress: 10 }
+            completedOn: null, // .timestamp, .legend1, .legend2
+            warnings: 0,
+            errors: 0,
+            resources: 0,
+            maxResources: 0,
+            health: -1
         },
 
-        methodMap:{
-            'run':'POST',
-            'stop':'POST',
-            'create':'POST',
-            'read':'GET',
-            'update':'POST',
-            'delete':'POST'
+        methodMap: {
+            'run': 'POST',
+            'stop': 'POST',
+            'create': 'POST',
+            'read': 'GET',
+            'update': 'POST',
+            'delete': 'POST'
         },
 
-        search:function (search) {
+        search: function (search) {
             return this.get("name").toLowerCase().indexOf(search.toLowerCase()) > -1 ||
                 this.get("entrypoint").toLowerCase().indexOf(search.toLowerCase()) > -1;
         },
 
-        reportUrl:function () {
+        reportUrl: function () {
             return this.url() + "/resources";
         },
 
-        isIdle:function () {
+        isIdle: function () {
             return this.get("status").status === "idle";
         },
 
-        isCompleted:function () {
+        isCompleted: function () {
             return this.get("completedOn") !== null;
         },
 
-        run:function (options) {
+        run: function (options) {
             this.logger.info(this.get("name") + ": run");
             var action = this._serverEvent('run', options);
             this.logger.debug(action);
 
         },
 
-        stop:function (options) {
+        stop: function (options) {
             this._serverEvent('stop', options);
         },
 
-        validate:function (attrs) {
+        validate: function (attrs) {
             /*if (!attrs.name || attrs.name.length < 1) {
              logger.warn("Name required");
              return "Name required";
@@ -73,7 +79,7 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
              }*/
         },
 
-        _serverEvent:function (event, options) {
+        _serverEvent: function (event, options) {
             var model, success, trigger, xhr;
 
             if (this.isNew()) {
@@ -106,32 +112,32 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
             return xhr;
         },
 
-        sync:function (method, model, options) {
+        sync: function (method, model, options) {
             var type, params;
             type = this.methodMap[method];
-            params = { type:type };
+            params = { type: type };
             if (!options.url) {
                 params.url = model.url() || Util.exception("A 'url' property or function must be specified");
             }
             if (method !== 'read') {
-                params.data = { action:method };
+                params.data = { action: method };
             }
             if (!options.data && model && (method === 'create' || method === 'update')) {
                 params.data = _.extend(
                     params.data,
                     {
-                        id:model.id,
-                        name:model.attributes.name, //; model.attributes
-                        entrypoint:model.attributes.entrypoint,
-                        maxResources:model.attributes.maxResources,
-                        assertor:model.attributes.assertor
+                        id: model.id,
+                        name: model.attributes.name, //; model.attributes
+                        entrypoint: model.attributes.entrypoint,
+                        maxResources: model.attributes.maxResources,
+                        assertor: model.attributes.assertor
                     }
                 );
             }
             return $.ajax(_.extend(params, options));
         },
 
-        url:function () {
+        url: function () {
             return this.collection.url + "/" + this.get("id");
         }
 
@@ -139,45 +145,57 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
 
     Job.View = Job.View.extend({
 
-        templateId:"job-template",
+        templateId: "job-template",
 
-        events:{
-            "click .stop":"stop",
-            "click .run":"run",
-            "click .delete":"_delete",
+        events: {
+            "click .stop": "stop",
+            "click .run": "run",
+            "click .delete": "_delete",
+            "click .print": "print",
             //"keydown .dropdown" : "dropdown",
-            "change [name='group']":"group"
+            "change [name='group']": "group"
             //"keyup [name=search]": "search"
         },
 
-        dropdown:function (event) {
+        print: function () {
+            if (this.model.collection.options.assertions) {
+                this.model.collection.options.assertions.view.render({dump: true});
+            }
+            if (this.model.collection.options.resources) {
+                this.model.collection.options.resources.view.render({dump: true});
+            }
+            window.print();
+            return false;
+        },
+
+        dropdown: function (event) {
             // Space = 32
             /*if (event.which === 32) {
              $("input:not(:checked)", event.target).click();
              }*/
         },
 
-        group:function (event) {
+        group: function (event) {
             $(event.target).parents('form').submit();
         },
 
-        init:function () {
+        init: function () {
             this.el.setAttribute("data-id", this.model.id);
         },
 
-        templateOptions:function () {
+        templateOptions: function () {
             return {
-                url:this.model.url(),
-                isIdle:this.model.isIdle(),
-                reportUrl:this.model.reportUrl(),
-                isCompleted:this.model.get("completedOn") !== null,
-                hasResources:function () {
+                url: this.model.url(),
+                isIdle: this.model.isIdle(),
+                reportUrl: this.model.reportUrl(),
+                isCompleted: this.model.get("completedOn") !== null,
+                hasResources: function () {
                     return $("#resources").size() > 0;
                 }
             };
         },
 
-        getStatusString:function () {
+        getStatusString: function () {
             if (this.model.isIdle()) {
                 return "Idle";
             } else {
@@ -185,12 +203,12 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
             }
         },
 
-        stop:function () {
-            this.model.stop({ wait:true });
+        stop: function () {
+            this.model.stop({ wait: true });
             return false;
         },
 
-        run:function () {
+        run: function () {
             this.$(".run").parents("form").attr("action", this.model.url());
 
             /*this.model.run({ wait: true });
@@ -202,7 +220,7 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
              return false;*/
         },
 
-        addSearchHandler:function () {
+        addSearchHandler: function () {
             var collec = this.options.resources || this.options.assertions;
             if (!collec) {
                 return;
@@ -215,12 +233,12 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
             });
         },
 
-        afterRender:function () {
+        afterRender: function () {
             this.addSearchHandler();
         },
 
-        softRender:function (options) {
-            console.log("soft render");
+        softRender: function (options) {
+            //console.log("soft render");
             var html = $('<dl></dl>').html(this.template(options));
             this.$(".status").replaceWith(html.children(".status"));
             this.$(".completedOn").replaceWith(html.children(".completedOn"));
@@ -237,23 +255,23 @@ define(["util/Logger", "util/Util", "libs/backbone", "model/model"], function (L
     Job.fromHtml = function ($article) {
         var value = Util.valueFrom($article);
         return {
-            id:$article.attr("data-id"),
-            name:value('data-name'),
-            entrypoint:value('data-entrypoint'),
-            status:{
-                status:value('data-status'),
-                progress:value('data-progress')
+            id: $article.attr("data-id"),
+            name: value('data-name'),
+            entrypoint: value('data-entrypoint'),
+            status: {
+                status: value('data-status'),
+                progress: value('data-progress')
             },
-            completedOn:_.isUndefined(value('data-completed')) ? null : {
-                timestamp:value('data-completed'),
-                legend1:value('data-completed-legend1'),
-                legend2:value('data-completed-legend2')
+            completedOn: _.isUndefined(value('data-completed')) ? null : {
+                timestamp: value('data-completed'),
+                legend1: value('data-completed-legend1'),
+                legend2: value('data-completed-legend2')
             },
-            warnings:parseInt(value('data-warnings'), 10),
-            errors:parseInt(value('data-errors'), 10),
-            resources:parseInt(value('data-resources'), 10),
-            maxResources:parseInt(value('data-max-resources'), 10),
-            health:parseInt(value('data-health'), 10)
+            warnings: parseInt(value('data-warnings'), 10),
+            errors: parseInt(value('data-errors'), 10),
+            resources: parseInt(value('data-resources'), 10),
+            maxResources: parseInt(value('data-max-resources'), 10),
+            health: parseInt(value('data-health'), 10)
         };
     };
 
