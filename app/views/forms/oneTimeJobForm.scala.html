@@ -2,6 +2,14 @@
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
 
+@checkIfPlan(name: String) = @{
+    req.getQueryString("plan") match {
+        case Some(`name`) => {"checked='checked'"}
+        case None if name == "tiny" => {"checked='checked'"}
+        case _ => {}
+    }
+}
+
 <div class="column">
 
     <h1 class="formHeader">Buy a One Time job</h1>
@@ -60,7 +68,7 @@
                             <ul class="pricing-table">
                                 <li class="title">
                                     <label for="tiny">
-                                        <input id="tiny" name="plan" value="tiny" type="radio" checked/>
+                                        <input id="tiny" name="plan" value="tiny" type="radio" @checkIfPlan("tiny") />
                                         <span>Tiny</span>
                                     </label>
                                 </li>
@@ -73,7 +81,7 @@
                             <ul class="pricing-table">
                                 <li class="title">
                                     <label for="small">
-                                        <input id="small" name="plan" value="small" type="radio"/>
+                                        <input id="small" name="plan" value="small" type="radio" @checkIfPlan("small") />
                                         Small
                                     </label>
                                 </li>
@@ -86,7 +94,7 @@
                             <ul class="pricing-table">
                                 <li class="title">
                                     <label for="medium">
-                                        <input id="medium" name="plan" value="medium" type="radio"/>
+                                        <input id="medium" name="plan" value="medium" type="radio" @checkIfPlan("medium") />
                                         Medium
                                     </label>
                                 </li>
@@ -99,7 +107,7 @@
                             <ul class="pricing-table">
                                 <li class="title">
                                     <label for="large">
-                                        <input id="large" name="plan" value="large" type="radio"/>
+                                        <input id="large" name="plan" value="large" type="radio" @checkIfPlan("large") />
                                         Large
                                     </label>
                                 </li>
