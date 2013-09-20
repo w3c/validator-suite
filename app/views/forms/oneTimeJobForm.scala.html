@@ -2,10 +2,10 @@
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
 
-@checkIfPlan(name: String) = @{
-    req.getQueryString("plan") match {
-        case Some(`name`) => {"checked='checked'"}
-        case None if name == "tiny" => {"checked='checked'"}
+@checkIfPlan(name: String) = {
+    @req.getQueryString("plan") match {
+        case Some(`name`) => {checked="checked"}
+        case None if name == "tiny" => {checked="checked"}
         case _ => {}
     }
 }
