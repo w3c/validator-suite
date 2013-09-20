@@ -20,7 +20,7 @@ import scala.collection.immutable.Nil
 
 object OneTimeJobForm {
 
-  type OneTimeJobType = (String, URL, OTOJType, Boolean)
+  type OneTimeJobType = (String, URL, OneTimePlan, Boolean)
 
   def bind()(implicit req: Request[AnyContent], context: ExecutionContext): Either[OneTimeJobForm, ValidOneTimeJobForm] = {
 
@@ -36,12 +36,12 @@ object OneTimeJobForm {
 
   def blank: OneTimeJobForm = new OneTimeJobForm(playForm)
 
-  implicit val Otojformater = new Formatter[OTOJType]{
-    def bind(key: String, data: Map[String, String]): Either[Seq[FormError], OTOJType] = {
-      Right(OTOJType.fromOpt(data.get("plan")))
+  implicit val Otojformater = new Formatter[OneTimePlan]{
+    def bind(key: String, data: Map[String, String]): Either[Seq[FormError], OneTimePlan] = {
+      Right(data.get("plan").map(OneTimePlan.fromString(_)).flatten.getOrElse(OneTimePlan.Tiny))
     }
-    def unbind(key: String, value: OTOJType): Map[String, String] = {
-      Map(key -> value.value)
+    def unbind(key: String, value: OneTimePlan): Map[String, String] = {
+      Map(key -> value.key)
     }
   }
 
@@ -49,7 +49,7 @@ object OneTimeJobForm {
     tuple(
       "name" -> nonEmptyText,
       "entrypoint" -> of[URL],
-      "plan" -> of[OTOJType],
+      "plan" -> of[OneTimePlan],
       "terms" -> of[Boolean](checkboxFormatter).verifying("not_accepted", _ == true)
     )
   )

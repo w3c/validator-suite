@@ -12,48 +12,6 @@ import org.w3.vs.model.{JobData, Job}
 
 package object view {
 
-  object OTOJType {
-    def fromOpt(o: Option[String]): OTOJType = {
-      o match {
-        case Some("tiny") => Tiny
-        case Some("small") => Small
-        case Some("medium") => Medium
-        case _ => Large
-      }
-    }
-    def fromJob(job: Job): OTOJType = {
-      job.strategy.maxResources match {
-        case n if n <= Tiny.maxPages => Tiny
-        case n if n <= Small.maxPages => Small
-        case n if n <= Medium.maxPages => Medium
-        case n if n <= Large.maxPages => Large
-        case _ => throw new Exception("this job max pages exceed the maximum one-time job value")
-      }
-    }
-  }
-  sealed trait OTOJType {
-    def value: String
-    def maxPages: Int
-  }
-  case object Tiny extends OTOJType {
-    val value = "one-time-tiny"
-    val maxPages = 250
-  }
-  case object Small extends OTOJType {
-    val value = "one-time-small"
-    val maxPages = 500
-  }
-  case object Medium extends OTOJType{
-    val value = "one-time-medium"
-    val maxPages = 1000
-  }
-  case object Large extends OTOJType{
-    val value = "one-time-large"
-    val maxPages = 2000
-  }
-
-
-
   type Crumb = (String, String)
   type Crumbs = Seq[(String, String)]
 

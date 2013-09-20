@@ -3,20 +3,18 @@ package controllers
 import org.w3.vs.controllers._
 import org.w3.vs.model.{ Job => JobModel, User, JobId, _ }
 import play.api.i18n.Messages
-import play.api.mvc.{WebSocket, Result, Handler, Action}
+import play.api.mvc.Action
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.w3.vs.util.timer._
 import org.w3.vs.Graphite
 import com.codahale.metrics._
-import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.{ Json => PlayJson, JsValue }
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
-import org.w3.vs.view.{Helper, OTOJType}
-import org.w3.vs.exception.InvalidFormException
-import org.w3.vs.view.model.{JobView, AssertionView}
+import org.w3.vs.view.model.{JobView}
 import org.w3.vs.store.Formats._
+import org.w3.vs.model.OneTimePlan
 
 object Job extends VSController {
 
@@ -92,7 +90,7 @@ object Job extends VSController {
           SeeOther(routes.Job.get(job.id)) //.flashing(("success" -> Messages("jobs.run", job.name)))
         } else {
           logger.info(s"Redirected user ${user.email} to store for jobId ${job.id}")
-          controllers.OneTimeJob.redirectToStore(OTOJType.fromJob(job).value, job.id)
+          controllers.OneTimeJob.redirectToStore(OneTimePlan.fromJob(job), job.id)
         }
       }
       case _ => {
