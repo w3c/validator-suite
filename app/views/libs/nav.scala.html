@@ -1,11 +1,11 @@
 @(user: Option[User] = None)(implicit req: RequestHeader)
 
 @navLink(url: String, attrs: String = "")(name: Html) = {
-@if(req.uri == url) {
-<span class="link active" @attrs>@name</span>
-} else {
-<a href="@url" @attrs>@name</a>
-}
+    @if(req.uri == url) {
+        <span class="link active" @attrs>@name</span>
+    } else {
+        <a href="@url" @attrs>@name</a>
+    }
 }
 
 <nav class="mainNav">
@@ -32,8 +32,10 @@
         }
         case _ => {
         <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")'>Contact</a></li>
-        <li>@navLink(routes.Application.login.url, if(req.uri !=
-            routes.Application.login.url){"data-reveal-id='loginModal'"}else{""}){<strong>Login</strong>}
+        <li>
+            <a href="@routes.Application.login.url"
+                @if(req.uri != routes.Application.login.url) {data-reveal-id="loginModal"}
+                @if(req.uri == routes.Application.login.url) {class="active"}><strong>Login</strong></a>
         </li>
         }}
     </ul>

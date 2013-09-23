@@ -13,16 +13,16 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
             index = 0;
 
         return {
-            arr:array,
-            push:function (command) {
+            arr: array,
+            push: function (command) {
                 index = array.length + 1;
                 return array.push(command);
             },
-            next:function () {
+            next: function () {
                 index = index >= array.length ? array.length : index + 1;
                 return array[index] || "";
             },
-            prev:function () {
+            prev: function () {
                 index = index - 1 > 0 ? index - 1 : 0;
                 return array[index] || "";
             }
@@ -35,44 +35,44 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
 
         var console = {
 
-            el:el,
+            el: el,
 
-            socket:new window.WebSocket(socketUrl),
+            socket: new window.WebSocket(socketUrl),
 
-            history:new History(),
+            history: new History(),
 
-            write:function (msg) {
+            write: function (msg) {
                 msg = msg === "" ? invite : msg + "\n" + invite;
                 el.val(el.val() + "\n" + msg);
                 el.scrollTop(el[0].scrollHeight);
             },
 
-            lastCommand:function () {
+            lastCommand: function () {
                 return this.history[this.history.length - 1];
             },
 
-            fill:function (command) {
+            fill: function (command) {
                 var lines = el.val().split("\n");
                 lines[lines.length - 1] = invite + command;
                 el.val(lines.join("\n"));
             },
 
-            execute:function (command) {
+            execute: function (command) {
                 logger.info("Executing command: " + command);
                 el.attr("disabled", "disabled");
                 this.socket.send(command);
                 this.history.push(command);
             },
 
-            clear:function () {
+            clear: function () {
                 el.val(invite);
             },
 
-            clearHistory:function () {
+            clearHistory: function () {
                 this.history = [];
             },
 
-            newLine:function () {
+            newLine: function () {
                 this.write("");
             }
 
@@ -120,51 +120,51 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
 
         }).keydown(function (event) {
 
-                //window.console.log(event.which);
+            //window.console.log(event.which);
 
-                var last, commands;
+            var last, commands;
 
-                // Backspace || Delete
-                if (event.which === 8 || event.which === 46) {
-                    last = getLastLine();
-                    window.console.log(last);
-                    if (!last || last === "" || last === invite) {
-                        console.fill("");
-                        return false;
+            // Backspace || Delete
+            if (event.which === 8 || event.which === 46) {
+                last = getLastLine();
+                window.console.log(last);
+                if (!last || last === "" || last === invite) {
+                    console.fill("");
+                    return false;
+                }
+            }
+
+            // Enter
+            if (event.keyCode === 13) {
+                commands = parseCommands();
+                _.each(commands, function (command) {
+                    if (command) {
+                        console.execute(command);
+                    } else {
+                        console.newLine();
                     }
-                }
+                });
+                return false;
+            }
 
-                // Enter
-                if (event.keyCode === 13) {
-                    commands = parseCommands();
-                    _.each(commands, function (command) {
-                        if (command) {
-                            console.execute(command);
-                        } else {
-                            console.newLine();
-                        }
-                    });
-                    return false;
-                }
+            // Ctrl + l
+            if (event.keyCode === 76 && event.ctrlKey) {
+                console.clear();
+                return false;
+            }
 
-                // Ctrl + l
-                if (event.keyCode === 76 && event.ctrlKey) {
-                    console.clear();
-                    return false;
-                }
+            // Up arrow
+            if (event.keyCode === 38) {
+                console.fill(console.history.prev());
+                return false;
+            }
 
-                // Up arrow
-                if (event.keyCode === 38) {
-                    console.fill(console.history.prev());
-                    return false;
-                }
-
-                // Down arrow
-                if (event.keyCode === 40) {
-                    console.fill(console.history.next());
-                    return false;
-                }
-            });
+            // Down arrow
+            if (event.keyCode === 40) {
+                console.fill(console.history.next());
+                return false;
+            }
+        });
 
         el.focus();
         console.fill("?");
