@@ -15,6 +15,7 @@ import scala.concurrent.duration.Duration
 import play.api.libs.json.Json.toJson
 import org.w3.vs.store.Formats._
 import play.api.Mode
+import scala.util.matching.Regex
 
 object Administration extends VSController {
 
@@ -115,7 +116,15 @@ object Administration extends VSController {
         import org.w3.vs.util.timer._
         import play.api.libs.json.Json.prettyPrint
 
-        command.split(" ") match {
+        val argRegex = new Regex( """"((\\"|[^"])*?)"|[^ ]+""")
+
+        val args = argRegex.findAllMatchIn(command).map {
+          r =>
+            if (r.group(1) != null) r.group(1)
+            else r.group(0)
+        }.toArray
+
+        args match {
           case Array("?") | Array("help") =>
             """Basic UI functionality:
               |    Ctrl+l to clear the console

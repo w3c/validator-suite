@@ -1,4 +1,4 @@
-define(["util/Socket", "libs/jquery", "util/Logger"], function (Socket, $) {
+define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], function (Socket, Logger, $, _) {
 
     "use strict";
 
