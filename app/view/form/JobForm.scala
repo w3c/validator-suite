@@ -1,4 +1,3 @@
-/*
 package org.w3.vs.view.form
 
 import org.w3.vs.web.URL
@@ -7,129 +6,76 @@ import org.w3.vs.assertor.Assertor
 import org.w3.vs.model._
 import org.w3.vs.view._
 import play.api.data.Forms._
-import play.api.data.format._
-import play.api.data.format.Formats._
-import play.api.data.validation.Constraints._
 import play.api.data._
-import play.api.mvc.{ Filter => _, _ }
+import play.api.data.format.Formats._
+import play.api.data.format._
+import play.api.mvc.{Filter => _, _}
 import scala.concurrent._
+
+import JobForm.JobType
+import play.api.data
 import play.api.i18n.Messages
+import controllers.Assertors
+import scala.collection.immutable.Nil
 
 object JobForm {
 
-  type Type = (String, URL, Boolean, Int)
-
-  def assertors()(implicit req: Request[AnyContent]): Seq[Assertor] = try {
-    req.body.asFormUrlEncoded.get.get("assertor[]").get.map(Assertor.get)
-  } catch { case _: Exception =>
-    Seq.empty
-  }
-
-  def assertorParameters()(implicit req: Request[AnyContent]): AssertorsConfiguration = {
-    assertors().map { assertor =>
-      val k = assertor.id
-      val v: Map[String, List[String]] = req.body.asFormUrlEncoded match {
-        case Some(foo) => foo.collect {
-          case (param, values) if (param.startsWith(assertor.id + "-")) =>
-            (param.replaceFirst("^" + assertor.id + "-", ""), values.toList)
-        }.toMap
-        case None => Map.empty
-      }
-      (k -> v)
-    }.toMap
-  }
+  type JobType = (String, URL, Int, Boolean)
 
   def bind()(implicit req: Request[AnyContent], context: ExecutionContext): Either[JobForm, ValidJobForm] = {
 
-    val form: Form[Type] = playForm.bindFromRequest
+    val form: Form[JobType] = playForm.bindFromRequest
 
     val vsform: Either[JobForm, ValidJobForm] = form.fold(
-      f => Left(new JobForm(f, assertorParameters())),
-      s => {
-        if (assertors().isEmpty)
-          Left(new JobForm(form.withError("assertor", "required"), assertorParameters())) // TODO
-        else
-          Right(new ValidJobForm(form, s, assertorParameters()))
-      }
+      f => Left(new JobForm(f)),
+      s => Right(new ValidJobForm(form, s))
     )
 
     vsform
   }
 
-  def blank: JobForm = new JobForm(playForm, AssertorsConfiguration.default)
+  def blank: JobForm = new JobForm(playForm)
 
-  def fill(job: Job) = new ValidJobForm(
-    playForm fill(
-      job.name,
-      job.strategy.entrypoint,
-      job.strategy.linkCheck,
-      job.strategy.maxResources
-    ), (
-      job.name,
-      job.strategy.entrypoint,
-      job.strategy.linkCheck,
-      job.strategy.maxResources
-    ), job.strategy.assertorsConfiguration
-  )
-
-  private def playForm: Form[Type] = Form(
+  private def playForm: Form[JobType] = Form(
     tuple(
       "name" -> nonEmptyText,
-      //"assertor" -> of[Seq[String]].verifying("Choose an assertor", ! _.isEmpty),
       "entrypoint" -> of[URL],
-      "linkCheck" -> of[Boolean](checkboxFormatter),
-      "maxResources" -> number(min=1, max=5000)
+      "maxPages" -> of[Int],
+      "terms" -> of[Boolean](checkboxFormatter).verifying("not_accepted", _ == true)
     )
   )
 
 }
 
-class JobForm private[view](
-    form: Form[(String, URL, Boolean, Int)],
-    val assertorsConfiguration: AssertorsConfiguration) extends VSForm {
+case class JobForm private[view](form: Form[JobType]) extends VSForm {
 
   def apply(s: String) = form(s)
 
-  def errors: Seq[(String, String)] = form.errors.map{
-    case error => ("error", Messages("form." + error.key + "." + error.message))
+  def errors: Seq[(String, String)] = form.errors.map {
+    case error => ("error", Messages(s"form.${error.key}.${error.message}"))
   }
 
-  def hasAssertor(assertor: String): Boolean = try {
-    assertorsConfiguration.contains(AssertorId(assertor))
-  } catch { case _: Exception =>
-    false
-  }
+  def withError(key: String, message: String) = copy(form = form.withError(key, message))
+
+  def withErrors(errors: Seq[(String, String)]) = copy(form = form.copy(errors = errors.map(e => FormError(e._1, e._2)) ++ form.errors))
 
 }
 
 class ValidJobForm private[view](
-    form: Form[JobForm.Type],
-    bind: JobForm.Type,
-    assertorsConfiguration: AssertorsConfiguration) extends JobForm(form, assertorsConfiguration) with VSForm {
+                                  form: Form[JobType],
+                                  bind: JobType) extends JobForm(form) with VSForm {
 
-  val (name, entrypoint, linkCheck, maxResources) = bind
+  val (name, entrypoint, maxPages, terms) = bind
 
   def createJob(user: User)(implicit conf: ValidatorSuite): Job = {
     val strategy = Strategy(
       entrypoint = org.w3.vs.web.URL(entrypoint),
-      linkCheck = linkCheck,
-      filter = Filter.includePrefix(entrypoint.toString), // Tom: non persisté de toute façon
-      maxResources = maxResources,
-      assertorsConfiguration = assertorsConfiguration)
+      linkCheck = false,
+      filter = Filter.includePrefix(entrypoint.toString),
+      maxResources = maxPages,
+      assertorsConfiguration = AssertorsConfiguration.default
+    )
     Job.createNewJob(name, strategy, user.id)
   }
 
-  def update(job: Job)(implicit conf: ValidatorSuite): Job = {
-    ??? // TODO decide, implement
-    //     job.copy(
-    //         name = name,
-    //         strategy = job.strategy.copy(
-    //             entrypoint = url,
-    //             linkCheck = linkCheck,
-    //             maxResources = maxResources
-    //         )
-    //     )
-  }
-
 }
-*/

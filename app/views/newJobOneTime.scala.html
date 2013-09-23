@@ -1,8 +1,8 @@
-@(form: JobForm,
+@(form: OneTimeJobForm,
 user: User,
 messages: List[(String, String)] = List.empty)(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
-@front("W3C Validator Suite - New Job", Some(user)) {
+@front("W3C Validator Suite - Buy a One Time service", Some(user)) {
 
 <section class="newJob row">
 
@@ -13,7 +13,7 @@ messages: List[(String, String)] = List.empty)(implicit req: RequestHeader, flas
     </div>
     }}
 
-    @forms.jobForm(form)
+    @forms.oneTimeJobForm(form)
 
 </section>
 
