@@ -1,6 +1,4 @@
-.mainNav {
-
-    //position: absolute;
+.mainNav { //position: absolute;
     right: 0;
     bottom: 0;
 
@@ -17,15 +15,15 @@
         margin-right: -3px;
 
         &:not(:last-of-type) {
-            border-right: 1px solid rgba(255,255,255,0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        a {
+        a, .link {
             display: inline-block;
             color: white;
             padding: 0.5em 1.7em;
             &:hover, &.active {
-                background: rgba(0,0,0,0.4);
+                background: rgba(0, 0, 0, 0.4);
             }
 
         }
@@ -39,8 +37,7 @@
         margin: 0.5em;
     }
 
-    .c-dropdown {
-        //position: relative;
+    .c-dropdown { //position: relative;
     }
 
     .f-dropdown {
@@ -67,7 +64,9 @@
             }
 
             &.noHover {
-                &:hover{background: inherit;}
+                &:hover {
+                    background: inherit;
+                }
                 cursor: auto;
 
                 label {
@@ -77,11 +76,11 @@
             }
 
             a:hover {
-                background: rgba(0,0,0,0.1);
+                background: rgba(0, 0, 0, 0.1);
             }
         }
 
-        a, .loggedIn {
+        a, .link, .loggedIn {
             color: #222222;
             display: inline-block;
             padding: 1em 0em;
@@ -97,8 +96,6 @@
             color: #888888;
         }
 
-
     }
-
 
 }
