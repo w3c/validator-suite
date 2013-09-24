@@ -61,7 +61,7 @@ object Main {
 
   def stressTestData(n: Int)(implicit conf: Database): Unit = {
 
-    def makeUser(name: String): User = User.create(name = name, email = s"${name}@w3.org", password = "secret", isSubscriber = true)
+    def makeUser(name: String): User = User.create(name = name, email = s"${name}@w3.org", password = "secret", credits = 1000000, isSubscriber = false, isRoot = true)
 
     val script = for {
       _ <- MongoStore.reInitializeDb()
@@ -91,97 +91,75 @@ object Main {
   }
 
   def clearCache() {
-    import play.api.Play.current
-    for (p <- current.plugin[EhCachePlugin]) {
+    for {
+      current <- play.api.Play.maybeApplication
+      p <- current.plugin[EhCachePlugin]
+    } {
       p.manager.clearAll
     }
   }
 
   def defaultData()(implicit conf: Database): Unit = {
 
-    val tgambet = User.create(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", isSubscriber = false)
+    val tgambet = User.create(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
 
-    val bertails = User.create(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", isSubscriber = true)
+    val bertails = User.create(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
 
-    val ted = User.create(email = "ted@w3.org", name = "Ted Guild", password = "secret", isSubscriber = true)
+    val ted = User.create(email = "ted@w3.org", name = "Ted Guild", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
 
-    val bernard = User.create(email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar", isSubscriber = true)
+    val bernard = User.create(email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar", credits = 10000, isSubscriber = false, isRoot = true)
 
-    val ralph = User.create(email = "swick@w3.org", name = "Ralph R. Swick", password = "secret", isSubscriber = true)
+    val ralph = User.create(email = "swick@w3.org", name = "Ralph R. Swick", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
 
-    val w3team = User.create(email = "w3t@w3.org", name = "W3C Team", password = "w3team", isSubscriber = true)
+    val vivien = User.create(email = "vivien@w3.org", name = "Vivien Lacourba", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
+
+    val w3team = User.create(email = "w3t@w3.org", name = "W3C Team", password = "w3team", credits = 10000, isSubscriber = false, isRoot = true)
     
     val w3 = Job(
-      id = JobId(),
-      createdOn = DateTime.now(DateTimeZone.UTC),
       name = "W3C",
-      creatorId = tgambet.id,
-      strategy = Strategy(
-        entrypoint = URL("http://www.w3.org/"),
-        linkCheck = false,
-        maxResources = 10,
-        filter = Filter(include = Everything, exclude = Nothing),
-        assertorsConfiguration = AssertorsConfiguration.default),
-      status = NeverStarted,
-      latestDone = None)
+      creatorId = Some(tgambet.id),
+      strategy = Strategy(URL("http://www.w3.org/"), 10)
+    )
+
+    val w3Public = Job(
+      name = "W3C",
+      creatorId = None,
+      strategy = Strategy(URL("http://www.w3.org/"), 100)
+    )
         
     val tr = Job(
-      id = JobId(),
       createdOn = DateTime.now.plus(1000),
       name = "TR",
-      creatorId = bertails.id,
+      creatorId =  Some(bertails.id),
       strategy = Strategy(
         entrypoint = URL("http://www.w3.org/TR"),
-        linkCheck = false,
         maxResources = 10,
-        filter=Filter.includePrefixes("http://www.w3.org/TR"),
-        assertorsConfiguration = AssertorsConfiguration.default),
-      status = NeverStarted,
-      latestDone = None)
+        filter = Filter.includePrefixes("http://www.w3.org/TR"))
+      )
 
     val List(w3c1, w3c2, w3c3, w3c4, w3c5, w3c6) = List(1, 2, 3, 4, 5, 6) map { i =>
       Job(
-        id = JobId(),
-        createdOn = DateTime.now.plus(1000),
         name = s"""w3c${i}""",
-        creatorId = bertails.id,
+        creatorId = Some(bertails.id),
         strategy = Strategy(
-          entrypoint = URL("http://www.w3.org"),
-          linkCheck = false,
-          maxResources = 100,
-          filter=Filter.includePrefixes("http://www.w3.org/TR"),
-          assertorsConfiguration = AssertorsConfiguration.default),
-      status = NeverStarted,
-      latestDone = None)
+          entrypoint = URL("http://www.w3.org/TR"),
+          maxResources = 100))
     }
 
     val ibm = Job(
-      id = JobId(),
-      createdOn = DateTime.now.plus(2000),
       name = "IBM",
-      creatorId = bertails.id,
+      creatorId = Some(bertails.id),
       strategy = Strategy(
         entrypoint = URL("http://www.ibm.com"),
-        linkCheck = false,
         maxResources = 20,
-        filter = Filter(include=Everything, exclude=Nothing),
-        assertorsConfiguration = AssertorsConfiguration.default),
-      status = NeverStarted,
-      latestDone = None)
+        filter = Filter(include=Everything, exclude=Nothing))
+      )
       
     val lemonde = Job(
-      id = JobId(),
-      createdOn = DateTime.now.plus(3000),
       name = "Le Monde",
-      creatorId = tgambet.id,
-      strategy = Strategy(
-        entrypoint = URL("http://www.lemonde.fr"),
-        linkCheck = false,
-        maxResources = 30,
-        filter = Filter(include = Everything, exclude = Nothing),
-        assertorsConfiguration = AssertorsConfiguration.default),
-      status = NeverStarted,
-      latestDone = None)
+      creatorId = Some(tgambet.id),
+      strategy = Strategy(URL("http://www.lemonde.fr"), 30)
+    )
 
     val script: Future[Unit] = for {
       _ <- MongoStore.reInitializeDb()
@@ -193,6 +171,7 @@ object Main {
       _ <- User.save(ralph)
       _ <- User.save(w3team)
       _ <- Job.save(w3)
+      _ <- Job.save(w3Public)
       _ <- Job.save(w3c1)
       _ <- Job.save(w3c2)
       _ <- Job.save(w3c3)

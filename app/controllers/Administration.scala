@@ -57,12 +57,12 @@ object Administration extends VSController {
           }
         }
       } yield {
-        SeeOther(routes.Administration.index()).flashing(
+        SeeOther(routes.Administration.index.url).flashing(
           ("success" -> Messages(msg, jobId + " (" + job.name + ")"))
         )
       }
 
-      Await.result(f.recover(toError), Duration(5, "s"))
+      Await.result(f, Duration(5, "s"))
   }
 
   def migration(): ActionA = RootBasicAuth {
@@ -90,7 +90,7 @@ object Administration extends VSController {
           User.update(user.copy(isSubscriber = isSubscriber))
         }
       } yield {
-        SeeOther(routes.Administration.index()).flashing(
+        SeeOther(routes.Administration.index.url).flashing(
           ("success" -> s"User ${email} succesfully saved with account type subscriber=${isSubscriber}")
         )
       }
@@ -101,11 +101,10 @@ object Administration extends VSController {
         }
       }
 
-      Await.result(f.recover(toError), Duration(5, "s"))
+      Await.result(f, Duration(5, "s"))
   }
 
-  def socket(): WebSocket[String] = WebSocket.using[String] {
-    implicit reqHeader =>
+  def socket(): WebSocket[String] = WebSocket.using[String] { implicit reqHeader =>
 
     // TODO: Find a way to authenticate. (Authentication header is not passed in a websocket request)
 
@@ -115,6 +114,25 @@ object Administration extends VSController {
       def executeCommand(command: String): String = {
         import org.w3.vs.util.timer._
         import play.api.libs.json.Json.prettyPrint
+
+        val int = new Object {
+          def unapply(s: String): Option[Int] = try Some(s.toInt) catch { case _: NumberFormatException => None }
+        }
+        val bool = new Object {
+          def unapply(s: String): Option[Boolean] = {
+            s match {
+              case "true" => Some(true)
+              case "false" => Some(false)
+              case _ => None
+            }
+          }
+        }
+        val regex = new Object {
+          def unapply(s: String): Option[Regex] = {
+            try { Some(new Regex(s)) }
+            catch { case _: Throwable => None }
+          }
+        }
 
         val argRegex = new Regex( """"((\\"|[^"])*?)"|[^ ]+""")
 
@@ -144,7 +162,17 @@ object Administration extends VSController {
 
           case Array("jobs") =>
             val jobs = model.Job.getAll().getOrFail()
-            jobs.map(job => s"${job.id} [${job.name}] by ${job.creatorId}").mkString("\n")
+            //jobs.map(job => s"${job.id} [${job.name}] by ${job.creatorId}").mkString("\n")
+            jobs.map(_.compactString).mkString("\n")
+
+          case Array("jobs", regex(reg)) =>
+            try {
+              val jobs = model.Job.getAll().getOrFail()
+              jobs.filter(job => reg.findFirstIn(job.compactString).isDefined).map(_.compactString).mkString("\n")
+            } catch {
+              case t: Throwable =>
+                t.toString
+            }
 
           case Array("runningJobs") =>
             val jobs = model.Job.getRunningJobs().getOrFail()
@@ -180,9 +208,9 @@ object Administration extends VSController {
                 t.getMessage
             }
 
-          case Array("add-user", name, email, password, isSubscriber) =>
+          case Array("add-user", name, email, password, int(credits), bool(isSubscriber)) =>
             try {
-              val user = model.User.register(name, email, password, isSubscriber == "true").getOrFail()
+              val user = model.User.register(name, email, password, credits, isSubscriber).getOrFail()
               val json = toJson(user)
               s"Scala: ${user}\nJSON: ${prettyPrint(json)}"
             } catch {
@@ -211,7 +239,12 @@ object Administration extends VSController {
         case Input.EOF => Done("end of stream")
         case Input.Empty => iteratee
         case Input.El(command) => {
-          channel.push(executeCommand(command))
+          val r = try {
+            executeCommand(command)
+          } catch { case e: Exception =>
+            e.getMessage() + "\n" + e.printStackTrace()
+          }
+          channel.push(r)
           iteratee
         }
       }

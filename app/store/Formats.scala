@@ -70,8 +70,12 @@ object Formats {
 
   def oid[T <: Id](apply: BSONObjectID => T): Format[T] = new Format[T] {
     def reads(json: JsValue): JsResult[T] = {
-      val oid = (json \ "$oid").as[String]
-      JsSuccess(apply(BSONObjectID(oid)))
+      val oidOpt = (json \ "$oid").asOpt[String]
+      oidOpt.map{ oid =>
+        JsSuccess(apply(BSONObjectID(oid)))
+      }.getOrElse {
+        JsError("couldn't parse the id")
+      }
     }
     def writes(id: T): JsValue = Json.obj("$oid" -> id.oid.stringify)
   }
@@ -103,8 +107,8 @@ object Formats {
 
   implicit val StrategyFormat: Format[Strategy] = (
     (__ \ 'entrypoint).format[URL] and
-    (__ \ 'linkCheck).format[Boolean] and
     (__ \ 'maxResources).format[Int] and
+    (__ \ 'linkCheck).format[Boolean] and
     (__ \ 'filter).format[Filter] and
     (__ \ 'assertorsConfiguration).format[AssertorsConfiguration]
   )(Strategy.apply, unlift(Strategy.unapply))
@@ -163,7 +167,7 @@ object Formats {
     (__ \ 'errors).format[Int] and
     (__ \ 'warnings).format[Int] and
     (__ \ 'progress).format[JobDataStatus] and
-    (__ \ 'completedOn).format[Option[DateTime]]
+    (__ \ 'completedOn).formatNullable[DateTime]
   )(RunData.apply, unlift(RunData.unapply))
 
   implicit val NeverStartedFormat = constant("never-started", NeverStarted)
@@ -207,12 +211,12 @@ object Formats {
   implicit val JobFormat: Format[Job] = (
     (__ \ '_id).format[JobId] and
     (__ \ 'name).format[String] and
-    (__ \ 'createdOn).format[DateTime] and
     (__ \ 'strategy).format[Strategy] and
-    (__ \ 'creator).format[UserId] and
+    (__ \ 'creator).format[Option[UserId]] and
     (__ \ 'status).format[JobStatus] and
-    (__ \ 'latestDone).formatNullable[Done](DoneFormat)
-  )(Job.apply _, unlift(Job.unapply _))
+    (__ \ 'latestDone).formatNullable[Done](DoneFormat) and
+    (__ \ 'createdOn).format[DateTime]
+    )(Job.apply _, unlift(Job.unapply _))
   
   implicit val ContextFormat: Format[Context] = (
     (__ \ 'content).format[String] and
@@ -358,7 +362,7 @@ object Formats {
 
   val CreateRunEventFormat: Format[CreateRunEvent] = (
     (__ \ 'event).format[String](pattern("create-run".r)) and
-    (__ \ 'userId).format[UserId] and
+    (__ \ 'userId).formatNullable[UserId] and
     (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
     (__ \ 'actorName).format[RunningActorName] and
@@ -379,7 +383,7 @@ object Formats {
 
   val DoneRunEventFormat: Format[DoneRunEvent] = (
     (__ \ 'event).format[String](pattern("done-run".r)) and
-    (__ \ 'userId).format[UserId] and
+    (__ \ 'userId).formatNullable[UserId] and
     (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
     (__ \ 'doneReason).format[DoneReason] and
@@ -395,7 +399,7 @@ object Formats {
 
   val AssertorResponseEventFormat: Format[AssertorResponseEvent] = (
     (__ \ 'event).format[String](pattern("assertor-response".r)) and
-    (__ \ 'userId).format[UserId] and
+    (__ \ 'userId).formatNullable[UserId] and
     (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
     (__ \ 'ar).format[AssertorResponse] and
@@ -404,7 +408,7 @@ object Formats {
 
   val ResourceResponseEventFormat: Format[ResourceResponseEvent] = (
     (__ \ 'event).format[String](pattern("resource-response".r)) and
-    (__ \ 'userId).format[UserId] and
+    (__ \ 'userId).formatNullable[UserId] and
     (__ \ 'jobId).format[JobId] and
     (__ \ 'runId).format[RunId] and
     (__ \ 'rr).format[ResourceResponse] and
@@ -431,7 +435,9 @@ object Formats {
     (__ \ 'name).format[String] and
     (__ \ 'email).format[String] and
     (__ \ 'password).format[String] and
-    (__ \ 'isSubscriber).format[Boolean]
+    (__ \ 'credits).format[Int] and
+    (__ \ 'isSubscriber).format[Boolean] and
+    (__ \ 'isRoot).format[Boolean]
   )(User.apply _, unlift(User.unapply _))
 
 }

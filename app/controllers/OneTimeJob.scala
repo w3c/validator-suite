@@ -21,20 +21,20 @@ object OneTimeJob extends VSController {
         } recover {
           case _: UnauthorizedException =>
             Unauthorized(views.html.register(RegisterForm.redirectTo(req.uri), messages = List(("info", Messages("info.register.first")))))
-        } recover toError
+        }
       }
   }
 
-  def buyAction(): ActionA = AuthAsyncAction {
-    implicit req => user =>
-      val f1: Future[PartialFunction[Format, Result]] = for {
-        form <- Future(OneTimeJobForm.bind match {
-          case Left(form) => throw InvalidFormException(form, Some(user))
-          case Right(validJobForm) => validJobForm
-        })
-        job <- form.createJob(user).save()
-      } yield {
-        case Html(_) => {
+  def buyAction(): ActionA = AuthenticatedAction { implicit req => user =>
+    (for {
+      form <- Future(OneTimeJobForm.bind match {
+        case Left(form) => throw InvalidFormException(form, Some(user))
+        case Right(validJobForm) => validJobForm
+      })
+      job <- form.createJob(user).save()
+    } yield {
+      render {
+        case Accepts.Html() => {
           if (user.isSubscriber) {
             Redirect(routes.Jobs.index).withSession("email" -> user.email)
           } else {
@@ -42,13 +42,16 @@ object OneTimeJob extends VSController {
             redirectToStore(form.plan, job.id).withSession("email" -> user.email)
           }
         }
+        case Accepts.Json() => ???
       }
-      f1 recover {
-        case InvalidFormException(form: OneTimeJobForm, _) => {
-          case Html(_) => BadRequest(views.html.newJobOneTime(form, user))
-          case _ => BadRequest
+    }) recover {
+      case InvalidFormException(form: OneTimeJobForm, _) => {
+        render {
+          case Accepts.Html() => BadRequest(views.html.newJobOneTime(form, user))
+          case Accepts.Json() => BadRequest
         }
       }
+    }
   }
 
   def redirectToStore(product: OneTimePlan, jobId: JobId) =

@@ -26,16 +26,27 @@ import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
 
-/** A User.
-  * Be careful when creating a User direclty with `new User` or `User.apply` as you'll have to hash the password yourself.
-  * Prefer `User.create` (or `User.register`) instead.
-  */
+/**
+ * A User.
+ *   Be careful when creating a User direclty with `new User` or `User.apply` as you'll have to hash the password yourself.
+ *   Prefer `User.create` (or `User.register`) instead.
+ *
+ * @param id
+ * @param name
+ * @param email
+ * @param password
+ * @param credits Numbers of credits left
+ * @param isRoot
+ * @param isSubscriber
+ */
 case class User(
   id: UserId,
   name: String,
   email: String,
   password: String,
-  isSubscriber: Boolean) {
+  credits: Int,
+  isSubscriber: Boolean,
+  isRoot: Boolean) {
 
   import User.logger
 
@@ -145,16 +156,20 @@ object User {
     * @param name the name of this user as UTF8
     * @param email the email of the user
     * @param password the plain-text password of the user
+    * @param credits
+    * @param isRoot
     * @param isSubscriber
     */
   def create(
     name: String,
     email: String,
     password: String,
-    isSubscriber: Boolean): User = {
+    credits: Int,
+    isSubscriber: Boolean,
+    isRoot: Boolean): User = {
     val hash = BCrypt.hashpw(password, BCrypt.gensalt())
     val id = UserId()
-    val user = new User(id, name, email.toLowerCase, hash, isSubscriber)
+    val user = new User(id, name, email.toLowerCase, hash, credits, isRoot = isRoot, isSubscriber = isSubscriber)
     user
   }
 
@@ -163,9 +178,15 @@ object User {
     * 
     * @return the User created within a Future
     */
-  def register(name: String, email: String, password: String, isSubscriber: Boolean)(implicit conf: ValidatorSuite): Future[User] = {
+  def register(
+      name: String,
+      email: String,
+      password: String,
+      credits: Int = 20,
+      isSubscriber: Boolean = false,
+      isRoot: Boolean = false)(implicit conf: ValidatorSuite): Future[User] = {
     logger.info(s"Registering user: ${name}, ${email}")
-    val user = User.create(name, email, password, isSubscriber)
+    val user = User.create(name, email, password, credits, isRoot = isRoot, isSubscriber = isSubscriber)
     user.save().map(_ => user)
   }
   

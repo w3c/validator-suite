@@ -28,20 +28,24 @@ import Json.toJson
 import org.w3.vs.store.Formats._
 
 case class Job(
-  id: JobId,
+  id: JobId = JobId(),
   name: String,
-  createdOn: DateTime,
   /**the strategy to be used when creating the Run */
   strategy: Strategy,
-  /**the identity of the the creator of this Job */
-  creatorId: UserId,
+  /**the identity of the the creator of this Job, None if it is a OneTime public job */
+  creatorId: Option[UserId],
   /**the status for this Job */
-  status: JobStatus,
+  status: JobStatus = NeverStarted,
   /**if this job was ever done, the final state -- includes link to the concerned Run */
-  latestDone: Option[Done]) {
+  latestDone: Option[Done] = None,
+  createdOn: DateTime =  DateTime.now(DateTimeZone.UTC)) {
   thisJob =>
 
   import Job.logger
+
+  def compactString = {
+    s"${id} - ${name} - ${strategy.entrypoint} - ${strategy.maxResources} - ${status} - ${creatorId.getOrElse("PUBLIC")}"
+  }
 
   def getAssertions()(implicit conf: ValidatorSuite with Database): Future[Iterable[Assertion]] = {
     status match {
@@ -373,7 +377,7 @@ case class Job(
 object Job {
 
   def createNewJob(name: String, strategy: Strategy, creatorId: UserId): Job =
-    Job(JobId(), name, DateTime.now(DateTimeZone.UTC), strategy, creatorId, NeverStarted, None)
+    Job(name = name, strategy = strategy, creatorId = Some(creatorId))
 
   val logger = Logger.of(classOf[Job])
 
@@ -510,7 +514,7 @@ object Job {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
-      case Some(json) if (json \ "creator").as[UserId] === userId => json.as[Job]
+      case Some(json) if (json \ "creator").asOpt[UserId] === Some(userId) => json.as[Job]
       case _ => throw UnknownJob(jobId)
     }
   }

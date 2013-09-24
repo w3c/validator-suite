@@ -15,6 +15,7 @@ import play.api.libs.{EventSource, Comet}
 import org.w3.vs.view.model.{JobView}
 import org.w3.vs.store.Formats._
 import org.w3.vs.model.OneTimePlan
+import play.api.http.MimeTypes
 
 object Job extends VSController {
 
@@ -64,40 +65,38 @@ object Job extends VSController {
     }
   }*/
 
-  def delete(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
+  def delete(id: JobId): ActionA = AuthenticatedAction { implicit req => user =>
     for {
       job <- user.getJob(id)
       _ <- job.delete()
     } yield {
-      case Html(_) => SeeOther(routes.Jobs.index()).flashing(("success" -> Messages("jobs.deleted", job.name)))
-      case _ => Ok
+      render {
+        case Accepts.Html() => SeeOther(routes.Jobs.index.url).flashing(("success" -> Messages("jobs.deleted", job.name)))
+        case Accepts.Json() => Ok
+      }
     }
   }
 
-  //def on(id: JobId): ActionA = simpleJobAction(id)(user => job => job.on())("jobs.on")
-
-  //def off(id: JobId): ActionA = simpleJobAction(id)(user => job => job.off())("jobs.off")
-
-  //def run(id: JobId): ActionA = simpleJobAction(id)(user => job => job.run())("jobs.run")
-
-  def run(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
+  def run(id: JobId): ActionA = AuthenticatedAction { implicit req => user =>
     for {
       job <- user.getJob(id)
       _ <- if (user.isSubscriber) job.run() else Future.successful()
     } yield {
-      case Html(_) => {
-        if (user.isSubscriber) {
-          SeeOther(routes.Job.get(job.id)) //.flashing(("success" -> Messages("jobs.run", job.name)))
-        } else {
-          logger.info(s"Redirected user ${user.email} to store for jobId ${job.id}")
-          controllers.OneTimeJob.redirectToStore(OneTimePlan.fromJob(job), job.id)
+      render {
+        case Accepts.Html() => {
+          if (user.isSubscriber) {
+            SeeOther(routes.Job.get(job.id).url) //.flashing(("success" -> Messages("jobs.run", job.name)))
+          } else {
+            logger.info(s"Redirected user ${user.email} to store for jobId ${job.id}")
+            controllers.OneTimeJob.redirectToStore(OneTimePlan.fromJob(job), job.id)
+          }
         }
-      }
-      case _ => {
-        if (user.isSubscriber) {
-          Accepted
-        } else {
-          Status(402) // Payment required
+        case Accepts.Json() => {
+          if (user.isSubscriber) {
+            Accepted
+          } else {
+            Status(402) // Payment required
+          }
         }
       }
     }
@@ -116,8 +115,6 @@ object Job extends VSController {
       } yield action.toLowerCase match {
         //case "update" => update(id)(req)
         case "delete" => delete(id)(req)
-        //case "on" => on(id)(req)
-        //case "off" => off(id)(req)
         case "run" => run(id)(req)
         case "stop" => stop(id)(req)
         case a => BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
@@ -129,7 +126,6 @@ object Job extends VSController {
     typ match {
       case SocketType.ws => webSocket(jobId)
       case SocketType.events => eventsSocket(jobId)
-      case SocketType.comet => cometSocket(jobId)
     }
   }
 
@@ -139,13 +135,11 @@ object Job extends VSController {
     (iteratee, enum)
   }
 
-  def cometSocket(jobId: JobId): ActionA = AuthAction { implicit req => user => {
-    case Html(_) => Ok.stream(enumerator(jobId, user) &> Comet(callback = "parent.VS.resourceupdate"))
-  }}
-
-  def eventsSocket(jobId: JobId): ActionA = AuthAction { implicit req => user => {
-    case Stream => Ok.stream(enumerator(jobId, user) &> EventSource())
-  }}
+  def eventsSocket(jobId: JobId): ActionA = AuthenticatedAction { implicit req => user =>
+    render {
+      case AcceptsStream() => Ok.stream(enumerator(jobId, user) &> EventSource())
+    }
+  }
 
   private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
     import PlayJson.toJson
@@ -154,13 +148,15 @@ object Job extends VSController {
     }
   }
 
-  private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthAsyncAction { implicit req => user =>
+  private def simpleJobAction(id: JobId)(action: User => JobModel => Any)(msg: String): ActionA = AuthenticatedAction { implicit req => user =>
     for {
       job <- user.getJob(id)
       _ = action(user)(job)
     } yield {
-      case Html(_) => SeeOther(routes.Job.get(job.id)).flashing(("success" -> Messages(msg, job.name)))
-      case _ => Accepted
+      render {
+        case Accepts.Html() => SeeOther(routes.Job.get(job.id).url).flashing(("success" -> Messages(msg, job.name)))
+        case Accepts.Json() => Accepted
+      }
     }
   }
 

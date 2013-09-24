@@ -21,6 +21,7 @@ import org.joda.time.DateTime
 import play.api.libs.json.JsUndefined
 import play.api.libs.json.JsObject
 import org.w3.vs.view.model.ResourceView
+import play.api.http.MimeTypes
 
 object Resources extends VSController  {
 
@@ -28,8 +29,8 @@ object Resources extends VSController  {
 
   def index(id: JobId, url: Option[URL]): ActionA = {
     url match {
-      case Some(url) => AuthAction { index_(id, url) }
-      case None => AuthAsyncAction { index_(id) }
+      case Some(url) => index_(id, url)
+      case None => index_(id)
     }
   }
 
@@ -37,16 +38,15 @@ object Resources extends VSController  {
     Redirect(routes.Resources.index(id, url))
   }
 
-  def index_(id: JobId): Request[AnyContent] => User => Future[PartialFunction[Format, Result]] = { implicit req: RequestHeader => user: User =>
-    val f: Future[PartialFunction[Format, Result]] = for {
+  def index_(id: JobId) = AuthenticatedAction { implicit req => user =>
+    for {
       job_ <- user.getJob(id)
       job <- JobsView(job_)
       resources <- ResourcesView(job_)
       bindedResources = resources.bindFromRequest
     } yield {
-      case Json => Ok(bindedResources.toJson)
-      case Html(_) =>
-        Ok(views.html.main(
+      render {
+        case Accepts.Html() => Ok(views.html.main(
           user = user,
           title = s"""Report for job "${job_.name}" - By resources - W3C Validator Suite""",
           crumbs = Seq(job_.name -> ""),
@@ -55,13 +55,14 @@ object Resources extends VSController  {
             bindedResources
           ))
         )
+        case Accepts.Json() => Ok(bindedResources.toJson)
+      }
     }
-    f.timer(indexName).timer(indexTimer)
   }
 
-  def index_(id: JobId, url: URL): Request[AnyContent] => User => PartialFunction[Format, Result] = { implicit req: RequestHeader => user: User =>
-    timer(indexUrlName, indexUrlTimer) {
-      case Html(_) => Redirect(routes.Assertions.index(id, url))
+  def index_(id: JobId, url: URL) = AuthenticatedAction { implicit req => user =>
+    render {
+      case Accepts.Html() => Redirect(routes.Assertions.index(id, url))
     }
   }
 
@@ -69,7 +70,6 @@ object Resources extends VSController  {
     typ match {
       case SocketType.ws => webSocket(jobId, url)
       case SocketType.events => eventsSocket(jobId, url)
-      case SocketType.comet => cometSocket(jobId, url)
     }
   }
 
@@ -79,13 +79,11 @@ object Resources extends VSController  {
     (iteratee, enum)
   }
 
-  def cometSocket(jobId: JobId, url: Option[URL]): ActionA = AuthAction { implicit req => user => {
-    case Html(_) => Ok.stream(enumerator(jobId, url, user) &> Comet(callback = "parent.VS.resourceupdate"))
-  }}
-
-  def eventsSocket(jobId: JobId, url: Option[URL]): ActionA = AuthAction { implicit req => user => {
-    case Stream => Ok.stream(enumerator(jobId, url, user) &> EventSource())
-  }}
+  def eventsSocket(jobId: JobId, url: Option[URL]): ActionA = AuthenticatedAction { implicit req => user =>
+    render {
+      case AcceptsStream() => Ok.stream(enumerator(jobId, url, user) &> EventSource())
+    }
+  }
 
   private def enumerator(jobId: JobId, urlOpt: Option[URL], user: User): Enumerator[JsValue] = urlOpt match {
     case Some(url) => enumerator(jobId, url, user)

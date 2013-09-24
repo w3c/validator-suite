@@ -17,6 +17,7 @@ import play.api.libs.{EventSource, Comet}
 import org.w3.vs.model.{ Job => ModelJob, _ }
 import org.w3.vs.store.Formats._
 import org.w3.vs.view.model.AssertionView
+import play.api.http.{MediaRange, MimeTypes}
 
 object Assertions extends VSController  {
 
@@ -58,8 +59,9 @@ object Assertions extends VSController  {
     f.timer(indexName).timer(indexTimer)
   } */
 
-  def index(id: JobId, url: URL): ActionA = AuthAsyncAction { implicit req: RequestHeader => user: User =>
-    val f: Future[PartialFunction[Format, Result]] = for {
+  def index(id: JobId, url: URL): ActionA = AsyncAction { implicit req: RequestHeader =>
+    Authenticated {case user: User =>
+    for {
       job_ <- user.getJob(id)
       resource <- ResourcesView(job_, url)
       assertions <- AssertionsView(job_, url)
@@ -67,25 +69,23 @@ object Assertions extends VSController  {
       // XXX: /!\ get rid of the cyclic dependency between assertors and assertions
       bindedAssertions = assertions.filterOn(assertors.firstAssertor).bindFromRequest
     } yield {
-      case Html(_) => {
-        Ok(views.html.main(
+      render {
+        case Accepts.Html() => Ok(views.html.main(
           user = user,
           title = s"Report for ${Helper.shorten(url, 50)} - W3C Validator Suite",
           crumbs = Seq(
-            job_.name -> routes.Job.get(id),
+            job_.name -> routes.Job.get(id).url,
             Helper.shorten(url, 50) -> ""),
           collections = Seq(
             resource.withAssertions(bindedAssertions),
             assertors.withCollection(bindedAssertions),
             bindedAssertions
-        )))
-      }
-      case Json => {
-        Ok(assertions.bindFromRequest.toJson)
+          )))
+        case Accepts.Json() => Ok(assertions.bindFromRequest.toJson)
       }
     }
-    f.timer(indexUrlName).timer(indexUrlTimer)
-  }
+    //f.timer(indexUrlName).timer(indexUrlTimer)
+  }}
 
   def redirect(id: JobId, url: URL): ActionA = Action { implicit req =>
     Redirect(routes.Assertions.index(id, url))
@@ -95,7 +95,7 @@ object Assertions extends VSController  {
     typ match {
       case SocketType.ws => webSocket(jobId, url)
       case SocketType.events => eventsSocket(jobId, url)
-      case SocketType.comet => cometSocket(jobId, url)
+      //case SocketType.comet => cometSocket(jobId, url)
     }
   }
 
@@ -105,13 +105,17 @@ object Assertions extends VSController  {
     (iteratee, enum)
   }
 
-  def cometSocket(jobId: JobId, url: URL): ActionA = AuthAction { implicit req => user => {
+  /*def cometSocket(jobId: JobId, url: URL): ActionA = AuthAction { implicit req => user => {
     case Html(_) => Ok.stream(enumerator(jobId, url, user) &> Comet(callback = "parent.VS.resourceupdate"))
-  }}
+  }}*/
 
-  def eventsSocket(jobId: JobId, url: URL): ActionA = AuthAction { implicit req => user => {
-    case Stream => Ok.stream(enumerator(jobId, url, user) &> EventSource())
-  }}
+  def eventsSocket(jobId: JobId, url: URL): ActionA =AsyncAction { implicit req =>
+    Authenticated { case user =>
+      render {
+        case AcceptsStream() => Ok.stream(enumerator(jobId, url, user) &> EventSource())
+      }
+    }
+  }
 
   private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson

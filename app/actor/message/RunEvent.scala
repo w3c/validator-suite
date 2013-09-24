@@ -6,16 +6,16 @@ import org.w3.vs.web.URL
 
 /* any event that has an impact on the state of a run */
 sealed trait RunEvent {
-  def userId: UserId
+  def userId: Option[UserId]
   def jobId: JobId
   def runId: RunId
   def timestamp: DateTime
 }
 
-case class CreateRunEvent(userId: UserId, jobId: JobId, runId: RunId, actorName: RunningActorName, strategy: Strategy, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+case class CreateRunEvent(userId: Option[UserId], jobId: JobId, runId: RunId, actorName: RunningActorName, strategy: Strategy, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
 case class DoneRunEvent(
-  userId: UserId,
+  userId: Option[UserId],
   jobId: JobId,
   runId: RunId,
   doneReason: DoneReason,
@@ -26,6 +26,6 @@ case class DoneRunEvent(
   groupedAssertionsDatas: Iterable[GroupedAssertionData],
   timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
-case class AssertorResponseEvent(userId: UserId, jobId: JobId, runId: RunId, ar: AssertorResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+case class AssertorResponseEvent(userId: Option[UserId], jobId: JobId, runId: RunId, ar: AssertorResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
 
-case class ResourceResponseEvent(userId: UserId, jobId: JobId, runId: RunId, rr: ResourceResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent
+case class ResourceResponseEvent(userId: Option[UserId], jobId: JobId, runId: RunId, rr: ResourceResponse, timestamp: DateTime = DateTime.now(DateTimeZone.UTC)) extends RunEvent

@@ -17,6 +17,7 @@ import com.codahale.metrics._
 import org.w3.vs.view.model.JobView
 import org.w3.vs.store.Formats._
 import play.api.i18n.Messages
+import play.api.http.MimeTypes
 
 object Jobs extends VSController {
 
@@ -25,23 +26,20 @@ object Jobs extends VSController {
   val indexName = (new controllers.javascript.ReverseJobs).index.name
   val indexTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, indexName))
 
-  def index: ActionA = AuthAsyncAction {
-    implicit req => user =>
-      val f: Future[PartialFunction[Format, Result]] = for {
-        jobs_ <- user.getJobs()
-        jobs <- JobsView(jobs_)
-      } yield {
-        case Html(_) => {
-          Ok(views.html.main(
-            user = user,
-            title = "Jobs - W3C Validator Suite",
-            collections = Seq(jobs.bindFromRequest)
-          ))
-        }
-        case Json => Ok(jobs.bindFromRequest.toJson)
-        //case Rdf => TODO(req) // TODO
+  def index: ActionA = AuthenticatedAction { implicit req => user =>
+    for {
+      jobs_ <- user.getJobs()
+      jobs <- JobsView(jobs_)
+    } yield {
+      render {
+        case Accepts.Html() => Ok(views.html.main(
+          user = user,
+          title = "Jobs - W3C Validator Suite",
+          collections = Seq(jobs.bindFromRequest)
+        ))
+        case Accepts.Json() => Ok(jobs.bindFromRequest.toJson)
       }
-      f.timer(indexName).timer(indexTimer)
+    }
   }
 
   def redirect(): ActionA = Action {
@@ -52,40 +50,39 @@ object Jobs extends VSController {
   val newJobName = (new controllers.javascript.ReverseJobs).newJob.name
   val newJobTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, newJobName))
 
-  def newJob: ActionA = AuthAction {
-    implicit req => user =>
-      timer(newJobName, newJobTimer) {
-        case Html(_) => {
-          if (user.isSubscriber) {
-            Ok(views.html.newJob(JobForm.blank, user))
-          } else {
-            Redirect(routes.OneTimeJob.buy.url)
-            //Ok(views.html.newJobOneTime(OneTimeJobForm.blank, user))
-          }
+  def newJob: ActionA = AuthenticatedAction { implicit req => user =>
+    render {
+      case Accepts.Html() => {
+        if (user.isSubscriber) {
+          Ok(views.html.newJob(JobForm.blank, user))
+        } else {
+          Redirect(routes.OneTimeJob.buy.url)
+          //Ok(views.html.newJobOneTime(OneTimeJobForm.blank, user))
         }
       }
+    }
   }
 
-  def create: ActionA = AuthAsyncAction {
-    implicit req => user =>
-      val f1: Future[PartialFunction[Format, Result]] =
-        for {
-          form <- Future(JobForm.bind match {
-            case Left(form) => throw new InvalidFormException(form)
-            case Right(validJobForm) => validJobForm
-          })
-          job <- form.createJob(user).save()
-        } yield {
-          case Html(_) => SeeOther(routes.Jobs.index()) /*.flashing(("success" -> Messages("jobs.created", job.name)))*/
-          case _ => Created(routes.Job.get(job.id).toString)
-        }
-      val f2: Future[PartialFunction[Format, Result]] = f1 recover {
-        case InvalidFormException(form: JobForm, _) => {
-          case Html(_) => BadRequest(views.html.newJob(form, user))
-          case _ => BadRequest
+  def create: ActionA = AuthenticatedAction { implicit req => user =>
+    (for {
+      form <- Future(JobForm.bind match {
+        case Left(form) => throw new InvalidFormException(form)
+        case Right(validJobForm) => validJobForm
+      })
+      job <- form.createJob(user).save()
+    } yield {
+      render {
+        case Accepts.Html() => SeeOther(routes.Jobs.index.url) /*.flashing(("success" -> Messages("jobs.created", job.name)))*/
+        case Accepts.Json() => Created(routes.Job.get(job.id).toString)
+      }
+    }) recover {
+      case InvalidFormException(form: JobForm, _) => {
+        render {
+          case Accepts.Html() => BadRequest(views.html.newJob(form, user))
+          case Accepts.Json() => BadRequest
         }
       }
-      f2
+    }
   }
 
   /*val createName = (new controllers.javascript.ReverseJobs).create.name
@@ -116,26 +113,20 @@ object Jobs extends VSController {
     typ match {
       case SocketType.ws => webSocket()
       case SocketType.events => eventsSocket()
-      case SocketType.comet => cometSocket()
     }
   }
 
-  def webSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] {
-    implicit reqHeader =>
-      val iteratee = Iteratee.ignore[JsValue]
-      val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(user)))
-      (iteratee, enum)
+  def webSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
+    // TODO Authenticate
+    val iteratee = Iteratee.ignore[JsValue]
+    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(user)))
+    (iteratee, enum)
+    ???
   }
 
-  def cometSocket: ActionA = AuthAction {
-    implicit req => user => {
-      case Html(_) => Ok.stream(enumerator(user) &> Comet(callback = "parent.VS.jobupdate"))
-    }
-  }
-
-  def eventsSocket: ActionA = AuthAction {
-    implicit req => user => {
-      case Stream => Ok.stream(enumerator(user) &> EventSource()) //.as("text/event-stream")
+  def eventsSocket: ActionA = AuthenticatedAction { implicit req => user =>
+    render {
+      case AcceptsStream() => Ok.stream(enumerator(user) &> EventSource())
     }
   }
 

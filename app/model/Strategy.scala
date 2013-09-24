@@ -13,10 +13,10 @@ object Strategy {
 
 case class Strategy (
     entrypoint: URL,
-    linkCheck: Boolean,
     maxResources: Int,
+    linkCheck: Boolean = false,
     filter: Filter = Filter.includeEverything,
-    assertorsConfiguration: AssertorsConfiguration) {
+    assertorsConfiguration: AssertorsConfiguration = AssertorsConfiguration.default) {
 
   def mainAuthority: Authority = entrypoint.authority
 
