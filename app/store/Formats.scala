@@ -436,6 +436,7 @@ object Formats {
     (__ \ 'email).format[String] and
     (__ \ 'password).format[String] and
     (__ \ 'credits).format[Int] and
+    (__ \ 'optedIn).format[Boolean] and
     (__ \ 'isSubscriber).format[Boolean] and
     (__ \ 'isRoot).format[Boolean]
   )(User.apply _, unlift(User.unapply _))

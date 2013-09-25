@@ -4,14 +4,15 @@
 # Application
 GET     /                                           controllers.Application.index
 GET     /faqs                                       controllers.Application.faq
-GET     /pricing                                    controllers.Application.pricing
 GET     /logos                                      controllers.Application.logos
+GET     /pricing                                    controllers.Application.pricing
+GET     /features                                   controllers.Application.features
 GET     /policies/terms                             controllers.Application.terms
 GET     /policies/privacy                           controllers.Application.privacy
 GET     /login                                      controllers.Application.login
-POST    /login                                      controllers.Application.loginAction
-POST    /logout                                     controllers.Application.logout
 GET     /register                                   controllers.Application.register
+POST    /login                                      controllers.Application.loginAction
+POST    /logout                                     controllers.Application.logoutAction
 POST    /register                                   controllers.Application.registerAction
 
 # Jobs
@@ -21,18 +22,18 @@ POST    /jobs                                       controllers.Jobs.create
 GET     /jobs/new                                   controllers.Jobs.newJob
 GET     /jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
-GET     /jobs/buy-one-time                          controllers.OneTimeJob.buy
-POST    /jobs/buy-one-time                          controllers.OneTimeJob.buyAction
-POST    /purchase/callback                          controllers.OneTimeJob.callback
+GET     /jobs/buy-one-time                          controllers.Purchase.buyJob
+GET     /jobs/buy-credits                           controllers.Purchase.buyCredits
+POST    /jobs/buy                                   controllers.Purchase.buyAction
+POST    /purchase/callback                          controllers.Purchase.callback
 
 # Job
 GET     /jobs/:job                                  controllers.Job.get(job: JobId)
 GET     /jobs/:job/                                 controllers.Job.redirect(job: JobId)
 POST    /jobs/:job                                  controllers.Job.dispatcher(job: JobId)
-# GET     /jobs/:job/edit                           controllers.Job.edit(job: JobId)
 GET     /jobs/:job/socket/:socket                   controllers.Job.socket(job: JobId, socket: SocketType)
 
-# Job/grouped
+# Job/messages
 GET     /jobs/:job/messages                         controllers.GroupedAssertions.index(job: JobId)
 GET     /jobs/:job/messages/                        controllers.GroupedAssertions.redirect(job: JobId)
 GET     /jobs/:job/messages/socket/:socket          controllers.GroupedAssertions.socket(job: JobId, socket: SocketType)
@@ -43,8 +44,8 @@ GET     /jobs/:job/assertions/                      controllers.Assertions.redir
 GET     /jobs/:job/assertions/socket/:socket        controllers.Assertions.socket(job: JobId, resource: URL, socket: SocketType)
 
 # Job/assertors
-#GET     /jobs/:job/assertors                        controllers.Assertors.index(job: JobId, resource: Option[URL])
-#GET     /jobs/:job/assertors/socket/:socket         controllers.Assertors.socket(job: JobId, resource: Option[URL], socket: SocketType)
+#GET     /jobs/:job/assertors                       controllers.Assertors.index(job: JobId, resource: Option[URL])
+#GET     /jobs/:job/assertors/socket/:socket        controllers.Assertors.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Job/resources
 GET     /jobs/:job/resources                        controllers.Resources.index(job: JobId, resource: Option[URL])
@@ -52,16 +53,15 @@ GET     /jobs/:job/resources/                       controllers.Resources.redire
 GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Administration
-GET     /admin/                                     controllers.Administration.index()
-GET     /admin/503                                  controllers.Administration.e503()
+GET     /admin                                      controllers.Administration.index()
 GET     /admin/console                              controllers.Administration.console()
 GET     /admin/console/socket                       controllers.Administration.socket()
 POST    /admin/jobs                                 controllers.Administration.jobsPost()
 POST    /admin/users                                controllers.Administration.usersPost()
-POST    /admin/migration                            controllers.Administration.migration()
 
 # Dev
 GET     /dev/test                                   controllers.Dev.test()
+GET     /dev/503                                    controllers.Dev.e503()
 
 ##########################
 

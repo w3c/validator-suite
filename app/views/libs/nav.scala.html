@@ -22,8 +22,11 @@
                 <li class="noHover"><span class="loggedIn">Logged in as @user.name</span></li>
                 <li>@navLink(routes.Jobs.index.url){My Jobs}</li>
                 <li class="noHover" title="Coming soon"><a class="disabled">My Profile</a></li>
+                @if(user.isRoot){
+                <li><a href="@routes.Administration.index.url">Administration</a></li>
+                <li><a href="@routes.Administration.console.url">Console</a></li>}
                 <li class="noHover">
-                    <form action="@routes.Application.logout" method="post">
+                    <form action="@routes.Application.logoutAction" method="post">
                         <button type="submit" class="logout">Logout</button>
                     </form>
                 </li>

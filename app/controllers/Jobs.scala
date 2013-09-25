@@ -23,9 +23,6 @@ object Jobs extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
 
-  val indexName = (new controllers.javascript.ReverseJobs).index.name
-  val indexTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, indexName))
-
   def index: ActionA = AuthenticatedAction { implicit req => user =>
     for {
       jobs_ <- user.getJobs()
@@ -42,23 +39,12 @@ object Jobs extends VSController {
     }
   }
 
-  def redirect(): ActionA = Action {
-    implicit req =>
-      Redirect(routes.Jobs.index)
-  }
-
-  val newJobName = (new controllers.javascript.ReverseJobs).newJob.name
-  val newJobTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, newJobName))
+  def redirect(): ActionA = Action { implicit req => MovedPermanently(routes.Jobs.index().url) }
 
   def newJob: ActionA = AuthenticatedAction { implicit req => user =>
     render {
       case Accepts.Html() => {
-        if (user.isSubscriber) {
-          Ok(views.html.newJob(JobForm.blank, user))
-        } else {
-          Redirect(routes.OneTimeJob.buy.url)
-          //Ok(views.html.newJobOneTime(OneTimeJobForm.blank, user))
-        }
+        Ok(views.html.newJob(JobForm.blank, user))
       }
     }
   }
@@ -84,30 +70,6 @@ object Jobs extends VSController {
       }
     }
   }
-
-  /*val createName = (new controllers.javascript.ReverseJobs).create.name
-  val createTimer = Graphite.metrics.timer(MetricRegistry.name(Jobs.getClass, createName))
-
-  def create: ActionA = AuthAsyncAction { implicit req => user =>
-    val f1: Future[PartialFunction[Format, Result]] =
-      for {
-        form <- Future(JobForm.bind match {
-          case Left(form) => throw new InvalidFormException(form)
-          case Right(validJobForm) => validJobForm
-        })
-        job <- form.createJob(user).save()
-      } yield {
-        case Html(_) => SeeOther(routes.Jobs.index()) /*.flashing(("success" -> Messages("jobs.created", job.name)))*/
-        case _ => Created(routes.Job.get(job.id).toString)
-      }
-    val f2: Future[PartialFunction[Format, Result]] = f1 recover {
-      case InvalidFormException(form: JobForm, _) => {
-        case Html(_) => BadRequest(views.html.newJob(form, user))
-        case _ => BadRequest
-      }
-    }
-    f2.timer(createName).timer(createTimer)
-  }*/
 
   def socket(typ: SocketType): Handler = {
     typ match {

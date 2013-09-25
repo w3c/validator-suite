@@ -1,35 +1,33 @@
-@(messages: List[(String, String)] = List())(implicit flash: Flash, vs: ValidatorSuite, req: RequestHeader)
+@(root: User, messages: List[(String, String)] = List())(implicit flash: Flash, vs: ValidatorSuite, req: RequestHeader)
 
-@libs.main("W3C Validator Suite - Admin"){
+@front("W3C Validator Suite - Admin", Some(root)){
 
-  @libs.messages(messages)
+<div class="row admin">
 
-  <form action="@routes.Administration.jobsPost" method="post">
-      <h1>Job Controls</h1>
-      <input type="text" placeholder="JobId" name="jobId" required/>
-      <button type="submit" name="action" value="reset">Reset</button>
-      <button type="submit" name="action" value="delete">Delete</button>
-      <button type="submit" name="action" value="run">Run</button>
-  </form>
+    @if(messages.size > 0) {
+    <div class="column globalMessages">
+        @libs.messages2(messages)
+    </div>}
 
-  <form action="@routes.Administration.usersPost" method="post">
-      <h1>Change a user account type</h1>
-      <input type="text" placeholder="Email" name="email" required/>
-      <select name="userType">
+    <form action="@routes.Administration.jobsPost" method="post">
+        <h1>Job Controls</h1>
+        <input type="text" placeholder="JobId" name="jobId" required/>
+        <button type="submit" name="action" value="reset">Reset</button>
+        <button type="submit" name="action" value="delete">Delete</button>
+        <button type="submit" name="action" value="run">Run</button>
+    </form>
+
+    <form action="@routes.Administration.usersPost" method="post">
+        <h1>Change a user account type</h1>
+        <input type="text" placeholder="Email" name="email" required/>
+        <select name="userType">
           <option value="oneTime">One-Time user</option>
           <option value="subscriber">Subscriber</option>
-      </select>
-      <button type="submit">Submit</button>
-  </form>
+        </select>
+        <button type="submit">Submit</button>
+    </form>
 
     <a href="@routes.Administration.console()">Console</a>
 
-  @**<form action="@routes.Administration.migration" method="post">
-      <button type="submit"><span style="color:#ff0d00; font-weight: bold;">Migrate March 28</span></button>
-  </form>**@
-
-}{ @***** Footer *****@
-
-
-
+</div>
 }

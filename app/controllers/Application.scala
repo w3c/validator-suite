@@ -16,43 +16,32 @@ object Application extends VSController {
   
   val logger = play.Logger.of("org.w3.vs.controllers.Application")
 
-  def faq: ActionA     = UserAwareAction { implicit req => user => Ok(views.html.faq(user)) }
-  def index: ActionA   = UserAwareAction { implicit req => user => Ok(views.html.index(user)) }
-  def pricing: ActionA = UserAwareAction { implicit req => user => Ok(views.html.pricing(user)) }
-  def logos: ActionA   = UserAwareAction { implicit req => user => Ok(views.html.logos(user)) }
-  def terms: ActionA   = UserAwareAction { implicit req => user => Ok(views.html.terms(user)) }
-  def privacy: ActionA = UserAwareAction { implicit req => user => Ok(views.html.privacy(user)) }
-
-  val loginName = (new controllers.javascript.ReverseApplication).login.name
-  val loginTimer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, loginName))
+  def index: ActionA    = UserAwareAction { implicit req => user => Ok(views.html.index(user)) }
+  def faq: ActionA      = UserAwareAction { implicit req => user => Ok(views.html.faq(user)) }
+  def logos: ActionA    = UserAwareAction { implicit req => user => Ok(views.html.logos(user)) }
+  def pricing: ActionA  = UserAwareAction { implicit req => user => Ok(views.html.pricing(user)) }
+  def features: ActionA = UserAwareAction { implicit req => user => Ok(views.html.features(user)) }
+  def terms: ActionA    = UserAwareAction { implicit req => user => Ok(views.html.terms(user)) }
+  def privacy: ActionA  = UserAwareAction { implicit req => user => Ok(views.html.privacy(user)) }
 
   def login: ActionA = AsyncAction { implicit req =>
-    val f = getUser map {
+    getUser map {
       case _ => Redirect(routes.Jobs.index()) // Already logged in -> redirect to index
     } recover {
       case  _: UnauthorizedException => Ok(views.html.login()).withNewSession
     }
-    f.timer(loginName).timer(loginTimer)
   }
 
   def register = AsyncAction { implicit req =>
-    val f = getUser map {
+    getUser map {
       case _ => Redirect(routes.Jobs.index()) // Already logged in -> redirect to index
     } recover {
       case  _: UnauthorizedException => Ok(views.html.register()).withNewSession
     }
-    f.timer(loginName).timer(loginTimer)
   }
 
-  def logout: ActionA = Action {
-    Redirect(routes.Application.index()).withNewSession // .flashing("success" -> Messages("application.loggedOut"))
-  }
-
-  val authenticateName = (new controllers.javascript.ReverseApplication).loginAction.name
-  val authenticateTimer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, authenticateName))
-  
   def loginAction: ActionA = AsyncAction { implicit req =>
-    val f = (for {
+    (for {
       form <- Future(LoginForm.bind() match {
         case Left(form) => throw InvalidFormException(form)
         case Right(validForm) => validForm
@@ -65,31 +54,12 @@ object Application extends VSController {
         case Some(uri) if (uri != routes.Application.login.url && uri != "") => SeeOther(uri)
         case _ => SeeOther(routes.Jobs.index.url)
       }).withSession("email" -> user.email)
-
-      /*(for {
-        body <- req.body.asFormUrlEncoded
-        param <- body.get("uri")
-        uri <- param.headOption
-      } yield uri) match {
-        case Some(uri) if (uri != routes.Application.login.url && uri != "") => {
-          SeeOther(uri).withSession("email" -> user.email)
-        } // Redirect to "uri" param if specified
-        case _ => SeeOther(routes.Jobs.index).withSession("email" -> user.email)
-      }*/
     }) recover {
-      /*case UnauthorizedException(email) =>
-        Unauthorized(views.html.login(
-          loginForm = LoginForm(email).withGlobalError("application.invalidCredentials")
-        )).withNewSession*/
       case InvalidFormException(form: LoginForm, _) => {
         BadRequest(views.html.login(form)).withNewSession
       }
-
     }
-    f.timer(authenticateName).timer(authenticateTimer)
   }
-
-  val optInLogger = play.Logger.of("OptInUsers")
 
   def registerAction: ActionA = AsyncAction { implicit req =>
     RegisterForm.bind() match {
@@ -97,29 +67,26 @@ object Application extends VSController {
         Future.successful(BadRequest(views.html.register(registerForm = form)))
       }
       case Right(form) => {
-        val f = User.register(name = form.name, email = form.email, password = form.password, isSubscriber = false).map {
+        User.register(
+          name = form.name,
+          email = form.email,
+          password = form.password,
+          optedIn = form.optedIn,
+          isSubscriber = false).map {
           case user => {
-            getFormParam("optin") match {
-              case Some("on") => optInLogger.info(s"${user.name} <${user.email}>")
-              case _ =>
+            val newUri = form("uri").value match {
+              case Some(uri) if uri != "" => uri
+              case _ => routes.Jobs.index.url
             }
-            (getFormParam("uri") match {
-              case Some(uri) if uri != "" => SeeOther(uri)
-              case _ => SeeOther(routes.Jobs.index.url)
-            }).withSession("email" -> user.email).flashing(("success", Messages("success.registered.user", user.name, user.email)))
+            SeeOther(newUri).withSession("email" -> user.email).flashing(("success", Messages("success.registered.user", user.name, user.email)))
           }
         } recover {
           case DuplicatedEmail(email: String) => BadRequest(views.html.register(registerForm = form.withError("r_email", "duplicate")))
         }
-        f
       }
     }
   }
 
-  private def getFormParam(param: String)(implicit req: Request[AnyContent]) = for {
-    body <- req.body.asFormUrlEncoded
-    paramL <- body.get(param)
-    param <- paramL.headOption
-  } yield param
-  
+  def logoutAction: ActionA = Action { Redirect(routes.Application.index()).withNewSession }
+
 }

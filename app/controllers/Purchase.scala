@@ -9,15 +9,15 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object OneTimeJob extends VSController {
+object Purchase extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.OneTimeJob")
+  val logger = play.Logger.of("org.w3.vs.controllers.Purchase")
 
-  def buy: ActionA = Action {
+  def buyJob: ActionA = Action {
     implicit req =>
       AsyncResult {
         getUser map {
-          case user => Ok(views.html.newJobOneTime(OneTimeJobForm.blank, user))
+          case user => Ok(views.html.newOneTimeJob(OneTimeJobForm.blank, user))
         } recover {
           case _: UnauthorizedException =>
             Unauthorized(views.html.register(RegisterForm.redirectTo(req.uri), messages = List(("info", Messages("info.register.first")))))
@@ -25,7 +25,9 @@ object OneTimeJob extends VSController {
       }
   }
 
-  def buyAction(): ActionA = AuthenticatedAction { implicit req => user =>
+  def buyCredits: ActionA = ???
+
+  def buyAction: ActionA = AuthenticatedAction { implicit req => user =>
     (for {
       form <- Future(OneTimeJobForm.bind match {
         case Left(form) => throw InvalidFormException(form, Some(user))
@@ -47,7 +49,7 @@ object OneTimeJob extends VSController {
     }) recover {
       case InvalidFormException(form: OneTimeJobForm, _) => {
         render {
-          case Accepts.Html() => BadRequest(views.html.newJobOneTime(form, user))
+          case Accepts.Html() => BadRequest(views.html.newOneTimeJob(form, user))
           case Accepts.Json() => BadRequest
         }
       }

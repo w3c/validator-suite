@@ -32,38 +32,7 @@ object Job extends VSController {
       }
   }
 
-  def redirect(id: JobId): ActionA = Action { implicit req =>
-    Redirect(routes.Job.get(id))
-  }
-
-  /*def edit(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
-    val f: Future[PartialFunction[Format, Result]] = for {
-      job <- user.getJob(id)
-    } yield {
-      case Html(_) => Ok(views.html.jobForm(JobForm.fill(job), user, Some(id)))
-    }
-    f.timer(editName).timer(editTimer)
-  }*/
-
-  /*def update(id: JobId): ActionA = AuthAsyncAction { implicit req => user =>
-    val result: Future[PartialFunction[Format, Result]] = for {
-      form <- Future(JobForm.bind match {
-        case Left(form) => throw new InvalidFormException(form)
-        case Right(validJobForm) => validJobForm
-      })
-      job_ <- user.getJob(id)
-      job <- form.update(job_).save()
-    } yield {
-      case Html(_) => SeeOther(routes.Job.get(job.id)).flashing(("success" -> Messages("jobs.updated", job.name)))
-      case _ => Ok
-    }
-    result recover {
-      case InvalidFormException(form: JobForm, _) => {
-        case Html(_) => BadRequest(views.html.jobForm(form, user, Some(id)))
-        case _ => BadRequest
-      }
-    }
-  }*/
+  def redirect(id: JobId): ActionA = Action { implicit req => MovedPermanently(routes.Job.get(id).url) }
 
   def delete(id: JobId): ActionA = AuthenticatedAction { implicit req => user =>
     for {
@@ -88,7 +57,7 @@ object Job extends VSController {
             SeeOther(routes.Job.get(job.id).url) //.flashing(("success" -> Messages("jobs.run", job.name)))
           } else {
             logger.info(s"Redirected user ${user.email} to store for jobId ${job.id}")
-            controllers.OneTimeJob.redirectToStore(OneTimePlan.fromJob(job), job.id)
+            controllers.Purchase.redirectToStore(OneTimePlan.fromJob(job), job.id)
           }
         }
         case Accepts.Json() => {
@@ -107,19 +76,17 @@ object Job extends VSController {
   import play.api.mvc._
 
   def dispatcher(implicit id: JobId): ActionA = Action { implicit req =>
-    timer(dispatcherName, dispatcherTimer) {
-      (for {
-        body <- req.body.asFormUrlEncoded
-        param <- body.get("action")
-        action <- param.headOption
-      } yield action.toLowerCase match {
-        //case "update" => update(id)(req)
-        case "delete" => delete(id)(req)
-        case "run" => run(id)(req)
-        case "stop" => stop(id)(req)
-        case a => BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
-      }).getOrElse(BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
-    }
+    (for {
+      body <- req.body.asFormUrlEncoded
+      param <- body.get("action")
+      action <- param.headOption
+    } yield action.toLowerCase match {
+      //case "update" => update(id)(req)
+      case "delete" => delete(id)(req)
+      case "run" => run(id)(req)
+      case "stop" => stop(id)(req)
+      case a => BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
+    }).getOrElse(BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
   }
 
   def socket(jobId: JobId, typ: SocketType): Handler = {
@@ -159,12 +126,5 @@ object Job extends VSController {
       }
     }
   }
-
-  val getName = (new controllers.javascript.ReverseJob).get.name
-  val getTimer = Graphite.metrics.timer(MetricRegistry.name(Job.getClass, getName))
-//  val editName = (new controllers.javascript.ReverseJob).edit.name
-//  val editTimer = Metrics.newTimer(Jobs.getClass, editName, MILLISECONDS, SECONDS)
-  val dispatcherName = (new controllers.javascript.ReverseJob).dispatcher.name
-  val dispatcherTimer = Graphite.metrics.timer(MetricRegistry.name(Job.getClass, dispatcherName))
 
 }

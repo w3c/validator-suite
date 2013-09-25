@@ -61,7 +61,8 @@ object Main {
 
   def stressTestData(n: Int)(implicit conf: Database): Unit = {
 
-    def makeUser(name: String): User = User.create(name = name, email = s"${name}@w3.org", password = "secret", credits = 1000000, isSubscriber = false, isRoot = true)
+    def makeUser(name: String): User =
+      User.create(name = name, email = s"${name}@w3.org", password = "secret", credits = 1000000, optedIn = false, isSubscriber = false, isRoot = true)
 
     val script = for {
       _ <- MongoStore.reInitializeDb()
@@ -101,19 +102,33 @@ object Main {
 
   def defaultData()(implicit conf: Database): Unit = {
 
-    val tgambet = User.create(email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
+    val tgambet = User.create(
+      email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret",
+      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
-    val bertails = User.create(email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
+    val bertails = User.create(
+      email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret",
+      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
-    val ted = User.create(email = "ted@w3.org", name = "Ted Guild", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
+    val ted = User.create(
+      email = "ted@w3.org", name = "Ted Guild", password = "secret",
+      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
-    val bernard = User.create(email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar", credits = 10000, isSubscriber = false, isRoot = true)
+    val bernard = User.create(
+      email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar",
+      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
-    val ralph = User.create(email = "swick@w3.org", name = "Ralph R. Swick", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
+    val ralph = User.create(
+      email = "swick@w3.org", name = "Ralph R. Swick", password = "secret",
+      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
-    val vivien = User.create(email = "vivien@w3.org", name = "Vivien Lacourba", password = "secret", credits = 10000, isSubscriber = false, isRoot = true)
+    val vivien = User.create(
+      email = "vivien@w3.org", name = "Vivien Lacourba", password = "secret",
+      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
-    val w3team = User.create(email = "w3t@w3.org", name = "W3C Team", password = "w3team", credits = 10000, isSubscriber = false, isRoot = true)
+    val w3team = User.create(
+      email = "w3t@w3.org", name = "W3C Team", password = "w3team",
+      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
     
     val w3 = Job(
       name = "W3C",
@@ -151,8 +166,7 @@ object Main {
       creatorId = Some(bertails.id),
       strategy = Strategy(
         entrypoint = URL("http://www.ibm.com"),
-        maxResources = 20,
-        filter = Filter(include=Everything, exclude=Nothing))
+        maxResources = 20)
       )
       
     val lemonde = Job(
@@ -169,6 +183,7 @@ object Main {
       _ <- User.save(ted)
       _ <- User.save(bernard)
       _ <- User.save(ralph)
+      _ <- User.save(vivien)
       _ <- User.save(w3team)
       _ <- Job.save(w3)
       _ <- Job.save(w3Public)
@@ -239,11 +254,7 @@ object Main {
         println("Database reset with default data")
       }
       case _ => {
-        println(
-          """Help:
-            | * TODO
-            |
-          """.stripMargin)
+        println("TODO")
       }
     }
 
@@ -254,9 +265,7 @@ object Main {
       Strategy(
         entrypoint = URL("http://www.w3.org/"),
         linkCheck = false,
-        maxResources = 20,
-        filter=Filter(include = Everything, exclude = Nothing),
-        assertorsConfiguration = AssertorsConfiguration.default)
+        maxResources = 20)
 
     val job = Job.createNewJob(name = "w3c", strategy = strategy, creatorId = UserId())
 

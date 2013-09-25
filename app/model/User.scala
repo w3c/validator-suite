@@ -36,8 +36,9 @@ import org.w3.vs.store.Formats._
  * @param email
  * @param password
  * @param credits Numbers of credits left
+ * @param optedIn Whether the user opted-in for mailing
+ * @param isSubscriber A monhtly subscriber user
  * @param isRoot
- * @param isSubscriber
  */
 case class User(
   id: UserId,
@@ -45,6 +46,7 @@ case class User(
   email: String,
   password: String,
   credits: Int,
+  optedIn: Boolean,
   isSubscriber: Boolean,
   isRoot: Boolean) {
 
@@ -165,11 +167,11 @@ object User {
     email: String,
     password: String,
     credits: Int,
+    optedIn: Boolean,
     isSubscriber: Boolean,
     isRoot: Boolean): User = {
     val hash = BCrypt.hashpw(password, BCrypt.gensalt())
-    val id = UserId()
-    val user = new User(id, name, email.toLowerCase, hash, credits, isRoot = isRoot, isSubscriber = isSubscriber)
+    val user = new User(UserId(), name, email.toLowerCase, hash, credits, optedIn = optedIn, isRoot = isRoot, isSubscriber = isSubscriber)
     user
   }
 
@@ -183,10 +185,14 @@ object User {
       email: String,
       password: String,
       credits: Int = 20,
+      optedIn: Boolean = false,
       isSubscriber: Boolean = false,
       isRoot: Boolean = false)(implicit conf: ValidatorSuite): Future[User] = {
     logger.info(s"Registering user: ${name}, ${email}")
-    val user = User.create(name, email, password, credits, isRoot = isRoot, isSubscriber = isSubscriber)
+    val user = User.create(name, email, password, credits, optedIn = optedIn, isRoot = isRoot, isSubscriber = isSubscriber)
+    if (optedIn) {
+      play.Logger.of("OptInUsers").info(s"${user.name} <${user.email}>")
+    }
     user.save().map(_ => user)
   }
   

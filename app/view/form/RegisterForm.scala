@@ -31,7 +31,7 @@ object RegisterForm {
       "r_email" -> email,
       "r_password" -> nonEmptyText(minLength = 6),
       "repeatPassword" -> text,
-      "mailing" -> of[Boolean](checkboxFormatter),
+      "optedIn" -> of[Boolean](checkboxFormatter),
       "uri" -> text
     ).verifying("password.dont_match", p => p._3 == p._4)
   )
@@ -60,5 +60,5 @@ class RegisterForm private[view](val form: Form[RegisterType]) extends VSForm {
 }
 
 class ValidRegisterForm private[view](form: Form[RegisterType], bind: RegisterType) extends RegisterForm(form) with VSForm {
-  val (name, email, password, repeatPassword, mailing, redirectUri) = bind
+  val (name, email, password, repeatPassword, optedIn, redirectUri) = bind
 }

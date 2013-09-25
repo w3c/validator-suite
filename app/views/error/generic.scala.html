@@ -1,10 +1,15 @@
-@(messages: List[(String, String)] = List(), userO: Option[User] = None)(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
+@(messages: List[(String, String)] = List())(implicit req: RequestHeader)
 
-@libs.main("W3C Validator Suite"){
+@front("W3C Validator Suite - Internal Server Error") {
 
-    @libs.messages(messages)
+<section class="row">
 
-}{ @***** Footer *****@
+    @if(messages.size > 0) {
+    <div class="column globalMessages">
+        @libs.messages2(messages)
+    </div>}
 
+</section>
 
 }
+

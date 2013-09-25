@@ -19,8 +19,9 @@ import play.api.mvc.AsyncResult
 import play.api.mvc.Call
 import org.apache.commons.codec.binary.Base64.decodeBase64
 import org.mindrot.jbcrypt.BCrypt
-import org.w3.vs.Global
+import org.w3.vs.{Graphite, Global}
 import play.api.http.{MimeTypes, MediaRange}
+import com.codahale.metrics.MetricRegistry
 
 trait VSController extends Controller {
 
@@ -49,6 +50,13 @@ trait VSController extends Controller {
     getUser.map(Some(_)).recover{case _ => None}
   }
 
+  def Timer(name: String)(f: Future[Result]): Future[Result] = {
+    /*val timer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, name))
+    Graphite.getTimer(name)
+    f.timer(name).timer(loginTimer)*/
+    f
+  }
+
   def AsyncAction(f: Request[AnyContent] => Future[Result]) = Action { req => Async(f(req)) }
 
   val AcceptsStream = Accepting(MimeTypes.EVENT_STREAM)
@@ -71,6 +79,15 @@ trait VSController extends Controller {
     }
   }
 
+  def RootAction(f: Request[AnyContent] => User => Future[Result]): ActionA = AsyncAction { implicit req =>
+    Authenticated { user =>
+      user match {
+        case user if user.isRoot => f(req)(user)
+        case _ => Global.onHandlerNotFound(req)
+      }
+    }
+  }
+
   def AuthenticatedAction(f: Request[AnyContent] => User => Future[Result]): ActionA =
     AsyncAction { implicit req => Authenticated { user => f(req)(user) } }
 
@@ -83,18 +100,5 @@ trait VSController extends Controller {
 
   def UserAwareAction(f: Request[AnyContent] => Option[User] => Future[Result]): ActionA =
     AsyncAction { implicit req => UserAware { user => f(req)(user) } }
-
-  def RootBasicAuth(f: Request[AnyContent] => Result): ActionA = Action { implicit req =>
-    val action =
-      req.headers.get("Authorization").flatMap { headerValue =>
-        val b64 = headerValue.replace("Basic ", "")
-        new String(decodeBase64(b64.getBytes)).split(":") match {
-          case Array("ROOT", rootPassword) if BCrypt.checkpw(rootPassword, User.rootPassword) =>
-            Some(f(req))
-          case _ => None
-        }
-      }
-    action.getOrElse(Unauthorized("unauthorized").withHeaders(("WWW-Authenticate", """Basic realm="W3C Validator Suite"""")))
-  }
 
 }

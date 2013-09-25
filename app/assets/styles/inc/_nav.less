@@ -22,11 +22,11 @@
             display: inline-block;
             color: white;
             padding: 0.5em 1.7em;
-            &:hover, &.active {
-                background: rgba(0, 0, 0, 0.4);
-            }
-
         }
+        a:hover, a.active, .link.active {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
     }
 
     a[data-dropdown] {
@@ -52,6 +52,10 @@
         &.open {
             left: auto !important;
             right: 0 !important;
+        }
+
+        .link.active {
+            background: rgba(0, 0, 0, 0.1);
         }
 
         li {
