@@ -103,7 +103,11 @@ object Main {
   def defaultData()(implicit conf: Database): Unit = {
 
     val tgambet = User.create(
-      email = "tgambet@w3.org", name = "Thomas Gambet", password = "secret",
+      email = "tgambet+1@w3.org", name = "Thomas Gambet", password = "secret",
+      credits = 10000, optedIn = true, isSubscriber = false, isRoot = false)
+
+    val tgambetRoot = User.create(
+      email = "tgambet@w3.org", name = "Thomas Gambet (Root)", password = "secret",
       credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
     val bertails = User.create(
@@ -179,6 +183,7 @@ object Main {
       _ <- MongoStore.reInitializeDb()
       _ <- Future.successful(clearCache())
       _ <- User.save(tgambet)
+      _ <- User.save(tgambetRoot)
       _ <- User.save(bertails)
       _ <- User.save(ted)
       _ <- User.save(bernard)

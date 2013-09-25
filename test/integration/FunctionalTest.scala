@@ -1,6 +1,5 @@
 // TODO: investigate why htmlunit hangs on this test
 
-/*
 package org.w3.vs.integration
 
 import play.api.test._
@@ -25,33 +24,40 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
       import browser._
 
-      //val baseUrl: String = "http://localhost:9001/suite"
+      goTo("http://localhost:9001/jobs/")
+      url must be === "http://localhost:9001/jobs"
+      $("#submit-login").isEmpty must be (false)
 
-      goTo("http://localhost:9001/suite/jobs/")
-      url must be === "http://localhost:9001/suite/jobs/"
-      // and code should be Unauthenticated (not verifiable in this framework)
-
-      fill("#email").`with`("bertails@w3.org")
-      fill("#password").`with`("secret")
+      goTo("http://localhost:9001/login")
+      fill("#l_email").`with`("tgambet+1@w3.org") // Non root
+      fill("#l_password").`with`("secret")
+      $("#submit-login").isEmpty must be (false)
       click("#submit-login")
-      url must be === "http://localhost:9001/suite/jobs/"
 
-      $("#admin .name").first().getText() must include ("Alexandre Bertails")
+      url must be === "http://localhost:9001/jobs"
+      $(".loggedIn").first().getText() must include ("Thomas Gambet")
+
+      goTo("http://localhost:9001/admin")
+      $("h1").first().getText() must include ("404")
 
       // and log out
-      click("#admin form button")
-      //goTo("http://localhost:9001/logout")
-      url must be === "http://localhost:9001/suite/login"
-      goTo("http://localhost:9001/suite/jobs/")
-      $("button#submit-login").isEmpty must be (false)
-      
-      // can't log in with wrong password
-      fill("#email").`with`("bertails@w3.org")
-      fill("#password").`with`("wrong")
+      goTo("http://localhost:9001/jobs")
+      //click("a[data-dropdown=myAccount]")
+      click("button.logout")
+
+      url must be === "http://localhost:9001/"
+
+      goTo("http://localhost:9001/login")
+      url must be === "http://localhost:9001/login"
+      $("#submit-login").isEmpty must be (false)
+
+      fill("#l_email").`with`("tgambet@w3.org") // Root
+      fill("#l_password").`with`("secret")
       click("#submit-login")
-      url must be === ("http://localhost:9001/suite/login")
+      goTo("http://localhost:9001/admin")
+      $("h1").first().getText() must not include ("404")
 
     }
   }
 }
-*/
+

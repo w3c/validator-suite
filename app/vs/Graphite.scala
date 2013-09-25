@@ -9,7 +9,7 @@ object Graphite {
 
   val metrics = new MetricRegistry()
 
-  val timer1 = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, "timer1"))
+  val timer1 = metrics.timer(MetricRegistry.name("t", "timer1"))
 
 }
 

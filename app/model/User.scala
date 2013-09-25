@@ -167,9 +167,9 @@ object User {
     email: String,
     password: String,
     credits: Int,
-    optedIn: Boolean,
-    isSubscriber: Boolean,
-    isRoot: Boolean): User = {
+    optedIn: Boolean = false,
+    isSubscriber: Boolean = false,
+    isRoot: Boolean = false): User = {
     val hash = BCrypt.hashpw(password, BCrypt.gensalt())
     val user = new User(UserId(), name, email.toLowerCase, hash, credits, optedIn = optedIn, isRoot = isRoot, isSubscriber = isSubscriber)
     user

@@ -40,7 +40,7 @@ class RunTest extends WordSpec with MustMatchers {
         timestamp = DateTime.now(DateTimeZone.UTC))
     val ar = AssertorResult(assertorId, URL("http://example.com"), Map(URL("http://example.com") -> Vector(assertion)))
     val run = Run.freshRun(strategy)
-    val event = AssertorResponseEvent(UserId(), JobId(), run.runId, ar)
+    val event = AssertorResponseEvent(Some(UserId()), JobId(), run.runId, ar)
     run.step(event).run.step(event).run.assertions must be(run.step(event).run.assertions)
   }
 
