@@ -1,8 +1,8 @@
 @(form: OneTimeJobForm,
-user: User,
-messages: List[(String, String)] = List.empty)(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
+    user: Option[User],
+    messages: List[(String, String)] = List.empty)(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
-@front("W3C Validator Suite - Buy a One Time service", Some(user)) {
+@front("W3C Validator Suite - Buy a One Time service", user) {
 
 <section class="newJob row">
 

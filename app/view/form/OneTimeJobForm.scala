@@ -75,15 +75,14 @@ class ValidOneTimeJobForm private[view](
 
   val (name, entrypoint, plan, terms) = bind
 
-  def createJob(user: User)(implicit conf: ValidatorSuite): Job = {
+  def createJob(user: Option[User])(implicit conf: ValidatorSuite): Job = {
     val strategy = Strategy(
       entrypoint = org.w3.vs.web.URL(entrypoint),
       linkCheck = false,
       filter = Filter.includePrefix(entrypoint.toString),
-      maxResources = plan.maxPages,
-      assertorsConfiguration = AssertorsConfiguration.default
+      maxResources = plan.maxPages
     )
-    Job.createNewJob(name, strategy, user.id)
+    Job(name = name, strategy = strategy, creatorId = user.map(_.id))
   }
 
 }

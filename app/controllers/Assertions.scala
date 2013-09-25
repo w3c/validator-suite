@@ -112,7 +112,7 @@ object Assertions extends VSController  {
   def eventsSocket(jobId: JobId, url: URL): ActionA =AsyncAction { implicit req =>
     Authenticated { case user =>
       render {
-        case AcceptsStream() => Ok.stream(enumerator(jobId, url, user) &> EventSource())
+        case AcceptsStream() => Ok.stream(enumerator(jobId, url, user) &> EventSource()).as(MimeTypes.EVENT_STREAM)
       }
     }
   }

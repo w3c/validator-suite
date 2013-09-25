@@ -267,7 +267,7 @@ object Main {
         linkCheck = false,
         maxResources = 20)
 
-    val job = Job.createNewJob(name = "w3c", strategy = strategy, creatorId = UserId())
+    val job = Job(name = "w3c", strategy = strategy, creatorId = None)
 
     org.w3.vs.assertor.LocalValidators.start()
 

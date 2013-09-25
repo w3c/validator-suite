@@ -75,7 +75,7 @@ class ValidJobForm private[view](
       maxResources = maxPages,
       assertorsConfiguration = AssertorsConfiguration.default
     )
-    Job.createNewJob(name, strategy, user.id)
+    Job(name = name, strategy = strategy, creatorId = Some(user.id))
   }
 
 }

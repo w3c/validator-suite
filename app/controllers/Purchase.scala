@@ -4,6 +4,7 @@ import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.model._
 import org.w3.vs.view.form._
+import org.w3.vs.util.timer._
 import play.api.i18n._
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -13,35 +14,42 @@ object Purchase extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Purchase")
 
-  def buyJob: ActionA = Action {
-    implicit req =>
-      AsyncResult {
-        getUser map {
-          case user => Ok(views.html.newOneTimeJob(OneTimeJobForm.blank, user))
-        } recover {
-          case _: UnauthorizedException =>
-            Unauthorized(views.html.register(RegisterForm.redirectTo(req.uri), messages = List(("info", Messages("info.register.first")))))
-        }
-      }
+  def buyJob: ActionA = UserAwareAction { implicit req => user =>
+    val messages = user match {
+      case Some(user) => List.empty
+      case None => List(("info" -> Messages("warning.createOrBuy")))
+    }
+    Ok(views.html.newOneTimeJob(OneTimeJobForm.blank, user, messages))
+
+    /*getUser map {
+      case user => Ok(views.html.newOneTimeJob(OneTimeJobForm.blank, user))
+    } recover {
+      case _: UnauthorizedException =>
+        Unauthorized(views.html.register(RegisterForm.redirectTo(req.uri), messages = List(("info", Messages("info.register.first")))))
+    } */
   }
 
   def buyCredits: ActionA = ???
 
-  def buyAction: ActionA = AuthenticatedAction { implicit req => user =>
+  def buyAction: ActionA = UserAwareAction { implicit req => user =>
     (for {
       form <- Future(OneTimeJobForm.bind match {
-        case Left(form) => throw InvalidFormException(form, Some(user))
+        case Left(form) => throw InvalidFormException(form, user)
         case Right(validJobForm) => validJobForm
       })
       job <- form.createJob(user).save()
     } yield {
       render {
         case Accepts.Html() => {
-          if (user.isSubscriber) {
-            Redirect(routes.Jobs.index).withSession("email" -> user.email)
-          } else {
-            logger.info(s"Redirected user ${user.email} to store for job ${routes.Job.get(job.id).toString}")
-            redirectToStore(form.plan, job.id).withSession("email" -> user.email)
+          user match {
+            case Some(user) if user.isRoot => {
+              job.run().getOrFail()
+              Redirect(routes.Jobs.index)
+            }
+            case _ => {
+              logger.info(s"Redirected user ${user.map(_.email)} to store for job ${routes.Job.get(job.id).toString}")
+              redirectToStore(form.plan, job.id)
+            }
           }
         }
         case Accepts.Json() => ???

@@ -103,7 +103,7 @@ define([
                     model.trigger('sync', model, resp, options);
                 }
             };
-            options.error = Backbone.wrapError(options.error, model, options);
+            options.error = Backbone.wrapError(model, options);
             options.dataType = "json";
             xhr = (this.sync || Backbone.sync).call(this, event, this, options);
             if (!options.wait) {

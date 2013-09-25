@@ -88,7 +88,7 @@ object Jobs extends VSController {
 
   def eventsSocket: ActionA = AuthenticatedAction { implicit req => user =>
     render {
-      case AcceptsStream() => Ok.stream(enumerator(user) &> EventSource())
+      case AcceptsStream() => Ok.stream(enumerator(user) &> EventSource()).as(MimeTypes.EVENT_STREAM)
     }
   }
 

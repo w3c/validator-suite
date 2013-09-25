@@ -105,7 +105,7 @@ case class Job(
   def getFuture(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.OneOff], conf: ValidatorSuite): Future[classifier.OneOff] = {
     val actorRef = conf.system.actorFor(actorPath)
     val message = JobActor.Get(classifier)
-    val shortTimeout = Duration(1, "s")
+    val shortTimeout = Duration(2, "s")
     ask(actorRef, message)(shortTimeout).mapTo[classifier.OneOff] recoverWith {
       case _: AskTimeoutException => Future.failed[classifier.OneOff](new NoSuchElementException)
     }
@@ -375,9 +375,6 @@ case class Job(
 }
 
 object Job {
-
-  def createNewJob(name: String, strategy: Strategy, creatorId: UserId): Job =
-    Job(name = name, strategy = strategy, creatorId = Some(creatorId))
 
   val logger = Logger.of(classOf[Job])
 
