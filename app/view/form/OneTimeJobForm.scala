@@ -82,7 +82,7 @@ class ValidOneTimeJobForm private[view](
       filter = Filter.includePrefix(entrypoint.toString),
       maxResources = plan.maxPages
     )
-    Job(name = name, strategy = strategy, creatorId = user.map(_.id))
+    Job(name = name, strategy = strategy, creatorId = user.map(_.id), isPublic = true)
   }
 
 }

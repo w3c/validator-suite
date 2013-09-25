@@ -139,10 +139,12 @@ object Administration extends VSController {
     args match {
       case Array("?") | Array("help") =>
         """Available commands:
+          |    jobs               - the list of all jobs
           |    jobs <regex>       - the list of jobs that matched the given regex. Examples:
           |       jobs \.*                  All jobs
-          |       jobs PUBLIC               All public jobs
+          |       jobs Public               All public jobs
           |       jobs 250.*Never           All 250 pages jobs that never started
+          |       jobs Never.*ANONYM        All anonymous jobs that nerver started
           |    runningJobs        - only the running jobs
           |    user-id <userId>   - informations about the user with given userId
           |    user-email <email> - informations about the user with given email
@@ -150,6 +152,15 @@ object Administration extends VSController {
           |    current-users      - users seen in the last 5 minutes (or duration of cache.user.expire)
           |    clear-cache        - clear Play's cache of current users
           |    defaultData        - resets the database with default data (only available in Dev mode)""".stripMargin
+
+      case Array("jobs") =>
+        try {
+          val jobs = model.Job.getAll().getOrFail()
+          (s"${jobs.size} results:" :: jobs.map(_.compactString)).mkString("\n")
+        } catch {
+          case t: Throwable =>
+            t.toString
+        }
 
       case Array("jobs", regex(reg)) =>
         try {

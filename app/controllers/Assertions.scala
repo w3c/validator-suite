@@ -10,59 +10,23 @@ import scala.concurrent.Future
 import scalaz.Scalaz._
 import org.w3.vs.util.timer._
 import com.codahale.metrics._
-import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
-import play.api.libs.json.{Json => PlayJson, JsObject, JsNull, JsValue}
+import play.api.libs.json.{Json => PlayJson, JsNull, JsValue}
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
-import org.w3.vs.model.{ Job => ModelJob, _ }
+import org.w3.vs.model
+import org.w3.vs.model._
 import org.w3.vs.store.Formats._
 import org.w3.vs.view.model.AssertionView
 import play.api.http.{MediaRange, MimeTypes}
+import org.w3.vs.exception.AccessNotAllowed
 
 object Assertions extends VSController  {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Assertions")
 
-  /*def index(id: JobId, url: ): ActionA = {
-    url match {
-      case Some(url) => AuthAsyncAction { index_(id, url) }
-      case None => AuthAsyncAction { index_(id) }
-    }
-  }
-
-  def index_(id: JobId) = { implicit req: RequestHeader => user: User =>
-    val f: Future[PartialFunction[Format, Result]] = for {
-      job_ <- user.getJob(id)
-      //assertions_ <- job_.getAssertions()
-      job <- JobsView(job_)
-      assertions <- AssertionsView(job_)
-      assertors <- AssertorsView(assertions)
-    } yield {
-      case Html(_) => {
-        Ok(views.html.main(
-          user = user,
-          title = s"""Report for job "${job_.name}" - By messages - Validator Suite""",
-          style = "",
-          script = "test",
-          crumbs = Seq(job_.name -> ""),
-          collections = Seq(
-            job.withCollection(assertions), //.groupBy("message")),
-            assertors.withCollection(assertions),
-            assertions.filterOn(assertors.firstAssertor).bindFromRequest
-          )))
-      }
-      case Json => {
-        //val assertions = AssertionsView.grouped(assertions_, id).bindFromRequest
-        Ok(assertions.bindFromRequest.toJson)
-      }
-    }
-    f.timer(indexName).timer(indexTimer)
-  } */
-
-  def index(id: JobId, url: URL): ActionA = AsyncAction { implicit req: RequestHeader =>
-    Authenticated {case user: User =>
+  def index(id: JobId, url: URL): ActionA = UserAwareAction { implicit req: RequestHeader => user =>
     for {
-      job_ <- user.getJob(id)
+      job_ <- model.Job.get(id)
       resource <- ResourcesView(job_, url)
       assertions <- AssertionsView(job_, url)
       assertors <- AssertorsView(id, url, assertions)
@@ -84,8 +48,7 @@ object Assertions extends VSController  {
         case Accepts.Json() => Ok(assertions.bindFromRequest.toJson)
       }
     }
-    //f.timer(indexUrlName).timer(indexUrlTimer)
-  }}
+  }
 
   def redirect(id: JobId, url: URL): ActionA = Action { implicit req =>
     Redirect(routes.Assertions.index(id, url))
@@ -101,7 +64,7 @@ object Assertions extends VSController  {
 
   def webSocket(jobId: JobId, url: URL): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
-    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, url, user)))
+    val enum: Enumerator[JsValue] = Enumerator.flatten(getUserOption().map(user => enumerator(jobId, url, user)))
     (iteratee, enum)
   }
 
@@ -109,26 +72,21 @@ object Assertions extends VSController  {
     case Html(_) => Ok.stream(enumerator(jobId, url, user) &> Comet(callback = "parent.VS.resourceupdate"))
   }}*/
 
-  def eventsSocket(jobId: JobId, url: URL): ActionA =AsyncAction { implicit req =>
-    Authenticated { case user =>
+  def eventsSocket(jobId: JobId, url: URL): ActionA = AsyncAction { implicit req =>
+    UserAware { case user =>
       render {
         case AcceptsStream() => Ok.stream(enumerator(jobId, url, user) &> EventSource()).as(MimeTypes.EVENT_STREAM)
       }
     }
   }
 
-  private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue /*JsArray*/] = {
+  private def enumerator(jobId: JobId, url: URL, user: Option[User]): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson
-    Enumerator.flatten(user.getJob(jobId).map(
+    Enumerator.flatten(model.Job.getFor(jobId, user).map(
       job => job.assertions(org.w3.vs.web.URL(url))
     )) &> Enumeratee.map { iterator =>
       toJson(iterator.map(AssertionView(jobId, _).toJson))
     }
   }
-
-  val indexName = (new controllers.javascript.ReverseAssertions).index.name
-  val indexTimer = Graphite.metrics.timer(MetricRegistry.name(Assertions.getClass, indexName))
-  val indexUrlName = indexName + "+url"
-  val indexUrlTimer = Graphite.metrics.timer(MetricRegistry.name(Assertions.getClass, indexUrlName))
 
 }

@@ -15,7 +15,7 @@ import scala.util.{Success, Failure, Try}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ops => _, _}
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.exception.UnknownJob
+import org.w3.vs.exception.{AccessNotAllowed, UnknownJob}
 import org.w3.vs.view.model.JobView
 import scalaz.Scalaz._
 import play.modules.reactivemongo.json.collection.JSONCollection
@@ -34,6 +34,8 @@ case class Job(
   strategy: Strategy,
   /**the identity of the the creator of this Job, None if it is a OneTime public job */
   creatorId: Option[UserId],
+  // whether this job is publicly available
+  isPublic: Boolean = false,
   /**the status for this Job */
   status: JobStatus = NeverStarted,
   /**if this job was ever done, the final state -- includes link to the concerned Run */
@@ -44,7 +46,8 @@ case class Job(
   import Job.logger
 
   def compactString = {
-    s"${id} - ${name} - ${strategy.entrypoint} - ${strategy.maxResources} - ${status} - ${creatorId.getOrElse("PUBLIC")}"
+    val public = if (isPublic) "Public" else "Private"
+    s"${id} - ${name} - ${strategy.entrypoint} - ${strategy.maxResources} - ${status} - ${creatorId.getOrElse("ANONYMOUS")} - ${public}"
   }
 
   def getAssertions()(implicit conf: ValidatorSuite with Database): Future[Iterable[Assertion]] = {
@@ -507,12 +510,25 @@ object Job {
 
   /**returns the Job for this JobId, if it belongs to the provided user
    * if not, it throws an UnknownJob exception */
-  def getFor(userId: UserId, jobId: JobId)(implicit conf: Database): Future[Job] = {
+  /*def getFor(userId: UserId, jobId: JobId)(implicit conf: Database): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
       case Some(json) if (json \ "creator").asOpt[UserId] === Some(userId) => json.as[Job]
       case _ => throw UnknownJob(jobId)
+    }
+  }*/
+
+  // What is better in above implementation ?
+  def getFor(jobId: JobId, user: Option[User])(implicit conf: Database): Future[Job] = {
+    import scalaz.Equal
+    get(jobId).map{ job =>
+      user match {
+        case Some(user) if user.isRoot => ()
+        case Some(user) => if (!job.isPublic && (job.creatorId /== Some(user.id))) throw new AccessNotAllowed()
+        case None => if (!job.isPublic) throw new AccessNotAllowed()
+      }
+      job
     }
   }
 

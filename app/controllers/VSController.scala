@@ -57,7 +57,13 @@ trait VSController extends Controller {
     f
   }
 
-  def AsyncAction(f: Request[AnyContent] => Future[Result]) = Action { req => Async(f(req)) }
+  def AsyncAction(f: Request[AnyContent] => Future[Result]) = Action { req =>
+    Async {
+      f(req) recover {
+        case AccessNotAllowed() => Global.onHandlerNotFound(req)
+      }
+    }
+  }
 
   val AcceptsStream = Accepting(MimeTypes.EVENT_STREAM)
 
@@ -83,7 +89,7 @@ trait VSController extends Controller {
     Authenticated { user =>
       user match {
         case user if user.isRoot => f(req)(user)
-        case _ => Global.onHandlerNotFound(req)
+        case _ => throw AccessNotAllowed()
       }
     }
   }

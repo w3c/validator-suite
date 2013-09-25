@@ -212,7 +212,8 @@ object Formats {
     (__ \ '_id).format[JobId] and
     (__ \ 'name).format[String] and
     (__ \ 'strategy).format[Strategy] and
-    (__ \ 'creator).format[Option[UserId]] and
+    (__ \ 'creator).formatNullable[UserId] and
+    (__ \ 'isPublic).format[Boolean] and
     (__ \ 'status).format[JobStatus] and
     (__ \ 'latestDone).formatNullable[Done](DoneFormat) and
     (__ \ 'createdOn).format[DateTime]

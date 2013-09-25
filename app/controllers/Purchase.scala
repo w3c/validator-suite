@@ -16,11 +16,10 @@ object Purchase extends VSController {
 
   def buyJob: ActionA = UserAwareAction { implicit req => user =>
     val messages = user match {
-      case Some(user) => List.empty
-      case None => List(("info" -> Messages("warning.createOrBuy")))
+      case Some(user) => List(("info" -> Messages("warning.createOrBuy")))
+      case None => List.empty
     }
-    Ok(views.html.newOneTimeJob(OneTimeJobForm.blank, user, messages))
-
+    Ok(views.html.newOneTimeJob(OneTimeJobForm.blank, user, List.empty))
     /*getUser map {
       case user => Ok(views.html.newOneTimeJob(OneTimeJobForm.blank, user))
     } recover {
@@ -65,7 +64,11 @@ object Purchase extends VSController {
   }
 
   def redirectToStore(product: OneTimePlan, jobId: JobId) =
-    Redirect("https://sites.fastspring.com/ercim/instant/" + product.fastSpringKey + "?referrer=" + jobId)
+    Redirect(getStoreUrl(product, jobId))
+
+  def getStoreUrl(product: Plan, jobId: JobId) = {
+    "https://sites.fastspring.com/ercim/instant/" + product.fastSpringKey + "?referrer=" + jobId
+  }
 
   def callback = Action {
     req =>

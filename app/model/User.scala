@@ -2,6 +2,7 @@ package org.w3.vs.model
 
 import scalaz.std.string._
 import scalaz.Scalaz.ToEqualOps
+import scalaz.Equal
 import org.w3.vs.exception._
 import org.w3.vs._
 import org.w3.vs.store.MongoStore.journalCommit
@@ -52,12 +53,15 @@ case class User(
 
   import User.logger
 
-  def getJob(jobId: JobId)(implicit conf: ValidatorSuite): Future[Job] = {
-    Job.getFor(id, jobId)
-  }
-
-  def getJobs()(implicit conf: ValidatorSuite): Future[Iterable[Job]] = {
+  /*def getJobs()(implicit conf: ValidatorSuite): Future[Iterable[Job]] = {
     Job.getFor(id)
+  }*/
+
+  def owns(job: Job): Boolean = {
+    job.creatorId match {
+      case Some(creatorId) if creatorId === id => true
+      case _ => false
+    }
   }
   
   def save()(implicit conf: ValidatorSuite): Future[Unit] = User.save(this)

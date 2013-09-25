@@ -1,6 +1,7 @@
 package controllers
 
 import org.w3.vs.exception._
+import org.w3.vs.model
 import org.w3.vs.model._
 import org.w3.vs.view.collection._
 import org.w3.vs.view.form._
@@ -25,12 +26,12 @@ object Jobs extends VSController {
 
   def index: ActionA = AuthenticatedAction { implicit req => user =>
     for {
-      jobs_ <- user.getJobs()
+      jobs_ <- model.Job.getFor(user.id)
       jobs <- JobsView(jobs_)
     } yield {
       render {
         case Accepts.Html() => Ok(views.html.main(
-          user = user,
+          user = Some(user),
           title = "Jobs - W3C Validator Suite",
           collections = Seq(jobs.bindFromRequest)
         ))
@@ -79,11 +80,9 @@ object Jobs extends VSController {
   }
 
   def webSocket(): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
-    // TODO Authenticate
     val iteratee = Iteratee.ignore[JsValue]
     val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(user)))
     (iteratee, enum)
-    ???
   }
 
   def eventsSocket: ActionA = AuthenticatedAction { implicit req => user =>

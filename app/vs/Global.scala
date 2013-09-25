@@ -4,6 +4,7 @@ import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._
 import play.api.Mode._
+import org.w3.vs.exception.AccessNotAllowed
 
 object Global extends GlobalSettings with Rendering with AcceptExtractors {
 
