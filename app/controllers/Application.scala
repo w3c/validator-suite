@@ -28,6 +28,7 @@ object Application extends VSController {
   def faq: ActionA =     FrontAction { implicit req => user => Ok(views.html.faq(user)) }
   def index: ActionA =   FrontAction { implicit req => user => Ok(views.html.index(user)) }
   def pricing: ActionA = FrontAction { implicit req => user => Ok(views.html.pricing(user)) }
+  def features: ActionA = FrontAction { implicit req => user => Ok(views.html.features(user)) }
   def logos: ActionA =   FrontAction { implicit req => user => Ok(views.html.logos(user)) }
   def terms: ActionA =   FrontAction { implicit req => user => Ok(views.html.terms(user)) }
   def privacy: ActionA = FrontAction { implicit req => user => Ok(views.html.privacy(user)) }

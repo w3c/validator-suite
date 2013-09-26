@@ -5,6 +5,7 @@
 GET     /                                           controllers.Application.index
 GET     /faqs                                       controllers.Application.faq
 GET     /pricing                                    controllers.Application.pricing
+GET     /features                                   controllers.Application.features
 GET     /logos                                      controllers.Application.logos
 GET     /policies/terms                             controllers.Application.terms
 GET     /policies/privacy                           controllers.Application.privacy
