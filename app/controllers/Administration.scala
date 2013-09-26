@@ -31,7 +31,7 @@ object Administration extends VSController {
 
   def jobsPost(): ActionA = RootAction { implicit req => user =>
     // Really don't like that lenghty code to get just a few parameters from the body. Consider a helper function
-    val (jobId, action) = (for {
+    /*val (jobId, action) = (for {
       body <- req.body.asFormUrlEncoded
       param1 <- body.get("jobId")
       param2 <- body.get("action")
@@ -52,11 +52,11 @@ object Administration extends VSController {
       SeeOther(routes.Administration.index.url).flashing(
         ("success" -> Messages(msg, jobId + " (" + job.name + ")"))
       )
-    }
+    }*/ ???
   }
 
   def usersPost(): ActionA = RootAction { implicit req => root =>
-    val (email, isSubscriber) = (for {
+    /*val (email, isSubscriber) = (for {
       body <- req.body.asFormUrlEncoded
       email <- body.get("email").get.headOption
       isSubscriber <- body.get("userType").get.headOption.map {
@@ -81,11 +81,21 @@ object Administration extends VSController {
       case UnknownUser(email) => {
         BadRequest(views.html.admin(root = root, messages = List(("error" -> s"Unknown user with email: ${email}"))))
       }
-    }
+    }*/ ???
   }
 
   def socket(): WebSocket[String] = WebSocket.using[String] { implicit reqHeader =>
-    // TODO: Find a way to authenticate. (Authentication header is not passed in a websocket request)
+    import org.w3.vs.util.timer._
+    assert(getUser().map(_.isRoot).getOrFail() == true)
+
+    def toStackTraceString(ex: Throwable): String = {
+      val first = ex.getMessage() + "\n" + ex.getStackTrace().map(s => "\t" + s.toString).mkString("\n")
+      ex.getCause() match {
+        case cause: Throwable => first + "\n" + "Caused by:\n" + toStackTraceString(cause)
+        case _ => first
+      }
+    }
+
     val (enum, channel) = Concurrent.broadcast[String]
     def iteratee: Iteratee[String, String] = Cont[String, String] {
       case Input.EOF => Done("end of stream")
@@ -94,7 +104,7 @@ object Administration extends VSController {
         val r = try {
           executeCommand(command)
         } catch { case e: Exception =>
-          e.getMessage() + "\n" + e.printStackTrace()
+          toStackTraceString(e)
         }
         channel.push(r)
         iteratee
@@ -154,46 +164,26 @@ object Administration extends VSController {
           |    defaultData        - resets the database with default data (only available in Dev mode)""".stripMargin
 
       case Array("jobs") =>
-        try {
-          val jobs = model.Job.getAll().getOrFail()
-          (s"${jobs.size} results:" :: jobs.map(_.compactString)).mkString("\n")
-        } catch {
-          case t: Throwable =>
-            t.toString
-        }
+        val jobs = model.Job.getAll().getOrFail()
+        (s"${jobs.size} results:" :: jobs.map(_.compactString)).mkString("\n")
 
       case Array("jobs", regex(reg)) =>
-        try {
-          val jobs = model.Job.getAll().getOrFail()
-          val filtered = jobs.filter(job => reg.findFirstIn(job.compactString).isDefined).map(_.compactString)
-          (s"${filtered.size} results:" :: filtered).mkString("\n")
-        } catch {
-          case t: Throwable =>
-            t.toString
-        }
+        val jobs = model.Job.getAll().getOrFail()
+        val filtered = jobs.filter(job => reg.findFirstIn(job.compactString).isDefined).map(_.compactString)
+        (s"${filtered.size} results:" :: filtered).mkString("\n")
 
       case Array("runningJobs") =>
         val jobs = model.Job.getRunningJobs().getOrFail()
         jobs.map(job => s"${job.id} [${job.name}] by ${job.creatorId}").mkString("\n")
 
       case Array("job", jobId) =>
-        try {
-          val job = model.Job.get(JobId(jobId)).getOrFail()
-          job.compactString
-        } catch {
-          case t: Throwable =>
-            t.getMessage
-        }
+        val job = model.Job.get(JobId(jobId)).getOrFail()
+        job.compactString
 
       case Array("user-id", userId) =>
-        try {
-          val user = model.User.get(UserId(userId)).getOrFail()
-          val json = toJson(user)
-          s"Scala: ${user}\nJSON: ${prettyPrint(json)}"
-        } catch {
-          case t: Throwable =>
-            t.getMessage
-        }
+        val user = model.User.get(UserId(userId)).getOrFail()
+        val json = toJson(user)
+        s"Scala: ${user}\nJSON: ${prettyPrint(json)}"
 
       case Array("user-email", email) =>
         try {

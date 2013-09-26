@@ -1,7 +1,7 @@
 @(title: String, style: String = "", script: String = "", userO: Option[User] = None)(content: Html)(footer: Html)(implicit vs: ValidatorSuite, req: RequestHeader)
 @import play.api.Mode._
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
     <title>@title</title>
     <meta charset="utf-8"/>
@@ -13,9 +13,8 @@
     <script data-main='@routes.Assets.at(s"js/${script}.js")' src='@routes.Assets.at("js/libs/require.js")'></script>
 </head>
 
-<body class="no-js">
-<script>document.body.className = "js";</script>
-@libs.header(userO)
+<body>
+@libs.header(userO, false)
 <div id="main">
     @content
 </div>

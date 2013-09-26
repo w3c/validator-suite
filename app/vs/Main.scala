@@ -119,7 +119,7 @@ object Main {
       credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
     val bernard = User.create(
-      email = "bgidon@w3.org", name = "Bernard Gidon", password = "bernar",
+      email = "bgidon@w3.org", name = "Bernard Gidon", password = "secret",
       credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
     val ralph = User.create(
@@ -132,29 +132,27 @@ object Main {
 
     val w3team = User.create(
       email = "w3t@w3.org", name = "W3C Team", password = "w3team",
-      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
+      credits = 1000000, optedIn = true, isSubscriber = false, isRoot = false)
     
     val w3 = Job(
       name = "W3C",
       creatorId = Some(tgambet.id),
-      strategy = Strategy(URL("http://www.w3.org/"), 10)
+      strategy = Strategy(URL("http://www.w3.org/"), 100)
     )
 
     val w3Public = Job(
-      name = "W3C",
-      creatorId = None,
-      strategy = Strategy(URL("http://www.w3.org/"), 100)
+      name = "W3C Public",
+      creatorId = Some(tgambet.id),
+      strategy = Strategy(URL("http://www.w3.org/"), 100),
+      isPublic = true
     )
-        
-    val tr = Job(
-      createdOn = DateTime.now.plus(1000),
-      name = "TR",
-      creatorId =  Some(bertails.id),
-      strategy = Strategy(
-        entrypoint = URL("http://www.w3.org/TR"),
-        maxResources = 10,
-        filter = Filter.includePrefixes("http://www.w3.org/TR"))
-      )
+
+    val w3Anonymous = Job(
+      name = "W3C Anonymous",
+      creatorId = None,
+      strategy = Strategy(URL("http://www.w3.org/"), 100),
+      isPublic = true
+    )
 
     val List(w3c1, w3c2, w3c3, w3c4, w3c5, w3c6) = List(1, 2, 3, 4, 5, 6) map { i =>
       Job(
@@ -164,20 +162,6 @@ object Main {
           entrypoint = URL("http://www.w3.org/TR"),
           maxResources = 100))
     }
-
-    val ibm = Job(
-      name = "IBM",
-      creatorId = Some(bertails.id),
-      strategy = Strategy(
-        entrypoint = URL("http://www.ibm.com"),
-        maxResources = 20)
-      )
-      
-    val lemonde = Job(
-      name = "Le Monde",
-      creatorId = Some(tgambet.id),
-      strategy = Strategy(URL("http://www.lemonde.fr"), 30)
-    )
 
     val script: Future[Unit] = for {
       _ <- MongoStore.reInitializeDb()
@@ -192,15 +176,13 @@ object Main {
       _ <- User.save(w3team)
       _ <- Job.save(w3)
       _ <- Job.save(w3Public)
+      _ <- Job.save(w3Anonymous)
       _ <- Job.save(w3c1)
       _ <- Job.save(w3c2)
       _ <- Job.save(w3c3)
       _ <- Job.save(w3c4)
       _ <- Job.save(w3c5)
       _ <- Job.save(w3c6)
-      _ <- Job.save(tr)
-      _ <- Job.save(ibm)
-      _ <- Job.save(lemonde)
     } yield ()
 
     script.getOrFail(Duration("10s"))

@@ -1,5 +1,10 @@
 @(user: Option[User])(implicit req: RequestHeader)
 
+@taxSpan = {<span class="tax" title="Plus VAT if applicable">✝</span>}
+
+@oneTimeDesc(pages: Int) = {For one website<br/>with up to <strong>@pages pages</strong>}
+@creditsDesc(pages: Int) = {<strong>@pages credits</strong>}
+
 @front("W3C Validator Suite - Pricing", user) {
 
 <div class="row">
@@ -24,6 +29,71 @@
 <div class="row pricing">
 
     <div class="column head">
+        <h1 id="credits" tabindex="0">Credits</h1>
+
+        <p>
+            Blah blah
+        </p>
+
+    </div>
+
+    <div class="large-3 column">
+        <ul class="pricing-table">
+            <li class="title">Tiny</li>
+            <li class="price">$?? / 50€@taxSpan</li>
+            <li class="bullet-item">@creditsDesc(CreditPlan.Tiny.credits)</li>
+            <li class="description">HTML</li>
+            <li class="description">CSS</li>
+            <li class="description"><abbr title="Internationalization">i18n</abbr></li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=tiny" title="Buy a One Time Tiny job">Buy Now</a></li>
+        </ul>
+    </div>
+
+    <div class="large-3 column">
+        <ul class="pricing-table">
+            <li class="title">Small</li>
+            <li class="price">$?? / 75€@taxSpan</li>
+            <li class="bullet-item">@creditsDesc(CreditPlan.Small.credits)</li>
+            <li class="description">HTML</li>
+            <li class="description">CSS</li>
+            <li class="description"><abbr title="Internationalization">i18n</abbr></li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=small" title="Buy a One Time Small job">Buy Now</a></li>
+        </ul>
+    </div>
+
+    <div class="large-3 column">
+        <ul class="pricing-table">
+            <li class="title">Medium</li>
+            <li class="price">$??? / 180€@taxSpan</li>
+            <li class="bullet-item">@creditsDesc(CreditPlan.Medium.credits)</li>
+            <li class="description">HTML</li>
+            <li class="description">CSS</li>
+            <li class="description"><abbr title="Internationalization">i18n</abbr></li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=medium" title="Buy a One Time Medium job">Buy Now</a></li>
+        </ul>
+    </div>
+    <div class="large-3 column">
+        <ul class="pricing-table">
+            <li class="title">Large</li>
+            <li class="price">$??? / 250€@taxSpan</li>
+            <li class="bullet-item">@creditsDesc(CreditPlan.Large.credits)</li>
+            <li class="description">HTML</li>
+            <li class="description">CSS</li>
+            <li class="description"><abbr title="Internationalization">i18n</abbr></li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=large" title="Buy a One Time Large job">Buy Now</a></li>
+        </ul>
+    </div>
+
+    <p class="column note"><span class="tax">✝</span><em> Plus VAT if applicable.</em></p>
+
+</div>
+
+
+<hr/>
+
+<div class="row pricing">
+
+    <div class="column head">
         <h1 id="one-time" tabindex="0">One Time Service</h1>
 
         <p>
@@ -39,8 +109,8 @@
     <div class="large-3 column">
         <ul class="pricing-table">
             <li class="title">Tiny</li>
-            <li class="price">$50 / 40€<span class="tax" title="Plus VAT if applicable">*</span></li>
-            <li class="bullet-item">For one website<br/>with up to <strong>250 pages</strong></li>
+            <li class="price">$50 / 40€@taxSpan</li>
+            <li class="bullet-item">@oneTimeDesc(OneTimePlan.Tiny.maxPages)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
             <li class="description"><abbr title="Internationalization">i18n</abbr></li>
@@ -51,8 +121,8 @@
     <div class="large-3 column">
         <ul class="pricing-table">
             <li class="title">Small</li>
-            <li class="price">$75 / 60€<span class="tax" title="Plus VAT if applicable">*</span></li>
-            <li class="bullet-item">For one website<br/>with up to <strong>500 pages</strong></li>
+            <li class="price">$75 / 60€@taxSpan</li>
+            <li class="bullet-item">@oneTimeDesc(OneTimePlan.Small.maxPages)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
             <li class="description"><abbr title="Internationalization">i18n</abbr></li>
@@ -63,8 +133,8 @@
     <div class="large-3 column">
         <ul class="pricing-table">
             <li class="title">Medium</li>
-            <li class="price">$110 / 90€<span class="tax" title="Plus VAT if applicable">*</span></li>
-            <li class="bullet-item">For one website<br/>with up to <strong>1,000 pages</strong></li>
+            <li class="price">$110 / 90€@taxSpan</li>
+            <li class="bullet-item">@oneTimeDesc(OneTimePlan.Medium.maxPages)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
             <li class="description"><abbr title="Internationalization">i18n</abbr></li>
@@ -74,8 +144,8 @@
     <div class="large-3 column">
         <ul class="pricing-table">
             <li class="title">Large</li>
-            <li class="price">$190 / 150€<span class="tax" title="Plus VAT if applicable">*</span></li>
-            <li class="bullet-item">For one website<br/>with up to <strong>2,000 pages</strong></li>
+            <li class="price">$190 / 150€@taxSpan</li>
+            <li class="bullet-item">@oneTimeDesc(OneTimePlan.Large.maxPages)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
             <li class="description"><abbr title="Internationalization">i18n</abbr></li>
@@ -83,9 +153,7 @@
         </ul>
     </div>
 
-    <p class="column note"><em>* Plus VAT if applicable.</em></p>
-
-    <p class="column">Additional plans will be introduced soon.</p>
+    <p class="column note"><span class="tax">✝</span><em> Plus VAT if applicable.</em></p>
 
 </div>
 

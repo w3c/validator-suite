@@ -1,4 +1,4 @@
-@(title: String, user: Option[User] = None)(content: Html)(implicit req: RequestHeader)
+@(title: String, user: Option[User] = None, loginModal: Boolean = true)(content: Html)(implicit req: RequestHeader)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +16,7 @@
 
 <body>
 
-@libs.header(user)
+@libs.header(user, loginModal)
 
 @content
 
@@ -35,7 +35,7 @@
     </div>
 </footer>
 
-@if(user == None && req.uri != routes.Application.login.url) {
+@if(user == None && loginModal) {
 <div id="loginModal" class="reveal-modal medium">
     @forms.loginForm()
     <a class="close-reveal-modal">&#215;</a>

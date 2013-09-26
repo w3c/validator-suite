@@ -103,6 +103,12 @@ case class User(
 
 object User {
 
+  def updateCredits(userId: UserId, creditsDiff: Int)(implicit conf: Database): Future[Unit] = {
+    get(userId) flatMap { case user =>
+      update(user.copy(credits = user.credits + creditsDiff))
+    }
+  }
+
   val logger = play.Logger.of(classOf[User])
 
   /** the root password, from the configuration file.

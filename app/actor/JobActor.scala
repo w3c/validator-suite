@@ -47,16 +47,28 @@ object JobActor {
 //  }
 
   def saveEvent(event: RunEvent)(implicit vs: Database): Future[Unit] = event match {
-    case event@CreateRunEvent(userId, jobId, runId, actorName, strategy, timestamp) =>
+    case event@CreateRunEvent(userIdOpt, jobId, runId, actorName, strategy, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
         val running = Running(runId, actorName)
         Job.updateStatus(jobId, status = running)
+      } flatMap { case () =>
+        userIdOpt match {
+          case Some(userId) => User.updateCredits(userId, - strategy.maxResources)
+          case _ => Future.successful()
+        }
       }
 
-    case event@DoneRunEvent(userId, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) =>
+    case event@DoneRunEvent(userIdOpt, jobId, runId, doneReason, resources, errors, warnings, resourceDatas, groupedAssertionDatas, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
         val done = Done(runId, doneReason, timestamp, RunData(resources, errors, warnings, JobDataIdle, Some(timestamp)))
         Job.updateStatus(jobId, status = done, latestDone = done)
+      } flatMap { case () =>
+        Job.get(jobId)
+      } flatMap { job =>
+        userIdOpt match {
+          case Some(userId) => User.updateCredits(userId, job.strategy.maxResources - resources)
+          case _ => Future.successful()
+        }
       }
 
     case event@AssertorResponseEvent(userId, jobId, runId, ar, timestamp) =>

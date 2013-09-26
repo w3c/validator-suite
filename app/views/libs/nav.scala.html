@@ -1,10 +1,10 @@
-@(user: Option[User] = None)(implicit req: RequestHeader)
+@(user: Option[User] = None, loginModal: Boolean)(implicit req: RequestHeader)
 
 @navLink(url: String, attrs: String = "")(name: Html) = {
     @if(req.uri == url) {
         <span class="link active" @attrs>@name</span>
     } else {
-        <a href="@url" @attrs>@name</a>
+        <a href="@url" class="menu-entry" @attrs>@name</a>
     }
 }
 
@@ -15,16 +15,21 @@
         <li>@navLink(routes.Application.faq.url){FAQs}</li>
         @user match {
         case Some(user) => {
-        <li><a class="support" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
+        <li><a class="support menu-entry" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
         <li class="c-dropdown">
-            <a href="#" data-dropdown="myAccount">My Account</a>
+            <a href="#" data-dropdown="myAccount" class="menu-entry">My Account</a>
             <ul id="myAccount" class="f-dropdown small" data-dropdown-content>
-                <li class="noHover"><span class="loggedIn">Logged in as @user.name</span></li>
+                <li class="noHover menuHead">
+                    <span>Logged in as:</span> <span>@user.name</span>
+                </li>
+                <li class="noHover menuHead last">
+                    <span>Credits:</span> <span>@user.credits <a href="@routes.Purchase.buyCredits" class="buy-more">Buy more credits</a></span>
+                </li>
                 <li>@navLink(routes.Jobs.index.url){My Jobs}</li>
-                <li class="noHover" title="Coming soon"><a class="disabled">My Profile</a></li>
+                <li class="noHover" title="Coming soon"><a class="disabled menu-entry">My Profile</a></li>
                 @if(user.isRoot){
-                <li><a href="@routes.Administration.index.url">Administration</a></li>
-                <li><a href="@routes.Administration.console.url">Console</a></li>}
+                @**<li><a href="@routes.Administration.index.url" class="menu-entry">Administration</a></li>**@
+                <li><a href="@routes.Administration.console.url" class="menu-entry">Console</a></li>}
                 <li class="noHover">
                     <form action="@routes.Application.logoutAction" method="post">
                         <button type="submit" class="logout">Logout</button>
@@ -36,9 +41,10 @@
         case _ => {
         <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")'>Contact</a></li>
         <li>
-            <a href="@routes.Application.login.url"
-                @if(req.uri != routes.Application.login.url) {data-reveal-id="loginModal"}
-                @if(req.uri == routes.Application.login.url) {class="active"}><strong>Login</strong></a>
+            @loginModal match{
+                case true => {<a href="@routes.Application.login.url" data-reveal-id="loginModal"><strong>Login</strong></a>}
+                case false => {<span class="link active"><strong>Login</strong></span>}
+            }
         </li>
         }}
     </ul>

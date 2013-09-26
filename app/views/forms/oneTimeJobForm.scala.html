@@ -1,6 +1,7 @@
 @(form: OneTimeJobForm)(implicit req: RequestHeader)
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
+@taxSpan = {<span class="tax" title="Plus VAT if applicable">✝</span>}
 
 @checkIfPlan(name: String) = {
     @req.getQueryString("plan") match {
@@ -72,7 +73,7 @@
                                         <span>Tiny</span>
                                     </label>
                                 </li>
-                                <li class="price">$50 / 40€<span class="tax" title="Plus VAT if applicable">✝</span></li>
+                                <li class="price">$50 / 40€@taxSpan</li>
                                 <li class="bullet-item">For one website<br />with up to <strong>250 pages</strong></li>
                             </ul>
                         </div>
@@ -85,7 +86,7 @@
                                         Small
                                     </label>
                                 </li>
-                                <li class="price">$75 / 60€<span class="tax" title="Plus VAT if applicable">✝</span></li>
+                                <li class="price">$75 / 60€@taxSpan</li>
                                 <li class="bullet-item">For one website<br />with up to <strong>500 pages</strong></li>
                             </ul>
                         </div>
@@ -98,7 +99,7 @@
                                         Medium
                                     </label>
                                 </li>
-                                <li class="price">$110 / 90€<span class="tax" title="Plus VAT if applicable">✝</span></li>
+                                <li class="price">$110 / 90€@taxSpan</li>
                                 <li class="bullet-item">For one website<br />with up to <strong>1,000 pages</strong></li>
                             </ul>
                         </div>
@@ -111,7 +112,7 @@
                                         Large
                                     </label>
                                 </li>
-                                <li class="price">$190 / 150€<span class="tax" title="Plus VAT if applicable">✝</span></li>
+                                <li class="price">$190 / 150€@taxSpan</li>
                                 <li class="bullet-item">For one website<br />with up to <strong>2,000 pages</strong></li>
                             </ul>
                         </div>

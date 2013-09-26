@@ -1,3 +1,5 @@
+
+
 .mainNav { //position: absolute;
     right: 0;
     bottom: 0;
@@ -18,12 +20,12 @@
             border-right: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        a, .link {
+        .menu-entry, .link {
             display: inline-block;
             color: white;
             padding: 0.5em 1.7em;
         }
-        a:hover, a.active, .link.active {
+        .menu-entry:hover, .menu-entry.active, .link.active {
             background: rgba(0, 0, 0, 0.4);
         }
 
@@ -48,6 +50,21 @@
         padding: 0.5em;
         padding-bottom: 0;
         right: 0;
+
+        .menu-entry:hover, .menu-entry.active, .link.active {
+            background: transparent;
+        }
+
+        .buy-more {
+            display: inline;
+            padding: 0;
+            margin: 0;
+            color: #0066CC;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
 
         &.open {
             left: auto !important;
@@ -79,12 +96,33 @@
                 }
             }
 
-            a:hover {
-                background: rgba(0, 0, 0, 0.1);
+            .menu-entry:hover {
+                //background: rgba(0, 0, 0, 0.1);
+            }
+
+            &.menuHead {
+                 text-align: left;
+                 padding: 0.5em 0 0;
+                 border-bottom: none;
+                 background-color: rgba(0,0,0,0.08);
+             }
+            &.menuHead span:first-child {
+                color: #888;
+                font-style: italic;
+                display: inline-block;
+                min-width: 33%;
+                text-align: right;
+            }
+            &.menuHead.last {
+                border-bottom: 1px solid rgba(0,0,0,0.1);
+                padding-bottom: 0.5em;
+            }
+            &.menuHead:hover {
+                background: rgba(0, 0, 0, 0.08);
             }
         }
 
-        a, .link, .loggedIn {
+        .menu-entry, .link, .loggedIn {
             color: #222222;
             display: inline-block;
             padding: 1em 0em;

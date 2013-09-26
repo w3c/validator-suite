@@ -37,9 +37,12 @@ trait VSController extends Controller {
 
   def getUser()(implicit reqHeader: RequestHeader): Future[User] = {
     for {
-      // TODO sort out this code
-      email <- Future(session.get("email").get) recoverWith { case _ => Future(throw Unauthenticated("")) }
-      user <- Future(Cache.getAs[User](email).get) recoverWith { case _ => User.getByEmail(email) }
+      email <- session.get("email") match {
+          case Some(email) => Future.successful(email)
+          case _ => Future.failed(Unauthenticated(""))
+        }
+      user <- User.getByEmail(email)
+      //user <- Future(Cache.getAs[User](email).get) recoverWith { case _ => User.getByEmail(email) }
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
       user

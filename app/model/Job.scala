@@ -45,9 +45,20 @@ case class Job(
 
   import Job.logger
 
+  assert(isPublic == true || creatorId != None, "A Job cannot be both private and anonymous")
+
   def compactString = {
-    val public = if (isPublic) "Public" else "Private"
-    s"${id} - ${name} - ${strategy.entrypoint} - ${strategy.maxResources} - ${status} - ${creatorId.getOrElse("ANONYMOUS")} - ${public}"
+    val public = if (isPublic) "Public " else "Private"
+    def pad(s: String, padding: Int) = {
+      s + " "*(scala.math.max(0, padding - s.length))
+    }
+    val stat = status match {
+      case NeverStarted => NeverStarted.toString
+      case Zombie => Zombie.toString
+      case Running(runId, actorName) => "Running"
+      case Done(runId, reason, completedOn, runData) => s"Done(${completedOn})"
+    }
+    s"${id} - ${pad(strategy.maxResources.toString, 4)} - ${public} - ${creatorId.map(_.shortId).getOrElse("Anonymous")} - ${stat} - ${strategy.entrypoint} - ${name} "
   }
 
   def getAssertions()(implicit conf: ValidatorSuite with Database): Future[Iterable[Assertion]] = {

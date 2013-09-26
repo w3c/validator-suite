@@ -53,8 +53,8 @@ GET     /jobs/:job/resources/                       controllers.Resources.redire
 GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket(job: JobId, resource: Option[URL], socket: SocketType)
 
 # Administration
-GET     /admin                                      controllers.Administration.index()
-GET     /admin/console                              controllers.Administration.console()
+GET     /admin                                      controllers.Administration.console()
+#GET     /admin/console                              controllers.Administration.console()
 GET     /admin/console/socket                       controllers.Administration.socket()
 POST    /admin/jobs                                 controllers.Administration.jobsPost()
 POST    /admin/users                                controllers.Administration.usersPost()
