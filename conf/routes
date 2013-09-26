@@ -23,8 +23,8 @@ GET     /jobs/new                                   controllers.Jobs.newJob
 GET     /jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
 GET     /jobs/buy-one-time                          controllers.Purchase.buyJob
+POST    /jobs/buy-one-time                          controllers.Purchase.buyJobAction
 GET     /jobs/buy-credits                           controllers.Purchase.buyCredits
-POST    /jobs/buy                                   controllers.Purchase.buyAction
 POST    /purchase/callback                          controllers.Purchase.callback
 
 # Job

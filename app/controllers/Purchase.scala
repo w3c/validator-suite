@@ -36,9 +36,15 @@ object Purchase extends VSController {
         plan <- CreditPlan.fromString(planStr)
       } yield {
         render {
-          case Accepts.Html() =>
-            logger.info(s"Redirected user ${user.email} to store for credit plan ${plan}")
-            redirectToStore(plan, user.id)
+          case Accepts.Html() => {
+            if (user.isRoot) {
+              model.User.updateCredits(user.id, plan.credits).getOrFail()
+              Redirect(routes.Jobs.index())
+            } else {
+              logger.info(s"Redirected user ${user.email} to store for credit plan ${plan}")
+              redirectToStore(plan, user.id)
+            }
+          }
         }
       }
       redirect.getOrElse {
@@ -49,7 +55,7 @@ object Purchase extends VSController {
     }
   }
 
-  def buyAction: ActionA = UserAwareAction { implicit req => user =>
+  def buyJobAction: ActionA = UserAwareAction { implicit req => user =>
     (for {
       form <- Future(OneTimeJobForm.bind match {
         case Left(form) => throw InvalidFormException(form, user)
