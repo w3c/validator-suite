@@ -39,10 +39,10 @@
         </li>
         }
         case _ => {
-        <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")'>Contact</a></li>
+        <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")' class="menu-entry">Contact</a></li>
         <li>
             @loginModal match{
-                case true => {<a href="@routes.Application.login.url" data-reveal-id="loginModal"><strong>Login</strong></a>}
+                case true => {<a href="@routes.Application.login.url" data-reveal-id="loginModal" class="menu-entry"><strong>Login</strong></a>}
                 case false => {<span class="link active"><strong>Login</strong></span>}
             }
         </li>

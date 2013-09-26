@@ -2,6 +2,7 @@ package controllers
 
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
+import org.w3.vs.model
 import org.w3.vs.model._
 import org.w3.vs.view.form._
 import org.w3.vs.util.timer._
@@ -28,7 +29,25 @@ object Purchase extends VSController {
     } */
   }
 
-  def buyCredits: ActionA = ???
+  def buyCredits: ActionA = AuthenticatedAction { implicit req => user =>
+    Future {
+      val redirect: Option[Result] = for {
+        planStr <- req.getQueryString("plan")
+        plan <- CreditPlan.fromString(planStr)
+      } yield {
+        render {
+          case Accepts.Html() =>
+            logger.info(s"Redirected user ${user.email} to store for credit plan ${plan}")
+            redirectToStore(plan, user.id)
+        }
+      }
+      redirect.getOrElse {
+        render {
+          case Accepts.Html() => Redirect(routes.Application.pricing())
+        }
+      }
+    }
+  }
 
   def buyAction: ActionA = UserAwareAction { implicit req => user =>
     (for {
@@ -63,35 +82,59 @@ object Purchase extends VSController {
     }
   }
 
-  def redirectToStore(product: OneTimePlan, jobId: JobId) =
-    Redirect(getStoreUrl(product, jobId))
+  def redirectToStore(product: CreditPlan, id: UserId) =
+    Redirect(getStoreUrl(product, id))
 
-  def getStoreUrl(product: Plan, jobId: JobId) = {
-    "https://sites.fastspring.com/ercim/instant/" + product.fastSpringKey + "?referrer=" + jobId
+  def redirectToStore(product: OneTimePlan, id: JobId) =
+    Redirect(getStoreUrl(product, id))
+
+  def getStoreUrl(product: Plan, id: Id) = {
+    "https://sites.fastspring.com/ercim/instant/" + product.fastSpringKey + "?referrer=" + id
   }
 
-  def callback = Action {
-    req =>
-      AsyncResult {
-        logger.debug(req.body.asFormUrlEncoded.toString)
-        val orderId = req.body.asFormUrlEncoded.get("OrderID").headOption.get // let it fail
-        val f: Future[Result] = for {
-            jobId <- Future(JobId(req.body.asFormUrlEncoded.get("JobId").headOption.get))
-            job <- org.w3.vs.model.Job.get(jobId)
-            // TODO: add security check
+  def callback = AsyncAction { req =>
+    logger.debug(req.body.asFormUrlEncoded.toString)
+    // TODO: add security check
+    (for {
+      params <- req.body.asFormUrlEncoded
+      orderId <- params("OrderId").headOption
+      planString <- params("OrderProductNames").headOption
+      plan <- Plan.fromFsString(planString)
+      idString <- params("OrderReferrer").headOption
+    } yield {
+
+      plan match {
+        case plan: OneTimePlan =>
+          for {
+            jobId <- Future(JobId(idString))
+            job <- model.Job.get(jobId)
             _ <- {
-              logger.info("Got payment confirmation. Running job " + job.id)
-              // TODO: check if the order size matches the job's!
-              job.run()
+              if (job.strategy.maxResources <= plan.maxPages) {
+                logger.info("Got payment confirmation. Running job " + job.id)
+                job.run()
+              } else {
+                val s = s"Plan did not match expected size. The job's maxpages is: ${job.strategy.maxResources}. The plan's is: ${plan.maxPages}"
+                logger.error(s)
+                Future.failed(new Exception(s))
+              }
             }
-          } yield {
-            Ok
-          }
-        f onFailure {
-          case t: Throwable => logger.error("Error with order " + orderId, t)
-        }
-        f
+          } yield { Ok }
+
+        case plan: CreditPlan =>
+          for {
+            userId <- Future(UserId(idString))
+            _ <- {
+              logger.info(s"Got payment confirmation. Adding ${plan.credits} credits to " + userId)
+              model.User.updateCredits(userId, plan.credits)
+            }
+          } yield { Ok }
       }
+
+    }) getOrElse {
+      val s = "Error parsing order: \n" + req.body.asFormUrlEncoded.toString
+      logger.error(s)
+      InternalServerError(s)
+    }
   }
 
 }
