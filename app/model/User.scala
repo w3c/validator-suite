@@ -103,6 +103,9 @@ case class User(
 
 object User {
 
+  /** updates the credits for the given user in the database with the
+    * formula ``credits = credits + creditsDiff`` (you can use
+    * negative number) */
   def updateCredits(userId: UserId, creditsDiff: Int)(implicit conf: Database): Future[Unit] = {
     get(userId) flatMap { case user =>
       update(user.copy(credits = user.credits + creditsDiff))

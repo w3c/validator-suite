@@ -35,7 +35,7 @@ extends VSTest with WipeoutData {
   // just for the sake of this test :-)
   val actorName = RunningActorName("foo")
 
-  val user1: User = User.create("foo", "Foo@Example.com", "secret", isRoot = true, credits = 10000)
+  var user1: User = User.create("foo", "Foo@Example.com", "secret", isRoot = true, credits = 10000)
 
   val user2 = User.create("bar", "bar@example.com", "secret", isRoot = true, credits = 10000)
 
@@ -134,6 +134,7 @@ extends VSTest with WipeoutData {
 
   def createRun1(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job1.id, run1.runId, actorName, run1.strategy, now)).getOrFail()
+    user1 = user1.copy(credits = user1.credits - job1.strategy.maxResources)
     // add assertions
     var counter = 0
     for {
@@ -160,11 +161,15 @@ extends VSTest with WipeoutData {
 
   def createRun2(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job1.id, run2.runId, actorName, run2.strategy, now)).getOrFail()
-    JobActor.saveEvent(DoneRunEvent(Some(user1.id), job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas, run2.groupedAssertionDatas.values, run2.completedOn.get)).getOrFail()
+    user1 = user1.copy(credits = user1.credits - job1.strategy.maxResources)
+    val doneRunEvent = DoneRunEvent(Some(user1.id), job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas, run2.groupedAssertionDatas.values, run2.completedOn.get)
+    JobActor.saveEvent(doneRunEvent).getOrFail()
+    user1 = user1.copy(credits = user1.credits + job1.strategy.maxResources - doneRunEvent.resources)
   }
 
   def createRun3(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job1.id, run3.runId, actorName, run3.strategy, now)).getOrFail()
+    user1 = user1.copy(credits = user1.credits - job1.strategy.maxResources)
     val run3RD = Map(
       URL("http://example.com/foo/1") -> ResourceData(URL("http://example.com/foo/1"), now, 27, 19),
       URL("http://example.com/foo/2") -> ResourceData(URL("http://example.com/foo/2"), now, 27, 19)
@@ -174,17 +179,21 @@ extends VSTest with WipeoutData {
       AssertionTypeId("id2") -> GroupedAssertionData(AssertionTypeId("id2"), AssertorId("test_assertor"),"fr", "bar", Warning, 2, Map(URL("http://example.com/foo") -> 1, URL("http://example.com/bar") -> 3))
     )
     run3 = run3.copy(resourceDatas = run3RD, groupedAssertionDatas = run3GADs)
-    JobActor.saveEvent(DoneRunEvent(Some(user1.id), job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)).getOrFail()
+    val doneRunEvent = DoneRunEvent(Some(user1.id), job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)
+    JobActor.saveEvent(doneRunEvent).getOrFail()
+    user1 = user1.copy(credits = user1.credits + job1.strategy.maxResources - doneRunEvent.resources)
   }
 
   def createRun4(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job1.id, run4.runId, actorName, run4.strategy, now)).getOrFail()
+    user1 = user1.copy(credits = user1.credits - job1.strategy.maxResources)
     // time to get the latest value for job1 here
     job1 = Job.get(job1.id).getOrFail()
   }
 
   def createRun5(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job5.id, run5.runId, actorName, run5.strategy, now)).getOrFail()
+    user1 = user1.copy(credits = user1.credits - job5.strategy.maxResources)
   }
 
   override def beforeAll(): Unit = {
@@ -318,7 +327,9 @@ extends VSTest with WipeoutData {
 
   "Enumerator-s for completed jobs must send the elements from the latest Run" in {
     // first, we terminate job1/run4 and we make it point to run3
-    JobActor.saveEvent(DoneRunEvent(Some(user1.id), job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)).getOrFail()
+    val doneRunEvent = DoneRunEvent(Some(user1.id), job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)
+    JobActor.saveEvent(doneRunEvent).getOrFail()
+    user1 = user1.copy(credits = user1.credits + job1.strategy.maxResources - doneRunEvent.resources)
 
     // refresh job1
     job1 = Job.get(job1.id).getOrFail()
