@@ -36,25 +36,25 @@ sealed trait OneTimePlan extends Plan {
 object CreditPlan {
 
   case object Tiny extends CreditPlan {
-    val credits: Int = 250
+    val credits: Int = 200
     val fastSpringKey: String = "credits-tiny"
     val key: String = "tiny"
   }
 
   case object Small extends CreditPlan {
-    val credits: Int = 500
+    val credits: Int = 1000
     val fastSpringKey: String = "credits-small"
     val key: String = "small"
   }
 
   case object Medium extends CreditPlan {
-    val credits: Int = 2000
+    val credits: Int = 4000
     val fastSpringKey: String = "credits-medium"
     val key: String = "medium"
   }
 
   case object Large extends CreditPlan {
-    val credits: Int = 5000
+    val credits: Int = 20000
     val fastSpringKey: String = "credits-large"
     val key: String = "large"
   }
