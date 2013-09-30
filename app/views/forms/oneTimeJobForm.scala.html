@@ -1,7 +1,7 @@
 @(form: OneTimeJobForm)(implicit req: RequestHeader)
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
-@taxSpan = {<span class="tax" title="Plus VAT if applicable">✝</span>}
+@taxSpan = {<span class="tax" title="Plus VAT if applicable"><sup>(1)</sup></span>}
 
 @checkIfPlan(name: String) = {
     @req.getQueryString("plan") match {
@@ -123,7 +123,7 @@
         </div>
 
         <div class="row">
-            <p class="column small-9 small-offset-3 vats"><span class="tax">✝</span><em>Plus VAT if applicable.</em> Fields marked with an asterisk (*) are required.</p>
+            <p class="column small-9 small-offset-3 vats"><span class="tax"><sup>(1)</sup></span><em>Plus VAT if applicable.</em> Fields marked with an asterisk (*) are required.</p>
         </div>
 
         <div class="row">
