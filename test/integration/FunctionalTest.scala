@@ -35,10 +35,10 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       click("#submit-login")
 
       url must be === "http://localhost:9001/jobs"
-      $(".loggedIn").first().getText() must include ("Thomas Gambet")
+      $("#myAccount").first().getText must include ("Thomas Gambet")
 
       goTo("http://localhost:9001/admin")
-      $("h1").first().getText() must include ("404")
+      $("h1").first().getText must include ("404")
 
       // and log out
       goTo("http://localhost:9001/jobs")
@@ -51,11 +51,13 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       url must be === "http://localhost:9001/login"
       $("#submit-login").isEmpty must be (false)
 
-      fill("#l_email").`with`("tgambet@w3.org") // Root
+      // TODO. Define more functional tests: https://github.com/w3c/validator-suite/issues/271
+
+      /*fill("#l_email").`with`("tgambet@w3.org") // Root
       fill("#l_password").`with`("secret")
       click("#submit-login")
       goTo("http://localhost:9001/admin")
-      $("h1").first().getText() must not include ("404")
+      $("h1").first().getText() must not include ("404")*/
 
     }
   }
