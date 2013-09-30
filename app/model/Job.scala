@@ -463,8 +463,13 @@ object Job {
   def getAll()(implicit conf: Database): Future[List[Job]] = {
     val cursor = collection.find(Json.obj()).cursor[JsValue]
     cursor.toList() map {
-      list => list map {
-        _.as[Job]
+      list => list flatMap { job =>
+        try {
+          Some(job.as[Job])
+        } catch { case t: Throwable =>
+          logger.error(s"could not deserialize ${job}")
+          None
+        }
       }
     }
   }
