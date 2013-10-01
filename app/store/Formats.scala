@@ -439,7 +439,8 @@ object Formats {
     (__ \ 'credits).format[Int] and
     (__ \ 'optedIn).format[Boolean] and
     (__ \ 'isSubscriber).format[Boolean] and
-    (__ \ 'isRoot).format[Boolean]
+    (__ \ 'isRoot).format[Boolean] and
+    (__ \ 'expireDate).format[DateTime]
   )(User.apply _, unlift(User.unapply _))
 
 }

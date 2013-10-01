@@ -1,21 +1,16 @@
 package controllers
 
 import org.w3.vs.controllers._
-import play.api.mvc.{WebSocket, Result, Action}
-import org.w3.vs.exception.UnknownUser
+import play.api.mvc.WebSocket
 import org.w3.vs.model
-import org.w3.vs.model.{User, JobId, UserId}
-import play.api.i18n.Messages
+import org.w3.vs.model.{JobId, UserId}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
-import play.api.cache.Cache
-import play.api.Play._
 import play.api.libs.iteratee._
-import scala.concurrent.duration.Duration
 import play.api.libs.json.Json.toJson
 import play.api.Mode
 import scala.util.matching.Regex
 import org.w3.vs.store.Formats._
+import reactivemongo.bson.BSONObjectID
 
 object Administration extends VSController {
 
@@ -120,7 +115,13 @@ object Administration extends VSController {
     import play.api.libs.json.Json.prettyPrint
 
     val int = new Object {
-      def unapply(s: String): Option[Int] = try Some(s.toInt) catch { case _: NumberFormatException => None }
+      def unapply(s: String): Option[Int] = try Some(s.toInt) catch { case _: Throwable => None }
+    }
+    val id = new Object {
+      def unapply(s: String): Option[BSONObjectID] = {
+        try { Some(reactivemongo.bson.BSONObjectID.apply(s)) }
+        catch { case _: Throwable => None }
+      }
     }
     val bool = new Object {
       def unapply(s: String): Option[Boolean] = {
@@ -140,52 +141,72 @@ object Administration extends VSController {
 
     val argRegex = new Regex( """"((\\"|[^"])*?)"|[^ ]+""")
 
-    val args = argRegex.findAllMatchIn(command).map {
-      r =>
-        if (r.group(1) != null) r.group(1)
-        else r.group(0)
+    val args = argRegex.findAllMatchIn(command).map {r =>
+      if (r.group(1) != null) r.group(1)
+      else r.group(0)
     }.toArray
+
+    def displayResults(results: List[String]) = {
+      val size = s"${results.size} result(s)"
+      if (results.size > 0)
+        s"${results.mkString("\n")}\n${size}"
+      else
+        s"No result"
+    }
 
     args match {
       case Array("?") | Array("help") =>
         """Available commands:
-          |    jobs               - the list of all jobs
-          |    jobs <regex>       - the list of jobs that matched the given regex. Examples:
-          |       jobs \.*                  All jobs
-          |       jobs Public               All public jobs
-          |       jobs 250.*Never           All 250 pages jobs that never started
-          |       jobs Never.*ANONYM        All anonymous jobs that nerver started
-          |    runningJobs        - only the running jobs
-          |    user-id <userId>   - informations about the user with given userId
-          |    user-email <email> - informations about the user with given email
-          |    add-user <name> <email> <password> <isSubscriber> - register a new user
-          |    current-users      - users seen in the last 5 minutes (or duration of cache.user.expire)
-          |    clear-cache        - clear Play's cache of current users
-          |    defaultData        - resets the database with default data (only available in Dev mode)""".stripMargin
+          |    jobs <regex>        - the list of jobs that matched the given regex. Examples:
+          |       jobs                   All jobs
+          |       jobs \.*               All jobs
+          |       jobs <jobId>           The job with given id if any
+          |       jobs Public            Public jobs
+          |       jobs 250.*Never        All 250 pages jobs that never started
+          |       jobs Anonym.*Never     Anonymous jobs that nerver started
+          |       jobs Running           Running jobs
+          |    users <regex>       - the list of users that matched the given regex. Examples:
+          |       users                  All users
+          |       users <userId>         The user with given id if any
+          |       users (?i)thomas       Users that include "thomas" case insensitively
+          |       users ROOT             Root users
+          |       users Opted-In         Users that opted-in for e-mailing
+          |    db-add-user <name> <email> <password> <credits> - register a new user
+          |    db-set-root <email> - sets the user with given email as a root
+          |    db-add-roots        - adds all root users to the current db. Roots are defined in Main.scala.
+          |    db-reset            - resets the database with default data (only available in Dev mode)""".stripMargin
 
       case Array("jobs") =>
         val jobs = model.Job.getAll().getOrFail()
-        (s"${jobs.size} results:" :: jobs.map(_.compactString)).mkString("\n")
+        displayResults(jobs.map(_.compactString))
+
+      case Array("jobs", id(jobId)) =>
+        val job = model.Job.get(JobId(jobId)).getOrFail()
+        job.compactString
 
       case Array("jobs", regex(reg)) =>
         val jobs = model.Job.getAll().getOrFail()
         val filtered = jobs.filter(job => reg.findFirstIn(job.compactString).isDefined).map(_.compactString)
-        (s"${filtered.size} results:" :: filtered).mkString("\n")
+        displayResults(filtered)
 
-      case Array("runningJobs") =>
-        val jobs = model.Job.getRunningJobs().getOrFail()
-        jobs.map(job => s"${job.id} [${job.name}] by ${job.creatorId}").mkString("\n")
+      case Array("users") =>
+        val users = model.User.getAll().getOrFail()
+        displayResults(users.map(_.compactString))
 
-      case Array("job", jobId) =>
-        val job = model.Job.get(JobId(jobId)).getOrFail()
-        job.compactString
-
-      case Array("user-id", userId) =>
+      case Array("users", id(userId)) =>
         val user = model.User.get(UserId(userId)).getOrFail()
-        val json = toJson(user)
-        s"Scala: ${user}\nJSON: ${prettyPrint(json)}"
+        user.compactString
 
-      case Array("user-email", email) =>
+      case Array("users", regex(reg)) =>
+        val users = model.User.getAll().getOrFail()
+        val filtered = users.filter(job => reg.findFirstIn(job.compactString).isDefined).map(_.compactString)
+        displayResults(filtered)
+
+/*      case Array("runningJobs") =>
+        val jobs = model.Job.getRunningJobs().getOrFail()
+        jobs.map(job => s"${job.id} [${job.name}] by ${job.creatorId}").mkString("\n")*/
+
+/*      case Array("user-email", email) =>
         try {
           val user = model.User.getByEmail(email).getOrFail()
           val json = toJson(user)
@@ -193,11 +214,11 @@ object Administration extends VSController {
         } catch {
           case t: Throwable =>
             t.getMessage
-        }
+        }*/
 
-      case Array("add-user", name, email, password, int(credits), bool(isSubscriber)) =>
+      case Array("db-add-user", name, email, password, int(credits)) =>
         try {
-          val user = model.User.register(name, email, password, credits, isSubscriber).getOrFail()
+          val user = model.User.register(name, email, password, credits, isSubscriber = false, isRoot = false).getOrFail()
           val json = toJson(user)
           s"Scala: ${user}\nJSON: ${prettyPrint(json)}"
         } catch {
@@ -205,16 +226,21 @@ object Administration extends VSController {
             t.getMessage
         }
 
-      case Array("current-users") =>
+
+      /*case Array("current-users") =>
         org.w3.vs.Main.currentUsers().mkString(" | ")
 
       case Array("clear-cache") =>
         org.w3.vs.Main.clearCache()
-        "done"
+        "done"*/
 
-      case Array("defaultData") if conf.mode == Mode.Dev =>
+      case Array("db-reset") if conf.mode == Mode.Dev =>
         org.w3.vs.Main.defaultData()
         "done"
+
+      case Array("db-save-roots") =>
+        val roots: Iterable[Unit] = org.w3.vs.Main.addRootUsers().getOrFail()
+        s"${roots.size} root users added"
 
       case _ => s"Command ${command} not found"
 

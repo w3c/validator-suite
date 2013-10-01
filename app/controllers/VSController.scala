@@ -63,7 +63,7 @@ trait VSController extends Controller {
   def AsyncAction(f: Request[AnyContent] => Future[Result]) = Action { req =>
     Async {
       f(req) recover {
-        case AccessNotAllowed() => Global.onHandlerNotFound(req)
+        case AccessNotAllowed => Global.onHandlerNotFound(req)
       }
     }
   }
@@ -92,7 +92,7 @@ trait VSController extends Controller {
     Authenticated { user =>
       user match {
         case user if user.isRoot => f(req)(user)
-        case _ => throw AccessNotAllowed()
+        case _ => throw AccessNotAllowed
       }
     }
   }

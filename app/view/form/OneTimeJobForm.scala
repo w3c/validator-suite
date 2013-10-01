@@ -1,4 +1,4 @@
-package org.w3.vs.view.form
+/*package org.w3.vs.view.form
 
 import org.w3.vs.web.URL
 import org.w3.vs.ValidatorSuite
@@ -86,3 +86,4 @@ class ValidOneTimeJobForm private[view](
   }
 
 }
+  */

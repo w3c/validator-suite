@@ -15,7 +15,7 @@ object Purchase extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Purchase")
 
-  def buyJob: ActionA = UserAwareAction { implicit req => user =>
+  /*def buyJob: ActionA = UserAwareAction { implicit req => user =>
     val messages = user match {
       case Some(user) => List(("info" -> Messages("warning.createOrBuy")))
       case None => List.empty
@@ -27,7 +27,7 @@ object Purchase extends VSController {
       case _: UnauthorizedException =>
         Unauthorized(views.html.register(RegisterForm.redirectTo(req.uri), messages = List(("info", Messages("info.register.first")))))
     } */
-  }
+  }*/
 
   def buyCredits: ActionA = AuthenticatedAction { implicit req => user =>
     Future {
@@ -55,7 +55,7 @@ object Purchase extends VSController {
     }
   }
 
-  def buyJobAction: ActionA = UserAwareAction { implicit req => user =>
+  /*def buyJobAction: ActionA = UserAwareAction { implicit req => user =>
     (for {
       form <- Future(OneTimeJobForm.bind match {
         case Left(form) => throw InvalidFormException(form, user)
@@ -86,13 +86,13 @@ object Purchase extends VSController {
         }
       }
     }
-  }
+  }*/
 
   def redirectToStore(product: CreditPlan, id: UserId) =
     Redirect(getStoreUrl(product, id))
 
-  def redirectToStore(product: OneTimePlan, id: JobId) =
-    Redirect(getStoreUrl(product, id))
+  /*def redirectToStore(product: OneTimePlan, id: JobId) =
+    Redirect(getStoreUrl(product, id))*/
 
   def getStoreUrl(product: Plan, id: Id) = {
     "https://sites.fastspring.com/ercim/instant/" + product.fastSpringKey + "?referrer=" + id
@@ -111,7 +111,7 @@ object Purchase extends VSController {
 
       plan match {
         case plan: OneTimePlan =>
-          for {
+          /*for {
             jobId <- Future(JobId(idString))
             job <- model.Job.get(jobId)
             _ <- {
@@ -124,7 +124,7 @@ object Purchase extends VSController {
                 Future.failed(new Exception(s))
               }
             }
-          } yield { Ok }
+          } yield { Ok } */ ???
 
         case plan: CreditPlan =>
           for {
@@ -133,6 +133,7 @@ object Purchase extends VSController {
               logger.info(s"Got payment confirmation. Adding ${plan.credits} credits to " + userId)
               model.User.updateCredits(userId, plan.credits)
             }
+            _ <- model.User.updateExpireDate(userId)
           } yield { Ok }
       }
 

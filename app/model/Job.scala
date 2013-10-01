@@ -47,6 +47,8 @@ case class Job(
 
   assert(isPublic == true || creatorId != None, "A Job cannot be both private and anonymous")
 
+  def maxPages = strategy.maxResources
+
   def compactString = {
     val public = if (isPublic) "Public " else "Private"
     def pad(s: String, padding: Int) = {
@@ -58,7 +60,7 @@ case class Job(
       case Running(runId, actorName) => "Running"
       case Done(runId, reason, completedOn, runData) => s"Done(${completedOn})"
     }
-    s"${id} - ${pad(strategy.maxResources.toString, 4)} - ${public} - ${creatorId.map(_.shortId).getOrElse("Anonymous")} - ${stat} - ${strategy.entrypoint} - ${name} "
+    s"${id} - MaxPages: ${pad(strategy.maxResources.toString, 4)} - ${public} - ${creatorId.map(u => "User: " + u.id).getOrElse("Anonymous")} - ${stat} - ${strategy.entrypoint} - ${name} "
   }
 
   def getAssertions()(implicit conf: ValidatorSuite with Database): Future[Iterable[Assertion]] = {
@@ -540,11 +542,13 @@ object Job {
     import scalaz.Equal
     get(jobId).map{ job =>
       user match {
-        case Some(user) if user.isRoot => ()
-        case Some(user) => if (!job.isPublic && (job.creatorId /== Some(user.id))) throw new AccessNotAllowed()
-        case None => if (!job.isPublic) throw new AccessNotAllowed()
+        case Some(user) if user.isRoot => job
+        case Some(user) if job.isPublic => job
+        case Some(user) if !user.owns(job) => throw AccessNotAllowed
+        case None if !job.isPublic => throw AccessNotAllowed
+        case _ => job
       }
-      job
+
     }
   }
 

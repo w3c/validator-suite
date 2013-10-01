@@ -13,6 +13,8 @@ import scala.concurrent.Future
 import play.api.Mode.Prod
 import org.mozilla.javascript.tools.shell.Main.{main => executeJs}
 import play.api.cache.EhCachePlugin
+import collection.immutable.Iterable
+import org.joda.time.DateTime
 
 object Main {
 
@@ -40,7 +42,7 @@ object Main {
     urls foreach { url => cache.retrieveAndCache(URL(url), GET) }
   }
 
-  def test(jobIdS: String)(implicit conf: Database): Unit = {
+  /*def test(jobIdS: String)(implicit conf: Database): Unit = {
     val jobId = JobId(jobIdS)
     val job = Job.get(jobId).getOrFail()
     job.latestDone match {
@@ -57,7 +59,7 @@ object Main {
 
     println("you need to press ctrl-c")
 
-  }
+  }*/
 
   def stressTestData(n: Int)(implicit conf: Database): Unit = {
 
@@ -82,7 +84,7 @@ object Main {
 
   }
 
-  def currentUsers(): List[String] = {
+/*  def currentUsers(): List[String] = {
     import play.api.Play.current
     import scala.collection.JavaConversions._
     current.plugin[EhCachePlugin].map{ p: EhCachePlugin =>
@@ -98,91 +100,39 @@ object Main {
     } {
       p.manager.clearAll
     }
+  }*/
+
+  def addRootUsers()(implicit conf: Database): Future[Iterable[Unit]] = {
+
+    val roots = Map(
+      "Juan-Guy" -> "jean-gui@w3.org",
+      "Ted Guild" -> "ted@w3.org",
+      "Ralph Swick" -> "rswick@w3.org",
+      "Thomas Gambet" -> "tgambet@w3.org",
+      "Bernard Gidon" -> "bgidon@w3.org",
+      "Vivien Lacourba" -> "vivien@w3.org",
+      "Jérôme Chailloux" -> "jerome@w3.org",
+      "Alexandre Bertails" -> "bertails@w3.org"
+    ) map { case (name, email) =>
+      User.create(
+        email = email, name = name, password = "secret",
+        credits = 10000, optedIn = true, isSubscriber = false, isRoot = true, expireDate = DateTime.now(DateTimeZone.UTC).plusYears(10))
+    }
+
+    Future.sequence(roots.map(root => User.save(root)))
+
   }
 
   def defaultData()(implicit conf: Database): Unit = {
-
-    val tgambet = User.create(
-      email = "tgambet+1@w3.org", name = "Thomas Gambet", password = "secret",
-      credits = 10000, optedIn = true, isSubscriber = false, isRoot = false)
-
-    val tgambetRoot = User.create(
-      email = "tgambet@w3.org", name = "Thomas Gambet (Root)", password = "secret",
-      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
-
-    val bertails = User.create(
-      email = "bertails@w3.org", name = "Alexandre Bertails", password = "secret",
-      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
-
-    val ted = User.create(
-      email = "ted@w3.org", name = "Ted Guild", password = "secret",
-      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
-
-    val bernard = User.create(
-      email = "bgidon@w3.org", name = "Bernard Gidon", password = "secret",
-      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
-
-    val ralph = User.create(
-      email = "swick@w3.org", name = "Ralph R. Swick", password = "secret",
-      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
-
-    val vivien = User.create(
-      email = "vivien@w3.org", name = "Vivien Lacourba", password = "secret",
-      credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
 
     val w3team = User.create(
       email = "w3t@w3.org", name = "W3C Team", password = "w3team",
       credits = 1000000, optedIn = true, isSubscriber = false, isRoot = false)
     
-    val w3 = Job(
-      name = "W3C",
-      creatorId = Some(tgambet.id),
-      strategy = Strategy(URL("http://www.w3.org/"), 100)
-    )
-
-    val w3Public = Job(
-      name = "W3C Public",
-      creatorId = Some(tgambet.id),
-      strategy = Strategy(URL("http://www.w3.org/"), 100),
-      isPublic = true
-    )
-
-    val w3Anonymous = Job(
-      name = "W3C Anonymous",
-      creatorId = None,
-      strategy = Strategy(URL("http://www.w3.org/"), 100),
-      isPublic = true
-    )
-
-    val List(w3c1, w3c2, w3c3, w3c4, w3c5, w3c6) = List(1, 2, 3, 4, 5, 6) map { i =>
-      Job(
-        name = s"""w3c${i}""",
-        creatorId = Some(bertails.id),
-        strategy = Strategy(
-          entrypoint = URL("http://www.w3.org/TR"),
-          maxResources = 100))
-    }
-
     val script: Future[Unit] = for {
       _ <- MongoStore.reInitializeDb()
-      _ <- Future.successful(clearCache())
-      _ <- User.save(tgambet)
-      _ <- User.save(tgambetRoot)
-      _ <- User.save(bertails)
-      _ <- User.save(ted)
-      _ <- User.save(bernard)
-      _ <- User.save(ralph)
-      _ <- User.save(vivien)
+      _ <- addRootUsers()
       _ <- User.save(w3team)
-      _ <- Job.save(w3)
-      _ <- Job.save(w3Public)
-      _ <- Job.save(w3Anonymous)
-      _ <- Job.save(w3c1)
-      _ <- Job.save(w3c2)
-      _ <- Job.save(w3c3)
-      _ <- Job.save(w3c4)
-      _ <- Job.save(w3c5)
-      _ <- Job.save(w3c6)
     } yield ()
 
     script.getOrFail(Duration("10s"))
@@ -213,11 +163,11 @@ object Main {
       case Array("migration") => {
         println("nothing planned right now")
       }
-      case Array("test", jobIdS) => {
+      /*case Array("test", jobIdS) => {
         val nconf = new ValidatorSuite { val mode = Prod }
         test(jobIdS)(nconf)
         nconf.shutdown()
-      }
+      }*/
       case Array("run") =>  {
         val nconf = new ValidatorSuite { val mode = Prod }
         runJob()(nconf)

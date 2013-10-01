@@ -11,7 +11,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee.{Enumeratee, Concurrent, Enumerator}
 import akka.actor.{ Actor, Props, ActorRef }
 import java.nio.channels.ClosedChannelException
-import org.joda.time.DateTime
+import org.joda.time.{DateTimeZone, DateTime}
+import org.joda.time.format.DateTimeFormat
 import play.api.Play._
 import org.w3.vs.exception.DuplicatedEmail
 import play.api.Configuration
@@ -40,6 +41,7 @@ import org.w3.vs.store.Formats._
  * @param optedIn Whether the user opted-in for mailing
  * @param isSubscriber A monhtly subscriber user
  * @param isRoot
+ * @param expireDate Register or last purchase date + 3 months
  */
 case class User(
   id: UserId,
@@ -49,9 +51,25 @@ case class User(
   credits: Int,
   optedIn: Boolean,
   isSubscriber: Boolean,
-  isRoot: Boolean) {
+  isRoot: Boolean,
+  expireDate: DateTime) {
 
   import User.logger
+
+  def compactString = {
+    val formatter = DateTimeFormat.forPattern("yyyy-MM-dd")
+    def pad(s: String, padding: Int) = {
+      s + " "*(scala.math.max(0, padding - s.length))
+    }
+    val flags = {
+      var f = ""
+      if (optedIn) f += "- Opted-In "
+      if (isSubscriber) f += "- Subscriber "
+      if (isRoot) f += "- ROOT "
+      f
+    }
+    s"${id} - Credits: ${pad(credits.toString, 5)} - Expires: ${formatter.print(expireDate)} ${flags}- ${name} <${email}>"
+  }
 
   /*def getJobs()(implicit conf: ValidatorSuite): Future[Iterable[Job]] = {
     Job.getFor(id)
@@ -103,12 +121,24 @@ case class User(
 
 object User {
 
+  val expireCreditsDelay = 3 // months
+
   /** updates the credits for the given user in the database with the
     * formula ``credits = credits + creditsDiff`` (you can use
     * negative number) */
   def updateCredits(userId: UserId, creditsDiff: Int)(implicit conf: Database): Future[Unit] = {
     get(userId) flatMap { case user =>
-      update(user.copy(credits = user.credits + creditsDiff))
+      update(user.copy(
+        credits = user.credits + creditsDiff
+      ))
+    }
+  }
+
+  def updateExpireDate(userId: UserId)(implicit conf: Database): Future[Unit] = {
+    get(userId) flatMap { case user =>
+      update(user.copy(
+        expireDate = user.expireDate.plusMonths(expireCreditsDelay)
+      ))
     }
   }
 
@@ -148,6 +178,20 @@ object User {
       case None => sys.error("user not found")
     }
   }
+
+  def getAll()(implicit conf: Database): Future[List[User]] = {
+    val cursor = collection.find(Json.obj()).cursor[JsValue]
+    cursor.toList() map {
+      list => list flatMap { user =>
+        try {
+          Some(user.as[User])
+        } catch { case t: Throwable =>
+          logger.error(s"could not deserialize ${user}")
+          None
+        }
+      }
+    }
+  }
   
   /** Attemps to authenticate a user based on the couple email/password.
     * The password is checked against the hash in the database.
@@ -182,9 +226,19 @@ object User {
     credits: Int,
     optedIn: Boolean = false,
     isSubscriber: Boolean = false,
-    isRoot: Boolean = false): User = {
+    isRoot: Boolean = false,
+    expireDate: DateTime = DateTime.now(DateTimeZone.UTC).plusMonths(expireCreditsDelay)): User = {
     val hash = BCrypt.hashpw(password, BCrypt.gensalt())
-    val user = new User(UserId(), name, email.toLowerCase, hash, credits, optedIn = optedIn, isRoot = isRoot, isSubscriber = isSubscriber)
+    val user = new User(
+      id = UserId(),
+      name = name,
+      email = email.toLowerCase,
+      password = hash,
+      credits = credits,
+      optedIn = optedIn,
+      isRoot = isRoot,
+      isSubscriber = isSubscriber,
+      expireDate = expireDate)
     user
   }
 

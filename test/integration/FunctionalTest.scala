@@ -9,6 +9,8 @@ import org.scalatest.matchers.MustMatchers
 import play.api.Play._
 import play.api.test.TestServer
 import org.w3.vs.util.timer._
+import org.w3.vs.model.User
+import org.w3.vs.Global
 
 class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
@@ -28,14 +30,19 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       url must be === "http://localhost:9001/jobs"
       $("#submit-login").isEmpty must be (false)
 
+      // This user should register first through /register
+      implicit val conf = Global.conf
+      val testUser = User.create("Test User", "test@example.com", "secret", 100, false, false, false)
+      testUser.save().getOrFail()
+
       goTo("http://localhost:9001/login")
-      fill("#l_email").`with`("tgambet+1@w3.org") // Non root
+      fill("#l_email").`with`("test@example.com")
       fill("#l_password").`with`("secret")
       $("#submit-login").isEmpty must be (false)
       click("#submit-login")
 
       url must be === "http://localhost:9001/jobs"
-      $("#myAccount").first().getText must include ("Thomas Gambet")
+      $("#myAccount").first().getText must include ("Test User")
 
       goTo("http://localhost:9001/admin")
       $("h1").first().getText must include ("404")

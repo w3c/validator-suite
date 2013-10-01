@@ -35,7 +35,7 @@ extends VSTest with WipeoutData {
   // just for the sake of this test :-)
   val actorName = RunningActorName("foo")
 
-  var user1: User = User.create("foo", "Foo@Example.com", "secret", isRoot = true, credits = 10000)
+  val user1: User = User.create("foo", "Foo@Example.com", "secret", isRoot = true, credits = 10000)
 
   val user2 = User.create("bar", "bar@example.com", "secret", isRoot = true, credits = 10000)
 
@@ -134,7 +134,6 @@ extends VSTest with WipeoutData {
 
   def createRun1(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job1.id, run1.runId, actorName, run1.strategy, now)).getOrFail()
-    user1 = user1.copy(credits = user1.credits - job1.strategy.maxResources)
     // add assertions
     var counter = 0
     for {
@@ -161,15 +160,12 @@ extends VSTest with WipeoutData {
 
   def createRun2(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job1.id, run2.runId, actorName, run2.strategy, now)).getOrFail()
-    user1 = user1.copy(credits = user1.credits - job1.strategy.maxResources)
     val doneRunEvent = DoneRunEvent(Some(user1.id), job1.id, run2.runId, Completed, run2.data.resources, run2.data.errors, run2.data.warnings, run2.resourceDatas, run2.groupedAssertionDatas.values, run2.completedOn.get)
     JobActor.saveEvent(doneRunEvent).getOrFail()
-    user1 = user1.copy(credits = user1.credits + job1.strategy.maxResources - doneRunEvent.resources)
   }
 
   def createRun3(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job1.id, run3.runId, actorName, run3.strategy, now)).getOrFail()
-    user1 = user1.copy(credits = user1.credits - job1.strategy.maxResources)
     val run3RD = Map(
       URL("http://example.com/foo/1") -> ResourceData(URL("http://example.com/foo/1"), now, 27, 19),
       URL("http://example.com/foo/2") -> ResourceData(URL("http://example.com/foo/2"), now, 27, 19)
@@ -181,19 +177,16 @@ extends VSTest with WipeoutData {
     run3 = run3.copy(resourceDatas = run3RD, groupedAssertionDatas = run3GADs)
     val doneRunEvent = DoneRunEvent(Some(user1.id), job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)
     JobActor.saveEvent(doneRunEvent).getOrFail()
-    user1 = user1.copy(credits = user1.credits + job1.strategy.maxResources - doneRunEvent.resources)
   }
 
   def createRun4(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job1.id, run4.runId, actorName, run4.strategy, now)).getOrFail()
-    user1 = user1.copy(credits = user1.credits - job1.strategy.maxResources)
     // time to get the latest value for job1 here
     job1 = Job.get(job1.id).getOrFail()
   }
 
   def createRun5(): Unit = {
     JobActor.saveEvent(CreateRunEvent(Some(user1.id), job5.id, run5.runId, actorName, run5.strategy, now)).getOrFail()
-    user1 = user1.copy(credits = user1.credits - job5.strategy.maxResources)
   }
 
   override def beforeAll(): Unit = {
@@ -229,13 +222,16 @@ extends VSTest with WipeoutData {
     conf.shutdown()
   }*/
 
+  // User1 got his credits updated after his runs has been saved
+  val endUser1 = user1.copy(credits = user1.credits - (strategy.maxResources * 3))
+
   "User" in {
     val r = User.get(user1.id).getOrFail()
-    r must be(user1)
+    r must be(endUser1)
   }
 
   "retrieve User by email" in {
-    User.getByEmail("fOO@example.com").getOrFail() must be(user1)
+    User.getByEmail("fOO@example.com").getOrFail() must be(endUser1)
 
     Try { User.getByEmail("unknown@example.com").getOrFail() } must be (Failure(UnknownUser("unknown@example.com")))
   }
@@ -249,7 +245,7 @@ extends VSTest with WipeoutData {
 //  }
 
   "authenticate a user" in {
-    Try { User.authenticate("foo@example.com", "secret").getOrFail() } must be (Success(user1))
+    Try { User.authenticate("foo@example.com", "secret").getOrFail() } must be (Success(endUser1))
 
     Try { User.authenticate("foo@example.com", "bouleshit").getOrFail() } must be (Failure(Unauthenticated("foo@example.com")))
 
@@ -329,7 +325,6 @@ extends VSTest with WipeoutData {
     // first, we terminate job1/run4 and we make it point to run3
     val doneRunEvent = DoneRunEvent(Some(user1.id), job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)
     JobActor.saveEvent(doneRunEvent).getOrFail()
-    user1 = user1.copy(credits = user1.credits + job1.strategy.maxResources - doneRunEvent.resources)
 
     // refresh job1
     job1 = Job.get(job1.id).getOrFail()

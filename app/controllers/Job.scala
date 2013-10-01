@@ -17,7 +17,7 @@ import org.w3.vs.view.model.{JobView}
 import org.w3.vs.store.Formats._
 import org.w3.vs.model.OneTimePlan
 import play.api.http.MimeTypes
-import org.w3.vs.exception.PaymentRequired
+import org.w3.vs.exception.{AccessNotAllowed, PaymentRequired}
 
 object Job extends VSController {
 
@@ -40,8 +40,17 @@ object Job extends VSController {
     (for {
       job <- model.Job.getFor(id, userOpt)
       _ <- userOpt match {
-          case Some(user) if user.isRoot => job.run()
-          case Some(user) if user.owns(job) && !job.isPublic => job.run()
+          case Some(user) => {
+            if (user.isRoot) {
+              job.run()
+            } else if (user.owns(job) && user.credits >= job.maxPages) {
+              job.run()
+            } else if (!user.owns(job)) {
+              Future.failed(AccessNotAllowed)
+            } else {
+              Future.failed(PaymentRequired(job))
+            }
+          }
           case _ => Future.failed(PaymentRequired(job))
         }
     } yield {
@@ -54,9 +63,10 @@ object Job extends VSController {
         render {
           case Accepts.Html() => {
             logger.info(s"Redirected user ${userOpt.map(_.email)} to store for jobId ${job.id}")
-            controllers.Purchase.redirectToStore(OneTimePlan.fromJob(job), job.id)
+            //controllers.Purchase.redirectToStore(OneTimePlan.fromJob(job), job.id)
+            Redirect(routes.Application.pricing()) // TODO add flashing message to invite to buy more credits
           }
-          case Accepts.Json() => Status(402)(controllers.Purchase.getStoreUrl(OneTimePlan.fromJob(job), job.id))
+          case Accepts.Json() => Status(402) //(controllers.Purchase.getStoreUrl(OneTimePlan.fromJob(job), job.id))
         }
       }
     }
