@@ -1,5 +1,6 @@
 package org.w3.vs
 
+import _root_.controllers.Application
 import com.codahale.metrics._
 import com.codahale.metrics.graphite.{ Graphite => MGraphite, GraphiteReporter }
 import java.util.concurrent.TimeUnit
@@ -7,6 +8,8 @@ import java.util.concurrent.TimeUnit
 object Graphite {
 
   val metrics = new MetricRegistry()
+
+  val timer1 = metrics.timer(MetricRegistry.name("t", "timer1"))
 
 }
 

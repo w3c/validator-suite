@@ -15,7 +15,7 @@ import scala.util.{Success, Failure, Try}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ops => _, _}
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.exception.UnknownJob
+import org.w3.vs.exception.{AccessNotAllowed, UnknownJob}
 import org.w3.vs.view.model.JobView
 import scalaz.Scalaz._
 import play.modules.reactivemongo.json.collection.JSONCollection
@@ -28,20 +28,40 @@ import Json.toJson
 import org.w3.vs.store.Formats._
 
 case class Job(
-  id: JobId,
+  id: JobId = JobId(),
   name: String,
-  createdOn: DateTime,
   /**the strategy to be used when creating the Run */
   strategy: Strategy,
-  /**the identity of the the creator of this Job */
-  creatorId: UserId,
+  /**the identity of the the creator of this Job, None if it is a OneTime public job */
+  creatorId: Option[UserId],
+  // whether this job is publicly available
+  isPublic: Boolean = false,
   /**the status for this Job */
-  status: JobStatus,
+  status: JobStatus = NeverStarted,
   /**if this job was ever done, the final state -- includes link to the concerned Run */
-  latestDone: Option[Done]) {
+  latestDone: Option[Done] = None,
+  createdOn: DateTime =  DateTime.now(DateTimeZone.UTC)) {
   thisJob =>
 
   import Job.logger
+
+  assert(isPublic == true || creatorId != None, "A Job cannot be both private and anonymous")
+
+  def maxPages = strategy.maxResources
+
+  def compactString = {
+    val public = if (isPublic) "Public " else "Private"
+    def pad(s: String, padding: Int) = {
+      s + " "*(scala.math.max(0, padding - s.length))
+    }
+    val stat = status match {
+      case NeverStarted => NeverStarted.toString
+      case Zombie => Zombie.toString
+      case Running(runId, actorName) => "Running"
+      case Done(runId, reason, completedOn, runData) => s"Done(${completedOn})"
+    }
+    s"${id} - MaxPages: ${pad(strategy.maxResources.toString, 4)} - ${public} - ${creatorId.map(u => "User: " + u.id).getOrElse("Anonymous")} - ${stat} - ${strategy.entrypoint} - ${name} "
+  }
 
   def getAssertions()(implicit conf: ValidatorSuite with Database): Future[Iterable[Assertion]] = {
     status match {
@@ -101,7 +121,7 @@ case class Job(
   def getFuture(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.OneOff], conf: ValidatorSuite): Future[classifier.OneOff] = {
     val actorRef = conf.system.actorFor(actorPath)
     val message = JobActor.Get(classifier)
-    val shortTimeout = Duration(1, "s")
+    val shortTimeout = Duration(2, "s")
     ask(actorRef, message)(shortTimeout).mapTo[classifier.OneOff] recoverWith {
       case _: AskTimeoutException => Future.failed[classifier.OneOff](new NoSuchElementException)
     }
@@ -372,9 +392,6 @@ case class Job(
 
 object Job {
 
-  def createNewJob(name: String, strategy: Strategy, creatorId: UserId): Job =
-    Job(JobId(), name, DateTime.now(DateTimeZone.UTC), strategy, creatorId, NeverStarted, None)
-
   val logger = Logger.of(classOf[Job])
 
   def collection(implicit conf: Database): JSONCollection =
@@ -448,8 +465,13 @@ object Job {
   def getAll()(implicit conf: Database): Future[List[Job]] = {
     val cursor = collection.find(Json.obj()).cursor[JsValue]
     cursor.toList() map {
-      list => list map {
-        _.as[Job]
+      list => list flatMap { job =>
+        try {
+          Some(job.as[Job])
+        } catch { case t: Throwable =>
+          logger.error(s"could not deserialize ${job}")
+          None
+        }
       }
     }
   }
@@ -506,12 +528,27 @@ object Job {
 
   /**returns the Job for this JobId, if it belongs to the provided user
    * if not, it throws an UnknownJob exception */
-  def getFor(userId: UserId, jobId: JobId)(implicit conf: Database): Future[Job] = {
+  /*def getFor(userId: UserId, jobId: JobId)(implicit conf: Database): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
-      case Some(json) if (json \ "creator").as[UserId] === userId => json.as[Job]
+      case Some(json) if (json \ "creator").asOpt[UserId] === Some(userId) => json.as[Job]
       case _ => throw UnknownJob(jobId)
+    }
+  }*/
+
+  // What is better in above implementation ?
+  def getFor(jobId: JobId, user: Option[User])(implicit conf: Database): Future[Job] = {
+    import scalaz.Equal
+    get(jobId).map{ job =>
+      user match {
+        case Some(user) if user.isRoot => job
+        case Some(user) if job.isPublic => job
+        case Some(user) if !user.owns(job) => throw AccessNotAllowed
+        case None if !job.isPublic => throw AccessNotAllowed
+        case _ => job
+      }
+
     }
   }
 

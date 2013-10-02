@@ -4,9 +4,9 @@ import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._
 import play.api.Mode._
-import java.net.ResponseCache
+import org.w3.vs.exception.AccessNotAllowed
 
-object Global extends GlobalSettings {
+object Global extends GlobalSettings with Rendering with AcceptExtractors {
 
   var conf: ValidatorSuite = _
 
@@ -43,7 +43,19 @@ object Global extends GlobalSettings {
   }
 
   override def onHandlerNotFound(request : RequestHeader) : Result = {
-    NotFound(views.html.error._404()(request))
+    implicit val implReq = request
+    render {
+      case Accepts.Html() => NotFound(views.html.error._404())
+      case Accepts.Json() => NotFound
+    }
+  }
+
+  override def onError(request: RequestHeader, ex: Throwable): Result = {
+    implicit val implReq = request
+    render {
+      case Accepts.Html() => InternalServerError(views.html.error.generic(messages = List(("error", ex.getMessage))))
+      case Accepts.Json() => InternalServerError
+    }
   }
 
 }

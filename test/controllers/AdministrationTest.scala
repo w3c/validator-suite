@@ -1,3 +1,6 @@
+/*
+// Keep this class for reference for this testing framework.
+
 package controllers
 
 import play.api.test._
@@ -44,3 +47,4 @@ class AdministrationTest extends WordSpec with MustMatchers {
   }
 
 }
+*/

@@ -1,6 +1,7 @@
 package controllers
 
-import org.w3.vs.model.{ Job => ModelJob, _ }
+import org.w3.vs.model
+import org.w3.vs.model._
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
@@ -21,6 +22,7 @@ import org.joda.time.DateTime
 import play.api.libs.json.JsUndefined
 import play.api.libs.json.JsObject
 import org.w3.vs.view.model.ResourceView
+import play.api.http.MimeTypes
 
 object Resources extends VSController  {
 
@@ -28,8 +30,8 @@ object Resources extends VSController  {
 
   def index(id: JobId, url: Option[URL]): ActionA = {
     url match {
-      case Some(url) => AuthAction { index_(id, url) }
-      case None => AuthAsyncAction { index_(id) }
+      case Some(url) => index_(id, url)
+      case None => index_(id)
     }
   }
 
@@ -37,16 +39,15 @@ object Resources extends VSController  {
     Redirect(routes.Resources.index(id, url))
   }
 
-  def index_(id: JobId): Request[AnyContent] => User => Future[PartialFunction[Format, Result]] = { implicit req: RequestHeader => user: User =>
-    val f: Future[PartialFunction[Format, Result]] = for {
-      job_ <- user.getJob(id)
+  def index_(id: JobId) = UserAwareAction { implicit req => user =>
+    for {
+      job_ <- model.Job.getFor(id, user)
       job <- JobsView(job_)
       resources <- ResourcesView(job_)
       bindedResources = resources.bindFromRequest
     } yield {
-      case Json => Ok(bindedResources.toJson)
-      case Html(_) =>
-        Ok(views.html.main(
+      render {
+        case Accepts.Html() => Ok(views.html.main(
           user = user,
           title = s"""Report for job "${job_.name}" - By resources - W3C Validator Suite""",
           crumbs = Seq(job_.name -> ""),
@@ -55,13 +56,14 @@ object Resources extends VSController  {
             bindedResources
           ))
         )
+        case Accepts.Json() => Ok(bindedResources.toJson)
+      }
     }
-    f.timer(indexName).timer(indexTimer)
   }
 
-  def index_(id: JobId, url: URL): Request[AnyContent] => User => PartialFunction[Format, Result] = { implicit req: RequestHeader => user: User =>
-    timer(indexUrlName, indexUrlTimer) {
-      case Html(_) => Redirect(routes.Assertions.index(id, url))
+  def index_(id: JobId, url: URL) = UserAwareAction { implicit req => user =>
+    render {
+      case Accepts.Html() => Redirect(routes.Assertions.index(id, url))
     }
   }
 
@@ -69,32 +71,29 @@ object Resources extends VSController  {
     typ match {
       case SocketType.ws => webSocket(jobId, url)
       case SocketType.events => eventsSocket(jobId, url)
-      case SocketType.comet => cometSocket(jobId, url)
     }
   }
 
   def webSocket(jobId: JobId, url: Option[URL]): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
-    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, url, user)))
+    val enum: Enumerator[JsValue] = Enumerator.flatten(getUserOption().map(user => enumerator(jobId, url, user)))
     (iteratee, enum)
   }
 
-  def cometSocket(jobId: JobId, url: Option[URL]): ActionA = AuthAction { implicit req => user => {
-    case Html(_) => Ok.stream(enumerator(jobId, url, user) &> Comet(callback = "parent.VS.resourceupdate"))
-  }}
+  def eventsSocket(jobId: JobId, url: Option[URL]): ActionA = UserAwareAction { implicit req => user =>
+    render {
+      case AcceptsStream() => Ok.stream(enumerator(jobId, url, user) &> EventSource()).as(MimeTypes.EVENT_STREAM)
+    }
+  }
 
-  def eventsSocket(jobId: JobId, url: Option[URL]): ActionA = AuthAction { implicit req => user => {
-    case Stream => Ok.stream(enumerator(jobId, url, user) &> EventSource())
-  }}
-
-  private def enumerator(jobId: JobId, urlOpt: Option[URL], user: User): Enumerator[JsValue] = urlOpt match {
+  private def enumerator(jobId: JobId, urlOpt: Option[URL], user: Option[User]): Enumerator[JsValue] = urlOpt match {
     case Some(url) => enumerator(jobId, url, user)
     case None => enumerator(jobId, user)
   }
 
-  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
+  private def enumerator(jobId: JobId, user: Option[User]): Enumerator[JsValue] = {
     import PlayJson.toJson
-    val enumerator = Enumerator.flatten(user.getJob(jobId).map { job =>
+    val enumerator = Enumerator.flatten(model.Job.getFor(jobId, user).map { job =>
       job.resourceDatas()
     })
     enumerator &> Enumeratee.map { iterator =>
@@ -102,19 +101,14 @@ object Resources extends VSController  {
     }
   }
 
-  private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue] = {
+  private def enumerator(jobId: JobId, url: URL, user: Option[User]): Enumerator[JsValue] = {
     import PlayJson.toJson
-    val enumerator = Enumerator.flatten(user.getJob(jobId).map { job =>
+    val enumerator = Enumerator.flatten(model.Job.getFor(jobId, user).map { job =>
       job.resourceDatas(org.w3.vs.web.URL(url))
     })
     enumerator &> Enumeratee.map { rd =>
       PlayJson.arr(ResourceView(jobId, rd).toJson)
     }
   }
-
-  val indexName = (new controllers.javascript.ReverseResources).index.name
-  val indexTimer = Graphite.metrics.timer(MetricRegistry.name(Resources.getClass, indexName))
-  val indexUrlName = indexName + "+url"
-  val indexUrlTimer = Graphite.metrics.timer(MetricRegistry.name(Resources.getClass, indexUrlName))
 
 }

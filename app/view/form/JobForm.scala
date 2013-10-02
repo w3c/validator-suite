@@ -20,7 +20,7 @@ import scala.collection.immutable.Nil
 
 object JobForm {
 
-  type JobType = (String, URL, Int, Boolean)
+  type JobType = (String, URL, Int)
 
   def bind()(implicit req: Request[AnyContent], context: ExecutionContext): Either[JobForm, ValidJobForm] = {
 
@@ -40,8 +40,8 @@ object JobForm {
     tuple(
       "name" -> nonEmptyText,
       "entrypoint" -> of[URL],
-      "maxPages" -> of[Int],
-      "terms" -> of[Boolean](checkboxFormatter).verifying("not_accepted", _ == true)
+      "maxPages" -> of[Int]
+      //"terms" -> of[Boolean](checkboxFormatter).verifying("not_accepted", _ == true)
     )
   )
 
@@ -65,7 +65,7 @@ class ValidJobForm private[view](
                                   form: Form[JobType],
                                   bind: JobType) extends JobForm(form) with VSForm {
 
-  val (name, entrypoint, maxPages, terms) = bind
+  val (name, entrypoint, maxPages) = bind
 
   def createJob(user: User)(implicit conf: ValidatorSuite): Job = {
     val strategy = Strategy(
@@ -75,7 +75,7 @@ class ValidJobForm private[view](
       maxResources = maxPages,
       assertorsConfiguration = AssertorsConfiguration.default
     )
-    Job.createNewJob(name, strategy, user.id)
+    Job(name = name, strategy = strategy, creatorId = Some(user.id), isPublic = false)
   }
 
 }

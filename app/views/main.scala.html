@@ -1,11 +1,11 @@
-@(user: User,
+@(user: Option[User],
     title: String,
     script: String = "main",
     style: String = "",
     crumbs: Crumbs = Seq.empty,
     collections: Seq[Collection[Model]])(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
-@libs.main(title, style, script, Some(user)) {
+@libs.main(title, style, script, user) {
 
     @libs.navigation(crumbs)
 

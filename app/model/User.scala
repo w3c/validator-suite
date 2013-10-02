@@ -2,6 +2,7 @@ package org.w3.vs.model
 
 import scalaz.std.string._
 import scalaz.Scalaz.ToEqualOps
+import scalaz.Equal
 import org.w3.vs.exception._
 import org.w3.vs._
 import org.w3.vs.store.MongoStore.journalCommit
@@ -10,7 +11,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee.{Enumeratee, Concurrent, Enumerator}
 import akka.actor.{ Actor, Props, ActorRef }
 import java.nio.channels.ClosedChannelException
-import org.joda.time.DateTime
+import org.joda.time.{DateTimeZone, DateTime}
+import org.joda.time.format.DateTimeFormat
 import play.api.Play._
 import org.w3.vs.exception.DuplicatedEmail
 import play.api.Configuration
@@ -26,25 +28,58 @@ import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
 
-/** A User.
-  * Be careful when creating a User direclty with `new User` or `User.apply` as you'll have to hash the password yourself.
-  * Prefer `User.create` (or `User.register`) instead.
-  */
+/**
+ * A User.
+ *   Be careful when creating a User direclty with `new User` or `User.apply` as you'll have to hash the password yourself.
+ *   Prefer `User.create` (or `User.register`) instead.
+ *
+ * @param id
+ * @param name
+ * @param email
+ * @param password
+ * @param credits Numbers of credits left
+ * @param optedIn Whether the user opted-in for mailing
+ * @param isSubscriber A monhtly subscriber user
+ * @param isRoot
+ * @param expireDate Register or last purchase date + 3 months
+ */
 case class User(
   id: UserId,
   name: String,
   email: String,
   password: String,
-  isSubscriber: Boolean) {
+  credits: Int,
+  optedIn: Boolean,
+  isSubscriber: Boolean,
+  isRoot: Boolean,
+  expireDate: DateTime) {
 
   import User.logger
 
-  def getJob(jobId: JobId)(implicit conf: ValidatorSuite): Future[Job] = {
-    Job.getFor(id, jobId)
+  def compactString = {
+    val formatter = DateTimeFormat.forPattern("yyyy-MM-dd")
+    def pad(s: String, padding: Int) = {
+      s + " "*(scala.math.max(0, padding - s.length))
+    }
+    val flags = {
+      var f = ""
+      if (optedIn) f += "- Opted-In "
+      if (isSubscriber) f += "- Subscriber "
+      if (isRoot) f += "- ROOT "
+      f
+    }
+    s"${id} - Credits: ${pad(credits.toString, 5)} - Expires: ${formatter.print(expireDate)} ${flags}- ${name} <${email}>"
   }
 
-  def getJobs()(implicit conf: ValidatorSuite): Future[Iterable[Job]] = {
+  /*def getJobs()(implicit conf: ValidatorSuite): Future[Iterable[Job]] = {
     Job.getFor(id)
+  }*/
+
+  def owns(job: Job): Boolean = {
+    job.creatorId match {
+      case Some(creatorId) if creatorId === id => true
+      case _ => false
+    }
   }
   
   def save()(implicit conf: ValidatorSuite): Future[Unit] = User.save(this)
@@ -86,6 +121,27 @@ case class User(
 
 object User {
 
+  val expireCreditsDelay = 3 // months
+
+  /** updates the credits for the given user in the database with the
+    * formula ``credits = credits + creditsDiff`` (you can use
+    * negative number) */
+  def updateCredits(userId: UserId, creditsDiff: Int)(implicit conf: Database): Future[Unit] = {
+    get(userId) flatMap { case user =>
+      update(user.copy(
+        credits = user.credits + creditsDiff
+      ))
+    }
+  }
+
+  def updateExpireDate(userId: UserId)(implicit conf: Database): Future[Unit] = {
+    get(userId) flatMap { case user =>
+      update(user.copy(
+        expireDate = user.expireDate.plusMonths(expireCreditsDelay)
+      ))
+    }
+  }
+
   val logger = play.Logger.of(classOf[User])
 
   /** the root password, from the configuration file.
@@ -122,6 +178,20 @@ object User {
       case None => sys.error("user not found")
     }
   }
+
+  def getAll()(implicit conf: Database): Future[List[User]] = {
+    val cursor = collection.find(Json.obj()).cursor[JsValue]
+    cursor.toList() map {
+      list => list flatMap { user =>
+        try {
+          Some(user.as[User])
+        } catch { case t: Throwable =>
+          logger.error(s"could not deserialize ${user}")
+          None
+        }
+      }
+    }
+  }
   
   /** Attemps to authenticate a user based on the couple email/password.
     * The password is checked against the hash in the database.
@@ -145,16 +215,30 @@ object User {
     * @param name the name of this user as UTF8
     * @param email the email of the user
     * @param password the plain-text password of the user
+    * @param credits
+    * @param isRoot
     * @param isSubscriber
     */
   def create(
     name: String,
     email: String,
     password: String,
-    isSubscriber: Boolean): User = {
+    credits: Int,
+    optedIn: Boolean = false,
+    isSubscriber: Boolean = false,
+    isRoot: Boolean = false,
+    expireDate: DateTime = DateTime.now(DateTimeZone.UTC).plusMonths(expireCreditsDelay)): User = {
     val hash = BCrypt.hashpw(password, BCrypt.gensalt())
-    val id = UserId()
-    val user = new User(id, name, email.toLowerCase, hash, isSubscriber)
+    val user = new User(
+      id = UserId(),
+      name = name,
+      email = email.toLowerCase,
+      password = hash,
+      credits = credits,
+      optedIn = optedIn,
+      isRoot = isRoot,
+      isSubscriber = isSubscriber,
+      expireDate = expireDate)
     user
   }
 
@@ -163,9 +247,19 @@ object User {
     * 
     * @return the User created within a Future
     */
-  def register(name: String, email: String, password: String, isSubscriber: Boolean)(implicit conf: ValidatorSuite): Future[User] = {
+  def register(
+      name: String,
+      email: String,
+      password: String,
+      credits: Int = 20,
+      optedIn: Boolean = false,
+      isSubscriber: Boolean = false,
+      isRoot: Boolean = false)(implicit conf: ValidatorSuite): Future[User] = {
     logger.info(s"Registering user: ${name}, ${email}")
-    val user = User.create(name, email, password, isSubscriber)
+    val user = User.create(name, email, password, credits, optedIn = optedIn, isRoot = isRoot, isSubscriber = isSubscriber)
+    if (optedIn) {
+      play.Logger.of("OptInUsers").info(s"${user.name} <${user.email}>")
+    }
     user.save().map(_ => user)
   }
   

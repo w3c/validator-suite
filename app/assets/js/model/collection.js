@@ -46,18 +46,18 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
         //comparator: getComparatorBy("id"),
 
-        logger:Logger.of("UnNamed-Collection"),
+        logger: Logger.of("UnNamed-Collection"),
 
-        sortByParam:function (param, reverse, options) {
+        sortByParam: function (param, reverse, options) {
             this.comparator = getComparatorBy(param, reverse);
             this.sort(options);
         },
 
-        isComplete:function () {
-            return this.expected && this.length < this.expected ? false : true;
+        isComplete: function () {
+            return this.expected && this.length < this.expected ? false :  true;
         },
 
-        initialize:function () {
+        initialize: function () {
             var self = this;
             this.on('add', function () {
                 if (!_.isUndefined(self.expected) && self.expected < self.length) {
@@ -69,9 +69,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             }
         },
 
-        configure:function (options) {
+        configure: function (options) {
             options = this.options = (options || {});
-            this.view = new this.constructor.prototype.constructor.View(_.extend({ collection:this }, options));
+            this.view = new this.constructor.prototype.constructor.View(_.extend({ collection: this }, options));
             if (options.listen || (_.isUndefined(options.listen))) {
                 if (this.view.isList()) {
                     this.listen();
@@ -84,7 +84,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return this;
         },
 
-        listen:function () {
+        listen: function () {
 
             var self = this;
 
@@ -95,9 +95,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
                     var model = self.get(data.id);
                     if (!_.isUndefined(model)) {
                         changedModels.push(model);
-                        model.set(data, {silent:true});
+                        model.set(data, {silent: true});
                     } else {
-                        self.add(new self.model(data, {collection:self}), {silent:true});
+                        self.add(new self.model(data, {collection: self}), {silent: true});
                     }
                 });
 
@@ -113,15 +113,15 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
     Collection.View = Backbone.View.extend({
 
-        displayed:[],
+        displayed: [],
 
-        maxOnScreen:30,
+        maxOnScreen: 30,
 
-        filteredCount:0,
+        filteredCount: 0,
 
-        sortParams:[],
+        sortParams: [],
 
-        search:function (search, searchInput) {
+        search: function (search, searchInput) {
             this.currentSearch = search;
             this.search_ = (_.isString(search) && search !== "") ? function (model) {
                 return model.search(search);
@@ -129,7 +129,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             this.render();
         },
 
-        initialize:function () {
+        initialize: function () {
 
             this.logger = this.collection.logger;
 
@@ -168,7 +168,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             }
 
             if (!_.isFunction(collection.comparator)) {
-                collection.sortByParam(initial_sort.param, initial_sort.reverse, { silent:true });
+                collection.sortByParam(initial_sort.param, initial_sort.reverse, { silent: true });
             }
             /*else {
              //collection.sort({ silent: true });
@@ -180,7 +180,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
         },
 
-        loadFromMarkup:function () {
+        loadFromMarkup: function () {
             var collection = this.collection,
                 models;
 
@@ -200,18 +200,18 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             collection.reset(models);
         },
 
-        getSortParam:function () {
+        getSortParam: function () {
             var current = this.$(".sort .current"),
                 param = current.parents("dt").attr("class"),
                 reverse = !current.hasClass("ascend");
             return {
-                param:param,
-                reverse:reverse,
-                string:reverse ? param : "-" + param
+                param: param,
+                reverse: reverse,
+                string: reverse ? param : "-" + param
             };
         },
 
-        render:function (options) {
+        render: function (options) {
 
             options = (options || {});
 
@@ -223,7 +223,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
             var models = this.collection.models,
                 elements,
-                empty;
+                empty,
+                self = this,
+                emptyMessage;
 
             if (_.isFunction(this.search_)) {
                 models = _.filter(models, this.search_);
@@ -259,14 +261,13 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
                 //this.$el.append(empty);
                 this.$el.append('<p class="empty"></p>');
 
-                var self = this;
-                var emptyMessage = (function () {
+                emptyMessage = (function () {
                     if (_.isFunction(self.emptyMessage)) {
                         return self.emptyMessage();
                     } else if (_.isString(self.emptyMessage)) {
                         return self.emptyMessage;
                     } else {
-                        this.logger.warn("No emptyMessage function or value provided");
+                        self.logger.warn("No emptyMessage function or value provided");
                         return "";
                     }
                 }());
@@ -292,7 +293,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
         },
 
-        addSortHandler:function () {
+        addSortHandler: function () {
             var sortLinks = this.$(".sort a"),
                 self = this;
             _.each(this.sortParams, function (param) {
@@ -332,7 +333,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
          },*/
 
-        addScrollHandler:function () {
+        addScrollHandler: function () {
             var win = $(window),
                 aside = this.$('aside'),
                 asideClone = aside.clone(),
@@ -350,17 +351,17 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             }, 100));
         },
 
-        isList:function () {
+        isList: function () {
             return this.$el.hasClass('list') || this.$el.hasClass('folds');
         },
 
-        isSingle:function () {
+        isSingle: function () {
             return this.$el.hasClass('single');
         },
 
-        getVisibles:function () {
+        getVisibles: function () {
             var views = _.pluck(this.displayed, 'view'),
-                visibles = { first:null, last:null },
+                visibles = { first: null, last: null },
                 i = 0,
                 isVisible;
             for (i; i < views.length; i += 1) {
@@ -376,9 +377,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return visibles;
         },
 
-        getVisibles2:function () {
+        getVisibles2: function () {
             var views = _.pluck(this.displayed, 'view'),
-                visibles = { first:null, last:null },
+                visibles = { first: null, last: null },
                 i = views.length - 1,
                 isVisible;
             for (i; i >= 0; i -= 1) {
@@ -394,9 +395,9 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return visibles;
         },
 
-        getVisibles3:function () {
+        getVisibles3: function () {
             var views = _.pluck(this.displayed, 'view').reverse(),
-                visibles = { first:null, last:null },
+                visibles = { first: null, last: null },
                 i = 0,
                 isVisible,
                 index;
@@ -414,7 +415,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
             return visibles;
         },
 
-        updateLegend:function () {
+        updateLegend: function () {
 
             var visibles = this.getVisibles3(),
                 old,
@@ -426,7 +427,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
             if (this.maxOnScreen !== old && (this.displayed.length - visibles.last < 20 || this.displayed.length - visibles.last > 60)) { // does not remove elements on scroll up. seems more efficient like that
                 //console.log("re-rendering");
-                this.render({ updateLegend:false });
+                this.render({ updateLegend: false });
                 //return;
             }
 

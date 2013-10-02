@@ -17,7 +17,7 @@ package object controllers {
 
   object SocketType extends Enumeration {
     type SocketType = Value
-    val ws, events, comet = Value
+    val ws, events = Value
   }
 
   implicit val bindableSocketType = new PathBindable[SocketType] {

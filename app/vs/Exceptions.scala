@@ -13,7 +13,7 @@ case object UnauthorizedJob extends Exception("UnauthorizedJob") //with SuiteExc
 
 
 trait UnauthorizedException {
-  val email: String
+  def email: String
 }
 object UnauthorizedException {
   def unapply(o: UnauthorizedException): Option[String] = o match {
@@ -28,12 +28,16 @@ case class Unauthenticated(email: String) extends Exception("Unauthenticated") w
 
 case class DuplicatedEmail(email: String) extends Exception(s"${email} already in use")
 
-case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")
+//case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")
 
 case class StoreException(t: Throwable) extends Exception("StoreException") //with SuiteException
 
-case class Unexpected(t: Throwable) extends Exception(t) //with SuiteException
+//case class Unexpected(t: Throwable) extends Exception(t) //with SuiteException
 
 case class InvalidFormException[A <: VSForm](form: A, userOpt: Option[User] = None) extends Exception("InvalidFormException")
+
+// Contrary to UnauthorizedException this won't ask the user to log in but simply respond with a 404
+case object AccessNotAllowed extends Exception("AccessNotAllowed")
+case class PaymentRequired(job: Job) extends Exception("PaymentRequired")
 
 //case class ForceResult(result: Result) extends Exception("ForceResult carries a Result that can be used by Play")

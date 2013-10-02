@@ -1,13 +1,13 @@
-@(form: JobForm)(implicit req: RequestHeader)
+@(form: JobForm, user: User)(implicit req: RequestHeader)
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
 
 @checkIfPlan(name: String) = {
-@req.getQueryString("plan") match {
-case Some(`name`) => {checked="checked"}
-case None if name == "tiny" => {checked="checked"}
-case _ => {}
-}
+    @req.getQueryString("plan") match {
+        case Some(`name`) => {checked="checked"}
+        case None if name == "tiny" => {checked="checked"}
+        case _ => {}
+    }
 }
 
 <div class="column">
@@ -16,7 +16,7 @@ case _ => {}
 
     <form method="post" action="@routes.Jobs.create.url" class="vsForm">
 
-        <div class="row">
+        @**<div class="row">
             <div class="large-9 large-offset-3 columns">
                 <p>
                     /*Purchase a new W3C Validator Suite<span class="tm">™</span> <strong>One Time</strong> service job.
@@ -25,7 +25,7 @@ case _ => {}
                     A single validation job will be performed on your website.*/
                 </p>
             </div>
-        </div>
+        </div>**@
 
         @if(form.errors.size > 0) {
         <div class="row">
@@ -61,83 +61,23 @@ case _ => {}
 
         <div class="row">
 
-            <fieldset>
-                <legend class="column small-3">
-                    One Time job plan
-                </legend>
-
-                <div class="column small-9">
-                    <div class="row">
-                        <div class="large-3 column">
-                            <ul class="pricing-table">
-                                <li class="title">
-                                    <label for="tiny">
-                                        <input id="tiny" name="plan" value="tiny" type="radio" @checkIfPlan("tiny") />
-                                        <span>Tiny</span>
-                                    </label>
-                                </li>
-                                <li class="price">$50 / 40€<span class="tax" title="Plus VAT if applicable">✝</span>
-                                </li>
-                                <li class="bullet-item">For one website<br/>with up to <strong>250 pages</strong></li>
-                            </ul>
-                        </div>
-
-                        <div class="large-3 column">
-                            <ul class="pricing-table">
-                                <li class="title">
-                                    <label for="small">
-                                        <input id="small" name="plan" value="small" type="radio" @checkIfPlan("small")
-                                        />
-                                        Small
-                                    </label>
-                                </li>
-                                <li class="price">$75 / 60€<span class="tax" title="Plus VAT if applicable">✝</span>
-                                </li>
-                                <li class="bullet-item">For one website<br/>with up to <strong>500 pages</strong></li>
-                            </ul>
-                        </div>
-
-                        <div class="large-3 column">
-                            <ul class="pricing-table">
-                                <li class="title">
-                                    <label for="medium">
-                                        <input id="medium" name="plan" value="medium" type="radio"
-                                        @checkIfPlan("medium") />
-                                        Medium
-                                    </label>
-                                </li>
-                                <li class="price">$110 / 90€<span class="tax" title="Plus VAT if applicable">✝</span>
-                                </li>
-                                <li class="bullet-item">For one website<br/>with up to <strong>1,000 pages</strong></li>
-                            </ul>
-                        </div>
-
-                        <div class="large-3 column">
-                            <ul class="pricing-table">
-                                <li class="title">
-                                    <label for="large">
-                                        <input id="large" name="plan" value="large" type="radio" @checkIfPlan("large")
-                                        />
-                                        Large
-                                    </label>
-                                </li>
-                                <li class="price">$190 / 150€<span class="tax" title="Plus VAT if applicable">✝</span>
-                                </li>
-                                <li class="bullet-item">For one website<br/>with up to <strong>2,000 pages</strong></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </fieldset>
+            <div class="small-3 columns">
+                <label for="maxPages" class="right inline" title='@Messages("jobs.maxPages.detail")'>
+                    @Messages("jobs.maxPages")@requiredSpan
+                </label>
+            </div>
+            <div class="small-9 columns range">
+                <input id="maxPages" name="maxPages" type="range" max="@{scala.math.min(user.credits, 2000)}" value='@form("maxPages").value'
+                       step="10" required="required" placeholder='@Messages("jobs.maxPages.detail")'/>
+            </div>
 
         </div>
 
         <div class="row">
-            <p class="column small-9 small-offset-3 vats"><span class="tax">✝</span><em>Plus VAT if applicable.</em>
-                Fields marked with an asterisk (*) are required.</p>
+            <p class="column small-9 small-offset-3 compact"><span class="vats">Fields marked with an asterisk (*) are required.</span></p>
         </div>
 
-        <div class="row">
+        @**<div class="row">
             <div class="small-3 columns">
                 <input id="terms" type="checkbox" required="required" name="terms" class="right"
                 @form("terms").value.map{_ => checked="checked"}>
@@ -147,7 +87,7 @@ case _ => {}
                     I agree to the <a href="@routes.Application.terms.url" target="_blank">Terms and Conditions</a>@requiredSpan
                 </label>
             </div>
-        </div>
+        </div>**@
 
         @**
         <div class="row fsNotice">

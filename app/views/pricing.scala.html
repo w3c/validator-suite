@@ -1,15 +1,20 @@
 @(user: Option[User])(implicit req: RequestHeader)
 
-@front("W3C Validator Suite - Pricing", user) {
+@taxSpan = {<span class="tax" title="Plus VAT if applicable"><sup>(1)</sup></span>}
+
+@oneTimeDesc(pages: Int) = {For one website<br/>with up to <strong>@pages pages</strong>}
+@creditsDesc(pages: Int) = {<strong>@pages credits</strong>}
+
+@front("W3C Validator Suite - Pricing & Plans", user) {
 
 <div class="row">
     <div class="column">
         <h1>Pricing & Plans</h1>
         <p>
             W3C Validator Suite<span class="tm">™</span> is Software-as-a-Service product currently available as a
-            <a href="#one-time"><strong>One Time</strong></a> service.
-            The <strong>One Time</strong> service is designed for Website developers, designers or site managers,
-            wanting immediate "one time" results for a single Website.
+            <a href="#credits"><strong>Credits</strong></a> service.
+            The <strong>Credits</strong> service is designed for Website developers, designers or site managers,
+            willing to validate their websites and ensure compliance with W3C Web standards.
         </p>
         <p>
             <a href="@routes.Application.register">Register now</a> to be informed of the latest W3C Validator
@@ -24,12 +29,17 @@
 <div class="row pricing">
 
     <div class="column head">
-        <h1 id="one-time" tabindex="0">One Time Service</h1>
+        <h1 id="credits" tabindex="0">Credits</h1>
 
         <p>
-            The <strong>One Time</strong> service allows for <strong>a single validation of one website</strong>.<br/>
-            It is offered in four different plans whose prices depend on the maximum number of pages you choose to
-            validate.<br/>
+            The <strong>Credits</strong> service allows for <strong>multiple validations of any websites</strong>.
+        </p>
+        <p>
+            Our packs lets you choose the plan that best fulfils your validation needs. We only charge per each
+            individual page validation. Credits have to be used within 3 months, each purchase will also extend the
+            lifetime of your current credits.
+        </p>
+        <p>
             Special pricing for <a href="http://www.w3.org/Consortium/membership">W3C Members</a> available on request
             <a href='mailto:@Helper.config.getString("contact.email").getOrElse("")'>&lt;@Helper.config.getString("contact.email").getOrElse("")&gt;</a>.
         </p>
@@ -39,53 +49,51 @@
     <div class="large-3 column">
         <ul class="pricing-table">
             <li class="title">Tiny</li>
-            <li class="price">$50 / 40€<span class="tax" title="Plus VAT if applicable">*</span></li>
-            <li class="bullet-item">For one website<br/>with up to <strong>250 pages</strong></li>
+            <li class="price">$27 / 19€@taxSpan</li>
+            <li class="bullet-item">@creditsDesc(CreditPlan.Tiny.credits)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
-            <li class="description"><abbr title="Internationalization">i18n</abbr></li>
-            <li class="cta-button"><a class="button" href="@routes.OneTimeJob.buy.url?plan=tiny" title="Buy a One Time Tiny job">Buy Now</a></li>
+            <li class="description">Internationalization</li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=tiny" title="Buy a Tiny credits pack">Buy Now</a></li>
         </ul>
     </div>
 
     <div class="large-3 column">
         <ul class="pricing-table">
             <li class="title">Small</li>
-            <li class="price">$75 / 60€<span class="tax" title="Plus VAT if applicable">*</span></li>
-            <li class="bullet-item">For one website<br/>with up to <strong>500 pages</strong></li>
+            <li class="price">$70 / 49€@taxSpan</li>
+            <li class="bullet-item">@creditsDesc(CreditPlan.Small.credits)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
-            <li class="description"><abbr title="Internationalization">i18n</abbr></li>
-            <li class="cta-button"><a class="button" href="@routes.OneTimeJob.buy.url?plan=small" title="Buy a One Time Small job">Buy Now</a></li>
+            <li class="description">Internationalization</li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=small" title="Buy a Small credits pack">Buy Now</a></li>
         </ul>
     </div>
 
     <div class="large-3 column">
         <ul class="pricing-table">
             <li class="title">Medium</li>
-            <li class="price">$110 / 90€<span class="tax" title="Plus VAT if applicable">*</span></li>
-            <li class="bullet-item">For one website<br/>with up to <strong>1,000 pages</strong></li>
+            <li class="price">$140 / 99€@taxSpan</li>
+            <li class="bullet-item">@creditsDesc(CreditPlan.Medium.credits)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
-            <li class="description"><abbr title="Internationalization">i18n</abbr></li>
-            <li class="cta-button"><a class="button" href="@routes.OneTimeJob.buy.url?plan=medium" title="Buy a One Time Medium job">Buy Now</a></li>
+            <li class="description">Internationalization</li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=medium" title="Buy a Medium credits pack">Buy Now</a></li>
         </ul>
     </div>
     <div class="large-3 column">
         <ul class="pricing-table">
             <li class="title">Large</li>
-            <li class="price">$190 / 150€<span class="tax" title="Plus VAT if applicable">*</span></li>
-            <li class="bullet-item">For one website<br/>with up to <strong>2,000 pages</strong></li>
+            <li class="price">$280 / 199€@taxSpan</li>
+            <li class="bullet-item">@creditsDesc(CreditPlan.Large.credits)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
-            <li class="description"><abbr title="Internationalization">i18n</abbr></li>
-            <li class="cta-button"><a class="button" href="@routes.OneTimeJob.buy.url?plan=large" title="Buy a One Time Large job">Buy Now</a></li>
+            <li class="description">Internationalization</li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=large" title="Buy a Large credits pack">Buy Now</a></li>
         </ul>
     </div>
 
-    <p class="column note"><em>* Plus VAT if applicable.</em></p>
-
-    <p class="column">Additional plans will be introduced soon.</p>
+    <p class="column note"><span class="tax">(1)</span><em> Plus VAT if applicable.</em></p>
 
 </div>
 

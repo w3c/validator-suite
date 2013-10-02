@@ -38,7 +38,7 @@
   <logger name="org.w3.vs.actor" level="INFO" />
   <logger name="org.w3.vs.http" level="INFO" />
   <logger name="org.w3.vs.assertor" level="DEBUG" />
-  <logger name="org.w3.vs.controllers.OneTimeJob" level="DEBUG">
+  <logger name="org.w3.vs.controllers.Purchase" level="DEBUG">
       <appender-ref ref="ORDERS" />
   </logger>
   <logger name="org.eclipse.jetty.server" level="INFO"/>

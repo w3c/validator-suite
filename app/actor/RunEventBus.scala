@@ -47,7 +47,7 @@ class RunEventBusActor() extends Actor {
       protected def matches(classifier: MessageProvenance, event: RunEvent): Boolean =
         classifier match {
           case FromAll => true
-          case FromUser(userId) => userId === event.userId
+          case FromUser(userId) => event.userId.map(userId === _).getOrElse(false)
           case FromJob(jobId) => jobId === event.jobId
           case FromRun(runId) => runId === event.runId
         }

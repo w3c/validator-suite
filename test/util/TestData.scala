@@ -16,8 +16,8 @@ trait TestData { this: Suite =>
         filter = org.w3.vs.model.Filter(include = Everything, exclude = Nothing),
         assertorsConfiguration = Map.empty)
 
-    val user = User.create(email = "", name = "", password = "", isSubscriber = true)
-    val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = user.id)
+    val user = User.create(email = "", name = "", password = "", isSubscriber = true, credits = 10000)
+    val job = Job(name = "@@", strategy = strategy, creatorId = Some(user.id))
 
     val foo = URL("http://example.com/foo")
     val bar = URL("http://example.com/bar")

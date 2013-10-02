@@ -1,4 +1,4 @@
-@(title: String, user: Option[User] = None)(content: Html)(implicit req: RequestHeader)
+@(title: String, user: Option[User] = None, loginModal: Boolean = true)(content: Html)(implicit req: RequestHeader)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,13 +10,13 @@
     <meta name="viewport" content="width=device-width">
     <title>@title</title>
     <link rel="icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>
-    <link rel="stylesheet" href='@routes.Assets.at("styles/front.css")'>
+    <link rel="stylesheet" href='@routes.Assets.at("styles/front.min.css")'>
     <script data-main='@routes.Assets.at("js/front.js")' src='@routes.Assets.at("js/libs/require.js")' async="async"></script>
 </head>
 
 <body>
 
-@libs.header(user)
+@libs.header(user, loginModal)
 
 @content
 
@@ -35,7 +35,7 @@
     </div>
 </footer>
 
-@if(user == None && req.uri != routes.Application.login.url) {
+@if(user == None && loginModal) {
 <div id="loginModal" class="reveal-modal medium">
     @forms.loginForm()
     <a class="close-reveal-modal">&#215;</a>

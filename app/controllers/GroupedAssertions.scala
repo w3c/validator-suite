@@ -3,7 +3,7 @@ package controllers
 import org.w3.vs.view.Helper
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.Graphite
+import org.w3.vs.{Global, Graphite}
 import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
@@ -14,41 +14,39 @@ import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.json.{Json => PlayJson, JsObject, JsNull, JsValue}
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.{EventSource, Comet}
-import org.w3.vs.model.{ Job => ModelJob, _ }
+import org.w3.vs.model
+import org.w3.vs.model._
 import org.w3.vs.store.Formats._
 import org.w3.vs.view.model.GroupedAssertionView
+import play.api.http.MimeTypes
+import org.w3.vs.exception._
 
 object GroupedAssertions extends VSController  {
 
   val logger = play.Logger.of("org.w3.vs.controllers.GroupedAssertions")
 
-  def index(id: JobId) = AuthAsyncAction { implicit req: RequestHeader => user: User =>
-    val f: Future[PartialFunction[Format, Result]] = for {
-      job_ <- user.getJob(id)
+  def index(id: JobId) = UserAwareAction { implicit req: RequestHeader => user =>
+    for {
+      job_ <- model.Job.getFor(id, user)
       job <- JobsView(job_)
       groupedAssertions <- GroupedAssertionsView(job_)
       assertors <- AssertorsView(id, groupedAssertions).map(_.withCollection(groupedAssertions))
       bindedGroupedAssertions = groupedAssertions.filterOn(assertors.firstAssertor).bindFromRequest.groupBy("message")
     } yield {
-      case Html(_) => {
-        // XXX: /!\ get rid of the cyclic dependency between assertors and assertions
-        //val bindedGroupedAssertions = groupedAssertions.filterOn(assertors.firstAssertor).bindFromRequest
-        Ok(views.html.main(
-          user = user,
-          title = s"""Report for job "${job_.name}" - By messages - W3C Validator Suite""",
-          crumbs = Seq(job_.name -> ""),
-          collections = Seq(
-            job.withCollection(bindedGroupedAssertions),
-            assertors.withCollection(bindedGroupedAssertions),
-            bindedGroupedAssertions
-          )))
-      }
-      case Json => {
-        //val assertions = AssertionsView.grouped(assertions_, id).bindFromRequest
-        Ok(groupedAssertions.bindFromRequest.toJson)
+      render {
+        case Accepts.Html() => // XXX: /!\ get rid of the cyclic dependency between assertors and assertions
+          Ok(views.html.main(
+            user = user,
+            title = s"""Report for job "${job_.name}" - By messages - W3C Validator Suite""",
+            crumbs = Seq(job_.name -> ""),
+            collections = Seq(
+              job.withCollection(bindedGroupedAssertions),
+              assertors.withCollection(bindedGroupedAssertions),
+              bindedGroupedAssertions
+            )))
+        case Accepts.Json() => Ok(groupedAssertions.bindFromRequest.toJson)
       }
     }
-    f.timer(indexName).timer(indexTimer)
   }
 
   def redirect(id: JobId): ActionA = Action { implicit req =>
@@ -59,27 +57,24 @@ object GroupedAssertions extends VSController  {
     typ match {
       case SocketType.ws => webSocket(jobId)
       case SocketType.events => eventsSocket(jobId)
-      case SocketType.comet => cometSocket(jobId)
     }
   }
 
   def webSocket(jobId: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
-    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, user)))
+    val enum: Enumerator[JsValue] = Enumerator.flatten(getUserOption().map(user => enumerator(jobId, user)))
     (iteratee, enum)
   }
 
-  def cometSocket(jobId: JobId): ActionA = AuthAction { implicit req => user => {
-    case Html(_) => Ok.stream(enumerator(jobId, user) &> Comet(callback = "parent.VS.resourceupdate"))
-  }}
+  def eventsSocket(jobId: JobId): ActionA = UserAwareAction { implicit req => user =>
+    render {
+      case AcceptsStream() => Ok.stream(enumerator(jobId, user) &> EventSource()).as(MimeTypes.EVENT_STREAM)
+    }
+  }
 
-  def eventsSocket(jobId: JobId): ActionA = AuthAction { implicit req => user => {
-    case Stream => Ok.stream(enumerator(jobId, user) &> EventSource())
-  }}
-
-  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue /*JsArray*/] = {
+  private def enumerator(jobId: JobId, user: Option[User]): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson
-    Enumerator.flatten(user.getJob(jobId).map(
+    Enumerator.flatten(model.Job.getFor(jobId, user).map(
       job => job.groupedAssertionDatas()
     )) &> Enumeratee.map { iterator =>
       toJson(iterator.map(GroupedAssertionView(jobId, _).toJson))
