@@ -38,7 +38,7 @@ package object controllers {
       try {
         Right(JobId(value))
       } catch { case e: Exception =>
-        Left("invalid id: " + value)
+        Left("InvalidJobId")
       }
     }
     def unbind (key: String, value: JobId): String = {

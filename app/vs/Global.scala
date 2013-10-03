@@ -58,4 +58,12 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
     }
   }
 
+  override def onBadRequest(request: RequestHeader, error: String) = {
+    implicit val implReq = request
+    error match {
+      case "InvalidJobId" => onHandlerNotFound(request)
+      case _ => BadRequest(views.html.error.generic(List(("error", "Bad Request: " + error))))
+    }
+  }
+
 }
