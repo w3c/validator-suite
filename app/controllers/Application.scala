@@ -2,6 +2,7 @@ package controllers
 
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
+import org.w3.vs.model
 import org.w3.vs.model._
 import org.w3.vs.view.form._
 import play.api.i18n._
@@ -46,7 +47,7 @@ object Application extends VSController {
         case Left(form) => throw InvalidFormException(form)
         case Right(validForm) => validForm
       })
-      user <- User.authenticate(form.email, form.password) recover {
+      user <- model.User.authenticate(form.email, form.password) recover {
         case UnauthorizedException(email) => throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
       }
     } yield {
@@ -67,7 +68,7 @@ object Application extends VSController {
         Future.successful(BadRequest(views.html.register(registerForm = form)))
       }
       case Right(form) => {
-        User.register(
+        model.User.register(
           name = form.name,
           email = form.email,
           password = form.password,

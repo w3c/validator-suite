@@ -1,0 +1,119 @@
+@(userForm: UserForm,
+  passwordForm: Form[(String, String, String)], user: User)(implicit req: RequestHeader)
+
+@requiredSpan = {<span class="required" title="This field is required">*</span>}
+
+<div class="column">
+
+    <h1 class="formHeader">My Profile</h1>
+
+    <form method="post" action="@routes.User.editAction" class="vsForm">
+
+        @if(userForm.errors.size > 0) {
+        <div class="row">
+            <div class="column large-9 large-offset-3 formErrors">
+                @libs.messages2(userForm.errors.toList)
+            </div>
+        </div>}
+
+        <div class="row">
+            <div class="small-3 columns">
+                <label for="u_userName" class="right inline">Name@requiredSpan</label>
+            </div>
+            <div class="small-9 columns">
+                <input type="text" id="u_userName" name="u_userName" placeholder="Name" value='@userForm("u_userName").value' required="required" class="userName"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-3 columns">
+                <label for="u_email" class="right inline">Email@requiredSpan</label>
+            </div>
+            <div class="small-9 columns">
+                <input type="email" id="u_email" name="u_email" placeholder="Email" value='@userForm("u_email").value' required="required"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-3 columns">
+                <input type="checkbox" id="u_optedIn" name="u_optedIn" class="right inline" @userForm("u_optedIn").value.map{_ => checked="checked"} />
+            </div>
+            <div class="small-9 columns">
+                <label for="u_optedIn">W3C may send me information about new products and services</label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="column small-9 small-offset-3 note">
+                <em>Fields marked with an asterisk (*) are required.</em>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="column large-4 large-offset-8 small-9 small-offset-3">
+                <button id="submit_user" name="submit" value="save" type="submit">Save</button>
+            </div>
+        </div>
+
+    </form>
+
+    <h1 class="formHeader">Change password</h1>
+
+    <form method="post" action="@routes.User.changePasswordAction" class="vsForm">
+
+        @if(passwordForm.errors.size > 0) {
+        <div class="row">
+            <div class="column large-9 large-offset-3 formErrors">
+                @libs.messages2(passwordForm.errors.toList.map(a => ("error", Messages(a.message))))
+            </div>
+        </div>}
+
+        <div class="row">
+            <div class="small-3 columns">
+                <label for="p_current" class="right inline">Current password@requiredSpan</label>
+            </div>
+            <div class="small-9 columns">
+                <input type="password" id="p_current" name="p_current"
+                       placeholder="Your current password" required="required"
+                       title="Your current password"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-3 columns">
+                <label for="p_new" class="right inline">New password@requiredSpan</label>
+            </div>
+            <div class="small-9 columns">
+                <input type="password" id="p_new" pattern=".{6,}" name="p_new"
+                       placeholder="Your new password must be at least 6 characters long" required="required"
+                       title="Your new password must be at least 6 characters long"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-3 columns">
+                <label for="p_new2" class="right inline">Repeat password@requiredSpan</label>
+            </div>
+            <div class="small-9 columns">
+                <input type="password" id="p_new2" pattern=".{6,}" class="repeatPassword"
+                       name="p_new2" required="required" placeholder="Verify your new password"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="column small-9 small-offset-3 note">
+                <em>Fields marked with an asterisk (*) are required.</em>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="column large-4 large-offset-8 small-9 small-offset-3">
+                <button id="submit_password" name="submit" value="save" type="submit">Save</button>
+            </div>
+        </div>
+
+    </form>
+
+
+
+</div>

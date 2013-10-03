@@ -2,7 +2,8 @@ package controllers
 
 import org.w3.vs.exception._
 import org.w3.vs.controllers._
-import org.w3.vs.model.User
+import org.w3.vs.model
+import org.w3.vs.model._
 import org.w3.vs.view.form.LoginForm
 import play.Logger.ALogger
 import play.api.Play._
@@ -41,7 +42,7 @@ trait VSController extends Controller {
           case Some(email) => Future.successful(email)
           case _ => Future.failed(Unauthenticated(""))
         }
-      user <- User.getByEmail(email)
+      user <- model.User.getByEmail(email)
       //user <- Future(Cache.getAs[User](email).get) recoverWith { case _ => User.getByEmail(email) }
     } yield {
       Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
