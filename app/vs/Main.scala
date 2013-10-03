@@ -102,7 +102,7 @@ object Main {
     }
   }*/
 
-  def addRootUsers()(implicit conf: Database): Future[Iterable[Unit]] = {
+  def addRootUsers()(implicit conf: ValidatorSuite with Database): Future[Iterable[String]] = {
 
     val roots = Map(
       "Juan-Guy" -> "jean-gui@w3.org",
@@ -119,11 +119,26 @@ object Main {
         credits = 10000, optedIn = true, isSubscriber = false, isRoot = true, expireDate = DateTime.now(DateTimeZone.UTC).plusYears(10))
     }
 
-    Future.sequence(roots.map(root => User.save(root)))
+    Future.sequence(
+      roots.map( root =>
+        User.getByEmail(root.email).flatMap( user =>
+          user.isRoot match {
+            case true => Future.successful(s"${root.email} is already a root user.")
+            case false => User.update(user.copy(isRoot = true)).map(_ => s"${root.email} set as a root user.")
+          }
+        ) recoverWith { case _ =>
+          User.save(root) map { _ =>
+            s"${root.email} added to database as root."
+          } recover { case e: Exception =>
+            s"${root.email} could not be added to the db: ${e.getMessage}"
+          }
+        }
+      )
+    )
 
   }
 
-  def defaultData()(implicit conf: Database): Unit = {
+  def defaultData()(implicit conf: ValidatorSuite with Database): Unit = {
 
     val w3team = User.create(
       email = "w3t@w3.org", name = "W3C Team", password = "w3team",

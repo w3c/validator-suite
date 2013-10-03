@@ -238,9 +238,10 @@ object Administration extends VSController {
         org.w3.vs.Main.defaultData()
         "done"
 
-      case Array("db-save-roots") =>
-        val roots: Iterable[Unit] = org.w3.vs.Main.addRootUsers().getOrFail()
-        s"${roots.size} root users added"
+      case Array("db-add-roots") =>
+        val roots: Iterable[String] = org.w3.vs.Main.addRootUsers().getOrFail()
+        roots.mkString("\n")
+        //s"${roots.size} root users added"
 
       case _ => s"Command ${command} not found"
 
