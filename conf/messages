@@ -100,6 +100,7 @@ assertion.resources.detail=This message appears in the following resources:
 # Application
 application.loggedOut=You have been logged out
 form..application.invalidCredentials=The username or password you entered is incorrect
+application.invalidPassword=Authentication Failed. The password you entered is incorrect.
 application.unauthorized=You must be logged in to access this page
 
 
@@ -174,6 +175,7 @@ form.l_email.error.email=Invalid email address
 form.r_email.error.email=Invalid email address
 form.l_email.error.required=Email is required
 form.r_email.error.required=Email is required
+form.u_email.error.email=Email is required
 form.l_password.error.required=Password is required
 form.r_password.error.required=Password is required
 
@@ -184,6 +186,7 @@ form.maxResources.error.max=Invalid max pages value
 form.maxResources.error.min=Invalid max pages value
 
 form.userName.error.required=A name is required.
+form.u_userName.error.required=A name is required.
 
 form.r_password.error.minLength=Password too short. Minimum is 6 characters.
 # There is no key for this one hence the '..' (cf RegisterForm.scala)

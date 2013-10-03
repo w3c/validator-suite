@@ -15,6 +15,10 @@ POST    /login                                      controllers.Application.logi
 POST    /logout                                     controllers.Application.logoutAction
 POST    /register                                   controllers.Application.registerAction
 
+GET     /profile                                    controllers.User.profile
+POST    /profile                                    controllers.User.editAction
+POST    /profile/password                           controllers.User.changePasswordAction
+
 # Jobs
 GET     /jobs                                       controllers.Jobs.index
 GET     /jobs/                                      controllers.Jobs.redirect

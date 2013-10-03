@@ -26,7 +26,7 @@
                     <span>Credits:</span> <span>@user.credits <a href="@routes.Purchase.buyCredits" class="buy-more">Buy more credits</a></span>
                 </li>
                 <li>@navLink(routes.Jobs.index.url){My Jobs}</li>
-                <li class="noHover" title="Coming soon"><a class="disabled menu-entry">My Profile</a></li>
+                <li><a href="@routes.User.profile.url" class="menu-entry">My Profile</a></li>
                 @if(user.isRoot){
                 @**<li><a href="@routes.Administration.index.url" class="menu-entry">Administration</a></li>**@
                 <li><a href="@routes.Administration.console.url" class="menu-entry">Console</a></li>}

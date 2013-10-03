@@ -117,6 +117,10 @@ case class User(
     Enumerator.flatten(e)
   }
 
+  def withPassword(password: String): User = {
+    this.copy(password = BCrypt.hashpw(password, BCrypt.gensalt()))
+  }
+
 }
 
 object User {
