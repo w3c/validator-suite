@@ -20,11 +20,11 @@ object RunData {
   implicit val equal = Equal.equalA[RunData]
 
   def health(resources: Int, errors: Int, warnings: Int): Int = {
-    if (resources == 0) -1
+    if (resources == 0) 0 // If health = 0 it is assumed that the job hasn't run at all
     else {
       val errorAverage = errors.toDouble / resources.toDouble
       val h = (exp(log(0.5) / 10 * errorAverage) * 100).toInt
-      max(1, h)
+      max(1, h) // Minimal health of a started job is 1
     }
   }
 

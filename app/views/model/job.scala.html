@@ -50,7 +50,7 @@
                 <span data-max-resources="">@job.maxResources</span>}
 
                 case "health" => {
-                <progress max="100" value="@job.health" title="@job.health%" data-health="@job.health">@job.health%</progress>}
+                <progress max="100" value="@job.health" title="Health: @job.health%" data-health="@job.health">@job.health%</progress>}
 
                 case "actions" => {
                 <form action="@routes.Job.dispatcher(job.id)" method="post" class="jobAction">
