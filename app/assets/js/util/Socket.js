@@ -82,6 +82,8 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
                 eventsource.onerror = function (event) {
                     logger.error("eventsource connection error (" + socket.url + ")");
                     socket.trigger("error", event);
+                    // TODO: #234
+                    eventsource.close(); // Do not retry to open a connection
                 };
                 socket.close = function () {
                     eventsource.close();
