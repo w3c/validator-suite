@@ -40,6 +40,7 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
                 websocket = new window.WebSocket(socket.url);
 
                 websocket.onmessage = function (event) {
+                    logger.debug(event.data);
                     var message = JSON.parse(event.data);
                     socket.trigger("message", message);
                 };
@@ -70,9 +71,8 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
                 eventsource = new window.EventSource(socket.url);
 
                 eventsource.onmessage = function (event) {
-                    //console.log(event.data);
+                    logger.debug(event.data);
                     var message = JSON.parse(event.data);
-                    //console.log(message);
                     socket.trigger("message", message);
                 };
                 eventsource.onopen = function (event) {
@@ -80,7 +80,7 @@ define(["util/Logger", "util/Util", "libs/backbone"], function (Logger, Util, Ba
                     socket.trigger("open", event);
                 };
                 eventsource.onerror = function (event) {
-                    logger.info("eventsource connection error (" + socket.url + ")");
+                    logger.error("eventsource connection error (" + socket.url + ")");
                     socket.trigger("error", event);
                 };
                 socket.close = function () {

@@ -1,6 +1,7 @@
 //require.config({});
 
 define([], function () {
+    "use strict";
     return {
         logs: {
             globalLevel: 4

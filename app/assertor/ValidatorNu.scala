@@ -60,7 +60,8 @@ class ValidatorNu(serviceUrl: String) extends FromHttpResponseAssertor {
         case Some(code) => Vector(Context(code.trim, lastLine, lastCol)) // The model needs to accept a range of lines/column
         case _ => Vector.empty
       }
-      Assertion(AssertionTypeId(id, title), url, id, contexts, "en", title, severity, None)
+      val t = HtmlFormat.escape(title).body
+      Assertion(AssertionTypeId(id, t), url, id, contexts, "en", t, severity, None)
     }
   }
   

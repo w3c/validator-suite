@@ -32,7 +32,7 @@ case class GroupedAssertionsView(
     val a = Ordering[AssertionSeverity].reverse
     val b = Ordering[Int].reverse
     val c = Ordering[String]
-    Ordering.Tuple3(a, b, c).on[GroupedAssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.title))
+    Ordering.Tuple3(a, b, c).on[GroupedAssertionView](assertion => (assertion.severity, assertion.occurrences, assertion.title.body))
   }
 
   def filter(filter: Option[String]) =

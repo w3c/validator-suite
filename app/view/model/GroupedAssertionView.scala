@@ -18,7 +18,7 @@ case class GroupedAssertionView(
   def occurrences = data.occurrences
   def resources = data.resources
   def severity = data.severity
-  def title = data.title
+  def title = HtmlFormat.raw(data.title)
   def id = data.id.toString
 
   def toJson: JsValue = {
