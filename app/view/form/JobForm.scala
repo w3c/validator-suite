@@ -1,8 +1,7 @@
 package org.w3.vs.view.form
 
 import org.w3.vs.web.URL
-import org.w3.vs.ValidatorSuite
-import org.w3.vs.assertor.Assertor
+import org.w3.vs.{Global, ValidatorSuite}
 import org.w3.vs.model._
 import org.w3.vs.view._
 import play.api.data.Forms._
@@ -13,10 +12,8 @@ import play.api.mvc.{Filter => _, _}
 import scala.concurrent._
 
 import JobForm.JobType
-import play.api.data
 import play.api.i18n.Messages
-import controllers.Assertors
-import scala.collection.immutable.Nil
+import java.util.concurrent.TimeUnit
 
 object JobForm {
 
@@ -42,7 +39,14 @@ object JobForm {
       "entrypoint" -> of[URL],
       "maxPages" -> of[Int]
       //"terms" -> of[Boolean](checkboxFormatter).verifying("not_accepted", _ == true)
-    )
+    ).verifying("invalid.entrypoint", { bind =>
+      try {
+        val code = Global.conf.httpClient.prepareGet(bind._2.toString).execute().get(10, TimeUnit.SECONDS).getStatusCode
+        code >= 200 && code < 300
+      } catch { case e: Exception =>
+        false
+      }
+    })
   )
 
 }
