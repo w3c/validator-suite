@@ -1,18 +1,8 @@
 @(crumbs: Crumbs)
-@**
-    <!--<nav id="nav">
-        <h1>Main navigation</h1>
-        <ul>
-            <li><a href="@routes.Jobs.index">Dashboard</a></li>
-            <li><a href="@routes.Jobs.new1">New job</a></li>
-        </ul>
-    </nav>-->
-**@
     
     <nav id="crumbs">
-        <h1>Breadcrumbs</h1>
         <ul>
-            <li><a href="@routes.Jobs.index">Jobs</a></li>
+            <li><h1><a href="@routes.Jobs.index">My Jobs</a></h1></li>
             @crumbs.map { crumb =>
             @if(crumb._2 != "") {
             <li><a href="@crumb._2">@crumb._1</a></li>} else {
