@@ -74,7 +74,17 @@ object Job extends VSController {
 
   def stop(id: JobId): ActionA = simpleJobAction(id)(user => job => job.cancel())("jobs.stop")
 
-  def delete(id: JobId): ActionA = simpleJobAction(id)(user => job => job.delete())("jobs.deleted")
+  def delete(id: JobId): ActionA = AuthenticatedAction { implicit req => user =>
+    for {
+      job <- model.Job.getFor(id, Some(user))
+      _ <- job.delete()
+    } yield {
+      render {
+        case Accepts.Html() => SeeOther(routes.Jobs.index.url).flashing(("success" -> Messages("jobs.deleted", job.name)))
+        case Accepts.Json() => Ok
+      }
+    }
+  }
 
   import play.api.mvc._
 

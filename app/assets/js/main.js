@@ -3,11 +3,15 @@ require([
     "libs/jquery",
     "model/vs",
     "config",
-    "libs/foundation.dropdown"], function (_, $, VS, config) {
+    "libs/foundation.dropdown",
+    "libs/foundation.reveal"], function (_, $, VS, config) {
 
     "use strict";
 
-    $(document).foundation();
+    $(document).foundation('dropdown reveal', {
+        animation: 'fade',
+        animationSpeed: 100
+    });
 
     if (_.isUndefined(document.createElement('progress').position)) {
         require(["libs/progress-polyfill"]);

@@ -27,15 +27,7 @@
 @import 'inc/_sample.less';
 @import 'inc/_print.less';
 
-
-
-#banner {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    line-height: 25px !important;
-    font-size: 16px;
-
+#banner, #deleteModal {
     button:hover, .button:hover, button:focus, .button:hover, .button:active {
         background: #FFAD21 !important;
     }
@@ -67,7 +59,19 @@
         padding-left: 1.5em;
         font-size: 1em;
         color:  white;
+
+        top: 0;
+        right: 0;
+        line-height: 1;
     }
+}
+
+#banner {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    line-height: 25px !important;
+    font-size: 16px;
 
     a:hover {
         text-decoration: none;
@@ -335,4 +339,105 @@ fieldset.dropdown {
 
 #main {
     padding-bottom: 57px;
+}
+
+.reveal-modal-bg {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    background: black;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 98;
+    display: none;
+    top: 0;
+    left: 0;
+}
+
+.reveal-modal {
+    visibility: hidden;
+    display: none;
+    position: absolute;
+    left: 50%;
+    z-index: 99;
+    height: auto;
+    background-color: #fff;
+    margin-left: -40%;
+    width: 80%;
+    background-color: white;
+    padding: 1.25em;
+    border: solid 1px #666666;
+    -webkit-box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+    top: 50px;
+}
+
+.reveal-modal .column,
+.reveal-modal .columns {
+    min-width: 0;
+}
+
+.reveal-modal >
+
+:first-child {
+    margin-top: 0;
+}
+
+.reveal-modal >
+
+:last-child {
+    margin-bottom: 0;
+}
+
+.reveal-modal .close-reveal-modal {
+    font-size: 1.375em;
+    line-height: 1;
+    position: absolute;
+    top: 0.5em;
+    right: 0.6875em;
+    color: #aaaaaa;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+@media only screen and (min-width: 48em) {
+    .reveal-modal {
+        padding: 1.875em;
+        top: 6.25em;
+    }
+
+    .reveal-modal.tiny {
+        margin-left: -15%;
+        width: 30%;
+    }
+
+    .reveal-modal.small {
+        margin-left: -20%;
+        width: 40%;
+    }
+
+    .reveal-modal.medium {
+        margin-left: -30%;
+        width: 60%;
+    }
+
+    .reveal-modal.large {
+        margin-left: -35%;
+        width: 70%;
+    }
+
+    .reveal-modal.xlarge {
+        margin-left: -47.5%;
+        width: 95%;
+    }
+}
+
+#deleteModal {
+    font-size: 1.3em;
+    .msg {
+        //margin-top: 0.5em;
+    }
+    .choices {
+        float: right;
+
+    }
 }

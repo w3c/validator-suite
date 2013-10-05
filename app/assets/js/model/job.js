@@ -165,6 +165,17 @@ define([
             //"keyup [name=search]": "search"
         },
 
+        _delete: function () {
+            var self = this;
+            $("#deleteModal").map(function (i, modal) {
+                var msg = $(".msg", modal),
+                    yes = $(".yes", modal);
+                msg.html("Are you sure you want to delete the job <strong>" + self.model.get("name") + "</strong>? This action cannot be reverted.");
+                yes.unbind("click");
+                yes.click(function (yes) { self.model.destroy({wait: true}); });
+            });
+        },
+
         print: function () {
             if (this.model.collection.options.assertions) {
                 this.model.collection.options.assertions.view.render({dump: true});

@@ -14,6 +14,13 @@
             <button type="submit">@Messages("job.button.search")</button>
         </fieldset>
     </form>
+    <div id="deleteModal" class="reveal-modal small">
+        <div class="choices">
+            <a class="button close-reveal-modal yes" tabindex="0">Yes</a>
+            <a class="button close-reveal-modal" tabindex="0">No</a>
+        </div>
+        <p class="msg"></p>
+    </div>
 </section>}
 
 @views.html.collection.generic(collection)
