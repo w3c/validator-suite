@@ -2,6 +2,7 @@
 # This file defines all application routes (Higher priority routes first)
 
 # Application
+HEAD    /                                           controllers.Application.index
 GET     /                                           controllers.Application.index
 GET     /faqs                                       controllers.Application.faq
 GET     /logos                                      controllers.Application.logos
