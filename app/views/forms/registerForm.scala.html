@@ -71,26 +71,27 @@
         </div>
 
         <div class="row">
-            <div class="small-3 columns">
-                <input id="terms" type="checkbox" required="required" name="terms" class="right" @registerForm("terms").value.map{_ => checked="checked"}>
-            </div>
-            <div class="small-9 columns">
-                <label for="terms">
-                    I agree to the <a href="@routes.Application.terms.url" target="_blank">Terms and Conditions</a>@requiredSpan
-                </label>
-            </div>
-        </div>
-
-        <div class="row">
             <div class="column small-9 small-offset-3 note">
                 <em>Fields marked with an asterisk (*) are required.</em>
             </div>
         </div>
 
         <div class="row">
-            <div class="column large-4 large-offset-8 small-9 small-offset-3">
+            @**<div class="small-3 columns">
+                <input id="terms" type="checkbox" required="required" name="terms" class="right" @registerForm("terms").value.map{_ => checked="checked"}>
+            </div>**@
+            <div class="small-9 small-offset-3 columns">
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-5 small-offset-3 columns">
                 <input type="hidden" name="uri" value='@registerForm("uri").value'>
                 <button id="submit_register" name="submit" value="register" type="submit">Register</button>
+            </div>
+            <div class="column small-4 disclaimer">
+                <p>By clicking "Register", you agree to our<br> <a href="@routes.Application.terms.url">terms of service</a> and <a href="@routes.Application.privacy.url">privacy policy</a>.</p>
             </div>
         </div>
 
