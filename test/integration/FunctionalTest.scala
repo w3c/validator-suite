@@ -42,7 +42,7 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       click("#submit-login")
 
       url must be === "http://localhost:9001/jobs"
-      $("#myAccount").first().getText must include ("Test User")
+      $(".hello").first().getText must include ("Test User")
 
       goTo("http://localhost:9001/admin")
       $("h1").first().getText must include ("404")
