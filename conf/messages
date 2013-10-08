@@ -197,6 +197,12 @@ form.repeatPassword.error.required=Please verify your password.
 info.register.first=In order to purchase a job please register first, or login if you already have an account.
 success.registered.user=Successfully registered as {0} <{1}>
 
-form..invalid.entrypoint=Website URL not accessible or not within the 200 range
+entrypoint.invalid=Website URL not accessible or not within the 200 range
+maxPages.creditMaxExceeded=Max pages exceeded your available number of credits
+
+
 jobs.maxPages=Max pages
-jobs.maxPages.details=The maximum number of pages that will be crawled and validated
+jobs.maxPages.detail=The maximum number of pages that will be crawled and validated
+
+
+

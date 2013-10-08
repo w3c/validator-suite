@@ -11,11 +11,11 @@ import play.api.data.format._
 import play.api.mvc.{Filter => _, _}
 import scala.concurrent._
 
-import JobForm.JobType
 import play.api.i18n.Messages
 import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.Duration
 
-object JobForm {
+/*object JobForm {
 
   type JobType = (String, URL, Int)
 
@@ -81,5 +81,33 @@ class ValidJobForm private[view](
     )
     Job(name = name, strategy = strategy, creatorId = Some(user.id), isPublic = false)
   }
+
+}
+ */
+
+object JobForm {
+
+  def apply(user: User): Form[Job] = Form(
+    mapping(
+      "name" -> nonEmptyText,
+      "entrypoint" -> of[URL].verifying("invalid", { url =>
+        try {
+          // TODO use a dedicated httpClient?
+          val code = Global.conf.httpClient.prepareGet(url.toString).execute().get(10, TimeUnit.SECONDS).getStatusCode
+          code >= 200 && code < 300
+        } catch { case e: Exception =>
+          false
+        }
+      }),
+      "maxPages" -> of[Int].verifying("creditMaxExceeded", { credits =>
+        credits <= user.credits
+      })
+    )((name, entrypoint, maxPages) => {
+      val strategy = Strategy(URL(entrypoint), maxPages)
+      Job(name = name, strategy = strategy, creatorId = Some(user.id))
+    })((job: Job) =>
+      Some(job.name, job.strategy.entrypoint, job.strategy.maxResources)
+    )
+  )
 
 }

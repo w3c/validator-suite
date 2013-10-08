@@ -10,13 +10,16 @@ require([
     $(document).foundation();
 
     $(".range").each(function (i, element) {
-        var span, input = $("input", element);
+        var output, input = $("input", element);
         if (input[0] && input[0].type === "range") {
-            span = $("<span></span>");
-            input.after(span);
-            span.text(input[0].value);
+            output = $("<input type='text'></input>");
+            input.after(output);
+            output.val(input[0].value);
             input.on("change", function (e) {
-                span.text(e.target.value);
+                output.val(e.target.value);
+            });
+            output.on("change", function (e) {
+                input.val(e.target.value);
             });
         }
     });

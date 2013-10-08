@@ -494,19 +494,23 @@ a:hover {
 }
 
 .range {
-    input {
+    input[type="range"] {
         width: 100%;
         vertical-align: middle;
+        margin: 0;
+        display: inline-block;
     }
 }
 
 .js .range {
-    input {
+    input[type="range"] {
         width: 80%;
     }
-    span {
-        vertical-align: middle;
-        padding-left: 1em;
+    input[type="text"] {
+        width: 18%;
+        margin: 0;
+        margin-left: 2%;
+        display: inline-block;
     }
 }
 
@@ -572,5 +576,15 @@ body {
     .column {
         margin-bottom: 0.5em;
         padding-right: 5px;
+    }
+}
+
+.disclaimer {
+    padding-left: 0;
+
+    p {
+        font-size: 0.9em;
+        line-height: 1.6;
+        font-style: italic;
     }
 }

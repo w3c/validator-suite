@@ -45,14 +45,31 @@ object Jobs extends VSController {
   def newJob: ActionA = AuthenticatedAction { implicit req => user =>
     render {
       case Accepts.Html() => {
-        Ok(views.html.newJob(JobForm.blank, user))
+        Ok(views.html.newJob(JobForm(user), user))
       }
     }
   }
 
   def create: ActionA = AuthenticatedAction { implicit req => user =>
-    (for {
-      form <- Future(JobForm.bind match {
+    JobForm(user).bindFromRequest().fold(
+      form => Future.successful(render {
+        case Accepts.Html() => BadRequest(views.html.newJob(form, user))
+        case Accepts.Json() => BadRequest
+      }),
+      job => {
+        for {
+          _ <- job.save()
+        } yield {
+          render {
+            case Accepts.Html() => SeeOther(routes.Jobs.index.url).flashing(("success" -> Messages("jobs.created", job.name)))
+            case Accepts.Json() => Created(routes.Job.get(job.id).toString)
+          }
+        }
+      }
+    )
+
+    /*(for {
+      form <- Future(JobForm(user).fold() match {
         case Left(form) => throw new InvalidFormException(form)
         case Right(validJobForm) => validJobForm
       })
@@ -69,7 +86,7 @@ object Jobs extends VSController {
           case Accepts.Json() => BadRequest
         }
       }
-    }
+    } */
   }
 
   def socket(typ: SocketType): Handler = {
