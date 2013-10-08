@@ -8,6 +8,19 @@
     }
 }
 
+@creditClass(credits: Int) = {
+    @if(credits <= 50) {class="credits warn"} else {class="credits"}
+}
+
+@user.map{ user =>
+<div class="hello">
+    <p>Hello <a href="@routes.User.profile.url">@user.name</a>. You have <span @creditClass(user.credits)>@user.credits</span> credits left.</p>
+    <form action="@routes.Application.logoutAction" method="post">
+        <button type="submit" class="logout">Logout</button>
+    </form>
+</div>
+}
+
 <nav class="mainNav">
     <ul>
         <li>@navLink(routes.Application.index.url){Home}</li>
@@ -16,8 +29,9 @@
         @user match {
         case Some(user) => {
         <li><a class="support menu-entry" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
-        <li class="c-dropdown">
-            <a href="#" data-dropdown="myAccount" class="menu-entry">My Account</a>
+        <li>@navLink(routes.Jobs.index.url){My Jobs}</li>
+        @**<li class="c-dropdown">
+
             <ul id="myAccount" class="f-dropdown small" data-dropdown-content>
                 <li class="noHover menuHead">
                     <span>Logged in as:</span> <span>@user.name</span>
@@ -25,10 +39,10 @@
                 <li class="noHover menuHead last">
                     <span>Credits:</span> <span>@user.credits <a href="@routes.Purchase.buyCredits" class="buy-more">Buy more credits</a></span>
                 </li>
-                <li>@navLink(routes.Jobs.index.url){My Jobs}</li>
+
                 <li><a href="@routes.User.profile.url" class="menu-entry">My Profile</a></li>
                 @if(user.isRoot){
-                @**<li><a href="@routes.Administration.index.url" class="menu-entry">Administration</a></li>**@
+                @**<li><a href="@routes.Administration.index.url" class="menu-entry">Administration</a></li>** @
                 <li><a href="@routes.Administration.console.url" class="menu-entry">Console</a></li>}
                 <li class="noHover">
                     <form action="@routes.Application.logoutAction" method="post">
@@ -36,7 +50,7 @@
                     </form>
                 </li>
             </ul>
-        </li>
+        </li>**@
         }
         case _ => {
         <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")' class="menu-entry">Contact</a></li>
