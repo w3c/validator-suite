@@ -203,6 +203,6 @@ maxPages.creditMaxExceeded=Max pages exceeded your available number of credits
 
 jobs.maxPages=Max pages
 jobs.maxPages.detail=The maximum number of pages that will be crawled and validated
-
+maxPages.error.min=A Job max pages parameter must equal or greater than 1
 
 

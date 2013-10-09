@@ -87,6 +87,8 @@ class ValidJobForm private[view](
 
 object JobForm {
 
+  import play.api.data.validation.Constraints._
+
   def apply(user: User): Form[Job] = Form(
     mapping(
       "name" -> nonEmptyText,
@@ -99,7 +101,7 @@ object JobForm {
           false
         }
       }),
-      "maxPages" -> of[Int].verifying("creditMaxExceeded", { credits =>
+      "maxPages" -> of[Int].verifying(min(1)).verifying("creditMaxExceeded", { credits =>
         credits <= user.credits
       })
     )((name, entrypoint, maxPages) => {

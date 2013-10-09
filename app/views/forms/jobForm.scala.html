@@ -67,7 +67,7 @@
                 </label>
             </div>
             <div class="small-9 columns range">
-                <input id="maxPages" name="maxPages" type="range" max="@{scala.math.min(user.credits, 2000)}" value='@form("maxPages").value'
+                <input id="maxPages" name="maxPages" type="range" min="1" max="@{scala.math.min(user.credits, 2000)}" value='@form("maxPages").value'
                        step="10" required="required" placeholder='@Messages("jobs.maxPages.detail")'/>
             </div>
 
