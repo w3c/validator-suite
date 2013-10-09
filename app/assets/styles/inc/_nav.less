@@ -144,8 +144,10 @@
 
 .hello {
     //position: absolute;
-    right: 1.5em;
-    top: 1em;
+    min-width: 30%;
+    text-align: right;
+    right: 1em;
+    top: 0.4em;
     color: white;
     color: rgba(255,255,255,0.8);
     font-style: italic;
@@ -161,8 +163,13 @@
         font-weight: bold;
     }
 
-    form, p {
-        display: inline;
+    form {
+        float: right;
+        line-height: 1.4;
+        margin-left: 0.3em;
+    }
+    p {
+
     }
     button {
         color: #ffffff;
@@ -176,7 +183,7 @@
         font-size: 1em;
         cursor: pointer;
         font-family: inherit;
-        font-weight: bold;
+        //font-weight: bold;
         position: relative;
 
         text-align: center;

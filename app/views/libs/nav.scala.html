@@ -14,10 +14,11 @@
 
 @user.map{ user =>
 <div class="hello">
-    <p>Hello <a href="@routes.User.profile.url">@user.name</a>. You have <span @creditClass(user.credits)>@user.credits</span> credits left.</p>
     <form action="@routes.Application.logoutAction" method="post">
-        <button type="submit" class="logout">Logout</button>
+        <button type="submit" class="logout">(logout)</button>
     </form>
+    <p>Hello <a href="@routes.User.profile.url">@user.name</a></p>
+    <p>You have <span @creditClass(user.credits)>@user.credits</span> credits left</p>
 </div>
 }
 
