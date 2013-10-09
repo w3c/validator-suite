@@ -8,9 +8,11 @@
     }
 }
 
-@creditClass(credits: Int) = {
-    @if(credits <= 50) {class="credits warn"} else {class="credits"}
-}
+@creditClass(credits: Int) = {@credits match {
+    case n if n <= 0 => {class="credits critical"}
+    case n if n <= 50 => {class="credits warn"}
+    case _ => {class="credits"}
+}}
 
 @user.map{ user =>
 <div class="hello">

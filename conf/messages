@@ -195,7 +195,7 @@ form.terms.not_accepted=You must read and agree to the Terms and Conditions to p
 form.repeatPassword.error.required=Please verify your password.
 
 info.register.first=In order to purchase a job please register first, or login if you already have an account.
-success.registered.user=Successfully registered as {0} <{1}>
+success.registered.user=Successfully registered as {0} &lt;{1}>
 
 entrypoint.invalid=Website URL not accessible or not within the 200 range
 maxPages.creditMaxExceeded=Max pages exceeded your available number of credits
@@ -205,4 +205,5 @@ jobs.maxPages=Max pages
 jobs.maxPages.detail=The maximum number of pages that will be crawled and validated
 maxPages.error.min=A Job max pages parameter must equal or greater than 1
 
+error.notEnoughCredits=You do not have enough credits to run this job. <a href="{0}">Purchase credits</a>.
 

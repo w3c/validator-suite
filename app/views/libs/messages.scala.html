@@ -3,8 +3,8 @@
     <section id="messages">
         <h1>Messages</h1>
         @flash.data.map { case (key, message) =>
-        @if(message != ""){<p class="@key message">@message</p>}}
+        @if(message != ""){<p class="@key message">@HtmlFormat.raw(message)</p>}}
         @errors.map { case (key, message) =>
-        @if(message != ""){<p class="@key message">@message</p>}}
+        @if(message != ""){<p class="@key message">@HtmlFormat.raw(message)</p>}}
     </section>
 }
