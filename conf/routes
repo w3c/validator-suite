@@ -3,6 +3,7 @@
 
 # Application
 GET     /                                           controllers.Application.index
+GET     /try                                        controllers.Application.tryIt
 GET     /faqs                                       controllers.Application.faq
 GET     /logos                                      controllers.Application.logos
 GET     /pricing                                    controllers.Application.pricing

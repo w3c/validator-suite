@@ -29,27 +29,38 @@ object Purchase extends VSController {
     } */
   }*/
 
-  def buyCredits: ActionA = AuthenticatedAction { implicit req => user =>
-    Future {
-      val redirect: Option[Result] = for {
-        planStr <- req.getQueryString("plan")
-        plan <- CreditPlan.fromString(planStr)
-      } yield {
-        render {
-          case Accepts.Html() => {
-            if (user.isRoot) {
-              model.User.updateCredits(user.id, plan.credits).getOrFail()
-              Redirect(routes.Jobs.index())
-            } else {
-              logger.info(s"Redirected user ${user.email} to store for credit plan ${plan}")
-              redirectToStore(plan, user.id)
+  def buyCredits: ActionA = AsyncAction { implicit req =>
+    (for {
+      user <- getUser()
+      redirect <- Future.successful{
+        for {
+          planStr <- req.getQueryString("plan")
+          plan <- CreditPlan.fromString(planStr)
+        } yield {
+          render {
+            case Accepts.Html() => {
+              if (user.isRoot) {
+                model.User.updateCredits(user.id, plan.credits).getOrFail()
+                Redirect(routes.Jobs.index())
+              } else {
+                logger.info(s"Redirected user ${user.email} to store for credit plan ${plan}")
+                redirectToStore(plan, user.id)
+              }
             }
           }
         }
       }
+    } yield {
       redirect.getOrElse {
         render {
           case Accepts.Html() => Redirect(routes.Application.pricing())
+        }
+      }
+    }) recover {
+      case UnauthorizedException(_) => {
+        render {
+          case Accepts.Json() => Unauthorized
+          case Accepts.Html() => Unauthorized(views.html.register(RegisterForm.redirectTo(req.uri)))
         }
       }
     }

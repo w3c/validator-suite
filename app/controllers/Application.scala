@@ -33,6 +33,14 @@ object Application extends VSController {
     }
   }
 
+  def tryIt: ActionA = AsyncAction { implicit req =>
+    getUser map {
+      case _ => Redirect(routes.Jobs.index())
+    } recover {
+      case  _: UnauthorizedException => Redirect(routes.Application.register())
+    }
+  }
+
   def register = AsyncAction { implicit req =>
     getUser map {
       case _ => Redirect(routes.Jobs.index()) // Already logged in -> redirect to index
