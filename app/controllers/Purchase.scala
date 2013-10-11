@@ -114,10 +114,13 @@ object Purchase extends VSController {
     // TODO: add security check
     (for {
       params <- req.body.asFormUrlEncoded
-      orderId <- params("OrderId").headOption
-      planString <- params("OrderProductNames").headOption
+      orderIdL <- params.get("OrderID")
+      orderId <- orderIdL.headOption
+      planStringL <- params.get("OrderProductNames").headOption
+      planString <- planStringL.headOption
       plan <- Plan.fromFsString(planString)
-      idString <- params("OrderReferrer").headOption
+      idStringL <- params.get("OrderReferrer")
+      idString <- idStringL.headOption
     } yield {
 
       plan match {
