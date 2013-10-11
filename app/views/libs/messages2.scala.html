@@ -3,7 +3,7 @@
         @messages.map { case (key, message) =>
         @if(message != ""){
             <span data-alert class="alert-box @key message column">
-                @message
+                @HtmlFormat.raw(message)
             </span>
             @**<a href="#" class="close">&times;</a>**@
         }}

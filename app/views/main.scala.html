@@ -3,13 +3,14 @@
     script: String = "main",
     style: String = "",
     crumbs: Crumbs = Seq.empty,
+    messages: List[(String, String)] = List.empty,
     collections: Seq[Collection[Model]])(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
 @libs.main(title, style, script, user) {
 
     @libs.navigation(crumbs)
 
-    @libs.messages()
+    @libs.messages(messages)
 
     @collections.map { collection => @collection.toHtml }
 

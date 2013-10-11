@@ -1,7 +1,7 @@
 @(form: Form[Job], user: User)(implicit req: RequestHeader)
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
-
+@disabled = {@if(user.credits <= 0) {disabled="disabled"} else {}}
 @checkIfPlan(name: String) = {
     @req.getQueryString("plan") match {
         case Some(`name`) => {checked="checked"}
@@ -10,22 +10,13 @@
     }
 }
 
+
+
 <div class="column">
 
     <h1 class="formHeader">Create a new job</h1>
 
     <form method="post" action="@routes.Jobs.create.url" class="vsForm">
-
-        @**<div class="row">
-            <div class="large-9 large-offset-3 columns">
-                <p>
-                    /*Purchase a new W3C Validator Suite<span class="tm">™</span> <strong>One Time</strong> service job.
-                    Your website HTML and CSS content will be checked for validity and
-                    internationalization-friendliness.
-                    A single validation job will be performed on your website.*/
-                </p>
-            </div>
-        </div>**@
 
         @if(form.errors.size > 0) {
         <div class="row">
@@ -43,7 +34,7 @@
             </div>
             <div class="small-9 columns">
                 <input id="name" name="name" type="text" value='@form("name").value' required="required"
-                       placeholder="A display name for this job"/>
+                       placeholder="A display name for this job" @disabled />
             </div>
         </div>
 
@@ -55,7 +46,7 @@
             </div>
             <div class="small-9 columns">
                 <input id="entrypoint" name="entrypoint" type="url" value='@form("entrypoint").value'
-                       required="required" placeholder='@Messages("jobs.entrypoint.detail")'/>
+                       required="required" placeholder='@Messages("jobs.entrypoint.detail")' @disabled />
             </div>
         </div>
 
@@ -67,8 +58,8 @@
                 </label>
             </div>
             <div class="small-9 columns range">
-                <input id="maxPages" name="maxPages" type="range" min="1" max="@{scala.math.min(user.credits, 2000)}" value='@form("maxPages").value'
-                       step="1" required="required" placeholder='@Messages("jobs.maxPages.detail")'/>
+                <input id="maxPages" name="maxPages" type="range" min="@{scala.math.min(user.credits, 1)}" max="@{scala.math.min(user.credits, 2000)}" value='@form("maxPages").value'
+                       step="1" required="required" placeholder='@Messages("jobs.maxPages.detail")' @disabled />
             </div>
 
         </div>
@@ -80,7 +71,7 @@
         @**<div class="row">
             <div class="small-3 columns">
                 <input id="terms" type="checkbox" required="required" name="terms" class="right"
-                @form("terms").value.map{_ => checked="checked"}>
+                @form("terms").value.map{_ => checked="checked"}  >
             </div>
             <div class="small-9 columns">
                 <label for="terms">
@@ -104,7 +95,7 @@
 
         <div class="row">
             <div class="large-4 columns large-offset-3">
-                <button type="submit" name="action" value="create">Create</button>
+                <button type="submit" name="action" value="create" @disabled >Create</button>
             </div>
             @**
             <div class="large-4 columns paymentLogos">

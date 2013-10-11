@@ -3,7 +3,7 @@
     user: User,
     messages: List[(String, String)] = List())(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
-@front("W3C Validator Suite - My Profile", Some(user)) {
+@front(Messages("title.account"), Some(user)) {
 
 <section class="row">
 

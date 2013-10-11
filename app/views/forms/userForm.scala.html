@@ -3,9 +3,29 @@
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
 
+@creditClass(credits: Int) = {@credits match {
+case n if n <= 0 => {class="credits critical"}
+case n if n <= 50 => {class="credits warn"}
+case _ => {class="credits"}
+}}
+
+
 <div class="column">
 
-    <h1 class="formHeader">My Profile</h1>
+    <h1 class="formHeader">My Account</h1>
+
+    <div class="vsForm">
+        <div class="row">
+            <div class="column large-9 large-offset-3">
+                <p class="noMargin">
+                    You have <strong @creditClass(user.credits)>@user.credits</strong> page validation credits left.<br/>
+                    <a href="@routes.Application.pricing">Buy additional credits</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <h1 class="formHeader">User Information</h1>
 
     <form method="post" action="@routes.User.editAction" class="vsForm">
 

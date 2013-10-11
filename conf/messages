@@ -1,3 +1,7 @@
+#
+# TODO: organize this file and extract relevant strings from the source
+#
+#
 # All collection
 collection.definitions=Definitions
 
@@ -169,6 +173,9 @@ sort.descending=Sort in descending order
 
 # Form
 name.error.required=Name cannot be empty
+entrypoint.error.required=A Website URL is required
+maxPages.error.required=Max Pages is required
+
 form.r_email.duplicate=Email already in use. Choose another one or login with an existing account.
 
 form.l_email.error.email=Invalid email address
@@ -206,4 +213,14 @@ jobs.maxPages.detail=The maximum number of pages that will be crawled and valida
 maxPages.error.min=A Job max pages parameter must equal or greater than 1
 
 error.notEnoughCredits=You do not have enough credits to run this job. <a href="{0}">Purchase credits</a>.
+
+# used in the Try it now button, as a title attribute, and on the register form
+notice.registerNow=Register now and get 20 page validations free
+
+
+
+title.account=W3C Validator Suite - My Account
+
+warn.lowCredits=Your credits count is low ({0} credits left). <a href={1}>Purchase additional credits</a>.
+warn.noCredits=Your are out of credits! <a href={1}>Purchase additional credits</a>.
 

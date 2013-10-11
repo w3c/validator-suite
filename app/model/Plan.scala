@@ -12,10 +12,10 @@ object Plan {
   // TODO See if fastspring could give us the product key instead of the display name! Unstable.
   def fromFsString(s: String): Option[Plan] = {
     s match {
-      case "One Time Tiny" => Some(OneTimePlan.Tiny)
+/*      case "One Time Tiny" => Some(OneTimePlan.Tiny)
       case "One Time Small" => Some(OneTimePlan.Small)
       case "One Time Medium" => Some(OneTimePlan.Medium)
-      case "One Time Large" => Some(OneTimePlan.Large)
+      case "One Time Large" => Some(OneTimePlan.Large)*/
       case "Credits Tiny" => Some(CreditPlan.Tiny)
       case "Credits Small" => Some(CreditPlan.Small)
       case "Credits Medium" => Some(CreditPlan.Medium)
@@ -71,7 +71,7 @@ object CreditPlan {
 
 }
 
-object OneTimePlan {
+/*object OneTimePlan {
 
   case object Tiny extends OneTimePlan {
     val key = "tiny"
@@ -118,4 +118,4 @@ object OneTimePlan {
     }
   }
 
-}
+}*/

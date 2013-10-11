@@ -3,24 +3,28 @@
 @taxSpan = {<span class="tax" title="Plus VAT if applicable"><sup>(1)</sup></span>}
 
 @oneTimeDesc(pages: Int) = {For one website<br/>with up to <strong>@pages pages</strong>}
-@creditsDesc(pages: Int) = {<strong>@pages credits</strong>}
+@creditsDesc(pages: Int) = {<strong>@pages Credits</strong>}
 
 @front("W3C Validator Suite - Pricing & Plans", user) {
 
 <div class="row">
     <div class="column">
-        <h1>Pricing & Plans</h1>
+        <h1>Pricing</h1>
         <p>
-            W3C Validator Suite<span class="tm">™</span> is Software-as-a-Service product currently available as a
-            <a href="#credits"><strong>Credits</strong></a> service.
-            The <strong>Credits</strong> service is designed for Website developers, designers or site managers,
+            W3C Validator Suite<span class="tm">™</span>  is a Software-as-a-Service available through
+            <strong>Credits</strong> of Page Validation.
+        </p>
+        <p>
+            This Credit service is designed for Website developers, designers or site managers,
             willing to validate their websites and ensure compliance with W3C Web standards.
         </p>
         <p>
-            <a href="@routes.Application.register">Register now</a> to be informed of the latest W3C Validator
-            Suite<span class="tm">™</span> news.
+            Funds from W3C Validator Suite<span class="tm">™</span> will help W3C to improve the free validators and
+            will provide long-term stability of these services.
         </p>
-        <p>Funds from W3C Validator Suite<span class="tm">™</span> will help W3C to improve the free validators and will provide long-term stability of these services.</p>
+        <p>
+            <a href="@routes.Application.register">Register now</a> and get 20 free Pages Validations.
+        </p>
     </div>
 </div>
 
@@ -29,15 +33,13 @@
 <div class="row pricing">
 
     <div class="column head">
-        <h1 id="credits" tabindex="0">Credits</h1>
+        <h1 id="credits">Credits</h1>
 
         <p>
-            The <strong>Credits</strong> service allows for <strong>multiple validations of any websites</strong>.
+            A Credit permits to validate one page (one HTML file and all associated CSS files). <br />Credits can be used to <strong>validate multiple websites, anytime</strong>.
         </p>
         <p>
-            Our packs lets you choose the plan that best fulfils your validation needs. We only charge per each
-            individual page validation. Credits have to be used within 3 months, each purchase will also extend the
-            lifetime of your current credits.
+            The four plans lets you fulfill your validation needs.
         </p>
         <p>
             Special pricing for <a href="http://www.w3.org/Consortium/membership">W3C Members</a> available on request
@@ -48,52 +50,63 @@
 
     <div class="large-3 column">
         <ul class="pricing-table">
-            <li class="title">Tiny</li>
-            <li class="price">$27 / 19€@taxSpan</li>
+            <li class="title">Tiny plan</li>
+            <li class="price">19€@taxSpan / $27</li>
             <li class="bullet-item">@creditsDesc(CreditPlan.Tiny.credits)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
             <li class="description">Internationalization</li>
-            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=tiny" title="Buy a Tiny credits pack">Buy Now</a></li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=tiny" title="Buy a Tiny Credits plan">Buy Now</a></li>
         </ul>
     </div>
 
     <div class="large-3 column">
         <ul class="pricing-table">
-            <li class="title">Small</li>
-            <li class="price">$70 / 49€@taxSpan</li>
+            <li class="title">Small plan</li>
+            <li class="price">49€@taxSpan / $69</li>
             <li class="bullet-item">@creditsDesc(CreditPlan.Small.credits)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
             <li class="description">Internationalization</li>
-            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=small" title="Buy a Small credits pack">Buy Now</a></li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=small" title="Buy a Small Credits plan">Buy Now</a></li>
         </ul>
     </div>
 
     <div class="large-3 column">
         <ul class="pricing-table">
-            <li class="title">Medium</li>
-            <li class="price">$140 / 99€@taxSpan</li>
+            <li class="title">Medium plan</li>
+            <li class="price">99€@taxSpan / $139</li>
             <li class="bullet-item">@creditsDesc(CreditPlan.Medium.credits)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
             <li class="description">Internationalization</li>
-            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=medium" title="Buy a Medium credits pack">Buy Now</a></li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=medium" title="Buy a Medium Credits plan">Buy Now</a></li>
         </ul>
     </div>
     <div class="large-3 column">
         <ul class="pricing-table">
-            <li class="title">Large</li>
-            <li class="price">$280 / 199€@taxSpan</li>
+            <li class="title">Large plan</li>
+            <li class="price">199€@taxSpan / $279</li>
             <li class="bullet-item">@creditsDesc(CreditPlan.Large.credits)</li>
             <li class="description">HTML</li>
             <li class="description">CSS</li>
             <li class="description">Internationalization</li>
-            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=large" title="Buy a Large credits pack">Buy Now</a></li>
+            <li class="cta-button"><a class="button" href="@routes.Purchase.buyCredits.url?plan=large" title="Buy a Large Credits plan">Buy Now</a></li>
         </ul>
     </div>
 
-    <p class="column note"><span class="tax">(1)</span><em> Plus VAT if applicable.</em></p>
+    <div class="column"><p class="note"><span class="tax">(1)</span><em> Plus VAT if applicable.</em></p></div>
+
+    <div class="column large-6 fsImages">
+        <img src='@routes.Assets.at("images/fs-secure.png")' alt="FastSpring " title="Secure ordering by FastSpring"  />
+        <img src='@routes.Assets.at("images/paymentLogos.png")' alt="Visa, MasterCard, Maestro, American Express, PayPal" title="Accepted payment methods" class="cbLogos" />
+    </div>
+    <div class="column large-6 fsNotice">
+        <p>
+            To complete your order you will be redirected to FastSpring, our payment partner who accepts payments by Credit Cards or PayPal.
+        </p>
+    </div>
+
 
 </div>
 

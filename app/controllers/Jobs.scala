@@ -24,16 +24,28 @@ object Jobs extends VSController {
 
   val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
 
+  private def lowCreditWarning(credits: Int) = {
+    if (credits <= 0)
+      List(("warn" -> Messages("warn.noCredits", credits, routes.Application.pricing().url)))
+    else if (credits <= 50)
+      List(("warn" -> Messages("warn.lowCredits", credits, routes.Application.pricing().url)))
+    else
+      List.empty
+  }
+
   def index: ActionA = AuthenticatedAction { implicit req => user =>
     for {
       jobs_ <- model.Job.getFor(user.id)
       jobs <- JobsView(jobs_)
     } yield {
       render {
-        case Accepts.Html() => Ok(views.html.main(
+        case Accepts.Html() =>
+
+        Ok(views.html.main(
           user = Some(user),
           title = "Jobs - W3C Validator Suite",
-          collections = Seq(jobs.bindFromRequest)
+          collections = Seq(jobs.bindFromRequest),
+          messages = lowCreditWarning(user.credits)
         ))
         case Accepts.Json() => Ok(jobs.bindFromRequest.toJson)
       }
@@ -45,7 +57,11 @@ object Jobs extends VSController {
   def newJob: ActionA = AuthenticatedAction { implicit req => user =>
     render {
       case Accepts.Html() => {
-        Ok(views.html.newJob(JobForm(user), user))
+        Ok(views.html.newJob(
+          form = JobForm(user),
+          user = user,
+          messages = lowCreditWarning(user.credits)
+        ))
       }
     }
   }
@@ -59,6 +75,7 @@ object Jobs extends VSController {
       job => {
         for {
           _ <- job.save()
+          _ <- job.run()
         } yield {
           render {
             case Accepts.Html() => SeeOther(routes.Jobs.index.url).flashing(("success" -> Messages("jobs.created", job.name)))

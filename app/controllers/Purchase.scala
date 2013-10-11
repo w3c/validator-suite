@@ -110,7 +110,7 @@ object Purchase extends VSController {
     } yield {
 
       plan match {
-        case plan: OneTimePlan =>
+       //case plan: OneTimePlan =>
           /*for {
             jobId <- Future(JobId(idString))
             job <- model.Job.get(jobId)
@@ -124,17 +124,17 @@ object Purchase extends VSController {
                 Future.failed(new Exception(s))
               }
             }
-          } yield { Ok } */ ???
+          } yield { Ok } */
 
-        case plan: CreditPlan =>
-          for {
-            userId <- Future(UserId(idString))
-            _ <- {
-              logger.info(s"Got payment confirmation. Adding ${plan.credits} credits to " + userId)
-              model.User.updateCredits(userId, plan.credits)
-            }
-            _ <- model.User.updateExpireDate(userId)
-          } yield { Ok }
+       case plan: CreditPlan =>
+         for {
+           userId <- Future(UserId(idString))
+           _ <- {
+             logger.info(s"Got payment confirmation. Adding ${plan.credits} credits to " + userId)
+             model.User.updateCredits(userId, plan.credits)
+           }
+           _ <- model.User.updateExpireDate(userId)
+         } yield { Ok }
       }
 
     }) getOrElse {
