@@ -215,7 +215,7 @@ maxPages.error.min=A Job max pages parameter must equal or greater than 1
 error.notEnoughCredits=You do not have enough credits to run this job. <a href="{0}">Purchase credits</a>.
 
 # used in the Try it now button, as a title attribute, and on the register form
-notice.registerNow=Register now and get 20 page validations free
+notice.registerNow=Register now and get 20 free page validations
 
 
 
