@@ -82,12 +82,14 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
             logger.info("Received data: " + event.data);
             console.write(event.data);
             console.el.removeAttr("disabled");
+            console.el.focus();
+            console.el[0].setSelectionRange(console.el[0].value.length, console.el[0].value.length);
         };
 
         console.socket.onclose = function (event) {
             logger.info("[Socket closed]");
             console.fill("[Socket closed]");
-            el.attr("disabled", "disabled");
+            console.el.attr("disabled", "disabled");
         };
 
         function parseCommands() {

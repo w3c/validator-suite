@@ -62,8 +62,6 @@ object Job extends VSController {
       case PaymentRequired(job) => {
         render {
           case Accepts.Html() => {
-            logger.info(s"Redirected user ${userOpt.map(_.email)} to store for jobId ${job.id}")
-            //controllers.Purchase.redirectToStore(OneTimePlan.fromJob(job), job.id)
             Redirect(routes.Jobs.index()).flashing(("error" -> Messages("error.notEnoughCredits", routes.Application.pricing().url)))
           }
           case Accepts.Json() => Status(402) //(controllers.Purchase.getStoreUrl(OneTimePlan.fromJob(job), job.id))

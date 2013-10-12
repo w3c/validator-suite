@@ -172,9 +172,10 @@ object Administration extends VSController {
           |       users ROOT             Root users
           |       users Opted-In         Users that opted-in for e-mailing
           |    db-add-user <name> <email> <password> <credits> - register a new user
-          |    db-set-root <email> - sets the user with given email as a root
-          |    db-add-roots        - adds all root users to the current db. Roots are defined in Main.scala.
-          |    db-reset            - resets the database with default data (only available in Dev mode)""".stripMargin
+          |    db-add-credits <email> <nb> - add nb credits to user with given email
+          |    db-set-root <email>         - sets the user with given email as a root
+          |    db-add-roots                - adds all root users to the current db. Roots are defined in Main.scala.
+          |    db-reset                    - resets the database with default data (only available in Dev mode)""".stripMargin
 
       case Array("jobs") =>
         val jobs = model.Job.getAll().getOrFail()
@@ -217,22 +218,8 @@ object Administration extends VSController {
         }*/
 
       case Array("db-add-user", name, email, password, int(credits)) =>
-        try {
-          val user = model.User.register(name, email, password, credits, isSubscriber = false, isRoot = false).getOrFail()
-          val json = toJson(user)
-          s"Scala: ${user}\nJSON: ${prettyPrint(json)}"
-        } catch {
-          case t: Throwable =>
-            t.getMessage
-        }
-
-
-      /*case Array("current-users") =>
-        org.w3.vs.Main.currentUsers().mkString(" | ")
-
-      case Array("clear-cache") =>
-        org.w3.vs.Main.clearCache()
-        "done"*/
+        val user = model.User.register(name, email, password, credits, isSubscriber = false, isRoot = false).getOrFail()
+        user.compactString
 
       case Array("db-reset") if conf.mode == Mode.Dev =>
         org.w3.vs.Main.defaultData()
@@ -241,7 +228,14 @@ object Administration extends VSController {
       case Array("db-add-roots") =>
         val roots: Iterable[String] = org.w3.vs.Main.addRootUsers().getOrFail()
         roots.mkString("\n")
-        //s"${roots.size} root users added"
+
+      case Array("db-set-root", email) =>
+        org.w3.vs.Main.setRootUser(email).getOrFail()
+
+      case Array("db-add-credits", email, int(credits)) =>
+        val user = model.User.getByEmail(email).getOrFail()
+        model.User.updateCredits(user.id, credits).getOrFail()
+        s"${credits} credits added to user ${user.email} (${user.id}})"
 
       case _ => s"Command ${command} not found"
 
