@@ -196,8 +196,11 @@ form.userName.error.required=A name is required.
 form.u_userName.error.required=A name is required.
 
 form.r_password.error.minLength=Password too short. Minimum is 6 characters.
+
 # There is no key for this one hence the '..' (cf RegisterForm.scala)
 form..password.dont_match=Passwords did not match.
+password.dont_match=Passwords did not match.
+
 form.terms.not_accepted=You must read and agree to the Terms and Conditions to purchase a job.
 form.repeatPassword.error.required=Please verify your password.
 
@@ -224,3 +227,5 @@ title.account=W3C Validator Suite - My Account
 warn.lowCredits=Your credits count is low ({0} credits left). <a href={1}>Purchase additional credits</a>.
 warn.noCredits=Your are out of credits! <a href={1}>Purchase additional credits</a>.
 
+user.profile.updated=You profile has been updated.
+user.password.updated=Your password has been updated.

@@ -456,7 +456,7 @@ object Job {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
-      case None => throw new NoSuchElementException("Invalid jobId: " + jobId)
+      case None => throw UnknownJob(jobId) //new NoSuchElementException("Invalid jobId: " + jobId)
       case Some(json) => json.as[Job]
     }
   }

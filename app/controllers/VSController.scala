@@ -65,6 +65,7 @@ trait VSController extends Controller {
     Async {
       f(req) recover {
         case AccessNotAllowed => Global.onHandlerNotFound(req)
+        case UnknownJob(_) => Global.onHandlerNotFound(req)
       }
     }
   }
