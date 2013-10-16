@@ -11,6 +11,7 @@ import play.api.Mode
 import scala.util.matching.Regex
 import org.w3.vs.store.Formats._
 import reactivemongo.bson.BSONObjectID
+import scala.concurrent.Future
 
 object Administration extends VSController {
 
@@ -154,6 +155,8 @@ object Administration extends VSController {
         s"No result"
     }
 
+    // TODO add caching
+
     args match {
       case Array("?") | Array("help") =>
         """Available commands:
@@ -174,6 +177,7 @@ object Administration extends VSController {
           |    db-add-user <name> <email> <password> <credits> - register a new user
           |    db-add-credits <email> <nb> - add nb credits to user with given email
           |    db-set-root <email>         - sets the user with given email as a root
+          |    db-set-password <email> <pass> - changes a user password
           |    db-add-roots                - adds all root users to the current db. Roots are defined in Main.scala.
           |    db-reset                    - resets the database with default data (only available in Dev mode)""".stripMargin
 
@@ -231,6 +235,15 @@ object Administration extends VSController {
 
       case Array("db-set-root", email) =>
         org.w3.vs.Main.setRootUser(email).getOrFail()
+
+      case Array("db-set-password", email, password) =>
+        import org.mindrot.jbcrypt.BCrypt
+        model.User.getByEmail(email).flatMap( user =>
+          user.isRoot match {
+            case true => Future.successful(s"Cannot change the password of a root user: ${email}.")
+            case false => model.User.update(user.copy(password = BCrypt.hashpw(password, BCrypt.gensalt()))).map(_ => s"${email} password changed.")
+          }
+        ).getOrFail()
 
       case Array("db-add-credits", email, int(credits)) =>
         val user = model.User.getByEmail(email).getOrFail()
