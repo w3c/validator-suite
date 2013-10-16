@@ -18,6 +18,7 @@ object Http {
     val maxConnectionsTotal = httpClientConf.getInt("maximum-connections-total") getOrElse sys.error("maximum-connections-total")
     val maxConnectionsPerHost = httpClientConf.getInt("maximum-connectionsper-host") getOrElse sys.error("maximum-connectionsper-host")
     val timeout = httpClientConf.getInt("timeout") getOrElse sys.error("timeout")
+    val userAgent = httpClientConf.getString("user-agent") getOrElse sys.error("user-agent")
     val builder = new AsyncHttpClientConfig.Builder()
     val asyncHttpConfig =
       builder
@@ -34,6 +35,7 @@ object Http {
         .setRequestTimeoutInMs(timeout)
         .setWebSocketIdleTimeoutInMs(timeout)
         .setConnectionTimeoutInMs(timeout)
+        .setUserAgent(userAgent)
         .build
     new AsyncHttpClient(asyncHttpConfig)
   }

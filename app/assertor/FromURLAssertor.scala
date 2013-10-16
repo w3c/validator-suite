@@ -11,16 +11,20 @@ import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
 
 object FromURLAssertor {
 
+  // any reason for not sharing the configuration with application.http-client?
   private val client: AsyncHttpClient = {
     val configuration = Configuration.load(new File("."))
     val timeout =
       configuration.getInt("application.assertor.http-client.timeout") getOrElse sys.error("application.assertor.http-client.timeout")
+    val userAgent =
+      configuration.getString("application.assertor.http-client.user-agent") getOrElse sys.error("application.assertor.http-client.user-agent")
 //    val executor = new ForkJoinPool()
     val builder = new AsyncHttpClientConfig.Builder()
     val config =
       builder
 //        .setExecutorService(executor)
         .setFollowRedirects(true)
+        .setUserAgent(userAgent)
         .setConnectionTimeoutInMs(timeout)
         .build()
     new AsyncHttpClient(config)

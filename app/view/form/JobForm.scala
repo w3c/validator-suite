@@ -95,6 +95,7 @@ object JobForm {
       "name" -> nonEmptyText,
       "entrypoint" -> of[URL].verifying("invalid", { url =>
         try {
+          // careful: this is blocking IO, potentially up to 10 seconds
           val code = conf.formHttpClient.prepareGet(url.toString).execute().get(10, TimeUnit.SECONDS).getStatusCode
           code == 200
         } catch { case e: Exception =>
