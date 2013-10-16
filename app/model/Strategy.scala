@@ -23,16 +23,12 @@ case class Strategy (
   def getActionFor(url: URL): HttpAction = {
 //  if (filter.passThrough(url)) {
     // Tom: filters are not persisted and too complicated anyway for our simple single use case
-    if (url.toString.startsWith(entrypoint.toString)) {
-      if (url.authority === entrypoint.authority)
-        GET
-      else if (linkCheck)
-        HEAD
-      else
-        IGNORE
-    } else {
+    if (url.authority === entrypoint.authority)
+      GET
+    else if (linkCheck)
+      HEAD
+    else
       IGNORE
-    }
   }
 
   // TODO revise how this is done

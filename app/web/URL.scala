@@ -22,7 +22,7 @@ case class URL(underlying: jURL) extends AnyVal {
     a(s - 2) + "." + a(s - 1)
   }
 
-  def sameDomainAs(other: URL): Boolean = this.domain == other.domain
+  def sameDomainAs(other: URL): Boolean = this.domain === other.domain
 
   def /(spec: String): Option[URL] =
     try {
