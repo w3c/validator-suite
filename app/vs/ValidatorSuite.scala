@@ -111,6 +111,23 @@ trait ValidatorSuite extends Database {
     new AsyncHttpClient(asyncHttpConfig)
   }
 
+  // Used by form validation
+  lazy val formHttpClient = {
+    val builder = new AsyncHttpClientConfig.Builder()
+    val asyncHttpConfig =
+      builder
+        .setFollowRedirects(false)
+        .setMaximumConnectionsTotal(100)
+        .setMaximumConnectionsPerHost(5)
+        .setIdleConnectionTimeoutInMs(2000)
+        .setIdleConnectionInPoolTimeoutInMs(2000)
+        .setWebSocketIdleTimeoutInMs(2000)
+        .setRequestTimeoutInMs(10000)
+        .setConnectionTimeoutInMs(10000)
+        .build
+    new AsyncHttpClient(asyncHttpConfig)
+  }
+
   lazy val httpCacheOpt: Option[Cache] = Cache(config)
 
   def shutdownHttpClient(): Unit = {

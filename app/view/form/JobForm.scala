@@ -88,15 +88,15 @@ class ValidJobForm private[view](
 object JobForm {
 
   import play.api.data.validation.Constraints._
+  import Global.conf
 
   def apply(user: User): Form[Job] = Form(
     mapping(
       "name" -> nonEmptyText,
       "entrypoint" -> of[URL].verifying("invalid", { url =>
         try {
-          // TODO use a dedicated httpClient?
-          val code = Global.conf.httpClient.prepareGet(url.toString).execute().get(10, TimeUnit.SECONDS).getStatusCode
-          code >= 200 && code < 300
+          val code = conf.formHttpClient.prepareGet(url.toString).execute().get(10, TimeUnit.SECONDS).getStatusCode
+          code == 200
         } catch { case e: Exception =>
           false
         }

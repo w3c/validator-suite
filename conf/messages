@@ -185,9 +185,9 @@ form.r_email.error.required=Email is required
 form.u_email.error.email=Email is required
 form.l_password.error.required=Password is required
 form.r_password.error.required=Password is required
-
 form.name.error.required=A job name is required
 form.entrypoint.error.url=Website URL must be a valid URL
+entrypoint.error.url=Website URL must be a valid URL
 form.assertor.error.required=No assertors selected
 form.maxResources.error.max=Invalid max pages value
 form.maxResources.error.min=Invalid max pages value
@@ -207,7 +207,7 @@ form.repeatPassword.error.required=Please verify your password.
 info.register.first=In order to purchase a job please register first, or login if you already have an account.
 success.registered.user=Successfully registered as {0} &lt;{1}>
 
-entrypoint.invalid=Website URL not accessible or not within the 200 range
+entrypoint.invalid=The Website URL is not accessible or is a redirection.
 maxPages.creditMaxExceeded=Max pages exceeded your available number of credits
 
 
