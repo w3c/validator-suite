@@ -25,7 +25,7 @@ trait ValidatorSuite extends Database {
     shutdownHttpClient()
   }
 
-  lazy val logger: Logger = Logger(name + (mode match {
+  protected lazy val logger: Logger = Logger(name + (mode match {
     case Test => " [Test]"
     case Dev =>  " [Dev]"
     case _ => ""

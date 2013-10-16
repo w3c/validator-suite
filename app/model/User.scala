@@ -259,7 +259,6 @@ object User {
       optedIn: Boolean = false,
       isSubscriber: Boolean = false,
       isRoot: Boolean = false)(implicit conf: ValidatorSuite): Future[User] = {
-    logger.info(s"Registering user: ${name}, ${email}")
     val user = User.create(name, email, password, credits, optedIn = optedIn, isRoot = isRoot, isSubscriber = isSubscriber)
     if (optedIn) {
       play.Logger.of("OptInUsers").info(s"${user.name} <${user.email}>")

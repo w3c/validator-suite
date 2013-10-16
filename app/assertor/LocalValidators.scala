@@ -47,18 +47,18 @@ class LocalValidators(port: Int, cacheOpt: Option[Cache]) {
       }
       // start the validators
       try {
-        logger.debug("starting on port " + port)
+        logger.info("starting on port " + port)
         validators = new Validators(port, new nu.ValidatorNu("/nu"), new org.w3.validator.css.CSSValidator("/css"))
         validators.start()
       } catch { case be: java.net.BindException =>
-        logger.debug("already started on port " + port)
+        logger.warn("already started on port " + port)
       }
     }
 
   def stop(): Unit =
     if (validators != null) {
       cacheOpt foreach { _.restorePreviousCache() }
-      logger.debug("stopping")
+      logger.info("stopping")
       validators.stop()
       validators = null
     }

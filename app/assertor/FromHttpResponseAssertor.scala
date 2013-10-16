@@ -38,12 +38,12 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
     }
     val end = System.currentTimeMillis()
 
-    logger.debug {
+    if (logger.isDebugEnabled || logger.isErrorEnabled) {
       result match {
         case _: AssertorResult =>
-          s"${this.name} took ${end - start}ms to assert ${response.url}"
+          logger.debug(s"${this.name} took ${end - start}ms to assert ${response.url}")
         case _: AssertorFailure =>
-          s"Failure: ${this.name} took ${end - start}ms to assert ${response.url}"
+          logger.error(s"Failure: ${this.name} took ${end - start}ms to assert ${response.url}")
       }
     }
     

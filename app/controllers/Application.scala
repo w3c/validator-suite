@@ -59,6 +59,7 @@ object Application extends VSController {
         case UnauthorizedException(email) => throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
       }
     } yield {
+      logger.info(s"Logged in: ${user.email}")
       (form("uri").value match {
         case Some(uri) if (uri != routes.Application.login.url && uri != "") => SeeOther(uri)
         case _ => SeeOther(routes.Jobs.index.url)
@@ -77,12 +78,13 @@ object Application extends VSController {
       }
       case Right(form) => {
         model.User.register(
-          name = form.name,
-          email = form.email,
-          password = form.password,
-          optedIn = form.optedIn,
-          isSubscriber = false).map {
+            name = form.name,
+            email = form.email,
+            password = form.password,
+            optedIn = form.optedIn,
+            isSubscriber = false).map {
           case user => {
+            logger.info(s"Registered: ${user.name} <${user.email}> ${if(user.optedIn){"- Opted-in"}else{""}}")
             val newUri = form("uri").value match {
               case Some(uri) if uri != "" => uri
               case _ => routes.Jobs.index.url

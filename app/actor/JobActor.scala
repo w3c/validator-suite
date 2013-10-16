@@ -105,6 +105,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
   type Classifier = org.w3.vs.actor.Classifier
   type Event = Any
 
+  import JobActor.logger
   import conf._
 
   import job.{ creatorId => userId, id => jobId }
@@ -233,15 +234,17 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // compute the next step and do side-effects
     val state = event match {
       case CreateRunEvent(_, _, _, _, _, _) =>
+        logger.info(s"Job started - URL: ${job.strategy.entrypoint} - Max: ${job.strategy.maxResources} - Id: ${job.id}")
         runningJobs.inc()
         val running = Running(run.runId, RunningActorName(self.path.name))
         // Job.run() is waiting for this value
         val from = sender
         from ! running
         goto(Started) using run
-      case DoneRunEvent(_, _, _, doneReason, _, _, _, _, _, _) =>
+      case DoneRunEvent(_, jobId, _, doneReason, resources, errors, warnings, _, _, _) =>
         if (doneReason === Completed)
           logger.debug(s"${run.shortId}: Assertion phase finished")
+        logger.info(s"Job stopped - URL: ${job.strategy.entrypoint} - Resources: ${resources} - Errors: ${errors} - Warnings: ${warnings}")
         stopThisActor()
         goto(Stopping) using run
       case _ =>
@@ -278,7 +281,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       stay()
 
     case Event(e, run) =>
-      logger.info(s"${run.shortId}: unexpected event ${e}")
+      logger.warn(s"Unexpected event for run: ${run.shortId} - ${e.getClass()}")
       stay()
 
   }
