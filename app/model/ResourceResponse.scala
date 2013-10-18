@@ -48,10 +48,11 @@ object HttpResponse {
       status: Int,
       headers: Headers,
       resource: InputResource[InputStream]): HttpResponse = {
-    
+
     val (extractedURLs, doctypeOpt) = headers.mimetype collect {
       case "text/html" | "application/xhtml+xml" => {
-        val (urls, doctypeOpt) = HtmlParser.parse(url, resource, headers.charset)
+        val extractLinks = status == 200
+        val (urls, doctypeOpt) = HtmlParser.parse(url, resource, headers.charset, extractLinks)
         (urls.map(URL.clearHash).distinct, doctypeOpt)
       }
       case "text/css" => (List.empty, None) // TODO

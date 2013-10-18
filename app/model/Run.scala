@@ -284,9 +284,9 @@ case class Run private (
 
     val expectedAssertorCalls: Double =
       if (crawlProgress == 100)
-        numberOfFetchedResources * (strategy.assertorsConfiguration.size) // only assertors that accept html documents, i.e. all for now
+        numberOfFetchedResources * (AssertorsConfiguration.default.size) // only assertors that accept html documents, i.e. all for now
       else
-        expectedFetchs * (strategy.assertorsConfiguration.size)
+        expectedFetchs * (AssertorsConfiguration.default.size)
 
     val assertionProgress =
      if (expectedAssertorCalls == 0) 100
@@ -309,10 +309,9 @@ case class Run private (
     completedOn = Some(at),
     toBeExplored = List.empty)
 
-  // should we also count the errors and redirections?
   lazy val numberOfFetchedResources: Int = {
     knownResources.values count {
-      case Fetched(_) => true
+      case Fetched(status) if (status < 300) && (status >= 200) => true
       case _ => false
     }
   }
@@ -522,7 +521,7 @@ case class Run private (
     // add the new response
     val (runWithResponse, resourceInfo) = withResponse(httpResponse)
     resourceInfo match {
-      case Fetched(_) => {
+      case Fetched(status) if status == 200 => {
         // extract the urls to be explored
         val (runWithPendingFetches, urlsToFetch) =
           runWithResponse.withNewUrlsToBeExplored(httpResponse.extractedURLs).takeAtMost(Strategy.maxUrlsToFetch)
@@ -549,8 +548,13 @@ case class Run private (
           runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
         (runWithPendingFetches, urlsToFetch, List.empty)
       }
+      case response => {
+        logger.warn("Ignoring: " + response)
+        val (runWithPendingFetches, urlsToFetch) =
+          runWithResponse.takeAtMost(Strategy.maxUrlsToFetch)
+        (runWithPendingFetches, urlsToFetch, List.empty)
+      }
     }
-
   }
 
   /** fix because of CSS Validator. See http://www.w3.org/mid/511910CB.6050608@w3.org

@@ -20,7 +20,8 @@ trait HtmlParser {
   def parse(
       baseURL: URL,
       resource: InputResource[InputStream],
-      encodingOpt: Option[String] = None): (List[URL], Option[Doctype]) = {
+      encodingOpt: Option[String] = None,
+      extractLinks: Boolean): (List[URL], Option[Doctype]) = {
     resource.acquireAndGet { inputStream =>
       val encoding = encodingOpt getOrElse "UTF8"
       val inputSource = {
@@ -28,7 +29,7 @@ trait HtmlParser {
         is.setEncoding(encoding)
         is
       }
-      val extractor = new ExtractorHandler(baseURL)
+      val extractor = new ExtractorHandler(baseURL, extractLinks)
       val parser = {
         import nu.validator.htmlparser.common.XmlViolationPolicy
         val p = new nu.validator.htmlparser.sax.HtmlParser(XmlViolationPolicy.ALLOW)

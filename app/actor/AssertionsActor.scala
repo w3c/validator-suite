@@ -35,7 +35,7 @@ class AssertionsActor(job: Job)(implicit vs: ValidatorSuite) extends Actor {
     val sender = self
     
     Future {
-      assertor.assert(response, job.strategy.assertorsConfiguration(assertor.id))
+      assertor.assert(response, AssertorsConfiguration.default(assertor.id))
     } andThen { case _ =>
       atomic { implicit txn => pendingAssertions -= 1 }
     } andThen {

@@ -7,7 +7,7 @@ import org.xml.sax.helpers.DefaultHandler
 /** http://docs.oracle.com/javase/7/docs/api/org/xml/sax/helpers/DefaultHandler.html
   * http://docs.oracle.com/javase/7/docs/api/org/xml/sax/ext/LexicalHandler.html
   */
-class ExtractorHandler(baseURL: URL) extends DefaultHandler with LexicalHandler {
+class ExtractorHandler(baseURL: URL, extractLinks: Boolean) extends DefaultHandler with LexicalHandler {
 
   private var _hrefs = List[String]()
 
@@ -20,7 +20,7 @@ class ExtractorHandler(baseURL: URL) extends DefaultHandler with LexicalHandler 
    */
   override def startElement(uri: String, name: String, qname: String, attrs: Attributes) = {
     qname match {
-      case "a" | "link" => {
+      case "a" if extractLinks => {
         val value = attrs.getValue("href")
         if (value != null) _hrefs ::= value
       }

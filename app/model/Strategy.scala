@@ -15,6 +15,7 @@ case class Strategy (
     entrypoint: URL,
     maxResources: Int,
     linkCheck: Boolean = false,
+  // not used anymore
     filter: Filter = Filter.includeEverything,
     assertorsConfiguration: AssertorsConfiguration = AssertorsConfiguration.default) {
 
@@ -37,7 +38,7 @@ case class Strategy (
     for {
       mimetype <- httpResponse.headers.mimetype.toIterable
       if httpResponse.method === GET && httpResponse.status < 300 && httpResponse.status >= 200
-      assertors <- assertorsConfiguration.keys.map(Assertor.getById).filter(_.supportedMimeTypes.contains(mimetype))
+      assertors <- AssertorsConfiguration.default.keys.map(Assertor.getById).filter(_.supportedMimeTypes.contains(mimetype))
     } yield assertors
   }
 
