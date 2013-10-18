@@ -11,7 +11,7 @@ class CSSValidator(val serviceUrl: String) extends FromHttpResponseAssertor with
   val supportedMimeTypes = List("text/css", "text/html", "application/xhtml+xml", "image/svg+xml")
 
   def validatorURLForMachine(url: URL, assertorConfiguration: AssertorConfiguration): URL = {
-    validatorURLForHuman(url, assertorConfiguration + ("output" -> List("ucn")))
+    validatorURLForHuman(url, assertorConfiguration + ("output" -> List("ucn")) + ("vextwarning" -> List("true")))
   }
   
   override def validatorURLForHuman(url: URL, assertorConfiguration: AssertorConfiguration): URL = {

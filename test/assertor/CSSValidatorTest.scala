@@ -62,6 +62,7 @@ class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll
     Helper.parseQueryString(queryString) must be (assertorConfiguration
       + ("output" -> List("ucn"))
       + ("uri" -> List(url.encode("UTF-8")))
+      + ("vextwarning" -> List("true"))
     )
 
   }
