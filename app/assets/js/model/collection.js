@@ -154,6 +154,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
 
             collection.on('add reset change', _.throttle(this.render, 250), this);
             collection.on('destroy', this.render, this);
+            collection.on('sort', this.render, this);
 
             this.addSortHandler();
             //this.addSearchHandler();
