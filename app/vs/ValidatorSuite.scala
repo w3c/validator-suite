@@ -89,7 +89,7 @@ trait ValidatorSuite extends Database {
     val builder = new AsyncHttpClientConfig.Builder()
     val asyncHttpConfig =
       builder
-        .setFollowRedirects(true) // must be true because JobForm tests if statusCode == 200
+        .setFollowRedirects(false) // must be false because of #291. When setting to true also edit the "entrypoint.invalid" message.
         .setMaximumConnectionsTotal(100)
         .setMaximumConnectionsPerHost(5)
         .setIdleConnectionTimeoutInMs(2000)
