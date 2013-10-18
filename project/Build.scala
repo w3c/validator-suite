@@ -37,7 +37,7 @@ object ApplicationBuild extends Build {
   //  val assertorApi = Project("assertor-api", file("assertor-api"))
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
-    scalaVersion := "2.10.2",
+    scalaVersion := "2.10.3",
 
     // activates full stacktrace and durations
     testOptions in Test := Nil,
