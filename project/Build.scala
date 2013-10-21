@@ -21,7 +21,7 @@ object ApplicationBuild extends Build {
     "org.scala-lang" % "scala-actors" % "2.10.2",
     "org.apache.commons" % "commons-lang3" % "3.1" intransitive(), // For StringUtils escaping functions
     "com.codecommit" %% "anti-xml" % "0.4-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/anti-xml_2.10_20130110.jar",
-    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~vivien/jar/validators-20131017.jar",
+    "org.w3" % "validators" % "1.0-SNAPSHOT" from "http://jay.w3.org/~bertails/jar/validators-20130328-2.jar",
     "com.codahale.metrics" % "metrics-core" % metricsVersion excludeAll (ExclusionRule(organization = "org.slf4j")),
     "com.codahale.metrics" % "metrics-graphite" % metricsVersion excludeAll (ExclusionRule(organization = "org.slf4j")),
     "org.reactivemongo" %% "play2-reactivemongo" % "0.9" /*cross CrossVersion.full*/ excludeAll(ExclusionRule(organization = "io.netty"), ExclusionRule(organization = "play")),
