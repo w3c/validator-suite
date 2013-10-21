@@ -30,7 +30,7 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
   override def onStart(app: Application): Unit = {
     //conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
     conf.start()
-    org.w3.vs.assertor.LocalValidators.start()
+    //org.w3.vs.assertor.LocalValidators.start()
     org.w3.vs.model.Job.resumeAllJobs()(conf)
   }
   

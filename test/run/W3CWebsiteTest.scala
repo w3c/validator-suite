@@ -46,7 +46,7 @@ abstract class W3CWebsiteTest extends VSTestKit(
 
     vs.runEventBus.subscribe(testActor, FromJob(job.id))
 
-    fishForMessagePF(Duration("10s")) { case _: DoneRunEvent => () }
+    fishForMessagePF(Duration("60s")) { case _: DoneRunEvent => () }
 
     val rrs = ResourceResponse.getFor(runId).getOrFail()
     rrs must have size (10)

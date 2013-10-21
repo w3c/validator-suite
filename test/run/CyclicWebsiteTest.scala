@@ -29,7 +29,7 @@ class CyclicWebsiteCrawlTest extends VSTest with ServersTest with TestData with 
     val Running(runId, actorName) = runningJob.status
 
     val completeRunEvent =
-      (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail(Duration("3s"))
+      (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
     completeRunEvent.resources must be(circumference + 1)
 

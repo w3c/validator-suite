@@ -225,7 +225,7 @@ object Main {
 
     val job = Job(name = "w3c", strategy = strategy, creatorId = None)
 
-    org.w3.vs.assertor.LocalValidators.start()
+    //org.w3.vs.assertor.LocalValidators.start()
 
     Job.save(job).getOrFail()
 

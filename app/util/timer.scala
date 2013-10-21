@@ -36,7 +36,7 @@ object timer {
 
   implicit class FutureF[+T](val future: Future[T]) extends AnyVal {
 
-    def getOrFail(duration: Duration = Duration("6s")): T = {
+    def getOrFail(duration: Duration = Duration("60s")): T = {
       Await.result(future, duration)
     }
 

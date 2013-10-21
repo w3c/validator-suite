@@ -1,5 +1,6 @@
 package org.w3.vs
 
+import assertor.LocalValidators
 import play.api.{ Logger, Mode, Configuration }
 import play.api.Mode._
 import akka.util.Timeout
@@ -16,6 +17,7 @@ trait ValidatorSuite extends Database {
 
   def start(): Unit = {
     logger.info("Application starting")
+    LocalValidators.start()
   }
 
   def shutdown(): Unit = {
@@ -23,6 +25,7 @@ trait ValidatorSuite extends Database {
     shutdownAkkaSystem()
     shutdownDatabase()
     shutdownHttpClient()
+    LocalValidators.stop()
   }
 
   protected lazy val logger: Logger = Logger(name + (mode match {

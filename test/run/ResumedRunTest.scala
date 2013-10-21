@@ -59,7 +59,7 @@ class ResumedRunTest extends VSTestKit(
     jobActorRef ! PoisonPill
 
     // wait for the death notification
-    val terminated = fishForMessagePF(Duration("3s")) { case event: Terminated => event }
+    val terminated = fishForMessagePF(Duration("60s")) { case event: Terminated => event }
 
     // make sure we've seen the right death
     terminated.actor must be(jobActorRef)
