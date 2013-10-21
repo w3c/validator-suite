@@ -94,7 +94,7 @@ object Resources extends VSController  {
   private def enumerator(jobId: JobId, user: Option[User]): Enumerator[JsValue] = {
     import PlayJson.toJson
     val enumerator = Enumerator.flatten(model.Job.getFor(jobId, user).map { job =>
-      job.resourceDatas()
+      job.resourceDatas(forever = true)
     })
     enumerator &> Enumeratee.map { iterator =>
       toJson(iterator.map(ResourceView(jobId, _).toJson))
@@ -104,7 +104,7 @@ object Resources extends VSController  {
   private def enumerator(jobId: JobId, url: URL, user: Option[User]): Enumerator[JsValue] = {
     import PlayJson.toJson
     val enumerator = Enumerator.flatten(model.Job.getFor(jobId, user).map { job =>
-      job.resourceDatas(org.w3.vs.web.URL(url))
+      job.resourceDatas(org.w3.vs.web.URL(url), forever = true)
     })
     enumerator &> Enumeratee.map { rd =>
       PlayJson.arr(ResourceView(jobId, rd).toJson)

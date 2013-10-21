@@ -231,7 +231,7 @@ object Main {
 
     job.run()
 
-    job.resourceDatas() |>>> play.api.libs.iteratee.Iteratee.foreach(event => println("==========> " + event))
+    job.resourceDatas(forever = false) |>>> play.api.libs.iteratee.Iteratee.foreach(event => println("==========> " + event))
 
     job.jobDatas() |>>> play.api.libs.iteratee.Iteratee.foreach(jobData => println("&&&&&&&&> " + jobData))
 

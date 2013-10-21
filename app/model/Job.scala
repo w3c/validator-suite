@@ -242,22 +242,22 @@ case class Job(
    *  parameters (eg. filter X-s for a specific URL).
    */
 
-  def runEvents()(implicit conf: ValidatorSuite): Enumerator[Iterator[RunEvent]] = {
+  def runEvents(forever: Boolean = false)(implicit conf: ValidatorSuite): Enumerator[Iterator[RunEvent]] = {
     import conf._
     this.status match {
       case NeverStarted | Zombie => Enumerator()
       case Done(runId, _, _, _) => Run.enumerateRunEvents(runId)
       case Running(_, actorName) =>
-        actorBasedEnumerator(Classifier.AllRunEvents, forever = false)
+        actorBasedEnumerator(Classifier.AllRunEvents, forever = forever)
     }
   }
 
   /**Enumerator for all the JobData-s, even for future runs.  This is
    * stateless.  If you just want the most up-to-date JobData, use
    * Job.jobData() instead. */
-  def jobDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[JobData]] = {
+  def jobDatas(forever: Boolean = true)(implicit conf: ValidatorSuite): Enumerator[Iterator[JobData]] = {
     import conf._
-    runDatas() &> Enumeratee.map(_.map(runData => JobData(this, runData)))
+    runDatas(forever) &> Enumeratee.map(_.map(runData => JobData(this, runData)))
   }
 
   /**returns the most up-to-date JobData for the Job, if available */
@@ -269,8 +269,8 @@ case class Job(
 
   /**this is stateless, so if you're the Done case, you want to use
    * Job.runData() instead */
-  def runDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[RunData]] = {
-    def enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = true)
+  def runDatas(forever: Boolean = true)(implicit conf: ValidatorSuite): Enumerator[Iterator[RunData]] = {
+    def enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = forever)
     this.status match {
       case Done(_, _, _, runData) =>
         Enumerator(Iterator(runData)) andThen Enumerator.enumInput(Input.Empty) andThen enumerator
@@ -291,8 +291,8 @@ case class Job(
     }
   }
 
-  def resourceDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[ResourceData]] = {
-    def enumerator = actorBasedEnumerator(Classifier.AllResourceDatas, forever = true)
+  def resourceDatas(forever: Boolean)(implicit conf: ValidatorSuite): Enumerator[Iterator[ResourceData]] = {
+    def enumerator = actorBasedEnumerator(Classifier.AllResourceDatas, forever = forever)
     this.status match {
       case Done(runId, _, _, _) =>
         val partitionSize = 100
@@ -305,8 +305,8 @@ case class Job(
   }
 
   // all ResourceDatas updates for url
-  def resourceDatas(url: URL)(implicit conf: ValidatorSuite): Enumerator[ResourceData] = {
-    def enumerator = actorBasedEnumerator(Classifier.ResourceDataFor(url), forever = true) &> Enumeratee.mapConcat(_.toSeq)
+  def resourceDatas(url: URL, forever: Boolean)(implicit conf: ValidatorSuite): Enumerator[ResourceData] = {
+    def enumerator = actorBasedEnumerator(Classifier.ResourceDataFor(url), forever = forever) &> Enumeratee.mapConcat(_.toSeq)
     this.status match {
       case Done(runId, _, _, _) =>
         val current: Enumerator[ResourceData] =
@@ -339,8 +339,8 @@ case class Job(
   }
 
   // all GroupedAssertionDatas updates
-  def groupedAssertionDatas()(implicit conf: ValidatorSuite): Enumerator[Iterator[GroupedAssertionData]] = {
-    def enumerator = actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = true)
+  def groupedAssertionDatas(forever: Boolean = true)(implicit conf: ValidatorSuite): Enumerator[Iterator[GroupedAssertionData]] = {
+    def enumerator = actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = forever)
     this.status match {
       case Done(runId, _, _, _) =>
         val partitionSize = 100
@@ -364,8 +364,8 @@ case class Job(
   }
 
   // all Assertions updatesfor url
-  def assertions(url: URL)(implicit conf: ValidatorSuite): Enumerator[Iterator[Assertion]] = {
-    def enumerator = actorBasedEnumerator(Classifier.AssertionsFor(url), forever = true)
+  def assertions(url: URL, forever: Boolean = true)(implicit conf: ValidatorSuite): Enumerator[Iterator[Assertion]] = {
+    def enumerator = actorBasedEnumerator(Classifier.AssertionsFor(url), forever = forever)
     this.status match {
       case Done(runId, _, _, _) =>
         val partitionSize = 100

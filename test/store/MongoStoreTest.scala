@@ -333,7 +333,7 @@ extends VSTest with WipeoutData {
 
     // ... and resourceDatas
     val enumRds: List[ResourceData] =
-      (job1.resourceDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
+      (job1.resourceDatas(forever = false) &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     val rds = job1.getResourceDatas().getOrFail()
     enumRds must be(rds)
 

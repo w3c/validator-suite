@@ -25,15 +25,15 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
   
   "test enumerators" in {
 
-    val runningJob = job.run().getOrFail()
+    val runningJob = job.run().getOrFail() // will also run all default assertors
     val Running(runId, actorName) = runningJob.status
     val jobActor = vs.system.actorFor(actorName.actorPath)
 
     val runEvents = runningJob.runEvents()
     val jobDatas = runningJob.jobDatas()
     val runDatas = runningJob.runDatas()
-    val resourceDatas = runningJob.resourceDatas()
-    val groupedAssertionDatas = runningJob.groupedAssertionDatas()
+    val resourceDatas = runningJob.resourceDatas(forever = false)
+    val groupedAssertionDatas = runningJob.groupedAssertionDatas(forever = false)
 
     def test(): Iteratee[RunEvent, Try[Unit]] = for {
       e1 <- waitFor[CreateRunEvent]()
@@ -86,7 +86,8 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
     rd2.warnings must be(2) // from assertion3
     rd2.errors must be(0)   // from assertion3
 
-    val gads = (groupedAssertionDatas &> Enumeratee.mapConcat(_.toSeq) &> Enumeratee.take(2) |>>> Iteratee.getChunks[GroupedAssertionData]).getOrFail()
+    // wait for all of them
+    val gads = (groupedAssertionDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.getChunks[GroupedAssertionData]).getOrFail()
 
     val gad1 = gads.find(_.id == assertion1.id).get
     gad1.severity must be(Error)
