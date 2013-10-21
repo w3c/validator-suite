@@ -21,6 +21,7 @@ case class Website(links: Iterable[Link]) {
         resp.setStatus(200)
         resp.setContentType("text/html")
         resp.getWriter.print(webpage.toHtml)
+        resp.getWriter.close()
       }
       if (sleepAfterRequest > 0) {
         try {
