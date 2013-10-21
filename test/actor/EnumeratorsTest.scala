@@ -43,9 +43,9 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
       _ = jobActor ! ar2
       _ = jobActor ! ar3
       e3 <- waitFor[RunEvent]{ case rre: ResourceResponseEvent if rre.rr == httpResponse => rre }
-      e4 <- waitFor[AssertorResponseEvent]()
-      e5 <- waitFor[AssertorResponseEvent]()
-      e6 <- waitFor[AssertorResponseEvent]()
+      e4 <- waitFor[RunEvent]{ case are: AssertorResponseEvent if List(ar1, ar2, ar3).contains(are.ar) => are }
+      e5 <- waitFor[RunEvent]{ case are: AssertorResponseEvent if List(ar1, ar2, ar3).contains(are.ar) => are }
+      e6 <- waitFor[RunEvent]{ case are: AssertorResponseEvent if List(ar1, ar2, ar3).contains(are.ar) => are }
     } yield Try {
       val CreateRunEvent(_, jobId, _, _, _, _) = e1
       val ResourceResponseEvent(_, _, `runId`, hr2: HttpResponse, _) = e2
@@ -54,7 +54,7 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
       val AssertorResponseEvent(_, _, `runId`, a5: AssertorResult, _) = e5
       val AssertorResponseEvent(_, _, `runId`, a6: AssertorResult, _) = e6
       jobId must be(job.id)
-      hr2.url must be(URL("http://localhost:9001/"))
+      hr2.url must be(URL("http://localhost:9001/")) // first resource response event
       hr3 must be(httpResponse)
       Set(a4, a5, a6) must be(Set(ar1, ar2, ar3))
     }
@@ -76,7 +76,7 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
     val instantRunData = runningJob.getRunData().getOrFail()
     instantRunData.resources must be >= (runData.resources)
 
-    val rds = (resourceDatas &> Enumeratee.mapConcat(_.toSeq) &> Enumeratee.take(2) |>>> Iteratee.getChunks[ResourceData]).getOrFail()
+    val rds = (resourceDatas &> Enumeratee.mapConcat(_.toSeq) &> Enumeratee.take(circumference) |>>> Iteratee.getChunks[ResourceData]).getOrFail()
 
     val rd1 = rds.find(_.url == foo).get
     rd1.warnings must be(3) // from assertion2
