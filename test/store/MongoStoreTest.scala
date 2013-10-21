@@ -41,22 +41,10 @@ extends VSTest with WipeoutData {
 
   val user3 = User.create("baz", "baz@example.com", "secret", isRoot = true, credits = 10000)
   
-  val strategy =
-    Strategy( 
-      entrypoint=URL("http://localhost:9001/"),
-      linkCheck=true,
-      maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing),
-      assertorsConfiguration = AssertorsConfiguration.default)
+  val strategy = Strategy(entrypoint=URL("http://localhost:9001/"), maxResources = 100)
 
-  val strategy2 =
-    Strategy( 
-      entrypoint=URL("http://localhost:9001/foo"),
-      linkCheck=true,
-      maxResources = 100,
-      filter=Filter(include=Everything, exclude=Nothing),
-      assertorsConfiguration = AssertorsConfiguration.default)
-  
+  val strategy2 = Strategy(entrypoint=URL("http://localhost:9001/foo"), maxResources = 100)
+
   val now = DateTime.now(DateTimeZone.UTC)
 
   var job1 = Job(

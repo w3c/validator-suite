@@ -21,13 +21,7 @@ class WebsiteStartsWithRedirectTest extends VSTest with ServersTest with TestDat
   
   "test cyclic" in {
 
-    val strategy =
-      Strategy(
-        entrypoint = URL("http://localhost:9001/,redirect"),
-        linkCheck = true,
-        maxResources = 100,
-        filter = org.w3.vs.model.Filter(include = Everything, exclude = Nothing),
-        assertorsConfiguration = Map.empty)
+    val strategy = Strategy(entrypoint = URL("http://localhost:9001/,redirect"), maxResources = 100)
 
     val user = User.create(email = "", name = "", password = "", isSubscriber = true, credits = 10000)
     val job = Job(name = "@@", strategy = strategy, creatorId = Some(user.id))

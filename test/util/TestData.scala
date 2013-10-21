@@ -8,13 +8,7 @@ trait TestData { this: Suite =>
 
   object TestData {
 
-    val strategy =
-      Strategy(
-        entrypoint = URL("http://localhost:9001/"),
-        linkCheck = true,
-        maxResources = 100,
-        filter = org.w3.vs.model.Filter(include = Everything, exclude = Nothing),
-        assertorsConfiguration = Map.empty)
+    val strategy = Strategy(entrypoint = URL("http://localhost:9001/"), maxResources = 100)
 
     val user = User.create(email = "", name = "", password = "", isSubscriber = true, credits = 10000)
     val job = Job(name = "@@", strategy = strategy, creatorId = Some(user.id))

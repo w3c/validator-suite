@@ -10,13 +10,7 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
 
   val validatorNu: FromHttpResponseAssertor = LocalValidators.ValidatorNu
 
-  val strategy =
-    Strategy(
-      entrypoint = URL("http://example.com/foo"),
-      linkCheck = true,
-      maxResources = 100,
-      filter = Filter.includeEverything,
-      assertorsConfiguration = AssertorsConfiguration.default)
+  val strategy = Strategy(entrypoint = URL("http://example.com/foo"), maxResources = 100)
 
   "a strategy must select the assertors based on their mimetype" in {
 

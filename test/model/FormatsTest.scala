@@ -13,13 +13,7 @@ import Json.toJson
 
 class FormatsTest extends WordSpec with MustMatchers {
 
-  val strategy =
-    Strategy(
-      entrypoint = URL("http://example.com/foo"),
-      linkCheck = true,
-      maxResources = 100,
-      filter = Filter.includeEverything,
-      assertorsConfiguration = AssertorsConfiguration.default)
+  val strategy = Strategy(entrypoint = URL("http://example.com/foo"), maxResources = 100)
 
   val resourceData = ResourceData(URL("http://example.com/foo"), DateTime.now(DateTimeZone.UTC), 27, 19)
   val resourceData2 = ResourceData(URL("http://example.com/bar"), DateTime.now(DateTimeZone.UTC), 27, 19)

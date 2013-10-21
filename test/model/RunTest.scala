@@ -9,12 +9,7 @@ import org.joda.time.{ DateTime, DateTimeZone }
 class RunTest extends WordSpec with MustMatchers {
 
   val strategy =
-    Strategy(
-      entrypoint = URL("http://w3.org/"),
-      linkCheck = true,
-      maxResources = 100,
-      filter = Filter(include = Everything, exclude = Nothing),
-      assertorsConfiguration = Map.empty)
+    Strategy(entrypoint = URL("http://w3.org/"), maxResources = 100)
 
   "A fresh run" must {
     val fresh: Run = Run.freshRun(strategy)
