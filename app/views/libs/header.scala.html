@@ -1,9 +1,9 @@
 @(userO: Option[User], loginModal: Boolean)(implicit req: RequestHeader)
-    <section id="banner">
+    <header id="banner" role="banner">
         <div class="row">
             <a href="@routes.Application.index" class="logo">
-                <img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite" title="W3C Validator Suite homepage"/>
+                <img src='@routes.Assets.at("images/fullLogo.svg")' alt="W3C Validator Suite homepage" />
             </a>
             @libs.nav(userO, loginModal)
         </div>
-    </section>
+    </header>

@@ -10,7 +10,11 @@ require([
 
     $(document).foundation('dropdown reveal', {
         animation: 'fade',
-        animationSpeed: 100
+        animationSpeed: 100,
+        opened: function (event) {
+            var modal = event.target;
+            $(".button.no", modal).focus();
+        }
     });
 
     if (_.isUndefined(document.createElement('progress').position)) {

@@ -4,7 +4,7 @@
 
 <div class="column">
 
-    <h1 class="formHeader">Login</h1>
+    <h1 class="formHeader" id="loginFormHead" tabindex="0">Login</h1>
 
     <form action="@routes.Application.login" method="POST" class="vsForm">
 
@@ -23,7 +23,7 @@
 
         <div class="row">
             <div class="small-3 columns">
-                <label for="l_email" class="right inline">Email@requiredSpan</label>
+                <label for="l_email" class="right inline" aria-describedby="req">Email@requiredSpan</label>
             </div>
             <div class="small-9 columns">
                 <input type="email" id="l_email" name="l_email" placeholder="Email"
@@ -33,7 +33,7 @@
 
         <div class="row">
             <div class="small-3 columns">
-                <label for="l_password" class="right inline">Password@requiredSpan</label>
+                <label for="l_password" class="right inline" aria-describedby="req">Password@requiredSpan</label>
             </div>
             <div class="small-9 columns">
                 <input type="password" id="l_password" name="l_password" placeholder="Password" required="required">
@@ -42,7 +42,7 @@
 
         <div class="row">
             <div class="column small-9 small-offset-3 note">
-                <em>Fields marked with an asterisk (*) are required.</em>
+                <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em>
             </div>
         </div>
 

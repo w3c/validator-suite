@@ -8,6 +8,12 @@ require([
     "use strict";
 
     $(document).foundation();
+    $(document).foundation('reveal', {
+        opened: function (event) {
+            var modal = event.target;
+            $("h1", modal).focus();
+        }
+    });
 
     $(".range").each(function (i, element) {
         var output, input = $("input", element);

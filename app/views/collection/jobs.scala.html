@@ -4,20 +4,17 @@
 <section id="actions">
     <a href="@routes.Jobs.newJob" class="button">New job</a>
     <form class="search" action="@routes.Jobs.index" method="get">
-        <fieldset>
-            <legend>Search</legend>
-            <input name="search" type="text" placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required=""/>
-            @if(collection.params.search != None) {
-            <a class="button clear" href="@collection.search().queryString">@Messages("job.button.clear")</a>}
-            @collection.search("").queryParameters.map { param =>
-            <input name="@param.name" type="hidden" value="@param.value"/>}
-            <button type="submit">@Messages("job.button.search")</button>
-        </fieldset>
+        <label for="searchInput" class="offScreen">Search</label><input id="searchInput" name="search" type="text" placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required=""/>
+        @if(collection.params.search != None) {
+        <a class="button clear" href="@collection.search().queryString">@Messages("job.button.clear")</a>}
+        @collection.search("").queryParameters.map { param =>
+        <input name="@param.name" type="hidden" value="@param.value"/>}
+        <button type="submit">@Messages("job.button.search")</button>
     </form>
     <div id="deleteModal" class="reveal-modal small">
         <div class="choices">
-            <a class="button close-reveal-modal yes" tabindex="0">Yes</a>
-            <a class="button close-reveal-modal" tabindex="0">No</a>
+            <button class="close-reveal-modal yes" tabindex="0">Yes</button>
+            <button class="button close-reveal-modal no" tabindex="0">No</button>
         </div>
         <p class="msg"></p>
     </div>

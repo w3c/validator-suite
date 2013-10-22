@@ -28,7 +28,7 @@
 
         <div class="row">
             <div class="small-3 columns">
-                <label for="name" class="right inline">
+                <label for="name" class="right inline" aria-describedby="req">
                     Job Name@requiredSpan
                 </label>
             </div>
@@ -40,7 +40,7 @@
 
         <div class="row">
             <div class="small-3 columns">
-                <label for="entrypoint" class="right inline" title='@Messages("jobs.entrypoint.detail2")'>
+                <label for="entrypoint" class="right inline" title='@Messages("jobs.entrypoint.detail2")' aria-describedby="req">
                     @Messages("jobs.entrypoint")@requiredSpan
                 </label>
             </div>
@@ -53,7 +53,7 @@
         <div class="row">
 
             <div class="small-3 columns">
-                <label for="maxPages" class="right inline" title='@Messages("jobs.maxPages.detail")'>
+                <label for="maxPages" class="right inline" title='@Messages("jobs.maxPages.detail")' aria-describedby="req">
                     @Messages("jobs.maxPages")@requiredSpan
                 </label>
             </div>
@@ -65,7 +65,7 @@
         </div>
 
         <div class="row">
-            <p class="column small-9 small-offset-3 compact"><span class="vats">Fields marked with an asterisk (*) are required.</span></p>
+            <p class="column small-9 small-offset-3 compact"><span class="vats">Fields marked with an asterisk (*) are <span id="req">required</span>.</span></p>
         </div>
 
         @**<div class="row">
