@@ -1,7 +1,7 @@
 @(registerForm: RegisterForm = RegisterForm.blank,
     messages: List[(String, String)] = List())(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
-@front("W3C Validator Suite - Register") {
+@front("W3C Validator Suite - Register", user = None, loginModal = false) {
 
 <section class="row">
 
