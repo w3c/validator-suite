@@ -19,7 +19,7 @@ case class Website(links: Iterable[Link]) {
         val outLinks = links flatMap { _.outlinksFor(path) }
         val webpage = Webpage(path, outLinks)
         resp.setStatus(200)
-        resp.setContentType("text/html")
+        resp.setContentType("text/html; charset=UTF-8")
         resp.getWriter.print(webpage.toHtml)
         resp.getWriter.close()
       }

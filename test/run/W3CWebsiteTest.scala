@@ -23,12 +23,10 @@ abstract class W3CWebsiteTest extends VSTestKit(
   val user = TestData.user
 
   override def beforeAll: Unit = {
-    org.w3.vs.assertor.LocalValidators.start()
     super.beforeAll()
   }
 
   override def afterAll: Unit = {
-    org.w3.vs.assertor.LocalValidators.stop()
     super.afterAll()
   }
 

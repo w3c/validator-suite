@@ -18,7 +18,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%coloredLevel %logger - %message%n%xException{40}</pattern>
+      <pattern>[%highlight(%-5level)] %logger - %message%n%xException{40}</pattern>
     </encoder>
   </appender>
   
@@ -27,6 +27,8 @@
   <logger name="org.w3.vs" level="DEBUG" />
   <logger name="org.w3.vs.actor.JobActor" level="INFO" />
   <logger name="org.w3.vs.http.AuthorityManagerr" level="INFO" />
+    <logger name="org.w3.vs.assertor" level="WARN" />
+    <logger name="org.w3.vs.web.Cache" level="INFO" />
 
   <!-- External libraries to silence -->
   <logger name="com.gargoylesoftware.htmlunit" level="DEBUG" />

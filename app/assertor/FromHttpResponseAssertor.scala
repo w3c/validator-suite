@@ -42,8 +42,8 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
       result match {
         case _: AssertorResult =>
           logger.debug(s"${this.name} took ${end - start}ms to assert ${response.url}")
-        case _: AssertorFailure =>
-          logger.error(s"Failure: ${this.name} took ${end - start}ms to assert ${response.url}")
+        case failure: AssertorFailure =>
+          logger.error(s"Failure: ${this.name} took ${end - start}ms to assert ${response.url} - Reason: ${failure.why} - ${validatorURLForMachine(response.url, configuration)}")
       }
     }
     

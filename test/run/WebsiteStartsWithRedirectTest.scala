@@ -1,3 +1,8 @@
+/**
+ * See #291: https://github.com/w3c/validator-suite/issues/291
+ */
+
+/*
 package org.w3.vs.run
 
 import org.w3.vs.util._
@@ -42,3 +47,4 @@ class WebsiteStartsWithRedirectTest extends VSTest with ServersTest with TestDat
   }
   
 }
+*/
