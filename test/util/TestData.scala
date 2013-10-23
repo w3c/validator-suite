@@ -4,7 +4,7 @@ import org.w3.vs.model._
 import org.scalatest.{ Suite, BeforeAndAfterEach }
 import org.w3.vs.web._
 
-trait TestData { this: Suite =>
+trait TestData { this: VSTest =>
 
   object TestData {
 

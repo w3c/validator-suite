@@ -6,12 +6,17 @@ import org.joda.time.{ DateTime, DateTimeZone }
 import org.w3.vs.web._
 import org.w3.vs.model._
 import Formats._
+import org.w3.vs.util.VSTest
+import org.w3.vs.ValidatorSuite
+import play.api.Mode
 
 // Play Json imports
 import play.api.libs.json._
 import Json.toJson
 
-class FormatsTest extends WordSpec with MustMatchers {
+class FormatsTest extends VSTest with WordSpec with MustMatchers {
+
+  implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 
   val strategy = Strategy(entrypoint = URL("http://example.com/foo"), maxResources = 100)
 

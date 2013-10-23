@@ -26,7 +26,7 @@ import play.api.http.MimeTypes
 
 object Resources extends VSController  {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Resources")
+  val logger = play.Logger.of("controllers.Resources")
 
   def index(id: JobId, url: Option[URL]): ActionA = {
     url match {

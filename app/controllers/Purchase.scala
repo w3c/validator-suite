@@ -13,7 +13,7 @@ import scala.concurrent.Future
 
 object Purchase extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Purchase")
+  val logger = play.Logger.of("controllers.Purchase")
 
   /*def buyJob: ActionA = UserAwareAction { implicit req => user =>
     val messages = user match {
@@ -43,7 +43,7 @@ object Purchase extends VSController {
                 model.User.updateCredits(user.id, plan.credits).getOrFail()
                 Redirect(routes.Jobs.index())
               } else {
-                logger.info(s"Redirected user ${user.email} to store for credit plan ${plan}")
+                logger.info(s"""id=${user.id} action=purchase plan=${plan.fastSpringKey} message="Redirecting to FastSpring" """)
                 redirectToStore(plan, user.id)
               }
             }
@@ -141,13 +141,14 @@ object Purchase extends VSController {
           } yield { Ok } */
 
        case plan: CreditPlan =>
+         logger.info(s"""id=${idString} action=payment-confirmed plan=${plan.fastSpringKey} message="Received payment confirmation from FastSpring" """)
          for {
            userId <- Future(UserId(idString))
            _ <- {
-             logger.info(s"Got payment confirmation. Adding ${plan.credits} credits to " + userId)
-             model.User.updateCredits(userId, plan.credits)
+             model.User.updateCredits(userId, plan.credits).map(_ =>
+               logger.info(s"""id=${userId} action=credits-update amount=${plan.credits} message="${plan.fastSpringKey} purchase" """)
+             )
            }
-           _ <- model.User.updateExpireDate(userId)
          } yield { Ok }
       }
 

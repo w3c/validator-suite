@@ -125,26 +125,27 @@ case class User(
 
 object User {
 
-  val expireCreditsDelay = 3 // months
-
   /** updates the credits for the given user in the database with the
     * formula ``credits = credits + creditsDiff`` (you can use
     * negative number) */
-  def updateCredits(userId: UserId, creditsDiff: Int)(implicit conf: Database): Future[Unit] = {
+  def updateCredits(userId: UserId, creditsDiff: Int, expireDaysIncrement: Option[Int] = None)(implicit conf: ValidatorSuite with Database): Future[User] = {
+    // either the passed parameter, or the "application.expireDate.plusDaysOnCredits" configuration option, or 90 days
+    val daysToIncrement = expireDaysIncrement.getOrElse(conf.config.getInt("application.expireDate.plusDaysOnCredits").getOrElse(90))
     get(userId) flatMap { case user =>
       update(user.copy(
-        credits = user.credits + creditsDiff
+        credits = user.credits + creditsDiff,
+        expireDate = user.expireDate.plusDays(daysToIncrement)
       ))
     }
   }
 
-  def updateExpireDate(userId: UserId)(implicit conf: Database): Future[Unit] = {
+  /*def updateExpireDate(userId: UserId)(implicit conf: Database): Future[Unit] = {
     get(userId) flatMap { case user =>
       update(user.copy(
         expireDate = user.expireDate.plusMonths(expireCreditsDelay)
       ))
     }
-  }
+  }*/
 
   val logger = play.Logger.of(classOf[User])
 
@@ -230,8 +231,8 @@ object User {
     credits: Int,
     optedIn: Boolean = false,
     isSubscriber: Boolean = false,
-    isRoot: Boolean = false,
-    expireDate: DateTime = DateTime.now(DateTimeZone.UTC).plusMonths(expireCreditsDelay)): User = {
+    isRoot: Boolean = false)(implicit vs: ValidatorSuite): User = {
+    val daysToIncrement = vs.config.getInt("application.expireDate.plusDaysOnCreate").getOrElse(90)
     val hash = BCrypt.hashpw(password, BCrypt.gensalt())
     val user = new User(
       id = UserId(),
@@ -242,7 +243,7 @@ object User {
       optedIn = optedIn,
       isRoot = isRoot,
       isSubscriber = isSubscriber,
-      expireDate = expireDate)
+      expireDate = DateTime.now(DateTimeZone.UTC).plusDays(daysToIncrement))
     user
   }
 
@@ -260,9 +261,6 @@ object User {
       isSubscriber: Boolean = false,
       isRoot: Boolean = false)(implicit conf: ValidatorSuite): Future[User] = {
     val user = User.create(name, email, password, credits, optedIn = optedIn, isRoot = isRoot, isSubscriber = isSubscriber)
-    if (optedIn) {
-      play.Logger.of("OptInUsers").info(s"${user.name} <${user.email}>")
-    }
     user.save().map(_ => user)
   }
   
@@ -291,11 +289,11 @@ object User {
     }
   }
 
-  def update(user: User)(implicit conf: Database): Future[Unit] = {
+  def update(user: User)(implicit conf: Database): Future[User] = {
     import conf._
     val selector = Json.obj("_id" -> toJson(user.id))
     val update = toJson(user)
-    collection.update(selector, update, writeConcern = journalCommit) map { lastError => () }
+    collection.update(selector, update, writeConcern = journalCommit) map { lastError => user }
   }
 
   def delete(user: User)(implicit conf: ValidatorSuite): Future[Unit] =

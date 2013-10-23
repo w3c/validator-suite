@@ -23,7 +23,7 @@ import org.w3.vs.exception._
 
 object GroupedAssertions extends VSController  {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.GroupedAssertions")
+  val logger = play.Logger.of("controllers.GroupedAssertions")
 
   def index(id: JobId) = UserAwareAction { implicit req: RequestHeader => user =>
     for {

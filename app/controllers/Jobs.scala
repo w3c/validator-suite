@@ -22,7 +22,7 @@ import play.api.http.MimeTypes
 
 object Jobs extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Jobs")
+  val logger = play.Logger.of("controllers.Jobs")
 
   private def lowCreditWarning(credits: Int) = {
     if (credits <= 0)
@@ -40,13 +40,12 @@ object Jobs extends VSController {
     } yield {
       render {
         case Accepts.Html() =>
-
-        Ok(views.html.main(
-          user = Some(user),
-          title = "Jobs - W3C Validator Suite",
-          collections = Seq(jobs.bindFromRequest),
-          messages = lowCreditWarning(user.credits)
-        ))
+          Ok(views.html.main(
+            user = Some(user),
+            title = "Jobs - W3C Validator Suite",
+            collections = Seq(jobs.bindFromRequest),
+            messages = lowCreditWarning(user.credits)
+          ))
         case Accepts.Json() => Ok(jobs.bindFromRequest.toJson)
       }
     }

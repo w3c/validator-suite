@@ -15,7 +15,7 @@ import scala.concurrent.Future
 
 object Administration extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Administration")
+  val logger = play.Logger.of("controllers.Administration")
 
   def index: ActionA = RootAction { implicit req => root =>
     Ok(views.html.admin(root))
@@ -246,9 +246,14 @@ object Administration extends VSController {
         ).getOrFail()
 
       case Array("db-add-credits", email, int(credits)) =>
-        val user = model.User.getByEmail(email).getOrFail()
-        model.User.updateCredits(user.id, credits).getOrFail()
-        s"${credits} credits added to user ${user.email} (${user.id}})"
+        (for {
+          user <- model.User.getByEmail(email)
+          saved <- model.User.updateCredits(user.id, credits)
+        } yield {
+          // TODO adminId
+          Purchase.logger.info(s"""id=${user.id} action=credits-update amount=${credits} (expiration-date="${saved.expireDate}") message="credits updated by admin ???" """)
+          s"${credits} credits added to user ${user.email} (${user.id}})"
+        }).getOrFail()
 
       case _ => s"Command ${command} not found"
 

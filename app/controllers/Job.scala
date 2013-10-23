@@ -21,7 +21,7 @@ import org.w3.vs.exception.{AccessNotAllowed, PaymentRequired}
 
 object Job extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Job")
+  val logger = play.Logger.of("controllers.Job")
 
   def reportByMessage(id: JobId): ActionA = GroupedAssertions.index(id)
 

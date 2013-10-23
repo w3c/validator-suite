@@ -22,7 +22,7 @@ import org.w3.vs.exception.AccessNotAllowed
 
 object Assertions extends VSController  {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Assertions")
+  val logger = play.Logger.of("controllers.Assertions")
 
   def index(id: JobId, url: URL): ActionA = UserAwareAction { implicit req: RequestHeader => user =>
     for {

@@ -46,14 +46,17 @@ object JobActor {
 //    def warn(msg: String): Unit = println("== " + msg)
 //  }
 
-  def saveEvent(event: RunEvent)(implicit vs: Database): Future[Unit] = event match {
+  def saveEvent(event: RunEvent)(implicit vs: ValidatorSuite with Database): Future[Unit] = event match {
     case event@CreateRunEvent(userIdOpt, jobId, runId, actorName, strategy, timestamp) =>
       Run.saveEvent(event) flatMap { case () =>
         val running = Running(runId, actorName)
         Job.updateStatus(jobId, status = running)
       } flatMap { case () =>
         userIdOpt match {
-          case Some(userId) => User.updateCredits(userId, - strategy.maxResources)
+          case Some(userId) => for {
+            user <- User.get(userId)
+            _ <- User.update(user.copy(credits = user.credits - strategy.maxResources)) map (_ => ())
+          } yield ()
           case _ => Future.successful()
         }
       }
@@ -66,7 +69,12 @@ object JobActor {
         Job.get(jobId)
       } flatMap { job =>
         userIdOpt match {
-          case Some(userId) => User.updateCredits(userId, job.strategy.maxResources - resources)
+          case Some(userId) => {
+            for {
+              user <- User.get(userId)
+              _ <- User.update(user.copy(credits = user.credits + (job.strategy.maxResources - resources))) map (_ => ())
+            } yield ()
+          }
           case _ => Future.successful()
         }
       }
@@ -234,7 +242,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // compute the next step and do side-effects
     val state = event match {
       case CreateRunEvent(_, _, _, _, _, _) =>
-        logger.info(s"Job started - URL: ${job.strategy.entrypoint} - Max: ${job.strategy.maxResources} - Id: ${job.id}")
+        logger.info(s"id=${job.id} status=started user-id=${job.creatorId} url=${job.strategy.entrypoint} max=${job.strategy.maxResources}")
         runningJobs.inc()
         val running = Running(run.runId, RunningActorName(self.path.name))
         // Job.run() is waiting for this value
@@ -242,9 +250,10 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
         from ! running
         goto(Started) using run
       case DoneRunEvent(_, jobId, _, doneReason, resources, errors, warnings, _, _, _) =>
-        if (doneReason === Completed)
-          logger.debug(s"${run.shortId}: Assertion phase finished")
-        logger.info(s"Job stopped - URL: ${job.strategy.entrypoint} - Resources: ${resources} - Errors: ${errors} - Warnings: ${warnings}")
+        doneReason match {
+          case Completed => logger.info(s"""id=${job.id} status=completed result="Resources: ${resources} Errors: ${errors} Warnings: ${warnings}" """)
+          case Cancelled => logger.info(s"""id=${job.id} status=canceled result="Resources: ${resources} Errors: ${errors} Warnings: ${warnings}" """)
+        }
         stopThisActor()
         goto(Stopping) using run
       case _ =>
@@ -281,7 +290,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       stay()
 
     case Event(e, run) =>
-      logger.warn(s"Unexpected event for run: ${run.shortId} - ${e.getClass()}")
+      logger.warn(s"""status=unexpected message="Unexpected event for run: ${run.shortId} - ${e.getClass()}""")
       stay()
 
   }

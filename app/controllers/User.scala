@@ -10,7 +10,7 @@ import play.api.i18n.Messages
 
 object User extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.User")
+  val logger = play.Logger.of("controllers.User")
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -24,8 +24,9 @@ object User extends VSController {
         case Left(form) => throw new InvalidFormException(form)
         case Right(validJobForm) => validJobForm
       })
-      job <- model.User.update(form.updateUser(user))
+      _ <- model.User.update(form.updateUser(user))
     } yield {
+      logger.info(s"""id=${user.id} action=editprofile message="profile updated" """)
       render {
         case Accepts.Html() => SeeOther(routes.User.profile().url).withSession(("email" -> form.email)).flashing(("success" -> Messages("user.profile.updated")))
         case Accepts.Json() => Ok
@@ -45,7 +46,12 @@ object User extends VSController {
       formWithErrors => BadRequest(views.html.profile(UserForm.forUser(user), formWithErrors, user)),
       bind => {
         val newPassword = bind._2
-        model.User.update(user.withPassword(newPassword)).map(_ => SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.password.updated"))))
+        for {
+          saved <- model.User.update(user.withPassword(newPassword))
+        } yield {
+          logger.info(s"""id=${user.id} action=editpassword message="password updated" """)
+          SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.password.updated")))
+        }
       }
     )
   }

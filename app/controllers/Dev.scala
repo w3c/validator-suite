@@ -7,7 +7,7 @@ import org.w3.vs.controllers._
 
 object Dev extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Dev")
+  val logger = play.Logger.of("controllers.Dev")
 
   def DevAction(f: Request[AnyContent] => Result) = Action { req =>
     if (Global.conf.mode != Mode.Dev) {

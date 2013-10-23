@@ -32,19 +32,13 @@ trait FromHttpResponseAssertor extends FromURLAssertor {
           }
           assertionsWithGroupedTitles
         }
+      val end = System.currentTimeMillis()
+      logger.info(s"id=${id} status=completed time=${end - start}ms url=${response.url}")
       AssertorResult(assertor = id, sourceUrl = response.url, assertions = assertions)
     } catch { case t: Throwable =>
+      val end = System.currentTimeMillis()
+      logger.error(s"""id=${id} status=failed time=${end - start}ms url=${response.url} message="${t.getMessage}" """)
       AssertorFailure(assertor = id, sourceUrl = response.url, why = t.getMessage)
-    }
-    val end = System.currentTimeMillis()
-
-    if (logger.isDebugEnabled || logger.isErrorEnabled) {
-      result match {
-        case _: AssertorResult =>
-          logger.debug(s"${this.name} took ${end - start}ms to assert ${response.url}")
-        case failure: AssertorFailure =>
-          logger.error(s"Failure: ${this.name} took ${end - start}ms to assert ${response.url} - Reason: ${failure.why} - ${validatorURLForMachine(response.url, configuration)}")
-      }
     }
     
     result

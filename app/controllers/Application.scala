@@ -15,7 +15,7 @@ import org.w3.vs.Graphite
 
 object Application extends VSController {
   
-  val logger = play.Logger.of("org.w3.vs.controllers.Application")
+  val logger = play.Logger.of("controllers.Application")
 
   def index: ActionA    = UserAwareAction { implicit req => user => Ok(views.html.index(user)) }
   def faq: ActionA      = UserAwareAction { implicit req => user => Ok(views.html.faq(user)) }
@@ -56,10 +56,17 @@ object Application extends VSController {
         case Right(validForm) => validForm
       })
       user <- model.User.authenticate(form.email, form.password) recover {
-        case UnauthorizedException(email) => throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
+        case UnknownUser(email) => {
+          logger.warn(s"""action=login email=${email} message="Authentication failed. User does not exist." """)
+          throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
+        }
+        case Unauthenticated(email) => {
+          logger.warn(s"""action=login email=${email} message="Authentication failed. Invalid password." """)
+          throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
+        }
       }
     } yield {
-      logger.info(s"Logged in: ${user.email}")
+      logger.info(s"id=${user.id} action=login email=${user.email}")
       (form("uri").value match {
         case Some(uri) if (uri != routes.Application.login.url && uri != "") => SeeOther(uri)
         case _ => SeeOther(routes.Jobs.index.url)
@@ -84,7 +91,8 @@ object Application extends VSController {
             optedIn = form.optedIn,
             isSubscriber = false).map {
           case user => {
-            logger.info(s"Registered: ${user.name} <${user.email}> ${if(user.optedIn){"- Opted-in"}else{""}}")
+            logger.info(s"""id=${user.id} action=register email=${user.email} name="${user.name}" opt-in=${user.optedIn}""")
+            logger.info(s"""id=${user.id} action=login email=${user.email}""")
             val newUri = form("uri").value match {
               case Some(uri) if uri != "" => uri
               case _ => routes.Jobs.index.url
@@ -92,12 +100,18 @@ object Application extends VSController {
             SeeOther(newUri).withSession("email" -> user.email).flashing(("success", Messages("success.registered.user", user.name, user.email)))
           }
         } recover {
-          case DuplicatedEmail(email: String) => BadRequest(views.html.register(registerForm = form.withError("r_email", "duplicate")))
+          case DuplicatedEmail(email: String) => {
+            logger.info(s"""action=register email=${email} message="Registration failed. Email already in use." """)
+            BadRequest(views.html.register(registerForm = form.withError("r_email", "duplicate")))
+          }
         }
       }
     }
   }
 
-  def logoutAction: ActionA = Action { Redirect(routes.Application.index()).withNewSession }
+  def logoutAction: ActionA = UserAwareAction { req => userOpt =>
+    userOpt.map(user => logger.info(s"""id=${user.id} action=logout email=${user.email}"""))
+    Redirect(routes.Application.index()).withNewSession
+  }
 
 }

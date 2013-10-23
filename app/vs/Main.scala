@@ -61,7 +61,7 @@ object Main {
 
   }*/
 
-  def stressTestData(n: Int)(implicit conf: Database): Unit = {
+  def stressTestData(n: Int)(implicit conf: ValidatorSuite with Database): Unit = {
 
     def makeUser(name: String): User =
       User.create(name = name, email = s"${name}@w3.org", password = "secret", credits = 1000000, optedIn = false, isSubscriber = false, isRoot = true)
@@ -125,7 +125,7 @@ object Main {
     ) map { case (name, email) =>
       User.create(
         email = email, name = name, password = "secret",
-        credits = 10000, optedIn = true, isSubscriber = false, isRoot = true, expireDate = DateTime.now(DateTimeZone.UTC).plusYears(10))
+        credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
     }
 
     Future.sequence(

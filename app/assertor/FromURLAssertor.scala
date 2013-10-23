@@ -57,8 +57,7 @@ trait FromURLAssertor extends FromSourceAssertor {
    *  @return the assertion
    */
   def assert(url: URL, configuration: AssertorConfiguration): Iterable[Assertion] = {
-    //Assertor.logger.info(s"${this.name} asserting ${validatorURLForMachine(url, configuration)}")
-    Assertor.logger.info(s"${this.name} asserting ${url} - ${validatorURLForMachine(url, configuration)}")
+    Assertor.logger.info(s"id=${id} status=started url=${url}")
     val inputStream =
       client.prepareGet(validatorURLForMachine(url, configuration).toString).execute().get().getResponseBodyAsStream()
     val source = Source.fromInputStream(inputStream)

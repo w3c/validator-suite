@@ -13,7 +13,7 @@ import scalaz.Scalaz._
 
 object Assertors extends VSController {
 
-  val logger = play.Logger.of("org.w3.vs.controllers.Assertors")
+  val logger = play.Logger.of("controllers.Assertors")
 
   /*def index(id: JobId, url: Option[URL]): ActionA = {
     url match {
