@@ -1,20 +1,48 @@
 W3C Validator Suite
 ---------------
 
-### Play 2.1-SNAPSHOT
+## Project dependencies
 
+### Java
+
+You need the Java 7 JDK.
+
+On Debian based systems use [OpenJDK](http://openjdk.java.net/): `apt-get install openjdk-7-jdk`
+On Windows hosts use [Oracle's Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+
+### Play 2.1.x
+
+W3C Validator Suite is based on the [Play Framework](http://www.playframework.com/).
+The Play framework embeds its own scala version.
+
+```bash
+wet http://downloads.typesafe.com/play/2.1.5/play-2.1.5.zip
+unzip play-2.1.5.zip
+ln -s play-2.1.5 play
 ```
-git clone git://github.com/playframework/Play20.git
-cd Play20/framework
-./build publish-local
-```
 
-### start geeking
+### MongoDB
 
-You need Java 7. First build will take time as it fetches all the dependencies.
+W3 Validator Suite uses [MongoDB](http://www.mongodb.org/) as its data storage.
 
-```
+Install the latest "Production Release" from [MongoDB Downloads](http://www.mongodb.org/downloads)  _(tested with 2.4.7)_.
+
+## Start geeking
+
+Now start `play` and start playing!
+_First build will take time as it fetches all the dependencies._
+
+```bash
 git clone git@github.com:w3c/validator-suite.git
 cd validator-suite
-<path-to-Play20>/play
+<path-to-play>/play
 ```
+
+Some sample commands:
+* `help` - Displays Play help message.
+* `tasks` - Lists the tasks defined for the current project.
+* `clean` - _W3C Validator Suite:_ Deletes files produced by the build, such as generated sources, compiled classes, and task caches.
+* `doc` - _W3C Validator Suite:_ Generates API documentation.
+* `run` - _W3C Validator Suite:_ Runs the application in dev mode.
+* `run-main org.w3.vs.Main default` - _W3C Validator Suite:_ Resets the whole database and adds the root users.
+* `test` - _W3C Validator Suite:_ Executes all tests.
