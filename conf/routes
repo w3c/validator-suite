@@ -23,8 +23,8 @@ POST    /account/password                           controllers.User.changePassw
 # Jobs
 GET     /jobs                                       controllers.Jobs.index
 GET     /jobs/                                      controllers.Jobs.redirect
-POST    /jobs/new                                   controllers.Jobs.create
 GET     /jobs/new                                   controllers.Jobs.newJob
+POST    /jobs/new                                   controllers.Jobs.createAction
 GET     /jobs/socket/:socket                        controllers.Jobs.socket(socket: SocketType.SocketType)
 
 #GET     /jobs/buy-one-time                          controllers.Purchase.buyJob

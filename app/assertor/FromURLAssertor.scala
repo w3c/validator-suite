@@ -7,7 +7,7 @@ import scala.io.Source
 import play.api.Configuration
 import java.util.concurrent.{ Executors, ForkJoinPool }
 import java.io.File
-import com.ning.http.client.{ AsyncHttpClientConfig, AsyncHttpClient }
+import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
 
 object FromURLAssertor {
 

@@ -2,7 +2,7 @@ package controllers
 
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
-import org.w3.vs.model
+import org.w3.vs.{Metrics, model}
 import org.w3.vs.model._
 import org.w3.vs.view.form._
 import org.w3.vs.util.timer._
@@ -29,7 +29,7 @@ object Purchase extends VSController {
     } */
   }*/
 
-  def buyCredits: ActionA = AsyncAction { implicit req =>
+  def buyCredits: ActionA = AsyncAction("front.buy") { implicit req =>
     (for {
       user <- getUser()
       redirect <- Future.successful{
@@ -44,6 +44,7 @@ object Purchase extends VSController {
                 Redirect(routes.Jobs.index())
               } else {
                 logger.info(s"""id=${user.id} action=purchase plan=${plan.fastSpringKey} message="Redirecting to FastSpring" """)
+                Metrics.purchases.redirect()
                 redirectToStore(plan, user.id)
               }
             }
@@ -99,8 +100,7 @@ object Purchase extends VSController {
     }
   }*/
 
-  def redirectToStore(product: CreditPlan, id: UserId) =
-    Redirect(getStoreUrl(product, id))
+  def redirectToStore(product: CreditPlan, id: UserId) = Redirect(getStoreUrl(product, id))
 
   /*def redirectToStore(product: OneTimePlan, id: JobId) =
     Redirect(getStoreUrl(product, id))*/
@@ -109,7 +109,8 @@ object Purchase extends VSController {
     "https://sites.fastspring.com/ercim/instant/" + product.fastSpringKey + "?referrer=" + id
   }
 
-  def callback = AsyncAction { req =>
+  def callback = AsyncAction("form.fsCallback") { req =>
+    Metrics.purchases.callback()
     logger.debug(req.body.asFormUrlEncoded.toString)
     // TODO: add security check
     (for {
@@ -149,10 +150,14 @@ object Purchase extends VSController {
                logger.info(s"""id=${userId} action=credits-update amount=${plan.credits} message="${plan.fastSpringKey} purchase" """)
              )
            }
-         } yield { Ok }
+         } yield {
+           Metrics.purchases.purchased(plan)
+           Ok
+         }
       }
 
     }) getOrElse {
+      Metrics.purchases.callbackFailure()
       val s = "Error parsing order: \n" + req.body.asFormUrlEncoded.toString
       logger.error(s)
       InternalServerError(s)

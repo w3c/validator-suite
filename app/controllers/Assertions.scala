@@ -5,7 +5,6 @@ import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import play.api.mvc._
-import org.w3.vs.Graphite
 import scala.concurrent.Future
 import scalaz.Scalaz._
 import org.w3.vs.util.timer._
@@ -24,7 +23,7 @@ object Assertions extends VSController  {
 
   val logger = play.Logger.of("controllers.Assertions")
 
-  def index(id: JobId, url: URL): ActionA = UserAwareAction { implicit req: RequestHeader => user =>
+  def index(id: JobId, url: URL): ActionA = UserAwareAction("back.report.resource") { implicit req: RequestHeader => user =>
     for {
       job_ <- model.Job.get(id)
       resource <- ResourcesView(job_, url)

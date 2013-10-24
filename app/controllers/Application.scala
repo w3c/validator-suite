@@ -2,7 +2,7 @@ package controllers
 
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
-import org.w3.vs.model
+import org.w3.vs.{Metrics, model}
 import org.w3.vs.model._
 import org.w3.vs.view.form._
 import play.api.i18n._
@@ -11,21 +11,20 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.w3.vs.util.timer._
 import com.codahale.metrics._
-import org.w3.vs.Graphite
 
 object Application extends VSController {
   
   val logger = play.Logger.of("controllers.Application")
 
-  def index: ActionA    = UserAwareAction { implicit req => user => Ok(views.html.index(user)) }
-  def faq: ActionA      = UserAwareAction { implicit req => user => Ok(views.html.faq(user)) }
-  def logos: ActionA    = UserAwareAction { implicit req => user => Ok(views.html.logos(user)) }
-  def pricing: ActionA  = UserAwareAction { implicit req => user => Ok(views.html.pricing(user)) }
-  def features: ActionA = UserAwareAction { implicit req => user => Ok(views.html.features(user)) }
-  def terms: ActionA    = UserAwareAction { implicit req => user => Ok(views.html.terms(user)) }
-  def privacy: ActionA  = UserAwareAction { implicit req => user => Ok(views.html.privacy(user)) }
+  def index: ActionA    = UserAwareAction("front.index")    { implicit req => user => Ok(views.html.index(user)) }
+  def faq: ActionA      = UserAwareAction("front.faq")      { implicit req => user => Ok(views.html.faq(user)) }
+  def logos: ActionA    = UserAwareAction("front.logos")    { implicit req => user => Ok(views.html.logos(user)) }
+  def pricing: ActionA  = UserAwareAction("front.pricing")  { implicit req => user => Ok(views.html.pricing(user)) }
+  def features: ActionA = UserAwareAction("front.features") { implicit req => user => Ok(views.html.features(user)) }
+  def terms: ActionA    = UserAwareAction("front.terms")    { implicit req => user => Ok(views.html.terms(user)) }
+  def privacy: ActionA  = UserAwareAction("front.privacy")  { implicit req => user => Ok(views.html.privacy(user)) }
 
-  def login: ActionA = AsyncAction { implicit req =>
+  def login: ActionA = AsyncAction("front.login") { implicit req =>
     getUser map {
       case _ => Redirect(routes.Jobs.index()) // Already logged in -> redirect to index
     } recover {
@@ -33,7 +32,7 @@ object Application extends VSController {
     }
   }
 
-  def tryIt: ActionA = AsyncAction { implicit req =>
+  def tryIt: ActionA = AsyncAction("front.try") { implicit req =>
     getUser map {
       case _ => Redirect(routes.Jobs.index())
     } recover {
@@ -41,7 +40,7 @@ object Application extends VSController {
     }
   }
 
-  def register = AsyncAction { implicit req =>
+  def register = AsyncAction("front.register") { implicit req =>
     getUser map {
       case _ => Redirect(routes.Jobs.index()) // Already logged in -> redirect to index
     } recover {
@@ -49,7 +48,7 @@ object Application extends VSController {
     }
   }
 
-  def loginAction: ActionA = AsyncAction { implicit req =>
+  def loginAction: ActionA = AsyncAction("form.login") { implicit req =>
     (for {
       form <- Future(LoginForm.bind() match {
         case Left(form) => throw InvalidFormException(form)
@@ -73,15 +72,18 @@ object Application extends VSController {
       }).withSession("email" -> user.email)
     }) recover {
       case InvalidFormException(form: LoginForm, _) => {
+        Metrics.form.loginFailure()
         BadRequest(views.html.login(form)).withNewSession
       }
     }
   }
 
-  def registerAction: ActionA = AsyncAction { implicit req =>
+  def registerAction: ActionA = AsyncAction("form.register") { implicit req =>
     RegisterForm.bind() match {
       case Left(form) => {
-        Future.successful(BadRequest(views.html.register(registerForm = form)))
+        Future.successful {
+          BadRequest(views.html.register(registerForm = form))
+        }
       }
       case Right(form) => {
         model.User.register(
@@ -102,6 +104,7 @@ object Application extends VSController {
         } recover {
           case DuplicatedEmail(email: String) => {
             logger.info(s"""action=register email=${email} message="Registration failed. Email already in use." """)
+            Metrics.form.registerFailure()
             BadRequest(views.html.register(registerForm = form.withError("r_email", "duplicate")))
           }
         }
@@ -109,7 +112,7 @@ object Application extends VSController {
     }
   }
 
-  def logoutAction: ActionA = UserAwareAction { req => userOpt =>
+  def logoutAction: ActionA = UserAwareAction("form.logout") { req => userOpt =>
     userOpt.map(user => logger.info(s"""id=${user.id} action=logout email=${user.email}"""))
     Redirect(routes.Application.index()).withNewSession
   }

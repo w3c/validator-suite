@@ -2,7 +2,7 @@ package controllers
 
 import org.w3.vs.view.form.{PasswordForm, JobForm, UserForm}
 import org.w3.vs.controllers._
-import org.w3.vs.model
+import org.w3.vs.{Metrics, model}
 import scala.concurrent.Future
 import org.w3.vs.exception.InvalidFormException
 import play.api.i18n.Messages
@@ -14,11 +14,11 @@ object User extends VSController {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def profile = AuthenticatedAction { implicit req => user =>
+  def profile = AuthenticatedAction("back.account") { implicit req => user =>
     Ok(views.html.profile(UserForm.forUser(user), PasswordForm.create(user), user))
   }
 
-  def editAction: ActionA = AuthenticatedAction { implicit req => user =>
+  def editAction: ActionA = AuthenticatedAction("form.editAccount") { implicit req => user =>
     (for {
       form <- Future(UserForm.bind match {
         case Left(form) => throw new InvalidFormException(form)
@@ -33,6 +33,7 @@ object User extends VSController {
       }
     }) recover {
       case InvalidFormException(form: UserForm, _) => {
+        Metrics.form.editAccountFailure()
         render {
           case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm.create(user), user))
           case Accepts.Json() => BadRequest
@@ -41,9 +42,12 @@ object User extends VSController {
     }
   }
 
-  def changePasswordAction = AuthenticatedAction { implicit req => user =>
+  def changePasswordAction = AuthenticatedAction("form.editPassword") { implicit req => user =>
     PasswordForm.create(user).bindFromRequest().fold (
-      formWithErrors => BadRequest(views.html.profile(UserForm.forUser(user), formWithErrors, user)),
+      formWithErrors => {
+        Metrics.form.editPasswordFailure()
+        BadRequest(views.html.profile(UserForm.forUser(user), formWithErrors, user))
+      },
       bind => {
         val newPassword = bind._2
         for {

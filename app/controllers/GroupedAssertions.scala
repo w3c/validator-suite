@@ -3,7 +3,7 @@ package controllers
 import org.w3.vs.view.Helper
 import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
-import org.w3.vs.{Global, Graphite}
+import org.w3.vs.Global
 import org.w3.vs.controllers._
 import play.api.mvc._
 import scala.concurrent.Future
@@ -25,7 +25,7 @@ object GroupedAssertions extends VSController  {
 
   val logger = play.Logger.of("controllers.GroupedAssertions")
 
-  def index(id: JobId) = UserAwareAction { implicit req: RequestHeader => user =>
+  def index(id: JobId) = UserAwareAction("back.report.messages") { implicit req: RequestHeader => user =>
     for {
       job_ <- model.Job.getFor(id, user)
       job <- JobsView(job_)
@@ -80,10 +80,5 @@ object GroupedAssertions extends VSController  {
       toJson(iterator.map(GroupedAssertionView(jobId, _).toJson))
     }
   }
-
-  val indexName = (new controllers.javascript.ReverseAssertions).index.name
-  val indexTimer = Graphite.metrics.timer(MetricRegistry.name(Assertions.getClass, indexName))
-  val indexUrlName = indexName + "+url"
-  val indexUrlTimer = Graphite.metrics.timer(MetricRegistry.name(Assertions.getClass, indexUrlName))
 
 }

@@ -33,7 +33,10 @@ class AssertionsActor(job: Job)(implicit vs: ValidatorSuite) extends Actor {
 
     atomic { implicit txn => pendingAssertions += 1 }
     val sender = self
-    
+
+    Metrics.assertors.pending(assertor.id).inc()
+    val timer = Metrics.assertors.time(assertor.id)
+
     Future {
       assertor.assert(response, AssertorsConfiguration.default(assertor.id))
     } andThen { case _ =>
@@ -41,9 +44,15 @@ class AssertionsActor(job: Job)(implicit vs: ValidatorSuite) extends Actor {
     } andThen {
       case Failure(t) => {
         logger.error(s"${runId.shortId}: ${assertor} failed to assert ${response.url} because [${t.getMessage}]", t)
+        timer.stop()
+        Metrics.assertors.pending(assertor.id).dec()
         sender ! AssertorFailure(assertor.id, response.url, why = t.getMessage)
       }
-      case Success(assertorResponse) => sender ! assertorResponse
+      case Success(assertorResponse) => {
+        timer.stop()
+        Metrics.assertors.pending(assertor.id).dec()
+        sender ! assertorResponse
+      }
     }
     
   }
@@ -57,9 +66,13 @@ class AssertionsActor(job: Job)(implicit vs: ValidatorSuite) extends Actor {
         val AssertorCall(runId, assertorId, nextRI) = queue.dequeue()
         scheduleAssertion(runId, assertorId, nextRI)
       }
+      val (errors, warnings) = Assertion.countErrorsAndWarnings(result.assertions.values.flatten)
+      Metrics.assertors.errors(result.assertor, errors)
+      Metrics.assertors.warnings(result.assertor, warnings)
     }
 
     case result: AssertorFailure => {
+      Metrics.assertors.failure(result.assertor)
       context.parent ! result
       while (queue.nonEmpty && pendingAssertions.single() <= MAX_PENDING_ASSERTION) {
         val AssertorCall(runId, assertorId, nextRI) = queue.dequeue()

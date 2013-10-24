@@ -20,6 +20,8 @@ import org.w3.vs.view.model.JobView
 import scalaz.Scalaz._
 import play.modules.reactivemongo.json.collection.JSONCollection
 import akka.actor._
+import reactivemongo.core.commands.Count
+import reactivemongo.bson.BSONDocument
 
 // Play Json imports
 
@@ -474,6 +476,10 @@ object Job {
         }
       }
     }
+  }
+
+  def getCount()(implicit conf: Database): Future[Int] = {
+    collection.db.command(Count("jobs", Some(BSONDocument())))
   }
 
   def getRunningJobs()(implicit conf: Database): Future[List[Job]] = {

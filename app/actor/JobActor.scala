@@ -18,16 +18,9 @@ import akka.event._
 import akka.actor.{ ActorSystem => AkkaActorSystem, _ }
 import com.ning.http.client.{ Response, AsyncHttpClient, AsyncCompletionHandler }
 import scalax.io._
+import org.w3.vs.Metrics
 
 object JobActor {
-
-  val runningJobs: Counter = Graphite.metrics.counter(MetricRegistry.name(classOf[JobActor], "running-jobs"))
-
-  val extractedUrls: Histogram = Graphite.metrics.histogram(MetricRegistry.name(classOf[JobActor], "extracted-urls"))
-
-  val fetchesPerRun: Histogram = Graphite.metrics.histogram(MetricRegistry.name(classOf[JobActor], "fetches-per-run"))
-
-  val assertionsPerRun: Histogram = Graphite.metrics.histogram(MetricRegistry.name(classOf[JobActor], "assertions-per-run"))
 
   /* actor events */
   case object Start
@@ -138,6 +131,8 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
           case GET => httpClient.prepareGet(url.httpClientFriendly)
           case HEAD => httpClient.prepareHead(url.httpClientFriendly)
         }
+        val timer = Metrics.crawler.time()
+        Metrics.crawler.pending.inc()
         boundRequestBuilder.execute(new AsyncCompletionHandler[Unit]() {
           override def onCompleted(response: Response): Unit = {
             import java.util.{ Map => jMap, List => jList }
@@ -147,11 +142,16 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
             def resource = Resource.fromInputStream(response.getResponseBodyAsStream())
             val httpResponse = HttpResponse(url, method, status, headers, resource)
             self ! httpResponse
+            timer.stop()
+            Metrics.crawler.pending.dec()
 //            cacheOpt foreach { _.save(httpResponse, resource) }
           }
           override def onThrowable(t: Throwable): Unit = {
             val errorResponse = ErrorResponse(url = url, method = method, why = t.getMessage)
             self ! errorResponse
+            timer.stop()
+            Metrics.crawler.failure()
+            Metrics.crawler.pending.dec()
           }
         })
       case call: AssertorCall =>
@@ -243,7 +243,6 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     val state = event match {
       case CreateRunEvent(_, _, _, _, _, _) =>
         logger.info(s"id=${job.id} status=started user-id=${job.creatorId} url=${job.strategy.entrypoint} max=${job.strategy.maxResources}")
-        runningJobs.inc()
         val running = Running(run.runId, RunningActorName(self.path.name))
         // Job.run() is waiting for this value
         val from = sender
@@ -254,6 +253,9 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
           case Completed => logger.info(s"""id=${job.id} status=completed result="Resources: ${resources} Errors: ${errors} Warnings: ${warnings}" """)
           case Cancelled => logger.info(s"""id=${job.id} status=canceled result="Resources: ${resources} Errors: ${errors} Warnings: ${warnings}" """)
         }
+        Metrics.jobs.errors(errors)
+        Metrics.jobs.warnings(warnings)
+        Metrics.jobs.resources(resources)
         stopThisActor()
         goto(Stopping) using run
       case _ =>
@@ -320,7 +322,6 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
 
     case Event(Resume(actions), run) =>
       sender ! ()
-      runningJobs.inc()
       executeActions(actions)
       goto(Started)
 
@@ -341,7 +342,6 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     case Event(httpResponse: HttpResponse, run) =>
       // logging/monitoring
       logger.debug(s"${run.shortId}: <<< ${httpResponse.url}")
-      extractedUrls.update(httpResponse.extractedURLs.size)
       // logic
       val event = ResourceResponseEvent(userId, jobId, run.runId, httpResponse)
       handleRunEvent(run, event)
@@ -379,7 +379,16 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     system.scheduler.scheduleOnce(duration, self, PoisonPill)
   }
 
+  var timer: Timer.Context = _
+
+  override def preStart(): Unit = {
+    Metrics.jobs.running.inc()
+    timer = Metrics.jobs.time()
+  }
+
   override def postStop(): Unit = {
+    Metrics.jobs.running.dec()
+    timer.stop()
     httpClient.close()
   }
 

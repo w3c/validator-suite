@@ -1,19 +1,11 @@
 package org.w3.vs
 
-import _root_.controllers.Application
 import com.codahale.metrics._
 import com.codahale.metrics.graphite.{ Graphite => MGraphite, GraphiteReporter }
 import java.util.concurrent.TimeUnit
+import play.api.Mode
 
-object Graphite {
-
-  val metrics = new MetricRegistry()
-
-  val timer1 = metrics.timer(MetricRegistry.name("t", "timer1"))
-
-}
-
-trait Graphite extends ValidatorSuite {
+trait Graphite extends ValidatorSuite { this: ValidatorSuite with Database =>
 
   lazy val graphiteConf = config.getConfig("application.graphite-reporter") getOrElse sys.error("application.graphite-reporter")
 
@@ -26,25 +18,35 @@ trait Graphite extends ValidatorSuite {
   lazy val port = graphiteConf.getInt("port").map(_.toInt) getOrElse sys.error("port")
   lazy val prefix = graphiteConf.getString("prefix") getOrElse sys.error("prefix")
 
-  val graphite: MGraphite = new MGraphite(new java.net.InetSocketAddress(host, port))
-  val reporter: GraphiteReporter =
+  //val graphite: MGraphite = new MGraphite(new java.net.InetSocketAddress(host, port))
+
+  private val reporter = {
     GraphiteReporter
-      .forRegistry(Graphite.metrics)
+      .forRegistry(Metrics.metrics)
       .prefixedWith(prefix) /* should be the server being used! */
       .convertRatesTo(TimeUnit.SECONDS)
       .convertDurationsTo(TimeUnit.MILLISECONDS)
       .filter(MetricFilter.ALL)
       .build(graphite)
 
-  override def start(): Unit = {
+    /*ConsoleReporter.forRegistry(Metrics.metrics)
+      .convertRatesTo(TimeUnit.SECONDS)
+      .convertDurationsTo(TimeUnit.MILLISECONDS)
+      .build()*/
+  }
+
+  override def start() {
     super.start()
     logger.info("Initializing Graphite")
-    reporter.start(1, TimeUnit.MINUTES);
+    reporter.start(30, TimeUnit.SECONDS)
+    Metrics.metrics.register("db.jobs", Metrics.db.jobs()(this))
+    Metrics.metrics.register("db.users", Metrics.db.users()(this))
   }
 
   override def shutdown() {
-    logger.info("Shutting down Metrics")
+    logger.info("Shutting down Graphite")
     reporter.stop()
+    //graphite.close()
     super.shutdown()
   }
 

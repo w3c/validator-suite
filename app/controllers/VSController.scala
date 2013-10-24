@@ -2,7 +2,8 @@ package controllers
 
 import org.w3.vs.exception._
 import org.w3.vs.controllers._
-import org.w3.vs.model
+import org.w3.vs.Metrics
+import org.w3.vs.{Metrics, model, Graphite, Global}
 import org.w3.vs.model._
 import org.w3.vs.view.form.LoginForm
 import play.Logger.ALogger
@@ -20,7 +21,6 @@ import play.api.mvc.AsyncResult
 import play.api.mvc.Call
 import org.apache.commons.codec.binary.Base64.decodeBase64
 import org.mindrot.jbcrypt.BCrypt
-import org.w3.vs.{Graphite, Global}
 import play.api.http.{MimeTypes, MediaRange}
 import com.codahale.metrics.MetricRegistry
 
@@ -55,20 +55,27 @@ trait VSController extends Controller {
   }
 
   def Timer(name: String)(f: Future[Result]): Future[Result] = {
-    /*val timer = Graphite.metrics.timer(MetricRegistry.name(Application.getClass, name))
-    Graphite.getTimer(name)
-    f.timer(name).timer(loginTimer)*/
-    f
+    if (name == "") {
+      f
+    } else {
+      val timer = Metrics.forController(name)
+      val context = timer.time()
+      f onComplete { _ => context.stop() }
+      f
+    }
   }
 
-  def AsyncAction(f: Request[AnyContent] => Future[Result]) = Action { req =>
+  def AsyncAction(name: String)(f: Request[AnyContent] => Future[Result]): Action[AnyContent] = Action { req =>
     Async {
-      f(req) recover {
-        case AccessNotAllowed => Global.onHandlerNotFound(req)
-        case UnknownJob(_) => Global.onHandlerNotFound(req)
+      Timer(name) {
+        f(req) recover {
+          case AccessNotAllowed => Global.onHandlerNotFound(req)
+          case UnknownJob(_) => Global.onHandlerNotFound(req)
+        }
       }
     }
   }
+  def AsyncAction(f: Request[AnyContent] => Future[Result]): Action[AnyContent] = AsyncAction("")(f)
 
   val AcceptsStream = Accepting(MimeTypes.EVENT_STREAM)
 
@@ -99,8 +106,10 @@ trait VSController extends Controller {
     }
   }
 
-  def AuthenticatedAction(f: Request[AnyContent] => User => Future[Result]): ActionA =
-    AsyncAction { implicit req => Authenticated { user => f(req)(user) } }
+  def AuthenticatedAction(name: String)(f: Request[AnyContent] => User => Future[Result]): ActionA =
+    AsyncAction(name) { implicit req => Authenticated { user => f(req)(user) } }
+
+  def AuthenticatedAction(f: Request[AnyContent] => User => Future[Result]): ActionA = AuthenticatedAction("")(f)
 
   def UserAware(f: Option[User] => Future[Result])(implicit req: RequestHeader): Future[Result] = {
     for {
@@ -109,7 +118,9 @@ trait VSController extends Controller {
     } yield result
   }
 
-  def UserAwareAction(f: Request[AnyContent] => Option[User] => Future[Result]): ActionA =
-    AsyncAction { implicit req => UserAware { user => f(req)(user) } }
+  def UserAwareAction(name: String)(f: Request[AnyContent] => Option[User] => Future[Result]): ActionA =
+    AsyncAction(name) { implicit req => UserAware { user => f(req)(user) } }
+
+  def UserAwareAction(f: Request[AnyContent] => Option[User] => Future[Result]): ActionA = UserAwareAction("")(f)
 
 }

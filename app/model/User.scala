@@ -19,6 +19,8 @@ import play.api.Configuration
 import org.mindrot.jbcrypt.BCrypt
 import play.api.libs.iteratee
 import reactivemongo.api.collections.default.BSONCollection
+import reactivemongo.bson.BSONDocument
+import reactivemongo.core.commands.Count
 
 // Reactive Mongo imports
 import reactivemongo.api._
@@ -196,6 +198,10 @@ object User {
         }
       }
     }
+  }
+
+  def getCount()(implicit conf: Database): Future[Int] = {
+    collection.db.command(Count("users", Some(BSONDocument())))
   }
   
   /** Attemps to authenticate a user based on the couple email/password.

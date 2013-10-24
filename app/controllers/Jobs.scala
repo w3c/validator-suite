@@ -1,7 +1,7 @@
 package controllers
 
 import org.w3.vs.exception._
-import org.w3.vs.model
+import org.w3.vs.{Metrics, model}
 import org.w3.vs.model._
 import org.w3.vs.view.collection._
 import org.w3.vs.view.form._
@@ -13,8 +13,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import scala.concurrent.Future
 import org.w3.vs.util.timer._
-import org.w3.vs.Graphite
-import com.codahale.metrics._
 import org.w3.vs.view.model.JobView
 import org.w3.vs.store.Formats._
 import play.api.i18n.Messages
@@ -33,7 +31,7 @@ object Jobs extends VSController {
       List.empty
   }
 
-  def index: ActionA = AuthenticatedAction { implicit req => user =>
+  def index: ActionA = AuthenticatedAction("back.jobs") { implicit req => user =>
     for {
       jobs_ <- model.Job.getFor(user.id)
       jobs <- JobsView(jobs_)
@@ -53,7 +51,7 @@ object Jobs extends VSController {
 
   def redirect(): ActionA = Action { implicit req => MovedPermanently(routes.Jobs.index().url) }
 
-  def newJob: ActionA = AuthenticatedAction { implicit req => user =>
+  def newJob: ActionA = AuthenticatedAction("back.newJob") { implicit req => user =>
     render {
       case Accepts.Html() => {
         Ok(views.html.newJob(
@@ -65,12 +63,15 @@ object Jobs extends VSController {
     }
   }
 
-  def create: ActionA = AuthenticatedAction { implicit req => user =>
+  def createAction: ActionA = AuthenticatedAction("form.createJob") { implicit req => user =>
     JobForm(user).bindFromRequest().fold(
-      form => Future.successful(render {
-        case Accepts.Html() => BadRequest(views.html.newJob(form, user))
-        case Accepts.Json() => BadRequest
-      }),
+      form => Future.successful {
+        Metrics.form.createJobFailure()
+        render {
+          case Accepts.Html() => BadRequest(views.html.newJob(form, user))
+          case Accepts.Json() => BadRequest
+        }
+      },
       job => {
         for {
           _ <- job.save()
@@ -83,26 +84,6 @@ object Jobs extends VSController {
         }
       }
     )
-
-    /*(for {
-      form <- Future(JobForm(user).fold() match {
-        case Left(form) => throw new InvalidFormException(form)
-        case Right(validJobForm) => validJobForm
-      })
-      job <- form.createJob(user).save()
-    } yield {
-      render {
-        case Accepts.Html() => SeeOther(routes.Jobs.index.url) /*.flashing(("success" -> Messages("jobs.created", job.name)))*/
-        case Accepts.Json() => Created(routes.Job.get(job.id).toString)
-      }
-    }) recover {
-      case InvalidFormException(form: JobForm, _) => {
-        render {
-          case Accepts.Html() => BadRequest(views.html.newJob(form, user))
-          case Accepts.Json() => BadRequest
-        }
-      }
-    } */
   }
 
   def socket(typ: SocketType): Handler = {

@@ -19,7 +19,7 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
         val mode = Prod
       }
 
-      case m @ (Test | Dev) => conf = new ValidatorSuite {
+      case m @ (Test | Dev) => conf = new ValidatorSuite with Graphite {
         val mode = m
       }
 
@@ -43,6 +43,7 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
 
   override def onHandlerNotFound(request : RequestHeader) : Result = {
     implicit val implReq = request
+    Metrics.errors.e404()
     render {
       case Accepts.Html() => NotFound(views.html.error._404())
       case Accepts.Json() => NotFound
@@ -51,6 +52,7 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
 
   override def onError(request: RequestHeader, ex: Throwable): Result = {
     implicit val implReq = request
+    Metrics.errors.e500()
     render {
       case Accepts.Html() => InternalServerError(views.html.error.generic(messages = List(("error", ex.getMessage))))
       case Accepts.Json() => InternalServerError
@@ -61,7 +63,10 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
     implicit val implReq = request
     error match {
       case "InvalidJobId" => onHandlerNotFound(request)
-      case _ => BadRequest(views.html.error.generic(List(("error", "Bad Request: " + error))))
+      case _ => {
+        Metrics.errors.e400()
+        BadRequest(views.html.error.generic(List(("error", "Bad Request: " + error))))
+      }
     }
   }
 

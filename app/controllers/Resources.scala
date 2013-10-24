@@ -6,21 +6,13 @@ import org.w3.vs.view.collection._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
 import play.api.mvc._
-import scala.concurrent.Future
 import org.w3.vs.util.implicits.equaljURL
-import org.w3.vs.Graphite
-import org.w3.vs.util.timer._
-import com.codahale.metrics._
 import java.util.concurrent.TimeUnit.{ MILLISECONDS, SECONDS }
 import play.api.libs.iteratee.{Iteratee, Enumeratee, Enumerator}
 import play.api.libs.json.{Json => PlayJson, _}
 import play.api.libs.{EventSource, Comet}
 import scalaz.Scalaz._
 import org.w3.vs.store.Formats._
-import org.w3.vs.view.Helper
-import org.joda.time.DateTime
-import play.api.libs.json.JsUndefined
-import play.api.libs.json.JsObject
 import org.w3.vs.view.model.ResourceView
 import play.api.http.MimeTypes
 
@@ -39,7 +31,7 @@ object Resources extends VSController  {
     Redirect(routes.Resources.index(id, url))
   }
 
-  def index_(id: JobId) = UserAwareAction { implicit req => user =>
+  def index_(id: JobId) = UserAwareAction("back.report.resources") { implicit req => user =>
     for {
       job_ <- model.Job.getFor(id, user)
       job <- JobsView(job_)
