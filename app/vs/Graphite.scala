@@ -15,10 +15,10 @@ trait Graphite extends ValidatorSuite { this: ValidatorSuite with Database =>
       case r(period, "s") => (period.toInt, TimeUnit.SECONDS)
     }
   lazy val host = graphiteConf.getString("host") getOrElse sys.error("host")
-  lazy val port = graphiteConf.getInt("port").map(_.toInt) getOrElse sys.error("port")
+  lazy val port = graphiteConf.getInt("port") getOrElse sys.error("port")
   lazy val prefix = graphiteConf.getString("prefix") getOrElse sys.error("prefix")
 
-  //val graphite: MGraphite = new MGraphite(new java.net.InetSocketAddress(host, port))
+  val graphite: MGraphite = new MGraphite(new java.net.InetSocketAddress(host, port))
 
   private val reporter = {
     GraphiteReporter
