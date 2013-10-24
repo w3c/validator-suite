@@ -86,13 +86,13 @@ trait ValidatorSuite extends Database {
     system.actorOf(Props(new RunsActor()(this)), "runs")
 
   /* HttpClient */
-
+  val userAgent = config.getString("application.http-client.user-agent") getOrElse "Validator-Suite"
   // Used by form validation
-  lazy val formHttpClient = {
+  lazy val formHttpClient: AsyncHttpClient = {
     val builder = new AsyncHttpClientConfig.Builder()
     val asyncHttpConfig =
       builder
-        .setFollowRedirects(false) // must be false because of #291. When setting to true also edit the "entrypoint.invalid" message.
+        .setFollowRedirects(true) // must be false because of #291. When setting to true also edit the "entrypoint.invalid" message.
         .setMaximumConnectionsTotal(100)
         .setMaximumConnectionsPerHost(5)
         .setIdleConnectionTimeoutInMs(2000)
@@ -100,6 +100,7 @@ trait ValidatorSuite extends Database {
         .setWebSocketIdleTimeoutInMs(2000)
         .setRequestTimeoutInMs(10000)
         .setConnectionTimeoutInMs(10000)
+        .setUserAgent(userAgent)
         .build
     new AsyncHttpClient(asyncHttpConfig)
   }
