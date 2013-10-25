@@ -25,7 +25,7 @@ abstract class EmailerServiceTest extends VSTest {
   "EmailService" should {
     "send an email" in {
 
-      vs.sendEmail(Emails.registered(User.create("Test user", email, "123456", 0)))
+      vs.sendEmail(Emails.registered(User.create("John Doe", email, "123456", 20)))
 
       Thread.sleep(12000)
 

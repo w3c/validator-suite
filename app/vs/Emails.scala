@@ -27,7 +27,7 @@ object Emails {
   def registered(user: User)(implicit vs: ValidatorSuite) = new EmailMessage(
     subject = "W3C Validator Suite registration confirmation",
     recipient = user.email,
-    from = vs.config.getString("vs.emails.sender").get,
+    from = s"W3C Validator Suite Team <${vs.config.getString("vs.emails.sender").get}>",
     text = views.txt.emails.registered(user).body,
     html = views.html.emails.registered(user).body
   )

@@ -10,6 +10,10 @@ object Helper {
 
   def config = current.configuration
 
+  def notWord(boolean: Boolean): String = {
+    if (boolean) "" else "not "
+  }
+
   def shorten(string: String, limit: Int): String = {
     if (string.size > limit) {
       val dif = string.size - limit
