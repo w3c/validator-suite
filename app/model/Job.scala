@@ -546,6 +546,7 @@ object Job {
   // What is better in above implementation ?
   def getFor(jobId: JobId, user: Option[User])(implicit conf: Database): Future[Job] = {
     import scalaz.Equal
+    // TODO: review. where to configure acls
     get(jobId).map{ job =>
       user match {
         case Some(user) if user.isRoot => job

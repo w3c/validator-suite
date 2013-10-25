@@ -39,7 +39,7 @@ object Jobs extends VSController {
       render {
         case Accepts.Html() =>
           Ok(views.html.main(
-            user = Some(user),
+            user = user,
             title = "Jobs - W3C Validator Suite",
             collections = Seq(jobs.bindFromRequest),
             messages = lowCreditWarning(user.credits)

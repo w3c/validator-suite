@@ -17,15 +17,14 @@ import org.w3.vs.model._
 import org.w3.vs.store.Formats._
 import org.w3.vs.view.model.AssertionView
 import play.api.http.{MediaRange, MimeTypes}
-import org.w3.vs.exception.AccessNotAllowed
 
 object Assertions extends VSController  {
 
   val logger = play.Logger.of("controllers.Assertions")
 
-  def index(id: JobId, url: URL): ActionA = UserAwareAction("back.report.resource") { implicit req: RequestHeader => user =>
+  def index(id: JobId, url: URL): ActionA = AuthenticatedAction("back.report.resource") { implicit req: RequestHeader => user =>
     for {
-      job_ <- model.Job.get(id)
+      job_ <- model.Job.getFor(id, Some(user))
       resource <- ResourcesView(job_, url)
       assertions <- AssertionsView(job_, url)
       assertors <- AssertorsView(id, url, assertions)
@@ -63,7 +62,7 @@ object Assertions extends VSController  {
 
   def webSocket(jobId: JobId, url: URL): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
-    val enum: Enumerator[JsValue] = Enumerator.flatten(getUserOption().map(user => enumerator(jobId, url, user)))
+    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, url, user)))
     (iteratee, enum)
   }
 
@@ -72,16 +71,16 @@ object Assertions extends VSController  {
   }}*/
 
   def eventsSocket(jobId: JobId, url: URL): ActionA = AsyncAction { implicit req =>
-    UserAware { case user =>
+    Authenticated { case user =>
       render {
         case AcceptsStream() => Ok.stream(enumerator(jobId, url, user) &> EventSource()).as(MimeTypes.EVENT_STREAM)
       }
     }
   }
 
-  private def enumerator(jobId: JobId, url: URL, user: Option[User]): Enumerator[JsValue /*JsArray*/] = {
+  private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson
-    Enumerator.flatten(model.Job.getFor(jobId, user).map(
+    Enumerator.flatten(model.Job.getFor(jobId, Some(user)).map(
       job => job.assertions(org.w3.vs.web.URL(url))
     )) &> Enumeratee.map { iterator =>
       toJson(iterator.map(AssertionView(jobId, _).toJson))

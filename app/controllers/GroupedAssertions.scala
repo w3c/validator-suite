@@ -25,9 +25,9 @@ object GroupedAssertions extends VSController  {
 
   val logger = play.Logger.of("controllers.GroupedAssertions")
 
-  def index(id: JobId) = UserAwareAction("back.report.messages") { implicit req: RequestHeader => user =>
+  def index(id: JobId) = AuthenticatedAction("back.report.messages") { implicit req: RequestHeader => user =>
     for {
-      job_ <- model.Job.getFor(id, user)
+      job_ <- model.Job.getFor(id, Some(user))
       job <- JobsView(job_)
       groupedAssertions <- GroupedAssertionsView(job_)
       assertors <- AssertorsView(id, groupedAssertions).map(_.withCollection(groupedAssertions))
@@ -62,19 +62,19 @@ object GroupedAssertions extends VSController  {
 
   def webSocket(jobId: JobId): WebSocket[JsValue] = WebSocket.using[JsValue] { implicit reqHeader =>
     val iteratee = Iteratee.ignore[JsValue]
-    val enum: Enumerator[JsValue] = Enumerator.flatten(getUserOption().map(user => enumerator(jobId, user)))
+    val enum: Enumerator[JsValue] = Enumerator.flatten(getUser().map(user => enumerator(jobId, user)))
     (iteratee, enum)
   }
 
-  def eventsSocket(jobId: JobId): ActionA = UserAwareAction { implicit req => user =>
+  def eventsSocket(jobId: JobId): ActionA = AuthenticatedAction { implicit req => user =>
     render {
       case AcceptsStream() => Ok.stream(enumerator(jobId, user) &> EventSource()).as(MimeTypes.EVENT_STREAM)
     }
   }
 
-  private def enumerator(jobId: JobId, user: Option[User]): Enumerator[JsValue /*JsArray*/] = {
+  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue /*JsArray*/] = {
     import PlayJson.toJson
-    Enumerator.flatten(model.Job.getFor(jobId, user).map(
+    Enumerator.flatten(model.Job.getFor(jobId, Some(user)).map(
       job => job.groupedAssertionDatas()
     )) &> Enumeratee.map { iterator =>
       toJson(iterator.map(GroupedAssertionView(jobId, _).toJson))

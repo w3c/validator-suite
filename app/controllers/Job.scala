@@ -31,22 +31,14 @@ object Job extends VSController {
 
   def redirect(id: JobId): ActionA = Action { implicit req => MovedPermanently(routes.Job.get(id).url) }
 
-  def run(id: JobId): ActionA = UserAwareAction { implicit req => userOpt =>
+  def run(id: JobId): ActionA = AuthenticatedAction { implicit req => user =>
     (for {
-      job <- model.Job.getFor(id, userOpt)
-      _ <- userOpt match {
-          case Some(user) => {
-            if (user.isRoot) {
-              job.run()
-            } else if (user.owns(job) && user.credits >= job.maxPages) {
-              job.run()
-            } else if (!user.owns(job)) {
-              Future.failed(AccessNotAllowed)
-            } else {
-              Future.failed(PaymentRequired(job))
-            }
-          }
-          case _ => Future.failed(PaymentRequired(job))
+      job <- model.Job.getFor(id, Some(user))
+      _ <-
+        if (user.isRoot || (user.credits >= job.maxPages)) {
+          job.run()
+        } else {
+          Future.failed(PaymentRequired(job))
         }
     } yield {
       render {

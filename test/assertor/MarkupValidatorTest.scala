@@ -15,7 +15,7 @@ object MarkupValidatorTest {
 
 }
 
-class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatchers with BeforeAndAfterAll {
+abstract class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatchers with BeforeAndAfterAll {
 
 //  import MarkupValidatorTest.cache
 
