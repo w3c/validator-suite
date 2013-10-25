@@ -28,7 +28,7 @@ object Emails {
     subject = "W3C Validator Suite registration confirmation",
     recipient = user.email,
     from = vs.config.getString("vs.emails.sender").get,
-    text = views.txt.emails.registered().body,
+    text = views.txt.emails.registered(user).body,
     html = views.html.emails.registered(user).body
   )
 

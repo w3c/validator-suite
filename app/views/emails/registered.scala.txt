@@ -1,10 +1,11 @@
-@()
+@(user: User)
 Dear W3C Validator Suite User,
 
 Welcome to the W3C Validator Suite Service.
 
-We are pleased to confirm the email address used during your registration.
-We remind you that you have received 20 free page validations.
+We are pleased to confirm your registration under the name: @user.name
+and the email address: @user.email
+We remind you that you have received @user.credits free page validations.
 
 Comments and suggestions should be submitted to by email to our support team
 validator-suite-customers@@w3.org.
