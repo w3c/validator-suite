@@ -439,7 +439,7 @@ case class Run private (
     * JobActor -- which generates the RunEvents -- and any external
     * process that wants to retrieve a consistent state.
     * 
-    * @returns the new Run with some potential actions
+    * @return the new Run with some potential actions
     */
   def step(event: RunEvent): ResultStep = {
     val resultStep = event match {

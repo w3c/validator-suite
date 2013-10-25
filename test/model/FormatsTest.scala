@@ -14,7 +14,7 @@ import play.api.Mode
 import play.api.libs.json._
 import Json.toJson
 
-class FormatsTest extends VSTest with WordSpec with MustMatchers {
+class FormatsTest extends VSTest {
 
   implicit val vs = new ValidatorSuite { val mode = Mode.Test }
 

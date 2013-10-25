@@ -23,8 +23,7 @@ case class AssertorCall(
  * response) but this gives little type-safety
  *
  * @param url the URL of the Web resource to fetch
- * @param action the kind of HTTP action
- * @token a token that will be included in the response from the actor
+ * @param method the kind of HTTP action
  */
 case class Fetch(url: URL, method: HttpMethod) extends RunAction
 
