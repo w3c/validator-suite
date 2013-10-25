@@ -145,7 +145,7 @@ class EmailServiceWorker(smtpConfig: SmtpConfig) extends Actor {
 
   override def postStop() {
     if (emailMessage.isDefined) {
-      logger.error(s"Stopped child email worker after maximum attempts: ${deliveryAttempts} - ${emailMessage.get.recipient} - ${emailMessage.get.subject}")
+      logger.info(s"Stopped child email worker after attempts: ${deliveryAttempts} - ${emailMessage.get.recipient} - ${emailMessage.get.subject}")
     }
   }
 
