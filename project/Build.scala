@@ -29,6 +29,7 @@ object ApplicationBuild extends Build {
     "org.mindrot" % "jbcrypt" % "0.3m",
     //"rhino" % "js" % "1.7R2",
     "commons-io" % "commons-io" % "2.4",
+    "org.apache.commons" % "commons-email" % "1.2",
     // test dependencies
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
     "org.scalatest" %% "scalatest" % scalatestVersion

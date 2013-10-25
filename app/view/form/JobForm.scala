@@ -88,7 +88,7 @@ class ValidJobForm private[view](
 object JobForm {
 
   import play.api.data.validation.Constraints._
-  import Global.conf
+  import Global.vs
 
   def apply(user: User): Form[Job] = Form(
     mapping(
@@ -96,7 +96,7 @@ object JobForm {
       "entrypoint" -> of[URL].verifying("invalid", { url =>
         try {
           // careful: this is blocking IO, potentially up to 10 seconds
-          val code = conf.formHttpClient.prepareGet(url.toString).execute().get(10, TimeUnit.SECONDS).getStatusCode
+          val code = vs.formHttpClient.prepareGet(url.toString).execute().get(10, TimeUnit.SECONDS).getStatusCode
           code == 200
         } catch { case e: Exception =>
           false

@@ -10,7 +10,7 @@ object Dev extends VSController {
   val logger = play.Logger.of("controllers.Dev")
 
   def DevAction(f: Request[AnyContent] => Result) = Action { req =>
-    if (Global.conf.mode != Mode.Dev) {
+    if (Global.vs.mode != Mode.Dev) {
       Global.onHandlerNotFound(req)
     } else {
       f(req)

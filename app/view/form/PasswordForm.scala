@@ -31,7 +31,7 @@ object PasswordForm {
       "p_new2" -> nonEmptyText(minLength = 6)
     ).verifying("password.dont_match", p => p._2 == p._3)
       .verifying("application.invalidPassword", {p =>
-      implicit val c = Global.conf
+      implicit val c = Global.vs
       Await.result(model.User.authenticate(user.email, p._1).map(_ => true).recover{case _ => false}, Duration("3s"))
     })
   )

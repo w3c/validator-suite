@@ -7,19 +7,19 @@ import play.api.Mode._
 
 object Global extends GlobalSettings with Rendering with AcceptExtractors {
 
-  var conf: ValidatorSuite = _
+  var vs: ValidatorSuite with EmailService = _
 
   override def beforeStart(app: Application): Unit = {
 
-    assert(conf == null)
+    assert(vs == null)
 
     app.mode match {
 
-      case Prod => conf = new ValidatorSuite with Graphite {
+      case Prod => vs = new ValidatorSuite with Graphite with EmailService {
         val mode = Prod
       }
 
-      case m @ (Test | Dev) => conf = new ValidatorSuite with Graphite {
+      case m @ (Test | Dev) => vs = new ValidatorSuite with Graphite with EmailService {
         val mode = m
       }
 
@@ -29,16 +29,16 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
 
   override def onStart(app: Application): Unit = {
     //conf.httpCacheOpt foreach { cache => ResponseCache.setDefault(cache) }
-    conf.start()
+    vs.start()
     //org.w3.vs.assertor.LocalValidators.start()
-    org.w3.vs.model.Job.resumeAllJobs()(conf)
+    org.w3.vs.model.Job.resumeAllJobs()(vs)
   }
   
   override def onStop(app: Application): Unit = {
     //ResponseCache.setDefault(null)
     //org.w3.vs.assertor.LocalValidators.stop()
-    conf.shutdown()
-    conf = null
+    vs.shutdown()
+    vs = null
   }
 
   override def onHandlerNotFound(request : RequestHeader) : Result = {

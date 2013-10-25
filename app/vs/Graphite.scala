@@ -46,7 +46,7 @@ trait Graphite extends ValidatorSuite { this: ValidatorSuite with Database =>
   override def shutdown() {
     logger.info("Shutting down Graphite")
     reporter.stop()
-    //graphite.close()
+    graphite.close()
     super.shutdown()
   }
 

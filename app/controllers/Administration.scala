@@ -225,7 +225,7 @@ object Administration extends VSController {
         val user = model.User.register(name, email, password, credits, isSubscriber = false, isRoot = false).getOrFail()
         user.compactString
 
-      case Array("db-reset") if conf.mode == Mode.Dev =>
+      case Array("db-reset") if vs.mode == Mode.Dev =>
         org.w3.vs.Main.defaultData()
         "done"
 

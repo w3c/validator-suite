@@ -1,0 +1,13 @@
+@()
+Dear W3C Validator Suite User,
+
+Welcome to the W3C Validator Suite Service.
+
+We are pleased to confirm the email address used during your registration.
+We remind you that you have received 20 free page validations.
+
+Comments and suggestions should be submitted to by email to our support team
+validator-suite-customers@@w3.org.
+
+Best regards
+W3C Validator Suite Team
