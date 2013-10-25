@@ -1,6 +1,6 @@
 @(user: User)(implicit vs: ValidatorSuite, req: RequestHeader)
 
-@libs.main("W3C Validator Suite - Console", "console", "console", Some(user)){
+@libs.main("W3C Validator Suite - Console", "console", "console", user){
 
     <textarea
         class="console"

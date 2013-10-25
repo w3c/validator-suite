@@ -31,7 +31,7 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       $("#submit-login").isEmpty must be (false)
 
       // This user should register first through /register
-      implicit val conf = Global.conf
+      implicit val conf = Global.vs
       val testUser = User.create("Test User", "test@example.com", "secret", 100, false, false, false)
       testUser.save().getOrFail()
 

@@ -1,4 +1,4 @@
-@(title: String, style: String = "", script: String = "", userO: Option[User] = None)(content: Html)(footer: Html)(implicit vs: ValidatorSuite, req: RequestHeader)
+@(title: String, style: String = "", script: String = "", user: User)(content: Html)(footer: Html)(implicit vs: ValidatorSuite, req: RequestHeader)
 @import play.api.Mode._
 <!DOCTYPE html>
 <html lang="en" class="no-js">
@@ -14,7 +14,7 @@
 </head>
 
 <body>
-@libs.header(userO, false)
+@libs.header(Some(user), false)
 <div id="main">
     @content
 </div>

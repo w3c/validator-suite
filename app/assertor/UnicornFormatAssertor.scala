@@ -8,7 +8,7 @@ import scala.io.Source
 import play.api.i18n.Messages
 import org.apache.commons.lang3.StringEscapeUtils
 
-/** An Assertor that reads [[http://code.w3.org/unicorn/wiki/Documentation/Run/Response ObservationResponse]]s from [[scala.io.Source]]s
+/** An Assertor that reads [[http://code.w3.org/unicorn/wiki/Documentation/Run/Response ObservationResponse]]s from scala.io.Sources
  */
 trait UnicornFormatAssertor extends FromSourceAssertor {
   

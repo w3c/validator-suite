@@ -1,0 +1,32 @@
+@(user: User)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>W3C Validator Suite registration confirmation</title>
+</head>
+<body>
+<p> Dear @user.name,</p>
+<p> Welcome to the <a href="https://validator-suite.w3.org/">W3C Validator Suite Service</a></p>
+<p>
+    We are pleased to confirm your registration under the email address: @user.email <br />
+    We remind you that you have received @user.credits free page validations.
+</p>
+<p>
+    You chose @Helper.notWord(user.optedIn)to receive email communications from W3C. You can change this setting and edit
+    your account profile at <a href="https://validator-suite.w3.org/account">https://validator-suite.w3.org/account</a>.
+</p>
+<p> We welcome your feedback and ideas feel free to send us an email to <a href="mailto:validator-suite-customers@@w3.org">validator-suite-customers@@w3.org</a>.</p>
+<p>
+    Sincerely, <br />
+    W3C Validator Suite Team
+</p>
+<p>
+    -- <br />
+    W3C Validator Suite Support <br />
+    <a href="mailto:validator-suite-customers@@w3.org">validator-suite-customers@@w3.org</a>
+</p>
+</body>
+</html>
+
+

@@ -242,7 +242,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
     // compute the next step and do side-effects
     val state = event match {
       case CreateRunEvent(_, _, _, _, _, _) =>
-        logger.info(s"id=${job.id} status=started user-id=${job.creatorId} url=${job.strategy.entrypoint} max=${job.strategy.maxResources}")
+        logger.info(s"id=${job.id} status=started user-id=${job.creatorId.getOrElse("None")} url=${job.strategy.entrypoint} max=${job.strategy.maxResources}")
         val running = Running(run.runId, RunningActorName(self.path.name))
         // Job.run() is waiting for this value
         val from = sender
@@ -292,7 +292,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       stay()
 
     case Event(e, run) =>
-      logger.warn(s"""status=unexpected message="Unexpected event for run: ${run.shortId} - ${e.getClass()}""")
+      logger.warn(s"""status=unexpected message="Unexpected event for run: ${run.shortId} - ${e.getClass()}" """)
       stay()
 
   }

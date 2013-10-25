@@ -1,0 +1,18 @@
+@(user: User)
+Dear @user.name,
+
+Welcome to the W3C Validator Suite Service - https://validator-suite.w3.org/.
+
+We are pleased to confirm your registration under the email address: @user.email
+We remind you that you have received @user.credits free page validations.
+
+You chose @Helper.notWord(user.optedIn)to receive email communications from W3C. You can change this setting and edit your account profile at https://validator-suite.w3.org/account.
+
+We welcome your feedback and ideas feel free to send us an email to validator-suite-customers@@w3.org.
+
+Sincerely,
+W3C Validator Suite Team
+
+--
+W3C Validator Suite Support
+validator-suite-customers@@w3.org

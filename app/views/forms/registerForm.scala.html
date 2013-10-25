@@ -27,7 +27,7 @@
             </div>
             <div class="small-9 columns">
                 <input type="text" id="userName" name="userName" placeholder="Name"
-                       value='@registerForm("userName").value' required="required" class="userName"/>
+                       value='@registerForm("userName").value' required="required" class="userName" autocomplete="off" />
             </div>
         </div>
 
@@ -36,7 +36,7 @@
                 <label for="r_email" class="right inline" aria-describedby="req">Email@requiredSpan</label>
             </div>
             <div class="small-9 columns">
-                <input type="email" id="r_email" name="r_email" placeholder="Email" value='@registerForm("r_email").value' required="required"/>
+                <input type="email" id="r_email" name="r_email" placeholder="Email" value='@registerForm("r_email").value' required="required" autocomplete="off" />
             </div>
         </div>
 
@@ -47,7 +47,7 @@
             <div class="small-9 columns">
                 <input type="password" id="r_password" pattern=".{6,}" name="r_password"
                        placeholder="The password must be at least 6 characters long" required="required"
-                       title="The password must be at least 6 characters long"/>
+                       title="The password must be at least 6 characters long" autocomplete="off" />
             </div>
         </div>
 
@@ -57,7 +57,7 @@
             </div>
             <div class="small-9 columns">
                 <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword"
-                       name="repeatPassword" required="required" placeholder="Verify your password"/>
+                       name="repeatPassword" required="required" placeholder="Verify your password" autocomplete="off" />
             </div>
         </div>
 

@@ -3,14 +3,11 @@ package controllers
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.{Metrics, model}
-import org.w3.vs.model._
 import org.w3.vs.view.form._
 import play.api.i18n._
-import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import org.w3.vs.util.timer._
-import com.codahale.metrics._
+import org.w3.vs.Emails
 
 object Application extends VSController {
   
@@ -95,6 +92,7 @@ object Application extends VSController {
           case user => {
             logger.info(s"""id=${user.id} action=register email=${user.email} name="${user.name}" opt-in=${user.optedIn}""")
             logger.info(s"""id=${user.id} action=login email=${user.email}""")
+            vs.sendEmail(Emails.registered(user))
             val newUri = form("uri").value match {
               case Some(uri) if uri != "" => uri
               case _ => routes.Jobs.index.url

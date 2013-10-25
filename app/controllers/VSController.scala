@@ -2,8 +2,7 @@ package controllers
 
 import org.w3.vs.exception._
 import org.w3.vs.controllers._
-import org.w3.vs.Metrics
-import org.w3.vs.{Metrics, model, Graphite, Global}
+import org.w3.vs._
 import org.w3.vs.model._
 import org.w3.vs.view.form.LoginForm
 import play.Logger.ALogger
@@ -23,14 +22,18 @@ import org.apache.commons.codec.binary.Base64.decodeBase64
 import org.mindrot.jbcrypt.BCrypt
 import play.api.http.{MimeTypes, MediaRange}
 import com.codahale.metrics.MetricRegistry
+import play.api.mvc.Accepting
+import org.w3.vs.exception.UnknownJob
+import scala.Some
+import org.w3.vs.exception.Unauthenticated
 
 trait VSController extends Controller {
 
   def logger: ALogger
 
-  implicit val conf = org.w3.vs.Global.conf
+  implicit val vs: ValidatorSuite with EmailService = org.w3.vs.Global.vs
 
-  implicit val system = conf.system
+  implicit val system = vs.system
 
   def CloseWebsocket = (Iteratee.ignore[JsValue], Enumerator.eof)
 
