@@ -44,7 +44,7 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
             write: function (msg) {
                 msg = msg === "" ? invite : msg + "\n" + invite;
                 el.val(el.val() + "\n" + msg);
-                el.scrollTop(el[0].scrollHeight);
+                setTimeout(function () { el[0].scrollTop = el[0].scrollHeight; }, 0);
             },
 
             lastCommand: function () {
