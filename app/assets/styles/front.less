@@ -438,9 +438,12 @@ select {
 }
 
 .note {
-    font-size: 0.8em;
+
     margin-bottom: 0.75em;
     //display: inline-block;
+    em {
+        font-size: 0.8em;
+    }
 }
 
 .pricing .pricing-table {
@@ -606,3 +609,5 @@ body {
 button[disabled] {
     border: inherit !important;
 }
+
+@import "inc/_common.less";

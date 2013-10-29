@@ -47,7 +47,12 @@
         </div>
 
         <div class="row">
-            <div class="column large-4 large-offset-8 small-9 small-offset-3">
+            <div class="column large-5 large-offset-3">
+                <p>
+                    <a href="@routes.PasswordReset.resetRequest().url">Forgot your password?</a>
+                </p>
+            </div>
+            <div class="column large-4 small-9">
                 <input type="hidden" name="uri" value='@loginForm("uri").value'>
                 <button id="submit-login" name="submit" value="login" type="submit">Login</button>
             </div>

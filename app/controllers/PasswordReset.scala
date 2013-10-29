@@ -61,14 +61,14 @@ object PasswordReset extends VSController {
       bind => {
         val (email, password) = (bind._1, bind._2)
         Cache.getAs[model.User](id.toString) match {
-          case Some(user: model.User) if user.email == email => {
+          case Some(user) => {
             for {
               _ <- model.User.update(user.withPassword(password))
             } yield {
               Cache.remove(id.toString)
-              SeeOther(routes.PasswordReset.reset(id).url)
+              SeeOther(routes.User.profile().url)
                 .flashing(("success" -> Messages("resetActionSuccess")))
-                .withNewSession
+                .withSession(("email" -> user.email))
             }
           }
           case _ => {
