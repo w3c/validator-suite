@@ -20,6 +20,11 @@ GET     /account                                    controllers.User.profile
 POST    /account                                    controllers.User.editAction
 POST    /account/password                           controllers.User.changePasswordAction
 
+GET     /account/reset                              controllers.PasswordReset.resetRequest
+POST    /account/reset                              controllers.PasswordReset.resetRequestAction
+GET     /account/reset/:id                          controllers.PasswordReset.reset(id: PasswordResetId)
+POST    /account/reset/:id                          controllers.PasswordReset.resetAction(id: PasswordResetId)
+
 # Jobs
 GET     /jobs                                       controllers.Jobs.index
 GET     /jobs/                                      controllers.Jobs.redirect

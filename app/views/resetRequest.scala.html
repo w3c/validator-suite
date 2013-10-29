@@ -1,0 +1,19 @@
+@(resetRequestForm: Form[(String)],
+  messages: List[(String, String)] = List())(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
+
+@front("W3C Validator Suite - Reset your password", user = None) {
+
+<section class="row">
+
+    @defining(messages ++ flash.data){ case messages =>
+    @if(messages.size > 0) {
+    <div class="column globalMessages">
+        @libs.messages2(messages)
+    </div>
+    }}
+
+    @forms.resetRequestForm(resetRequestForm)
+
+</section>
+
+}

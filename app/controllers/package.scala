@@ -46,6 +46,19 @@ package object controllers {
     }
   }
 
+  implicit val bindablePasswordResetId = new PathBindable[PasswordResetId] {
+    def bind (key: String, value: String): Either[String, PasswordResetId] = {
+      try {
+        Right(PasswordResetId(value))
+      } catch { case e: Exception =>
+        Left("InvalidPasswordResetId")
+      }
+    }
+    def unbind (key: String, value: PasswordResetId): String = {
+      value.toString
+    }
+  }
+
 //  implicit val assertionJobId = new PathBindable[AssertionId] {
 //    def bind (key: String, value: String): Either[String, AssertionId] = {
 //      try {

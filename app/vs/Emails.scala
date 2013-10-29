@@ -1,6 +1,6 @@
 package org.w3.vs
 
-import org.w3.vs.model.User
+import org.w3.vs.model.{PasswordResetId, User}
 
 /**
  * An email
@@ -30,6 +30,14 @@ object Emails {
     from = s"W3C Validator Suite Team <${vs.config.getString("vs.emails.sender").get}>",
     text = views.txt.emails.registered(user).body,
     html = views.html.emails.registered(user).body
+  )
+
+  def resetPassword(user: User, id: PasswordResetId)(implicit vs: ValidatorSuite) = new EmailMessage(
+    subject = "W3C Validator Suite password reset",
+    recipient = user.email,
+    from = s"W3C Validator Suite Team <${vs.config.getString("vs.emails.sender").get}>",
+    text = views.txt.emails.passwordReset(user, id).body,
+    html = views.html.emails.passwordReset(user, id).body
   )
 
 }

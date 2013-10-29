@@ -46,9 +46,7 @@ trait VSController extends Controller {
           case _ => Future.failed(Unauthenticated(""))
         }
       user <- model.User.getByEmail(email)
-      //user <- Future(Cache.getAs[User](email).get) recoverWith { case _ => User.getByEmail(email) }
     } yield {
-      Cache.set(email, user, current.configuration.getInt("cache.user.expire").getOrElse(300))
       user
     }
   }

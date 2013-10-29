@@ -34,3 +34,10 @@ object AssertorId {
   implicit val equal = Equal.equalA[AssertorId]
 }
 
+
+case class PasswordResetId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
+
+object PasswordResetId {
+  def apply(s: String): PasswordResetId = PasswordResetId(BSONObjectID(s))
+  implicit val equal = Equal.equalA[PasswordResetId]
+}
