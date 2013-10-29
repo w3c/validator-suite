@@ -251,7 +251,7 @@ object Administration extends VSController {
           saved <- model.User.updateCredits(user.id, credits)
         } yield {
           // TODO adminId
-          Purchase.logger.info(s"""id=${user.id} action=credits-update amount=${credits} (expiration-date="${saved.expireDate}") message="credits updated by admin ???" """)
+          Purchase.logger.info(s"""id=${user.id} action=credits-update amount=${credits} expiration-date="${saved.expireDate.toString("yyyy-MM-dd")}" message="credits updated by admin ???" """)
           s"${credits} credits added to user ${user.email} (${user.id}})"
         }).getOrFail()
 

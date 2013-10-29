@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee.{Enumeratee, Concurrent, Enumerator}
 import akka.actor.{ Actor, Props, ActorRef }
 import java.nio.channels.ClosedChannelException
-import org.joda.time.{DateTimeZone, DateTime}
+import org.joda.time.{DateMidnight, DateTimeZone, DateTime}
 import org.joda.time.format.DateTimeFormat
 import play.api.Play._
 import org.w3.vs.exception.DuplicatedEmail
@@ -257,7 +257,7 @@ object User {
       optedIn = optedIn,
       isRoot = isRoot,
       isSubscriber = isSubscriber,
-      expireDate = DateTime.now(DateTimeZone.UTC).plusDays(daysToIncrement))
+      expireDate = DateMidnight.now(DateTimeZone.UTC).plusDays(daysToIncrement).toDateTime)
     user
   }
 
