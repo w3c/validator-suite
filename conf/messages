@@ -205,7 +205,7 @@ form.terms.not_accepted=You must read and agree to the Terms and Conditions to p
 form.repeatPassword.error.required=Please verify your password.
 
 info.register.first=In order to purchase a job please register first, or login if you already have an account.
-success.registered.user=Successfully registered as {0} &lt;{1}>
+success.registered.user=Successfully registered as {0} &lt;{1}>. An email acknowledging your registration will be sent to your email address.
 
 entrypoint.invalid=The Website URL is not accessible or is a redirection.
 maxPages.creditMaxExceeded=Max pages exceeded your available number of credits
