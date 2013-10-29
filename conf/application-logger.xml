@@ -72,11 +72,14 @@
         <appender-ref ref="assertors" />
     </logger>
 
-    <!-- logins.log -->
+    <!-- users.log // TODO review -->
     <logger name="controllers.User" level="INFO">
         <appender-ref ref="users" />
     </logger>
     <logger name="controllers.Application" level="INFO">
+        <appender-ref ref="users" />
+    </logger>
+    <logger name="org.w3.mode.User" level="INFO">
         <appender-ref ref="users" />
     </logger>
 

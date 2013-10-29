@@ -38,7 +38,7 @@ trait Graphite extends ValidatorSuite { this: ValidatorSuite with Database =>
   override def start() {
     super.start()
     logger.info("Initializing Graphite")
-    reporter.start(30, TimeUnit.SECONDS)
+    reporter.start(1, TimeUnit.MINUTES)
     Metrics.metrics.register("db.jobs", Metrics.db.jobs()(this))
     Metrics.metrics.register("db.users", Metrics.db.users()(this))
   }

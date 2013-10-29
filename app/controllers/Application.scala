@@ -51,16 +51,9 @@ object Application extends VSController {
         case Left(form) => throw InvalidFormException(form)
         case Right(validForm) => validForm
       })
-      user <- model.User.authenticate(form.email, form.password) recover {
-        case UnknownUser(email) => {
-          logger.warn(s"""action=login email=${email} message="Authentication failed. User does not exist." """)
+      user <- model.User.authenticate(form.email, form.password) recover { case Unauthenticated(email) => {
           throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
-        }
-        case Unauthenticated(email) => {
-          logger.warn(s"""action=login email=${email} message="Authentication failed. Invalid password." """)
-          throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
-        }
-      }
+        }}
     } yield {
       logger.info(s"id=${user.id} action=login email=${user.email}")
       (form("uri").value match {

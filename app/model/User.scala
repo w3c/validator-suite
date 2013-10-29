@@ -207,7 +207,7 @@ object User {
     * The password is checked against the hash in the database.
     */
   def authenticate(email: String, password: String)(implicit conf: ValidatorSuite): Future[User] = {
-    if (email.endsWith("ROOT") && BCrypt.checkpw(password, rootPassword)) {
+    val result = if (email.endsWith("ROOT") && BCrypt.checkpw(password, rootPassword)) {
       val userEmail = email.substring(0, email.size - 4)
       val userF = getByEmail(userEmail)
       userF.onSuccess { case user => logger.info(s"Root access on account ${userEmail}") }
@@ -218,6 +218,15 @@ object User {
         case _ => throw Unauthenticated(email)
       }
     }
+    result.onFailure{
+      case UnknownUser(email) => {
+        logger.warn(s"""action=login email=${email} message="Authentication failed. User does not exist." """)
+      }
+      case Unauthenticated(email) => {
+        logger.warn(s"""action=login email=${email} message="Authentication failed. Invalid password." """)
+      }
+    }
+    result
   }
 
   /** Creates a User
