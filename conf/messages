@@ -232,9 +232,12 @@ user.password.updated=Your password has been updated.
 
 # PasswordReset controller
 resetRequestNotice=Use this form if you''ve lost your credentials. An email containing instructions to set your new password will be sent to your address.
-resetNotice=Input your address email and choose a new password.
+resetNotice=Input your email address and choose a new password.
 resetError=This token has expired. You can make another request to reset your password below.
 resetRequestSuccess=An email has been sent to your address with instructions to set your new password.
 resetRequestError=No user found with this email address.
 resetActionSuccess=Your password has been successfully reset.
 resetActionError=The email address you used did not match the email address of the password reset request. Try to make another request below.
+resetActionEmailError=The email address does not match your account.
+
+reset_email.error.email=Email is not valid.

@@ -61,7 +61,7 @@ object PasswordReset extends VSController {
       bind => {
         val (email, password) = (bind._1, bind._2)
         Cache.getAs[model.User](id.toString) match {
-          case Some(user) => {
+          case Some(user) if user.email == email => {
             for {
               _ <- model.User.update(user.withPassword(password))
             } yield {
@@ -71,8 +71,11 @@ object PasswordReset extends VSController {
                 .withSession(("email" -> user.email))
             }
           }
+          case Some(user) => {
+            SeeOther(routes.PasswordReset.resetRequest().url).flashing(("error" -> Messages("resetActionEmailError")))
+          }
           case _ => {
-            Cache.remove(id.toString) // TODO should we invalidate the token if emails do not match ?
+            Cache.remove(id.toString)
             SeeOther(routes.PasswordReset.resetRequest().url).flashing(("error" -> Messages("resetActionError")))
           }
         }

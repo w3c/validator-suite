@@ -26,7 +26,13 @@
                 <label for="reset_email" class="right inline" aria-describedby="req">Email@requiredSpan</label>
             </div>
             <div class="small-9 columns">
-                <input type="text" id="reset_email" name="reset_email" placeholder="Email address" required="required" />
+                <input type="email" id="reset_email" name="reset_email" placeholder="Email address" required="required" autocomplete="off" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="column small-9 small-offset-3 note">
+                <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em>
             </div>
         </div>
 
