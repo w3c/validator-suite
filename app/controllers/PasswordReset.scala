@@ -43,7 +43,7 @@ object PasswordReset extends VSController {
           SeeOther(routes.PasswordReset.resetRequest().url).flashing(("success" -> Messages("resetRequestSuccess")))
         }) recover {
           case UnknownUser(_) =>
-            SeeOther(routes.PasswordReset.resetRequest().url).flashing(("success" -> Messages("resetRequestError")))
+            SeeOther(routes.PasswordReset.resetRequest().url).flashing(("error" -> Messages("resetRequestError")))
         }
     )
   }
