@@ -21,7 +21,23 @@ object Dev extends VSController {
     Ok(views.html.test())
   }
 
-  def e503(): ActionA = DevAction { implicit req =>
+  def testError400(): ActionA = DevAction { implicit req =>
+    BadRequest(views.html.error._400(List(("debug.unexpected", "blah blah blah"))))
+  }
+
+  def testError404(): ActionA = DevAction { implicit req =>
+    NotFound(views.html.error._404())
+  }
+  
+  def testError50x(): ActionA = DevAction { implicit req =>
+    InternalServerError(views.html.error._50x())
+  }
+
+  def testError500(): ActionA = DevAction { implicit req =>
+    InternalServerError(views.html.error._500(List(("error", "blah blah blah"))))
+  }
+
+  def testError503(): ActionA = DevAction { implicit req =>
     ServiceUnavailable(views.html.error._503())
   }
 

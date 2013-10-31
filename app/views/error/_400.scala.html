@@ -1,0 +1,20 @@
+@(messages: List[(String, String)] = List())(implicit req: RequestHeader)
+
+@front("W3C Validator Suite - Bad Request", loginModal = false) {
+
+<div class="row">
+    <div class="column">
+        <h1>bad Request</h1>
+        <p>
+            The request could not be understood by the server due to malformed syntax.
+        </p>
+    </div>
+
+    @if(messages.size > 0) {
+    <div class="column globalMessages">
+        @libs.messages2(messages)
+    </div>}
+
+</div>
+
+}

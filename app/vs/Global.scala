@@ -54,7 +54,7 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
     implicit val implReq = request
     Metrics.errors.e500()
     render {
-      case Accepts.Html() => InternalServerError(views.html.error.generic(messages = List(("error", ex.getMessage))))
+      case Accepts.Html() => InternalServerError(views.html.error._500(List(("error", ex.getMessage))))
       case Accepts.Json() => InternalServerError
     }
   }
@@ -65,7 +65,7 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
       case "InvalidJobId" => onHandlerNotFound(request)
       case _ => {
         Metrics.errors.e400()
-        BadRequest(views.html.error.generic(List(("error", "Bad Request: " + error))))
+        BadRequest(views.html.error._400(List(("error", error))))
       }
     }
   }

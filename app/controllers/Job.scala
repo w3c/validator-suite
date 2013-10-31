@@ -92,8 +92,8 @@ object Job extends VSController {
       case "delete" => delete(id)(req)
       case "run" => run(id)(req)
       case "stop" => stop(id)(req)
-      case a => BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
-    }).getOrElse(BadRequest(views.html.error.generic(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
+      case a => BadRequest(views.html.error._400(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
+    }).getOrElse(BadRequest(views.html.error._400(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
   }
 
   def socket(jobId: JobId, typ: SocketType): Handler = {

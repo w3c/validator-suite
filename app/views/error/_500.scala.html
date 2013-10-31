@@ -1,0 +1,20 @@
+@(messages: List[(String, String)] = List())(implicit req: RequestHeader)
+
+@front("W3C Validator Suite - Internal Server Error", loginModal = false) {
+
+<div class="row">
+    <div class="column">
+        <h1>Internal Server Error</h1>
+        <p>
+            The server encountered an unexpected condition which prevented it from fulfilling the request.
+        </p>
+    </div>
+
+    @if(messages.size > 0) {
+    <div class="column globalMessages">
+        @libs.messages2(messages)
+    </div>}
+
+</div>
+
+}
