@@ -1,18 +1,21 @@
 @(user: User)
 Dear @user.name,
 
-Welcome to the W3C Validator Suite Service - https://validator-suite.w3.org/.
+Welcome to the W3C Validator Suite Service - https://validator-suite.w3.org@routes.Application.index
 
 We are pleased to confirm your registration under the email address: @user.email
 We remind you that you have received @user.credits free page validations.
 
-You chose @Helper.notWord(user.optedIn)to receive email communications from W3C. You can change this setting and edit your account profile at https://validator-suite.w3.org/account.
+You chose @Helper.notWord(user.optedIn)to receive email communications from W3C. You can change this setting and edit your profile on the My Account page - https://validator-suite.w3.org@routes.User.profile
 
-We welcome your feedback and ideas feel free to send us an email to validator-suite-customers@@w3.org.
+If you have lost your password you can recover it using the Reset Password page - https://validator-suite.w3.org@routes.PasswordReset.resetRequest
+
+We welcome your feedback and ideas feel free to send us an email to @Helper.config.getString("support.email").getOrElse("")
 
 Sincerely,
 W3C Validator Suite Team
 
 --
-W3C Validator Suite Support
-validator-suite-customers@@w3.org
+W3C Validator Suite
+https://validator-suite.w3.org@routes.Application.index
+@Helper.config.getString("support.email").getOrElse("")
