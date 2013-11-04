@@ -51,7 +51,7 @@ object Application extends VSController {
         case Left(form) => throw InvalidFormException(form)
         case Right(validForm) => validForm
       })
-      user <- model.User.authenticate(form.email, form.password) recover { case Unauthenticated(email) => {
+      user <- model.User.authenticate(form.email, form.password) recover { case UnauthorizedException(email) => {
           throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
         }}
     } yield {

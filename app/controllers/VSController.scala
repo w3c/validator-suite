@@ -66,11 +66,11 @@ trait VSController extends Controller {
     }
   }
 
-  def AsyncAction(name: String)(f: Request[AnyContent] => Future[Result]): Action[AnyContent] = Action { req =>
+  def AsyncAction(name: String)(f: Request[AnyContent] => Future[Result]): Action[AnyContent] = Action { implicit req =>
     Async {
       Timer(name) {
         f(req) recover {
-          case AccessNotAllowed => Global.onHandlerNotFound(req)
+          case AccessNotAllowed => Forbidden(views.html.error._403())
           case UnknownJob(_) => Global.onHandlerNotFound(req)
         }
       }
