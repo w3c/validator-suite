@@ -71,6 +71,7 @@ POST    /admin/users                                controllers.Administration.u
 
 # Error pages
 GET     /error/400                                  controllers.Error.error400()
+GET     /error/403                                  controllers.Error.error403()
 GET     /error/404                                  controllers.Error.error404()
 GET     /error/50x                                  controllers.Error.error50x()
 GET     /error/500                                  controllers.Error.error500()
