@@ -77,14 +77,6 @@ GET     /error/50x                                  controllers.Error.error50x()
 GET     /error/500                                  controllers.Error.error500()
 GET     /error/503                                  controllers.Error.error503()
 
-# Dev
-GET     /dev/test                                   controllers.Dev.test()
-GET     /dev/400                                    controllers.Dev.testError400()
-GET     /dev/404                                    controllers.Dev.testError404()
-GET     /dev/50x                                    controllers.Dev.testError50x()
-GET     /dev/500                                    controllers.Dev.testError500()
-GET     /dev/503                                    controllers.Dev.testError503()
-
 ##########################
 
 # Serves assets from /public. In Dev mode try to find the file in /app/assets first unless forceProdAssets is true.
