@@ -95,11 +95,11 @@ trait ValidatorSuite extends Database {
         .setFollowRedirects(false) // must be false because of #291. When setting to true also edit the "entrypoint.invalid" message.
         .setMaximumConnectionsTotal(100)
         .setMaximumConnectionsPerHost(5)
-        .setIdleConnectionTimeoutInMs(2000)
-        .setIdleConnectionInPoolTimeoutInMs(2000)
-        .setWebSocketIdleTimeoutInMs(2000)
-        .setRequestTimeoutInMs(10000)
-        .setConnectionTimeoutInMs(10000)
+        .setIdleConnectionTimeoutInMs(10000)
+        .setIdleConnectionInPoolTimeoutInMs(10000)
+        .setWebSocketIdleTimeoutInMs(10000)
+        .setRequestTimeoutInMs(30000)
+        .setConnectionTimeoutInMs(30000)
         .setUserAgent(userAgent)
         .build
     new AsyncHttpClient(asyncHttpConfig)
