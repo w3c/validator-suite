@@ -96,7 +96,7 @@ object Application extends VSController {
           case DuplicatedEmail(email: String) => {
             logger.info(s"""action=register email=${email} message="Registration failed. Email already in use." """)
             Metrics.form.registerFailure()
-            BadRequest(views.html.register(registerForm = form.withError("r_email", "duplicate")))
+            BadRequest(views.html.register(registerForm = form, messages = List("error" -> Messages("r_email.duplicate", routes.Application.login().url, routes.PasswordReset.resetRequest().url))))
           }
         }
       }

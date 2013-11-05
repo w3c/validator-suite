@@ -176,7 +176,7 @@ name.error.required=Name cannot be empty
 entrypoint.error.required=A Website URL is required
 maxPages.error.required=Max Pages is required
 
-form.r_email.duplicate=Email already in use. Choose another one or login with an existing account.
+r_email.duplicate=This email is already registered. Please <a href="{0}">login</a> or send a request to <a href="{1}">recover your credentials</a>.
 
 form.l_email.error.email=Invalid email address
 form.r_email.error.email=Invalid email address
