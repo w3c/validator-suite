@@ -40,9 +40,11 @@ object PasswordReset extends VSController {
           val id = PasswordResetId()
           Cache.set(id.toString, user, vs.config.getInt("vs.emails.resetCacheExpire").getOrElse(3600))
           vs.sendEmail(Emails.resetPassword(user, id))
+          logger.info(s"""id=${user.id} action=reset email=${user.email} token=${id} message="Reset confirmation sent" """)
           SeeOther(routes.PasswordReset.resetRequest().url).flashing(("success" -> Messages("resetRequestSuccess")))
         }) recover {
           case UnknownUser(_) =>
+            logger.warn(s"""action=reset email=${email} message="Unknown email address" """)
             SeeOther(routes.PasswordReset.resetRequest().url).flashing(("error" -> Messages("resetRequestError")))
         }
     )
@@ -66,16 +68,19 @@ object PasswordReset extends VSController {
               _ <- model.User.update(user.withPassword(password))
             } yield {
               Cache.remove(id.toString)
+              logger.info(s"""id=${user.id} action=reset email=${email} token=${id} message="Password updated" """)
               SeeOther(routes.User.profile().url)
                 .flashing(("success" -> Messages("resetActionSuccess")))
                 .withSession(("email" -> user.email))
             }
           }
           case Some(user) => {
+            logger.warn(s"""id=${user.id} action=reset email=${email} token=${id} message="Email does not match this account" """)
             SeeOther(routes.PasswordReset.resetRequest().url).flashing(("error" -> Messages("resetActionEmailError")))
           }
           case _ => {
-            Cache.remove(id.toString)
+            //Cache.remove(id.toString)
+            logger.warn(s"""action=reset token=${id} message="Invalid token" """)
             SeeOther(routes.PasswordReset.resetRequest().url).flashing(("error" -> Messages("resetActionError")))
           }
         }
