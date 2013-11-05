@@ -53,7 +53,9 @@ object HttpResponse {
       case "text/html" | "application/xhtml+xml" => {
         val extractLinks = status == 200
         val (urls, doctypeOpt) = HtmlParser.parse(url, resource, headers.charset, extractLinks)
-        (urls.map(URL.clearHash).distinct, doctypeOpt)
+        // XXX: distinct does not work on a list of URLs hence the conversion to URIs before calling distinct. Cf: #339
+        val clearedURLs = urls.map(URL.clearHash).map(_.toURI).distinct.map(a => URL(a.toURL))
+        (clearedURLs, doctypeOpt)
       }
       case "text/css" => (List.empty, None) // TODO
     } getOrElse (List.empty, None)

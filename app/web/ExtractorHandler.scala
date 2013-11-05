@@ -11,7 +11,9 @@ class ExtractorHandler(baseURL: URL, extractLinks: Boolean) extends DefaultHandl
 
   private var _hrefs = List[String]()
 
-  def hrefs: List[URL] = _hrefs.reverse flatMap { baseURL / _ }
+  def hrefs: List[URL] = {
+    _hrefs.distinct.reverse flatMap { baseURL / _ }
+  }
 
   var doctypeOpt: Option[Doctype] = None
 
