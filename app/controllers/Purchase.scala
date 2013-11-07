@@ -41,7 +41,7 @@ object Purchase extends VSController {
             case Accepts.Html() => {
               if (user.isRoot) {
                 model.User.updateCredits(user.id, plan.credits).getOrFail()
-                logger.info(s"""id=${user.id} action=credits-update amount=${plan.credits} expiration-date=${user.expireDate.formatted("yyyy-MM-dd")} message="${plan.fastSpringKey} purchase by admin" """)
+                logger.info(s"""id=${user.id} action=credits-update amount=${plan.credits} expiration-date=${user.expireDate.toString("yyyy-MM-dd")} message="${plan.fastSpringKey} purchase by admin" """)
                 Redirect(routes.Jobs.index())
               } else {
                 logger.info(s"""id=${user.id} action=purchase plan=${plan.fastSpringKey} message="Redirecting to FastSpring" """)

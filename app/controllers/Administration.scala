@@ -179,6 +179,7 @@ object Administration extends VSController {
           |    db-set-root <email>         - sets the user with given email as a root
           |    db-set-password <email> <pass> - changes a user password
           |    db-add-roots                - adds all root users to the current db. Roots are defined in Main.scala.
+          |    db-delete-user <userId>     - delete user with given userId
           |    db-reset                    - resets the database with default data (only available in Dev mode)""".stripMargin
 
       case Array("jobs") =>
@@ -254,6 +255,10 @@ object Administration extends VSController {
           Purchase.logger.info(s"""id=${user.id} action=credits-update amount=${credits} expiration-date="${saved.expireDate.toString("yyyy-MM-dd")}" message="credits updated by some admin" """)
           s"${credits} credits added to user ${user.email} (${user.id}})"
         }).getOrFail()
+
+      case Array("db-delete-user", id(userId)) =>
+        model.User.delete(UserId(userId)).getOrFail()
+        s"user ${userId} deleted"
 
       case _ => s"Command ${command} not found"
 

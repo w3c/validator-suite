@@ -86,7 +86,7 @@ case class User(
   
   def save()(implicit conf: ValidatorSuite): Future[Unit] = User.save(this)
   
-  def delete()(implicit conf: ValidatorSuite): Future[Unit] = User.delete(this)
+  def delete()(implicit conf: ValidatorSuite): Future[Unit] = User.delete(id)
 
   def enumerator()(implicit conf: ValidatorSuite): Enumerator[RunEvent] = {
     val (_enumerator, channel) = Concurrent.broadcast[RunEvent]
@@ -310,7 +310,11 @@ object User {
     collection.update(selector, update, writeConcern = journalCommit) map { lastError => user }
   }
 
-  def delete(user: User)(implicit conf: ValidatorSuite): Future[Unit] =
-    sys.error("")
-    
+  def delete(userId: UserId)(implicit conf: ValidatorSuite): Future[Unit] = {
+    val query = Json.obj("_id" -> toJson(userId))
+    collection.remove[JsValue](query) map {
+      lastError => ()
+    }
+  }
+
 }
