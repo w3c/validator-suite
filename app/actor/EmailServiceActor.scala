@@ -5,7 +5,7 @@ import org.apache.commons.mail.{DefaultAuthenticator, HtmlEmail, EmailException}
 import akka.actor.SupervisorStrategy.{Stop, Restart}
 import scala.concurrent.duration.FiniteDuration
 import org.w3.vs.EmailMessage
-
+import akka.event.slf4j.Slf4jEventHandler
 /**
  * Modified from: http://raulraja.com/post/40997612883/sending-email-with-scala-and-akka-actors
  */
@@ -48,9 +48,7 @@ case class SmtpConfig (
  * Retries delivery up to 10 times every 5 minutes as long as it receives
  * an EmailException, gives up at any other type of exception
  */
-class EmailServiceActor(smtpConfig: SmtpConfig) extends Actor {
-
-  private val logger = play.Logger.of(classOf[EmailServiceActor])
+class EmailServiceActor(smtpConfig: SmtpConfig) extends Actor with ActorLogging {
 
   /**
    * The actor supervisor strategy attempts to send email up to 10 times if there is a EmailException
@@ -58,15 +56,15 @@ class EmailServiceActor(smtpConfig: SmtpConfig) extends Actor {
   override val supervisorStrategy =
     OneForOneStrategy(maxNrOfRetries = 10) {
       case emailException: EmailException => {
-        logger.warn(s"Restarting after receiving EmailException : ${emailException.getMessage}")
+        log.warning("Restarting after receiving EmailException : {}", emailException.getMessage)
         Restart
       }
       case unknownException: Exception => {
-        logger.error("Giving up. Can you recover from this?", unknownException)
+        log.error(unknownException, "Giving up. Can you recover from this?")
         Stop
       }
-      case unknownCase: Any => {
-        logger.error("Giving up on unexpected case", unknownCase)
+      case unknownCase: Throwable => {
+        log.error(unknownCase, "Giving up on unexpected case")
         Stop
       }
     }
@@ -83,9 +81,7 @@ class EmailServiceActor(smtpConfig: SmtpConfig) extends Actor {
 /**
  * Email worker that delivers the message
  */
-class EmailServiceWorker(smtpConfig: SmtpConfig) extends Actor {
-
-  private val logger = play.Logger.of(classOf[EmailServiceWorker])
+class EmailServiceWorker(smtpConfig: SmtpConfig) extends Actor with ActorLogging {
 
   /**
    * The email message in scope
@@ -100,13 +96,13 @@ class EmailServiceWorker(smtpConfig: SmtpConfig) extends Actor {
     case email: EmailMessage => {
       emailMessage = Option(email)
       deliveryAttempts += 1
-      logger.debug("Atempting to deliver message")
+      log.debug("Atempting to deliver message")
       sendEmailSync(email)
-      logger.debug("Message delivered")
+      log.debug("Message delivered")
     }
     case attempts: Int => deliveryAttempts = attempts
     case unexpectedMessage: Any => {
-      logger.warn(s"Received unexepected message : ${unexpectedMessage}")
+      log.warning("Received unexepected message : {}", unexpectedMessage)
       throw new Exception("can't handle %s".format(unexpectedMessage))
     }
   }
@@ -136,7 +132,7 @@ class EmailServiceWorker(smtpConfig: SmtpConfig) extends Actor {
    */
   override def preRestart(reason: Throwable, message: Option[Any]) {
     if (emailMessage.isDefined) {
-      logger.info(s"Scheduling email message to be sent after attempts: ${deliveryAttempts}")
+      log.info("Scheduling email message to be sent after attempts: {}", deliveryAttempts)
       import context.dispatcher // Use this Actors' Dispatcher as ExecutionContext
       self ! deliveryAttempts
       context.system.scheduler.scheduleOnce(FiniteDuration(10, "minutes"), self, emailMessage.get)
@@ -145,7 +141,7 @@ class EmailServiceWorker(smtpConfig: SmtpConfig) extends Actor {
 
   override def postStop() {
     if (emailMessage.isDefined) {
-      logger.info(s"Stopped child email worker after attempts: ${deliveryAttempts} - ${emailMessage.get.recipient} - ${emailMessage.get.subject}")
+      log.info(s"Stopped child email worker after attempts: {} - {} - {}", deliveryAttempts, emailMessage.get.recipient, emailMessage.get.subject)
     }
   }
 

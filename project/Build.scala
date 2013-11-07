@@ -27,12 +27,12 @@ object ApplicationBuild extends Build {
     "org.reactivemongo" %% "play2-reactivemongo" % "0.9" /*cross CrossVersion.full*/ excludeAll(ExclusionRule(organization = "io.netty"), ExclusionRule(organization = "play")),
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     "org.mindrot" % "jbcrypt" % "0.3m",
-    //"rhino" % "js" % "1.7R2",
     "commons-io" % "commons-io" % "2.4",
     "org.apache.commons" % "commons-email" % "1.2",
+    "com.typesafe.akka" %% "akka-slf4j"  % akkaVersion,
     // test dependencies
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
-    "org.scalatest" %% "scalatest" % scalatestVersion
+    "org.scalatest" %% "scalatest" % scalatestVersion % "test"
   )
 
   //  val assertorApi = Project("assertor-api", file("assertor-api"))
