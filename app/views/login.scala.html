@@ -1,7 +1,7 @@
 @(form: LoginForm = LoginForm.blank,
     messages: List[(String, String)] = List.empty)(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
-@front("W3C Validator Suite - Login", loginModal = false) {
+@front("W3C Validator Suite - Login", loginModal = false, loginPage = true) {
 
 <section class="row">
 

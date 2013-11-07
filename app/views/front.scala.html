@@ -1,4 +1,10 @@
-@(title: String, user: Option[User] = None, loginModal: Boolean = true)(content: Html)(implicit req: RequestHeader)
+@**
+ * @title Title of the page
+ * @user Optional user
+ * @loginModal Whether to add the loginModal to the page
+ * @loginPage Whether this a login page and the login link should be disabled
+**@
+@(title: String, user: Option[User] = None, loginModal: Boolean = true, loginPage: Boolean = false, js: Boolean = true)(content: Html)(implicit req: RequestHeader)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,12 +17,12 @@
     <title>@title</title>
     <link rel="icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>
     <link rel="stylesheet" href='@routes.Assets.at("styles/front.min.css")'>
-    <script data-main='@routes.Assets.at("js/front.js")' src='@routes.Assets.at("js/libs/require.js")' async="async"></script>
+    @if(js) {<script data-main='@routes.Assets.at("js/front.js")' src='@routes.Assets.at("js/libs/require.js")' async="async"></script>}
 </head>
 
 <body>
 
-@libs.header(user, loginModal)
+@libs.header(user, loginPage)
 
 @content
 

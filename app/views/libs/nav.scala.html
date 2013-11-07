@@ -1,4 +1,4 @@
-@(user: Option[User] = None, loginModal: Boolean)(implicit req: RequestHeader)
+@(user: Option[User] = None, loginPage: Boolean)(implicit req: RequestHeader)
 
 @navLink(url: String, attrs: String = "")(name: Html) = {
     @if(req.uri == url) {
@@ -32,35 +32,15 @@
         @user match {
         case Some(user) => {
         <li><a class="support menu-entry" href='mailto:@Helper.config.getString("support.email").getOrElse("")'>Support</a></li>
+        @if(user.isRoot){<li><a href="@routes.Administration.console.url" class="menu-entry">Console</a></li>}
         <li>@navLink(routes.Jobs.index.url){My Jobs}</li>
-        @**<li class="c-dropdown">
-
-            <ul id="myAccount" class="f-dropdown small" data-dropdown-content>
-                <li class="noHover menuHead">
-                    <span>Logged in as:</span> <span>@user.name</span>
-                </li>
-                <li class="noHover menuHead last">
-                    <span>Credits:</span> <span>@user.credits <a href="@routes.Purchase.buyCredits" class="buy-more">Buy more credits</a></span>
-                </li>
-
-                <li><a href="@routes.User.profile.url" class="menu-entry">My Profile</a></li>
-                @if(user.isRoot){
-                @**<li><a href="@routes.Administration.index.url" class="menu-entry">Administration</a></li>** @
-                <li><a href="@routes.Administration.console.url" class="menu-entry">Console</a></li>}
-                <li class="noHover">
-                    <form action="@routes.Application.logoutAction" method="post">
-                        <button type="submit" class="logout">Logout</button>
-                    </form>
-                </li>
-            </ul>
-        </li>**@
         }
         case _ => {
         <li><a href='mailto:@Helper.config.getString("contact.email").getOrElse("")' class="menu-entry">Contact</a></li>
         <li>
-            @loginModal match{
-                case true => {<a href="@routes.Application.login.url" data-reveal-id="loginModal" class="menu-entry"><strong>Login</strong></a>}
-                case false => {<span class="link active"><strong>Login</strong></span>}
+            @loginPage match{
+                case false => {<a href="@routes.Application.login.url" data-reveal-id="loginModal" class="menu-entry"><strong>Login</strong></a>}
+                case true => {<span class="link active"><strong>Login</strong></span>}
             }
         </li>
         }}
