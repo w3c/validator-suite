@@ -55,7 +55,7 @@ object ResourceView {
 
   def definitions: Seq[Definition] = Seq(
     ("url" -> true),
-    ("validated" -> true),
+    ("lastValidated" -> true),
     ("warnings" -> true),
     ("errors" -> true),
     ("actions" -> false)

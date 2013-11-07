@@ -31,17 +31,17 @@ case class ResourcesView (
   def order(sort: SortParam): Ordering[ResourceView] = {
     val params = List(
       "url",
-      "validated",
+      "lastValidated",
       "warnings",
       "errors"
     )
     sort match {
       case SortParam(param, ascending) if params.contains(param) => {
         val ord = param match {
-          case "url"       => Ordering[String].on[ResourceView](_.url.toString)
-          case "validated" => Ordering[(DateTime, String)].on[ResourceView](view => (view.lastValidated, view.url.toString))
-          case "warnings"  => Ordering[(Int, String)].on[ResourceView](view => (view.warnings, view.url.toString))
-          case "errors"    => Ordering[(Int, String)].on[ResourceView](view => (view.errors, view.url.toString))
+          case "url"           => Ordering[String].on[ResourceView](_.url.toString)
+          case "lastValidated" => Ordering[(DateTime, String)].on[ResourceView](view => (view.lastValidated, view.url.toString))
+          case "warnings"      => Ordering[(Int, String)].on[ResourceView](view => (view.warnings, view.url.toString))
+          case "errors"        => Ordering[(Int, String)].on[ResourceView](view => (view.errors, view.url.toString))
         }
         if (ascending) ord else ord.reverse
       }

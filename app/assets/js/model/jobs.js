@@ -4,19 +4,19 @@ define(["util/Logger", "model/job", "model/collection"], function (Logger, Job, 
 
     var Jobs = Collection.extend({
 
-        logger:Logger.of("Jobs"),
+        logger: Logger.of("Jobs"),
 
-        model:Job
+        model: Job
 
     });
 
     Jobs.View = Jobs.View.extend({
 
-        attributes:{
-            id:"jobs"
+        attributes: {
+            id: "jobs"
         },
 
-        sortParams:[
+        sortParams: [
             "name",
             "entrypoint",
             "status",
@@ -28,7 +28,7 @@ define(["util/Logger", "model/job", "model/collection"], function (Logger, Job, 
             "health"
         ],
 
-        init:function () {
+        init: function () {
             var self = this, view, input;
             if (!this.isList()) {
                 view = this.collection.at(0).view;
@@ -45,7 +45,7 @@ define(["util/Logger", "model/job", "model/collection"], function (Logger, Job, 
             });
         },
 
-        emptyMessage:function () {
+        emptyMessage: function () {
             return "No jobs have been configured yet. <a href='" + this.collection.url + "/new" + "'>Create your first job.</a>";
         }
 

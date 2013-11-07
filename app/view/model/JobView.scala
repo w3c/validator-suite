@@ -6,7 +6,7 @@ import play.api.libs.json._
 import play.api.templates.Html
 import org.w3.vs.view.Collection.Definition
 import org.w3.vs.store.Formats._
-import org.joda.time.DateTime
+import org.joda.time.{DateTimeZone, DateTime}
 import play.api.libs.json.Json._
 import play.api.libs.json.JsUndefined
 import org.w3.vs.view.Collection.Definition
@@ -33,7 +33,7 @@ case class JobView(
     // TODO: This must be implemented client side. temporary
     val completedOn = {
       if (!(json \ "completedOn").isInstanceOf[JsUndefined]) {
-        val timestamp = new DateTime((json \ "completedOn").as[Long])
+        val timestamp = new DateTime((json \ "completedOn").as[Long], DateTimeZone.UTC)
         Json.obj(
           "timestamp" -> Json.toJson(timestamp.toString()),
           "legend1" -> Json.toJson(Helper.formatTime(timestamp)),

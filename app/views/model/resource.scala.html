@@ -13,7 +13,7 @@
                 </a>
                 <br><a href="@resource.url" data-url="@resource.url" class="external" target="_blank" title="@Messages("resource.external.link")">@resource.url</a>}
 
-                case "validated" => {
+                case "lastValidated" => {
                 <time datetime="@resource.lastValidated" data-lastValidated="@resource.lastValidated" data-lastValidated-legend1="">@Helper.formatTime(resource.lastValidated)</time>
                 <span class="legend" data-lastValidated-legend2="">@Helper.formatLegendTime(resource.lastValidated)</span>}
 
