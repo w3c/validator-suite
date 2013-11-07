@@ -16,7 +16,9 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
             arr: array,
             push: function (command) {
                 index = array.length + 1;
-                return array.push(command);
+                array.push(command);
+                this.save();
+                return;
             },
             next: function () {
                 index = index >= array.length ? array.length : index + 1;
@@ -25,6 +27,22 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
             prev: function () {
                 index = index - 1 > 0 ? index - 1 : 0;
                 return array[index] || "";
+            },
+            save: function () {
+                if (window.localStorage) {
+                    localStorage.setItem("ConsoleHistory", array);
+                }
+                return this;
+            },
+            load: function () {
+                if (localStorage && localStorage.getItem("ConsoleHistory")) {
+                    array = localStorage.getItem("ConsoleHistory").split(",");
+                    index = array.length;
+                } else {
+                    array = ["?"];
+                    index = 0;
+                }
+                return this;
             }
         };
     };
@@ -39,7 +57,7 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
 
             socket: new window.WebSocket(socketUrl),
 
-            history: new History(),
+            history: (new History()).load(),
 
             write: function (msg) {
                 msg = msg === "" ? invite : msg + "\n" + invite;
@@ -79,6 +97,7 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
         };
 
         console.socket.onmessage = function (event) {
+            if (event.data === "ping") { return; }
             logger.info("Received data: " + event.data);
             console.write(event.data);
             console.el.removeAttr("disabled");
@@ -169,7 +188,7 @@ define(["util/Socket", "util/Logger", "libs/jquery", "libs/underscore"], functio
         });
 
         el.focus();
-        console.fill("?");
+        console.fill("");
 
         return console;
     };

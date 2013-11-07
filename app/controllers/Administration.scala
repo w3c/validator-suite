@@ -12,6 +12,7 @@ import scala.util.matching.Regex
 import org.w3.vs.store.Formats._
 import reactivemongo.bson.BSONObjectID
 import scala.concurrent.Future
+import concurrent.duration.FiniteDuration
 
 object Administration extends VSController {
 
@@ -93,8 +94,14 @@ object Administration extends VSController {
     }
 
     val (enum, channel) = Concurrent.broadcast[String]
+    val ping = new Runnable {def run() { channel.push("ping")} }
+    val pingEvents = vs.system.scheduler.schedule(FiniteDuration(30, "s"), FiniteDuration(30, "s"), ping)
     def iteratee: Iteratee[String, String] = Cont[String, String] {
-      case Input.EOF => Done("end of stream")
+      case Input.EOF => {
+        pingEvents.cancel()
+        channel.eofAndEnd()
+        Done("end of stream")
+      }
       case Input.Empty => iteratee
       case Input.El(command) => {
         val r = try {
