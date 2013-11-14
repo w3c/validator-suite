@@ -47,7 +47,8 @@ define(["model/model", "model/assertions", "util/Util", "util/Logger"], function
         templateId: "resource-template",
 
         events: {
-            "click .print": "print"
+            "click .print": "print",
+            "click .foldAllToggle": "foldAllToggle"
         },
 
         print: function () {
@@ -79,7 +80,30 @@ define(["model/model", "model/assertions", "util/Util", "util/Logger"], function
 
         afterRender: function () {
             this.addSearchHandler();
-        }
+        },
+
+        unfoldAll: function () {
+            if (this.model.collection.options.assertions) {
+                this.model.collection.options.assertions.view.unfoldAll();
+            }
+        },
+
+        foldAll: function () {
+            if (this.model.collection.options.assertions) {
+                this.model.collection.options.assertions.view.foldAll();
+            }
+        },
+
+        foldAllToggle: function () {
+            this.$el.toggleClass("foldAll");
+            if (this.model.collection.options.assertions) {
+                if (this.$el.hasClass("foldAll")) {
+                    this.unfoldAll();
+                } else {
+                    this.foldAll();
+                }
+            }
+        },
 
     });
 

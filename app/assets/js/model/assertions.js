@@ -4,15 +4,15 @@ define(["util/Logger", "model/assertion", "model/collection"], function (Logger,
 
     var Assertions = Collection.extend({
 
-        logger:Logger.of("Assertions"),
+        logger: Logger.of("Assertions"),
 
-        model:Assertion,
+        model: Assertion,
 
-        comparator:function (o1, o2) {
+        comparator: function (o1, o2) {
             if (o1.get("severity") === o2.get("severity")) {
                 return o1.get("occurrences") === o2.get("occurrences") ?
-                    (o1.get("title") > o2.get("title") ? +1 : -1) :
-                    (o1.get("occurrences") > o2.get("occurrences") ? -1 : +1);
+                        (o1.get("title") > o2.get("title") ? +1 : -1) :
+                        (o1.get("occurrences") > o2.get("occurrences") ? -1 : +1);
             }
             if (o1.get("severity") === "error") {
                 return -1;
@@ -32,20 +32,28 @@ define(["util/Logger", "model/assertion", "model/collection"], function (Logger,
 
     Assertions.View = Assertions.View.extend({
 
-        attributes:{
-            id:"assertions"
+        attributes: {
+            id: "assertions"
         },
 
-        sortParams:[],
+        sortParams: [],
 
-        filterOn:function (assertorId) {
+        filterOn: function (assertorId) {
             this.filter = function (assertion) {
                 return assertion.get("assertor") === assertorId;
             };
             this.render();
         },
 
-        emptyMessage:"No assertions to show." // assertions.empty
+        foldAll: function () {
+            this.collection.each(function (assertion) { assertion.view.fold(); });
+        },
+
+        unfoldAll: function () {
+            this.collection.each(function (assertion) { assertion.view.unfold(); });
+        },
+
+        emptyMessage: "No assertions to show." // assertions.empty
 
     });
 

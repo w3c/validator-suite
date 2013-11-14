@@ -25,6 +25,7 @@
                 case "actions" => {
                 <input type="text" name="search" class="search cleared" placeholder="Search" value=""/>
                 <a class="button print">Print</a>
+                <% if (model.collection.options.assertions) { %><a class="button foldAllToggle">Fold/Unfold all</a><% } %>
                 }
 
             }}
