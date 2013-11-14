@@ -39,7 +39,7 @@
 
             case "resources" => {
             <% if(resources.length > 0) { %>@Messages("assertion.resources.detail")<% } %>
-            <% _.map(resources, function (resource) {%>
+            <% _.map(resources.sort(function (r1, r2) { return r1.c < r2.c; }), function (resource) {%>
             <dd class="resource">
                 <span class="count" title="<%= resource.c %> time(s)"><%= resource.c %></span>
 

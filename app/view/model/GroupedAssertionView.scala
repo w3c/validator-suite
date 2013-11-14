@@ -16,7 +16,7 @@ case class GroupedAssertionView(
   def assertor = data.assertor
   def lang = data.lang
   def occurrences = data.occurrences
-  def resources = data.resources
+  def resources = data.resources.toSeq.sortBy(-_._2)
   def severity = data.severity
   def title = HtmlFormat.raw(data.title)
   def id = data.id.toString
