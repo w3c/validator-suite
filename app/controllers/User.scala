@@ -1,10 +1,9 @@
 package controllers
 
-import org.w3.vs.view.form.{PasswordForm, AccountForm}
 import org.w3.vs.controllers._
 import org.w3.vs.{Metrics, model}
 import play.api.i18n.Messages
-
+import org.w3.vs.view.Forms._
 
 object User extends VSController {
 
@@ -15,16 +14,16 @@ object User extends VSController {
   def profile = AuthenticatedAction("back.account") { implicit req => user =>
     Ok(views.html.profile(
       userForm = AccountForm(user),
-      passwordForm = PasswordForm.create(user),
+      passwordForm = PasswordForm(user),
       user = user))
   }
 
   def editAction: ActionA = AuthenticatedAction("form.editAccount") { implicit req => user =>
-    AccountForm().bindFromRequest().fold(
+    AccountForm.bindFromRequest().fold(
       form => {
         Metrics.form.editAccountFailure()
         render {
-          case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm.create(user), user))
+          case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm(user), user))
           case Accepts.Json() => BadRequest
         }
       },
@@ -45,15 +44,14 @@ object User extends VSController {
   }
 
   def changePasswordAction = AuthenticatedAction("form.editPassword") { implicit req => user =>
-    PasswordForm.create(user).bindFromRequest().fold (
+    PasswordForm(user).bindFromRequest().fold (
       formWithErrors => {
         Metrics.form.editPasswordFailure()
         BadRequest(views.html.profile(AccountForm(user), formWithErrors, user))
       },
-      bind => {
-        val newPassword = bind._2
+      password => {
         for {
-          saved <- model.User.update(user.withPassword(newPassword))
+          saved <- model.User.update(user.withPassword(password.newPassword))
         } yield {
           logger.info(s"""id=${user.id} action=editpassword message="password updated" """)
           SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.password.updated")))

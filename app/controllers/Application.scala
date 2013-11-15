@@ -3,11 +3,10 @@ package controllers
 import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.{Metrics, model}
-import org.w3.vs.view.form._
 import play.api.i18n._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import org.w3.vs.Emails
+import org.w3.vs.view.Forms._
 
 object Application extends VSController {
   
@@ -46,7 +45,7 @@ object Application extends VSController {
   }
 
   def loginAction: ActionA = AsyncAction("form.login") { implicit req =>
-    LoginForm().bindFromRequest().fold(
+    LoginForm.bindFromRequest().fold(
       form => {
         Metrics.form.loginFailure()
         BadRequest(views.html.login(form)).withNewSession
@@ -65,7 +64,7 @@ object Application extends VSController {
         }) recover {
           case UnauthorizedException(email) => {
             Metrics.form.loginFailure()
-            val failForm = LoginForm().bindFromRequest().withGlobalError("application.invalidCredentials")
+            val failForm = LoginForm.bindFromRequest().withGlobalError("application.invalidCredentials")
             BadRequest(views.html.login(failForm)).withNewSession
           }
         }
@@ -74,7 +73,7 @@ object Application extends VSController {
   }
 
   def registerAction: ActionA = AsyncAction("form.register") { implicit req =>
-    RegisterForm().bindFromRequest().fold(
+    RegisterForm.bindFromRequest().fold(
       form => BadRequest(views.html.register(registerForm = form)),
       register => (for {
         user <- model.User.register(
@@ -97,7 +96,7 @@ object Application extends VSController {
           logger.info(s"""action=register email=${email} message="Registration failed. Email already in use." """)
           Metrics.form.registerFailure()
           BadRequest(views.html.register(
-            registerForm = RegisterForm().bindFromRequest(),
+            registerForm = RegisterForm.bindFromRequest(),
             messages = List("error" -> Messages("r_email.duplicate", routes.Application.login().url, routes.PasswordReset.resetRequest().url)))
           )
         }

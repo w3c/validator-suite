@@ -1,8 +1,6 @@
 package org.w3.vs.exception
 
-import org.w3.vs.view.form._
 import org.w3.vs.model._
-import play.api.mvc.Result
 
 // TODO messages
 
@@ -33,8 +31,6 @@ case class DuplicatedEmail(email: String) extends Exception(s"${email} already i
 case class StoreException(t: Throwable) extends Exception("StoreException") //with SuiteException
 
 //case class Unexpected(t: Throwable) extends Exception(t) //with SuiteException
-
-//case class InvalidFormException[A <: VSForm](form: A, userOpt: Option[User] = None) extends Exception("InvalidFormException")
 
 // Contrary to UnauthorizedException this won't ask the user to log in but simply respond with a 404
 case object AccessNotAllowed extends Exception("AccessNotAllowed")

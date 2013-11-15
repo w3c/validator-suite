@@ -4,7 +4,7 @@ import org.w3.vs.exception._
 import org.w3.vs.{Metrics, model}
 import org.w3.vs.model._
 import org.w3.vs.view.collection._
-import org.w3.vs.view.form._
+import org.w3.vs.view.Forms._
 import play.api.libs.iteratee.{Enumeratee, Enumerator, Iteratee}
 import play.api.libs.json.{Json => PlayJson, _}
 import play.api.libs.{EventSource, Comet}

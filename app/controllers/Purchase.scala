@@ -4,12 +4,12 @@ import org.w3.vs.controllers._
 import org.w3.vs.exception._
 import org.w3.vs.{Metrics, model}
 import org.w3.vs.model._
-import org.w3.vs.view.form._
 import org.w3.vs.util.timer._
 import play.api.i18n._
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.w3.vs.view.Forms._
 
 object Purchase extends VSController {
 
@@ -62,7 +62,7 @@ object Purchase extends VSController {
       case UnauthorizedException(_) => {
         render {
           case Accepts.Json() => Unauthorized
-          case Accepts.Html() => Unauthorized(views.html.register(RegisterForm().fill(Register(redirectUri = req.uri))))
+          case Accepts.Html() => Unauthorized(views.html.register(RegisterForm.fill(Register(redirectUri = req.uri))))
         }
       }
     }

@@ -57,7 +57,7 @@ object ApplicationBuild extends Build {
     javascriptEntryPoints := Seq.empty[File],
     templatesImport += "org.w3.vs.ValidatorSuite",
     templatesImport += "org.w3.vs.view._",
-    templatesImport += "org.w3.vs.view.form._",
+    templatesImport += "org.w3.vs.view.Forms._",
     templatesImport += "org.w3.vs.view.model._",
     templatesImport += "org.w3.vs.view.collection._",
     templatesImport += "org.w3.vs.model._",
