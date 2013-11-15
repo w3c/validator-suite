@@ -1,6 +1,5 @@
 package controllers
 
-import org.w3.vs.exception._
 import org.w3.vs.{Metrics, model}
 import org.w3.vs.model._
 import org.w3.vs.view.collection._
@@ -11,12 +10,14 @@ import play.api.libs.{EventSource, Comet}
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.controllers._
-import scala.concurrent.Future
-import org.w3.vs.util.timer._
+import scala.concurrent.{Promise, Future}
 import org.w3.vs.view.model.JobView
 import org.w3.vs.store.Formats._
 import play.api.i18n.Messages
 import play.api.http.MimeTypes
+import com.ning.http.client._
+import com.ning.http.client.AsyncHandler.STATE
+import scala.util.Try
 
 object Jobs extends VSController {
 
@@ -63,6 +64,35 @@ object Jobs extends VSController {
     }
   }
 
+  def checkEntrypoint(url: URL): Future[Unit] = {
+    val promise: Promise[Unit] = akka.dispatch.Futures.promise[Unit]()
+    val handler = new AsyncHandler[Unit]() {
+      def onThrowable(p1: Throwable) {
+        if (!promise.isCompleted) {
+          promise.complete(Try(throw p1))
+        }
+      }
+      def onStatusReceived(p1: HttpResponseStatus): STATE = {
+        if (p1.getStatusCode == 200) {
+          promise.complete(Try())
+        } else {
+          promise.complete(Try(throw new Exception("Response code != 20")))
+        }
+        STATE.ABORT
+      }
+      def onHeadersReceived(p1: HttpResponseHeaders): STATE = STATE.ABORT
+      def onCompleted() {
+        if (!promise.isCompleted) {
+          promise.complete(Try(throw new Exception("Promise was not completed by the end of the response")))
+        }
+      }
+      def onBodyPartReceived(p1: HttpResponseBodyPart): STATE = STATE.ABORT
+
+    }
+    vs.formHttpClient.prepareGet(url.toString).execute(handler)
+    promise.future
+  }
+
   def createAction: ActionA = AuthenticatedAction("form.createJob") { implicit req => user =>
     JobForm(user).bindFromRequest().fold(
       form => Future.successful {
@@ -74,6 +104,7 @@ object Jobs extends VSController {
       },
       job => {
         for {
+          _ <- checkEntrypoint(job.strategy.entrypoint)
           _ <- job.save()
           _ <- job.run()
         } yield {

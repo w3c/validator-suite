@@ -2,7 +2,6 @@ package org.w3.vs.view
 
 import controllers.routes
 import java.util.concurrent.TimeUnit
-import org.w3.vs.Global
 import org.w3.vs.Global._
 import org.w3.vs.model.{Strategy, Job, User}
 import org.w3.vs.web.URL
@@ -10,8 +9,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.format.Formats._
 import play.api.data.validation.Constraints._
-import scala.concurrent.{ExecutionContext, Await}
-import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext
 import ExecutionContext.Implicits.global
 
 object Forms {
@@ -38,17 +36,13 @@ object Forms {
     newPassword: String = "",
     newPassword2: String = "")
 
-  def PasswordForm(user: User): Form[Password] = Form(
+  def PasswordForm: Form[Password] = Form(
     mapping(
       "p_current" -> nonEmptyText,
       "p_new" -> nonEmptyText(minLength = 6),
       "p_new2" -> nonEmptyText(minLength = 6)
     )(Password.apply)(Password.unapply)
       .verifying("password.dont_match", p => p.newPassword == p.newPassword2)
-      .verifying("application.invalidPassword", {p =>
-        implicit val c = Global.vs
-        Await.result(User.authenticate(user.email, p.current).map(_ => true).recover{case _ => false}, Duration("3s"))
-      })
   )
 
   /**
@@ -113,15 +107,7 @@ object Forms {
   def JobForm(user: User): Form[Job] = Form(
     mapping(
       "name" -> nonEmptyText,
-      "entrypoint" -> of[URL].verifying("invalid", { url =>
-        try {
-          // careful: this is blocking IO, potentially up to 10 seconds
-          val code = vs.formHttpClient.prepareGet(url.toString).execute().get(10, TimeUnit.SECONDS).getStatusCode
-          code == 200
-        } catch { case e: Exception =>
-          false
-        }
-      }),
+      "entrypoint" -> of[URL],
       "maxPages" -> of[Int].verifying(min(1)).verifying("creditMaxExceeded", { credits =>
         credits <= user.credits
       })

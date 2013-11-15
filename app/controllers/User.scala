@@ -4,6 +4,7 @@ import org.w3.vs.controllers._
 import org.w3.vs.{Metrics, model}
 import play.api.i18n.Messages
 import org.w3.vs.view.Forms._
+import org.w3.vs.exception.UnauthorizedException
 
 object User extends VSController {
 
@@ -14,7 +15,7 @@ object User extends VSController {
   def profile = AuthenticatedAction("back.account") { implicit req => user =>
     Ok(views.html.profile(
       userForm = AccountForm(user),
-      passwordForm = PasswordForm(user),
+      passwordForm = PasswordForm,
       user = user))
   }
 
@@ -23,7 +24,7 @@ object User extends VSController {
       form => {
         Metrics.form.editAccountFailure()
         render {
-          case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm(user), user))
+          case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm, user))
           case Accepts.Json() => BadRequest
         }
       },
@@ -39,22 +40,24 @@ object User extends VSController {
         }
       }
     )
-
-
   }
 
   def changePasswordAction = AuthenticatedAction("form.editPassword") { implicit req => user =>
-    PasswordForm(user).bindFromRequest().fold (
+    PasswordForm.bindFromRequest().fold (
       formWithErrors => {
         Metrics.form.editPasswordFailure()
         BadRequest(views.html.profile(AccountForm(user), formWithErrors, user))
       },
       password => {
-        for {
+        (for {
+          _ <- model.User.authenticate(user.email, password.current)
           saved <- model.User.update(user.withPassword(password.newPassword))
         } yield {
           logger.info(s"""id=${user.id} action=editpassword message="password updated" """)
           SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.password.updated")))
+        }) recover {
+          case UnauthorizedException(email) =>
+            BadRequest(views.html.profile(AccountForm(user), PasswordForm, user, List("error" -> Messages("application.invalidPassword"))))
         }
       }
     )
