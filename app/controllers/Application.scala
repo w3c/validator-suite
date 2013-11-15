@@ -46,61 +46,63 @@ object Application extends VSController {
   }
 
   def loginAction: ActionA = AsyncAction("form.login") { implicit req =>
-    (for {
-      form <- Future(LoginForm.bind() match {
-        case Left(form) => throw InvalidFormException(form)
-        case Right(validForm) => validForm
-      })
-      user <- model.User.authenticate(form.email, form.password) recover { case UnauthorizedException(email) => {
-          throw InvalidFormException(form.withGlobalError("application.invalidCredentials"))
-        }}
-    } yield {
-      logger.info(s"id=${user.id} action=login email=${user.email}")
-      (form("uri").value match {
-        case Some(uri) if (uri != routes.Application.login.url && uri != "") => SeeOther(uri)
-        case _ => SeeOther(routes.Jobs.index.url)
-      }).withSession("email" -> user.email)
-    }) recover {
-      case InvalidFormException(form: LoginForm, _) => {
+    LoginForm().bindFromRequest().fold(
+      form => {
         Metrics.form.loginFailure()
         BadRequest(views.html.login(form)).withNewSession
+      },
+      login => {
+        (for {
+          user <- model.User.authenticate(login.email, login.password)
+        } yield {
+          logger.info(s"id=${user.id} action=login email=${user.email}")
+          /*val redirectUri = if (login.uri == "" || login.uri == routes.Application.login().url) {
+            routes.Jobs.index().url
+          } else {
+            login.uri
+          }*/
+          SeeOther(login.redirectUri  ).withSession("email" -> user.email)
+        }) recover {
+          case UnauthorizedException(email) => {
+            Metrics.form.loginFailure()
+            val failForm = LoginForm().bindFromRequest().withGlobalError("application.invalidCredentials")
+            BadRequest(views.html.login(failForm)).withNewSession
+          }
+        }
       }
-    }
+    )
   }
 
   def registerAction: ActionA = AsyncAction("form.register") { implicit req =>
-    RegisterForm.bind() match {
-      case Left(form) => {
-        Future.successful {
-          BadRequest(views.html.register(registerForm = form))
+    RegisterForm().bindFromRequest().fold(
+      form => BadRequest(views.html.register(registerForm = form)),
+      register => (for {
+        user <- model.User.register(
+          name = register.name,
+          email = register.email,
+          password = register.password,
+          optedIn = register.optedIn,
+          isSubscriber = false)
+      } yield {
+        logger.info(s"""id=${user.id} action=register email=${user.email} name="${user.name}" opt-in=${user.optedIn}""")
+        logger.info(s"""id=${user.id} action=login email=${user.email}""")
+        vs.sendEmail(Emails.registered(user))
+        /*val newUri = form("uri").value match {
+          case Some(uri) if uri != "" => uri
+          case _ => routes.Jobs.index.url
+        }*/
+        SeeOther(register.redirectUri).withSession("email" -> user.email).flashing(("success", Messages("success.registered.user", user.name, user.email)))
+      }) recover {
+        case DuplicatedEmail(email: String) => {
+          logger.info(s"""action=register email=${email} message="Registration failed. Email already in use." """)
+          Metrics.form.registerFailure()
+          BadRequest(views.html.register(
+            registerForm = RegisterForm().bindFromRequest(),
+            messages = List("error" -> Messages("r_email.duplicate", routes.Application.login().url, routes.PasswordReset.resetRequest().url)))
+          )
         }
       }
-      case Right(form) => {
-        model.User.register(
-            name = form.name,
-            email = form.email,
-            password = form.password,
-            optedIn = form.optedIn,
-            isSubscriber = false).map {
-          case user => {
-            logger.info(s"""id=${user.id} action=register email=${user.email} name="${user.name}" opt-in=${user.optedIn}""")
-            logger.info(s"""id=${user.id} action=login email=${user.email}""")
-            vs.sendEmail(Emails.registered(user))
-            val newUri = form("uri").value match {
-              case Some(uri) if uri != "" => uri
-              case _ => routes.Jobs.index.url
-            }
-            SeeOther(newUri).withSession("email" -> user.email).flashing(("success", Messages("success.registered.user", user.name, user.email)))
-          }
-        } recover {
-          case DuplicatedEmail(email: String) => {
-            logger.info(s"""action=register email=${email} message="Registration failed. Email already in use." """)
-            Metrics.form.registerFailure()
-            BadRequest(views.html.register(registerForm = form, messages = List("error" -> Messages("r_email.duplicate", routes.Application.login().url, routes.PasswordReset.resetRequest().url))))
-          }
-        }
-      }
-    }
+    )
   }
 
   def logoutAction: ActionA = UserAwareAction("form.logout") { req => userOpt =>

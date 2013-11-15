@@ -1,4 +1,4 @@
-@(userForm: UserForm = UserForm.blank,
+@(userForm: Form[Account] = AccountForm(),
     passwordForm: Form[PasswordForm.PasswordType],
     user: User,
     messages: List[(String, String)] = List())(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)

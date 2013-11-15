@@ -62,7 +62,7 @@ object Purchase extends VSController {
       case UnauthorizedException(_) => {
         render {
           case Accepts.Json() => Unauthorized
-          case Accepts.Html() => Unauthorized(views.html.register(RegisterForm.redirectTo(req.uri)))
+          case Accepts.Html() => Unauthorized(views.html.register(RegisterForm().fill(Register(redirectUri = req.uri))))
         }
       }
     }

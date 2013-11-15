@@ -6,36 +6,42 @@ import play.api.data.validation.Constraints._
 import play.api.i18n.Messages
 import play.api.mvc._
 import scala.concurrent._
+import controllers.routes
+
+case class Login(
+  email: String = "",
+  password: String = "",
+  redirectUri: String = routes.Jobs.index().url)
 
 object LoginForm {
 
-  def bind()(implicit req: Request[_], context: ExecutionContext): Either[LoginForm, ValidLoginForm] = {
-    val form = playForm.bindFromRequest
-    form.fold(
-      f => Left(new LoginForm(f)),
-      s => Right(new ValidLoginForm(form, s))
-    )
-  }
-
-  def blank: LoginForm = new LoginForm(playForm)
-
-  def redirectTo(uri: String) = new LoginForm(playForm.bind(Map(("uri", uri))))
-
-  private def playForm: Form[(String, String, String)] = Form(
-    tuple(
+  def apply(): Form[Login] = Form(
+    mapping(
       "l_email" -> email.verifying(nonEmpty),
       "l_password" -> nonEmptyText,
       "uri" -> text
-    )
-  )
+    )(Login.apply)(Login.unapply)
+  ).fill(Login())
 
-  /*def apply(email: String) = {
-    new LoginForm(playForm.fill(email, ""))
+  /*
+  {
+      case (email, password, uri) =>
+        /*val redirectUri = if (uri == "" || uri == routes.Application.login().url) {
+          routes.Jobs.index().url
+        } else {
+          uri
+        }*/
+        Login(email, password, uri)
+    }
+   */
+
+  /*def redirectTo(uri: String) = {
+    apply().fill(Login(uri = uri))
   }*/
 
 }
 
-class LoginForm private[view](form: Form[(String, String, String)]) extends VSForm {
+/*class LoginForm private[view](form: Form[(String, String, String)]) extends VSForm {
 
   def apply(s: String) = form(s)
 
@@ -63,3 +69,4 @@ class LoginForm private[view](form: Form[(String, String, String)]) extends VSFo
 class ValidLoginForm private[view](form: Form[(String, String, String)], bind: (String, String, String)) extends LoginForm(form) with VSForm {
   val (email, password, redirectUri) = bind
 }
+  */

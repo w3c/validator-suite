@@ -1,4 +1,4 @@
-@(registerForm: RegisterForm = RegisterForm.blank)
+@(registerForm: Form[Register] = RegisterForm())
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
 
@@ -17,7 +17,7 @@
         @if(registerForm.errors.size > 0) {
         <div class="row">
             <div class="column large-9 large-offset-3 formErrors">
-                @libs.messages2(registerForm.errors.toList)
+                @libs.messages2(registerForm.errors.map(f => ("error", Messages(f.key+"."+f.message))).toList)
             </div>
         </div>}
 

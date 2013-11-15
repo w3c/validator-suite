@@ -34,7 +34,7 @@ case class StoreException(t: Throwable) extends Exception("StoreException") //wi
 
 //case class Unexpected(t: Throwable) extends Exception(t) //with SuiteException
 
-case class InvalidFormException[A <: VSForm](form: A, userOpt: Option[User] = None) extends Exception("InvalidFormException")
+//case class InvalidFormException[A <: VSForm](form: A, userOpt: Option[User] = None) extends Exception("InvalidFormException")
 
 // Contrary to UnauthorizedException this won't ask the user to log in but simply respond with a 404
 case object AccessNotAllowed extends Exception("AccessNotAllowed")

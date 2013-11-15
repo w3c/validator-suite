@@ -2,16 +2,33 @@ package org.w3.vs.view.form
 
 import play.api.data.Forms._
 import play.api.data._
-import play.api.mvc._
-import scala.concurrent._
-
-import RegisterForm.RegisterType
-import play.api.i18n.Messages
 import org.w3.vs.view._
+import controllers.routes
+
+case class Register(
+  name: String = "",
+  email: String = "",
+  password: String = "",
+  password2: String = "",
+  optedIn: Boolean = false,
+  redirectUri: String = routes.Jobs.index().url)
 
 object RegisterForm {
 
-  type RegisterType = (String, String, String, String, Boolean, String)
+  def apply(): Form[Register] = Form(
+    mapping(
+      "userName" -> nonEmptyText,
+      "r_email" -> email,
+      "r_password" -> nonEmptyText(minLength = 6),
+      "repeatPassword" -> text,
+      "optedIn" -> of[Boolean](checkboxFormatter),
+      "uri" -> text
+    )(Register.apply)(Register.unapply).verifying("password.dont_match", p => p.password == p.password2)
+  ).fill(Register())
+
+}
+
+  /*type RegisterType = (String, String, String, String, Boolean, String)
 
   def bind()(implicit req: Request[_], context: ExecutionContext): Either[RegisterForm, ValidRegisterForm] = {
     val form = playForm.bindFromRequest
@@ -62,4 +79,4 @@ class RegisterForm private[view](val form: Form[RegisterType]) extends VSForm {
 
 class ValidRegisterForm private[view](form: Form[RegisterType], bind: RegisterType) extends RegisterForm(form) with VSForm {
   val (name, email, password, repeatPassword, optedIn, redirectUri) = bind
-}
+}   */

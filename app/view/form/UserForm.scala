@@ -1,23 +1,49 @@
 package org.w3.vs.view.form
 
-import org.w3.vs.web.URL
-import org.w3.vs.{Global, ValidatorSuite, model}
-import org.w3.vs.assertor.Assertor
 import org.w3.vs.model._
 import org.w3.vs.view._
 import play.api.data.Forms._
 import play.api.data._
-import play.api.data.format.Formats._
-import play.api.data.format._
 import play.api.mvc.{Filter => _, _}
-import scala.concurrent._
 
-import UserForm.UserType
-import play.api.data
-import play.api.i18n.Messages
-import scala.concurrent.duration.Duration
+case class Account(
+  name: String,
+  email: String,
+  optedIn: Boolean) {
 
-object UserForm {
+  def update(user: User): User = {
+    user.copy(
+      name = name,
+      email = email,
+      optedIn = optedIn
+    )
+  }
+}
+
+object Account {
+
+  def apply(user: User): Account = Account(
+    name = user.name,
+    email = user.email,
+    optedIn = user.optedIn)
+
+}
+
+object AccountForm {
+
+  def apply(): Form[Account] = Form(
+    mapping(
+      "u_userName" -> nonEmptyText,
+      "u_email" -> email,
+      "u_optedIn" -> of[Boolean](checkboxFormatter)
+    )(Account.apply)(Account.unapply)
+  )
+
+  def apply(user: User): Form[Account] = apply().fill(Account(user))
+
+}
+
+/*object UserForm {
 
   type UserType = (String, String, Boolean)
 
@@ -80,4 +106,4 @@ class ValidUserForm private[view](
     user.copy(name = name, email = email, optedIn = optedIn)
   }
 
-}
+} */

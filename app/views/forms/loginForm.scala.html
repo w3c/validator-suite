@@ -1,4 +1,4 @@
-@(loginForm: LoginForm = LoginForm.blank)
+@(loginForm: Form[Login] = LoginForm())
 
 @requiredSpan = {<span class="required" title="This field is required">*</span>}
 
@@ -17,7 +17,8 @@
         @if(loginForm.errors.size > 0) {
         <div class="row">
             <div class="column large-9 large-offset-3 formErrors">
-                @libs.messages2(loginForm.errors.toList)
+                @**libs.messages2(loginForm.errors.toList)**@
+                @libs.messages2(loginForm.errors.map(f => ("error", Messages(f.key+"."+f.message))).toList)
             </div>
         </div>}
 

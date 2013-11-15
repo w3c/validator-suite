@@ -4,7 +4,7 @@ import org.w3.vs.exception._
 import org.w3.vs.controllers._
 import org.w3.vs._
 import org.w3.vs.model._
-import org.w3.vs.view.form.LoginForm
+import org.w3.vs.view.form.{Login, LoginForm}
 import play.Logger.ALogger
 import play.api.Play._
 import play.api.cache.Cache
@@ -89,7 +89,7 @@ trait VSController extends Controller {
         render {
           case Accepts.Html() =>
             Unauthorized(views.html.login(
-              form = LoginForm.blank.fill(email, "", req.uri),
+              form = LoginForm().fill(Login(email, "", req.uri)),
               messages = List(("error", Messages("application.unauthorized")))
             )).withNewSession
           case Accepts.Json() => Unauthorized
