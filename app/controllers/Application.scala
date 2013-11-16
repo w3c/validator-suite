@@ -64,7 +64,7 @@ object Application extends VSController {
         }) recover {
           case UnauthorizedException(email) => {
             Metrics.form.loginFailure()
-            val failForm = LoginForm.bindFromRequest().withGlobalError("application.invalidCredentials")
+            val failForm = LoginForm.bindFromRequest().withGlobalError("application.invalidCredentials", routes.PasswordReset.resetRequest().url)
             BadRequest(views.html.login(failForm)).withNewSession
           }
         }

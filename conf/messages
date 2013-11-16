@@ -103,7 +103,7 @@ assertion.resources.detail=This message appears in the following resources:
 
 # Application
 application.loggedOut=You have been logged out
-form..application.invalidCredentials=The username or password you entered is incorrect
+application.invalidCredentials=Authentication failed. If you have lost your password use the <a href="{0}">Password Reset</a> page.
 application.invalidPassword=Authentication Failed. The password you entered is incorrect.
 application.unauthorized=You must be logged in to access this page
 
