@@ -1,0 +1,28 @@
+@(field: play.api.data.Field, args: (Symbol, Any)*)
+
+@id = @{ args.toMap.get('id).map(_.toString).getOrElse(field.id) }
+@inputType = @{ args.toMap.get('type).map(_.toString).getOrElse("text") }
+@value = @{ args.toMap.get('value).map(_.toString).orElse(field.value) }
+@isRequired = @{ args.toMap.get('_required).map(_ == true).getOrElse(false) }
+@requiredSpan = @{ if(isRequired) { <span class="required" title="This field is required">*</span> }}
+@isCheckbox = @{ inputType == "checkbox" }
+@labelText = @{ args.toMap.get('label).map(_.toString).getOrElse(Messages(field.id + ".label")) }
+@htmlArgs = @{ args.filter(arg => !arg._1.name.startsWith("_") && arg._1.name != "id" && arg._1.name != "type" && arg._1.name != "value").toMap }
+@additionalArgs = {
+    @if(inputType == "checkbox" && field.value == Some("true")) { checked}
+    @if(inputType == "text" || inputType == "password" || inputType == "email") { placeholder="@Messages(field.id + ".placeholder")" title="@Messages(field.id + ".title")"}
+    @if(inputType != "password") { value="@value"}
+    @if(isRequired) { required}
+}
+
+@label(right: Boolean = false) = { <label for="@id" @if(right) {class="right inline"} @if(isRequired){aria-describedby="req"}>@labelText@requiredSpan</label> }
+@input(right: Boolean = false) = { <input id="@id" type="@inputType" @if(right) {class="right inline"} name="@field.name" @toHtmlArgs(htmlArgs) @additionalArgs> }
+
+<div class="row @if(field.hasErrors) {error}">
+    <div class="small-3 columns">
+        @if(isCheckbox) { @input(true) } else { @label(true) }
+    </div>
+    <div class="small-9 columns">
+        @if(isCheckbox) { @label() } else { @input() }
+    </div>
+</div>

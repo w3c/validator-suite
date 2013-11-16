@@ -42,7 +42,7 @@ object Forms {
       "p_new" -> nonEmptyText(minLength = 6),
       "p_new2" -> nonEmptyText(minLength = 6)
     )(Password.apply)(Password.unapply)
-      .verifying("password.dont_match", p => p.newPassword == p.newPassword2)
+      .verifying("r_new2.error.mismatch", p => p.newPassword == p.newPassword2)
   )
 
   /**
@@ -61,11 +61,11 @@ object Forms {
       "userName" -> nonEmptyText,
       "r_email" -> email,
       "r_password" -> nonEmptyText(minLength = 6),
-      "repeatPassword" -> text,
-      "optedIn" -> of[Boolean](checkboxFormatter),
+      "r_password2" -> text,
+      "optedIn" -> of[Boolean],
       "uri" -> text
     )(Register.apply)(Register.unapply)
-      .verifying("password.dont_match", p => p.password == p.password2)
+      .verifying("r_password2.error.mismatch", p => p.password == p.password2)
   ).fill(Register())
 
   /**
@@ -89,7 +89,7 @@ object Forms {
     mapping(
       "u_userName" -> nonEmptyText,
       "u_email" -> email,
-      "u_optedIn" -> of[Boolean](checkboxFormatter)
+      "u_optedIn" -> of[Boolean]
     )(Account.apply)(Account.unapply)
   )
 
@@ -108,7 +108,7 @@ object Forms {
     mapping(
       "name" -> nonEmptyText,
       "entrypoint" -> of[URL],
-      "maxPages" -> of[Int].verifying(min(1)).verifying("creditMaxExceeded", { credits =>
+      "maxPages" -> of[Int].verifying(min(1), max(2000)).verifying("creditMaxExceeded", { credits =>
         credits <= user.credits
       })
     )((name, entrypoint, maxPages) => {

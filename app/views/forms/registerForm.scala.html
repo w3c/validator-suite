@@ -1,6 +1,63 @@
 @(registerForm: Form[Register] = RegisterForm)
 
-@requiredSpan = {<span class="required" title="This field is required">*</span>}
+@import Helper._
+
+<div class="column">
+
+    <h1 class="formHeader" tabindex="0">Register</h1>
+
+    @helper.form(action = routes.Application.registerAction(), 'class -> "vsForm") {
+
+    @api.topLabel { @Messages("notice.registerNow"). If you already have an account, <a href="@routes.Application.login.url">login</a>. }
+
+    @api.formErrors(registerForm)
+
+    @api.input(
+        registerForm("userName"),
+        '_required -> true,
+        'autocomplete -> "off")
+
+    @api.input(
+        registerForm("r_email"),
+        '_required -> true,
+        'autocomplete -> "off",
+        'type -> "email")
+
+    @api.input(
+        registerForm("r_password"),
+        '_required -> true,
+        'autocomplete -> "off",
+        'pattern -> ".{6,}",
+        'type -> "password")
+
+    @api.input(
+        registerForm("r_password2"),
+        '_required -> true,
+        'autocomplete -> "off",
+        'pattern -> ".{6,}",
+        'type -> "password")
+
+    @api.input(
+        registerForm("optedIn"),
+        'type -> "checkbox",
+        'value -> "true")
+
+    @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
+
+    <div class="row">
+        <div class="small-5 small-offset-3 columns">
+            <input type="hidden" name="uri" value='@registerForm("uri").value'>
+            <button id="submit_register" name="submit" value="register" type="submit">Register</button>
+        </div>
+        <div class="column small-4 disclaimer">
+            <p>By clicking "Register", you agree to our<br> <a href="@routes.Application.terms.url">terms of service</a> and <a href="@routes.Application.privacy.url">privacy policy</a>.</p>
+        </div>
+    </div>
+
+    }
+</div>
+
+@**requiredSpan = {<span class="required" title="This field is required">*</span>}
 
 <div class="column">
 
@@ -77,9 +134,9 @@
         </div>
 
         <div class="row">
-            @**<div class="small-3 columns">
+            @ **<div class="small-3 columns">
                 <input id="terms" type="checkbox" required="required" name="terms" class="right" @registerForm("terms").value.map{_ => checked="checked"}>
-            </div>**@
+            </div>** @
             <div class="small-9 small-offset-3 columns">
 
             </div>
@@ -96,4 +153,4 @@
         </div>
 
     </form>
-</div>
+</div>**@

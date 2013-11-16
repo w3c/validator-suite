@@ -1,0 +1,13 @@
+@(form: Form[_])
+
+@key(error: FormError) = @{if(error.key != "") {error.key + "." + error.message} else {error.message}}
+
+@if(form.errors.size > 0) {
+<div class="row">
+    <div class="column large-9 large-offset-3 formErrors">
+        @form.errors.map { case error =>
+        <span class="alert-box error message column">
+            @HtmlFormat.raw(Messages(key(error)))
+        </span>}
+    </div>
+</div>}

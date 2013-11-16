@@ -171,49 +171,121 @@ sort.ascending=Sort in ascending order
 sort.descending=Sort in descending order
 
 
-# Form
-name.error.required=Name cannot be empty
+#####
+#
+#   Definitions in Forms.scala
+#
+#   Login form
+#
+#   "l_email" -> email.verifying(nonEmpty),
+#   "l_password" -> nonEmptyText,
+#
+l_email.label=Email
+l_email.placeholder=Email
+l_email.error.required=An email is required.
+l_email.error.email=Invalid email address
+l_password.label=Password
+l_password.placeholder=Password
+l_password.error.required=Password is required
+
+
+#
+#   Password
+#
+#   "p_current" -> nonEmptyText,
+#   "p_new" -> nonEmptyText(minLength = 6),
+#   "p_new2" -> nonEmptyText(minLength = 6)
+#
+p_current.label=
+p_current.placeholder=
+p_current.error.required=
+p_new.label=
+p_new.placeholder=
+p_new.error.required=
+p_new.error.minLength=Password too short. Minimum is 6 characters.
+p_new2.label=
+p_new2.placeholder=
+p_new2.error.required=Please verify your password.
+p_new2.error.minLength=
+p_new2.error.mismatch=Passwords did not match.
+
+#
+#   Register
+#
+#   "userName" -> nonEmptyText,
+#   "r_email" -> email,
+#   "r_password" -> nonEmptyText(minLength = 6),
+#   "r_password2" -> text,
+#   "optedIn" -> of[Boolean],
+#
+userName.label=Name
+userName.placeholder=Name
+userName.title=Name
+userName.error.required=A name is required
+r_email.label=Email
+r_email.placeholder=Email
+r_email.title=Email
+r_email.error.email=Invalid email address
+r_email.error.duplicate=This email is already registered. Please <a href="{0}">login</a> or send a request to <a href="{1}">recover your credentials</a>.
+r_password.label=Password
+r_password.placeholder=The password must be at least 6 characters long
+r_password.title=The password must be at least 6 characters long
+r_password.error.required=A password is required
+r_password.error.minLength=Password too short. Your password must be at least 6 characters long.
+r_password2.label=Password
+r_password2.placeholder=Verify your password
+r_password2.title=Verify your password
+r_password2.error.required=Please verify your password
+r_password2.error.mismatch=Passwords did not match
+optedIn.label=W3C may send me information about new products and services
+
+#
+#   Account
+#
+#   "u_userName" -> nonEmptyText,
+#   "u_email" -> email,
+#   "u_optedIn" -> of[Boolean]
+#
+u_userName.label=
+u_userName.placeholder=
+u_userName.error.required=
+u_email.label=
+u_email.placeholder=
+u_email.error.required=
+u_email.error.email=Email is required
+u_optedIn.label=
+u_optedIn.placeholder=
+u_optedIn.error.required=
+
+#
+#   Job
+#
+#   "name" -> nonEmptyText,
+#   "entrypoint" -> of[URL],
+#   "maxPages" -> of[Int].verifying(min(1), max(2000)).verifying("creditMaxExceeded",
+#
+name.label=
+name.placeholder=
+name.error.required=A job name is required
+entrypoint.label=
+entrypoint.placeholder=
 entrypoint.error.required=A Website URL is required
-maxPages.error.required=Max Pages is required
-
-r_email.duplicate=This email is already registered. Please <a href="{0}">login</a> or send a request to <a href="{1}">recover your credentials</a>.
-
-form.l_email.error.email=Invalid email address
-form.r_email.error.email=Invalid email address
-form.l_email.error.required=Email is required
-form.r_email.error.required=Email is required
-form.u_email.error.email=Email is required
-form.l_password.error.required=Password is required
-form.r_password.error.required=Password is required
-form.name.error.required=A job name is required
-form.entrypoint.error.url=Website URL must be a valid URL
 entrypoint.error.url=Website URL must be a valid URL
-form.assertor.error.required=No assertors selected
-form.maxResources.error.max=Invalid max pages value
-form.maxResources.error.min=Invalid max pages value
+entrypoint.invalid=The Website URL is not accessible or is a redirection.
+maxPages.label=Max pages
+maxPages.placeholder=
+maxPages.error.required=Max Pages is required
+maxPages.error.min=A Job max pages parameter must be at least 1
+maxPages.error.max=A Job cannot exceed 2000 pages
+maxPages.creditMaxExceeded=Max pages exceeded your available number of credits
 
-form.userName.error.required=A name is required.
-form.u_userName.error.required=A name is required.
 
-form.r_password.error.minLength=Password too short. Minimum is 6 characters.
-
-# There is no key for this one hence the '..' (cf RegisterForm.scala)
-form..password.dont_match=Passwords did not match.
-password.dont_match=Passwords did not match.
-
-form.terms.not_accepted=You must read and agree to the Terms and Conditions to purchase a job.
-form.repeatPassword.error.required=Please verify your password.
+jobs.maxPages.detail=The maximum number of pages that will be crawled and validated
 
 info.register.first=In order to purchase a job please register first, or login if you already have an account.
 success.registered.user=Successfully registered as {0} &lt;{1}>. An email acknowledging your registration will be sent to your email address.
 
-entrypoint.invalid=The Website URL is not accessible or is a redirection.
-maxPages.creditMaxExceeded=Max pages exceeded your available number of credits
 
-
-jobs.maxPages=Max pages
-jobs.maxPages.detail=The maximum number of pages that will be crawled and validated
-maxPages.error.min=A Job max pages parameter must equal or greater than 1
 
 error.notEnoughCredits=You do not have enough credits to run this job. <a href="{0}">Purchase credits</a>.
 

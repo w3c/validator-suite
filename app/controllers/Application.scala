@@ -97,7 +97,7 @@ object Application extends VSController {
           Metrics.form.registerFailure()
           BadRequest(views.html.register(
             registerForm = RegisterForm.bindFromRequest(),
-            messages = List("error" -> Messages("r_email.duplicate", routes.Application.login().url, routes.PasswordReset.resetRequest().url)))
+            messages = List("error" -> Messages("r_email.error.duplicate", routes.Application.login().url, routes.PasswordReset.resetRequest().url)))
           )
         }
       }

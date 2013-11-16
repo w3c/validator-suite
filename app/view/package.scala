@@ -41,12 +41,12 @@ package object view {
 //    }
 //  }
 
-  implicit val checkboxFormatter = new Formatter[Boolean] {
+/*  implicit val checkboxFormatter = new Formatter[Boolean] {
     def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Boolean] =
       Right(data isDefinedAt key)
     def unbind(key: String, value: Boolean): Map[String, String] =
       if (value) Map(key -> "on") else Map()
-  }
+  }*/
 
   implicit val urlFormat = new Formatter[URL] {
     override val format = Some("format.url", Nil)

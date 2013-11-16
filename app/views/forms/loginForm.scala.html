@@ -1,64 +1,36 @@
 @(loginForm: Form[Login] = LoginForm)
 
-@requiredSpan = {<span class="required" title="This field is required">*</span>}
+@import Helper._
 
 <div class="column">
-
     <h1 class="formHeader" id="loginFormHead" tabindex="0">Login</h1>
+    @helper.form(action = routes.Application.loginAction(), 'class -> "vsForm") {
 
-    <form action="@routes.Application.login" method="POST" class="vsForm">
+        @api.topLabel { If you don't have an account yet, you can <a href="@routes.Application.register.url">register now</a>. }
 
-        <div class="row">
-            <span class="column large-offset-3 large-9 topLabel">
-                If you don't have an account yet, you can <a href="@routes.Application.register.url">register now</a>.
-            </span>
-        </div>
+        @api.formErrors(loginForm)
 
-        @if(loginForm.errors.size > 0) {
-        <div class="row">
-            <div class="column large-9 large-offset-3 formErrors">
-                @**libs.messages2(loginForm.errors.toList)**@
-                @libs.messages2(loginForm.errors.map(f => ("error", Messages(f.key+"."+f.message))).toList)
-            </div>
-        </div>}
+        @helper.inputText(
+            loginForm("l_email"),
+            'placeholder -> Messages("l_email.placeholder"),
+            'required -> "required",
+            'type -> "email")
 
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="l_email" class="right inline" aria-describedby="req">Email@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="email" id="l_email" name="l_email" placeholder="Email"
-                       value='@loginForm("l_email").value' required="required">
-            </div>
-        </div>
+        @helper.inputPassword(
+            loginForm("l_password"),
+            'placeholder -> Messages("l_password.placeholder"),
+            'required -> "required")
 
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="l_password" class="right inline" aria-describedby="req">Password@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="password" id="l_password" name="l_password" placeholder="Password" required="required">
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="column small-9 small-offset-3 note">
-                <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em>
-            </div>
-        </div>
+        @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
 
         <div class="row">
             <div class="column large-5 large-offset-3">
-                <p>
-                    <a href="@routes.PasswordReset.resetRequest().url">Forgot your password?</a>
-                </p>
+                <p><a href="@routes.PasswordReset.resetRequest().url">Forgot your password?</a></p>
             </div>
             <div class="column large-4 small-9">
                 <input type="hidden" name="uri" value='@loginForm("uri").value'>
                 <button id="submit-login" name="submit" value="login" type="submit">Login</button>
             </div>
         </div>
-
-    </form>
-
+    }
 </div>
