@@ -10,7 +10,7 @@
 
     @libs.navigation(crumbs)
 
-    @libs.messages(messages)
+    @libs.messages(messages ++ flash.data)
 
     @collections.map { collection => @collection.toHtml }
 

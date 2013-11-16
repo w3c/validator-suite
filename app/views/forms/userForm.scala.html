@@ -41,7 +41,7 @@
         'type -> "checkbox",
         'value -> "true")
 
-    @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
+    @api.requiredFields()
 
     @api.submit("Save")
 
@@ -73,7 +73,7 @@
         'pattern -> ".{6,}",
         'type -> "password")
 
-    @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
+    @api.requiredFields()
 
     @api.submit("Save")
 

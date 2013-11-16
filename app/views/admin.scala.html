@@ -4,10 +4,7 @@
 
 <div class="row admin">
 
-    @if(messages.size > 0) {
-    <div class="column globalMessages">
-        @libs.messages2(messages)
-    </div>}
+    @libs.messages(messages ++ flash.data)
 
     <form action="@routes.Administration.jobsPost" method="post">
         <h1>Job Controls</h1>

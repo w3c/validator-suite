@@ -1,9 +1,0 @@
-@(messages: List[(String, String)] = List.empty)
-
-        @messages.map { case (key, message) =>
-        @if(message != ""){
-            <span data-alert class="alert-box @key message column">
-                @HtmlFormat.raw(message)
-            </span>
-            @**<a href="#" class="close">&times;</a>**@
-        }}

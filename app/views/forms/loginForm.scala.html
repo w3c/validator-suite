@@ -1,33 +1,35 @@
 @(loginForm: Form[Login] = LoginForm)
 
 <div class="column">
+
     <h1 class="formHeader" id="loginFormHead" tabindex="0">Login</h1>
+
     @helper.form(action = routes.Application.loginAction(), 'class -> "vsForm") {
 
-        @api.topLabel { If you don't have an account yet, you can <a href="@routes.Application.register.url">register now</a>. }
+    @api.topLabel { If you don't have an account yet, you can <a href="@routes.Application.register.url">register now</a>. }
 
-        @api.formErrors(loginForm)
+    @api.formErrors(loginForm)
 
-        @api.input(
-            loginForm("l_email"),
-            '_required -> true,
-            'type -> "email")
+    @api.input(
+        loginForm("l_email"),
+        '_required -> true,
+        'type -> "email")
 
-        @api.input(
-            loginForm("l_password"),
-            '_required -> true,
-            'type -> "password")
+    @api.input(
+        loginForm("l_password"),
+        '_required -> true,
+        'type -> "password")
 
-        @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
+    @api.requiredFields()
 
-        <div class="row">
-            <div class="column large-5 large-offset-3">
-                <p><a href="@routes.PasswordReset.resetRequest().url">Forgot your password?</a></p>
-            </div>
-            <div class="column large-4 small-9">
-                <input type="hidden" name="uri" value='@loginForm("uri").value'>
-                <button type="submit">Login</button>
-            </div>
+    <div class="row">
+        <div class="column large-5 large-offset-3">
+            <p><a href="@routes.PasswordReset.resetRequest().url">Forgot your password?</a></p>
         </div>
+        <div class="column large-4 small-9">
+            <input type="hidden" name="uri" value='@loginForm("uri").value'>
+            <button type="submit">Login</button>
+        </div>
+    </div>
     }
 </div>

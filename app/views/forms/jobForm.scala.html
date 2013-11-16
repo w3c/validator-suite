@@ -1,12 +1,12 @@
 @(form: Form[Job], user: User)(implicit req: RequestHeader)
 
-@disabled = {@if(user.credits <= 0) {disabled="disabled"} else {}}
-
 <div class="column">
 
     <h1 class="formHeader">Create a new job</h1>
 
     @helper.form(action = routes.Jobs.createAction(), 'class -> "vsForm") {
+
+    @api.formErrors(form)
 
     @api.input(
         form("name"),
@@ -26,7 +26,7 @@
         'step -> 1,
         'type -> "range")
 
-    @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
+    @api.requiredFields()
 
     @api.submit(
         "Create",

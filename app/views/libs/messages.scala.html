@@ -1,10 +1,10 @@
-@(errors: List[(String, String)] = List.empty)(implicit flash: Flash)
-@if(errors.size > 0 || flash.data.filter(_._2 != "").size > 0) {
-    <section id="messages">
-        <h1>Messages</h1>
-        @flash.data.map { case (key, message) =>
-        @if(message != ""){<p class="@key message">@HtmlFormat.raw(message)</p>}}
-        @errors.map { case (key, message) =>
-        @if(message != ""){<p class="@key message">@HtmlFormat.raw(message)</p>}}
-    </section>
-}
+@(messages: List[(String, String)] = List.empty)
+@if(messages.size > 0) {
+<section class="column messages">
+    @messages.map { case (key, message) =>
+    @if(message != ""){
+    <p data-alert class="alert-box @key message">
+        @HtmlFormat.raw(message)
+    </p>
+    @**<a href="#" class="close">&times;</a>**@}}
+</section>}

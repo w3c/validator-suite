@@ -5,12 +5,7 @@
 
 <section class="row">
 
-    @defining(messages ++ flash.data){ case messages =>
-    @if(messages.size > 0) {
-    <div class="column globalMessages">
-        @libs.messages2(messages)
-    </div>
-    }}
+    @libs.messages(messages ++ flash.data)
 
     @forms.resetRequestForm(resetRequestForm)
 
