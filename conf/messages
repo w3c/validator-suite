@@ -188,7 +188,6 @@ l_password.label=Password
 l_password.placeholder=Password
 l_password.error.required=Password is required
 
-
 #
 #   Password
 #
@@ -196,15 +195,18 @@ l_password.error.required=Password is required
 #   "p_new" -> nonEmptyText(minLength = 6),
 #   "p_new2" -> nonEmptyText(minLength = 6)
 #
-p_current.label=
-p_current.placeholder=
-p_current.error.required=
-p_new.label=
-p_new.placeholder=
+p_current.label=Current password
+p_current.placeholder=Your current password
+p_current.title=Your current password
+p_current.error.required=A password is required
+p_new.label=New password
+p_new.placeholder=Your new password must be at least 6 characters long
+p_new.title=Your new password must be at least 6 characters long
 p_new.error.required=
 p_new.error.minLength=Password too short. Minimum is 6 characters.
-p_new2.label=
-p_new2.placeholder=
+p_new2.label=Repeat password
+p_new2.placeholder=Verify your new password
+p_new2.title=Verify your new password
 p_new2.error.required=Please verify your password.
 p_new2.error.minLength=
 p_new2.error.mismatch=Passwords did not match.
@@ -219,12 +221,12 @@ p_new2.error.mismatch=Passwords did not match.
 #   "optedIn" -> of[Boolean],
 #
 userName.label=Name
-userName.placeholder=Name
-userName.title=Name
+userName.placeholder=Your name
+userName.title=Your name
 userName.error.required=A name is required
 r_email.label=Email
-r_email.placeholder=Email
-r_email.title=Email
+r_email.placeholder=Your email address
+r_email.title=Your email address
 r_email.error.email=Invalid email address
 r_email.error.duplicate=This email is already registered. Please <a href="{0}">login</a> or send a request to <a href="{1}">recover your credentials</a>.
 r_password.label=Password
@@ -232,7 +234,7 @@ r_password.placeholder=The password must be at least 6 characters long
 r_password.title=The password must be at least 6 characters long
 r_password.error.required=A password is required
 r_password.error.minLength=Password too short. Your password must be at least 6 characters long.
-r_password2.label=Password
+r_password2.label=Repeat password
 r_password2.placeholder=Verify your password
 r_password2.title=Verify your password
 r_password2.error.required=Please verify your password
@@ -246,16 +248,15 @@ optedIn.label=W3C may send me information about new products and services
 #   "u_email" -> email,
 #   "u_optedIn" -> of[Boolean]
 #
-u_userName.label=
-u_userName.placeholder=
-u_userName.error.required=
-u_email.label=
-u_email.placeholder=
-u_email.error.required=
-u_email.error.email=Email is required
-u_optedIn.label=
-u_optedIn.placeholder=
-u_optedIn.error.required=
+u_userName.label=Name
+u_userName.placeholder=Your name
+u_userName.title=Your name
+u_userName.error.required=A name is required
+u_email.label=Email
+u_email.placeholder=Your email address
+u_email.title=Your email address
+u_email.error.email=An email address is required
+u_optedIn.label=W3C may send me information about new products and services
 
 #
 #   Job
@@ -264,11 +265,11 @@ u_optedIn.error.required=
 #   "entrypoint" -> of[URL],
 #   "maxPages" -> of[Int].verifying(min(1), max(2000)).verifying("creditMaxExceeded",
 #
-name.label=
-name.placeholder=
+name.label=Job Name
+name.placeholder=A display name for this job
 name.error.required=A job name is required
-entrypoint.label=
-entrypoint.placeholder=
+entrypoint.label=Website URL
+entrypoint.placeholder=W3C Validator Suite will begin crawling your site from this page.
 entrypoint.error.required=A Website URL is required
 entrypoint.error.url=Website URL must be a valid URL
 entrypoint.invalid=The Website URL is not accessible or is a redirection.
@@ -279,26 +280,39 @@ maxPages.error.min=A Job max pages parameter must be at least 1
 maxPages.error.max=A Job cannot exceed 2000 pages
 maxPages.creditMaxExceeded=Max pages exceeded your available number of credits
 
+#
+#   Reset
+#
+#   "reset_email" -> email,
+#   "reset_password" -> nonEmptyText(minLength = 6),
+#   "reset_password2" -> text
+#
+reset_email.label=Email
+reset_email.placeholder=Your email address
+reset_email.title=Your email address
+reset_email.error.email=Invalid email address
+reset_password.label=Password
+reset_password.placeholder=Your new password
+reset_password.error.required=A password is required
+reset_password2.error.minLength=Password too short. Minimum is 6 characters.
+reset_password2.label=Repeat password
+reset_password2.placeholder=Verify your new password
+reset_password2.error.mismatch=Passwords did not match
+
+
+
+
 
 jobs.maxPages.detail=The maximum number of pages that will be crawled and validated
-
 info.register.first=In order to purchase a job please register first, or login if you already have an account.
 success.registered.user=Successfully registered as {0} &lt;{1}>. An email acknowledging your registration will be sent to your email address.
-
-
-
 error.notEnoughCredits=You do not have enough credits to run this job. <a href="{0}">Purchase credits</a>.
 
 # used in the Try it now button, as a title attribute, and on the register form
 notice.registerNow=Register now and get 20 free page validations
-
-
-
 title.account=W3C Validator Suite - My Account
-
 warn.lowCredits=Your credits count is low ({0} credits left). <a href={1}>Purchase additional credits</a>.
-warn.noCredits=Your are out of credits! <a href={1}>Purchase additional credits</a>.
-
+warn.noCredits=Your are out of credits! <a href={0}>Purchase additional credits</a>.
 user.profile.updated=You profile has been updated.
 user.password.updated=Your password has been updated.
 
@@ -311,5 +325,3 @@ resetRequestError=No user found with this email address.
 resetActionSuccess=Your password has been successfully reset.
 resetActionError=The email address you used did not match the email address of the password reset request. Try to make another request below.
 resetActionEmailError=The email address does not match your account.
-
-reset_email.error.email=Email is not valid.

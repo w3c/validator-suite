@@ -1,7 +1,5 @@
 @(loginForm: Form[Login] = LoginForm)
 
-@import Helper._
-
 <div class="column">
     <h1 class="formHeader" id="loginFormHead" tabindex="0">Login</h1>
     @helper.form(action = routes.Application.loginAction(), 'class -> "vsForm") {
@@ -10,16 +8,15 @@
 
         @api.formErrors(loginForm)
 
-        @helper.inputText(
+        @api.input(
             loginForm("l_email"),
-            'placeholder -> Messages("l_email.placeholder"),
-            'required -> "required",
+            '_required -> true,
             'type -> "email")
 
-        @helper.inputPassword(
+        @api.input(
             loginForm("l_password"),
-            'placeholder -> Messages("l_password.placeholder"),
-            'required -> "required")
+            '_required -> true,
+            'type -> "password")
 
         @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
 
@@ -29,7 +26,7 @@
             </div>
             <div class="column large-4 small-9">
                 <input type="hidden" name="uri" value='@loginForm("uri").value'>
-                <button id="submit-login" name="submit" value="login" type="submit">Login</button>
+                <button type="submit">Login</button>
             </div>
         </div>
     }

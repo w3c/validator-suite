@@ -1,67 +1,35 @@
-@(form: Form[(String, String, String)], id: PasswordResetId)
-
-@requiredSpan = {<span class="required" title="This field is required">*</span>}
+@(form: Form[Reset] = ResetForm, id: PasswordResetId)
 
 <div class="column">
-
     <h1 class="formHeader">Reset your password</h1>
 
-    <form method="post" action="@routes.PasswordReset.resetAction(id)" class="vsForm">
+    @helper.form(action = routes.PasswordReset.resetAction(id), 'class -> "vsForm") {
 
-        <div class="row">
-            <div class="column large-9 large-offset-3">
-                <p class="topLabel">@Messages("resetNotice")</p>
-            </div>
-        </div>
+    @api.topLabel { Messages("resetNotice") }
 
-        @if(form.errors.size > 0) {
-        <div class="row">
-            <div class="column large-9 large-offset-3 formErrors">
-                @libs.messages2(form.errors.map(f => ("error", Messages(f.key+"."+f.message))).toList)
-            </div>
-        </div>}
+    @api.formErrors(form)
 
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="reset_email" class="right inline" aria-describedby="req">Email@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="email" id="reset_email" name="reset_email" placeholder="Email address" required="required" autocomplete="off" />
-            </div>
-        </div>
+    @api.input(
+        form("reset_email"),
+        '_required -> true,
+        'autocomplete -> "off",
+        'type -> "email")
 
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="reset_password" class="right inline">New password@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="password" id="reset_password" pattern=".{6,}" name="reset_password"
-                       placeholder="Your new password must be at least 6 characters long" required="required"
-                       title="Your new password must be at least 6 characters long" autocomplete="off" />
-            </div>
-        </div>
+    @api.input(
+        form("reset_password"),
+        '_required -> true,
+        'autocomplete -> "off",
+        'type -> "password")
 
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="reset_password2" class="right inline">Repeat password@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="password" id="reset_password2" pattern=".{6,}" class="repeatPassword"
-                       name="reset_password2" required="required" placeholder="Verify your new password" autocomplete="off" />
-            </div>
-        </div>
+    @api.input(
+        form("reset_password2"),
+        '_required -> true,
+        'autocomplete -> "off",
+        'type -> "password")
 
-        <div class="row">
-            <div class="column small-9 small-offset-3 note">
-                <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em>
-            </div>
-        </div>
+    @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
 
-        <div class="row">
-            <div class="column large-4 large-offset-8 small-9 small-offset-3">
-                <button id="submit-reset" name="submit" value="reset" type="submit">Submit</button>
-            </div>
-        </div>
+    @api.submit("Submit")
 
-    </form>
+    }
 </div>

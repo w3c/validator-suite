@@ -1,0 +1,8 @@
+@(name: String, args: (Symbol, Any)*)
+@htmlArgs = @{ args.filter(arg => !arg._1.name.startsWith("_") && arg._1.name != "type").toMap }
+@disabled = @{ args.toMap.get('_disabled).map(_ == true).getOrElse(false) }
+<div class="row">
+    <div class="column large-4 large-offset-8">
+        <button type="submit" @toHtmlArgs(htmlArgs) @if(disabled){ disabled}>@name</button>
+    </div>
+</div>

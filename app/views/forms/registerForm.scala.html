@@ -1,7 +1,5 @@
 @(registerForm: Form[Register] = RegisterForm)
 
-@import Helper._
-
 <div class="column">
 
     <h1 class="formHeader" tabindex="0">Register</h1>
@@ -47,7 +45,7 @@
     <div class="row">
         <div class="small-5 small-offset-3 columns">
             <input type="hidden" name="uri" value='@registerForm("uri").value'>
-            <button id="submit_register" name="submit" value="register" type="submit">Register</button>
+            <button type="submit">Register</button>
         </div>
         <div class="column small-4 disclaimer">
             <p>By clicking "Register", you agree to our<br> <a href="@routes.Application.terms.url">terms of service</a> and <a href="@routes.Application.privacy.url">privacy policy</a>.</p>
@@ -56,101 +54,3 @@
 
     }
 </div>
-
-@**requiredSpan = {<span class="required" title="This field is required">*</span>}
-
-<div class="column">
-
-    <h1 class="formHeader">Register</h1>
-
-    <form method="post" action="@routes.Application.register" class="vsForm">
-
-        <div class="row">
-            <span class="column large-9 large-offset-3 topLabel">
-                @Messages("notice.registerNow"). If you already have an account, <a href="@routes.Application.login.url">login</a>.
-            </span>
-        </div>
-
-        @if(registerForm.errors.size > 0) {
-        <div class="row">
-            <div class="column large-9 large-offset-3 formErrors">
-                @libs.messages2(registerForm.errors.map(f => ("error", Messages(f.key+"."+f.message))).toList)
-            </div>
-        </div>}
-
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="userName" class="right inline" aria-describedby="req">Name@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="text" id="userName" name="userName" placeholder="Name"
-                       value='@registerForm("userName").value' required="required" class="userName" autocomplete="off" />
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="r_email" class="right inline" aria-describedby="req">Email@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="email" id="r_email" name="r_email" placeholder="Email" value='@registerForm("r_email").value' required="required" autocomplete="off" />
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="r_password" class="right inline" aria-describedby="req">Password@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="password" id="r_password" pattern=".{6,}" name="r_password"
-                       placeholder="The password must be at least 6 characters long" required="required"
-                       title="The password must be at least 6 characters long" autocomplete="off" />
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="repeatPassword" class="right inline" aria-describedby="req">Repeat password@requiredSpan</label>
-            </div>
-            <div class="small-9 columns">
-                <input type="password" id="repeatPassword" pattern=".{6,}" class="repeatPassword"
-                       name="repeatPassword" required="required" placeholder="Verify your password" autocomplete="off" />
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="small-3 columns">
-                <input type="checkbox" id="optedIn" name="optedIn" class="right inline" @registerForm("optedIn").value.map{_ => checked="checked"} />
-            </div>
-            <div class="small-9 columns">
-                <label for="optedIn">W3C may send me information about new products and services</label>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="column small-9 small-offset-3 note">
-                <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em>
-            </div>
-        </div>
-
-        <div class="row">
-            @ **<div class="small-3 columns">
-                <input id="terms" type="checkbox" required="required" name="terms" class="right" @registerForm("terms").value.map{_ => checked="checked"}>
-            </div>** @
-            <div class="small-9 small-offset-3 columns">
-
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="small-5 small-offset-3 columns">
-                <input type="hidden" name="uri" value='@registerForm("uri").value'>
-                <button id="submit_register" name="submit" value="register" type="submit">Register</button>
-            </div>
-            <div class="column small-4 disclaimer">
-                <p>By clicking "Register", you agree to our<br> <a href="@routes.Application.terms.url">terms of service</a> and <a href="@routes.Application.privacy.url">privacy policy</a>.</p>
-            </div>
-        </div>
-
-    </form>
-</div>**@

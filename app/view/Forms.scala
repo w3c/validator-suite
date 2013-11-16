@@ -119,4 +119,19 @@ object Forms {
     )
   )
 
+  /**
+   * Reset Password
+   */
+  val ResetRequestForm: Form[String] = Form(single("reset_email" -> email))
+
+  case class Reset(email: String, password: String, password2: String)
+
+  val ResetForm: Form[Reset] = Form(
+    mapping(
+      "reset_email" -> email,
+      "reset_password" -> nonEmptyText(minLength = 6),
+      "reset_password2" -> text
+    )(Reset.apply)(Reset.unapply).verifying("reset_password2.error.mismatch", p => p.password == p.password2)
+  )
+
 }

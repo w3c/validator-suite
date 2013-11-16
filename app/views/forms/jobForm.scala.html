@@ -1,110 +1,39 @@
 @(form: Form[Job], user: User)(implicit req: RequestHeader)
 
-@requiredSpan = {<span class="required" title="This field is required">*</span>}
 @disabled = {@if(user.credits <= 0) {disabled="disabled"} else {}}
-@checkIfPlan(name: String) = {
-    @req.getQueryString("plan") match {
-        case Some(`name`) => {checked="checked"}
-        case None if name == "tiny" => {checked="checked"}
-        case _ => {}
-    }
-}
-
-
 
 <div class="column">
 
     <h1 class="formHeader">Create a new job</h1>
 
-    <form method="post" action="@routes.Jobs.createAction.url" class="vsForm">
+    @helper.form(action = routes.Jobs.createAction(), 'class -> "vsForm") {
 
-        @if(form.errors.size > 0) {
-        <div class="row">
-            <div class="column large-9 large-offset-3 formErrors">
-                @libs.messages2(form.errors.map(f => ("error", Messages(f.key+"."+f.message))).toList)
-            </div>
-        </div>
-        }
+    @api.input(
+        form("name"),
+        '_required -> true,
+        'type -> "text")
 
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="name" class="right inline" aria-describedby="req">
-                    Job Name@requiredSpan
-                </label>
-            </div>
-            <div class="small-9 columns">
-                <input id="name" name="name" type="text" value='@form("name").value' required="required"
-                       placeholder="A display name for this job" @disabled />
-            </div>
-        </div>
+    @api.input(
+        form("entrypoint"),
+        '_required -> true,
+        'type -> "url")
 
-        <div class="row">
-            <div class="small-3 columns">
-                <label for="entrypoint" class="right inline" title='@Messages("jobs.entrypoint.detail2")' aria-describedby="req">
-                    @Messages("jobs.entrypoint")@requiredSpan
-                </label>
-            </div>
-            <div class="small-9 columns">
-                <input id="entrypoint" name="entrypoint" type="url" value='@form("entrypoint").value'
-                       required="required" placeholder='@Messages("jobs.entrypoint.detail")' @disabled />
-            </div>
-        </div>
+    @api.input(
+        form("maxPages"),
+        '_required -> true,
+        'min -> 1,
+        'max -> 2000,
+        'step -> 1,
+        'type -> "range")
 
-        <div class="row">
+    @api.note { <em>Fields marked with an asterisk (*) are <span id="req">required</span>.</em> }
 
-            <div class="small-3 columns">
-                <label for="maxPages" class="right inline" title='@Messages("jobs.maxPages.detail")' aria-describedby="req">
-                    @Messages("jobs.maxPages")@requiredSpan
-                </label>
-            </div>
-            <div class="small-9 columns range">
-                <input id="maxPages" name="maxPages" type="range" min="@{scala.math.min(user.credits, 1)}" max="@{scala.math.min(user.credits, 2000)}" value='@form("maxPages").value'
-                       step="1" required="required" placeholder='@Messages("jobs.maxPages.detail")' @disabled />
-            </div>
+    @api.submit(
+        "Create",
+        '_disabled -> (user.credits <= 0),
+        'name -> "action",
+        'value -> "create")
 
-        </div>
-
-        <div class="row">
-            <p class="column small-9 small-offset-3 compact"><span class="vats">Fields marked with an asterisk (*) are <span id="req">required</span>.</span></p>
-        </div>
-
-        @**<div class="row">
-            <div class="small-3 columns">
-                <input id="terms" type="checkbox" required="required" name="terms" class="right"
-                @form("terms").value.map{_ => checked="checked"}  >
-            </div>
-            <div class="small-9 columns">
-                <label for="terms">
-                    I agree to the <a href="@routes.Application.terms.url" target="_blank">Terms and Conditions</a>@requiredSpan
-                </label>
-            </div>
-        </div>**@
-
-        @**
-        <div class="row fsNotice">
-            <div class="column large-9 large-offset-3">
-                <p>
-                    <img src='@routes.Assets.at("images/fs-secure.png")' alt="FastSpring "
-                         title="Secure ordering by FastSpring" class="right"/>
-                    To complete your order you will be redirected to FastSpring, our payment partner who accepts
-                    payments by Credit Cards or PayPal.
-                </p>
-            </div>
-        </div>
-        **@
-
-        <div class="row">
-            <div class="large-4 columns large-offset-3">
-                <button type="submit" name="action" value="create" @disabled >Create</button>
-            </div>
-            @**
-            <div class="large-4 columns paymentLogos">
-                <img src='@routes.Assets.at("images/paymentLogos.png")'
-                     alt="Visa, MasterCard, Maestro, American Express, PayPal" title="Accepted payment methods"/>
-            </div>
-            **@
-        </div>
-
-    </form>
+    }
 
 </div>

@@ -25,7 +25,7 @@ object Jobs extends VSController {
 
   private def lowCreditWarning(credits: Int) = {
     if (credits <= 0)
-      List(("warn" -> Messages("warn.noCredits", credits, routes.Application.pricing().url)))
+      List(("warn" -> Messages("warn.noCredits", routes.Application.pricing().url)))
     else if (credits <= 50)
       List(("warn" -> Messages("warn.lowCredits", credits, routes.Application.pricing().url)))
     else

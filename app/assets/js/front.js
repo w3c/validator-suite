@@ -15,10 +15,10 @@ require([
         }
     });
 
-    $(".range").each(function (i, element) {
-        var output, input = $("input", element);
+    $("input[type=range]").each(function (i, element) {
+        var output, input = $(element);
         if (input[0] && input[0].type === "range") {
-            output = $("<input type='text'></input>");
+            output = $("<input class='rangeOutput' type='text'></input>");
             input.after(output);
             output.val(input[0].value);
             input.on("change", function (e) {
