@@ -1,7 +1,8 @@
-@(registerForm: Form[Register] = RegisterForm,
+@(registerForm: Form[Register],
+    loginForm: Form[Login],
     messages: List[(String, String)] = List())(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
-@front("W3C Validator Suite - Register", user = None, loginModal = false) {
+@front("W3C Validator Suite - Register", user = None, withModals = false) {
 
 <section class="row">
 
@@ -10,5 +11,13 @@
     @forms.registerForm(registerForm)
 
 </section>
+
+<div id="loginModal" class="reveal-modal medium">
+
+    @forms.loginForm(loginForm, false)
+
+    <a class="close-reveal-modal" href="#" aria-label="Cancel">&#215;</a>
+
+</div>
 
 }

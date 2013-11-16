@@ -1,4 +1,4 @@
-@(loginForm: Form[Login] = LoginForm)
+@(loginForm: Form[Login], withModal: Boolean = true)
 
 <div class="column">
 
@@ -6,7 +6,10 @@
 
     @helper.form(action = routes.Application.loginAction(), 'class -> "vsForm") {
 
-    @api.topLabel { If you don't have an account yet, you can <a href="@routes.Application.register.url">register now</a>. }
+    @api.topLabel {
+        If you don't have an account yet,
+        you can <a @if(withModal) {data-reveal-id="registerModal"} href="@routes.Application.register.url">register now</a>.
+    }
 
     @api.formErrors(loginForm)
 

@@ -1,14 +1,23 @@
-@(form: Form[Login] = LoginForm,
+@(loginForm: Form[Login] = LoginForm,
+    registerForm: Form[Register] = RegisterForm,
     messages: List[(String, String)] = List.empty)(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
-@front("W3C Validator Suite - Login", loginModal = false, loginPage = true) {
+@front("W3C Validator Suite - Login", withModals = false, loginPage = true) {
 
 <section class="row">
 
     @libs.messages(messages ++ flash.data)
 
-    @forms.loginForm(form)
+    @forms.loginForm(loginForm)
 
 </section>
+
+<div id="registerModal" class="reveal-modal large">
+
+    @forms.registerForm(registerForm, false)
+
+    <a class="close-reveal-modal" href="#" aria-label="Cancel">&#215;</a>
+
+</div>
 
 }

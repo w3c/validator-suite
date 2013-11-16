@@ -304,7 +304,7 @@ reset_password2.error.mismatch=Passwords did not match
 
 
 jobs.maxPages.detail=The maximum number of pages that will be crawled and validated
-info.register.first=In order to purchase a job please register first, or login if you already have an account.
+info.register.first=In order to purchase credits please register below, or <a href="{0}" data-reveal-id="loginModal">login</a> if you already have an account.
 success.registered.user=Successfully registered as {0} &lt;{1}>. An email acknowledging your registration will be sent to your email address.
 error.notEnoughCredits=You do not have enough credits to run this job. <a href="{0}">Purchase credits</a>.
 

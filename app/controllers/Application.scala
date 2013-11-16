@@ -40,7 +40,7 @@ object Application extends VSController {
     getUser map {
       case _ => Redirect(routes.Jobs.index()) // Already logged in -> redirect to index
     } recover {
-      case  _: UnauthorizedException => Ok(views.html.register()).withNewSession
+      case  _: UnauthorizedException => Ok(views.html.register(RegisterForm, LoginForm)).withNewSession
     }
   }
 
@@ -74,7 +74,7 @@ object Application extends VSController {
 
   def registerAction: ActionA = AsyncAction("form.register") { implicit req =>
     RegisterForm.bindFromRequest().fold(
-      form => BadRequest(views.html.register(registerForm = form)),
+      form => BadRequest(views.html.register(registerForm = form, loginForm = LoginForm)),
       register => (for {
         user <- model.User.register(
           name = register.name,
@@ -97,6 +97,7 @@ object Application extends VSController {
           Metrics.form.registerFailure()
           BadRequest(views.html.register(
             registerForm = RegisterForm.bindFromRequest(),
+            loginForm = LoginForm,
             messages = List("error" -> Messages("r_email.error.duplicate", routes.Application.login().url, routes.PasswordReset.resetRequest().url)))
           )
         }

@@ -89,7 +89,8 @@ trait VSController extends Controller {
         render {
           case Accepts.Html() =>
             Unauthorized(views.html.login(
-              form = LoginForm.fill(Login(email = email, redirectUri = req.uri)),
+              loginForm = LoginForm.fill(Login(email = email, redirectUri = req.uri)),
+              registerForm = RegisterForm.fill(Register(redirectUri = req.uri)),
               messages = List(("error", Messages("application.unauthorized")))
             )).withNewSession
           case Accepts.Json() => Unauthorized

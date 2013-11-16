@@ -11,7 +11,10 @@
     </p>
 
     <div class="large-3 columns">
-        <a class="button right" href="@routes.Application.tryIt" title="@Messages("notice.registerNow")">Try it now</a>
+        @user match{
+            case Some(user) => {<a class="button right" href="@routes.Jobs.index.url" title="@Messages("notice.registerNow")">Try it now</a>}
+            case None => {<a class="button right" href="@routes.Application.tryIt.url" data-reveal-id="registerModal" title="@Messages("notice.registerNow")">Try it now</a>}
+        }
     </div>
 </div>
 

@@ -4,7 +4,7 @@
  * @loginModal Whether to add the loginModal to the page
  * @loginPage Whether this a login page and the login link should be disabled
 **@
-@(title: String, user: Option[User] = None, loginModal: Boolean = true, loginPage: Boolean = false, js: Boolean = true)(content: Html)(implicit req: RequestHeader)
+@(title: String, user: Option[User] = None, withModals: Boolean = true, loginPage: Boolean = false, js: Boolean = true)(content: Html)(implicit req: RequestHeader)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,11 +41,16 @@
     </div>
 </footer>
 
-@if(user == None && loginModal) {
+@if(user == None && withModals) {
 <div id="loginModal" class="reveal-modal medium">
-    @forms.loginForm()
-    <a class="close-reveal-modal" aria-label="Cancel">&#215;</a>
-</div>}
+    @forms.loginForm(LoginForm)
+    <a class="close-reveal-modal" href="#" aria-label="Cancel">&#215;</a>
+</div>
+<div id="registerModal" class="reveal-modal large">
+    @forms.registerForm(RegisterForm)
+    <a class="close-reveal-modal" href="#" aria-label="Cancel">&#215;</a>
+</div>
+}
 
 </body>
 </html>
