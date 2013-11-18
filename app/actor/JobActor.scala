@@ -128,7 +128,7 @@ with ScanningClassification /* Maps Classifiers to Subscribers */ {
       case Fetch(url, method) =>
         logger.debug(s"${runId.shortId}: >>> ${method} ${url}")
         val boundRequestBuilder = method match {
-          case GET => httpClient.prepareGet(url.httpClientFriendly)
+          case GET => httpClient.prepareGet(url.httpClientFriendly).setHeader("Accept-Language", "en-us,en;q=0.5")
           case HEAD => httpClient.prepareHead(url.httpClientFriendly)
         }
         val timer = Metrics.crawler.time()

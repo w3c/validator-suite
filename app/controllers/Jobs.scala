@@ -76,11 +76,13 @@ object Jobs extends VSController {
         if (p1.getStatusCode == 200) {
           promise.complete(Try())
         } else {
-          promise.complete(Try(throw new Exception("Response code != 20")))
+          promise.complete(Try(throw new Exception("Response code != 200: " + p1.getStatusCode)))
         }
         STATE.ABORT
       }
-      def onHeadersReceived(p1: HttpResponseHeaders): STATE = STATE.ABORT
+      def onHeadersReceived(p1: HttpResponseHeaders): STATE = {
+        STATE.ABORT
+      }
       def onCompleted() {
         if (!promise.isCompleted) {
           promise.complete(Try(throw new Exception("Promise was not completed by the end of the response")))
@@ -89,7 +91,10 @@ object Jobs extends VSController {
       def onBodyPartReceived(p1: HttpResponseBodyPart): STATE = STATE.ABORT
 
     }
-    vs.formHttpClient.prepareGet(url.toString).execute(handler)
+    vs.formHttpClient
+      .prepareGet(url.toString)
+      .setHeader("Accept-Language", "en-us,en;q=0.5")
+      .execute(handler)
     promise.future
   }
 

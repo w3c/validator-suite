@@ -101,7 +101,7 @@ case class Cache(directory: File) extends ResponseCache {
 
     try {
       val client = new AsyncHttpClient()
-      val response: Response = client.prepareGet(url.toString).execute().get()
+      val response: Response = client.prepareGet(url.toString).setHeader("Accept-Language", "en-us,en;q=0.5").execute().get()
       val (hr, bodyContent) = response.asHttpResponse(url, method)
       this.save(hr, bodyContent)
     } catch { case e: Exception =>
