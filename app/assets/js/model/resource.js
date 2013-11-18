@@ -94,13 +94,15 @@ define(["model/model", "model/assertions", "util/Util", "util/Logger"], function
             }
         },
 
-        foldAllToggle: function () {
+        foldAllToggle: function (event) {
             this.$el.toggleClass("foldAll");
             if (this.model.collection.options.assertions) {
                 if (this.$el.hasClass("foldAll")) {
                     this.unfoldAll();
+                    $(event.target).text("Collapse all");
                 } else {
                     this.foldAll();
+                    $(event.target).text("Expand all");
                 }
             }
         },
