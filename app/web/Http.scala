@@ -22,7 +22,7 @@ object Http {
     val builder = new AsyncHttpClientConfig.Builder()
     val asyncHttpConfig =
       builder
-        .setFollowRedirects(true)
+        .setFollowRedirects(false)
         // concurrent connections
         .setMaximumConnectionsTotal(maxConnectionsTotal)
         .setMaximumConnectionsPerHost(maxConnectionsPerHost)

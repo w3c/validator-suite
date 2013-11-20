@@ -99,31 +99,27 @@ object Jobs extends VSController {
         import org.w3.vs.web.URL._
         import scala.collection.JavaConversions._
 
+        val headers = Headers(p1.getHeaders)
+
         if (code == 200) {
 
           // Check the mimetype
-          val mimetype = {
-            if (p1.getHeaders.get("Content-Type") == null) None
-            else p1.getHeaders.get("Content-Type").toList.headOption.flatMap(Headers.extractMimeType(_))
-          }
-          if (!mimetype.isDefined) {
+          if (!headers.mimetype.isDefined) {
             throw new EntrypointException(url, "error.mimetype.notFound")
-          } else if (!ValidatorNu.supportedMimeTypes.contains(mimetype.get)) {
-            throw new EntrypointException(url, "error.mimetype.unsupported", mimetype.get, ValidatorNu.supportedMimeTypes.mkString("", ", ", ""))
+          } else if (!ValidatorNu.supportedMimeTypes.contains(headers.mimetype.get)) {
+            throw new EntrypointException(url, "error.mimetype.unsupported", headers.mimetype.get, ValidatorNu.supportedMimeTypes.mkString("", ", ", ""))
           }
 
         } else { // It's a redirection
 
           // Check the new location
-          val location = {
-            if (p1.getHeaders.get("Location") == null) None
-            else p1.getHeaders.get("Location").toList.headOption.map(s => URL(new java.net.URL(url, s)))
-          }
+          val location = headers.locationURL(url)
+
           if (!location.isDefined) {
             throw new EntrypointException(url, "error.location.notFound")
           } else if (location.get.authority != url.authority) {
             throw new EntrypointException(location.get, "error.location.newDomain", url.toString)
-          } else if (!location.get.getAuthority.startsWith(url.authority.underlying)) {
+          } else if (!location.get.getAuthority.startsWith(url.getAuthority)) {
             //promise.complete(Try(throw new EntrypointException(newLocation, "redirection.upperLevel")))
             promise.complete(Try(location.get))
           }

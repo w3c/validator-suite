@@ -36,7 +36,9 @@ class Headers(val underlying: Map[String, List[String]]) extends AnyVal {
   
   def charset: Option[String] = contentTypeHeader flatMap Headers.extractCharset
 
-  def location: Option[String] = underlying.get("Location") flatMap { _.headOption }
+  def location: Option[String] = underlying.get("Location") orElse (underlying.get("location")) flatMap { _.headOption }
+
+  def locationURL(root: URL): Option[URL] = location.flatMap(root / _)
 
   def asJava: jMap[String, jList[String]] = underlying.mapValues(_.asJava).asJava
 
