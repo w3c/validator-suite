@@ -24,7 +24,7 @@ class WebsiteWithRedirectsCrawlTest extends VSTest with ServersTest with TestDat
     val user = TestData.user
 
     (for {
-      _ <- User.save(user)
+      //_ <- User.save(user)
       _ <- Job.save(job)
     } yield ()).getOrFail()
 

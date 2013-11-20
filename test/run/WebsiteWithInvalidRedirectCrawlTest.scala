@@ -33,6 +33,7 @@ class WebsiteWithInvalidRedirectCrawlTest extends VSTest with ServersTest with T
         case "/404/bar" => {
           // no Location header!
           resp.setStatus(302)
+          //resp.setHeader("Location", "/foo")
         }
       }
     }
@@ -53,7 +54,7 @@ class WebsiteWithInvalidRedirectCrawlTest extends VSTest with ServersTest with T
     def test(): Iteratee[RunEvent, Try[Unit]] = for {
       hr1 <- nextHttpResponse
       hr2 <- nextHttpResponse
-      hr3 <- nextHttpResponse
+      //hr3 <- nextHttpResponse
     } yield Try {
       hr1.url must be(URL("http://localhost:9001/"))
       hr1.status must be(200)

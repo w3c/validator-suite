@@ -28,7 +28,7 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
 
       goTo("http://localhost:9001/jobs/")
       url must be === "http://localhost:9001/jobs"
-      $("#submit-login").isEmpty must be (false)
+      $("form[action='/login']").isEmpty must be (false)
 
       // This user should register first through /register
       implicit val conf = Global.vs
@@ -38,8 +38,8 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       goTo("http://localhost:9001/login")
       fill("#l_email").`with`("test@example.com")
       fill("#l_password").`with`("secret")
-      $("#submit-login").isEmpty must be (false)
-      click("#submit-login")
+      $("form[action='/login']").isEmpty must be (false)
+      click("form[action='/login'] button")
 
       url must be === "http://localhost:9001/jobs"
       $(".hello").first().getText must include ("Test User")
@@ -50,13 +50,13 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       // and log out
       goTo("http://localhost:9001/jobs")
       //click("a[data-dropdown=myAccount]")
-      click("button.logout")
+      click("form[action='/logout'] button")
 
       url must be === "http://localhost:9001/"
 
       goTo("http://localhost:9001/login")
       url must be === "http://localhost:9001/login"
-      $("#submit-login").isEmpty must be (false)
+      $("form[action='/login']").isEmpty must be (false)
 
       // TODO. Define more functional tests: https://github.com/w3c/validator-suite/issues/271
 
