@@ -6,8 +6,8 @@
 <div class="row">
     <div class="column large-9 large-offset-3 formErrors">
         @form.errors.map { case error =>
-        <span class="alert-box error message column">
+        <p class="alert-box error message column">
             @HtmlFormat.raw(Messages(key(error), error.args: _*))
-        </span>}
+        </p>}
     </div>
 </div>}

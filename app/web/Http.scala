@@ -22,8 +22,7 @@ object Http {
     val builder = new AsyncHttpClientConfig.Builder()
     val asyncHttpConfig =
       builder
-        // no redirect, we handle them in the crawler ourselved
-        .setFollowRedirects(false)
+        .setFollowRedirects(true)
         // concurrent connections
         .setMaximumConnectionsTotal(maxConnectionsTotal)
         .setMaximumConnectionsPerHost(maxConnectionsPerHost)

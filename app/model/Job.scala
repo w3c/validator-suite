@@ -51,6 +51,8 @@ case class Job(
 
   def maxPages = strategy.maxResources
 
+  def withEntrypoint(url: URL) = copy(strategy = strategy.copy(entrypoint = url))
+
   def compactString = {
     val public = if (isPublic) "Public " else "Private"
     def pad(s: String, padding: Int) = {

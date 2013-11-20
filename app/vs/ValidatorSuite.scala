@@ -92,7 +92,7 @@ trait ValidatorSuite extends Database {
     val builder = new AsyncHttpClientConfig.Builder()
     val asyncHttpConfig =
       builder
-        .setFollowRedirects(false) // must be false because of #291. When setting to true also edit the "entrypoint.invalid" message.
+        .setFollowRedirects(false)
         .setMaximumConnectionsTotal(100)
         .setMaximumConnectionsPerHost(5)
         .setIdleConnectionTimeoutInMs(10000)

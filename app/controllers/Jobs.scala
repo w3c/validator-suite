@@ -18,6 +18,10 @@ import play.api.http.MimeTypes
 import com.ning.http.client._
 import com.ning.http.client.AsyncHandler.STATE
 import scala.util.Try
+import java.{net, util}
+import play.api.i18n.Messages.Message
+import org.w3.vs.web.Headers
+import org.w3.vs.assertor.LocalValidators.ValidatorNu
 
 object Jobs extends VSController {
 
@@ -64,23 +68,68 @@ object Jobs extends VSController {
     }
   }
 
-  def checkEntrypoint(url: URL): Future[Unit] = {
-    val promise: Promise[Unit] = akka.dispatch.Futures.promise[Unit]()
+  case class EntrypointException(url: URL, message: String, args: String*) extends Exception(message)
+
+  def checkEntrypoint(url: URL): Future[URL] = {
+    val promise: Promise[URL] = akka.dispatch.Futures.promise[URL]()
+    var code: Int = 0
     val handler = new AsyncHandler[Unit]() {
       def onThrowable(p1: Throwable) {
         if (!promise.isCompleted) {
-          promise.complete(Try(throw p1))
+          promise.complete(Try(p1 match {
+            case e: EntrypointException => throw e
+            case _ => throw new EntrypointException(url, "error.exception", p1.getMessage)
+          }))
         }
       }
       def onStatusReceived(p1: HttpResponseStatus): STATE = {
-        if (p1.getStatusCode == 200) {
-          promise.complete(Try())
+        code = p1.getStatusCode
+        if (code == 200) {
+          STATE.CONTINUE
+        } else if (300 <= code && code < 400) {
+          // We found a redirection, let's continue and check the location header
+          STATE.CONTINUE
         } else {
-          promise.complete(Try(throw new Exception("Response code != 200: " + p1.getStatusCode)))
+          promise.complete(Try(throw new EntrypointException(url, "error.invalidCode", p1.getStatusCode.toString)))
+          STATE.ABORT
         }
-        STATE.ABORT
       }
       def onHeadersReceived(p1: HttpResponseHeaders): STATE = {
+        import org.w3.vs.web.URL
+        import org.w3.vs.web.URL._
+        import scala.collection.JavaConversions._
+
+        if (code == 200) {
+
+          // Check the mimetype
+          val mimetype = {
+            if (p1.getHeaders.get("Content-Type") == null) None
+            else p1.getHeaders.get("Content-Type").toList.headOption.flatMap(Headers.extractMimeType(_))
+          }
+          if (!mimetype.isDefined) {
+            throw new EntrypointException(url, "error.mimetype.notFound")
+          } else if (!ValidatorNu.supportedMimeTypes.contains(mimetype.get)) {
+            throw new EntrypointException(url, "error.mimetype.unsupported", mimetype.get, ValidatorNu.supportedMimeTypes.mkString("", ", ", ""))
+          }
+
+        } else { // It's a redirection
+
+          // Check the new location
+          val location = {
+            if (p1.getHeaders.get("Location") == null) None
+            else p1.getHeaders.get("Location").toList.headOption.map(s => URL(new java.net.URL(url, s)))
+          }
+          if (!location.isDefined) {
+            throw new EntrypointException(url, "error.location.notFound")
+          } else if (location.get.authority != url.authority) {
+            throw new EntrypointException(location.get, "error.location.newDomain", url.toString)
+          } else if (!location.get.getAuthority.startsWith(url.authority.underlying)) {
+            //promise.complete(Try(throw new EntrypointException(newLocation, "redirection.upperLevel")))
+            promise.complete(Try(location.get))
+          }
+
+        }
+        promise.complete(Try(url))
         STATE.ABORT
       }
       def onCompleted() {
@@ -89,7 +138,6 @@ object Jobs extends VSController {
         }
       }
       def onBodyPartReceived(p1: HttpResponseBodyPart): STATE = STATE.ABORT
-
     }
     vs.formHttpClient
       .prepareGet(url.toString)
@@ -107,9 +155,10 @@ object Jobs extends VSController {
           case Accepts.Json() => BadRequest
         }
       },
-      job => {
-        for {
-          _ <- checkEntrypoint(job.strategy.entrypoint)
+      job_ => {
+        (for {
+          newUrl <- checkEntrypoint(job_.strategy.entrypoint)
+          job = job_.withEntrypoint(newUrl)
           _ <- job.save()
           _ <- job.run()
         } yield {
@@ -117,6 +166,10 @@ object Jobs extends VSController {
             case Accepts.Html() => SeeOther(routes.Jobs.index.url).flashing(("success" -> Messages("jobs.created", job.name)))
             case Accepts.Json() => Created(routes.Job.get(job.id).toString)
           }
+        }) recover {
+          case e: EntrypointException =>
+            val form = JobForm(user).fill(job_.withEntrypoint(e.url)).withError("entrypoint", e.message, e.args: _*)
+            BadRequest(views.html.newJob(form, user))
         }
       }
     )
