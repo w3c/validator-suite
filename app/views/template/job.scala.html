@@ -16,7 +16,10 @@
             case "status" => {
             <span class="<%= status.status %>"><%= view.getStatusString() %></span>
             <% if(isIdle) { %>
-            <form method="post"><button class="run" name="action" value="run">@Messages("job.button.run")</button></form>
+            <form method="post">
+                <input type="hidden" name="action" value="run">
+                <button class="run" type="submit" data-reveal-id="choiceModal">@Messages("job.button.run")</button>
+            </form>
             <% } else { %>
             <button class="stop">@Messages("job.button.stop")</button>
             <% } %>}
@@ -51,11 +54,11 @@
                 <fieldset>
                     <legend>Controls</legend>
             <% if(model.isIdle()) { %>
-                <button class="run" name="action" value="run">@Messages("job.button.run")</button>
+                <button class="run" name="action" value="run" data-reveal-id="choiceModal">@Messages("job.button.run")</button>
             <% } else { %>
                 <button class="stop">@Messages("job.button.stop")</button>
             <% } %>
-                <button class="delete" title="@Messages("job.button.delete.title")" data-reveal-id="deleteModal">@Messages("job.button.delete")</button>
+                <button class="delete" title="@Messages("job.button.delete.title")" data-reveal-id="choiceModal">@Messages("job.button.delete")</button>
                     </fieldset>
             </form>
             <form class="group" action="<%= url %>" method="get">

@@ -193,7 +193,7 @@ define([
 
         _delete: function () {
             var self = this;
-            $("#deleteModal").map(function (i, modal) {
+            $("#choiceModal").map(function (i, modal) {
                 var msg = $(".msg", modal),
                     yes = $(".yes", modal);
                 msg.html("Are you sure you want to delete the job <strong>" + self.model.get("name") + "</strong>? This action cannot be reverted.");
@@ -254,15 +254,17 @@ define([
         },
 
         run: function () {
-            this.$(".run").parents("form").attr("action", this.model.url());
-
-            /*this.model.run({ wait: true });
-             var collec = this.options.resources || this.options.assertions;
-             if (collec) {
-             logger.log("reset collection");
-             collec.reset();
-             }
-             return false;*/
+            var self = this;
+            $("#choiceModal").map(function (i, modal) {
+                console.log(modal);
+                var msg = $(".msg", modal),
+                    yes = $(".yes", modal);
+                msg.html("Are you sure you want to re-run the job <strong>" + self.model.get("name") + "</strong>? This will consume up to <strong>" + self.model.get("maxResources") + "</strong> credits and previous results will be lost.");
+                yes.unbind("click");
+                yes.click(function (yes) {
+                    self.$(".run").parents("form").attr("action", self.model.url()).submit();
+                });
+            });
         },
 
         addSearchHandler: function () {

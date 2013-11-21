@@ -14,6 +14,14 @@
 
     @collections.map { collection => @collection.toHtml }
 
+    <div id="choiceModal" class="reveal-modal small">
+        <div class="choices">
+            <button class="close-reveal-modal yes" tabindex="0">Yes</button>
+            <button class="close-reveal-modal no" tabindex="0">No</button>
+        </div>
+        <p class="msg"></p>
+    </div>
+
 }{
     @libs.pageCtrl(collections.last)
 }
