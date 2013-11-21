@@ -54,6 +54,7 @@ case class User(
   optedIn: Boolean,
   isSubscriber: Boolean,
   isRoot: Boolean,
+  registrationDate: Option[DateTime],
   expireDate: DateTime) {
 
   import User.logger
@@ -257,6 +258,7 @@ object User {
       optedIn = optedIn,
       isRoot = isRoot,
       isSubscriber = isSubscriber,
+      registrationDate = Some(DateTime.now(DateTimeZone.UTC)),
       expireDate = DateMidnight.now(DateTimeZone.UTC).plusDays(daysToIncrement).toDateTime)
     user
   }

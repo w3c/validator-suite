@@ -440,6 +440,7 @@ object Formats {
     (__ \ 'optedIn).format[Boolean] and
     (__ \ 'isSubscriber).format[Boolean] and
     (__ \ 'isRoot).format[Boolean] and
+    (__ \ 'registrationDate).formatNullable[DateTime] and
     (__ \ 'expireDate).format[DateTime]
   )(User.apply _, unlift(User.unapply _))
 
