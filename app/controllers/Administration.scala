@@ -187,7 +187,8 @@ object Administration extends VSController {
           |    db-set-password <email> <pass> - changes a user password
           |    db-add-roots                - adds all root users to the current db. Roots are defined in Main.scala.
           |    db-delete-user <userId>     - delete user with given userId
-          |    db-reset                    - resets the database with default data (only available in Dev mode)""".stripMargin
+          |    db-reset                    - resets the database with default data (only available in Dev mode)
+          |    emails                      - comma-separated list of all opted-in emails""".stripMargin
 
       case Array("jobs") =>
         val jobs = model.Job.getAll().getOrFail()
@@ -214,6 +215,10 @@ object Administration extends VSController {
         val users = model.User.getAll().getOrFail()
         val filtered = users.filter(job => reg.findFirstIn(job.compactString).isDefined).map(_.compactString)
         displayResults(filtered)
+
+      case Array("emails") =>
+        val optIns = model.User.getAll().getOrFail().filter(_.optedIn == true)
+        optIns.map(user => s"${user.name} <${user.email}>").mkString("", ", ", s"\n${optIns.size} result(s).")
 
 /*      case Array("runningJobs") =>
         val jobs = model.Job.getRunningJobs().getOrFail()
