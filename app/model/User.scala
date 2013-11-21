@@ -157,7 +157,7 @@ object User {
     * Here is how you can easily hash a password from the REPL:
     * scala> import org.mindrot.jbcrypt.BCrypt
     * scala> BCrypt.hashpw("the password", BCrypt.gensalt())
-    * res1: String = $2a$10$Iz9jrqrtT4VzV7s4.3l2bew/C3PZh52wDzc5GWlhYxvYa3cVk5u8i
+    * res1: String = [the hash]
     */
   def rootPassword: String = {
     val configuration = play.api.Play.configuration

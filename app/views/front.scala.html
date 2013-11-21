@@ -1,8 +1,8 @@
 @**
- * @title Title of the page
- * @user Optional user
- * @loginModal Whether to add the loginModal to the page
- * @loginPage Whether this a login page and the login link should be disabled
+ * title: Title of the page
+ * user: Optional user
+ * withModals: Whether to add the loginModal and registerModal to the page
+ * loginPage Whether this a login page and the login link should be disabled
 **@
 @(title: String, user: Option[User] = None, withModals: Boolean = true, loginPage: Boolean = false, js: Boolean = true)(content: Html)(implicit req: RequestHeader)
 <!DOCTYPE html>
