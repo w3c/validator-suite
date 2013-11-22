@@ -218,7 +218,7 @@ object Administration extends VSController {
 
       case Array("emails") =>
         val optIns = model.User.getAll().getOrFail().filter(_.optedIn == true)
-        optIns.map(user => s"${user.name} <${user.email}>").mkString("", ", ", s"\n${optIns.size} result(s).")
+        optIns.map(user => s"${user.name}\t${user.email}").mkString("", "\n", s"\n${optIns.size} result(s).")
 
 /*      case Array("runningJobs") =>
         val jobs = model.Job.getRunningJobs().getOrFail()
