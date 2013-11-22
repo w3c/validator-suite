@@ -157,7 +157,7 @@ define([
 
         events: {
             "click .stop": "stop",
-            "click .run": "run",
+            "click .status .run": "run",
             "click .delete": "_delete",
             "click .print": "print",
             "click .foldAllToggle": "foldAllToggle",
@@ -256,13 +256,12 @@ define([
         run: function () {
             var self = this;
             $("#choiceModal").map(function (i, modal) {
-                console.log(modal);
                 var msg = $(".msg", modal),
                     yes = $(".yes", modal);
                 msg.html("Are you sure you want to re-run the job <strong>" + self.model.get("name") + "</strong>? This will consume up to <strong>" + self.model.get("maxResources") + "</strong> credits and previous results will be lost.");
                 yes.unbind("click");
                 yes.click(function (yes) {
-                    self.$(".run").parents("form").attr("action", self.model.url()).submit();
+                    self.$(".status .run").parents("form").attr("action", self.model.url()).submit();
                 });
             });
         },
