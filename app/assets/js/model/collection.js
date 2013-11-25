@@ -432,7 +432,7 @@ define(["util/Logger", "libs/backbone", "util/Util", "util/Socket", "libs/unders
                 //return;
             }
 
-            total = this.filteredCount !== this.collection.length ? this.filteredCount : this.collection.expected;
+            total = this.filteredCount !== this.collection.length ? this.filteredCount : Math.max(this.collection.expected, this.collection.length);
             legend = $('.pagination .legend');
 
             if (visibles.first !== null && visibles.last !== null) {
