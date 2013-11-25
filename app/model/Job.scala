@@ -259,7 +259,7 @@ case class Job(
   /**Enumerator for all the JobData-s, even for future runs.  This is
    * stateless.  If you just want the most up-to-date JobData, use
    * Job.jobData() instead. */
-  def jobDatas(forever: Boolean = true)(implicit conf: ValidatorSuite): Enumerator[Iterator[JobData]] = {
+  def jobDatas(forever: Boolean = false)(implicit conf: ValidatorSuite): Enumerator[Iterator[JobData]] = {
     import conf._
     runDatas(forever) &> Enumeratee.map(_.map(runData => JobData(this, runData)))
   }
@@ -273,7 +273,7 @@ case class Job(
 
   /**this is stateless, so if you're the Done case, you want to use
    * Job.runData() instead */
-  def runDatas(forever: Boolean = true)(implicit conf: ValidatorSuite): Enumerator[Iterator[RunData]] = {
+  def runDatas(forever: Boolean = false)(implicit conf: ValidatorSuite): Enumerator[Iterator[RunData]] = {
     def enumerator = actorBasedEnumerator(Classifier.AllRunDatas, forever = forever)
     this.status match {
       case Done(_, _, _, runData) =>
@@ -343,7 +343,7 @@ case class Job(
   }
 
   // all GroupedAssertionDatas updates
-  def groupedAssertionDatas(forever: Boolean = true)(implicit conf: ValidatorSuite): Enumerator[Iterator[GroupedAssertionData]] = {
+  def groupedAssertionDatas(forever: Boolean = false)(implicit conf: ValidatorSuite): Enumerator[Iterator[GroupedAssertionData]] = {
     def enumerator = actorBasedEnumerator(Classifier.AllGroupedAssertionDatas, forever = forever)
     this.status match {
       case Done(runId, _, _, _) =>
@@ -368,7 +368,7 @@ case class Job(
   }
 
   // all Assertions updatesfor url
-  def assertions(url: URL, forever: Boolean = true)(implicit conf: ValidatorSuite): Enumerator[Iterator[Assertion]] = {
+  def assertions(url: URL, forever: Boolean = false)(implicit conf: ValidatorSuite): Enumerator[Iterator[Assertion]] = {
     def enumerator = actorBasedEnumerator(Classifier.AssertionsFor(url), forever = forever)
     this.status match {
       case Done(runId, _, _, _) =>

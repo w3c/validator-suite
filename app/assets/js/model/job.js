@@ -157,7 +157,7 @@ define([
 
         events: {
             "click .stop": "stop",
-            "click .status .run": "run",
+            "click .run": "run",
             "click .delete": "_delete",
             "click .print": "print",
             "click .foldAllToggle": "foldAllToggle",

@@ -78,25 +78,25 @@ object Resources extends VSController  {
     }
   }
 
-  private def enumerator(jobId: JobId, urlOpt: Option[URL], user: User): Enumerator[JsValue] = urlOpt match {
-    case Some(url) => enumerator(jobId, url, user)
-    case None => enumerator(jobId, user)
+  private def enumerator(jobId: JobId, urlOpt: Option[URL], user: User, forever: Boolean = false): Enumerator[JsValue] = urlOpt match {
+    case Some(url) => enumerator(jobId, url, user, forever)
+    case None => enumerator(jobId, user, forever)
   }
 
-  private def enumerator(jobId: JobId, user: User): Enumerator[JsValue] = {
+  private def enumerator(jobId: JobId, user: User, forever: Boolean): Enumerator[JsValue] = {
     import PlayJson.toJson
     val enumerator = Enumerator.flatten(model.Job.getFor(jobId, Some(user)).map { job =>
-      job.resourceDatas(forever = true)
+      job.resourceDatas(forever = forever)
     })
     enumerator &> Enumeratee.map { iterator =>
       toJson(iterator.map(ResourceView(jobId, _).toJson))
     }
   }
 
-  private def enumerator(jobId: JobId, url: URL, user: User): Enumerator[JsValue] = {
+  private def enumerator(jobId: JobId, url: URL, user: User, forever: Boolean): Enumerator[JsValue] = {
     import PlayJson.toJson
     val enumerator = Enumerator.flatten(model.Job.getFor(jobId, Some(user)).map { job =>
-      job.resourceDatas(org.w3.vs.web.URL(url), forever = true)
+      job.resourceDatas(org.w3.vs.web.URL(url), forever = forever)
     })
     enumerator &> Enumeratee.map { rd =>
       PlayJson.arr(ResourceView(jobId, rd).toJson)
