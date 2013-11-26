@@ -173,7 +173,14 @@ sort.descending=Sort in descending order
 
 #####
 #
+#   Forms:
 #   Definitions in Forms.scala
+#
+#   Conventions:
+#   <key>.label             - label of the field
+#   <key>.placeholder       - placeholder of the field if relevant (depending on the input type)
+#   <key>.title             - title of the field if relevant (depending on the input type)
+#   <key>.error.<errorKey>  - a validation error message on the field. <errorKey> depends on the validation constraints on the field.
 #
 #   Login form
 #
@@ -182,10 +189,12 @@ sort.descending=Sort in descending order
 #
 l_email.label=Email
 l_email.placeholder=Email
+l_email.title=Email
 l_email.error.required=An email is required.
 l_email.error.email=Invalid email address
 l_password.label=Password
 l_password.placeholder=Password
+l_password.title=Password
 l_password.error.required=Password is required
 
 #
@@ -271,13 +280,14 @@ name.title=A display name for this job
 name.error.required=A job name is required
 entrypoint.label=Website URL
 entrypoint.placeholder=W3C Validator Suite will begin crawling your site from this page.
-entrypoint.title=W3C Validator Suite will begin crawling your site from this page.
+entrypoint.title=W3C Validator Suite will begin crawling your site from this page. Only pages that start with this URL prefix will be checked.
 entrypoint.error.required=A Website URL is required
 entrypoint.error.url=Website URL must be a valid URL
 entrypoint.error.exception=Error fetching the Website URL: {0}
 entrypoint.error.invalidCode=The Website URL must return a OK (200) HTTP status. Got: {0}.
 entrypoint.error.location.notFound=The Website URL does not specify a Location header.
 entrypoint.error.location.newDomain=The Website URL ({0}) is redirected to a different domain. The final URL has been pre-filled below. Please verify it and submit the form again.
+entrypoint.error.location.upperLevel=The Website URL ({0}) is redirected to a an upper-level URL. The final URL has been pre-filled below. Please verify it and submit the form again.
 entrypoint.error.mimetype.notFound=The Website URL does not specify a Content-Type header.
 entrypoint.error.mimetype.unsupported=The Website URL Content-Type is not supported: {0}. The mimetype must be one of: {1}.
 maxPages.label=Max pages

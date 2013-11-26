@@ -120,8 +120,7 @@ object Jobs extends VSController {
           } else if (location.get.authority != url.authority) {
             throw new EntrypointException(location.get, "error.location.newDomain", url.toString)
           } else if (!location.get.getAuthority.startsWith(url.getAuthority)) {
-            //promise.complete(Try(throw new EntrypointException(newLocation, "redirection.upperLevel")))
-            promise.complete(Try(location.get))
+            throw new EntrypointException(location.get, "error.location.upperLevel")
           }
 
         }
