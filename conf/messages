@@ -309,6 +309,7 @@ reset_email.title=Your email address
 reset_email.error.email=Invalid email address
 reset_password.label=Password
 reset_password.placeholder=Your new password
+reset_password.title=Your new password
 reset_password.error.required=A password is required
 reset_password2.label=Repeat password
 reset_password2.placeholder=Verify your new password
