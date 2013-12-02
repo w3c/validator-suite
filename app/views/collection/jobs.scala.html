@@ -4,7 +4,7 @@
 <section id="actions">
     <a href="@routes.Jobs.newJob" class="button">New job</a>
     <form class="search" action="@routes.Jobs.index" method="get">
-        <label for="searchInput" class="offScreen">Search</label><input id="searchInput" name="search" type="text" placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required=""/>
+        <label for="searchInput" class="offScreen">Filter results</label><input id="searchInput" name="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required=""/>
         @if(collection.params.search != None) {
         <a class="button clear" href="@collection.search().queryString">@Messages("job.button.clear")</a>}
         @collection.search("").queryParameters.map { param =>

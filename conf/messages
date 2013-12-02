@@ -88,7 +88,7 @@ job.button.run=Run
 job.button.delete=Delete
 job.button.delete.title=Delete this job
 job.button.clear=Clear
-job.button.search=Search
+job.button.search=Filter
 
 
 

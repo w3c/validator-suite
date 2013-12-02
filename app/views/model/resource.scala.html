@@ -37,8 +37,8 @@
                 @defining(assertions.get) { collection =>
                 <form class="search" action="@routes.Assertions.index(resource.jobId, resource.url)" method="get">
                     <fieldset>
-                        <legend>Search</legend>
-                        <input name="search" type="text" placeholder="Search" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>
+                        <legend>Filter results</legend>
+                        <input name="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>
                         @if(collection.params.search != None) {
                         <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
                         @collection.search().goToPage(1).queryParameters.map { param =>
