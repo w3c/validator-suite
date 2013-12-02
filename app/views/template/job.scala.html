@@ -50,6 +50,15 @@
             </progress>}
 
             case "actions" => {
+            <ul class="reportTypes">
+                <% if(hasResources()) { %>
+                <li><a href="<%= url %>?group=url" class="selected">By URL</a></li>
+                <li><a href="<%= url %>?group=message">By Message</a></li>
+                <% } else { %>
+                <li><a href="<%= url %>?group=url" >By URL</a></li>
+                <li><a href="<%= url %>?group=message" class="selected">By Message</a></li>
+                <% } %>
+            </ul>
             <form method="post" class="jobAction">
                 <fieldset>
                     <legend>Controls</legend>
@@ -61,7 +70,7 @@
                 <button class="delete" title="@Messages("job.button.delete.title")" data-reveal-id="choiceModal">@Messages("job.button.delete")</button>
                     </fieldset>
             </form>
-            <form class="group" action="<%= url %>" method="get">
+            <!--form class="group" action="<%= url %>" method="get">
                 <fieldset class="dropdown" tabindex="0">
                     <legend>Report by</legend>
                     <input name="group" type="radio" value="url" id="url" <% if(hasResources()) {%>checked="checked"<%} %>/>
@@ -69,8 +78,8 @@
                     <input name="group" type="radio" value="message" id="message" <% if(!hasResources()) {%>checked="checked"<%} %> />
                     <label for="message">Group by message</label>
                 </fieldset>
-            </form>
-            <input name="search" class="search cleared" type="text" placeholder="Search" required="" value=""/>
+            </form-->
+            <input name="search" class="search cleared" type="text" placeholder="Filter results" title="Filter results" required value=""/>
             <% if (model.collection.options.assertions) { %><a class="button foldAllToggle">Expand all</a><% } %>
             <a class="button print">Print</a>
             }}

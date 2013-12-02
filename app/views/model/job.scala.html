@@ -53,6 +53,18 @@
                 <progress max="100" value="@job.health" title="Health: @job.health%" data-health="@job.health">@job.health%</progress>}
 
                 case "actions" => {
+                @if(collection.isDefined) {
+                @defining(collection.get) { collection =>
+                <ul class="reportTypes">
+                    @if(!collection.isGroupedBy("message")){
+                    <li><a href="<%= url %>?group=url" class="selected">By URL</a></li>
+                    <li><a href="<%= url %>?group=message">By Message</a></li>
+                    } else {
+                    <li><a href="<%= url %>?group=url">By URL</a></li>
+                    <li><a href="<%= url %>?group=message" class="selected">By Message</a></li>
+                    }
+                </ul>
+                }}
                 <form action="@routes.Job.dispatcher(job.id)" method="post" class="jobAction">
                     @if(!collection.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.index"/>}
                     <fieldset>
@@ -67,7 +79,7 @@
 
                 @if(collection.isDefined) {
                 @defining(collection.get) { collection =>
-                <form class="group" action="@routes.Job.dispatcher(job.id)" method="get">
+                <!--form class="group" action="@routes.Job.dispatcher(job.id)" method="get">
                     <fieldset class="dropdown" tabindex="0">
                         <legend>Report by</legend>
                         <input name="group" type="radio" value="resource" id="resource" @if(!collection.isGroupedBy("message")){checked}/>
@@ -78,7 +90,7 @@
                         <input name="search" type="hidden" value="@search"/>}
                     </fieldset>
                     <button type="submit">Go</button>
-                </form>
+                </form-->
                 <form class="search" method="get">
                     <fieldset>
                         <legend>Filter results</legend>
