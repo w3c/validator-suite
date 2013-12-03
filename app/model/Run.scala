@@ -478,7 +478,7 @@ case class Run private (
       val timestamp = DateTime.now(DateTimeZone.UTC)
       val completedRun = resultStep.run.completeOn(timestamp)
       val data = completedRun.data
-      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, resourceDatas, groupedAssertionDatas.values, timestamp)
+      val completeRunEvent = DoneRunEvent(event.userId, event.jobId, runId, Completed, data.resources, data.errors, data.warnings, completedRun.resourceDatas, completedRun.groupedAssertionDatas.values, timestamp)
       resultStep.copy(
         run = completedRun,
         actions = resultStep.actions :+ EmitEvent(completeRunEvent)
