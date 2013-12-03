@@ -57,11 +57,11 @@
                 @defining(collection.get) { collection =>
                 <ul class="reportTypes">
                     @if(!collection.isGroupedBy("message")){
-                    <li><a href="<%= url %>?group=url" class="selected">By URL</a></li>
-                    <li><a href="<%= url %>?group=message">By Message</a></li>
+                    <li><a href="./resources" class="selected">By URL</a></li>
+                    <li><a href="./messages">By Message</a></li>
                     } else {
-                    <li><a href="<%= url %>?group=url">By URL</a></li>
-                    <li><a href="<%= url %>?group=message" class="selected">By Message</a></li>
+                    <li><a href="./resources" >By URL</a></li>
+                    <li><a href="./messages" class="selected">By Message</a></li>
                     }
                 </ul>
                 }}
@@ -91,10 +91,10 @@
                     </fieldset>
                     <button type="submit">Go</button>
                 </form-->
-                <form class="search" method="get">
+                <form method="get">
                     <fieldset>
                         <legend>Filter results</legend>
-                        <input name="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>
+                        <input class="search" name="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>
                         @if(collection.params.search != None) {
                         <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
                         @collection.search().goToPage(1).queryParameters.map { param =>

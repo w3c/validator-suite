@@ -52,11 +52,11 @@
             case "actions" => {
             <ul class="reportTypes">
                 <% if(hasResources()) { %>
-                <li><a href="<%= url %>?group=url" class="selected">By URL</a></li>
-                <li><a href="<%= url %>?group=message">By Message</a></li>
+                <li><a href="./resources" class="selected">By URL</a></li>
+                <li><a href="./messages">By Message</a></li>
                 <% } else { %>
-                <li><a href="<%= url %>?group=url" >By URL</a></li>
-                <li><a href="<%= url %>?group=message" class="selected">By Message</a></li>
+                <li><a href="./resources" >By URL</a></li>
+                <li><a href="./messages" class="selected">By Message</a></li>
                 <% } %>
             </ul>
             <form method="post" class="jobAction">
@@ -68,6 +68,8 @@
                 <button class="stop">@Messages("job.button.stop")</button>
             <% } %>
                 <button class="delete" title="@Messages("job.button.delete.title")" data-reveal-id="choiceModal">@Messages("job.button.delete")</button>
+                    <input name="search" class="search cleared" type="text" placeholder="Filter results" title="Filter results" required value=""/>
+                    <button type="submit">@Messages("job.button.search")</button>
                     </fieldset>
             </form>
             <!--form class="group" action="<%= url %>" method="get">
@@ -79,7 +81,7 @@
                     <label for="message">Group by message</label>
                 </fieldset>
             </form-->
-            <input name="search" class="search cleared" type="text" placeholder="Filter results" title="Filter results" required value=""/>
+
             <% if (model.collection.options.assertions) { %><a class="button foldAllToggle">Expand all</a><% } %>
             <a class="button print">Print</a>
             }}

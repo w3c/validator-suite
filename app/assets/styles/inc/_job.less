@@ -5,7 +5,7 @@
 
 #jobs.single {
 
-    padding-bottom: 25px;
+    padding-bottom: 1.9em;
 
     aside {
         .health,
@@ -55,9 +55,9 @@
         }
         .health {
             //progress {
-                position: absolute;
-                right: 20px;
-                bottom: 21px;
+            position: absolute;
+            right: 1.7em;
+            bottom: 1.7em;
             //}
 
             progress[role] { width: 228px !important; }
@@ -65,8 +65,8 @@
         }
         .actions {
             left: 10px;
-            bottom: 10px;
-            height: 27px;
+            bottom: 0.7em;
+            height: 34px;
 
             legend {display: none;}
 
@@ -81,9 +81,53 @@
 
             button, .button, input {vertical-align: top;}
 
+            button:hover, .button:hover, button:focus, .button:hover, .button:active {
+                background: #FFAD21 !important;
+            }
+
+            button, .button {
+                background: #F97F2D !important;
+                border-color: #C47800;
+                text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+                border-radius: 1px;
+
+                display: inline-block;
+                -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+                box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+                -webkit-transition: background-color 300ms ease-out;
+                -moz-transition: background-color 300ms ease-out;
+                transition: background-color 300ms ease-out;
+                border-style: solid;
+                border-width: 1px;
+                cursor: pointer;
+                font-family: inherit;
+                font-weight: bold;
+                position: relative;
+                text-decoration: none;
+                text-align: center;
+                display: inline-block;
+                padding: 0.5em 1em;
+                font-size: 1em;
+                color:  white;
+
+                top: 0;
+                right: 0;
+                line-height: 1;
+            }
+
+            .search {
+                padding: 0.58em 0.5em;
+                box-shadow: 0 0 0;
+                border-radius: 0;
+            }
+
+            .jobAction input, .jobAction button, .search, .run, .clear, .button {
+                margin-right: 0.5em;
+            }
+
         }
         .status {
-            form, a:not(:link) {
+            a:not(:link) {
                 display: none;
             }
             .run,
@@ -93,13 +137,13 @@
             progress {
                 -moz-box-sizing: border-box;
                 box-sizing: border-box;
-                width: (3 * @rb-width + 10) - @rb-padding;
+                width: 14.2em;
                 height: 15px;
             }
         }
     }
 
-    .name, .entrypoint {padding-right: 10px;}
+    .name, .entrypoint, .completedOn {padding-right: 10px;}
 
     .warnings,
     .errors,
@@ -108,16 +152,16 @@
         width: @rb-width;
 
         dfn {
-            padding-top: 10px;
-            padding-bottom: 5px;
+            padding-top: 1em;
+            padding-bottom: 1em;
         }
 
         span {
-            padding-bottom: 30px;
+            padding-bottom: 2.5em;
         }
 
         span, dfn {
-            box-shadow: 1px 1px 1px #AAA;
+            //box-shadow: 1px 1px 1px #AAA;
             display: inline-block;
             .border-sizing();
             width: 100%;
@@ -138,15 +182,15 @@
         }
         dfn  {
             border-width: 1px 0 0   1px;
-            -webkit-border-top-left-radius: 5px;
-            -moz-border-radius-topleft: 5px;
-            border-top-left-radius: 5px;
+            -webkit-border-top-left-radius: 1px;
+            -moz-border-radius-topleft: 1px;
+            border-top-left-radius: 1px;
         }
         span {
             border-width: 0   0 1px 1px;
-            -webkit-border-bottom-left-radius: 5px;
-            -moz-border-radius-bottomleft: 5px;
-            border-bottom-left-radius: 5px;
+            -webkit-border-bottom-left-radius: 1px;
+            -moz-border-radius-bottomleft: 1px;
+            border-bottom-left-radius: 1px;
         }
     }
     .errors {
@@ -161,15 +205,15 @@
         }
         dfn  {
             border-width: 1px 1px 0   0;
-            -webkit-border-top-right-radius: 5px;
-            -moz-border-radius-topright: 5px;
-            border-top-right-radius: 5px;
+            -webkit-border-top-right-radius: 1px;
+            -moz-border-radius-topright: 1px;
+            border-top-right-radius: 1px;
         }
         span {
             border-width: 0   1px 1px 0;
-            -webkit-border-bottom-right-radius: 5px;
-            -moz-border-radius-bottomright: 5px;
-            border-bottom-right-radius: 5px;
+            -webkit-border-bottom-right-radius: 1px;
+            -moz-border-radius-bottomright: 1px;
+            border-bottom-right-radius: 1px;
         }
     }
 }
