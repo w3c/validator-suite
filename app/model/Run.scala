@@ -474,7 +474,11 @@ case class Run private (
       case _ => true
     }
 
-    if (resultStep.run.hasNoPendingAction && notCancel ) {
+    // a Run must go into the Completed state if and only if
+    // * it has no pending action
+    // * it was not cancelled
+    // * it's not already Completed
+    if (resultStep.run.hasNoPendingAction && notCancel && resultStep.run.completedOn.isEmpty) {
       val timestamp = DateTime.now(DateTimeZone.UTC)
       val completedRun = resultStep.run.completeOn(timestamp)
       val data = completedRun.data
