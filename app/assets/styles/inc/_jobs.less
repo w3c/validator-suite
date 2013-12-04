@@ -90,27 +90,10 @@
             float: left;
             margin-right: 0.5em;
         }
-        .stop {
-            background: none;
-            text-transform: lowercase;
-            border: none;
-            padding: 0;
-            margin: 0 0 0 20px;
-            line-height: 14px;
-            //font-size: 11px;
-            text-decoration: underline;
-            color: #06C;
-            border-radius: 0;
-        }
-        .running:before {
-            top: 8px;
-        }
-
-        button:hover, .button:hover, button:focus, .button:focus, .button:active {
+        .run:hover, .run:focus {
             background: #FFAD21 !important;
         }
-
-        button, .button {
+        .run {
             background: #F97F2D !important;
             border-color: #C47800;
             text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
@@ -126,19 +109,38 @@
             border-width: 1px;
             cursor: pointer;
             font-family: inherit;
-            //font-weight: bold;
+        //font-weight: bold;
             position: relative;
             text-decoration: none;
             text-align: center;
             display: inline-block;
-            //padding: 0.4em 0.5em;
-            //font-size: 0.9em;
+        //padding: 0.4em 0.5em;
+        //font-size: 0.9em;
             color:  white;
 
             top: 0;
             right: 0;
             line-height: 1;
         }
+
+        .stop {
+            background: none;
+            text-transform: lowercase;
+            text-shadow: none;
+            border: none;
+            padding: 0;
+            margin: 0 0 0 20px;
+            line-height: 14px;
+            //font-size: 11px;
+            text-decoration: underline;
+            color: #06C;
+            border-radius: 0;
+        }
+        .running:before {
+            top: 8px;
+        }
+
+
 
     }
     aside dfn {

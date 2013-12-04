@@ -21,7 +21,7 @@
             case "resources" => {
             @Messages("assertion.resources.detail")
 
-            @assertion.resources.take(50).map { case (url, count) =>
+            @assertion.resources.map { case (url, count) =>
             <dd class="resource">
                 <span class="count" data-count="" title="@count time(s)">@count</span>
                 <a href="@routes.Assertions.index(assertion.jobId, url)" class="report" title="@Messages("report.link")">

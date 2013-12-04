@@ -8,22 +8,23 @@ import play.api.templates.{HtmlFormat, Html}
 import org.w3.vs.model.GroupedAssertionData
 import org.w3.vs.view.Collection.Definition
 import org.w3.vs.store.Formats._
+import org.w3.vs.web.URL
 
 case class GroupedAssertionView(
   jobId: JobId,
   data: GroupedAssertionData) extends Model {
 
-  def assertor = data.assertor
-  def lang = data.lang
-  def occurrences = data.occurrences
-  def resources = data.resources.toSeq.sortBy(-_._2)
-  def severity = data.severity
-  def title = HtmlFormat.raw(data.title)
-  def id = data.id.toString
+  def assertor: AssertorId = data.assertor
+  def lang: String = data.lang
+  def occurrences: Int = data.occurrences
+  val resources: Seq[(URL, Int)] = data.resources.toSeq.sortBy(-_._2).take(50)
+  def severity: AssertionSeverity = data.severity
+  def title: Html = HtmlFormat.raw(data.title)
+  def id: String = data.id.toString
 
   def toJson: JsValue = {
-    Json.toJson(data).asInstanceOf[JsObject] +
-      ("occurrencesLegend" -> Json.toJson(occurrencesLegend))
+    Json.toJson(this)//.asInstanceOf[JsObject] +
+      //("occurrencesLegend" -> Json.toJson(occurrencesLegend))
   }
 
   def toHtml: Html =
@@ -45,8 +46,6 @@ case class GroupedAssertionView(
 
 object GroupedAssertionView {
 
-  //case class Context(line: Option[Int], column: Option[Int], content: Option[Html])
-
   def definitions: Seq[Definition] = Seq(
     ("assertor" -> true),
     ("severity" -> true),
@@ -55,62 +54,31 @@ object GroupedAssertionView {
     ("resources" -> true)
   ).map(a => Definition(a._1, a._2))
 
-//  def apply(jobId: JobId, data: GroupedAssertionData): GroupedAssertionView = {
-//    GroupedAssertionView(jobId, data)
-//  }
+  implicit val resourcesWrite: Writes[Seq[(URL, Int)]] = new Writes[Seq[(URL, Int)]] {
+    def writes(o: Seq[(URL, Int)]): JsValue = {
+      Json.toJson(o.map{ case (url, count) =>
+        Json.obj(
+          "url" -> url,
+          "c" -> count
+        )
+      })
+    }
+  }
 
-//  def apply(assertion: Assertion, jobId: JobId): AssertionView = {
-//    AssertionView(
-//      id = assertion.title.hashCode,
-//      jobId = jobId,
-//      assertor = assertion.assertor,
-//      severity = assertion.severity,
-//      validated = assertion.timestamp,
-//      title = HtmlFormat.raw(assertion.title),
-//      description = assertion.description.map(HtmlFormat.raw),
-//      occurrences = scala.math.max(1, assertion.contexts.size),
-//      resources = Iterable.empty,
-//      contexts = assertion.contexts.toSeq.sorted(
-//        Ordering[(Int, Int)].on[ContextModel](context => (context.line.getOrElse(Int.MaxValue), context.column.getOrElse(Int.MaxValue)))
-//      ).map(context =>
-//        new Context(
-//          line = context.line,
-//          column = context.column,
-//          content = context.content match {
-//            case "" => None
-//            case s => Some(Html(s))
-//          }
-//        )
-//      )
-//    )
-//  }
-
-//  implicit val writes: Writes[AssertionView] = new Writes[AssertionView] {
-//    import Json.toJson
-//    implicit def contextWrites = new Writes[AssertionView.Context] {
-//      def writes(context: AssertionView.Context): JsValue = {
-//        toJson(Map(
-//          "line" -> toJson(context.line),
-//          "column" -> toJson(context.column),
-//          "content" -> toJson(context.content)
-//        ))
-//      }
-//    }
-//    def writes(assertion: AssertionView): JsValue = {
-//      toJson(Map(
-//        "id" -> toJson(assertion.id),
-//        "assertor" -> toJson(assertion.assertor.id.toString),
-//        "severity" -> toJson(assertion.severity.toString),
-//        "title" -> toJson(assertion.title.toString),
-//        "description" -> assertion.description.map(d => toJson(d.toString)).getOrElse(JsNull),
-//        "occurrences" -> toJson(assertion.occurrences),
-//        "occurrencesLegend" -> toJson(assertion.occurrencesLegend),
-//        "contexts" -> toJson(assertion.contexts.take(50)),
-//        "contextsMore" -> toJson(scala.math.max(0, assertion.contexts.size - 50)),
-//        "resources" -> toJson(assertion.resources.map(_.toString).take(50)),
-//        "resourcesMore" -> toJson(scala.math.max(0, assertion.resources.size - 50))
-//      ))
-//    }
-//  }
+  implicit val writes: Writes[GroupedAssertionView] = new Writes[GroupedAssertionView] {
+    import Json.toJson
+    def writes(assertion: GroupedAssertionView): JsValue = {
+      toJson(Map(
+        "id" -> toJson(assertion.id),
+        "assertor" -> toJson(assertion.assertor.id.toString),
+        "severity" -> toJson(assertion.severity.toString),
+        "title" -> toJson(assertion.title.toString),
+        "occurrences" -> toJson(assertion.occurrences),
+        "occurrencesLegend" -> toJson(assertion.occurrencesLegend),
+        "resources" -> toJson(assertion.resources)(resourcesWrite),
+        "resourcesMore" -> toJson(scala.math.max(0, assertion.resources.size - 50))
+      ))
+    }
+  }
 
 }

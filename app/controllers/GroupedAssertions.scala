@@ -77,7 +77,7 @@ object GroupedAssertions extends VSController  {
     Enumerator.flatten(model.Job.getFor(jobId, Some(user)).map(
       job => job.groupedAssertionDatas()
     )) &> Enumeratee.map { iterator =>
-      toJson(iterator.map(GroupedAssertionView(jobId, _).toJson))
+      toJson(iterator.map(GroupedAssertionView(jobId, _)))
     }
   }
 
