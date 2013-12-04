@@ -14,13 +14,14 @@ case class GroupedAssertionView(
   jobId: JobId,
   data: GroupedAssertionData) extends Model {
 
-  def assertor: AssertorId = data.assertor
-  def lang: String = data.lang
-  def occurrences: Int = data.occurrences
+  val assertor: AssertorId = data.assertor
+  val lang: String = data.lang
+  val occurrences: Int = data.occurrences
   val resources: Seq[(URL, Int)] = data.resources.toSeq.sortBy(-_._2).take(50)
-  def severity: AssertionSeverity = data.severity
-  def title: Html = HtmlFormat.raw(data.title)
-  def id: String = data.id.toString
+  val resourcesCount = data.resources.size
+  val severity: AssertionSeverity = data.severity
+  val title: Html = HtmlFormat.raw(data.title)
+  val id: String = data.id.toString
 
   def toJson: JsValue = {
     Json.toJson(this)//.asInstanceOf[JsObject] +
@@ -36,7 +37,7 @@ case class GroupedAssertionView(
     //if (resources.size > 1) {
       val occ = if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
       else Messages("assertion.occurrences.count.one")
-      Messages("assertion.occurrences.count.resources", occ, resources.size)
+      Messages("assertion.occurrences.count.resources", occ, data.resources.size)
     /*} else {
       if (occurrences > 1) Messages("assertion.occurrences.count", occurrences)
       else Messages("assertion.occurrences.count.one")
@@ -76,7 +77,7 @@ object GroupedAssertionView {
         "occurrences" -> toJson(assertion.occurrences),
         "occurrencesLegend" -> toJson(assertion.occurrencesLegend),
         "resources" -> toJson(assertion.resources)(resourcesWrite),
-        "resourcesMore" -> toJson(scala.math.max(0, assertion.resources.size - 50))
+        "resourcesCount" -> toJson(scala.math.max(0, assertion.data.resources.size))
       ))
     }
   }

@@ -30,9 +30,9 @@
                 </a>
                 <br><a href="@url" data-resource="@url" class="external" target="_blank" title="@Messages("resource.external.link")">@url</a>
             </dd>}
-            @if(assertion.resources.size > 50){
+            @if(assertion.resourcesCount - assertion.resources.size > 0){
             <dd class="more">
-                <p>And <span data-resourcesMore="">@{assertion.resources.size - 50}</span> more</p>
+                <p>And <span data-resourcesCount="">@{assertion.resourcesCount - assertion.resources.size}</span> more</p>
             </dd>}}
 
             }}

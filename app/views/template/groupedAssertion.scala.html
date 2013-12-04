@@ -51,9 +51,9 @@
                 <br><a href="<%= resource.url %>" class="external" target="_blank" title="@Messages("resource.external.link")"><%= resource.url %></a>
             </dd>
             <%}); %>
-            <% if(resourcesMore > 0){ %>
+            <% if(resourcesCount - resources.length > 0){ %>
             <dd class="more">
-                <p>And <%= resourcesMore %> more</p>
+                <p>And <%= resourcesCount - resources.length %> more</p>
             </dd><% } %>}
 
         }}

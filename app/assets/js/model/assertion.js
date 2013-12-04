@@ -16,7 +16,7 @@ define(["util/Logger", "util/Util", "model/model"], function (Logger, Util, Mode
             contexts: [],
             resources: [],
             contextsMore: 0,
-            resourcesMore: 0
+            resourcesCount: 0
         },
 
         search: function (search) {
@@ -92,7 +92,7 @@ define(["util/Logger", "util/Util", "model/model"], function (Logger, Util, Mode
                 return { url: value('data-resource'), c: value('data-count') };
             }),
             contextsMore: parseInt(value('data-contextsMore'), 10) || 0,
-            resourcesMore: parseInt(value('data-resourcesMore'), 10) || 0
+            resourcesCount: parseInt(value('data-resourcesCount'), 10) || 0
         };
     };
 
