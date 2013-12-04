@@ -3,13 +3,13 @@
 @if(collection.classe == "list") {
 <section id="actions">
     <a href="@routes.Jobs.newJob" class="button">New job</a>
-    <form class="search" action="@routes.Jobs.index" method="get">
-        <label for="searchInput" class="offScreen">Filter results</label><input id="searchInput" name="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required=""/>
+    <form action="@routes.Jobs.index" method="get">
+        <label for="searchInput" class="offScreen">Filter results</label><input id="searchInput" name="search" class="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required=""/>
         @if(collection.params.search != None) {
         <a class="button clear" href="@collection.search().queryString">@Messages("job.button.clear")</a>}
         @collection.search("").queryParameters.map { param =>
         <input name="@param.name" type="hidden" value="@param.value"/>}
-        <button type="submit">@Messages("job.button.search")</button>
+        <button type="submit" class="filter">@Messages("job.button.search")</button>
     </form>
 </section>}
 

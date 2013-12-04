@@ -52,31 +52,30 @@
             case "actions" => {
             <ul class="reportTypes">
                 <% if(hasResources()) { %>
-                <li><a href="./resources" class="selected">By URL</a></li>
-                <li><a href="./messages">By Message</a></li>
+                <li><span class="selected" title="View the report grouped by URL (current)">By URL</span></li>
+                <li><a href="./messages" title="View the report grouped by message">By Message</a></li>
                 <% } else { %>
-                <li><a href="./resources" >By URL</a></li>
-                <li><a href="./messages" class="selected">By Message</a></li>
+                <li><a href="./resources"  title="View the report grouped by URL">By URL</a></li>
+                <li><span class="selected"  title="View the report grouped by message (current)">By Message</span></li>
                 <% } %>
             </ul>
-            <form method="post" class="jobAction">
-                <fieldset>
-                    <legend>Controls</legend>
-            <% if(model.isIdle()) { %>
-                <button class="run" name="action" value="run" data-reveal-id="choiceModal">@Messages("job.button.run")</button>
-            <% } else { %>
-                <button class="stop">@Messages("job.button.stop")</button>
-            <% } %>
-                <button class="delete" title="@Messages("job.button.delete.title")" data-reveal-id="choiceModal">@Messages("job.button.delete")</button>
-                    <% if (model.collection.options.assertions || model.collection.options.resources) { %>
-                        <input name="search" class="search cleared" type="text" placeholder="Filter results" title="Filter results" required value=""/>
-                        <button type="submit">@Messages("job.button.search")</button>
-                        <a class="button print">Print</a>
-                    <% } %>
-                    <% if (model.collection.options.assertions) { %><a class="button foldAllToggle">Expand all</a><% } %>
-                    }}
-                    </fieldset>
+            <form method="get" class="jobAction">
+                <% if (model.collection.options.assertions || model.collection.options.resources) { %>
+                    <input name="search" class="search cleared" type="text" placeholder="Filter results" title="Filter results" required value=""/>
+                    @**<button type="submit">@Messages("job.button.search")</button>**@
+                    <a class="button print">Print</a>
+                <% } %>
+                <% if (model.collection.options.assertions) { %><a class="button foldAllToggle">Expand all</a><% } %>
             </form>
+            <form method="post" class="jobAction">
+                <% if(model.isIdle()) { %>
+                <button class="run" name="action" value="run" data-reveal-id="choiceModal">@Messages("job.button.run")</button>
+                <% } else { %>
+                <button class="stop">@Messages("job.button.stop")</button>
+                <% } %>
+                <button class="delete" title="@Messages("job.button.delete.title")" data-reveal-id="choiceModal">@Messages("job.button.delete")</button>
+            </form>}
+            }
         </dd>}
 
         @**collection match {

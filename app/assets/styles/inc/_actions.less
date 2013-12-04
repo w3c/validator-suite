@@ -1,6 +1,8 @@
 
 #actions {
 
+    font-size: 1.2em;
+
     background-image: url('../images/texture.gif');
 
     legend {display: none;}
@@ -8,4 +10,50 @@
     form, fieldset {display: inline;}
 
     legend {display: none;}
+
+    button:hover, .button:hover, button:focus, .button:hover, .button:active {
+        background: #FFAD21 !important;
+    }
+
+    button, .button {
+        background: #F97F2D !important;
+        border-color: #C47800;
+        text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+        border-radius: 1px;
+
+        display: inline-block;
+        -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+        -webkit-transition: background-color 300ms ease-out;
+        -moz-transition: background-color 300ms ease-out;
+        transition: background-color 300ms ease-out;
+        border-style: solid;
+        border-width: 1px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: bold;
+        position: relative;
+        text-decoration: none;
+        text-align: center;
+        display: inline-block;
+        padding: 0.5em 1em;
+        font-size: 1em;
+        color:  white;
+
+        top: 0;
+        right: 0;
+        line-height: 1;
+    }
+
+    .search {
+        padding: 0.58em 0.5em;
+        box-shadow: 0 0 0;
+        border-radius: 0;
+    }
+
+    input, button, .button {
+        vertical-align: bottom;
+        margin-right: 0.5em;
+    }
+
 }

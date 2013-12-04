@@ -57,13 +57,27 @@
                 @defining(collection.get) { collection =>
                 <ul class="reportTypes">
                     @if(!collection.isGroupedBy("message")){
-                    <li><a href="./resources" class="selected">By URL</a></li>
-                    <li><a href="./messages">By Message</a></li>
+                    <li><span class="selected" title="View the report grouped by URL (current)">By URL</span></li>
+                    <li><a href="./messages" title="View the report grouped by message">By Message</a></li>
                     } else {
-                    <li><a href="./resources" >By URL</a></li>
-                    <li><a href="./messages" class="selected">By Message</a></li>
+                    <li><a href="./resources"  title="View the report grouped by URL">By URL</a></li>
+                    <li><span class="selected"  title="View the report grouped by message (current)">By Message</span></li>
                     }
                 </ul>
+                }}
+                @if(collection.isDefined) {
+                @defining(collection.get) { collection =>
+                <form method="get" class="jobAction">
+                    <fieldset>
+                        <legend>Filter results</legend>
+                        <input class="search" name="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>
+                        @if(collection.params.search != None) {
+                        <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
+                        @collection.search().goToPage(1).queryParameters.map { param =>
+                        <input name="@param.name" type="hidden" value="@param.value"/>}
+                        <button type="submit">@Messages("job.button.search")</button>
+                    </fieldset>
+                </form>
                 }}
                 <form action="@routes.Job.dispatcher(job.id)" method="post" class="jobAction">
                     @if(!collection.isDefined) {<input type="hidden" name="uri" value="@routes.Jobs.index"/>}
@@ -76,33 +90,6 @@
                         <button type="submit" name="action" value="delete" class="delete" title="@Messages("job.button.delete.title")">@Messages("job.button.delete")</button>
                     </fieldset>
                 </form>
-
-                @if(collection.isDefined) {
-                @defining(collection.get) { collection =>
-                <!--form class="group" action="@routes.Job.dispatcher(job.id)" method="get">
-                    <fieldset class="dropdown" tabindex="0">
-                        <legend>Report by</legend>
-                        <input name="group" type="radio" value="resource" id="resource" @if(!collection.isGroupedBy("message")){checked}/>
-                        <label for="resource">Group by resource</label>
-                        <input name="group" type="radio" value="message" id="message" @if(collection.isGroupedBy("message")){checked}/>
-                        <label for="message">Group by message</label>
-                        @collection.params.search.map { search =>
-                        <input name="search" type="hidden" value="@search"/>}
-                    </fieldset>
-                    <button type="submit">Go</button>
-                </form-->
-                <form method="get">
-                    <fieldset>
-                        <legend>Filter results</legend>
-                        <input class="search" name="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>
-                        @if(collection.params.search != None) {
-                        <a class="button clear" href="@collection.search().goToPage(1).queryString">@Messages("job.button.clear")</a>}
-                        @collection.search().goToPage(1).queryParameters.map { param =>
-                        <input name="@param.name" type="hidden" value="@param.value"/>}
-                        <button type="submit">@Messages("job.button.search")</button>
-                    </fieldset>
-                </form>
-                }}
               }
             }
             </dd>}

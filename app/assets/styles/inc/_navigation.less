@@ -35,7 +35,7 @@
 
 /* Crumb nav */
 #crumbs {
-    font-size: 0.9em;
+    font-size: 1.1em;
     padding: 15px 10px 0 10px;
 
     h1 {
@@ -52,7 +52,12 @@
         display:inline;
     }
 }
-#crumbs li:not(:last-child):after {content: " > "}
+#crumbs li:not(:last-child):after {
+    content: " > ";
+    font-weight: bold;
+    display: inline-block;
+    padding: 0 0.3em 0 0.8em;
+}
 #crumbs a {
     color: #222;
     text-decoration: underline;
