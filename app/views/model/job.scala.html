@@ -25,7 +25,7 @@
                     <input type="hidden" name="uri" value="@routes.Jobs.index"/>
                     @job.status match {
                     case JobDataRunning(_) => {<button type="submit" name="action" value="stop" class="stop">@Messages("job.button.stop")</button>}
-                    case JobDataIdle       => {<button type="submit" name="action" value="run" class="run">@Messages("job.button.run")</button>}
+                    case JobDataIdle       => {<button type="submit" name="action" value="run" class="run" title="@Messages("job.button.run.title")">@Messages("job.button.run")</button>}
                     }
                 </form>}}
 

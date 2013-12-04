@@ -85,6 +85,7 @@ resources.button.revalidate=Revalidate
 
 job.button.stop=Cancel
 job.button.run=Run
+job.button.run.title=Re-run this job
 job.button.delete=Delete
 job.button.delete.title=Delete this job
 job.button.clear=Clear

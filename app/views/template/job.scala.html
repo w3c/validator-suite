@@ -18,7 +18,7 @@
             <% if(isIdle) { %>
             <form method="post">
                 <input type="hidden" name="action" value="run">
-                <button class="run" type="submit" data-reveal-id="choiceModal">@Messages("job.button.run")</button>
+                <button class="run" type="submit" data-reveal-id="choiceModal" title="@Messages("job.button.run.title")">@Messages("job.button.run")</button>
             </form>
             <% } else { %>
             <button class="stop">@Messages("job.button.stop")</button>
@@ -69,7 +69,7 @@
             </form>
             <form method="post" class="jobAction">
                 <% if(model.isIdle()) { %>
-                <button class="run" name="action" value="run" data-reveal-id="choiceModal">@Messages("job.button.run")</button>
+                <button class="run" name="action" value="run" data-reveal-id="choiceModal" title="@Messages("job.button.run.title")">@Messages("job.button.run")</button>
                 <% } else { %>
                 <button class="stop">@Messages("job.button.stop")</button>
                 <% } %>
