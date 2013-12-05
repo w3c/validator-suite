@@ -6,24 +6,15 @@ import org.w3.vs._
 import org.w3.vs.model._
 import play.Logger.ALogger
 import play.api.Play._
-import play.api.cache.Cache
 import play.api.i18n.Messages
 import play.api.libs.iteratee.{Enumerator, Iteratee}
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.collection.mutable.LinkedHashMap
-import org.w3.vs.exception.UnknownJob
-import play.api.mvc.AsyncResult
-import play.api.mvc.Call
-import org.apache.commons.codec.binary.Base64.decodeBase64
-import org.mindrot.jbcrypt.BCrypt
-import play.api.http.{MimeTypes, MediaRange}
-import com.codahale.metrics.MetricRegistry
+import play.api.http.MimeTypes
 import play.api.mvc.Accepting
 import org.w3.vs.exception.UnknownJob
-import scala.Some
 import org.w3.vs.exception.Unauthenticated
 import org.w3.vs.view.Forms._
 
