@@ -553,8 +553,8 @@ object Job {
       user match {
         case Some(user) if user.isRoot => job
         case Some(user) if job.isPublic => job
-        case Some(user) if !user.owns(job) => throw AccessNotAllowed
-        case None if !job.isPublic => throw AccessNotAllowed
+        case Some(user) if !user.owns(job) => throw AccessNotAllowed()
+        case None if !job.isPublic => throw AccessNotAllowed()
         case _ => job
       }
 

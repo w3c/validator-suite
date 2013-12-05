@@ -70,7 +70,7 @@ trait VSController extends Controller {
     Async {
       Timer(name) {
         f(req) recover {
-          case AccessNotAllowed => Forbidden(views.html.error._403())
+          case AccessNotAllowed(msg) => Forbidden(views.html.error._403(msg))
           case UnknownJob(_) => Global.onHandlerNotFound(req)
         }
       }
@@ -103,7 +103,7 @@ trait VSController extends Controller {
     Authenticated { user =>
       user match {
         case user if user.isRoot => f(req)(user)
-        case _ => throw AccessNotAllowed
+        case _ => throw AccessNotAllowed()
       }
     }
   }

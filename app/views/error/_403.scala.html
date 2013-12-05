@@ -1,4 +1,4 @@
-@()(implicit req: RequestHeader)
+@(msg: String = AccessNotAllowed().msg)(implicit req: RequestHeader)
 
 @front("W3C Validator Suite - Forbidden", withModals = false, js = false) {
 
@@ -6,7 +6,7 @@
     <div class="column">
         <h1>Forbidden</h1>
         <p>
-            You do not have permission to access the requested resource.
+            @msg
         </p>
         <br/>
     </div>

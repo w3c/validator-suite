@@ -10,6 +10,7 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.w3.vs.view.Forms._
+import play.api.{Mode, Play}
 
 object Purchase extends VSController {
 
@@ -105,7 +106,12 @@ object Purchase extends VSController {
     }
   }*/
 
-  def redirectToStore(product: CreditPlan, id: UserId) = Redirect(getStoreUrl(product, id))
+  def redirectToStore(product: CreditPlan, id: UserId)(implicit req: RequestHeader) = {
+    Play.current.mode match {
+      case Mode.Dev => throw new AccessNotAllowed("Purchase have been disabled on the development instance")
+      case _ => Redirect(getStoreUrl(product, id))
+    }
+  }
 
   /*def redirectToStore(product: OneTimePlan, id: JobId) =
     Redirect(getStoreUrl(product, id))*/

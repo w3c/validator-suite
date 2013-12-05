@@ -1,0 +1,14 @@
+@()
+
+@play.api.Play.current.mode match {
+    case play.api.Mode.Dev => {
+    <div class="row messages">
+        <div class="columns">
+            <p class="alert-box warn message">
+            This is the development instance of the Validator-Suite and should be used for testing only. The official
+            instance is available at the following address: <a href="https://validator-suite.w3.org">https://validator-suite.w3.org</a>
+            </p>
+        </div>
+    </div>}
+    case _ => {}
+}
