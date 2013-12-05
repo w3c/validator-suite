@@ -77,7 +77,7 @@ object Helper {
     val keys: Iterator[String] = messages.getKeys
     val testimonials: Iterable[Testimonial] = keys.toSeq.groupBy(key => key.split("""\.""")(0)).map{ case (prefix, keys) =>
       Testimonial(
-        author = messages.getString(keys(keys.indexOf(s"${prefix}.author"))),
+        author = messages.getString(keys(keys.indexOf(s"${prefix}.cite"))),
         message = messages.getString(keys(keys.indexOf(s"${prefix}.message")))
       )
     }

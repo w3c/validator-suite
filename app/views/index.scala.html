@@ -68,34 +68,13 @@
         <h1>Testimonials</h1>
     </div>
     @Helper.testimonials.map{ case testimonial =>
-        <div class="columns large-4">
+    <div class="columns large-4">
+        <blockquote>
             <p class="msg">@testimonial.message</p>
-            <p class="author">@testimonial.author</p>
-        </div>
+            <cite class="author">@HtmlFormat.raw(testimonial.author)</cite>
+        </blockquote>
+    </div>
     }
-    <!--<div class="columns large-4">
-        <p class="msg">
-            I have used your free validator since day one. When I saw this new service,
-            it became clear how I could do an entire website with one click!
-        </p>
-        <p class="author">Web designer</p>
-    </div>
-    <div class="columns large-4">
-        <p class="msg">
-            I'd like to say how important your service has become to my business! With
-            today's online web-authoring services, software and service bureaus that
-            make publishing websites "easy" for the novice, it's unsettling to see how
-            many do not even know there are standards! I'm proud to be able to have
-            potential clients see that my designed websites are to your standards.
-        </p>
-        <p class="author">Web designer</p>
-    </div>
-    <div class="columns large-4">
-        <p class="msg">
-            The W3C Validation is vital to my success. Case in point: A friend told me, "I like viewing your web sites. They work."
-        </p>
-        <p class="author">Web developer</p>
-    </div>-->
 </div>
 
 <hr/>
