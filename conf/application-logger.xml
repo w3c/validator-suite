@@ -5,7 +5,7 @@
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${application.home}/logs/application.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${application.home}/logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${application.home}/logs/application.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>%date{ISO8601} [%level] %logger{15} - %message%n%xException{40}</pattern>
@@ -15,7 +15,7 @@
     <appender name="assertors" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${application.home}/logs/assertors.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${application.home}/logs/assertors.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${application.home}/logs/assertors.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>%date [%level] %message%n</pattern>
@@ -25,7 +25,7 @@
     <appender name="users" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${application.home}/logs/users.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${application.home}/logs/users.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${application.home}/logs/users.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>%date [%level] %message%n</pattern>
@@ -35,7 +35,7 @@
     <appender name="jobs" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${application.home}/logs/jobs.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${application.home}/logs/jobs.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${application.home}/logs/jobs.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>%date [%level] %message\n</pattern>
@@ -45,7 +45,7 @@
     <appender name="ORDERS" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${application.home}/logs/orders.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${application.home}/logs/orders.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${application.home}/logs/orders.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>%date [%level] %message%n%xException{40}</pattern>
