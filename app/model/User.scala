@@ -132,23 +132,20 @@ object User {
     * formula ``credits = credits + creditsDiff`` (you can use
     * negative number) */
   def updateCredits(userId: UserId, creditsDiff: Int, expireDaysIncrement: Option[Int] = None)(implicit conf: ValidatorSuite with Database): Future[User] = {
-    // either the passed parameter, or the "application.expireDate.plusDaysOnCredits" configuration option, or 90 days
-    val daysToIncrement = expireDaysIncrement.getOrElse(conf.config.getInt("application.expireDate.plusDaysOnCredits").getOrElse(90))
     get(userId) flatMap { case user =>
       update(user.copy(
         credits = user.credits + creditsDiff,
-        expireDate = user.expireDate.plusDays(daysToIncrement)
+        expireDate = newCreditsExpiration(expireDaysIncrement)
       ))
     }
   }
 
-  /*def updateExpireDate(userId: UserId)(implicit conf: Database): Future[Unit] = {
-    get(userId) flatMap { case user =>
-      update(user.copy(
-        expireDate = user.expireDate.plusMonths(expireCreditsDelay)
-      ))
-    }
-  }*/
+  // New credits expiration date: today + either the passed parameter if defined, or the
+  // "application.expireDate.plusDaysOnCredits" configuration value in days, or 90 days
+  def newCreditsExpiration(daysToIncrement: Option[Int] = None)(implicit conf: ValidatorSuite): DateTime = {
+    lazy val confDaysToIncrement = conf.config.getInt("application.expireDate.plusDaysOnCredits")
+    DateMidnight.now(DateTimeZone.UTC).plusDays(daysToIncrement.orElse(confDaysToIncrement).getOrElse(90)).toDateTime
+  }
 
   val logger = play.Logger.of(classOf[User])
 
@@ -247,7 +244,6 @@ object User {
     optedIn: Boolean = false,
     isSubscriber: Boolean = false,
     isRoot: Boolean = false)(implicit vs: ValidatorSuite): User = {
-    val daysToIncrement = vs.config.getInt("application.expireDate.plusDaysOnCreate").getOrElse(90)
     val hash = BCrypt.hashpw(password, BCrypt.gensalt())
     val user = new User(
       id = UserId(),
@@ -259,7 +255,7 @@ object User {
       isRoot = isRoot,
       isSubscriber = isSubscriber,
       registrationDate = Some(DateTime.now(DateTimeZone.UTC)),
-      expireDate = DateMidnight.now(DateTimeZone.UTC).plusDays(daysToIncrement).toDateTime)
+      expireDate = newCreditsExpiration())
     user
   }
 

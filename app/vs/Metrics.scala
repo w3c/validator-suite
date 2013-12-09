@@ -123,7 +123,6 @@ object Metrics {
 
     def purchased(plan: Plan) {
       metrics.meter(s"purchases.plan.${plan.fastSpringKey}").mark()
-      metrics.meter(s"purchases.eurosEquiv").mark(plan.priceInEuros)
       plan match {
         case p: CreditPlan =>
           metrics.meter(s"purchases.credits").mark(p.credits)

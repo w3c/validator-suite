@@ -5,8 +5,6 @@ sealed trait Plan {
   def key: String
   // Fastspring product key
   def fastSpringKey: String
-  // Price in euros (only used by graphite for now)
-  def priceInEuros: Int
 }
 
 object Plan {
@@ -41,28 +39,24 @@ object CreditPlan {
     val credits: Int = 200
     val fastSpringKey: String = "credits-tiny"
     val key: String = "tiny"
-    val priceInEuros: Int = 19
   }
 
   case object Small extends CreditPlan {
     val credits: Int = 1000
     val fastSpringKey: String = "credits-small"
     val key: String = "small"
-    val priceInEuros: Int = 49
   }
 
   case object Medium extends CreditPlan {
     val credits: Int = 4000
     val fastSpringKey: String = "credits-medium"
     val key: String = "medium"
-    val priceInEuros: Int = 99
   }
 
   case object Large extends CreditPlan {
     val credits: Int = 20000
     val fastSpringKey: String = "credits-large"
     val key: String = "large"
-    val priceInEuros: Int = 199
   }
 
   def fromString(s: String): Option[CreditPlan] = {
