@@ -40,6 +40,7 @@ object MongoStore {
       _ <- User.collection.create()
       _ <- Job.collection.create()
       _ <- Run.collection.create()
+      _ <- Coupon.collection.create()
     } yield ()
   }
 

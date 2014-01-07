@@ -109,6 +109,8 @@ class FormatsTest extends VSTest {
   val jobData =
     JobData(JobId(), "foo", URL("http://example.com"), JobDataRunning(2719), Some(DateTime.now(DateTimeZone.UTC)), 1, 2, 3, 4, 5)
 
+  val coupon = Coupon("CouponId", "CampaignId", Some("AT&T Coupon"), 50)
+
   "all domain must be serializable and then deserializable" in {
     toJson(strategy).as[Strategy] must be(strategy)
     toJson(jobStatus).as[JobStatus] must be(jobStatus)
@@ -136,6 +138,7 @@ class FormatsTest extends VSTest {
     toJson(userJobId).as[(UserId, JobId)] must be(userJobId)
     toJson(userJobRunId).as[(UserId, JobId, RunId)] must be(userJobRunId)
     toJson(jobData).as[JobData] must be(jobData)
+    toJson(coupon).as[Coupon] must be(coupon)
   }
 
   
