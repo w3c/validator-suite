@@ -7,7 +7,7 @@ object Headers {
 
   val DEFAULT_CHARSET = "UTF-8"
 
-  val CONTENT_TYPE_REGEX = """^(\w+?/\w+?)(;.*)?$""".r
+  val CONTENT_TYPE_REGEX = """^(\w*/\w*(\+\w+)?)(;.*)?$""".r
 
   val CHARSET_REGEX = """charset=(.*)$""".r
 
