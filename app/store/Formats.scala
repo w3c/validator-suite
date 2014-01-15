@@ -444,4 +444,14 @@ object Formats {
     (__ \ 'expireDate).format[DateTime]
   )(User.apply _, unlift(User.unapply _))
 
+  implicit val CouponFormat: Format[Coupon] = (
+    (__ \ 'code).format[String] and
+    (__ \ 'campaign).format[String] and
+    (__ \ 'description).formatNullable[String] and
+    (__ \ 'credits).format[Int] and
+    (__ \ 'expirationDate).format[DateTime] and
+    (__ \ 'useDate).formatNullable[DateTime] and
+    (__ \ 'usedBy).formatNullable[UserId]
+  )(Coupon.apply, unlift(Coupon.unapply))
+
 }

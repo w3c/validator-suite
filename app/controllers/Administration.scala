@@ -3,7 +3,7 @@ package controllers
 import org.w3.vs.controllers._
 import play.api.mvc.WebSocket
 import org.w3.vs.model
-import org.w3.vs.model.{JobId, UserId}
+import model.{JobId, UserId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._
 import play.api.libs.json.Json.toJson
@@ -18,67 +18,8 @@ object Administration extends VSController {
 
   val logger = play.Logger.of("controllers.Administration")
 
-  def index: ActionA = RootAction { implicit req => root =>
-    Ok(views.html.admin(root))
-  }
-
   def console: ActionA = RootAction { implicit req => root =>
     Ok(views.html.console(root))
-  }
-
-  def jobsPost(): ActionA = RootAction { implicit req => user =>
-    // Really don't like that lenghty code to get just a few parameters from the body. Consider a helper function
-    /*val (jobId, action) = (for {
-      body <- req.body.asFormUrlEncoded
-      param1 <- body.get("jobId")
-      param2 <- body.get("action")
-      jobId <- param1.headOption
-      action <- param2.headOption
-    } yield (jobId, action)).get
-
-    for {
-      job <- org.w3.vs.model.Job.get(JobId(jobId))
-      msg <- {
-        action match {
-          case "delete" => job.delete().map(_ => "jobs.deleted")
-          case "reset" => job.reset().map(_ => "jobs.reset")
-          case "run" => job.run().map(_ => "jobs.run")
-        }
-      }
-    } yield {
-      SeeOther(routes.Administration.index.url).flashing(
-        ("success" -> Messages(msg, jobId + " (" + job.name + ")"))
-      )
-    }*/ ???
-  }
-
-  def usersPost(): ActionA = RootAction { implicit req => root =>
-    /*val (email, isSubscriber) = (for {
-      body <- req.body.asFormUrlEncoded
-      email <- body.get("email").get.headOption
-      isSubscriber <- body.get("userType").get.headOption.map {
-        _ match {
-          case "subscriber" => true
-          case _ => false
-        }
-      }
-    } yield (email, isSubscriber)).get
-
-    (for {
-      user <- org.w3.vs.model.User.getByEmail(email)
-      _ <- {
-        Cache.remove(email)
-        User.update(user.copy(isSubscriber = isSubscriber))
-      }
-    } yield {
-      SeeOther(routes.Administration.index.url).flashing(
-        ("success" -> s"User ${email} succesfully saved with account type subscriber=${isSubscriber}")
-      )
-    }) recover {
-      case UnknownUser(email) => {
-        BadRequest(views.html.admin(root = root, messages = List(("error" -> s"Unknown user with email: ${email}"))))
-      }
-    }*/ ???
   }
 
   def socket(): WebSocket[String] = WebSocket.using[String] { implicit reqHeader =>
@@ -167,49 +108,85 @@ object Administration extends VSController {
     args match {
       case Array("?") | Array("help") =>
         """Available commands:
+          |    job <jobId>        - the job with given id if any
           |    jobs <regex>        - the list of jobs that matched the given regex. Examples:
           |       jobs                   All jobs
           |       jobs \.*               All jobs
-          |       jobs <jobId>           The job with given id if any
           |       jobs Public            Public jobs
           |       jobs 250.*Never        All 250 pages jobs that never started
           |       jobs Anonym.*Never     Anonymous jobs that nerver started
           |       jobs Running           Running jobs
+          |    user <userId>       - the user with given id if any
           |    users <regex>       - the list of users that matched the given regex. Examples:
           |       users                  All users
-          |       users <userId>         The user with given id if any
           |       users (?i)thomas       Users that include "thomas" case insensitively
           |       users ROOT             Root users
           |       users Opted-In         Users that opted-in for e-mailing
-          |    db-add-user <name> <email> <password> <credits> - register a new user
-          |    db-add-credits <email> <nb> - add nb credits to user with given email
-          |    db-set-root <email>         - sets the user with given email as a root
-          |    db-set-password <email> <pass> - changes a user password
-          |    db-add-roots                - adds all root users to the current db. Roots are defined in Main.scala.
-          |    db-delete-user <userId>     - delete user with given userId
-          |    db-reset                    - resets the database with default data (only available in Dev mode)
-          |    emails                      - comma-separated list of all opted-in emails""".stripMargin
+          |    user-create <name> <email> <password> <credits> - register a new user
+          |    user-delete <userId>          - delete user with given userId
+          |    user-add-credits <email> <nb> - add nb credits to user with given email
+          |    user-set-root <email>         - sets the user with given email as a root
+          |    user-set-password <email> <pass> - changes a user password
+          |    admin-add-roots               - adds all root users to the current db. Roots are defined in Main.scala.
+          |    db-reset                      - resets the database with default data (only available in Dev mode)
+          |    emails                        - comma-separated list of all opted-in emails
+          |    coupons [regex]
+          |    coupon [code]
+          |    coupon-create [code] [campaign] [credits]
+          |    coupon-create [code] [campaign] [credits] [description] [validityInDays|expirationDate]
+          |    coupon-delete [code]
+          |    coupon-redeem [code] [userId]
+          |    """.stripMargin
+
+      case Array("coupons") =>
+        val coupons = model.Coupon.getAll().getOrFail()
+        displayResults(coupons.map(_.compactString))
+
+      case Array("coupons", regex(reg)) =>
+        val coupons = model.Coupon.getAll().getOrFail()
+        val filtered = coupons.filter(coupon => reg.findFirstIn(coupon.compactString).isDefined).map(_.compactString)
+        displayResults(filtered)
+
+      case Array("coupon", code) =>
+        val coupon = model.Coupon.get(code).getOrFail()
+        coupon.compactString
+
+      case Array("coupon-create", code, campaign, int(credits)) =>
+        val coupon = model.Coupon(code, campaign, credits).save().getOrFail()
+        coupon.compactString
+
+      case Array("coupon-create", code, campaign, int(credits), description, validity) =>
+        val coupon = model.Coupon(code, campaign, credits, description, validity).save().getOrFail()
+        coupon.compactString
+
+      case Array("coupon-delete", code) =>
+        model.Coupon.delete(code).getOrFail()
+        s"coupon ${code} deleted"
+
+      case Array("coupon-redeem", code, id(userId)) =>
+        val (user, redeemed) = model.Coupon.redeem(code, UserId(userId)).getOrFail()
+        s"coupon ${code} redeemed\n" + redeemed.compactString
+
+      case Array("job", id(jobId)) =>
+        val job = model.Job.get(JobId(jobId)).getOrFail()
+        job.compactString
 
       case Array("jobs") =>
         val jobs = model.Job.getAll().getOrFail()
         displayResults(jobs.map(_.compactString))
-
-      case Array("jobs", id(jobId)) =>
-        val job = model.Job.get(JobId(jobId)).getOrFail()
-        job.compactString
 
       case Array("jobs", regex(reg)) =>
         val jobs = model.Job.getAll().getOrFail()
         val filtered = jobs.filter(job => reg.findFirstIn(job.compactString).isDefined).map(_.compactString)
         displayResults(filtered)
 
+      case Array("user", id(userId)) =>
+        val user = model.User.get(UserId(userId)).getOrFail()
+        user.compactString
+
       case Array("users") =>
         val users = model.User.getAll().getOrFail()
         displayResults(users.map(_.compactString))
-
-      case Array("users", id(userId)) =>
-        val user = model.User.get(UserId(userId)).getOrFail()
-        user.compactString
 
       case Array("users", regex(reg)) =>
         val users = model.User.getAll().getOrFail()
@@ -234,7 +211,7 @@ object Administration extends VSController {
             t.getMessage
         }*/
 
-      case Array("db-add-user", name, email, password, int(credits)) =>
+      case Array("user-create", name, email, password, int(credits)) =>
         val user = model.User.register(name, email, password, credits, isSubscriber = false, isRoot = false).getOrFail()
         user.compactString
 
@@ -242,14 +219,14 @@ object Administration extends VSController {
         org.w3.vs.Main.defaultData()
         "done"
 
-      case Array("db-add-roots") =>
+      case Array("admin-add-roots") =>
         val roots: Iterable[String] = org.w3.vs.Main.addRootUsers().getOrFail()
         roots.mkString("\n")
 
-      case Array("db-set-root", email) =>
+      case Array("user-set-root", email) =>
         org.w3.vs.Main.setRootUser(email).getOrFail()
 
-      case Array("db-set-password", email, password) =>
+      case Array("user-set-password", email, password) =>
         import org.mindrot.jbcrypt.BCrypt
         model.User.getByEmail(email).flatMap( user =>
           user.isRoot match {
@@ -258,7 +235,7 @@ object Administration extends VSController {
           }
         ).getOrFail()
 
-      case Array("db-add-credits", email, int(credits)) =>
+      case Array("user-add-credits", email, int(credits)) =>
         (for {
           user <- model.User.getByEmail(email)
           saved <- model.User.updateCredits(user.id, credits)
@@ -268,7 +245,7 @@ object Administration extends VSController {
           s"${credits} credits added to user ${user.email} (${user.id}})"
         }).getOrFail()
 
-      case Array("db-delete-user", id(userId)) =>
+      case Array("user-delete", id(userId)) =>
         model.User.delete(UserId(userId)).getOrFail()
         s"user ${userId} deleted"
 

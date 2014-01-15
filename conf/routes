@@ -1,4 +1,5 @@
 # Routes
+# Routes
 # This file defines all application routes (Higher priority routes first)
 
 # Application
@@ -66,8 +67,6 @@ GET     /jobs/:job/resources/socket/:socket         controllers.Resources.socket
 GET     /admin                                      controllers.Administration.console()
 #GET     /admin/console                              controllers.Administration.console()
 GET     /admin/console/socket                       controllers.Administration.socket()
-POST    /admin/jobs                                 controllers.Administration.jobsPost()
-POST    /admin/users                                controllers.Administration.usersPost()
 
 # Error pages
 GET     /error/400                                  controllers.Error.error400()
