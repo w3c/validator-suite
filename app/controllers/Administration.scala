@@ -2,7 +2,7 @@ package controllers
 
 import org.w3.vs.controllers._
 import play.api.mvc.WebSocket
-import org.w3.vs.model
+import org.w3.vs.{Main, model}
 import model.{JobId, UserId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._
@@ -13,6 +13,7 @@ import org.w3.vs.store.Formats._
 import reactivemongo.bson.BSONObjectID
 import scala.concurrent.Future
 import concurrent.duration.FiniteDuration
+import org.w3.vs.store.MongoStore
 
 object Administration extends VSController {
 
@@ -129,6 +130,7 @@ object Administration extends VSController {
           |    user-set-password <email> <pass> - changes a user password
           |    admin-add-roots               - adds all root users to the current db. Roots are defined in Main.scala.
           |    db-reset                      - resets the database with default data (only available in Dev mode)
+          |    db-indexes                    - recreate database indexes
           |    emails                        - comma-separated list of all opted-in emails
           |    coupons [regex]
           |    coupon [code]
@@ -216,8 +218,13 @@ object Administration extends VSController {
         user.compactString
 
       case Array("db-reset") if vs.mode == Mode.Dev =>
-        org.w3.vs.Main.defaultData()
+        MongoStore.reInitializeDb().getOrFail()
+        Main.defaultData()
         "done"
+
+      case Array("db-indexes") =>
+        MongoStore.createIndexes().getOrFail()
+        s"indexes created"
 
       case Array("admin-add-roots") =>
         val roots: Iterable[String] = org.w3.vs.Main.addRootUsers().getOrFail()

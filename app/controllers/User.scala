@@ -16,6 +16,7 @@ object User extends VSController {
     Ok(views.html.profile(
       userForm = AccountForm(user),
       passwordForm = PasswordForm,
+      couponForm = CouponForm,
       user = user))
   }
 
@@ -24,7 +25,7 @@ object User extends VSController {
       form => {
         Metrics.form.editAccountFailure()
         render {
-          case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm, user))
+          case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm, CouponForm, user))
           case Accepts.Json() => BadRequest
         }
       },
@@ -46,7 +47,7 @@ object User extends VSController {
     PasswordForm.bindFromRequest().fold (
       formWithErrors => {
         Metrics.form.editPasswordFailure()
-        BadRequest(views.html.profile(AccountForm(user), formWithErrors, user))
+        BadRequest(views.html.profile(AccountForm(user), formWithErrors, CouponForm, user))
       },
       password => {
         (for {
@@ -57,7 +58,7 @@ object User extends VSController {
           SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.password.updated")))
         }) recover {
           case UnauthorizedException(email) =>
-            BadRequest(views.html.profile(AccountForm(user), PasswordForm, user, List("error" -> Messages("application.invalidPassword"))))
+            BadRequest(views.html.profile(AccountForm(user), PasswordForm, CouponForm, user, List("error" -> Messages("application.invalidPassword"))))
         }
       }
     )

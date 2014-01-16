@@ -10,10 +10,16 @@ class Id(val oid: BSONObjectID = BSONObjectID.generate) {
   override def toString = oid.stringify
 }
 
+case class CouponId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
 case class JobId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
 case class RunId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
 case class UserId (override val oid: BSONObjectID = BSONObjectID.generate) extends Id(oid)
 case class AssertorId (id: String) { override def toString = id }
+
+object CouponId {
+  def apply(s: String): CouponId = CouponId(BSONObjectID(s))
+  implicit val equal = Equal.equalA[CouponId]
+}
 
 object JobId {
   def apply(s: String): JobId = JobId(BSONObjectID(s))

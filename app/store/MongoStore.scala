@@ -62,6 +62,9 @@ object MongoStore {
       _ <- runIndexesManager.ensure(Index(
         name = Some("by-runId"),
         key = List("runId" -> Ascending)))
+      _ <- indexesManager.onCollection(Coupon.collection.name).ensure(Index(
+        name = Some("by-code"),
+        key = List("code" -> Ascending), unique = true))
     } yield ()
   }
 

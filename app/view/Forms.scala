@@ -53,6 +53,7 @@ object Forms {
     email: String = "",
     password: String = "",
     password2: String = "",
+    coupon: Option[String] = None,
     optedIn: Boolean = false,
     redirectUri: String = routes.Jobs.index().url)
 
@@ -62,6 +63,7 @@ object Forms {
       "r_email" -> email,
       "r_password" -> nonEmptyText(minLength = 6),
       "r_password2" -> text,
+      "coupon" -> optional(text),
       "optedIn" -> of[Boolean],
       "uri" -> text
     )(Register.apply)(Register.unapply)
@@ -98,6 +100,17 @@ object Forms {
       name = user.name,
       email = user.email,
       optedIn = user.optedIn
+    )
+  )
+
+  /**
+   * Coupon
+   */
+  //case class CouponF(id: String)
+
+  val CouponForm: Form[String] = Form(
+    single(
+      "coupon" -> nonEmptyText
     )
   )
 

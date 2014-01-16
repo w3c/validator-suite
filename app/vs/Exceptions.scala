@@ -26,6 +26,9 @@ case class Unauthenticated(email: String) extends Exception("Unauthenticated") w
 
 case class DuplicatedEmail(email: String) extends Exception(s"${email} already in use")
 
+class CouponException(msg: String) extends Exception(msg)
+class DuplicateCouponException() extends CouponException("coupon.exception.duplicate")
+
 //case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")
 
 case class StoreException(t: Throwable) extends Exception("StoreException") //with SuiteException

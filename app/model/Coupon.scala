@@ -25,7 +25,7 @@ import scala.util.{Success, Failure, Try}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ops => _, _}
 import scala.concurrent.ExecutionContext.Implicits.global
-import exception.{DuplicatedEmail, AccessNotAllowed, UnknownJob}
+import exception.{DuplicateCouponException, DuplicatedEmail, AccessNotAllowed, UnknownJob}
 import org.w3.vs.view.model.JobView
 import scalaz.Scalaz._
 import play.modules.reactivemongo.json.ImplicitBSONHandlers._
@@ -38,6 +38,7 @@ import Json.toJson
 import org.w3.vs.store.Formats._
 
 case class Coupon(
+  id: CouponId = CouponId(),
   code: String,
   campaign: String,
   description: Option[String],
@@ -53,7 +54,7 @@ case class Coupon(
   }
 
   def save()(implicit conf: Database): Future[Coupon] = {
-    Coupon.save(this)
+    Coupon.save(this).map(_ => this)
   }
 
   def compactString = s"${code} - ${campaign} - Credits: ${credits} - ${expirationDate} - ${useDate} - ${usedBy}"
@@ -73,7 +74,7 @@ object Coupon {
     code: String,
     campaign: String,
     credits: Int): Coupon = {
-    new Coupon(code, campaign, None, credits)
+    new Coupon(code = code, campaign = campaign, description = None, credits = credits)
   }
 
   def apply(
@@ -82,12 +83,15 @@ object Coupon {
     credits: Int,
     description: String,
     validity: String): Coupon = {
-    new Coupon(code, campaign, Some(description), credits) // TODO
+    new Coupon(code = code, campaign = campaign, description = Some(description), credits = credits) // TODO
   }
 
   def redeem(couponCode: String, userId: UserId)(implicit vs: ValidatorSuite with Database): Future[(User, Coupon)] = {
     for {
-      coupon <- get(couponCode)
+      coupon <- get(couponCode).map{ coupon =>
+        if (coupon.useDate.isDefined) { throw new Exception() }
+        coupon
+      }
       user <- model.User.updateCredits(userId, coupon.credits)
       redeemed <- coupon.copy(useDate = Some(DateTime.now(DateTimeZone.UTC)), usedBy = Some(userId)).save()
     } yield (user, redeemed)
@@ -99,9 +103,9 @@ object Coupon {
   def getAll()(implicit conf: Database): Future[List[Coupon]] = {
     val cursor = collection.find(Json.obj()).cursor[JsValue]
     cursor.toList() map {
-      list => list flatMap { job =>
+      list => list flatMap { coupon =>
         try {
-          Some(job.as[Coupon])
+          Some(coupon.as[Coupon])
         } catch { case t: Throwable =>
           None
         }
@@ -118,10 +122,11 @@ object Coupon {
     }
   }
 
-  def save(coupon: Coupon)(implicit conf: Database): Future[Coupon] = {
+  def save(coupon: Coupon)(implicit conf: Database): Future[Unit] = {
     val couponJson = toJson(coupon)
-    collection.insert(couponJson) map {
-      lastError => coupon
+    import reactivemongo.core.commands.LastError
+    collection.insert(couponJson, writeConcern = journalCommit) map { lastError => () } recover {
+      case LastError(_, _, Some(11000), _, _, _, _) => throw new DuplicateCouponException()
     }
   }
 

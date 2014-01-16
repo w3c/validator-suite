@@ -7,6 +7,7 @@ import play.api.i18n._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.w3.vs.Emails
 import org.w3.vs.view.Forms._
+import concurrent.Future
 
 object Application extends VSController {
   
@@ -82,6 +83,9 @@ object Application extends VSController {
           password = register.password,
           optedIn = register.optedIn,
           isSubscriber = false)
+        _ <- register.coupon.map{ coupon =>
+          model.Coupon.redeem(coupon, user.id)
+        }.getOrElse(Future.successful())
       } yield {
         logger.info(s"""id=${user.id} action=register email=${user.email} name="${user.name}" opt-in=${user.optedIn}""")
         logger.info(s"""id=${user.id} action=login email=${user.email}""")

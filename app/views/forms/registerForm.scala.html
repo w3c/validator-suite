@@ -39,6 +39,11 @@
         'type -> "password")
 
     @api.input(
+        registerForm("coupon"),
+        'type -> "text",
+        'autocomplete -> "off")
+
+    @api.input(
         registerForm("optedIn"),
         'type -> "checkbox",
         'value -> "true")

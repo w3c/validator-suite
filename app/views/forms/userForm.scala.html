@@ -1,4 +1,4 @@
-@(userForm: Form[Account], passwordForm: Form[Password], user: User)(implicit req: RequestHeader)
+@(userForm: Form[Account], passwordForm: Form[Password], couponForm: Form[String], user: User)(implicit req: RequestHeader)
 
 @creditClass(credits: Int) = {@credits match {
     case n if n <= 0 => {class="credits critical"}
@@ -17,6 +17,13 @@
                     You have <strong @creditClass(user.credits)>@user.credits</strong> page validation credits left.<br/>
                     <a href="@routes.Application.pricing">Buy additional credits</a>
                 </p>
+                @helper.form(action = routes.User.editAction(), 'class -> "") {
+                    @api.formErrors(couponForm)
+                    @api.input(
+                        couponForm("coupon"),
+                        '_required -> true)
+                    @api.submit("Redeem")
+                }
             </div>
         </div>
     </div>

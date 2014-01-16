@@ -99,6 +99,8 @@ object Formats {
 
   implicit val UserIdFormat = oid[UserId](UserId(_))
 
+  implicit val CouponIdFormat = oid[CouponId](CouponId(_))
+
   implicit val JobIdFormat = oid[JobId](JobId(_))
 
   implicit val RunIdFormat = oid[RunId](RunId(_))
@@ -445,6 +447,7 @@ object Formats {
   )(User.apply _, unlift(User.unapply _))
 
   implicit val CouponFormat: Format[Coupon] = (
+    (__ \ '_id).format[CouponId] and
     (__ \ 'code).format[String] and
     (__ \ 'campaign).format[String] and
     (__ \ 'description).formatNullable[String] and
