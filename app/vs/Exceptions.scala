@@ -28,6 +28,7 @@ case class DuplicatedEmail(email: String) extends Exception(s"${email} already i
 
 class CouponException(msg: String) extends Exception(msg)
 class DuplicateCouponException() extends CouponException("coupon.exception.duplicate")
+class AlreadyUsedCouponException() extends CouponException("coupon.exception.alreadyUsed")
 
 //case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")
 

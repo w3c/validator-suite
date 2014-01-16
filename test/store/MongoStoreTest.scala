@@ -353,6 +353,25 @@ extends VSTest with WipeoutData {
 
   }
 
+  "create a coupon" in {
+    val coupon = Coupon(code = "CouponCode", campaign = "campaign", credits = 150)
+    // save it
+    coupon.save().getOrFail() must be(coupon)
+    // saving it again throws an exception
+    intercept[Exception] {
+      coupon.save().getOrFail()
+    }
+    val coupon2 = Coupon(code = "CouponCode", campaign = "campaign2", credits = 1500)
+    // can't save a coupon with the same code
+    intercept[Exception] {
+      coupon2.save().getOrFail()
+    }
+    val redeemed = coupon.copy(usedBy = Some(UserId()))
+    redeemed.update().getOrFail() must be(redeemed)
+    Coupon.get(redeemed.code).getOrFail() must be(redeemed)
+
+  }
+
   /* THIS HAS TO BE AT THE END BECAUSE THERE ARE SIDE-EFFECTS HAPPENING */
   "reInitialize a job" in {
     val jobId = JobId()

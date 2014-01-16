@@ -25,7 +25,7 @@ import scala.util.{Success, Failure, Try}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ops => _, _}
 import scala.concurrent.ExecutionContext.Implicits.global
-import exception.{DuplicateCouponException, DuplicatedEmail, AccessNotAllowed, UnknownJob}
+import exception._
 import org.w3.vs.view.model.JobView
 import scalaz.Scalaz._
 import play.modules.reactivemongo.json.ImplicitBSONHandlers._
@@ -36,6 +36,8 @@ import reactivemongo.bson.BSONDocument
 import play.api.libs.json._
 import Json.toJson
 import org.w3.vs.store.Formats._
+import reactivemongo.api.FailoverStrategy
+import reactivemongo.api.collections.default.BSONCollection
 
 case class Coupon(
   id: CouponId = CouponId(),
@@ -55,6 +57,10 @@ case class Coupon(
 
   def save()(implicit conf: Database): Future[Coupon] = {
     Coupon.save(this).map(_ => this)
+  }
+
+  def update()(implicit conf: Database): Future[Coupon] = {
+    Coupon.update(this).map(_ => this)
   }
 
   def compactString = s"${code} - ${campaign} - Credits: ${credits} - ${expirationDate} - ${useDate} - ${usedBy}"
@@ -89,11 +95,12 @@ object Coupon {
   def redeem(couponCode: String, userId: UserId)(implicit vs: ValidatorSuite with Database): Future[(User, Coupon)] = {
     for {
       coupon <- get(couponCode).map{ coupon =>
-        if (coupon.useDate.isDefined) { throw new Exception() }
+        if (coupon.useDate.isDefined) { throw new AlreadyUsedCouponException() }
         coupon
       }
       user <- model.User.updateCredits(userId, coupon.credits)
-      redeemed <- coupon.copy(useDate = Some(DateTime.now(DateTimeZone.UTC)), usedBy = Some(userId)).save()
+      redeemed <-
+        coupon.copy(useDate = Some(DateTime.now(DateTimeZone.UTC)), usedBy = Some(userId)).update()
     } yield (user, redeemed)
   }
 
@@ -127,6 +134,14 @@ object Coupon {
     import reactivemongo.core.commands.LastError
     collection.insert(couponJson, writeConcern = journalCommit) map { lastError => () } recover {
       case LastError(_, _, Some(11000), _, _, _, _) => throw new DuplicateCouponException()
+    }
+  }
+
+  def update(coupon: Coupon)(implicit conf: Database): Future[Unit] = {
+    val selector = Json.obj("_id" -> toJson(coupon.id))
+    val update = toJson(coupon)
+    collection.update(selector, update, writeConcern = journalCommit) map {
+      lastError => if (!lastError.ok) throw lastError
     }
   }
 
