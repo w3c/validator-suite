@@ -26,9 +26,23 @@ case class Unauthenticated(email: String) extends Exception("Unauthenticated") w
 
 case class DuplicatedEmail(email: String) extends Exception(s"${email} already in use")
 
-class CouponException(msg: String) extends Exception(msg)
-class DuplicateCouponException() extends CouponException("coupon.exception.duplicate")
-class AlreadyUsedCouponException() extends CouponException("coupon.exception.alreadyUsed")
+trait CouponException {
+  def code: String
+  def msg: String
+}
+object CouponException {
+  def unapply(o: CouponException): Option[(String, String)] = Some((o.code, o.msg))
+
+}
+case class DuplicateCouponException(code: String) extends Exception("coupon.exception.duplicate") with CouponException{
+  val msg: String = "exception.duplicate"
+}
+case class AlreadyUsedCouponException(code: String) extends Exception("coupon.exception.alreadyUsed") with CouponException{
+  val msg: String = "exception.alreadyUsed"
+}
+case class NoSuchCouponException(code: String) extends Exception("coupon.exception.notFound") with CouponException{
+  val msg: String = "exception.notFound"
+}
 
 //case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")
 

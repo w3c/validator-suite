@@ -3,7 +3,7 @@ package controllers
 import org.w3.vs.controllers._
 import play.api.mvc.WebSocket
 import org.w3.vs.{Main, model}
-import model.{JobId, UserId}
+import model.{CouponId, JobId, UserId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._
 import play.api.libs.json.Json.toJson
@@ -136,6 +136,7 @@ object Administration extends VSController {
           |    coupon [code]
           |    coupon-create [code] [campaign] [credits]
           |    coupon-create [code] [campaign] [credits] [description] [validityInDays|expirationDate]
+          |    coupon-delete [id]
           |    coupon-delete [code]
           |    coupon-redeem [code] [userId]
           |    """.stripMargin
@@ -160,6 +161,10 @@ object Administration extends VSController {
       case Array("coupon-create", code, campaign, int(credits), description, validity) =>
         val coupon = model.Coupon(code, campaign, credits, description, validity).save().getOrFail()
         coupon.compactString
+
+      case Array("coupon-delete", id(id)) =>
+        model.Coupon.delete(CouponId(id)).getOrFail()
+        s"coupon ${id} deleted"
 
       case Array("coupon-delete", code) =>
         model.Coupon.delete(code).getOrFail()

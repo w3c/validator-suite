@@ -63,7 +63,9 @@ case class Coupon(
     Coupon.update(this).map(_ => this)
   }
 
-  def compactString = s"${code} - ${campaign} - Credits: ${credits} - ${expirationDate} - ${useDate} - ${usedBy}"
+  def compactString = {
+    s"${id} - Code: ${code} - Campaign: ${campaign} - Credits: ${credits} - Expires: ${expirationDate} - UseDate: ${useDate} - UsedBy: ${usedBy}"
+  }
 
 }
 
@@ -71,6 +73,13 @@ object Coupon {
 
   def delete(code: String)(implicit conf: ValidatorSuite): Future[Unit] = {
     val query = Json.obj("code" -> toJson(code))
+    collection.remove[JsValue](query) map {
+      lastError => ()
+    }
+  }
+
+  def delete(id: CouponId)(implicit conf: ValidatorSuite): Future[Unit] = {
+    val query = Json.obj("_id" -> toJson(id))
     collection.remove[JsValue](query) map {
       lastError => ()
     }
@@ -95,7 +104,7 @@ object Coupon {
   def redeem(couponCode: String, userId: UserId)(implicit vs: ValidatorSuite with Database): Future[(User, Coupon)] = {
     for {
       coupon <- get(couponCode).map{ coupon =>
-        if (coupon.useDate.isDefined) { throw new AlreadyUsedCouponException() }
+        if (coupon.usedBy.isDefined) { throw new AlreadyUsedCouponException(couponCode) }
         coupon
       }
       user <- model.User.updateCredits(userId, coupon.credits)
@@ -124,7 +133,7 @@ object Coupon {
     val query = Json.obj("code" -> toJson(code))
     val cursor = collection.find(query).cursor[JsValue]
     cursor.headOption() map {
-      case None => throw new NoSuchElementException("Invalid coupon code: " + code)
+      case None => throw new NoSuchCouponException(code)
       case Some(json) => json.as[Coupon]
     }
   }
@@ -133,7 +142,7 @@ object Coupon {
     val couponJson = toJson(coupon)
     import reactivemongo.core.commands.LastError
     collection.insert(couponJson, writeConcern = journalCommit) map { lastError => () } recover {
-      case LastError(_, _, Some(11000), _, _, _, _) => throw new DuplicateCouponException()
+      case LastError(_, _, Some(11000), _, _, _, _) => throw new DuplicateCouponException(coupon.code)
     }
   }
 

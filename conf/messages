@@ -251,6 +251,12 @@ r_password2.error.required=Please verify your password
 r_password2.error.mismatch=Passwords did not match
 optedIn.label=W3C may send me information about new products and services
 
+coupon.label=coupon.label
+coupon.placeholder=coupon.placeholder
+coupon.title=coupon.title
+coupon.exception.notFound=coupon.exception.notFound
+coupon.exception.alreadyUsed=coupon.exception.alreadyUsed
+
 #
 #   Account
 #

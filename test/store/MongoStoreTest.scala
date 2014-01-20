@@ -355,6 +355,9 @@ extends VSTest with WipeoutData {
 
   "create a coupon" in {
     val coupon = Coupon(code = "CouponCode", campaign = "campaign", credits = 150)
+    intercept[NoSuchCouponException] {
+      model.Coupon.get(coupon.code).getOrFail()
+    }
     // save it
     coupon.save().getOrFail() must be(coupon)
     // saving it again throws an exception
@@ -363,13 +366,17 @@ extends VSTest with WipeoutData {
     }
     val coupon2 = Coupon(code = "CouponCode", campaign = "campaign2", credits = 1500)
     // can't save a coupon with the same code
-    intercept[Exception] {
+    intercept[DuplicateCouponException] {
       coupon2.save().getOrFail()
     }
-    val redeemed = coupon.copy(usedBy = Some(UserId()))
+    val redeemed = coupon.copy(usedBy = Some(UserId()), useDate = Some(DateTime.now()))
     redeemed.update().getOrFail() must be(redeemed)
     Coupon.get(redeemed.code).getOrFail() must be(redeemed)
-
+    val redeemed2 = redeemed.copy(usedBy = Some(UserId()))
+    // can't re-redeem a coupon
+    intercept[AlreadyUsedCouponException] {
+      model.Coupon.redeem(redeemed.code, UserId()).getOrFail()
+    }
   }
 
   /* THIS HAS TO BE AT THE END BECAUSE THERE ARE SIDE-EFFECTS HAPPENING */
@@ -415,11 +422,3 @@ class MongoStoreTestLight extends MongoStoreTest(
   nbHttpErrorsPerAssertions = 2,
   nbHttpResponsesPerAssertions = 5,
   nbRunDatas = 3)
-
-
-
-
-
-
-
-

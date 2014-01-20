@@ -77,6 +77,9 @@ object Application extends VSController {
     RegisterForm.bindFromRequest().fold(
       form => BadRequest(views.html.register(registerForm = form, loginForm = LoginForm)),
       register => (for {
+        _ <- register.coupon.map{ coupon =>
+          model.Coupon.get(coupon)
+        }.getOrElse(Future.successful())
         user <- model.User.register(
           name = register.name,
           email = register.email,
@@ -103,6 +106,15 @@ object Application extends VSController {
             registerForm = RegisterForm.bindFromRequest(),
             loginForm = LoginForm,
             messages = List("error" -> Messages("r_email.error.duplicate", routes.Application.login().url, routes.PasswordReset.resetRequest().url)))
+          )
+        }
+        case CouponException(code, msg) => {
+          logger.info(s"""action=register email=??? message="Registration failed. Invalid coupon: ${code} - ${msg}." """)
+          Metrics.form.registerFailure()
+          BadRequest(views.html.register(
+            registerForm = RegisterForm.bindFromRequest().withError("coupon", msg),
+            loginForm = LoginForm,
+            messages = List.empty)
           )
         }
       }
