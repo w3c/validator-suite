@@ -4,7 +4,7 @@ import org.w3.vs.controllers._
 import org.w3.vs.{Metrics, model}
 import play.api.i18n.Messages
 import org.w3.vs.view.Forms._
-import org.w3.vs.exception.UnauthorizedException
+import org.w3.vs.exception.{CouponException, UnauthorizedException}
 
 object User extends VSController {
 
@@ -59,6 +59,26 @@ object User extends VSController {
         }) recover {
           case UnauthorizedException(email) =>
             BadRequest(views.html.profile(AccountForm(user), PasswordForm, CouponForm, user, List("error" -> Messages("application.invalidPassword"))))
+        }
+      }
+    )
+  }
+
+  def redeemCouponAction = AuthenticatedAction("form.redeemCoupon") { implicit req => user =>
+    CouponForm.bindFromRequest().fold (
+      formWithErrors => {
+        BadRequest(views.html.profile(AccountForm(user), PasswordForm, formWithErrors, user))
+      },
+      coupon => {
+        (for {
+          _ <- model.Coupon.redeem(coupon, user.id)
+        } yield {
+          logger.info(s"""id=${user.id} action=couponRedeemed message="coupon redeemed: ${coupon}" """)
+          SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.coupon.redeemed")))
+        }) recover {
+          case CouponException(code, msg) =>
+            val form = CouponForm.withError("coupon", msg)
+            BadRequest(views.html.profile(AccountForm(user), PasswordForm, form, user))
         }
       }
     )

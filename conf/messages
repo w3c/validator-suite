@@ -258,6 +258,8 @@ coupon.exception.notFound=coupon.exception.notFound
 coupon.exception.alreadyUsed=coupon.exception.alreadyUsed
 coupon.exception.expired=coupon.exception.expired
 
+user.coupon.redeemed=user.coupon.redeemed
+
 #
 #   Account
 #

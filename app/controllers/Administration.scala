@@ -135,7 +135,7 @@ object Administration extends VSController {
           |    coupons [regex]
           |    coupon [code]
           |    coupon-create [code] [campaign] [credits]
-          |    coupon-create [code] [campaign] [credits] [description] [validityInDays|expirationDate]
+          |    coupon-create [code] [campaign] [credits] [description] [validityInDays]
           |    coupon-delete [id]
           |    coupon-delete [code]
           |    coupon-redeem [code] [userId]

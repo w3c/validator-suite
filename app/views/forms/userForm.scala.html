@@ -17,14 +17,14 @@
                     You have <strong @creditClass(user.credits)>@user.credits</strong> page validation credits left.<br/>
                     <a href="@routes.Application.pricing">Buy additional credits</a>
                 </p>
-                @helper.form(action = routes.User.editAction(), 'class -> "") {
-                    @api.formErrors(couponForm)
-                    @api.input(
-                        couponForm("coupon"),
-                        '_required -> true)
-                    @api.submit("Redeem")
-                }
             </div>
+            @helper.form(action = routes.User.redeemCouponAction(), 'class -> "") {
+                @api.formErrors(couponForm)
+                @api.input(
+                    couponForm("coupon"),
+                    '_required -> true)
+                @api.submit("Redeem")
+            }
         </div>
     </div>
 

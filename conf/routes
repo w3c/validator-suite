@@ -20,6 +20,7 @@ POST    /register                                   controllers.Application.regi
 GET     /account                                    controllers.User.profile
 POST    /account                                    controllers.User.editAction
 POST    /account/password                           controllers.User.changePasswordAction
+POST    /account/coupon                             controllers.User.redeemCouponAction
 
 GET     /account/reset                              controllers.PasswordReset.resetRequest
 POST    /account/reset                              controllers.PasswordReset.resetRequestAction
