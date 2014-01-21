@@ -256,6 +256,7 @@ coupon.placeholder=coupon.placeholder
 coupon.title=coupon.title
 coupon.exception.notFound=coupon.exception.notFound
 coupon.exception.alreadyUsed=coupon.exception.alreadyUsed
+coupon.exception.expired=coupon.exception.expired
 
 #
 #   Account

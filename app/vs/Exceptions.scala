@@ -43,6 +43,9 @@ case class AlreadyUsedCouponException(code: String) extends Exception("coupon.ex
 case class NoSuchCouponException(code: String) extends Exception("coupon.exception.notFound") with CouponException{
   val msg: String = "exception.notFound"
 }
+case class ExpiredCouponException(code: String) extends Exception("coupon.exception.expired") with CouponException{
+  val msg: String = "exception.expired"
+}
 
 //case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")
 

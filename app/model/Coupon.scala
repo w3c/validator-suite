@@ -45,7 +45,7 @@ case class Coupon(
   campaign: String,
   description: Option[String],
   credits: Int,
-  expirationDate: DateTime = DateTime.now(DateTimeZone.UTC).plusYears(1),        // 90 days
+  expirationDate: DateTime,
   useDate: Option[DateTime] = None,
   usedBy: Option[UserId] = None) {
 
@@ -88,8 +88,15 @@ object Coupon {
   def apply(
     code: String,
     campaign: String,
-    credits: Int): Coupon = {
-    new Coupon(code = code, campaign = campaign, description = None, credits = credits)
+    credits: Int)(implicit conf: ValidatorSuite): Coupon = {
+    val confValidityDays = conf.config.getInt("application.expireDate.couponValidityInDays").getOrElse(90)
+    Coupon(
+      code = code,
+      campaign = campaign,
+      description = None,
+      credits = credits,
+      expirationDate = DateTime.now(DateTimeZone.UTC).plusDays(confValidityDays)
+    )
   }
 
   def apply(
@@ -97,14 +104,21 @@ object Coupon {
     campaign: String,
     credits: Int,
     description: String,
-    validity: String): Coupon = {
-    new Coupon(code = code, campaign = campaign, description = Some(description), credits = credits) // TODO
+    validityDays: Int)(implicit conf: ValidatorSuite): Coupon = {
+    Coupon(
+      code = code,
+      campaign = campaign,
+      description = Some(description),
+      credits = credits,
+      expirationDate = DateTime.now(DateTimeZone.UTC).plusDays(validityDays)
+    )
   }
 
   def redeem(couponCode: String, userId: UserId)(implicit vs: ValidatorSuite with Database): Future[(User, Coupon)] = {
     for {
       coupon <- get(couponCode).map{ coupon =>
         if (coupon.usedBy.isDefined) { throw new AlreadyUsedCouponException(couponCode) }
+        if (coupon.expirationDate.isBefore(DateTime.now(DateTimeZone.UTC))) { throw new ExpiredCouponException(couponCode) }
         coupon
       }
       user <- model.User.updateCredits(userId, coupon.credits)

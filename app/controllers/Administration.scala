@@ -158,8 +158,8 @@ object Administration extends VSController {
         val coupon = model.Coupon(code, campaign, credits).save().getOrFail()
         coupon.compactString
 
-      case Array("coupon-create", code, campaign, int(credits), description, validity) =>
-        val coupon = model.Coupon(code, campaign, credits, description, validity).save().getOrFail()
+      case Array("coupon-create", code, campaign, int(credits), description, int(validityDays)) =>
+        val coupon = model.Coupon(code, campaign, credits, description, validityDays).save().getOrFail()
         coupon.compactString
 
       case Array("coupon-delete", id(id)) =>

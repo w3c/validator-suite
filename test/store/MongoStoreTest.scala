@@ -369,7 +369,7 @@ extends VSTest with WipeoutData {
     intercept[DuplicateCouponException] {
       coupon2.save().getOrFail()
     }
-    val redeemed = coupon.copy(usedBy = Some(UserId()), useDate = Some(DateTime.now()))
+    val redeemed = coupon.copy(usedBy = Some(UserId()), useDate = Some(DateTime.now(DateTimeZone.UTC)))
     redeemed.update().getOrFail() must be(redeemed)
     Coupon.get(redeemed.code).getOrFail() must be(redeemed)
     val redeemed2 = redeemed.copy(usedBy = Some(UserId()))
