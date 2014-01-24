@@ -257,6 +257,7 @@ coupon.title=If you have a coupon code enter it here
 coupon.error.notFound=This coupon does not exist
 coupon.error.alreadyUsed=This coupon has already been used
 coupon.error.expired=This coupon has expired
+coupon.error.syntax=Invalid coupon syntax
 
 user.coupon.redeemed=The "{0}" ({1}) coupon of {2} credits has been added to your account
 

@@ -71,6 +71,13 @@ case class Coupon(
 
 object Coupon {
 
+  // e.g. PREFIX-ABCD-EFGH-0123-4567
+  val pattern = """^\w{2,8}(-[0-9A-Z]{4}){3}$""".r
+
+  def checkSyntax(code: String) {
+    if (!pattern.findFirstIn(code).isDefined) throw new InvalidSyntaxCouponException(code)
+  }
+
   def delete(code: String)(implicit conf: ValidatorSuite): Future[Unit] = {
     val query = Json.obj("code" -> toJson(code))
     collection.remove[JsValue](query) map {

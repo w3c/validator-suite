@@ -3,7 +3,7 @@ package org.w3.vs.view
 import controllers.routes
 import java.util.concurrent.TimeUnit
 import org.w3.vs.Global._
-import org.w3.vs.model.{Strategy, Job, User}
+import org.w3.vs.model._
 import org.w3.vs.web.URL
 import play.api.data.Form
 import play.api.data.Forms._
@@ -63,7 +63,7 @@ object Forms {
       "r_email" -> email,
       "r_password" -> nonEmptyText(minLength = 6),
       "r_password2" -> text,
-      "coupon" -> optional(text),
+      "coupon" -> optional(text).verifying("error.syntax", { couponOpt => !couponOpt.isDefined || Coupon.pattern.findFirstIn(couponOpt.get).isDefined }),
       "optedIn" -> of[Boolean],
       "uri" -> text
     )(Register.apply)(Register.unapply)
@@ -106,11 +106,9 @@ object Forms {
   /**
    * Coupon
    */
-  //case class CouponF(id: String)
-
   val CouponForm: Form[String] = Form(
     single(
-      "coupon" -> nonEmptyText
+      "coupon" -> nonEmptyText.verifying("error.syntax", Coupon.pattern.findFirstIn(_).isDefined)
     )
   )
 

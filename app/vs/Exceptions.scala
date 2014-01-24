@@ -46,15 +46,11 @@ case class NoSuchCouponException(code: String) extends Exception("coupon.error.n
 case class ExpiredCouponException(code: String) extends Exception("coupon.error.expired") with CouponException{
   val msg: String = "error.expired"
 }
-
-//case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")
-
-case class StoreException(t: Throwable) extends Exception("StoreException") //with SuiteException
-
-//case class Unexpected(t: Throwable) extends Exception(t) //with SuiteException
+case class InvalidSyntaxCouponException(code: String) extends Exception("coupon.error.syntax") with CouponException{
+  val msg: String = "error.syntax"
+}
+case class StoreException(t: Throwable) extends Exception("StoreException")
 
 // Contrary to UnauthorizedException this won't ask the user to log in but simply respond with a 404
 case class AccessNotAllowed(msg: String = "You do not have permission to access the requested resource.") extends Exception("AccessNotAllowed")
 case class PaymentRequired(job: Job) extends Exception("PaymentRequired")
-
-//case class ForceResult(result: Result) extends Exception("ForceResult carries a Result that can be used by Play")
