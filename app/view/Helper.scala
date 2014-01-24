@@ -11,6 +11,8 @@ import scala.collection.immutable.Iterable
 
 object Helper {
 
+  def year = DateTime.now(DateTimeZone.UTC).getYear
+
   def config = current.configuration
 
   def notWord(boolean: Boolean): String = {
