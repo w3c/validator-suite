@@ -3,7 +3,7 @@ package controllers
 import org.w3.vs.controllers._
 import play.api.mvc.WebSocket
 import org.w3.vs.{Main, model}
-import model.{CouponId, JobId, UserId}
+import model.{JobId, CouponId, UserId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.iteratee._
 import play.api.libs.json.Json.toJson
@@ -132,13 +132,14 @@ object Administration extends VSController {
           |    db-reset                      - resets the database with default data (only available in Dev mode)
           |    db-indexes                    - recreate database indexes
           |    emails                        - comma-separated list of all opted-in emails
-          |    coupons [regex]
-          |    coupon [code]
-          |    coupon-create [code] [campaign] [credits]
-          |    coupon-create [code] [campaign] [credits] [description] [validityInDays]
-          |    coupon-delete [id]
-          |    coupon-delete [code]
-          |    coupon-redeem [code] [userId]
+          |    coupons <regex>        - all coupons that match the given regex
+          |    coupon <code>          - the coupon with the given coupon code
+          |    coupon <id>            - the coupon with the given coupon id (database identifier)
+          |    coupon-create <code> <campaign> <credits> - creates a coupon with provided parameters
+          |    coupon-create <code> <campaign> <credits> <description> <validityInDays>
+          |    coupon-delete <id>     - delete the coupon with given id
+          |    coupon-delete <code>   - delete the coupon with given code
+          |    coupon-redeem <code> <userId>  - redeem a coupon to a userId
           |    """.stripMargin
 
       case Array("coupons") =>
@@ -153,6 +154,9 @@ object Administration extends VSController {
       case Array("coupon", code) =>
         val coupon = model.Coupon.get(code).getOrFail()
         coupon.compactString
+
+      case Array("coupon", id(id)) =>
+        model.Coupon.get(CouponId(id)).map(_.compactString).recover{case _ => s"No coupon found"}.getOrFail()
 
       case Array("coupon-create", code, campaign, int(credits)) =>
         val coupon = model.Coupon(code, campaign, credits).save().getOrFail()
@@ -175,8 +179,7 @@ object Administration extends VSController {
         s"coupon ${code} redeemed\n" + redeemed.compactString
 
       case Array("job", id(jobId)) =>
-        val job = model.Job.get(JobId(jobId)).getOrFail()
-        job.compactString
+        model.Job.get(JobId(jobId)).map(_.compactString).recover{case _ => s"No job found"}.getOrFail()
 
       case Array("jobs") =>
         val jobs = model.Job.getAll().getOrFail()
@@ -188,8 +191,7 @@ object Administration extends VSController {
         displayResults(filtered)
 
       case Array("user", id(userId)) =>
-        val user = model.User.get(UserId(userId)).getOrFail()
-        user.compactString
+        model.User.get(UserId(userId)).map(_.compactString).recover{case _ => s"No user found"}.getOrFail()
 
       case Array("users") =>
         val users = model.User.getAll().getOrFail()
@@ -235,21 +237,21 @@ object Administration extends VSController {
         val roots: Iterable[String] = org.w3.vs.Main.addRootUsers().getOrFail()
         roots.mkString("\n")
 
-      case Array("user-set-root", email) =>
-        org.w3.vs.Main.setRootUser(email).getOrFail()
+      case Array("user-set-root", id(userId)) =>
+        org.w3.vs.Main.setRootUser(UserId(userId)).getOrFail()
 
-      case Array("user-set-password", email, password) =>
+      case Array("user-set-password", id(userId), password) =>
         import org.mindrot.jbcrypt.BCrypt
-        model.User.getByEmail(email).flatMap( user =>
+        model.User.get(UserId(userId)).flatMap( user =>
           user.isRoot match {
-            case true => Future.successful(s"Cannot change the password of a root user: ${email}.")
-            case false => model.User.update(user.copy(password = BCrypt.hashpw(password, BCrypt.gensalt()))).map(_ => s"${email} password changed.")
+            case true => Future.successful(s"Cannot change the password of a root user: ${user.email} (${user.id}}).")
+            case false => model.User.update(user.copy(password = BCrypt.hashpw(password, BCrypt.gensalt()))).map(_ => s"${user.email} (${user.id}}) password changed.")
           }
         ).getOrFail()
 
-      case Array("user-add-credits", email, int(credits)) =>
+      case Array("user-add-credits", id(id), int(credits)) =>
         (for {
-          user <- model.User.getByEmail(email)
+          user <- model.User.get(UserId(id))
           saved <- model.User.updateCredits(user.id, credits)
         } yield {
           // TODO adminId

@@ -111,6 +111,15 @@ object Main {
     )
   }
 
+  def setRootUser(id: UserId)(implicit conf: ValidatorSuite with Database): Future[String] = {
+    User.get(id).flatMap( user =>
+      user.isRoot match {
+        case true => Future.successful(s"${user.email} is already a root user.")
+        case false => User.update(user.copy(isRoot = true)).map(_ => s"${user.email} (${id}}) set as a root user.")
+      }
+    )
+  }
+
   def addRootUsers()(implicit conf: ValidatorSuite with Database): Future[Iterable[String]] = {
 
     val roots = Map(

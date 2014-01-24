@@ -34,17 +34,17 @@ object CouponException {
   def unapply(o: CouponException): Option[(String, String)] = Some((o.code, o.msg))
 
 }
-case class DuplicateCouponException(code: String) extends Exception("coupon.exception.duplicate") with CouponException{
-  val msg: String = "exception.duplicate"
+case class DuplicateCouponException(code: String) extends Exception("coupon.error.duplicate") with CouponException{
+  val msg: String = "error.duplicate"
 }
-case class AlreadyUsedCouponException(code: String) extends Exception("coupon.exception.alreadyUsed") with CouponException{
-  val msg: String = "exception.alreadyUsed"
+case class AlreadyUsedCouponException(code: String) extends Exception("coupon.error.alreadyUsed") with CouponException{
+  val msg: String = "error.alreadyUsed"
 }
-case class NoSuchCouponException(code: String) extends Exception("coupon.exception.notFound") with CouponException{
-  val msg: String = "exception.notFound"
+case class NoSuchCouponException(code: String) extends Exception("coupon.error.notFound") with CouponException{
+  val msg: String = "error.notFound"
 }
-case class ExpiredCouponException(code: String) extends Exception("coupon.exception.expired") with CouponException{
-  val msg: String = "exception.expired"
+case class ExpiredCouponException(code: String) extends Exception("coupon.error.expired") with CouponException{
+  val msg: String = "error.expired"
 }
 
 //case class NotAcceptableException(supportedTypes: Seq[String]) extends Exception("NotAcceptableException")

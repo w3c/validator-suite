@@ -251,14 +251,14 @@ r_password2.error.required=Please verify your password
 r_password2.error.mismatch=Passwords did not match
 optedIn.label=W3C may send me information about new products and services
 
-coupon.label=coupon.label
-coupon.placeholder=coupon.placeholder
-coupon.title=coupon.title
-coupon.exception.notFound=coupon.exception.notFound
-coupon.exception.alreadyUsed=coupon.exception.alreadyUsed
-coupon.exception.expired=coupon.exception.expired
+coupon.label=Coupon
+coupon.placeholder=If you have a coupon code enter it here
+coupon.title=If you have a coupon code enter it here
+coupon.error.notFound=This coupon does not exist
+coupon.error.alreadyUsed=This coupon has already been used
+coupon.error.expired=This coupon has expired
 
-user.coupon.redeemed=user.coupon.redeemed
+user.coupon.redeemed=The "{0}" ({1}) coupon of {2} credits has been added to your account
 
 #
 #   Account

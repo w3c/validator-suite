@@ -143,6 +143,15 @@ object Coupon {
     }
   }
 
+  def get(id: CouponId)(implicit conf: Database): Future[Coupon] = {
+    val query = Json.obj("_id" -> toJson(id))
+    val cursor = collection.find(query).cursor[JsValue]
+    cursor.headOption() map {
+      case None => throw new NoSuchCouponException(id.toString)
+      case Some(json) => json.as[Coupon]
+    }
+  }
+
   def get(code: String)(implicit conf: Database): Future[Coupon] = {
     val query = Json.obj("code" -> toJson(code))
     val cursor = collection.find(query).cursor[JsValue]

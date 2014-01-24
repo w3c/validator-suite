@@ -71,10 +71,10 @@ object User extends VSController {
       },
       coupon => {
         (for {
-          _ <- model.Coupon.redeem(coupon, user.id)
+          (user, coupon) <- model.Coupon.redeem(coupon, user.id)
         } yield {
           logger.info(s"""id=${user.id} action=couponRedeemed message="coupon redeemed: ${coupon}" """)
-          SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.coupon.redeemed")))
+          SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.coupon.redeemed", coupon.description.getOrElse("Validator Suite"), coupon.code, coupon.credits)))
         }) recover {
           case CouponException(code, msg) =>
             val form = CouponForm.withError("coupon", msg)
