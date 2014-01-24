@@ -79,7 +79,7 @@
     <logger name="controllers.Application" level="INFO">
         <appender-ref ref="users" />
     </logger>
-    <logger name="org.w3.mode.User" level="INFO">
+    <logger name="org.w3.vs.model.User" level="INFO">
         <appender-ref ref="users" />
     </logger>
 
