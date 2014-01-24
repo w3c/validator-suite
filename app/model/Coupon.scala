@@ -78,6 +78,11 @@ object Coupon {
     if (!pattern.findFirstIn(code).isDefined) throw new InvalidSyntaxCouponException(code)
   }
 
+  def generateCode(prefix: String): String = {
+    def random = org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric(4).toUpperCase()
+    s"${prefix}-${random}-${random}-${random}"
+  }
+
   def delete(code: String)(implicit conf: ValidatorSuite): Future[Unit] = {
     val query = Json.obj("code" -> toJson(code))
     collection.remove[JsValue](query) map {

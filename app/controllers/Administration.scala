@@ -140,6 +140,7 @@ object Administration extends VSController {
           |    coupon-delete <id>     - delete the coupon with given id
           |    coupon-delete <code>   - delete the coupon with given code
           |    coupon-redeem <code> <userId>  - redeem a coupon to a userId
+          |    coupon-campaign-create <numberOfCoupons> <prefix> <campaign> <credits> <description> <validityInDays>
           |    """.stripMargin
 
       case Array("coupons") =>
@@ -177,6 +178,14 @@ object Administration extends VSController {
       case Array("coupon-redeem", code, id(userId)) =>
         val (user, redeemed) = model.Coupon.redeem(code, UserId(userId)).getOrFail()
         s"coupon ${code} redeemed\n" + redeemed.compactString
+
+      case Array("coupon-campaign-create", int(number), prefix, campaign, int(credits), description, int(validityInDays)) =>
+        var coupons = List.empty[String]
+        for (i <- 1 to number) {
+          coupons = model.Coupon.generateCode(prefix) +: coupons
+        }
+        val c = coupons.map(code => model.Coupon(code, campaign, credits, description, validityInDays)).map(_.save().getOrFail())
+        c.mkString("\n")
 
       case Array("job", id(jobId)) =>
         model.Job.get(JobId(jobId)).map(_.compactString).recover{case _ => s"No job found"}.getOrFail()
