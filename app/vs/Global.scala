@@ -4,6 +4,7 @@ import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._
 import play.api.Mode._
+import concurrent.Future
 
 object Global extends GlobalSettings with Rendering with AcceptExtractors {
 
@@ -41,31 +42,31 @@ object Global extends GlobalSettings with Rendering with AcceptExtractors {
     vs = null
   }
 
-  override def onHandlerNotFound(request : RequestHeader) : Result = {
+  override def onHandlerNotFound(request : RequestHeader): Future[SimpleResult] = {
     implicit val implReq = request
     Metrics.errors.e404()
-    render {
+    Future.successful(render {
       case Accepts.Html() => NotFound(views.html.error._404())
       case Accepts.Json() => NotFound
-    }
+    })
   }
 
-  override def onError(request: RequestHeader, ex: Throwable): Result = {
+  override def onError(request: RequestHeader, ex: Throwable): Future[SimpleResult] = {
     implicit val implReq = request
     Metrics.errors.e500()
-    render {
+    Future.successful(render {
       case Accepts.Html() => InternalServerError(views.html.error._500(List(("error", ex.getMessage))))
       case Accepts.Json() => InternalServerError
-    }
+    })
   }
 
-  override def onBadRequest(request: RequestHeader, error: String) = {
+  override def onBadRequest(request: RequestHeader, error: String): Future[SimpleResult] = {
     implicit val implReq = request
     error match {
       case "InvalidJobId" => onHandlerNotFound(request)
       case _ => {
         Metrics.errors.e400()
-        BadRequest(views.html.error._400(List(("error", error))))
+        Future.successful(BadRequest(views.html.error._400(List(("error", error)))))
       }
     }
   }

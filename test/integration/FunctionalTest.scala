@@ -5,16 +5,16 @@ package org.w3.vs.integration
 import play.api.test._
 import play.api.test.Helpers._
 import org.scalatest._
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.Matchers
 import play.api.Play._
 import play.api.test.TestServer
 import org.w3.vs.util.timer._
 import org.w3.vs.model.User
 import org.w3.vs.Global
 
-class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
+class FunctionalTest extends WordSpec with Matchers with BeforeAndAfterAll {
 
-  override def beforeAll(configMap: Map[String, Any]): Unit = {
+  override def beforeAll(): Unit = {
     timer("load data for FunctionalTest") {
       org.w3.vs.Main.main(Array("default"))
     }
@@ -27,8 +27,8 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       import browser._
 
       goTo("http://localhost:9001/jobs/")
-      url must be === "http://localhost:9001/jobs"
-      $("form[action='/login']").isEmpty must be (false)
+      url should be ("http://localhost:9001/jobs")
+      $("form[action='/login']").isEmpty should be (false)
 
       // This user should register first through /register
       implicit val conf = Global.vs
@@ -38,25 +38,25 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       goTo("http://localhost:9001/login")
       fill("#l_email").`with`("test@example.com")
       fill("#l_password").`with`("secret")
-      $("form[action='/login']").isEmpty must be (false)
+      $("form[action='/login']").isEmpty should be (false)
       click("form[action='/login'] button")
 
-      url must be === "http://localhost:9001/jobs"
-      $(".hello").first().getText must include ("Test User")
+      url should be ("http://localhost:9001/jobs")
+      $(".hello").first().getText should include ("Test User")
 
       goTo("http://localhost:9001/admin")
-      $("h1").first().getText must include ("Forbidden")
+      $("h1").first().getText should include ("Forbidden")
 
       // and log out
       goTo("http://localhost:9001/jobs")
       //click("a[data-dropdown=myAccount]")
       click("form[action='/logout'] button")
 
-      url must be === "http://localhost:9001/"
+      url should be ("http://localhost:9001/")
 
       goTo("http://localhost:9001/login")
-      url must be === "http://localhost:9001/login"
-      $("form[action='/login']").isEmpty must be (false)
+      url should be ("http://localhost:9001/login")
+      $("form[action='/login']").isEmpty should be (false)
 
       // TODO. Define more functional tests: https://github.com/w3c/validator-suite/issues/271
 
@@ -64,7 +64,7 @@ class FunctionalTest extends WordSpec with MustMatchers with BeforeAndAfterAll {
       fill("#l_password").`with`("secret")
       click("#submit-login")
       goTo("http://localhost:9001/admin")
-      $("h1").first().getText() must not include ("404")*/
+      $("h1").first().getText() should not include ("404")*/
 
     }
   }

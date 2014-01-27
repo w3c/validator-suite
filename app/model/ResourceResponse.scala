@@ -23,7 +23,7 @@ object ResourceResponse {
       "runId" -> toJson(runId),
       "event" -> toJson("resource-response") )
     val cursor = Run.collection.find(query).cursor[JsValue]
-    cursor.toList() map { list =>
+    cursor.collect[List]() map { list =>
       list.map(json => json.as[ResourceResponseEvent](ResourceResponseEventFormat).rr).toSet
     }
   }

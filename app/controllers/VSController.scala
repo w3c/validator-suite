@@ -28,7 +28,7 @@ trait VSController extends Controller {
 
   def CloseWebsocket = (Iteratee.ignore[JsValue], Enumerator.eof)
 
-  implicit def toAsynchronousResult(result: Result): Future[Result] = Future.successful(result)
+  implicit def toAsynchronousResult(result: SimpleResult): Future[SimpleResult] = Future.successful(result)
 
   def getUser()(implicit reqHeader: RequestHeader): Future[User] = {
     for {
@@ -46,7 +46,7 @@ trait VSController extends Controller {
     getUser.map(Some(_)).recover{case _ => None}
   }
 
-  def Timer(name: String)(f: Future[Result]): Future[Result] = {
+  def Timer(name: String)(f: Future[SimpleResult]): Future[SimpleResult] = {
     if (name == "") {
       f
     } else {
@@ -57,21 +57,19 @@ trait VSController extends Controller {
     }
   }
 
-  def AsyncAction(name: String)(f: Request[AnyContent] => Future[Result]): Action[AnyContent] = Action { implicit req =>
-    Async {
+  def AsyncAction(name: String)(f: Request[AnyContent] => Future[SimpleResult]): Action[AnyContent] = Action.async { implicit req =>
       Timer(name) {
-        f(req) recover {
-          case AccessNotAllowed(msg) => Forbidden(views.html.error._403(msg))
+        f(req).recoverWith[SimpleResult] {
+          case AccessNotAllowed(msg) => Future.successful(Forbidden(views.html.error._403(msg)))
           case UnknownJob(_) => Global.onHandlerNotFound(req)
         }
       }
-    }
   }
-  def AsyncAction(f: Request[AnyContent] => Future[Result]): Action[AnyContent] = AsyncAction("")(f)
+  def AsyncAction(f: Request[AnyContent] => Future[SimpleResult]): Action[AnyContent] = AsyncAction("")(f)
 
   val AcceptsStream = Accepting(MimeTypes.EVENT_STREAM)
 
-  def Authenticated(f: User => Future[Result])(implicit req: RequestHeader): Future[Result] = {
+  def Authenticated(f: User => Future[SimpleResult])(implicit req: RequestHeader): Future[SimpleResult] = {
     (for {
       user <- getUser()
       result <- f(user)
@@ -90,7 +88,7 @@ trait VSController extends Controller {
     }
   }
 
-  def RootAction(f: Request[AnyContent] => User => Future[Result]): ActionA = AsyncAction { implicit req =>
+  def RootAction(f: Request[AnyContent] => User => Future[SimpleResult]): ActionA = AsyncAction { implicit req =>
     Authenticated { user =>
       user match {
         case user if user.isRoot => f(req)(user)
@@ -99,21 +97,21 @@ trait VSController extends Controller {
     }
   }
 
-  def AuthenticatedAction(name: String)(f: Request[AnyContent] => User => Future[Result]): ActionA =
+  def AuthenticatedAction(name: String)(f: Request[AnyContent] => User => Future[SimpleResult]): ActionA =
     AsyncAction(name) { implicit req => Authenticated { user => f(req)(user) } }
 
-  def AuthenticatedAction(f: Request[AnyContent] => User => Future[Result]): ActionA = AuthenticatedAction("")(f)
+  def AuthenticatedAction(f: Request[AnyContent] => User => Future[SimpleResult]): ActionA = AuthenticatedAction("")(f)
 
-  def UserAware(f: Option[User] => Future[Result])(implicit req: RequestHeader): Future[Result] = {
+  def UserAware(f: Option[User] => Future[SimpleResult])(implicit req: RequestHeader): Future[SimpleResult] = {
     for {
       userO <- getUserOption()
       result <- f(userO)
     } yield result
   }
 
-  def UserAwareAction(name: String)(f: Request[AnyContent] => Option[User] => Future[Result]): ActionA =
+  def UserAwareAction(name: String)(f: Request[AnyContent] => Option[User] => Future[SimpleResult]): ActionA =
     AsyncAction(name) { implicit req => UserAware { user => f(req)(user) } }
 
-  def UserAwareAction(f: Request[AnyContent] => Option[User] => Future[Result]): ActionA = UserAwareAction("")(f)
+  def UserAwareAction(f: Request[AnyContent] => Option[User] => Future[SimpleResult]): ActionA = UserAwareAction("")(f)
 
 }

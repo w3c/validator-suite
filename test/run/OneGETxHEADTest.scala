@@ -42,7 +42,7 @@ abstract class OneGETxHEADTest extends VSTest with ServersTest with TestData wit
 //    val completeRunEvent =
 //      (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 //
-//    completeRunEvent.resources must be(j + 1)
+//    completeRunEvent.resources should be(j + 1)
 //
 //  }
 

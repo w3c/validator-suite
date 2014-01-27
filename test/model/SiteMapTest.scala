@@ -22,7 +22,7 @@ object SiteMapTest extends Specification {
           URLSiteMap(URL("http://www.example.com/catalog?item=74&desc=vacation_newfoundland"),Some(new DateTime(2004,12,23,18,00,15,DateTimeZone.UTC))),
           URLSiteMap(URL("http://www.example.com/catalog?item=83&desc=vacation_usa"),Some(new DateMidnight(2004,11,23)))))
           
-    expectedSitemap must beEqualTo(sitemap)
+    expectedSitemap should beEqualTo(sitemap)
     
   }
 

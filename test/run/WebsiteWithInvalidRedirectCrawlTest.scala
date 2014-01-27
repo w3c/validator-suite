@@ -56,8 +56,8 @@ class WebsiteWithInvalidRedirectCrawlTest extends VSTest with ServersTest with T
       hr2 <- nextHttpResponse
       //hr3 <- nextHttpResponse
     } yield Try {
-      hr1.url must be(URL("http://localhost:9001/"))
-      hr1.status must be(200)
+      hr1.url should be(URL("http://localhost:9001/"))
+      hr1.status should be(200)
     }
 
     (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> test()).getOrFail().get

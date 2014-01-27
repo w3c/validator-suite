@@ -12,9 +12,11 @@ import org.w3.vs._
 import play.api.Mode
 import akka.actor.{ ActorSystem => _, _ }
 
-class ResumedRunTest extends VSTestKit(
-  new ValidatorSuite { val mode = Mode.Test }
-) with ServersTest with TestData with WipeoutData {
+class ResumedRunTest extends VSTestKit with ServersTest with TestData /*with WipeoutData*/ {
+
+
+  //implicit val vs =  new ValidatorSuite { val mode = Mode.Test }
+
 
   //implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
 
@@ -46,7 +48,7 @@ class ResumedRunTest extends VSTestKit(
     
     val runningJob = job.run().getOrFail()
     val Running(runId, actorName) = runningJob.status
-    runningJob.id must be(job.id)
+    runningJob.id should be(job.id)
 
     // register to the death of the JobActor
     val jobActorRef = vs.system.actorFor(actorName.actorPath)
@@ -62,22 +64,22 @@ class ResumedRunTest extends VSTestKit(
     val terminated = fishForMessagePF(Duration("60s")) { case event: Terminated => event }
 
     // make sure we've seen the right death
-    terminated.actor must be(jobActorRef)
+    terminated.actor should be(jobActorRef)
 
     // then resume!
     val rJob = Job.get(jobId).getOrFail()
 
-    // the database must know that the job was still Running
-    rJob.status must be(runningJob.status)
+    // the database should know that the job was still Running
+    rJob.status should be(runningJob.status)
 
     // now we revive the actor
     val resume = rJob.resume().getOrFail()
-    resume must be(())
+    resume should be(())
 
     val completeRunEvent =
       (rJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
-    completeRunEvent.resources must be(circumference + 1)
+    completeRunEvent.resources should be(circumference + 1)
 
   }
   

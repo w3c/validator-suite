@@ -28,11 +28,11 @@ trait FilterMatchers {
 
 }
 
-class FilterTest extends WordSpec with MustMatchers with FilterMatchers {
+class FilterTest extends WordSpec with Matchers with FilterMatchers {
 
   "include everything" in {
 
-    Filter.includeEverything must accept ("http://example.com/foo")
+    Filter.includeEverything should accept ("http://example.com/foo")
 
   }
 
@@ -40,13 +40,13 @@ class FilterTest extends WordSpec with MustMatchers with FilterMatchers {
 
     val exampleFoo = Filter.includePrefix("http://example.com/foo")
 
-    exampleFoo must accept ("http://example.com/foo")
+    exampleFoo should accept ("http://example.com/foo")
 
-    exampleFoo must accept ("http://example.com/foo/bar")
+    exampleFoo should accept ("http://example.com/foo/bar")
 
-    exampleFoo must not (accept ("http://example.com/"))
+    exampleFoo should not (accept ("http://example.com/"))
 
-    exampleFoo must not (accept ("http://example.com/bar"))
+    exampleFoo should not (accept ("http://example.com/bar"))
 
   }
 
@@ -54,19 +54,19 @@ class FilterTest extends WordSpec with MustMatchers with FilterMatchers {
 
     val exampleFoo = Filter.includePrefixes("http://example.com/foo", "https://example.com/bar")
 
-    exampleFoo must accept ("http://example.com/foo")
+    exampleFoo should accept ("http://example.com/foo")
 
-    exampleFoo must accept ("http://example.com/foo/bar")
+    exampleFoo should accept ("http://example.com/foo/bar")
 
-    exampleFoo must accept ("https://example.com/bar")
+    exampleFoo should accept ("https://example.com/bar")
 
-    exampleFoo must accept ("https://example.com/bar/foo/baz")
+    exampleFoo should accept ("https://example.com/bar/foo/baz")
 
-    exampleFoo must not (accept ("http://example.com/"))
+    exampleFoo should not (accept ("http://example.com/"))
 
-    exampleFoo must not (accept ("http://example.com/bar"))
+    exampleFoo should not (accept ("http://example.com/bar"))
 
-    exampleFoo must not (accept ("https://example.com/foo"))
+    exampleFoo should not (accept ("https://example.com/foo"))
 
   }
 

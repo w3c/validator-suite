@@ -39,7 +39,7 @@ class SimpleInterWebsiteTest extends VSTest with ServersTest with TestData {
     val completeRunEvent =
       (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
-    completeRunEvent.resources must be(2)
+    completeRunEvent.resources should be(2)
 
   }
   

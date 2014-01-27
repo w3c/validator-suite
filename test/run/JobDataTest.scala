@@ -32,7 +32,7 @@ class JobDataTest extends VSTest[ActorSystem with Database with RunEvents] with 
   val http = vs.httpActorRef
   PathAware(http, http.path / "localhost_9001") ! SetSleepTime(0)
 
-  "Job.jobData() must be subscribed to future updates even if the job was Idle" in {
+  "Job.jobData() should be subscribed to future updates even if the job was Idle" in {
 
     val job = TestData.job
 
@@ -40,7 +40,7 @@ class JobDataTest extends VSTest[ActorSystem with Database with RunEvents] with 
     Job.save(job).getOrFail()
 
     val rdsBeforeRun = job.getResourceDatas().getOrFail()
-    rdsBeforeRun must be('empty)
+    rdsBeforeRun should be('empty)
 
     // Get the enum first
     val enum = job.jobDatas() &> Enumeratee.mapConcat(_.toSeq)
@@ -64,7 +64,7 @@ class JobDataTest extends VSTest[ActorSystem with Database with RunEvents] with 
 
     // just wait for a RunEvent so we now that something interesting had happened
     val rdsAfterRun = runningJob.getResourceDatas().getOrFail()
-    rdsAfterRun must not be('empty)
+    rdsAfterRun should not be('empty)
 
   }
 

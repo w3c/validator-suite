@@ -1,7 +1,7 @@
 package org.w3.vs.assertor
 
 import org.scalatest._
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.Matchers
 import org.w3.vs.web._
 import org.w3.vs.model._
 import org.w3.vs.web.URL
@@ -15,7 +15,7 @@ object MarkupValidatorTest {
 
 }
 
-abstract class MarkupValidatorTest extends WordSpec with MustMatchers with AssertionsMatchers with BeforeAndAfterAll {
+abstract class MarkupValidatorTest extends WordSpec with Matchers with AssertionsMatchers with BeforeAndAfterAll {
 
 //  import MarkupValidatorTest.cache
 
@@ -30,20 +30,20 @@ abstract class MarkupValidatorTest extends WordSpec with MustMatchers with Asser
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
     val assertions = MarkupValidator.assert(url, Map.empty: AssertorConfiguration)
-    assertions must (haveErrors)
+    assertions should (haveErrors)
   }
 
-  "MarkupValidator must accept optional parameters" in {
+  "MarkupValidator should accept optional parameters" in {
     val url = URL("http://www.google.com")
     val assertorConfiguration: AssertorConfiguration = Map.empty
 
     val urlForMachine = MarkupValidator.validatorURLForMachine(url, assertorConfiguration).toString
 
-    urlForMachine must startWith(MarkupValidator.serviceUrl)
+    urlForMachine should startWith(MarkupValidator.serviceUrl)
 
     val queryString: String = urlForMachine.substring(MarkupValidator.serviceUrl.length)
 
-    Helper.parseQueryString(queryString) must be (assertorConfiguration
+    Helper.parseQueryString(queryString) should be (assertorConfiguration
       + ("output" -> List("ucn"))
       + ("uri" -> List(url.encode("UTF-8")))
     )
@@ -54,9 +54,9 @@ abstract class MarkupValidatorTest extends WordSpec with MustMatchers with Asser
     if (! MarkupValidator.serviceUrl.startsWith("http://validator.w3.org")) {
       val url = URL("http://www.w3.org/2008/MW4D/")
       val assertions: Iterable[Assertion] = MarkupValidator.assert(url, Map.empty)
-      assertions must have size(1)
+      assertions should have size(1)
       val assertion = assertions.head
-      assertion.title must be(MarkupValidator.UsesHtml5Syntax)
+      assertion.title should be(MarkupValidator.UsesHtml5Syntax)
     } else {
       play.Logger.debug("not executing test because using validator.w3.org")
     }
@@ -66,7 +66,7 @@ abstract class MarkupValidatorTest extends WordSpec with MustMatchers with Asser
   // "there should be no HTML error in http://www.w3.org/2011/08/validator-test/no-error.html" in {
   //   val url = URL("http://www.w3.org/2011/08/validator-test/no-error.html")
   //   val assertion = MarkupValidator.assert(url) getOrElse sys.error("was not a Success")
-  //   assertion must not (haveErrorz)
+  //   assertion should not (haveErrorz)
   // }
 
 }

@@ -459,7 +459,7 @@ object Job {
   def get(jobId: JobId)(implicit conf: Database): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.headOption() map {
+    cursor.headOption map {
       case None => throw UnknownJob(jobId) //new NoSuchElementException("Invalid jobId: " + jobId)
       case Some(json) => json.as[Job]
     }
@@ -468,7 +468,7 @@ object Job {
   /**the list of all the Jobs */
   def getAll()(implicit conf: Database): Future[List[Job]] = {
     val cursor = collection.find(Json.obj()).cursor[JsValue]
-    cursor.toList() map {
+    cursor.collect[List]() map {
       list => list flatMap { job =>
         try {
           Some(job.as[Job])
@@ -487,7 +487,7 @@ object Job {
   def getRunningJobs()(implicit conf: Database): Future[List[Job]] = {
     val query = Json.obj("status.actorName" -> Json.obj("$exists" -> JsBoolean(true)))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.toList() map {
+    cursor.collect[List]() map {
       list => list map {
         _.as[Job]
       }
@@ -539,7 +539,7 @@ object Job {
   /*def getFor(userId: UserId, jobId: JobId)(implicit conf: Database): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.headOption() map {
+    cursor.headOption map {
       case Some(json) if (json \ "creator").asOpt[UserId] === Some(userId) => json.as[Job]
       case _ => throw UnknownJob(jobId)
     }
@@ -563,7 +563,8 @@ object Job {
 
   def save(job: Job)(implicit conf: Database): Future[Job] = {
     val jobJson = toJson(job)
-    collection.insert(jobJson) map {
+    println(Json.prettyPrint(jobJson))
+    collection.insert(jobJson, writeConcern = journalCommit) map {
       lastError => job
     }
   }

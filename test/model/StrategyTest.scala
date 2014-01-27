@@ -6,13 +6,13 @@ import org.scalatest.{ Filter => ScalaTestFilter, _ }
 import org.scalatest.matchers._
 import org.w3.vs.assertor.{ LocalValidators, FromHttpResponseAssertor }
 
-class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
+class StrategyTest extends WordSpec with Matchers with FilterMatchers {
 
   val validatorNu: FromHttpResponseAssertor = LocalValidators.ValidatorNu
 
   val strategy = Strategy(entrypoint = URL("http://example.com/foo"), maxResources = 100)
 
-  "a strategy must select the assertors based on their mimetype" in {
+  "a strategy should select the assertors based on their mimetype" in {
 
     val httpResponseKnownMimeType =
       HttpResponse(
@@ -23,11 +23,11 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
         extractedURLs = List.empty,
         doctypeOpt = None)
 
-    strategy.getAssertors(httpResponseKnownMimeType) must contain(validatorNu)
+    strategy.getAssertors(httpResponseKnownMimeType) should contain(validatorNu)
 
   }
 
-  "a strategy must reject assertors for unknown mimetype" in {
+  "a strategy should reject assertors for unknown mimetype" in {
 
     val httpResponseKnownMimeType =
       HttpResponse(
@@ -38,11 +38,11 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
         extractedURLs = List.empty,
         doctypeOpt = None)
 
-    strategy.getAssertors(httpResponseKnownMimeType) must be('empty)
+    strategy.getAssertors(httpResponseKnownMimeType) should be('empty)
 
   }
 
-  "a strategy must return assertors only for responses in the 2xx range status" in {
+  "a strategy should return assertors only for responses in the 2xx range status" in {
 
     val httpResponseKnownMimeType =
       HttpResponse(
@@ -53,11 +53,11 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
         extractedURLs = List.empty,
         doctypeOpt = None)
 
-    strategy.getAssertors(httpResponseKnownMimeType) must be('empty)
+    strategy.getAssertors(httpResponseKnownMimeType) should be('empty)
 
   }
 
-  "a strategy must return assertors only for responses from a GET" in {
+  "a strategy should return assertors only for responses from a GET" in {
 
     val httpResponseKnownMimeType =
       HttpResponse(
@@ -68,7 +68,7 @@ class StrategyTest extends WordSpec with MustMatchers with FilterMatchers {
         extractedURLs = List.empty,
         doctypeOpt = None)
 
-    strategy.getAssertors(httpResponseKnownMimeType) must be('empty)
+    strategy.getAssertors(httpResponseKnownMimeType) should be('empty)
 
   }
 

@@ -83,17 +83,18 @@ object Job extends VSController {
 
   import play.api.mvc._
 
-  def dispatcher(implicit id: JobId): ActionA = Action { implicit req =>
-    (for {
+  def dispatcher(implicit id: JobId): ActionA = Action.async { implicit req =>
+    val action: String = (for {
       body <- req.body.asFormUrlEncoded
       param <- body.get("action")
       action <- param.headOption
-    } yield action.toLowerCase match {
+    } yield action.toLowerCase).getOrElse("notSpecified")
+    action match {
       case "delete" => delete(id)(req)
       case "run" => run(id)(req)
       case "stop" => stop(id)(req)
-      case a => BadRequest(views.html.error._400(List(("error", Messages("debug.unexpected", "unknown action " + a)))))
-    }).getOrElse(BadRequest(views.html.error._400(List(("error", Messages("debug.unexpected", "no action parameter was specified"))))))
+      case a => Future.successful(BadRequest(views.html.error._400(List(("error", Messages("debug.unexpected", "unknown action " + a))))))
+    }
   }
 
   def socket(jobId: JobId, typ: SocketType): Handler = {

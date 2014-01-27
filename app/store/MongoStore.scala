@@ -26,7 +26,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 object MongoStore {
 
-  val journalCommit = GetLastError(awaitJournalCommit = true)
+  val journalCommit = GetLastError(j = true)
 
   def reInitializeDb()(implicit conf: Database): Future[Unit] = {
     for {

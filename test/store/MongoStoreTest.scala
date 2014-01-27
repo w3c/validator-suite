@@ -178,13 +178,18 @@ extends VSTest with WipeoutData {
   }
 
   override def beforeAll(): Unit = {
+    //super.beforeAll()
     val start = System.currentTimeMillis
     val initScript = for {
       _ <- MongoStore.reInitializeDb()
       _ <- User.save(user1)
+      _ = println("1")
       _ <- User.save(user2)
+      _ = println("2")
       _ <- User.save(user3)
+      _ = println("3")
       _ <- Job.save(job1)
+      _ = println("4")
       _ <- Job.save(job2)
       _ <- Job.save(job3)
       _ <- Job.save(job4)
@@ -215,101 +220,101 @@ extends VSTest with WipeoutData {
 
   "User" in {
     val r = User.get(user1.id).getOrFail()
-    r must be(endUser1)
+    r should be(endUser1)
   }
 
   "retrieve User by email" in {
-    User.getByEmail("fOO@example.com").getOrFail() must be(endUser1)
+    User.getByEmail("fOO@example.com").getOrFail() should be(endUser1)
 
-    Try { User.getByEmail("unknown@example.com").getOrFail() } must be (Failure(UnknownUser("unknown@example.com")))
+    Try { User.getByEmail("unknown@example.com").getOrFail() } should be (Failure(UnknownUser("unknown@example.com")))
   }
 
 
   // TODO: Fails with new reactivemongo?
 //  "a User can't have an email already in use" in {
 //    val user = User.create("FOO", "foo@example.com", "secret", isSubscriber = true)
-//    Try { User.save(user).getOrFail() } must be (Failure(DuplicatedEmail("foo@example.com")))
-//    Try { User.register("FOO", "foo@example.com", "secret", true).getOrFail() } must be (Failure(DuplicatedEmail("foo@example.com")))
+//    Try { User.save(user).getOrFail() } should be (Failure(DuplicatedEmail("foo@example.com")))
+//    Try { User.register("FOO", "foo@example.com", "secret", true).getOrFail() } should be (Failure(DuplicatedEmail("foo@example.com")))
 //  }
 
   "authenticate a user" in {
-    Try { User.authenticate("foo@example.com", "secret").getOrFail() } must be (Success(endUser1))
+    Try { User.authenticate("foo@example.com", "secret").getOrFail() } should be (Success(endUser1))
 
-    Try { User.authenticate("foo@example.com", "bouleshit").getOrFail() } must be (Failure(Unauthenticated("foo@example.com")))
+    Try { User.authenticate("foo@example.com", "bouleshit").getOrFail() } should be (Failure(Unauthenticated("foo@example.com")))
 
-    Try {User.authenticate("unknown@example.com", "bouleshit").getOrFail() } must be (Failure(UnknownUser("unknown@example.com")))
+    Try {User.authenticate("unknown@example.com", "bouleshit").getOrFail() } should be (Failure(UnknownUser("unknown@example.com")))
   }
 
   "retrieve unknown Job" in {
     val retrieved = Try { Job.get(JobId()).getOrFail() }
-    retrieved must be ('Failure) // TODO test exception type (UnknownJob)
+    retrieved should be ('Failure) // TODO test exception type (UnknownJob)
   }
 
   "create, put, retrieve, delete Job" in {
     val job = job1.copy(id = JobId())
-    Try { Job.get(job.id).getOrFail() } must be ('failure)
-    Try { Job.save(job).getOrFail() } must be ('success)
+    Try { Job.get(job.id).getOrFail() } should be ('failure)
+    Try { Job.save(job).getOrFail() } should be ('success)
     val retrieved = Job.get(job.id).getOrFail(Duration("10s"))
-    retrieved must be (job)
-    Try { Job.delete(job.id).getOrFail() } must be ('success)
-    Try { Job.get(job.id).getOrFail() } must be ('failure)
+    retrieved should be (job)
+    Try { Job.delete(job.id).getOrFail() } should be ('success)
+    Try { Job.get(job.id).getOrFail() } should be ('failure)
   }
 
   "a user can only access the jobs that he created" in {
     val jobs = Job.getFor(user1.id).getOrFail()
-    jobs must have size(4)
-    jobs must contain (job1)
-    jobs must contain (job2)
-    jobs must contain (job3)
-    jobs must contain (job5)
+    jobs should have size(4)
+    jobs should contain (job1)
+    jobs should contain (job2)
+    jobs should contain (job3)
+    jobs should contain (job5)
   }
 
   "a user with no job should still be able to list his empty list of jobs" in {
     val jobs = Job.getFor(user3.id).getOrFail()
-    jobs must be ('empty)
+    jobs should be ('empty)
   }
 
   "retrieve Run" in {
     val run = Run.get(run1.runId).getOrFail(Duration("10s"))._1
-    run.assertions.size must be(run1.assertions.size)
+    run.assertions.size should be(run1.assertions.size)
   }
 
   "get all assertions for a completed Run" in {
     val assertions = Run.getAssertions(run1.runId).getOrFail()
-    assertions.toList must have length(nbAssertionsPerRun)
+    assertions.toList should have length(nbAssertionsPerRun)
   }
 
   "get all assertions for a completed Run for a given url" in {
     val url = URL("http://example.com/foo/1")
     val assertions = Run.getAssertionsForURL(run1.runId, url).getOrFail()
-    assertions.toList must have size(severities(Error) + severities(Warning) + severities(Info))
-    assertions.map(_.url).toSet must be(Set(URL("http://example.com/foo/1")))
+    assertions.toList should have size(severities(Error) + severities(Warning) + severities(Info))
+    assertions.map(_.url).toSet should be(Set(URL("http://example.com/foo/1")))
   }
 
   "get final ResourceData-s for a given run" in {
     val rds = Run.getResourceDatas(run3.runId).getOrFail()
-    rds.toSet must be(run3.resourceDatas.values.toSet)
+    rds.toSet should be(run3.resourceDatas.values.toSet)
   }
 
   "get final ResourceData for a given run and url" in {
     val url = URL("http://example.com/foo/1")
     val rd = Run.getResourceDataForURL(run3.runId, url).getOrFail()
-    rd must be(run3.resourceDatas(url))
+    rd should be(run3.resourceDatas(url))
   }
 
   "get final GroupedAssertionData-s for a given run" in {
     val gads = Run.getGroupedAssertionDatas(run3.runId).getOrFail()
-    gads.toSet must be(run3.groupedAssertionDatas.values.toSet)
+    gads.toSet should be(run3.groupedAssertionDatas.values.toSet)
   }
 
   "get all running jobs" in {
     val runningJobs = Job.getRunningJobs().getOrFail()
-    runningJobs must have size(2)
-    runningJobs must contain(job1)
-    runningJobs must contain(job5)
+    runningJobs should have size(2)
+    runningJobs should contain(job1)
+    runningJobs should contain(job5)
   }
 
-  "Enumerator-s for completed jobs must send the elements from the latest Run" in {
+  "Enumerator-s for completed jobs should send the elements from the latest Run" in {
     // first, we terminate job1/run4 and we make it point to run3
     val doneRunEvent = DoneRunEvent(Some(user1.id), job1.id, run3.runId, Completed, run3.data.resources, run3.data.errors, run3.data.warnings, run3.resourceDatas, run3.groupedAssertionDatas.values, run3.completedOn.get)
     JobActor.saveEvent(doneRunEvent).getOrFail()
@@ -324,24 +329,24 @@ extends VSTest with WipeoutData {
 
     // and compare it to the RunData in the Job
     val jobData = JobData(job1, runData)
-    enumJobDatas must be(List(jobData))
+    enumJobDatas should be(List(jobData))
 
     // do the same with RunData
     val enumRunDatas: List[RunData] =
       (job1.runDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
-    enumRunDatas must be(List(runData))
+    enumRunDatas should be(List(runData))
 
     // ... and resourceDatas
     val enumRds: List[ResourceData] =
       (job1.resourceDatas(forever = false) &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     val rds = job1.getResourceDatas().getOrFail()
-    enumRds must be(rds)
+    enumRds should be(rds)
 
     // ... and GroupedAssertionDatas
     val enumGads: List[GroupedAssertionData] =
       (job1.groupedAssertionDatas() &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     val gads = job1.getGroupedAssertionDatas().getOrFail()
-    enumGads must be(gads)
+    enumGads should be(gads)
 
     // ... and Assertions
     // TODO add assertions in run3: it's currently empty
@@ -349,7 +354,7 @@ extends VSTest with WipeoutData {
     val enumAssertions: List[Assertion] =
       (job1.assertions(url) &> Enumeratee.mapConcat(_.toSeq) &> endWithEmpty() |>>> Iteratee.getChunks).getOrFail()
     val assertions = job1.getAssertions(url).getOrFail()
-    enumAssertions must be(assertions)
+    enumAssertions should be(assertions)
 
   }
 
@@ -359,7 +364,7 @@ extends VSTest with WipeoutData {
       model.Coupon.get(coupon.code).getOrFail()
     }
     // save it
-    coupon.save().getOrFail() must be(coupon)
+    coupon.save().getOrFail() should be(coupon)
     // saving it again throws an exception
     intercept[Exception] {
       coupon.save().getOrFail()
@@ -370,8 +375,8 @@ extends VSTest with WipeoutData {
       coupon2.save().getOrFail()
     }
     val redeemed = coupon.copy(usedBy = Some(UserId()), useDate = Some(DateTime.now(DateTimeZone.UTC)))
-    redeemed.update().getOrFail() must be(redeemed)
-    Coupon.get(redeemed.code).getOrFail() must be(redeemed)
+    redeemed.update().getOrFail() should be(redeemed)
+    Coupon.get(redeemed.code).getOrFail() should be(redeemed)
     val redeemed2 = redeemed.copy(usedBy = Some(UserId()))
     // can't re-redeem a coupon
     intercept[AlreadyUsedCouponException] {
@@ -405,11 +410,11 @@ extends VSTest with WipeoutData {
       rebornJob <- Job.get(job.id)
       assertionsAfter <- Run.getAssertions(run.runId)
     } yield {
-      rebornJob.id must be(job.id)
-      rebornJob.status must be(NeverStarted)
-      rebornJob.latestDone must be(None)
-      assertionsBefore must have size(1)
-      assertionsAfter must be('empty)
+      rebornJob.id should be(job.id)
+      rebornJob.status should be(NeverStarted)
+      rebornJob.latestDone should be(None)
+      assertionsBefore should have size(1)
+      assertionsAfter should be('empty)
     }
     script.getOrFail()
   }

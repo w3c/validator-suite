@@ -2,7 +2,7 @@ package org.w3.vs.util
 
 import org.scalatest.{ Suite, BeforeAndAfterAll }
 
-trait ServersTest extends BeforeAndAfterAll { this: Suite =>
+trait ServersTest extends VSTest {
 
   def servers: Seq[Webserver]
 

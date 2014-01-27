@@ -6,9 +6,9 @@ import org.scalatest._
 import org.scalatest.Inside._
 import org.scalatest.matchers._
 
-class ResourceInfoTest extends WordSpec with MustMatchers {
+class ResourceInfoTest extends WordSpec with Matchers {
 
-  "a redirect with a relative URL MUST return the absolute URL" in {
+  "a redirect with a relative URL should return the absolute URL" in {
 
     val rr = HttpResponse(
       URL("http://example.com/foo/"),
@@ -20,11 +20,11 @@ class ResourceInfoTest extends WordSpec with MustMatchers {
 
     val ri = ResourceInfo(rr)
 
-    ri must be(Redirect(302, URL("http://example.com/bar/baz")))
+    ri should be(Redirect(302, URL("http://example.com/bar/baz")))
 
   }
 
-  "a redirect with an absolute URL MUST return the same absolute URL" in {
+  "a redirect with an absolute URL should return the same absolute URL" in {
 
     val rr = HttpResponse(
       URL("http://example.com/foo/"),
@@ -36,11 +36,11 @@ class ResourceInfoTest extends WordSpec with MustMatchers {
 
     val ri = ResourceInfo(rr)
 
-    ri must be(Redirect(302, URL("http://other.example.com/bar/baz")))
+    ri should be(Redirect(302, URL("http://other.example.com/bar/baz")))
 
   }
 
-  "a redirect with no Location header MUST be an error" in {
+  "a redirect with no Location header should be an error" in {
 
     val rr = HttpResponse(
       URL("http://example.com/foo/"),
@@ -56,7 +56,7 @@ class ResourceInfoTest extends WordSpec with MustMatchers {
 
   }
 
-  "a redirect with an invalid Location header MUST be an error" in {
+  "a redirect with an invalid Location header should be an error" in {
 
     val rr = HttpResponse(
       URL("http://example.com/foo/"),

@@ -28,13 +28,15 @@ class WebsiteWithRedirectsCrawlTest extends VSTest with ServersTest with TestDat
       _ <- Job.save(job)
     } yield ()).getOrFail()
 
+    println("sdfsdfsdfsd")
+
     val runningJob = job.run().getOrFail()
     val Running(runId, actorName) = runningJob.status
 
     val completeRunEvent =
       (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
-    completeRunEvent.resources must be(circumference + 1)
+    completeRunEvent.resources should be(circumference + 1)
 
   }
   

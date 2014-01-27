@@ -6,21 +6,21 @@ import org.scalatest._
 import org.scalatest.matchers._
 import org.joda.time.{ DateTime, DateTimeZone }
 
-class RunTest extends WordSpec with MustMatchers {
+class RunTest extends WordSpec with Matchers {
 
   val strategy =
     Strategy(entrypoint = URL("http://w3.org/"), maxResources = 100)
 
-  "A fresh run" must {
+  "A fresh run" should {
     val fresh: Run = Run.freshRun(strategy)
     "be really fresh" in {
-      fresh.completedOn must be('empty)
-      fresh.pendingFetches must be('empty)
-      fresh.knownResources must be('empty)
+      fresh.completedOn should be('empty)
+      fresh.pendingFetches should be('empty)
+      fresh.knownResources should be('empty)
     }
   }
 
-  "A Run must filter out already seen assertions" in {
+  "A Run should filter out already seen assertions" in {
     val assertorId = AssertorId("test_assertor")
     val assertion =
       Assertion(
@@ -36,7 +36,7 @@ class RunTest extends WordSpec with MustMatchers {
     val ar = AssertorResult(assertorId, URL("http://example.com"), Map(URL("http://example.com") -> Vector(assertion)))
     val run = Run.freshRun(strategy)
     val event = AssertorResponseEvent(Some(UserId()), JobId(), run.runId, ar)
-    run.step(event).run.step(event).run.assertions must be(run.step(event).run.assertions)
+    run.step(event).run.step(event).run.assertions should be(run.step(event).run.assertions)
   }
 
 }
