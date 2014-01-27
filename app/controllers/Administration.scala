@@ -14,6 +14,7 @@ import reactivemongo.bson.BSONObjectID
 import scala.concurrent.Future
 import concurrent.duration.FiniteDuration
 import org.w3.vs.store.MongoStore
+import org.w3.vs.exception.InvalidSyntaxCouponException
 
 object Administration extends VSController {
 
@@ -49,7 +50,8 @@ object Administration extends VSController {
         val r = try {
           executeCommand(command)
         } catch { case e: Exception =>
-          toStackTraceString(e)
+          //toStackTraceString(e)
+          e.getMessage
         }
         channel.push(r)
         iteratee
@@ -133,12 +135,10 @@ object Administration extends VSController {
           |    db-indexes                    - recreate database indexes
           |    emails                        - comma-separated list of all opted-in emails
           |    coupons <regex>        - all coupons that match the given regex
-          |    coupon <code>          - the coupon with the given coupon code
-          |    coupon <id>            - the coupon with the given coupon id (database identifier)
+          |    coupon <couponId>            - the coupon with the given coupon id
           |    coupon-create <code> <campaign> <credits> - creates a coupon with provided parameters
           |    coupon-create <code> <campaign> <credits> <description> <validityInDays>
-          |    coupon-delete <id>     - delete the coupon with given id
-          |    coupon-delete <code>   - delete the coupon with given code
+          |    coupon-delete <couponId>     - delete the coupon with given id
           |    coupon-redeem <code> <userId>  - redeem a coupon to a userId
           |    coupon-campaign-create <numberOfCoupons> <prefix> <campaign> <credits> <description> <validityInDays>
           |    """.stripMargin
@@ -152,12 +152,8 @@ object Administration extends VSController {
         val filtered = coupons.filter(coupon => reg.findFirstIn(coupon.compactString).isDefined).map(_.compactString)
         displayResults(filtered)
 
-      case Array("coupon", code) =>
-        val coupon = model.Coupon.get(code).getOrFail()
-        coupon.compactString
-
-      case Array("coupon", id(id)) =>
-        model.Coupon.get(CouponId(id)).map(_.compactString).recover{case _ => s"No coupon found"}.getOrFail()
+      case Array("coupon", id(couponId)) =>
+        model.Coupon.get(CouponId(couponId)).map(_.compactString).recover{case _ => s"No coupon found"}.getOrFail()
 
       case Array("coupon-create", code, campaign, int(credits)) =>
         val coupon = model.Coupon(code, campaign, credits).save().getOrFail()
@@ -167,25 +163,24 @@ object Administration extends VSController {
         val coupon = model.Coupon(code, campaign, credits, description, validityDays).save().getOrFail()
         coupon.compactString
 
-      case Array("coupon-delete", id(id)) =>
-        model.Coupon.delete(CouponId(id)).getOrFail()
+      case Array("coupon-delete", id(couponId)) =>
+        model.Coupon.delete(CouponId(couponId)).getOrFail()
         s"coupon ${id} deleted"
 
-      case Array("coupon-delete", code) =>
-        model.Coupon.delete(code).getOrFail()
-        s"coupon ${code} deleted"
-
       case Array("coupon-redeem", code, id(userId)) =>
-        val (user, redeemed) = model.Coupon.redeem(code, UserId(userId)).getOrFail()
+        val (_, redeemed) = model.Coupon.redeem(code, UserId(userId)).getOrFail()
         s"coupon ${code} redeemed\n" + redeemed.compactString
 
       case Array("coupon-campaign-create", int(number), prefix, campaign, int(credits), description, int(validityInDays)) =>
-        var coupons = List.empty[String]
-        for (i <- 1 to number) {
-          coupons = model.Coupon.generateCode(prefix) +: coupons
+        val pattern = """^\w{2,8}$""".r
+        if (!pattern.findFirstIn(prefix).isDefined) {
+          s"""invalid prefix: ${prefix}. The prefix must be a string of 2 to 8 alphanumeric characters."""
+        } else {
+          var coupons = List.empty[String]
+          for (i <- 1 to number) { coupons = model.Coupon.generateCode(prefix) +: coupons }
+          val c = coupons.map(code => model.Coupon(code, campaign, credits, description, validityInDays)).map(_.save().getOrFail())
+          c.mkString("\n")
         }
-        val c = coupons.map(code => model.Coupon(code, campaign, credits, description, validityInDays)).map(_.save().getOrFail())
-        c.mkString("\n")
 
       case Array("job", id(jobId)) =>
         model.Job.get(JobId(jobId)).map(_.compactString).recover{case _ => s"No job found"}.getOrFail()
