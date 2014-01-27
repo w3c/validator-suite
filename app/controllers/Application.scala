@@ -77,9 +77,9 @@ object Application extends VSController {
     RegisterForm.bindFromRequest().fold(
       form => BadRequest(views.html.register(registerForm = form, loginForm = LoginForm)),
       register => (for {
-        _ <- register.coupon.map{ coupon =>
-          model.Coupon.get(coupon)
-        }.getOrElse(Future.successful())
+        couponOpt <- register.coupon.map{ coupon =>
+          model.Coupon.getIfValid(coupon).map(Some(_))
+        }.getOrElse(Future.successful(None))
         user <- model.User.register(
           name = register.name,
           email = register.email,
@@ -93,11 +93,11 @@ object Application extends VSController {
         logger.info(s"""id=${user.id} action=register email=${user.email} name="${user.name}" opt-in=${user.optedIn}""")
         logger.info(s"""id=${user.id} action=login email=${user.email}""")
         vs.sendEmail(Emails.registered(user))
-        /*val newUri = form("uri").value match {
-          case Some(uri) if uri != "" => uri
-          case _ => routes.Jobs.index.url
-        }*/
-        SeeOther(register.redirectUri).withSession("email" -> user.email).flashing(("success", Messages("success.registered.user", user.name, user.email)))
+        val msg = couponOpt match {
+          case Some(coupon) => Messages("success.registered.user", user.name, user.email) + "<br/>" + Messages("user.coupon.redeemed", coupon.description.getOrElse("Validator Suite"), coupon.code, coupon.credits)
+          case _ => Messages("success.registered.user", user.name, user.email)
+        }
+        SeeOther(register.redirectUri).withSession("email" -> user.email).flashing("success" -> msg)
       }) recover {
         case DuplicatedEmail(email: String) => {
           logger.info(s"""action=register email=${email} message="Registration failed. Email already in use." """)

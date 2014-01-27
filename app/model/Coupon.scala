@@ -126,13 +126,17 @@ object Coupon {
     )
   }
 
-  def redeem(couponCode: String, userId: UserId)(implicit vs: ValidatorSuite with Database): Future[(User, Coupon)] = {
-    for {
-      coupon <- get(couponCode).map{ coupon =>
+  def getIfValid(couponCode: String)(implicit vs: ValidatorSuite with Database): Future[Coupon] = {
+      get(couponCode).map{ coupon =>
         if (coupon.usedBy.isDefined) { throw new AlreadyUsedCouponException(couponCode) }
         if (coupon.expirationDate.isBefore(DateTime.now(DateTimeZone.UTC))) { throw new ExpiredCouponException(couponCode) }
         coupon
       }
+  }
+
+  def redeem(couponCode: String, userId: UserId)(implicit vs: ValidatorSuite with Database): Future[(User, Coupon)] = {
+    for {
+      coupon <- getIfValid(couponCode)
       user <- model.User.updateCredits(userId, coupon.credits)
       redeemed <-
         coupon.copy(useDate = Some(DateTime.now(DateTimeZone.UTC)), usedBy = Some(userId)).update()
