@@ -27,7 +27,8 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
 
     val runningJob = job.run().getOrFail() // will also run all default assertors
     val Running(runId, actorName) = runningJob.status
-    val jobActor = vs.system.actorFor(actorName.actorPath)
+    import vs.timeout
+    val jobActor = vs.system.actorSelection(actorName.actorPath).resolveOne().getOrFail()
 
     val runEvents = runningJob.runEvents()
     val jobDatas = runningJob.jobDatas()

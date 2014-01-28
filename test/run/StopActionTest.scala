@@ -15,8 +15,6 @@ import play.api.Mode
 
 class StopActionTest extends VSTestKit with ServersTest with TestData with WipeoutData {
 
-  //implicit val vs =  new ValidatorSuite { val mode = Mode.Test }
-
   val servers = Seq(Webserver(9001, Website.cyclic(1000).toServlet()))
 
   val job = TestData.job

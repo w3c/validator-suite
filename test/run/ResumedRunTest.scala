@@ -12,30 +12,12 @@ import org.w3.vs._
 import play.api.Mode
 import akka.actor.{ ActorSystem => _, _ }
 
-class ResumedRunTest extends VSTestKit with ServersTest with TestData with WipeoutData {
-
-
-  //implicit val vs =  new ValidatorSuite { val mode = Mode.Test }
-
-
-  //implicit val vs = new ValidatorSuite(Mode.Test) with DefaultActorSystem with DefaultDatabase with DefaultHttpClient with DefaultRunEvents
-
-  //val a: ActorSystem = conf
-//
-//  val strategy =
-//    Strategy(
-//      entrypoint=URL("http://localhost:9001/"),
-//      linkCheck=true,
-//      maxResources = 100,
-//      filter=Filter(include=Everything, exclude=Nothing),
-//      assertorsConfiguration = Map.empty)
-//
-//  val job = Job.createNewJob(name = "@@", strategy = strategy, creatorId = userTest.id)
+class ResumedRunTest extends VSTestKit with TestData with ServersTest with WipeoutData {
 
   val circumference = 20
   
   val servers = Seq(Webserver(9001, Website.cyclic(circumference).toServlet()))
-  
+
   "test cyclic + interruption + resuming job" in {
 
     val job = TestData.job
@@ -44,14 +26,15 @@ class ResumedRunTest extends VSTestKit with ServersTest with TestData with Wipeo
     User.save(TestData.user).getOrFail()
     Job.save(TestData.job).getOrFail()
 
-    val jobId = job.id
+    val jobId: JobId = job.id
     
     val runningJob = job.run().getOrFail()
     val Running(runId, actorName) = runningJob.status
     runningJob.id should be(job.id)
 
     // register to the death of the JobActor
-    val jobActorRef = vs.system.actorFor(actorName.actorPath)
+    import vs.timeout
+    val jobActorRef = vs.system.actorSelection(actorName.actorPath).resolveOne().getOrFail()
     watch(jobActorRef)
 
     // wait for the first ResourceResponseEvent
@@ -82,5 +65,5 @@ class ResumedRunTest extends VSTestKit with ServersTest with TestData with Wipeo
     completeRunEvent.resources should be(circumference + 1)
 
   }
-  
+
 }

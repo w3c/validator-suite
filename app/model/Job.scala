@@ -108,8 +108,9 @@ case class Job(
       case NeverStarted | Zombie => Future.successful(())
       case Done(_, _, _, _) => Future.successful(())
       case Running(_, actorName) => {
-        val actorRef = conf.system.actorFor(actorName.actorPath)
-        (actorRef ? JobActor.Cancel).mapTo[Unit]
+        conf.system.actorSelection(actorName.actorPath).resolveOne().flatMap(
+          actor => (actor ? JobActor.Cancel).mapTo[Unit]
+        )
       }
     }
   }
@@ -123,12 +124,14 @@ case class Job(
    * NoSuchElementException.
    */
   def getFuture(actorPath: ActorPath, classifier: Classifier)(implicit classTag: ClassTag[classifier.OneOff], conf: ValidatorSuite): Future[classifier.OneOff] = {
-    val actorRef = conf.system.actorFor(actorPath)
     val message = JobActor.Get(classifier)
     val shortTimeout = Duration(2, "s")
-    ask(actorRef, message)(shortTimeout).mapTo[classifier.OneOff] recoverWith {
-      case _: AskTimeoutException => Future.failed[classifier.OneOff](new NoSuchElementException)
-    }
+    import conf.timeout
+    conf.system.actorSelection(actorPath).resolveOne().flatMap(
+      actor => ask(actor, message)(shortTimeout).mapTo[classifier.OneOff] recoverWith {
+        case _: AskTimeoutException => Future.failed[classifier.OneOff](new NoSuchElementException)
+      }
+    )
   }
 
   /**enumerates the values of type T (according to the
@@ -165,8 +168,13 @@ case class Job(
         }
       }
 
-      def subscribeToJobActor(actorRef: ActorRef): Unit = {
+      def subscribeToJobActor(actorRef: ActorRef) {
         actorRef ! JobActor.Listen(classifier)
+      }
+
+      def subscribeToJobActor(actorPath: ActorPath) {
+        import vs.timeout
+        system.actorSelection(actorPath).resolveOne().map(actor => actor ! JobActor.Listen(classifier))
       }
 
       def subscribeToChannel(channel: Concurrent.Channel[Iterator[classifier.Streamed]]): Unit = {
@@ -178,7 +186,7 @@ case class Job(
         // subscribe to the JobActor itself
         thisJob.status match {
           // if the Job is currently running, just talk to it directly
-          case Running(_, actorName) => subscribeToJobActor(system.actorFor(actorName.actorPath))
+          case Running(_, actorName) => subscribeToJobActor(actorName.actorPath)
           // but if it's not running right now, then the status may
           // have changed. Let's give it a chance. Note that we
           // shouldn't be missing anything at this point as we've

@@ -15,19 +15,17 @@ object VSTest {
 
 }
 
-abstract class VSTest extends WordSpec with BeforeAndAfterAll with Matchers with Inside {
+trait VSTest extends WordSpecLike with BeforeAndAfterAll with Matchers {
 
   implicit def vs: ValidatorSuite
 
   override def beforeAll() {
-    super.beforeAll()
     vs.start()
     vs.db
   }
 
   override def afterAll() {
     vs.shutdown()
-    super.afterAll()
   }
 
 }
@@ -36,19 +34,21 @@ trait WipeoutData extends VSTest {
 
   override def beforeAll() {
     super.beforeAll()
-    MongoStore.reInitializeDb()(vs)
+    import org.w3.vs.util.timer._
+    MongoStore.reInitializeDb()(vs).getOrFail()
   }
 
 }
 
 
-trait VSTestKit
-    extends VSTest
-    with TestKitBase
+class VSTestKit(val conf: ValidatorSuite = VSTest.newTestConfiguration())
+    extends TestKit(conf.system)
+    with VSTest
     with TestKitHelper {
 
-  implicit lazy val vs: ValidatorSuite = new ValidatorSuite { val mode = Mode.Test }
-  implicit lazy val system : akka.actor.ActorSystem = vs.system
+  override val invokeBeforeAllAndAfterAllEvenIfNoTestsAreExpected = true
+
+  implicit val vs: ValidatorSuite = conf
   implicit def self = testActor
 
 }

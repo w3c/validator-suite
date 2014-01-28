@@ -13,22 +13,12 @@ import java.io.File
 import org.w3.vs._
 import play.api.Mode
 
-abstract class W3CWebsiteTest extends VSTestKit with TestData with Inside with WipeoutData {
-
-  //implicit val vs =  new ValidatorSuite { val mode = Mode.Test }
+abstract class W3CWebsiteTest extends VSTestKit with TestData with WipeoutData with Inside {
 
   val servers = Seq.empty
 
   val job = TestData.job
   val user = TestData.user
-
-  override def beforeAll: Unit = {
-    super.beforeAll()
-  }
-
-  override def afterAll: Unit = {
-    super.afterAll()
-  }
 
   "test w3c website" in {
     
