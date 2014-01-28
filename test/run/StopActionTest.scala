@@ -13,7 +13,7 @@ import org.w3.vs.util.TestData
 import org.w3.vs._
 import play.api.Mode
 
-class StopActionTest extends VSTestKit with ServersTest with TestData /*with WipeoutData*/ {
+class StopActionTest extends VSTestKit with ServersTest with TestData with WipeoutData {
 
   //implicit val vs =  new ValidatorSuite { val mode = Mode.Test }
 

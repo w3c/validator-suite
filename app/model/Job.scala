@@ -458,8 +458,7 @@ object Job {
   // the Run may not exist if the Job was never started
   def get(jobId: JobId)(implicit conf: Database): Future[Job] = {
     val query = Json.obj("_id" -> toJson(jobId))
-    val cursor = collection.find(query).cursor[JsValue]
-    cursor.headOption map {
+    collection.find(query).one[JsValue].map {
       case None => throw UnknownJob(jobId) //new NoSuchElementException("Invalid jobId: " + jobId)
       case Some(json) => json.as[Job]
     }
@@ -526,7 +525,7 @@ object Job {
     import conf._
     val query = Json.obj("creator" -> toJson(userId))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.toList() map {
+    cursor.collect[List]() map {
       list =>
         list map {
           json => json.as[Job]
@@ -563,7 +562,6 @@ object Job {
 
   def save(job: Job)(implicit conf: Database): Future[Job] = {
     val jobJson = toJson(job)
-    println(Json.prettyPrint(jobJson))
     collection.insert(jobJson, writeConcern = journalCommit) map {
       lastError => job
     }

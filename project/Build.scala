@@ -25,7 +25,7 @@ object ApplicationBuild extends Build {
     "org.w3" % "validators" % "20131211" from "http://jay.w3.org/~vivien/jar/validators-20131211.jar",
     "com.codahale.metrics" % "metrics-core" % metricsVersion excludeAll (ExclusionRule(organization = "org.slf4j")),
     "com.codahale.metrics" % "metrics-graphite" % metricsVersion excludeAll (ExclusionRule(organization = "org.slf4j")),
-    "org.reactivemongo" %% "play2-reactivemongo" % "0.10.0" /*cross CrossVersion.full*/ excludeAll(ExclusionRule(organization = "io.netty"), ExclusionRule(organization = "play")),
+    "org.reactivemongo" %% "play2-reactivemongo" % "0.10.0" /*cross CrossVersion.full*/ excludeAll(ExclusionRule(organization = "io.netty"), ExclusionRule(organization = "com.typesafe.play")),
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     "org.mindrot" % "jbcrypt" % "0.3m",
     "commons-io" % "commons-io" % "2.4",

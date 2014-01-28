@@ -13,7 +13,7 @@ import java.io.File
 import org.w3.vs._
 import play.api.Mode
 
-abstract class W3CWebsiteTest extends VSTestKit with TestData with Inside {
+abstract class W3CWebsiteTest extends VSTestKit with TestData with Inside with WipeoutData {
 
   //implicit val vs =  new ValidatorSuite { val mode = Mode.Test }
 

@@ -183,13 +183,9 @@ extends VSTest with WipeoutData {
     val initScript = for {
       _ <- MongoStore.reInitializeDb()
       _ <- User.save(user1)
-      _ = println("1")
       _ <- User.save(user2)
-      _ = println("2")
       _ <- User.save(user3)
-      _ = println("3")
       _ <- Job.save(job1)
-      _ = println("4")
       _ <- Job.save(job2)
       _ <- Job.save(job3)
       _ <- Job.save(job4)

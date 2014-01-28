@@ -13,11 +13,7 @@ object Strategy {
 
 case class Strategy (
     entrypoint: URL,
-    maxResources: Int,
-    linkCheck: Boolean = false,
-  // not used anymore
-    filter: Filter = Filter.includeEverything,
-    assertorsConfiguration: AssertorsConfiguration = AssertorsConfiguration.default) {
+    maxResources: Int) {
 
   def mainAuthority: Authority = entrypoint.authority
 
@@ -25,8 +21,6 @@ case class Strategy (
     if (url.toString.startsWith(entrypoint.toString)) {
       if (url.authority === entrypoint.authority)
         GET
-      else if (linkCheck)
-        HEAD
       else
         IGNORE
     } else {

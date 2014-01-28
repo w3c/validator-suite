@@ -12,7 +12,7 @@ import org.w3.vs._
 import play.api.Mode
 import akka.actor.{ ActorSystem => _, _ }
 
-class ResumedRunTest extends VSTestKit with ServersTest with TestData /*with WipeoutData*/ {
+class ResumedRunTest extends VSTestKit with ServersTest with TestData with WipeoutData {
 
 
   //implicit val vs =  new ValidatorSuite { val mode = Mode.Test }

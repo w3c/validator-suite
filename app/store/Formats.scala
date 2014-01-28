@@ -58,7 +58,7 @@ object Formats {
   class StringLikeFormat[T](val apply: String => T, val unapply: T => String) extends Format[T] {
     def reads(json: JsValue): JsResult[T] = json match {
       case JsString(s) => JsSuccess(apply(s))
-      case _ => JsError()
+      case _ => JsError(Json.prettyPrint(json) + " is not a JsString")
     }
     def writes(t: T): JsValue = JsString(unapply(t))
   }
@@ -109,10 +109,7 @@ object Formats {
 
   implicit val StrategyFormat: Format[Strategy] = (
     (__ \ 'entrypoint).format[URL] and
-    (__ \ 'maxResources).format[Int] and
-    (__ \ 'linkCheck).format[Boolean] and
-    (__ \ 'filter).format[Filter] and
-    (__ \ 'assertorsConfiguration).format[AssertorsConfiguration]
+    (__ \ 'maxResources).format[Int]
   )(Strategy.apply, unlift(Strategy.unapply))
 
   import akka.actor.ActorPath

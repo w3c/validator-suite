@@ -291,7 +291,7 @@ object User {
     * if an error happens, we assume it's because there was already a user with the same email
     * looks like the driver is buggy as it does not return a specific error code
     */
-  def save(user: User)(implicit conf: Database): Future[Unit] = {
+  def save(user: User)(implicit conf: ValidatorSuite with Database): Future[Unit] = {
     import conf._
     val userId = user.id
     val userJ = toJson(user)

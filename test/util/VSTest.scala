@@ -22,6 +22,7 @@ abstract class VSTest extends WordSpec with BeforeAndAfterAll with Matchers with
   override def beforeAll() {
     super.beforeAll()
     vs.start()
+    vs.db
   }
 
   override def afterAll() {
@@ -34,8 +35,7 @@ abstract class VSTest extends WordSpec with BeforeAndAfterAll with Matchers with
 trait WipeoutData extends VSTest {
 
   override def beforeAll() {
-    //super.beforeAll()
-    vs.start()
+    super.beforeAll()
     MongoStore.reInitializeDb()(vs)
   }
 
