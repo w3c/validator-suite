@@ -207,6 +207,19 @@ object Coupon {
     }
   }
 
+  def getRedeemedBy(userId: UserId)(implicit conf: ValidatorSuite with Database): Future[List[Coupon]] = {
+    val cursor = collection.find(Json.obj("usedBy" -> userId)).cursor[JsValue]
+    cursor.toList() map {
+      list => list flatMap { coupon =>
+        try {
+          Some(coupon.as[Coupon])
+        } catch { case t: Throwable =>
+          None
+        }
+      }
+    }
+  }
+
   def save(coupon: Coupon)(implicit conf: Database): Future[Unit] = {
     val couponJson = toJson(coupon)
     import reactivemongo.core.commands.LastError

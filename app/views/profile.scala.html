@@ -1,6 +1,7 @@
 @(userForm: Form[Account] = AccountForm,
     passwordForm: Form[Password],
     couponForm: Form[String],
+    redeemedCoupons: List[Coupon],
     user: User,
     messages: List[(String, String)] = List())(implicit req: RequestHeader, flash: Flash, vs: ValidatorSuite)
 
@@ -10,7 +11,7 @@
 
     @libs.messages(messages ++ flash.data)
 
-    @forms.userForm(userForm, passwordForm, couponForm, user)
+    @forms.userForm(userForm, passwordForm, couponForm, redeemedCoupons, user)
 
 </section>
 

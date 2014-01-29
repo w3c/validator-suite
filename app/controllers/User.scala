@@ -5,6 +5,7 @@ import org.w3.vs.{Metrics, model}
 import play.api.i18n.Messages
 import org.w3.vs.view.Forms._
 import org.w3.vs.exception.{CouponException, UnauthorizedException}
+import concurrent.Future
 
 object User extends VSController {
 
@@ -13,20 +14,29 @@ object User extends VSController {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def profile = AuthenticatedAction("back.account") { implicit req => user =>
-    Ok(views.html.profile(
-      userForm = AccountForm(user),
-      passwordForm = PasswordForm,
-      couponForm = CouponForm,
-      user = user))
+    for {
+      redeemedCoupons <- model.Coupon.getRedeemedBy(user.id)
+    } yield {
+      Ok(views.html.profile(
+        userForm = AccountForm(user),
+        passwordForm = PasswordForm,
+        couponForm = CouponForm,
+        redeemedCoupons = redeemedCoupons,
+        user = user))
+    }
   }
 
   def editAction: ActionA = AuthenticatedAction("form.editAccount") { implicit req => user =>
     AccountForm.bindFromRequest().fold(
       form => {
         Metrics.form.editAccountFailure()
-        render {
-          case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm, CouponForm, user))
-          case Accepts.Json() => BadRequest
+        for {
+          redeemedCoupons <- model.Coupon.getRedeemedBy(user.id)
+        } yield {
+          render {
+            case Accepts.Html() => BadRequest(views.html.profile(form, PasswordForm, CouponForm, redeemedCoupons, user))
+            case Accepts.Json() => BadRequest
+          }
         }
       },
       account => {
@@ -47,7 +57,9 @@ object User extends VSController {
     PasswordForm.bindFromRequest().fold (
       formWithErrors => {
         Metrics.form.editPasswordFailure()
-        BadRequest(views.html.profile(AccountForm(user), formWithErrors, CouponForm, user))
+        for {
+          redeemedCoupons <- model.Coupon.getRedeemedBy(user.id)
+        } yield BadRequest(views.html.profile(AccountForm(user), formWithErrors, CouponForm, redeemedCoupons, user))
       },
       password => {
         (for {
@@ -56,9 +68,11 @@ object User extends VSController {
         } yield {
           logger.info(s"""id=${user.id} action=editpassword message="password updated" """)
           SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.password.updated")))
-        }) recover {
+        }).recoverWith {
           case UnauthorizedException(email) =>
-            BadRequest(views.html.profile(AccountForm(user), PasswordForm, CouponForm, user, List("error" -> Messages("application.invalidPassword"))))
+            for {
+              redeemedCoupons <- model.Coupon.getRedeemedBy(user.id)
+            } yield BadRequest(views.html.profile(AccountForm(user), PasswordForm, CouponForm, redeemedCoupons, user, List("error" -> Messages("application.invalidPassword"))))
         }
       }
     )
@@ -67,7 +81,9 @@ object User extends VSController {
   def redeemCouponAction = AuthenticatedAction("form.redeemCoupon") { implicit req => user =>
     CouponForm.bindFromRequest().fold (
       formWithErrors => {
-        BadRequest(views.html.profile(AccountForm(user), PasswordForm, formWithErrors, user))
+        for {
+          redeemedCoupons <- model.Coupon.getRedeemedBy(user.id)
+        } yield BadRequest(views.html.profile(AccountForm(user), PasswordForm, formWithErrors, redeemedCoupons, user))
       },
       coupon => {
         (for {
@@ -75,10 +91,12 @@ object User extends VSController {
         } yield {
           logger.info(s"""id=${user.id} action=couponRedeemed message="coupon redeemed: ${coupon}" """)
           SeeOther(routes.User.profile().url).flashing(("success" -> Messages("user.coupon.redeemed", coupon.description.getOrElse("Validator Suite"), coupon.code, coupon.credits)))
-        }) recover {
+        }) recoverWith {
           case CouponException(code, msg) =>
             val form = CouponForm.withError("coupon", msg)
-            BadRequest(views.html.profile(AccountForm(user), PasswordForm, form, user))
+            for {
+              redeemedCoupons <- model.Coupon.getRedeemedBy(user.id)
+            } yield BadRequest(views.html.profile(AccountForm(user), PasswordForm, form, redeemedCoupons, user))
         }
       }
     )

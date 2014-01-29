@@ -1,4 +1,8 @@
-@(userForm: Form[Account], passwordForm: Form[Password], couponForm: Form[String], user: User)(implicit req: RequestHeader)
+@(userForm: Form[Account],
+  passwordForm: Form[Password],
+  couponForm: Form[String],
+  redeemedCoupons: List[Coupon],
+  user: User)(implicit req: RequestHeader)
 
 @creditClass(credits: Int) = {@credits match {
     case n if n <= 0 => {class="credits critical"}
@@ -30,7 +34,34 @@
             '_required -> true)
         @api.requiredFields()
         @api.submit("Use Coupon")
+
+        @if(redeemedCoupons.size > 0) {
+        <div class="row">
+        <div class="column large-9 large-offset-3">
+            <table class="coupons">
+                <thead>
+                    <tr>
+                        <td>Use Date</td>
+                        <td>Code</td>
+                        <td>Description</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @redeemedCoupons.map{case coupon =>
+                    <tr>
+                        <td>@coupon.useDate</td>
+                        <td>@coupon.code</td>
+                        <td>@coupon.credits credits "@coupon.description"</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        </div>
+        }
     }
+
+
 
     <h1 class="formHeader">User Information</h1>
 
