@@ -1,37 +1,17 @@
 package org.w3.vs.model
 
-import org.joda.time.{DateTimeZone, DateTime}
-import scalaz.Scalaz._
-import play.api.libs.json._
-import org.w3.vs.util.implicits._
-import org.w3.vs.Database
-import org.w3.vs.store.Formats._
-import reactivemongo.api.collections.default.BSONCollection
-import reactivemongo.api.FailoverStrategy
-import concurrent.Future
-
 import org.joda.time.{DateTime, DateTimeZone}
 import akka.pattern.{ask, AskTimeoutException}
-import play.api.libs.iteratee._
-import play.Logger
 import org.w3.vs.util._
 import org.w3.vs.store.MongoStore.journalCommit
-import org.w3.vs.web._
 import scalaz.Equal
 import scalaz.Equal._
 import org.w3.vs._
-import org.w3.vs.actor._
-import scala.util.{Success, Failure, Try}
-import scala.concurrent.duration.Duration
 import scala.concurrent.{ops => _, _}
 import scala.concurrent.ExecutionContext.Implicits.global
 import exception._
-import org.w3.vs.view.model.JobView
 import scalaz.Scalaz._
 import play.modules.reactivemongo.json.ImplicitBSONHandlers._
-import akka.actor._
-import reactivemongo.core.commands.Count
-import reactivemongo.bson.BSONDocument
 
 import play.api.libs.json._
 import Json.toJson
@@ -64,7 +44,7 @@ case class Coupon(
   }
 
   def compactString = {
-    s"""${id} - Code: ${code} - Campaign: ${campaign} - Description: "${description}" - Credits: ${credits} - Expires: ${expirationDate} - UseDate: ${useDate.getOrElse("Never")} - UsedBy: ${usedBy.getOrElse("NoOne")}"""
+    s"""${id} - Code: ${code} - Campaign: ${campaign} - Description: "${description.getOrElse("Validator Suite")}" - Credits: ${credits} - Expires: ${expirationDate} - UseDate: ${useDate.getOrElse("Never")} - UsedBy: ${usedBy.getOrElse("NoOne")}"""
   }
 
 }
