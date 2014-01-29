@@ -86,7 +86,7 @@ trait ValidatorSuite extends Database {
     system.actorOf(Props(new RunsActor()(this)), "runs")
 
   /* HttpClient */
-  val userAgent = config.getString("application.http-client.user-agent") getOrElse "Validator-Suite"
+  val userAgent = config.getString("application.http-client.user-agent") getOrElse "Validator Suite"
   // Used by form validation
   lazy val formHttpClient: AsyncHttpClient = {
     val builder = new AsyncHttpClientConfig.Builder()

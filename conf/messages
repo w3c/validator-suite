@@ -128,10 +128,10 @@ error.timeout=Request timed out
 debug.unexpected=Unexpected: {0}
 
 #assertors
-assertor.checker_i18n=I18n Checker
+assertor.checker_i18n=Internationalization
 assertor.checker_mobile=MobileOk Checker
-assertor.validator_nu=HTML5 Validator
-assertor.validator_css=CSS Validator
+assertor.validator_nu=HTML
+assertor.validator_css=CSS
 assertor.markup_validator=HTML4/XHTML Validator
 
 assertor.noissues=The {0} found no issues to report
@@ -163,7 +163,8 @@ resources.empty=No resources to show.
 resources.revalidate=Revalidate this resource.
 assertions.empty=No assertions to show.
 
-report.link=Go to the report
+report.job.link=Go to job report
+report.link=Go to the report for this resource
 search.empty=No search result.
 search.clear=Clear search.
 

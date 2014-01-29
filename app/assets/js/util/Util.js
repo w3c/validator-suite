@@ -94,11 +94,11 @@ define(["util/Logger", "libs/underscore", "libs/jquery"], function (Logger, _, $
 
             switch (assertorId) {
             case "checker_i18n":
-                return "I18n Checker";
+                return "Internationalization";
             case "validator_nu":
-                return "HTML5 Validator";
+                return "HTML5";
             case "validator_css":
-                return "CSS Validator";
+                return "CSS";
             case "markup_validator":
                 return "HTML4/XHTML Validator";
             default:

@@ -12,7 +12,7 @@
 
 <div class="column">
 
-    <h1 class="formHeader">My Account</h1>
+    <h1 class="formHeader" id="MyAccount">My Account</h1>
 
     <div class="vsForm">
         <div class="row">
@@ -25,7 +25,7 @@
         </div>
     </div>
 
-    <h1 class="formHeader">Coupons</h1>
+    <h1 class="formHeader" id="Coupons">Coupons</h1>
 
     @helper.form(action = routes.User.redeemCouponAction(), 'class -> "vsForm") {
         @api.formErrors(couponForm)
@@ -37,7 +37,10 @@
 
         @if(redeemedCoupons.size > 0) {
         <div class="row">
-        <div class="column large-9 large-offset-3">
+        <div class="column large-3">
+            <h3 class="couponsTitle">Used Coupons</h3>
+        </div>
+        <div class="column large-9">
             <table class="coupons">
                 <thead>
                     <tr>
@@ -61,9 +64,7 @@
         }
     }
 
-
-
-    <h1 class="formHeader">User Information</h1>
+    <h1 class="formHeader" id="UserInformation">User Information</h1>
 
     @helper.form(action = routes.User.editAction(), 'class -> "vsForm") {
 
@@ -89,7 +90,7 @@
 
     }
 
-    <h1 class="formHeader">Change password</h1>
+    <h1 class="formHeader" id="ChangePassword">Change password</h1>
 
     @helper.form(action = routes.User.changePasswordAction(), 'class -> "vsForm") {
 

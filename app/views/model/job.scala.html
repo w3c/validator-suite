@@ -7,7 +7,7 @@
                 @definition.name match {
 
                 case "name" => {
-                <a href="@routes.Resources.index(job.id, None)" data-name="">@job.name</a>}
+                <a href="@routes.Resources.index(job.id, None)" title="@Messages("report.job.link")" data-name="">@job.name</a>}
 
                 case "entrypoint" => {
                 <a href="@job.entrypoint" data-entrypoint="@job.entrypoint" class="external" target="_blank" title="@Messages("resource.external.link")">

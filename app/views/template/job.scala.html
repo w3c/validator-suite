@@ -6,7 +6,7 @@
             @definition.name match {
 
             case "name" => {
-            <a href="<%= reportUrl %>"><%= name %></a>}
+            <a href="<%= reportUrl %>" title="@Messages("report.job.link")"><%= name %></a>}
 
             case "entrypoint" => {
             <a href="<%= entrypoint %>" class="external" target="_blank" title="@Messages("resource.external.link")">

@@ -14,7 +14,8 @@ import reactivemongo.bson.BSONObjectID
 import scala.concurrent.Future
 import concurrent.duration.FiniteDuration
 import org.w3.vs.store.MongoStore
-import org.w3.vs.exception.InvalidSyntaxCouponException
+import org.w3.vs.exception.{CouponException, InvalidSyntaxCouponException}
+import play.api.i18n.Messages
 
 object Administration extends VSController {
 
@@ -49,9 +50,9 @@ object Administration extends VSController {
       case Input.El(command) => {
         val r = try {
           executeCommand(command)
-        } catch { case e: Exception =>
-          //toStackTraceString(e)
-          e.getMessage
+        } catch {
+          case e: CouponException => Messages(e.getMessage)
+          case e: Exception => e.getMessage //toStackTraceString(e)
         }
         channel.push(r)
         iteratee
@@ -186,9 +187,13 @@ object Administration extends VSController {
           displayResults(c.map(_.compactString))
         }
 
-      case Array("coupon-campaign-codes", campaign) =>
+      case Array("coupon-campaign", campaign) =>
         val coupons = model.Coupon.getCampaign(campaign).getOrFail()
         displayResults(coupons.map(_.compactString))
+
+      case Array("coupon-campaign-codes", campaign) =>
+        val coupons = model.Coupon.getCampaign(campaign).getOrFail()
+        displayResults(coupons.map(_.code))
 
       case Array("coupon-campaign-delete", campaign) =>
         val coupons = model.Coupon.getCampaign(campaign).getOrFail()
