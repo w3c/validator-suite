@@ -2,7 +2,7 @@ package org.w3.vs.model
 
 import org.joda.time.{DateTime, DateTimeZone}
 import akka.pattern.{ask, AskTimeoutException}
-import org.w3.vs.util._
+import org.w3.vs.util.implicits._
 import org.w3.vs.store.MongoStore.journalCommit
 import scalaz.Equal
 import scalaz.Equal._
