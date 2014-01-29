@@ -126,21 +126,23 @@ object Administration extends VSController {
           |       users ROOT             Root users
           |       users Opted-In         Users that opted-in for e-mailing
           |    user-create <name> <email> <password> <credits> - register a new user
-          |    user-delete <userId>          - delete user with given userId
-          |    user-add-credits <email> <nb> - add nb credits to user with given email
-          |    user-set-root <email>         - sets the user with given email as a root
-          |    user-set-password <email> <pass> - changes a user password
+          |    user-delete <userId>              - delete user with given userId
+          |    user-add-credits <userId> <nb>    - add nb credits to user with given email
+          |    user-set-root <userId>            - sets the user with given email as a root
+          |    user-set-password <userId> <pass> - changes a user password
           |    admin-add-roots               - adds all root users to the current db. Roots are defined in Main.scala.
           |    db-reset                      - resets the database with default data (only available in Dev mode)
           |    db-indexes                    - recreate database indexes
           |    emails                        - comma-separated list of all opted-in emails
-          |    coupons <regex>        - all coupons that match the given regex
-          |    coupon <couponId>            - the coupon with the given coupon id
+          |    coupons <regex>               - all coupons that match the given regex
+          |    coupon <couponId>             - the coupon with the given coupon id
           |    coupon-create <code> <campaign> <credits> - creates a coupon with provided parameters
           |    coupon-create <code> <campaign> <credits> <description> <validityInDays>
-          |    coupon-delete <couponId>     - delete the coupon with given id
-          |    coupon-redeem <code> <userId>  - redeem a coupon to a userId
+          |    coupon-delete <couponId>           - delete the coupon with given id
+          |    coupon-redeem <couponId> <userId>  - redeem a coupon to a userId
           |    coupon-campaign-create <numberOfCoupons> <prefix> <campaign> <credits> <description> <validityInDays>
+          |    coupon-campaign-codes <campaign>   - show all coupons of the given campaign
+          |    coupon-campaign-delete <campaign>  - delete all coupons of the given campaign
           |    """.stripMargin
 
       case Array("coupons") =>
@@ -156,10 +158,12 @@ object Administration extends VSController {
         model.Coupon.get(CouponId(couponId)).map(_.compactString).recover{case _ => s"No coupon found"}.getOrFail()
 
       case Array("coupon-create", code, campaign, int(credits)) =>
+        model.Coupon.checkSyntax(code)
         val coupon = model.Coupon(code, campaign, credits).save().getOrFail()
         coupon.compactString
 
       case Array("coupon-create", code, campaign, int(credits), description, int(validityDays)) =>
+        model.Coupon.checkSyntax(code)
         val coupon = model.Coupon(code, campaign, credits, description, validityDays).save().getOrFail()
         coupon.compactString
 
@@ -167,9 +171,9 @@ object Administration extends VSController {
         model.Coupon.delete(CouponId(couponId)).getOrFail()
         s"coupon ${id} deleted"
 
-      case Array("coupon-redeem", code, id(userId)) =>
-        val (_, redeemed) = model.Coupon.redeem(code, UserId(userId)).getOrFail()
-        s"coupon ${code} redeemed\n" + redeemed.compactString
+      case Array("coupon-redeem", id(couponId), id(userId)) =>
+        val (_, redeemed) = model.Coupon.redeem(CouponId(couponId), UserId(userId)).getOrFail()
+        s"coupon ${couponId} redeemed\n" + redeemed.compactString
 
       case Array("coupon-campaign-create", int(number), prefix, campaign, int(credits), description, int(validityInDays)) =>
         val pattern = """^\w{2,8}$""".r
@@ -179,8 +183,17 @@ object Administration extends VSController {
           var coupons = List.empty[String]
           for (i <- 1 to number) { coupons = model.Coupon.generateCode(prefix) +: coupons }
           val c = coupons.map(code => model.Coupon(code, campaign, credits, description, validityInDays)).map(_.save().getOrFail())
-          c.mkString("\n")
+          displayResults(c.map(_.compactString))
         }
+
+      case Array("coupon-campaign-codes", campaign) =>
+        val coupons = model.Coupon.getCampaign(campaign).getOrFail()
+        displayResults(coupons.map(_.compactString))
+
+      case Array("coupon-campaign-delete", campaign) =>
+        val coupons = model.Coupon.getCampaign(campaign).getOrFail()
+        coupons.map(coupon => model.Coupon.delete(coupon.id).getOrFail())
+        displayResults(coupons.map(_.compactString)) + " deleted"
 
       case Array("job", id(jobId)) =>
         model.Job.get(JobId(jobId)).map(_.compactString).recover{case _ => s"No job found"}.getOrFail()

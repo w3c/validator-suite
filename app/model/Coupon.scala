@@ -64,7 +64,7 @@ case class Coupon(
   }
 
   def compactString = {
-    s"${id} - Code: ${code} - Campaign: ${campaign} - Credits: ${credits} - Expires: ${expirationDate} - UseDate: ${useDate} - UsedBy: ${usedBy}"
+    s"${id} - Code: ${code} - Campaign: ${campaign} - Credits: ${credits} - Expires: ${expirationDate} - UseDate: ${useDate.getOrElse("Never")} - UsedBy: ${usedBy.getOrElse("NoOne")}"
   }
 
 }
@@ -134,6 +134,14 @@ object Coupon {
       }
   }
 
+  def getIfValid(couponId: CouponId)(implicit vs: ValidatorSuite with Database): Future[Coupon] = {
+    get(couponId).map{ coupon =>
+      if (coupon.usedBy.isDefined) { throw new AlreadyUsedCouponException(coupon.code) }
+      if (coupon.expirationDate.isBefore(DateTime.now(DateTimeZone.UTC))) { throw new ExpiredCouponException(coupon.code) }
+      coupon
+    }
+  }
+
   def redeem(couponCode: String, userId: UserId)(implicit vs: ValidatorSuite with Database): Future[(User, Coupon)] = {
     for {
       coupon <- getIfValid(couponCode)
@@ -143,11 +151,33 @@ object Coupon {
     } yield (user, redeemed)
   }
 
+  def redeem(couponId: CouponId, userId: UserId)(implicit vs: ValidatorSuite with Database): Future[(User, Coupon)] = {
+    for {
+      coupon <- getIfValid(couponId)
+      user <- model.User.updateCredits(userId, coupon.credits)
+      redeemed <-
+      coupon.copy(useDate = Some(DateTime.now(DateTimeZone.UTC)), usedBy = Some(userId)).update()
+    } yield (user, redeemed)
+  }
+
   def collection(implicit conf: Database): BSONCollection =
     conf.db("coupons", failoverStrategy = FailoverStrategy(retries = 0))
 
   def getAll()(implicit conf: Database): Future[List[Coupon]] = {
     val cursor = collection.find(Json.obj()).cursor[JsValue]
+    cursor.toList() map {
+      list => list flatMap { coupon =>
+        try {
+          Some(coupon.as[Coupon])
+        } catch { case t: Throwable =>
+          None
+        }
+      }
+    }
+  }
+
+  def getCampaign(campaign: String)(implicit conf: Database): Future[List[Coupon]] = {
+    val cursor = collection.find(Json.obj("campaign" -> campaign)).cursor[JsValue]
     cursor.toList() map {
       list => list flatMap { coupon =>
         try {
