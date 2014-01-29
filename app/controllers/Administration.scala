@@ -112,38 +112,39 @@ object Administration extends VSController {
     args match {
       case Array("?") | Array("help") =>
         """Available commands:
-          |    job <jobId>        - the job with given id if any
-          |    jobs <regex>        - the list of jobs that matched the given regex. Examples:
+          |    job <jobId>         - job with given id
+          |    jobs <regex>        - jobs that match the given regex. Examples:
           |       jobs                   All jobs
           |       jobs \.*               All jobs
           |       jobs Public            Public jobs
           |       jobs 250.*Never        All 250 pages jobs that never started
           |       jobs Anonym.*Never     Anonymous jobs that nerver started
           |       jobs Running           Running jobs
-          |    user <userId>       - the user with given id if any
-          |    users <regex>       - the list of users that matched the given regex. Examples:
+          |    user <userId>       - user with given id
+          |    users <regex>       - users that match the given regex. Examples:
           |       users                  All users
           |       users (?i)thomas       Users that include "thomas" case insensitively
           |       users ROOT             Root users
           |       users Opted-In         Users that opted-in for e-mailing
           |    user-create <name> <email> <password> <credits> - register a new user
-          |    user-delete <userId>              - delete user with given userId
-          |    user-add-credits <userId> <nb>    - add nb credits to user with given email
-          |    user-set-root <userId>            - sets the user with given email as a root
-          |    user-set-password <userId> <pass> - changes a user password
-          |    admin-add-roots               - adds all root users to the current db. Roots are defined in Main.scala.
-          |    db-reset                      - resets the database with default data (only available in Dev mode)
+          |    user-delete <userId>              - delete user with given id
+          |    user-add-credits <userId> <nb>    - add nb credits to user with given id
+          |    user-set-root <userId>            - set root privileges to user with given id
+          |    user-set-password <userId> <pass> - set password of user with given id
+          |    admin-add-roots               - add all root users to the current db. Roots are defined in Main.scala.
+          |    db-reset                      - reset the database with default data (only available in Dev mode)
           |    db-indexes                    - recreate database indexes
           |    emails                        - comma-separated list of all opted-in emails
-          |    coupons <regex>               - all coupons that match the given regex
-          |    coupon <couponId>             - the coupon with the given coupon id
-          |    coupon-create <code> <campaign> <credits> - creates a coupon with provided parameters
+          |    coupon <couponId>             - coupon with given id
+          |    coupons <regex>               - coupons that match the given regex
+          |    coupon-create <code> <campaign> <credits> - creates a new coupon
           |    coupon-create <code> <campaign> <credits> <description> <validityInDays>
-          |    coupon-delete <couponId>           - delete the coupon with given id
-          |    coupon-redeem <couponId> <userId>  - redeem a coupon to a userId
+          |    coupon-delete <couponId>           - delete coupon with given id
+          |    coupon-redeem <couponId> <userId>  - redeem given coupon to given user
+          |    coupon-campaign <campaign>         - all coupons of the given campaign
           |    coupon-campaign-create <numberOfCoupons> <prefix> <campaign> <credits> <description> <validityInDays>
-          |    coupon-campaign-codes <campaign>   - show all coupons of the given campaign
           |    coupon-campaign-delete <campaign>  - delete all coupons of the given campaign
+          |    coupon-campaign-codes <campaign>   - show coupons codes of the given campaign
           |    """.stripMargin
 
       case Array("coupons") =>
