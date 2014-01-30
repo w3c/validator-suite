@@ -1,7 +1,7 @@
 package org.w3.vs.web
 
 import org.scalatest._
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.Matchers
 import java.nio.file.Files.createTempDirectory
 import org.w3.vs.util.timer._
 import org.w3.vs.model._
@@ -10,7 +10,7 @@ import scalax.io._
 import scalax.io.JavaConverters._
 import scala.collection.JavaConverters._
 
-class CacheTest extends WordSpec with MustMatchers {
+class CacheTest extends WordSpec with Matchers {
 
   val directory = {
     val d = createTempDirectory("cache-test-").toFile
@@ -22,11 +22,11 @@ class CacheTest extends WordSpec with MustMatchers {
 
   "retrieving a resource that was never cached should be a miss" in {
 
-    cache.resource(URL("http://example.com/never-cached"), GET) must be(None)
+    cache.resource(URL("http://example.com/never-cached"), GET) should be(None)
     
   }
 
-  "retrieving a previously cached resource must be a hit" in {
+  "retrieving a previously cached resource should be a hit" in {
     
     List[HttpMethod](GET, HEAD) foreach { method =>
 
@@ -38,17 +38,17 @@ class CacheTest extends WordSpec with MustMatchers {
       val bais = new ByteArrayInputStream(content.getBytes("UTF-8"))
       val bodyContent = Resource.fromInputStream(bais)
   
-      cache.save(hr, bodyContent) must be('success)
+      cache.save(hr, bodyContent) should be('success)
   
       val r = cache.resource(url, method).flatMap(_.get().toOption)
   
-      r must be(Some(hr))
+      r should be(Some(hr))
 
     }
 
   }
 
-  "a Cache must be able to cache errors" in {
+  "a Cache should be able to cache errors" in {
     
     List[HttpMethod](GET, HEAD) foreach { method =>
 
@@ -56,17 +56,17 @@ class CacheTest extends WordSpec with MustMatchers {
   
       val er = ErrorResponse(url, method, "server not reachable")
   
-      cache.save(er) must be('success)
+      cache.save(er) should be('success)
   
       val r = cache.resource(url, method).flatMap(_.get().toOption)
   
-      r must be(Some(er))
+      r should be(Some(er))
 
     }
 
   }
 
-  "a cached resource must be retrievable from ResponseCache#get" in {
+  "a cached resource should be retrievable from ResponseCache#get" in {
 
     List[HttpMethod](GET, HEAD) foreach { method =>
 
@@ -83,19 +83,19 @@ class CacheTest extends WordSpec with MustMatchers {
       val bais = new ByteArrayInputStream(content.getBytes("UTF-8"))
       val bodyContent = Resource.fromInputStream(bais)
   
-      cache.save(hr, bodyContent) must be('success)
+      cache.save(hr, bodyContent) should be('success)
   
       val cacheResponse = cache.get(url.toURI, method.toString, Map("foo" -> List("bar").asJava).asJava)
 
-      cacheResponse must not be(null)
+      cacheResponse should not be(null)
 
-      Resource.fromInputStream(cacheResponse.getBody()).string must be(content)
+      Resource.fromInputStream(cacheResponse.getBody()).string should be(content)
 
       val rHeaders = cacheResponse.getHeaders.asScala.mapValues(_.asScala.toList).toMap
 
-      (rHeaders - null) must be(headers.underlying)
+      (rHeaders - null) should be(headers.underlying)
 
-      (rHeaders(null).head contains status.toString) must be (true)
+      (rHeaders(null).head contains status.toString) should be (true)
 
     }
 

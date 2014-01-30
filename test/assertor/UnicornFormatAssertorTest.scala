@@ -5,9 +5,9 @@ import org.w3.vs.web._
 import org.w3.vs.view.Helper
 import io.Source
 import org.scalatest._
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.Matchers
 
-class UnicornFormatAssertorTest extends WordSpec with MustMatchers {
+class UnicornFormatAssertorTest extends WordSpec with Matchers {
 
   val source = new Source {
     protected val iter: Iterator[Char] = { //[&lt; &gt; &amp; &#39; &amp;#39;]
@@ -32,21 +32,21 @@ class UnicornFormatAssertorTest extends WordSpec with MustMatchers {
 
   val assertion = assertor.assert(source).head
 
-  "A UnicornFormat Assertor must unescape urls correctly" in {
+  "A UnicornFormat Assertor should unescape urls correctly" in {
 
-    assertion.url must be (URL("http://test.vs?p=1&p=2"))
-
-  }
-
-  "A UnicornFormat Assertor must unescape the title correctly" in {
-
-    assertion.title must be ("""Property doesn't exist. ## ' &lt; &gt; ' &amp; ## <a href="?p=1&amp;p=2">test</a>""") // [&lt; &gt; & ' ']
+    assertion.url should be (URL("http://test.vs?p=1&p=2"))
 
   }
 
-  "A UnicornFormat Assertor must unescape the description correctly" in {
+  "A UnicornFormat Assertor should unescape the title correctly" in {
 
-    assertion.description must be (Some("<code>&lt;p&gt; test &lt;/p&gt;</code>"))
+    assertion.title should be ("""Property doesn't exist. ## ' &lt; &gt; ' &amp; ## <a href="?p=1&amp;p=2">test</a>""") // [&lt; &gt; & ' ']
+
+  }
+
+  "A UnicornFormat Assertor should unescape the description correctly" in {
+
+    assertion.description should be (Some("<code>&lt;p&gt; test &lt;/p&gt;</code>"))
 
   }
 

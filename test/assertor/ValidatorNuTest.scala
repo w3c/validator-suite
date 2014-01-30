@@ -1,7 +1,7 @@
 package org.w3.vs.assertor
 
 import org.scalatest._
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.Matchers
 import org.w3.vs.web._
 import org.w3.vs.model._
 import org.w3.vs.web.URL
@@ -19,7 +19,7 @@ object ValidatorNuTest {
 
 }
 
-class ValidatorNuTest extends WordSpec with MustMatchers with AssertionsMatchers with BeforeAndAfterAll {
+class ValidatorNuTest extends WordSpec with Matchers with AssertionsMatchers with BeforeAndAfterAll {
 
   import ValidatorNuTest.cache
 
@@ -38,7 +38,7 @@ class ValidatorNuTest extends WordSpec with MustMatchers with AssertionsMatchers
   "http://www.google.com should have at least one error" in {
     val url = URL("http://www.google.com")
     val assertions = ValidatorNu.assert(url, Map.empty: AssertorConfiguration)
-    assertions must (haveErrors)
+    assertions should (haveErrors)
   }
 
 //  "http://www.1stincoffee.com should have at least one info" in {

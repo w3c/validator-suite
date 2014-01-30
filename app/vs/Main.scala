@@ -229,7 +229,6 @@ object Main {
     val strategy =
       Strategy(
         entrypoint = URL("http://www.w3.org/"),
-        linkCheck = false,
         maxResources = 20)
 
     val job = Job(name = "w3c", strategy = strategy, creatorId = None)

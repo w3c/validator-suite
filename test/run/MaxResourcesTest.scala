@@ -29,7 +29,7 @@ class MaxResourcesTest extends VSTest with ServersTest with TestData with Wipeou
     val completeRunEvent =
       (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
-    completeRunEvent.resources must be(maxResources)
+    completeRunEvent.resources should be(maxResources)
 
   }
 

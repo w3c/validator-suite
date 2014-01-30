@@ -2,9 +2,10 @@ package org.w3.vs.util
 
 import org.w3.vs._
 import org.scalatest._
-import akka.testkit.{TestKit, ImplicitSender}
+import akka.testkit.{TestKitBase, TestKit, ImplicitSender}
 import org.w3.vs.store.MongoStore
 import play.api.Mode.Test
+import play.api.Mode
 
 object VSTest {
 
@@ -14,18 +15,17 @@ object VSTest {
 
 }
 
-trait VSTest extends Suite with BeforeAndAfterAll with MustMatchers with WordSpec with Inside {
+trait VSTest extends WordSpecLike with BeforeAndAfterAll with Matchers {
 
   implicit def vs: ValidatorSuite
 
   override def beforeAll() {
-    super.beforeAll()
     vs.start()
+    vs.db
   }
 
   override def afterAll() {
     vs.shutdown()
-    super.afterAll()
   }
 
 }
@@ -34,18 +34,21 @@ trait WipeoutData extends VSTest {
 
   override def beforeAll() {
     super.beforeAll()
-    MongoStore.reInitializeDb()(vs)
+    import org.w3.vs.util.timer._
+    MongoStore.reInitializeDb()(vs).getOrFail()
   }
 
 }
 
 
-abstract class VSTestKit(val vs: ValidatorSuite)
-  extends TestKit(vs.system)
+class VSTestKit(val conf: ValidatorSuite = VSTest.newTestConfiguration())
+    extends TestKit(conf.system)
     with VSTest
-    with TestKitHelper
-    with ImplicitSender {
+    with TestKitHelper {
 
-  implicit val _vs = vs
+  override val invokeBeforeAllAndAfterAllEvenIfNoTestsAreExpected = true
+
+  implicit val vs: ValidatorSuite = conf
+  implicit def self = testActor
 
 }

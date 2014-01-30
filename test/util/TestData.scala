@@ -3,8 +3,11 @@ package org.w3.vs.util
 import org.w3.vs.model._
 import org.scalatest.{ Suite, BeforeAndAfterEach }
 import org.w3.vs.web._
+import org.w3.vs.ValidatorSuite
 
-trait TestData { this: VSTest =>
+trait TestData {
+
+  implicit def vs: ValidatorSuite
 
   object TestData {
 

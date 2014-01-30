@@ -11,7 +11,7 @@ import org.scalatest.matchers._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.mindrot.jbcrypt.BCrypt
 
-class AdministrationTest extends WordSpec with MustMatchers {
+class AdministrationTest extends WordSpec with Matchers {
   
   def authHeader(password: String): String = {
     val hex = org.apache.commons.codec.binary.Base64.encodeBase64(s"ROOT:${password}".getBytes)
@@ -27,7 +27,7 @@ class AdministrationTest extends WordSpec with MustMatchers {
      running(FakeApplication(additionalConfiguration = configuration)) {
        val post =
          route(FakeRequest(GET, "/admin/").withHeaders("Authorization" -> s"Basic ${headerValue}")).get
-       status(post) must be (OK)
+       status(post) should be (OK)
      }
     
   }
@@ -40,8 +40,8 @@ class AdministrationTest extends WordSpec with MustMatchers {
      running(FakeApplication()) {
        val get =
          route(FakeRequest(GET, "/admin/").withHeaders("Authorization" -> s"Basic ${headerValue}")).get
-       status(get) must be (UNAUTHORIZED)
-       headers(get)("WWW-Authenticate") must be("""Basic realm="W3C Validator Suite"""")
+       status(get) should be (UNAUTHORIZED)
+       headers(get)("WWW-Authenticate") should be("""Basic realm="W3C Validator Suite"""")
      }
     
   }

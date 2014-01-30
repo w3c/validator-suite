@@ -27,7 +27,8 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
 
     val runningJob = job.run().getOrFail() // will also run all default assertors
     val Running(runId, actorName) = runningJob.status
-    val jobActor = vs.system.actorFor(actorName.actorPath)
+    import vs.timeout
+    val jobActor = vs.system.actorSelection(actorName.actorPath).resolveOne().getOrFail()
 
     val runEvents = runningJob.runEvents()
     val jobDatas = runningJob.jobDatas()
@@ -53,10 +54,10 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
       val AssertorResponseEvent(_, _, `runId`, a4: AssertorResult, _) = e4
       val AssertorResponseEvent(_, _, `runId`, a5: AssertorResult, _) = e5
       val AssertorResponseEvent(_, _, `runId`, a6: AssertorResult, _) = e6
-      jobId must be(job.id)
-      hr2.url must be(URL("http://localhost:9001/")) // first resource response event
-      hr3 must be(httpResponse)
-      Set(a4, a5, a6) must be(Set(ar1, ar2, ar3))
+      jobId should be(job.id)
+      hr2.url should be(URL("http://localhost:9001/")) // first resource response event
+      hr3 should be(httpResponse)
+      Set(a4, a5, a6) should be(Set(ar1, ar2, ar3))
     }
 
     (runEvents &> Enumeratee.mapConcat(_.toSeq) &> eprint() |>>> test()).getOrFail().get
@@ -64,40 +65,40 @@ class EnumeratorsTest extends VSTest with ServersTest with TestData with Wipeout
     val jobData = 
       (jobDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.head[JobData]).getOrFail().get
 
-    jobData.id must be (job.id)
-    jobData.entrypoint must be(strategy.entrypoint)
-    jobData.resources must be >=(2)
+    jobData.id should be (job.id)
+    jobData.entrypoint should be(strategy.entrypoint)
+    jobData.resources should be >=(2)
 
     val runData = 
       (runDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.head[RunData]).getOrFail().get
 
-    runData.resources must be >= (2)
+    runData.resources should be >= (2)
 
     val instantRunData = runningJob.getRunData().getOrFail()
-    instantRunData.resources must be >= (runData.resources)
+    instantRunData.resources should be >= (runData.resources)
 
     val rds = (resourceDatas &> Enumeratee.mapConcat(_.toSeq) &> Enumeratee.take(circumference) |>>> Iteratee.getChunks[ResourceData]).getOrFail()
 
     val rd1 = rds.find(_.url == foo).get
-    rd1.warnings must be(3) // from assertion2
-    rd1.errors must be(2)   // from assertion1
+    rd1.warnings should be(3) // from assertion2
+    rd1.errors should be(2)   // from assertion1
 
     val rd2 = rds.find(_.url == bar).get
-    rd2.warnings must be(2) // from assertion3
-    rd2.errors must be(0)   // from assertion3
+    rd2.warnings should be(2) // from assertion3
+    rd2.errors should be(0)   // from assertion3
 
     // wait for all of them
     val gads = (groupedAssertionDatas &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.getChunks[GroupedAssertionData]).getOrFail()
 
     val gad1 = gads.find(_.id == assertion1.id).get
-    gad1.severity must be(Error)
-    gad1.occurrences must be(2)
-    gad1.resources must be(Map(foo -> 2))
+    gad1.severity should be(Error)
+    gad1.occurrences should be(2)
+    gad1.resources should be(Map(foo -> 2))
 
     val gad2 = gads.find(_.id == commonId).get
-    gad2.severity must be(Warning)
-    gad2.occurrences must be(5)
-    gad2.resources must be(Map(foo -> 3, bar -> 2))
+    gad2.severity should be(Warning)
+    gad2.occurrences should be(5)
+    gad2.resources should be(Map(foo -> 3, bar -> 2))
 
   }
   

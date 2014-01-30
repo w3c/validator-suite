@@ -15,7 +15,7 @@ object I18nCheckerTest {
 
 }
 
-class I18nCheckerTest extends WordSpec with MustMatchers with AssertionsMatchers with BeforeAndAfterAll {
+class I18nCheckerTest extends WordSpec with Matchers with AssertionsMatchers with BeforeAndAfterAll {
 
   import I18nCheckerTest.cache
 
@@ -30,13 +30,13 @@ class I18nCheckerTest extends WordSpec with MustMatchers with AssertionsMatchers
   "http://www.w3.org/International/tests/i18n-checker/generate?test=25&format=html&serveas=html should have at least one error" in {
     val url = URL("http://www.w3.org/International/tests/i18n-checker/generate?test=25&format=html&serveas=html")
     val assertions = I18nChecker.assert(url, Map.empty: AssertorConfiguration)
-    assertions must (haveErrors)
+    assertions should (haveErrors)
   }
 
   "http://www.w3.com/ should have at least one error" in {
     val url = URL("http://www.w3.org/")
     val assertions = I18nChecker.assert(url, Map.empty: AssertorConfiguration)
-    assertions must not (haveErrors)
+    assertions should not (haveErrors)
   }
 
 
@@ -46,9 +46,9 @@ class I18nCheckerTest extends WordSpec with MustMatchers with AssertionsMatchers
 //      case _: Local =>
 //        val url = URL("http://www.w3.org/2008/MW4D/")
 //        val assertions: Iterable[Assertion] = MarkupValidator.assert(url, Map.empty)
-//        assertions must have size(1)
+//        assertions should have size(1)
 //        val assertion = assertions.head
-//        assertion.title must be(MarkupValidator.UsesHtml5Syntax)
+//        assertion.title should be(MarkupValidator.UsesHtml5Syntax)
 //    }
 //  }
 

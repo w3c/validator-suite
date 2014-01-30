@@ -177,7 +177,7 @@ object User {
     import conf._
     val query = Json.obj("_id" -> toJson(userId))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.headOption() map {
+    cursor.headOption map {
       case Some(json) => json.as[User]
       case None => sys.error("user not found")
     }
@@ -185,7 +185,7 @@ object User {
 
   def getAll()(implicit conf: Database): Future[List[User]] = {
     val cursor = collection.find(Json.obj()).cursor[JsValue]
-    cursor.toList() map {
+    cursor.collect[List]() map {
       list => list flatMap { user =>
         try {
           Some(user.as[User])
@@ -280,7 +280,7 @@ object User {
     import conf._
     val query = Json.obj("email" -> JsString(email.toLowerCase))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.headOption() map {
+    cursor.headOption map {
       case Some(json) => json.as[User]
       case None => throw UnknownUser(email)
     }
@@ -291,7 +291,7 @@ object User {
     * if an error happens, we assume it's because there was already a user with the same email
     * looks like the driver is buggy as it does not return a specific error code
     */
-  def save(user: User)(implicit conf: Database): Future[Unit] = {
+  def save(user: User)(implicit conf: ValidatorSuite with Database): Future[Unit] = {
     import conf._
     val userId = user.id
     val userJ = toJson(user)

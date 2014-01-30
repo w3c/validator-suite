@@ -11,7 +11,7 @@ class StringW(s: String) {
   def -->(urls: String*): Link = {
     /* here is a trick with the partial function that is built
      * the list of URLs is static, hence the partial function that reacts on anything
-     * also, the matched URL must be a regex that will behave like String equality, hence the enclosing parenthesis
+     * also, the matched URL should be a regex that will behave like String equality, hence the enclosing parenthesis
      */
     Link("("+s+")", { case _ => urls.toSeq })
   }

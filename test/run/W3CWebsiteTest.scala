@@ -13,22 +13,12 @@ import java.io.File
 import org.w3.vs._
 import play.api.Mode
 
-abstract class W3CWebsiteTest extends VSTestKit(
-  new ValidatorSuite { val mode = Mode.Test }
-) with TestData with Inside {
+abstract class W3CWebsiteTest extends VSTestKit with TestData with WipeoutData with Inside {
 
   val servers = Seq.empty
 
   val job = TestData.job
   val user = TestData.user
-
-  override def beforeAll: Unit = {
-    super.beforeAll()
-  }
-
-  override def afterAll: Unit = {
-    super.afterAll()
-  }
 
   "test w3c website" in {
     
@@ -47,16 +37,16 @@ abstract class W3CWebsiteTest extends VSTestKit(
     fishForMessagePF(Duration("60s")) { case _: DoneRunEvent => () }
 
     val rrs = ResourceResponse.getFor(runId).getOrFail()
-    rrs must have size (10)
+    rrs should have size (10)
 
     // just checking that the data in the store is correct
 
     val finalJob = Job.get(job.id).getOrFail()
 
-    finalJob.latestDone must be(Some(finalJob.status))
+    finalJob.latestDone should be(Some(finalJob.status))
 
     inside(finalJob.status ) { case Done(runId, reason, completedOn, runData) =>
-      reason must be(Completed)
+      reason should be(Completed)
     }
 
     val assertions = finalJob.getAssertions().getOrFail()

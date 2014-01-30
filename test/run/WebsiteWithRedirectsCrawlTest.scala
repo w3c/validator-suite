@@ -24,7 +24,7 @@ class WebsiteWithRedirectsCrawlTest extends VSTest with ServersTest with TestDat
     val user = TestData.user
 
     (for {
-      //_ <- User.save(user)
+      _ <- User.save(user)
       _ <- Job.save(job)
     } yield ()).getOrFail()
 
@@ -34,7 +34,7 @@ class WebsiteWithRedirectsCrawlTest extends VSTest with ServersTest with TestDat
     val completeRunEvent =
       (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> waitFor[RunEvent]{ case e: DoneRunEvent => e }).getOrFail()
 
-    completeRunEvent.resources must be(circumference + 1)
+    completeRunEvent.resources should be(circumference + 1)
 
   }
   

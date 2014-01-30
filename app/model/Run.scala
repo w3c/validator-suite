@@ -79,7 +79,7 @@ object Run {
       "rd" -> BSONInteger(1),
       "_id" -> BSONInteger(0))
     val cursor = collection.find(query, projection).cursor[JsValue]
-    cursor.headOption() flatMap {
+    cursor.headOption flatMap {
       case None => Future.failed(new NoSuchElementException(s"${runId} does not exist or is not in Done state"))
       case Some(json) =>
         (json \ "rd").as[JsArray].value.collectFirst { case json if (json \ "url") == toJson(url) =>
@@ -101,7 +101,7 @@ object Run {
       "rd" -> BSONInteger(1),
       "_id" -> BSONInteger(0))
     val cursor = collection.find(query, projection).cursor[JsValue]
-    cursor.headOption() flatMap {
+    cursor.headOption flatMap {
       case None => Future.failed(new NoSuchElementException(s"${runId} does not exist or is not in Done state"))
       case Some(json) => Future.successful {
         val rds: Seq[ResourceData] =
@@ -121,7 +121,7 @@ object Run {
       "gad" -> BSONInteger(1),
       "_id" -> BSONInteger(0))
     val cursor = collection.find(query, projection).cursor[JsValue]
-    cursor.headOption() flatMap {
+    cursor.headOption flatMap {
       case None => Future.failed(new NoSuchElementException(s"${runId} does not exist or is not in Done state"))
       case Some(json) => Future.successful {
         (json \ "gad").as[Seq[GroupedAssertionData]]
@@ -140,7 +140,7 @@ object Run {
       "runData" -> BSONInteger(1),
       "_id" -> BSONInteger(0))
     val cursor = collection.find(query, projection).cursor[JsValue]
-    cursor.headOption() flatMap {
+    cursor.headOption flatMap {
       case None => Future.failed(new NoSuchElementException(runId.toString))
       case Some(json) => Future.successful((json \ "runData").as[RunData])
     }
@@ -158,7 +158,7 @@ object Run {
       "runData" -> BSONInteger(1),
       "_id" -> BSONInteger(0))
     val cursor = collection.find(query, projection).cursor[JsValue]
-    cursor.headOption() flatMap {
+    cursor.headOption flatMap {
       case None => Future.failed(new NoSuchElementException(runId.toString))
       case Some(json) => Future.successful {
         val timestamp = (json \ "timestamp").as[DateTime]
@@ -178,7 +178,7 @@ object Run {
   def get(runId: RunId)(implicit conf: Database): Future[(Run, Iterable[RunAction])] = {
     val query = Json.obj("runId" -> toJson(runId))
     val cursor = collection.find(query).cursor[JsValue]
-    cursor.toList() map { list =>
+    cursor.collect[List]() map { list =>
       // the sort is done client-side
       val orderedEvents = list.map(_.as[RunEvent]).sortBy(_.timestamp)
       val (createRun, events) = orderedEvents match {

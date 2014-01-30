@@ -34,11 +34,11 @@ class FilteredTreeWebsiteTest extends VSTest with ServersTest with TestData with
     val events = (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> Iteratee.getChunks[RunEvent]).getOrFail()
 
     val completeRunEvent = events.collectFirst { case e: DoneRunEvent => e }.get
-    completeRunEvent.resources must be(maxResources)
+    completeRunEvent.resources should be(maxResources)
 
     val rrs = events.collect { case ResourceResponseEvent(_, _, _, rr, _) => rr }
     rrs foreach { rr =>
-      rr.url.toString must startWith regex ("http://localhost:9001/[13]")
+      rr.url.toString should startWith regex ("http://localhost:9001/[13]")
     }
 
   }

@@ -13,9 +13,7 @@ import org.w3.vs.util.TestData
 import org.w3.vs._
 import play.api.Mode
 
-class StopActionTest extends VSTestKit(
-  new ValidatorSuite { val mode = Mode.Test }
-) with ServersTest with TestData with WipeoutData {
+class StopActionTest extends VSTestKit with ServersTest with TestData with WipeoutData {
 
   val servers = Seq(Webserver(9001, Website.cyclic(1000).toServlet()))
 
@@ -37,8 +35,8 @@ class StopActionTest extends VSTestKit(
       _ = runningJob.cancel()
       cancelEvent <- waitFor[RunEvent] { case e @ DoneRunEvent(_, _, _, Cancelled, _, _, _, _, _, _) => e }
     } yield Try {
-      rr.url must be(URL("http://localhost:9001/"))
-      cancelEvent.resources must be < (100)
+      rr.url should be(URL("http://localhost:9001/"))
+      cancelEvent.resources should be < (100)
     }
 
     (runningJob.runEvents() &> Enumeratee.mapConcat(_.toSeq) |>>> test()).getOrFail().get

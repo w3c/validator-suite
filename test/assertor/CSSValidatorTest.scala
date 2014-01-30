@@ -27,7 +27,7 @@ object CSSValidatorTest {
 
 }
 
-class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll with AssertionsMatchers {
+class CSSValidatorTest extends WordSpec with Matchers with BeforeAndAfterAll with AssertionsMatchers {
 
   import CSSValidatorTest.cache
 
@@ -46,20 +46,20 @@ class CSSValidatorTest extends WordSpec with MustMatchers with BeforeAndAfterAll
   "there should be no CSS error in http://www.w3.org/2011/08/validator-test/no-error.css" in {
     val url = URL("http://www.w3.org/2011/08/validator-test/no-error.css")
     val assertion: Iterable[Assertion] = CSSValidator.assert(url, Map.empty)
-    assertion must not (haveErrors)
+    assertion should not (haveErrors)
   }
 
-  "CSSValidator must accept optional parameters" in {
+  "CSSValidator should accept optional parameters" in {
     val url = URL("http://www.google.com")
     val assertorConfiguration: AssertorConfiguration = Map.empty
 
     val urlForMachine = CSSValidator.validatorURLForMachine(url, assertorConfiguration).toString
 
-    urlForMachine must startWith(CSSValidator.serviceUrl)
+    urlForMachine should startWith(CSSValidator.serviceUrl)
 
     val queryString: String = urlForMachine.substring(CSSValidator.serviceUrl.length)
 
-    Helper.parseQueryString(queryString) must be (assertorConfiguration
+    Helper.parseQueryString(queryString) should be (assertorConfiguration
       + ("output" -> List("ucn"))
       + ("uri" -> List(url.encode("UTF-8")))
       + ("vextwarning" -> List("true"))

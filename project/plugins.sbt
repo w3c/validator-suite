@@ -6,7 +6,7 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += Resolver.url("jay-tgambet", new URL("http://jay.w3.org/~tgambet/ivy/"))(Resolver.ivyStylePatterns)
 
-addSbtPlugin("play" % "sbt-plugin" % "2.1.5")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % System.getProperty("play.version"))
 
 addSbtPlugin("net.tgambet" % "play-requirejs" % "0.1-SNAPSHOT")
 
