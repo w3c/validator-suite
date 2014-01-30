@@ -38,7 +38,13 @@ object Helper {
     DateTimeFormat.forPattern("dd MMM yy' at 'H:mm' UTC'")
   }
 
+  val TimeFormatter2: DateTimeFormatter = {
+    DateTimeFormat.forPattern("yyyy-MM-dd' 'H:mm' UTC'")
+  }
+
   def formatTime(time: DateTime): String = TimeFormatter.print(time)
+
+  def formatTime2(time: DateTime): String = TimeFormatter2.print(time)
 
   def formatLegendTime(time: DateTime): String = {
     val diff = DateTime.now(DateTimeZone.UTC).minus(time.getMillis)
