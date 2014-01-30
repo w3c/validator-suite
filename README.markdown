@@ -26,7 +26,7 @@ ln -s play-2.2.1 play
 W3 Validator Suite uses [MongoDB](http://www.mongodb.org/) as its data storage.
 The code has been tested with version 2.4+.
 
-On Debian based systems (_mongodb 2.4.8 is availble in [Debian Wheezy Backports](http://packages.debian.org/wheezy-backports/mongodb)_): `apt-get install mongodb`
+On Debian based systems (_mongodb 2.4.8 is available in [Debian Wheezy Backports](http://packages.debian.org/wheezy-backports/mongodb)_): `apt-get install mongodb`
 On Windows hosts install the latest "Production Release" from [MongoDB Downloads](http://www.mongodb.org/downloads).
 
 ## Start geeking
