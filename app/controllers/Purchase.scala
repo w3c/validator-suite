@@ -108,7 +108,7 @@ object Purchase extends VSController {
 
   def redirectToStore(product: CreditPlan, id: UserId)(implicit req: RequestHeader) = {
     Play.current.mode match {
-      case Mode.Dev => throw new AccessNotAllowed("Purchase have been disabled on the development instance")
+      case Mode.Dev => throw new AccessNotAllowed("Purchases have been disabled on the development instance")
       case _ => Redirect(getStoreUrl(product, id))
     }
   }

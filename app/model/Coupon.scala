@@ -44,7 +44,7 @@ case class Coupon(
   }
 
   def compactString = {
-    s"""${id} - Code: ${code} - Campaign: ${campaign} - Description: "${description.getOrElse("Validator Suite")}" - Credits: ${credits} - Expires: ${expirationDate} - UseDate: ${useDate.getOrElse("Never")} - UsedBy: ${usedBy.getOrElse("NoOne")}"""
+    s"""${id} - Code: ${code} - Campaign: ${campaign} - Description: "${description.getOrElse("none")}" - Credits: ${credits} - Expires: ${expirationDate} - UseDate: ${useDate.getOrElse("Never")} - UsedBy: ${usedBy.getOrElse("NoOne")}"""
   }
 
 }
