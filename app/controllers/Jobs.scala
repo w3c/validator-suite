@@ -109,6 +109,7 @@ object Jobs extends VSController {
           } else if (!ValidatorNu.supportedMimeTypes.contains(headers.mimetype.get)) {
             throw new EntrypointException(url, "error.mimetype.unsupported", headers.mimetype.get, ValidatorNu.supportedMimeTypes.mkString("", ", ", ""))
           }
+          promise.complete(Try(url))
 
         } else { // It's a redirection
 
@@ -122,9 +123,9 @@ object Jobs extends VSController {
           } else if (!location.get.getAuthority.startsWith(url.getAuthority)) {
             throw new EntrypointException(location.get, "error.location.upperLevel")
           }
+          promise.complete(Try(location.get))
 
         }
-        promise.complete(Try(url))
         STATE.ABORT
       }
       def onCompleted() {
