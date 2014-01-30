@@ -7,12 +7,12 @@ W3C Validator Suite
 
 You need the Java 7 JDK.
 
-On Debian based systems use [OpenJDK](http://openjdk.java.net/): `apt-get install openjdk-7-jdk`
+On Debian based systems use [OpenJDK](http://openjdk.java.net/): `apt-get install openjdk-7-jdk`  
 On Windows hosts install [Oracle's Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 
 ### Play Framework
 
-W3C Validator Suite is based on the [Play Framework](http://www.playframework.com/).
+W3C Validator Suite is based on the [Play Framework](http://www.playframework.com/).  
 The Play framework embeds its own scala version.
 
 ```bash
@@ -23,15 +23,15 @@ ln -s play-2.2.1 play
 
 ### MongoDB
 
-W3 Validator Suite uses [MongoDB](http://www.mongodb.org/) as its data storage.
+W3 Validator Suite uses [MongoDB](http://www.mongodb.org/) as its data storage.  
 The code has been tested with version 2.4+.
 
-On Debian based systems (_mongodb 2.4.8 is available in [Debian Wheezy Backports](http://packages.debian.org/wheezy-backports/mongodb)_): `apt-get install mongodb`
-On Windows hosts install the latest "Production Release" from [MongoDB Downloads](http://www.mongodb.org/downloads).
+On Debian based systems (_mongodb 2.4.8 is available in [Debian Wheezy Backports](http://packages.debian.org/wheezy-backports/mongodb)_): `apt-get install mongodb`  
+On Windows hosts install the latest ["Production Release" of MongoDB](http://www.mongodb.org/downloads).
 
 ## Start geeking
 
-Now start `play` and start playing!
+Now start `play` and start playing!  
 _First build will take time as it fetches all the dependencies._
 
 ```bash
