@@ -171,7 +171,7 @@ object Administration extends VSController {
 
       case Array("coupon-delete", id(couponId)) =>
         model.Coupon.delete(CouponId(couponId)).getOrFail()
-        s"coupon ${id} deleted"
+        s"coupon ${couponId} deleted"
 
       case Array("coupon-redeem", id(couponId), id(userId)) =>
         val (_, redeemed) = model.Coupon.redeem(CouponId(couponId), UserId(userId)).getOrFail()
