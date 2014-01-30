@@ -158,7 +158,7 @@ object Coupon {
 
   def getCampaign(campaign: String)(implicit conf: Database): Future[List[Coupon]] = {
     val cursor = collection.find(Json.obj("campaign" -> campaign)).cursor[JsValue]
-    cursor.toList() map {
+    cursor.collect[List]() map {
       list => list flatMap { coupon =>
         try {
           Some(coupon.as[Coupon])
@@ -189,7 +189,7 @@ object Coupon {
 
   def getRedeemedBy(userId: UserId)(implicit conf: ValidatorSuite with Database): Future[List[Coupon]] = {
     val cursor = collection.find(Json.obj("usedBy" -> userId)).cursor[JsValue]
-    cursor.toList() map {
+    cursor.collect[List]() map {
       list => list flatMap { coupon =>
         try {
           Some(coupon.as[Coupon])
