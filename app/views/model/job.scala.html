@@ -67,7 +67,7 @@
                 }}
                 @if(collection.isDefined) {
                 @defining(collection.get) { collection =>
-                <form method="get" class="jobAction">
+                <form method="get" class="jobAction searchForm">
                     <fieldset>
                         <legend>Filter results</legend>
                         <input class="search" name="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>

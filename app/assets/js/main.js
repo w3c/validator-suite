@@ -26,6 +26,7 @@ require([
         // TODO
         $("#actions .clear").remove();
         $("#actions .search input").removeClass("clearable");
+        $("#actions .searchForm").on("submit", function () {return false;});
 
         var root = window;
 

@@ -3,7 +3,7 @@
 @if(collection.classe == "list") {
 <section id="actions">
     <a href="@routes.Jobs.newJob" class="button">New job</a>
-    <form action="@routes.Jobs.index" method="get">
+    <form action="@routes.Jobs.index" method="get" class="searchForm">
         <label for="searchInput" class="offScreen">Filter results</label><input id="searchInput" name="search" class="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required=""/>
         @if(collection.params.search != None) {
         <a class="button clear" href="@collection.search().queryString">@Messages("job.button.clear")</a>}

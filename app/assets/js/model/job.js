@@ -161,6 +161,7 @@ define([
             "click .delete": "_delete",
             "click .print": "print",
             "click .foldAllToggle": "foldAllToggle",
+            "submit .searchForm": function () { return false; },
             //"keydown .dropdown" : "dropdown",
             "change [name='group']": "group"
             //"keyup [name=search]": "search"

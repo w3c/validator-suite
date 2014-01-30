@@ -59,7 +59,7 @@
                 <li><span class="selected"  title="View the report grouped by message (current)">By Message</span></li>
                 <% } %>
             </ul>
-            <form method="get" class="jobAction">
+            <form method="get" class="jobAction searchForm">
                 <% if (model.collection.options.assertions || model.collection.options.resources) { %>
                     <input name="search" class="search cleared" type="text" placeholder="Filter results" title="Filter results" required value=""/>
                     @**<button type="submit">@Messages("job.button.search")</button>**@

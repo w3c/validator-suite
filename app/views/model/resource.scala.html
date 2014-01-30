@@ -35,7 +35,7 @@
                 *********@
                 @if(assertions.isDefined) {
                 @defining(assertions.get) { collection =>
-                <form action="@routes.Assertions.index(resource.jobId, resource.url)" method="get">
+                <form action="@routes.Assertions.index(resource.jobId, resource.url)" method="get" class="searchForm">
                     <fieldset>
                         <legend>Filter results</legend>
                         <input name="search" class="search" type="text" placeholder="Filter results" title="Filter results" value="@collection.params.search" @if(collection.params.search != None){class="clearable"} required/>
