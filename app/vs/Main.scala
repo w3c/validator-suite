@@ -64,7 +64,7 @@ object Main {
   def stressTestData(n: Int)(implicit conf: ValidatorSuite with Database): Unit = {
 
     def makeUser(name: String): User =
-      User.create(name = name, email = s"${name}@w3.org", password = "secret", credits = 1000000, optedIn = false, isSubscriber = false, isRoot = true)
+      User.create(name = name, email = s"${name}@exapmle.com", password = "secret", credits = 1000000, optedIn = false, isSubscriber = false, isRoot = true)
 
     val script = for {
       _ <- MongoStore.reInitializeDb()
