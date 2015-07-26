@@ -123,18 +123,11 @@ object Main {
   def addRootUsers()(implicit conf: ValidatorSuite with Database): Future[Iterable[String]] = {
 
     val roots = Map(
-      "Juan-Guy" -> "jean-gui@w3.org",
-      "Ted Guild" -> "ted@w3.org",
-      "Ralph Swick" -> "rswick@w3.org",
-      "Thomas Gambet" -> "tgambet@w3.org",
-      "Bernard Gidon" -> "bgidon@w3.org",
-      "Vivien Lacourba" -> "vivien@w3.org",
-      "Jérôme Chailloux" -> "jerome@w3.org",
-      "Alexandre Bertails" -> "bertails@w3.org"
+      "Admin User" -> "admin@example.com"
     ) map { case (name, email) =>
       User.create(
-        email = email, name = name, password = "secret",
-        credits = 10000, optedIn = true, isSubscriber = false, isRoot = true)
+        email = email, name = name, password = "password",
+        credits = 10000, optedIn = false, isSubscriber = false, isRoot = true)
     }
 
     Future.sequence(
@@ -154,8 +147,8 @@ object Main {
   def defaultData()(implicit conf: ValidatorSuite with Database): Unit = {
 
     val w3team = User.create(
-      email = "w3t@w3.org", name = "W3C Team", password = "w3team",
-      credits = 1000000, optedIn = true, isSubscriber = false, isRoot = false)
+      email = "test@example.com", name = "Test User", password = "password",
+      credits = 1000, optedIn = false, isSubscriber = false, isRoot = false)
     
     val script: Future[Unit] = for {
       _ <- MongoStore.reInitializeDb()
