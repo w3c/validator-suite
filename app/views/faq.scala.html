@@ -50,7 +50,7 @@
 
         <h2 id="howcaniuse"> How can I use W3C Validator Suite<span class="tm">™</span> service?</h2>
 
-        <p>W3C is providing W3C Validator Suite<span class="tm">™</span> as Software-as-a-Service available at <a href="@routes.Application.index">https://validator-suite.w3.org</a>.</p>
+        <p>W3C is providing W3C Validator Suite<span class="tm">™</span> as Software-as-a-Service available at <a href="@routes.Application.index">@Helper.config.getString("website.url").getOrElse("")</a>.</p>
 
         <h2 id="news">How do I learn about W3C Validator Suite<span class="tm">™</span> news?</h2>
 
@@ -90,7 +90,7 @@
             compatible with HTML5), etc. and soon CSS3 and responsive Web design.<br />
             If you are interested to be informed about upcoming W3C courses sessions, please
             <a href="http://eepurl.com/h9C_U">subscribe to W3DevCampus' announcement list</a> or
-            <a href="https://twitter.com/intent/follow?screen_name=W3Training&amp;original_referer=https://validator-suite.w3.org/">follow @@W3Training on Twitter</a>.</p>
+            <a href="https://twitter.com/intent/follow?screen_name=W3Training&amp;original_referer=@Helper.config.getString("website.url").getOrElse("")/">follow @@W3Training on Twitter</a>.</p>
 
         <h2 id="accessibility">What about Accessibility testing?</h2>
 
@@ -123,7 +123,7 @@
         <h2 id="api">Is there an API?</h2>
 
         <p>Currently the W3C Validator Suite<span class="tm">™</span> is only available as Software-as-a-Service from <a
-                href="@routes.Application.index">https://validator-suite.w3.org</a>.
+                href="@routes.Application.index">@Helper.config.getString("website.url").getOrElse("")</a>.
             We are hoping to offer an API in the future which will make it possible to integrate with Content Management
             Systems (CMS) or an existing Quality assurance (QA) process.</p>
 

@@ -10,7 +10,7 @@
     Dear @user.name,
 </p>
 <p>
-    Welcome to the <a href="https://validator-suite.w3.org@routes.Application.index">W3C Validator Suite Service</a>.
+    Welcome to the <a href="@Helper.config.getString("website.url").getOrElse("")@routes.Application.index">W3C Validator Suite Service</a>.
 </p>
 <p>
     We are pleased to confirm your registration under the email address: @user.email<br />
@@ -18,10 +18,10 @@
 </p>
 <p>
     You chose @Helper.notWord(user.optedIn)to receive email communications from W3C. You can change this setting and edit
-    your profile on the <a href="https://validator-suite.w3.org@routes.User.profile">My Account</a> page.
+    your profile on the <a href="@Helper.config.getString("website.url").getOrElse("")@routes.User.profile">My Account</a> page.
 </p>
 <p>
-    If you have lost your password you can recover it using the <a href="https://validator-suite.w3.org@routes.PasswordReset.resetRequest">Reset Password</a> page.
+    If you have lost your password you can recover it using the <a href="@Helper.config.getString("website.url").getOrElse("")@routes.PasswordReset.resetRequest">Reset Password</a> page.
 </p>
 <p>
     We welcome your feedback and ideas feel free to send us an email to <a href="mailto:@Helper.config.getString("support.email").getOrElse("")">@Helper.config.getString("support.email").getOrElse("")</a>.
@@ -33,7 +33,7 @@
 <p>
     --<br />
     W3C Validator Suite<br />
-    <a href="https://validator-suite.w3.org@routes.Application.index">https://validator-suite.w3.org@routes.Application.index</a><br />
+    <a href="@Helper.config.getString("website.url").getOrElse("")@routes.Application.index">@Helper.config.getString("website.url").getOrElse("")@routes.Application.index</a><br />
     <a href="mailto:@Helper.config.getString("support.email").getOrElse("")">@Helper.config.getString("support.email").getOrElse("")</a>
 </p>
 </body>

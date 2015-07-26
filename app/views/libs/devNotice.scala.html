@@ -6,7 +6,7 @@
         <div class="columns">
             <p class="alert-box warn message">
             This is the development instance of the Validator Suite and should be used for testing only. The official
-            instance is available at the following address: <a href="https://validator-suite.w3.org">https://validator-suite.w3.org</a>
+            instance is available at the following address: <a href="@Helper.config.getString("website.url").getOrElse("")">@Helper.config.getString("website.url").getOrElse("")</a>
             </p>
         </div>
     </div>}
