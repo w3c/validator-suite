@@ -60,12 +60,6 @@ class FunctionalTest extends WordSpec with Matchers with BeforeAndAfterAll {
 
       // TODO. Define more functional tests: https://github.com/w3c/validator-suite/issues/271
 
-      /*fill("#l_email").`with`("tgambet@w3.org") // Root
-      fill("#l_password").`with`("secret")
-      click("#submit-login")
-      goTo("http://localhost:9001/admin")
-      $("h1").first().getText() should not include ("404")*/
-
     }
   }
 }
