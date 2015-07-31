@@ -63,22 +63,6 @@
 
 <hr/>
 
-<div id="testimonials" class="row">
-    <div class="columns">
-        <h1>Testimonials</h1>
-    </div>
-    @Helper.testimonials.map{ case testimonial =>
-    <div class="columns large-4">
-        <blockquote>
-            <p class="msg">@testimonial.message</p>
-            <cite class="author">@HtmlFormat.raw(testimonial.author)</cite>
-        </blockquote>
-    </div>
-    }
-</div>
-
-<hr/>
-
 <div class="row">
 
     <figure class="column small-centered large-centered screenshot">

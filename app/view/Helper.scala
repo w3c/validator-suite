@@ -77,21 +77,6 @@ object Helper {
     a.groupBy(_._1).map{case (k, v) => (k, v.map(_._2))}.toMap
   }
 
-  case class Testimonial(author: String, message: String)
-
-  def testimonials: Iterable[Testimonial] = {
-    import scala.collection.JavaConversions._
-    val messages = ResourceBundle.getBundle("testimonials")
-    val keys: Iterator[String] = messages.getKeys
-    val testimonials: Iterable[Testimonial] = keys.toSeq.groupBy(key => key.split("""\.""")(0)).map{ case (prefix, keys) =>
-      Testimonial(
-        author = messages.getString(keys(keys.indexOf(s"${prefix}.cite"))),
-        message = messages.getString(keys(keys.indexOf(s"${prefix}.message")))
-      )
-    }
-    Random.shuffle(testimonials).take(3)
-  }
-
   /*def clearParam(param: String)(implicit req: Request[_]): String = {
     queryString(req.queryString - param)
   }*/

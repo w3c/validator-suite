@@ -7,8 +7,8 @@ server {
   listen         11010;
   server_name    localhost;
 
-  access_log     /var/log/nginx/w3.org/i18n-checker/access.log;
-  error_log      /var/log/nginx/w3.org/i18n-checker/error.log;
+  access_log     /var/log/nginx/i18n-checker-access.log;
+  error_log      /var/log/nginx/i18n-checker-error.log;
 
   root           /home/validator/i18n-checker/www;
 

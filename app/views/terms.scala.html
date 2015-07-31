@@ -45,7 +45,7 @@
 
         <h2 id="definitions">B. Definitions</h2>
         <ol>
-            <li><em>Service</em> means the W3C Validator Suite with usual service at <a href="https://validator-suite.w3.org/">https://validator-suite.w3.org/</a> as operated by GEIE ERCIM</li>
+            <li><em>Service</em> means the W3C Validator Suite with usual service at <a href="@Helper.config.getString("website.url").getOrElse("")">@Helper.config.getString("website.url").getOrElse("")</a> as operated by GEIE ERCIM</li>
             <li><em>You</em> and <em>Your</em> means the legal entity that uses the W3C Validator Suite</li>
             <li><em>Starting URI</em> means the URI that <em>You</em> entered as the starting point for the validation of the W3C Validator Suite.</li>
             <li><em>A page</em> is an HTML file and the associated CSS files.</li>
@@ -114,11 +114,11 @@
 
         <h2 id="other">J. Other Conditions</h2>
         <ol>
-            <li>Support by the <em>Service</em> is only available in English, via email from the address <a href="mailto:validator-suite-contact@@w3.org">validator-suite-contact@@w3.org</a>.</li>
+            <li>Support by the <em>Service</em> is only available in English, via email from the address <a href="mailto:@Helper.config.getString("support.contact").getOrElse("")">@Helper.config.getString("support.contact").getOrElse("")</a>.</li>
             <li><em>You</em> understand that the <em>Service</em> uses third party vendors and hosting partners to provide the necessary hardware, software, networking, storage, and related technology required to run the <em>Service</em>.</li>
             <li>The failure of W3C to exercise or enforce any right or provision of the Terms of Service shall not constitute a waiver of such right or provision.</li>
             <li>These Terms of Service and <em>Your</em> use of the <em>Service</em> are governed under the laws of France. The place of Trial will be Grasse/France.</li>
-            <li>Questions about the Terms of Service should be sent to <a href="mailto:validator-suite-contact@@w3.org">validator-suite-contact@@w3.org</a>.</li>
+            <li>Questions about the Terms of Service should be sent to <a href="mailto:@Helper.config.getString("support.contact").getOrElse("")">@Helper.config.getString("support.contact").getOrElse("")</a>.</li>
         </ol>
 
     </div>

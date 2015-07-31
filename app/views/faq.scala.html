@@ -15,8 +15,6 @@
             <li><a href="#freevalidators">What is the difference between the existing free W3C Markup Validator and this
                 new service?</a></li>
             <li><a href="#logomeaning">When I see the W3C Validator Suite<span class="tm">™</span> logo/badge, what does it mean?</a></li>
-            <li><a href="#w3cmembers">Do W3C Members enjoy special privileges?</a></li>
-            <li><a href="#training">I validated my Web site but do not know how to fix my errors. Can W3C teach me?</a></li>
             <li><a href="#accessibility">What about Accessibility testing?</a></li>
             <li><a href="#howlong">How long will it take to validate my Web site?</a></li>
             <li><a href="#privatesites">Can I check internal websites or sites that require authentication?</a></li>
@@ -50,7 +48,7 @@
 
         <h2 id="howcaniuse"> How can I use W3C Validator Suite<span class="tm">™</span> service?</h2>
 
-        <p>W3C is providing W3C Validator Suite<span class="tm">™</span> as Software-as-a-Service available at <a href="@routes.Application.index">https://validator-suite.w3.org</a>.</p>
+        <p>W3C is providing W3C Validator Suite<span class="tm">™</span> as Software-as-a-Service available at <a href="@routes.Application.index">@Helper.config.getString("website.url").getOrElse("")</a>.</p>
 
         <h2 id="news">How do I learn about W3C Validator Suite<span class="tm">™</span> news?</h2>
 
@@ -73,24 +71,6 @@
             Platform</a>. The W3C Validator Suite<span class="tm">™</span> badge says <cite>"Improved with W3C Validator Suite"</cite>. You are
             encouraged to post the badge to your Websites to indicate you used the service, although it does not imply
             any seal of approval or service outcomes.</p>
-
-        <h2 id="w3cmembers">Do W3C Members enjoy special privileges?</h2>
-
-        <p>Yes, a benefit of <a href="http://www.w3.org/Consortium/membership">W3C Membership</a> is that Members do
-            receive a W3C Validator Suite<span class="tm">™</span> service discount. Please contact our sales team <a
-                    href='mailto:@Helper.config.getString("contact.email").getOrElse("")'>&lt;@Helper.config.getString("contact.email").getOrElse("")&gt;</a>
-            directly instead of using the online payment platform.</p>
-
-        <h2 id="training">I validated my Web site but do not know how to fix my errors. Can W3C teach me? </h2>
-        
-        <p> <img src='@routes.Assets.at("images/w3devcampus-v2.png")' width="251" height="81" style="float:right; zoom: 0.7; margin-left: 0.3em" />
-            Yes, <a href="http://www.w3devcampus.com/">W3DevCampus</a> is the <strong>OFFICIAL W3C training
-            program</strong>. W3DevCampus delivers high quality <a href="http://www.w3devcampus.com/courses/">online
-            training courses</a> on topics such as HTML5, mobile Web apps development, SVG (vector graphics on the Web,
-            compatible with HTML5), etc. and soon CSS3 and responsive Web design.<br />
-            If you are interested to be informed about upcoming W3C courses sessions, please
-            <a href="http://eepurl.com/h9C_U">subscribe to W3DevCampus' announcement list</a> or
-            <a href="https://twitter.com/intent/follow?screen_name=W3Training&amp;original_referer=https://validator-suite.w3.org/">follow @@W3Training on Twitter</a>.</p>
 
         <h2 id="accessibility">What about Accessibility testing?</h2>
 
@@ -118,12 +98,12 @@
 
         <h2 id="license">Is the W3C Validator Suite<span class="tm">™</span> published under an open-source license?</h2>
 
-        <p>No but it is based on existing W3C Validators which are themselves <a href="http://www.w3.org/Status" title="W3C Open Source Software">available under an open-source license</a>.</p>
+        <p>Yes, the W3C Validator Suite code is distributed under the <a href="http://www.w3.org/Consortium/Legal/copyright-software">W3C Software License</a> and is availabe on <a href="https://github.com/w3c/validator-suite">GitHub</a>. It is also based on existing W3C Validators which are themselves <a href="http://www.w3.org/Status" title="W3C Open Source Software">available under an open-source license</a>.</p>
 
         <h2 id="api">Is there an API?</h2>
 
         <p>Currently the W3C Validator Suite<span class="tm">™</span> is only available as Software-as-a-Service from <a
-                href="@routes.Application.index">https://validator-suite.w3.org</a>.
+                href="@routes.Application.index">@Helper.config.getString("website.url").getOrElse("")</a>.
             We are hoping to offer an API in the future which will make it possible to integrate with Content Management
             Systems (CMS) or an existing Quality assurance (QA) process.</p>
 

@@ -10,21 +10,20 @@
 
         <p>
             @**
-            https://github.com/w3c/validator-suite/issues/204
             [[ Explain when and how to use them ]]
             [[ Give license information to reuse them ]]
             **@
         </p>
 
         <p>
-            <a href="https://validator-suite.w3.org/" title="Check your website with the W3C Validator Suite">
-                <img src="https://validator-suite.w3.org/icons/vs-blue-256.png" alt="W3C Validator Suite" />
+            <a href="@Helper.config.getString("website.url").getOrElse("")/" title="Check your website with the W3C Validator Suite">
+                <img src="@Helper.config.getString("website.url").getOrElse("")/icons/vs-blue-256.png" alt="W3C Validator Suite" />
             </a>
         </p>
 
         <p>
-<code>&lt;a href="https://validator-suite.w3.org/" title="Check your website with the W3C Validator Suite">
-    &lt;img src="https://validator-suite.w3.org/icons/vs-blue-256.png" alt="W3C Validator Suite" width="256" height="60">
+<code>&lt;a href="@Helper.config.getString("website.url").getOrElse("")/" title="Check your website with the W3C Validator Suite">
+    &lt;img src="@Helper.config.getString("website.url").getOrElse("")/icons/vs-blue-256.png" alt="W3C Validator Suite" width="256" height="60">
 &lt;/a>
 </code>
         </p>
