@@ -5,6 +5,8 @@ W3C Validator Suite
 
 Note: W3C is not running Validator Suite nor intending to continue development at this time.  Should there be interest from active developers in the community in furthering and maintaining it please let us know.
 
+Since there is no resources from W3C nor the community supporting this project at present, we encourage people to fork.
+
 ## Project dependencies
 
 ### Java
