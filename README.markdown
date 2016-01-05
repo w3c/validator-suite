@@ -22,7 +22,7 @@ W3C Validator Suite is based on the [Play Framework](http://www.playframework.co
 The Play framework embeds its own scala version.
 
 ```bash
-wet http://downloads.typesafe.com/play/2.2.1/play-2.2.1.zip
+wget http://downloads.typesafe.com/play/2.2.1/play-2.2.1.zip
 unzip play-2.2.1.zip
 ln -s play-2.2.1 play
 ```
