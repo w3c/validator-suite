@@ -3,7 +3,7 @@ W3C Validator Suite
 
 ## Status
 
-Note: W3C is not running Validator Suite nor intending to continue development at this time.  Should there be interest from active developers in the community in furthering and maintaining it please let us know.
+Note: W3C is not running Validator Suite nor intending to continue development at this time (see [W3C communication](https://www.w3.org/2015/08/validator-suite-service-discontinuation) from August 2015).  Should there be interest from active developers in the community in furthering and maintaining it please let us know.
 
 Since there is no resources from W3C nor the community supporting this project at present, we encourage people to fork.
 
